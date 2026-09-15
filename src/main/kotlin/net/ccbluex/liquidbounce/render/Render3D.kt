@@ -25,6 +25,7 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
@@ -80,6 +81,7 @@ inline fun PoseStack.translate(blockPos: Long, origin: BlockPos) {
  *
  * @param renderTarget The render target framebuffer.
  */
+@AddonApi
 class WorldRenderEnvironment internal constructor(
     val renderTarget: RenderTarget,
     val poseStack: PoseStack,

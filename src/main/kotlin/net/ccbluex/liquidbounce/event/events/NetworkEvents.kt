@@ -24,12 +24,14 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.minecraft.network.protocol.Packet
 
 @Tag("pipeline")
 class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : Event()
 
+@AddonApi
 @Tag("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
@@ -50,6 +52,7 @@ class BlinkPacketEvent(
 
 }
 
+@AddonApi
 enum class TransferOrigin(override val tag: String) : Tagged {
     INCOMING("Incoming"),
     OUTGOING("Outgoing");

@@ -289,6 +289,8 @@ object ConfigSystem {
         }
 
         for (value in valueGroup.inner) {
+            if (!value.isPersistent) continue
+
             val queue = valuesByName[value.name]
                 ?: value.aliases.firstNotNullOfOrNull { valuesByName[it] }
                 ?: continue

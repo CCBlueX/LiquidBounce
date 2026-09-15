@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
  * A callable event
  */
+@AddonApi
 abstract class Event {
     @ProtocolExclude
     var isCompleted: Boolean = false
@@ -32,6 +34,7 @@ abstract class Event {
 /**
  * A cancellable event
  */
+@AddonApi
 abstract class CancellableEvent : Event() {
     /**
      * Let you know if the event is canceled
@@ -55,6 +58,7 @@ abstract class CancellableEvent : Event() {
 /**
  * MixinEntityRenderState of event. Might be PRE or POST.
  */
+@AddonApi
 enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }

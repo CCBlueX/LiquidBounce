@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.minecraft.world.entity.LivingEntity
@@ -104,14 +105,17 @@ object CombatManager : EventListener {
         get() = pauseRotation > 0
     val shouldPauseBlocking: Boolean
         get() = pauseBlocking > 0
+    @AddonApi
     val isInCombat: Boolean
         get() = this.duringCombat > 0 ||
             (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null)
 
+    @AddonApi
     fun pauseCombatForAtLeast(pauseTime: Int) {
         pauseCombat = pauseCombat.coerceAtLeast(pauseTime)
     }
 
+    @AddonApi
     fun pauseRotationForAtLeast(pauseTime: Int) {
         pauseRotation = pauseRotation.coerceAtLeast(pauseTime)
     }

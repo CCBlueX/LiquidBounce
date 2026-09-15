@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.TreeMap
 
+@AddonApi
 object ModuleCategories {
 
     private val registry = TreeMap<String, ModuleCategory>(String.CASE_INSENSITIVE_ORDER)

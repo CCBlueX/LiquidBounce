@@ -133,7 +133,7 @@ class ModeValueGroup<T : Mode>(
 
 }
 
-abstract class Mode(
+abstract class Mode @JvmOverloads constructor(
     name: String,
     aliases: List<String> = emptyList()
 ) : ValueGroup(name, aliases = aliases), EventListener, Tagged, MinecraftShortcuts {

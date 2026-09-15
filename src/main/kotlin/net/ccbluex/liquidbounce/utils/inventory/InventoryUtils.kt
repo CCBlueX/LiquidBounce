@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -82,6 +83,7 @@ fun AbstractContainerScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
         .filter { !it.item.isEmpty && it.container !== player.inventory }
         .map { ContainerItemSlot(it.index) }
 
+@AddonApi
 @JvmOverloads
 context(requester: EventListener)
 fun useHotbarSlotOrOffhand(

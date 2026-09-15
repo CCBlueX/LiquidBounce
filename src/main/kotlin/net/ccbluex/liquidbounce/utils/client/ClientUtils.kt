@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.minecraft.client.Minecraft
 import net.minecraft.util.Util
 import org.apache.logging.log4j.LogManager
@@ -31,6 +32,7 @@ internal fun clientLogger(name: String): Logger = LogManager.getLogger("$CLIENT_
 
 val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
+@AddonApi
 val inGame: Boolean
     get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
 

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -48,6 +49,7 @@ import net.minecraft.util.Util
  * @param action The action triggered by the bound key (e.g., TOGGLE, HOLD).
  */
 @JvmRecord
+@AddonApi
 data class InputBind(
     val boundKey: InputConstants.Key,
     val action: BindAction,

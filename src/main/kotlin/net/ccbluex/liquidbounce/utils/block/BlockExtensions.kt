@@ -29,8 +29,15 @@ import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -42,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.network.useItem
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.TypedInstance
@@ -113,6 +121,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
@@ -123,6 +132,7 @@ import kotlin.math.floor
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
+@AddonApi
 val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 
 @Deprecated(
@@ -133,8 +143,10 @@ val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
 @JvmName("getState-deprecated")
 inline fun BlockPos.getState() = state
 
+@AddonApi
 val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
 
+@AddonApi
 fun BlockPos.getBlock(): Block? = state?.block
 
 fun BlockPos.getCenterDistanceSquared() = this.distToCenterSqr(player.position())
@@ -161,6 +173,7 @@ val BlockPos.immutable: BlockPos get() = if (this is BlockPos.MutableBlockPos) t
  *
  * Returns [FULL_BOX] when block is air or does not exist.
  */
+@AddonApi
 val BlockPos.outlineBox: AABB
     get() {
         val blockState = state ?: return FULL_BOX
@@ -483,6 +496,8 @@ val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.
  * @param rotation rotation used to produce [hitResult]
  * @see net.minecraft.client.Minecraft.startUseItem
  */
+@AddonApi
+@JvmOverloads
 fun doPlacement(
     hitResult: BlockHitResult,
     rotation: Rotation,
@@ -551,8 +566,54 @@ private inline fun handleActionsOnAccept(
 }
 
 /**
+ * Places the item in [hand] at [pos] against a neighbouring block, rotating silently towards it.
+ *
+ * @return false when there is nothing to place against or the spot is out of reach
+ */
+@AddonApi
+@JvmOverloads
+fun doPlacement(
+    pos: BlockPos,
+    hand: InteractionHand = InteractionHand.MAIN_HAND,
+    swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
+): Boolean {
+    val options = BlockPlacementTargetFindingOptions(
+        BlockOffsetOptions.Default,
+        FaceHandlingOptions(CenterTargetPositionFactory),
+        stackToPlaceWith = player.getItemInHand(hand),
+        PlayerLocationOnPlacement(position = player.position()),
+    )
+    val target = findBestBlockPlacementTarget(pos, options) ?: return false
+    val hit = traceFromPlayer(target.rotation)
+    if (hit.type != HitResult.Type.BLOCK) {
+        return false
+    }
+    doPlacement(hit, target.rotation, hand = hand, swingMode = swingMode)
+    return true
+}
+
+/**
+ * Starts breaking [pos], rotating silently towards it. [immediate] sends start and stop at once,
+ * which only works in creative or on blocks that break instantly.
+ *
+ * @return false when [pos] is not in reach
+ */
+@AddonApi
+@JvmOverloads
+fun doBreak(pos: BlockPos, immediate: Boolean = false, swingMode: SwingMode = SwingMode.DO_NOT_HIDE): Boolean {
+    val hit = traceFromPlayer(Rotation.lookingAt(Vec3.atCenterOf(pos), player.eyePosition))
+    if (hit.type != HitResult.Type.BLOCK || hit.blockPos != pos) {
+        return false
+    }
+    doBreak(hit, immediate, swingMode)
+    return true
+}
+
+/**
  * Breaks the block
  */
+@AddonApi
+@JvmOverloads
 fun doBreak(
     rayTraceResult: BlockHitResult,
     immediate: Boolean = false,
@@ -662,6 +723,7 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         || this is TrapDoorBlock
 }
 
+@AddonApi
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
 fun BlockPos.hasAnySolidPlacementNeighbor(): Boolean {

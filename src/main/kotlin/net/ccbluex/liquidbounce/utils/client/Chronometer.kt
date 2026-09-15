@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
+@AddonApi
 class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
 
     val elapsed: Long
