@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.network.protocol.game.ServerboundSwingPacket
@@ -27,6 +28,7 @@ import net.minecraft.world.InteractionHand
 import java.util.function.Consumer
 
 @Suppress("unused")
+@AddonApi
 enum class SwingMode(
     override val tag: String,
     val serverSwing: Boolean,

@@ -27,6 +27,7 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
@@ -73,6 +74,7 @@ import net.minecraft.world.phys.Vec3
  *
  * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
+@AddonApi
 data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
         @JvmField
@@ -80,6 +82,7 @@ data class EntityTargetingInfo(val classification: EntityTargetClassification, v
     }
 }
 
+@AddonApi
 enum class EntityTargetClassification {
     TARGET,
     INTERESTING,

@@ -69,6 +69,7 @@ class PlayerPushOutEvent : CancellableEvent()
 @Tag("playerMove")
 class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
 
+@AddonApi
 @Tag("playerJump")
 class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 

@@ -48,6 +48,7 @@ class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 @Tag("chunkDeltaUpdate")
 class ChunkDeltaUpdateEvent(val packet: ClientboundSectionBlocksUpdatePacket) : Event()
 
+@AddonApi
 @Tag("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
 

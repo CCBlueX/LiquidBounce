@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.brigadier
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import net.minecraft.client.multiplayer.ClientLevel
@@ -55,6 +56,7 @@ import java.util.stream.Stream
  * instead of each provider hardcoding its candidates. Every delegate falls back to an
  * empty/static value when no server connection exists (main menu, unit tests).
  */
+@AddonApi
 object ClientCommandSource : SharedSuggestionProvider {
 
     val playerOrNull: LocalPlayer?
