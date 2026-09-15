@@ -832,7 +832,10 @@ public final class net/ccbluex/liquidbounce/features/module/ModuleCategories {
 public final class net/ccbluex/liquidbounce/features/module/ModuleCategory : net/ccbluex/liquidbounce/config/types/list/Tagged {
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)V
-	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;Lnet/minecraft/resources/Identifier;)V
+	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;Lnet/minecraft/resources/Identifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lnet/minecraft/resources/Identifier;)V
+	public final fun getIcon ()Lnet/minecraft/resources/Identifier;
 	public final fun getInclusionGroup ()Lnet/ccbluex/liquidbounce/config/OptionalInclusion;
 	public final fun getReadableName ()Ljava/lang/String;
 	public fun getTag ()Ljava/lang/String;

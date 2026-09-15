@@ -5,17 +5,23 @@
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
     import {onMount} from "svelte";
-    import {getModules} from "../../integration/rest";
+    import {getCategories, getModules} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
     import {gridSize, showGrid} from "./clickgui_store";
     import ScaledClickGuiContent from "./ScaledClickGuiContent.svelte";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
+    let icons = $state<Record<string, string>>({});
 
     onMount(async () => {
         modules = await getModules();
         categories = groupByCategory(modules);
+        icons = Object.fromEntries(
+            (await getCategories())
+                .filter(category => category.icon)
+                .map(category => [category.name, category.icon!])
+        );
     });
 </script>
 
@@ -30,7 +36,7 @@
         <Search modules={structuredClone($state.snapshot(modules))}/>
 
         {#each Object.entries(categories) as [category, modules], panelIndex (category)}
-            <Panel {category} {modules} {panelIndex}/>
+            <Panel {category} {modules} {panelIndex} icon={icons[category]}/>
         {/each}
     </div>
 </ScaledClickGuiContent>

@@ -17,6 +17,11 @@ export interface Metadata {
     }[];
 }
 
+export interface ModuleCategory {
+    name: string;
+    icon: string | null;
+}
+
 export interface Module {
     name: string;
     category: string;

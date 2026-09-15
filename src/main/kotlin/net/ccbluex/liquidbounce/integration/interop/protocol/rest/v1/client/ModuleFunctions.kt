@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -151,9 +152,22 @@ private data class ModuleRequest(val name: String) {
     }
 }
 
+// GET /api/v1/client/modules/categories
+private fun Route.getCategories() = get("/categories") {
+    call.respond(JsonArray().apply {
+        ModuleCategories.entries.forEach { category ->
+            add(JsonObject().apply {
+                addProperty("name", category.tag)
+                addProperty("icon", category.icon?.let { "${ClientInteropServer.url}/api/v1/client/resource?id=$it" })
+            })
+        }
+    })
+}
+
 internal fun Route.moduleRoutes() {
     route("/modules") {
         getModules()
+        getCategories()
         route("/toggle") {
             toggleModulePut()
             toggleModuleDelete()
