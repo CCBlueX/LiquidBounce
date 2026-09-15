@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
  * it also features [onEnabled] and [onDisabled] which are called when the state is toggled.
  */
 @AddonApi
-abstract class ToggleableValueGroup(
+abstract class ToggleableValueGroup @JvmOverloads constructor(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
     enabled: Boolean,
@@ -94,10 +94,22 @@ abstract class ToggleableValueGroup(
     override val running: Boolean
         get() = super.running && enabled
 
+    // Declared here so Java subclasses override a plain method, not the interface default.
+    override fun onEnabled() = Unit
+
+    override fun onDisabled() = Unit
+
     final override fun parent() = parent
 
     protected fun <T : Mode> choices(name: String, active: T, choices: Array<T>) =
         modes(this, name, active, choices)
+
+    /**
+     * The first of [modes] starts active.
+     */
+    @Suppress("UNCHECKED_CAST")
+    protected fun <T : Mode> choices(name: String, vararg modes: T) =
+        modes(this, name, modes[0], modes as Array<T>)
 
     protected fun <T : Mode> choices(
         name: String,

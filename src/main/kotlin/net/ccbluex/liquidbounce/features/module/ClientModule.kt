@@ -54,7 +54,7 @@ import net.minecraft.network.chat.Style
  */
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
 @AddonApi
-open class ClientModule(
+open class ClientModule @JvmOverloads constructor(
     name: String, // name parameter in configurable
     @Exclude val category: ModuleCategory, // module category
     bind: Int = InputConstants.UNKNOWN.value, // default bind

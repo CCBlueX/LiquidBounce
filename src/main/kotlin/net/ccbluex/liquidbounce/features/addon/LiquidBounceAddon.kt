@@ -172,6 +172,7 @@ abstract class LiquidBounceAddon : EventListener {
         registeredModes += parent to mode
     }
 
+    @JvmOverloads
     fun config(
         name: String = id,
         tree: MutableCollection<out ValueGroup> = mutableListOf(),

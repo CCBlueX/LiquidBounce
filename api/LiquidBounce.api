@@ -126,11 +126,14 @@ public final class net/ccbluex/liquidbounce/config/types/group/ModeValueGroup : 
 }
 
 public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/misc/Toggleable, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
+	public fun <init> (Ljava/lang/String;Z)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;Z)V
 	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ZLjava/util/List;)V
 	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ZLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun children ()Ljava/util/List;
 	protected final fun choices (Ljava/lang/String;ILkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	protected final fun choices (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/group/Mode;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	protected final fun choices (Ljava/lang/String;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public static synthetic fun choices$default (Lnet/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
 	public fun getDebugOwnerId ()Ljava/lang/String;
@@ -155,15 +158,21 @@ public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValu
 }
 
 public class net/ccbluex/liquidbounce/config/types/group/ValueGroup : net/ccbluex/liquidbounce/config/types/Value {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Collection;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;Z)V
 	public fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;ZLjava/util/List;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;ZLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bind (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/BindValue;
 	public final fun bind (Ljava/lang/String;I)Lnet/ccbluex/liquidbounce/config/types/BindValue;
 	public final fun bind (Ljava/lang/String;Lnet/ccbluex/liquidbounce/utils/input/InputBind;)Lnet/ccbluex/liquidbounce/config/types/BindValue;
 	public static synthetic fun bind$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;IILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/BindValue;
 	public final fun block (Ljava/lang/String;Lnet/minecraft/world/level/block/Block;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun blocks (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
-	public final fun boolean (Ljava/lang/String;ZLjava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
-	public static synthetic fun boolean$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ZLjava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun bool (Ljava/lang/String;Z)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public final fun bool (Ljava/lang/String;ZLjava/util/List;)Lnet/ccbluex/liquidbounce/config/types/Value;
+	public static synthetic fun bool$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ZLjava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun c2sPackets (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
 	public final fun collectValueGroupsRecursively (Ljava/lang/String;)Lkotlin/sequences/Sequence;
 	public static synthetic fun collectValueGroupsRecursively$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILjava/lang/Object;)Lkotlin/sequences/Sequence;
@@ -177,27 +186,44 @@ public class net/ccbluex/liquidbounce/config/types/group/ValueGroup : net/ccblue
 	public final fun easing (Ljava/lang/String;Lnet/ccbluex/liquidbounce/utils/math/Easing;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
 	public final fun enchantments (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
 	public final fun entityTypes (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun enumChoice (Ljava/lang/String;Ljava/lang/Enum;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
+	public final fun enumChoice (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/list/Tagged;Ljava/util/Set;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
 	public final fun enumChoice (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/list/Tagged;Ljava/util/Set;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
 	public static synthetic fun enumChoice$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/list/Tagged;Ljava/util/Set;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/list/ChoiceListValue;
 	public final fun file (Ljava/lang/String;Ljava/io/File;Lnet/ccbluex/liquidbounce/config/types/FileDialogMode;Ljava/util/Set;)Lnet/ccbluex/liquidbounce/config/types/FileValue;
 	public static synthetic fun file$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Ljava/io/File;Lnet/ccbluex/liquidbounce/config/types/FileDialogMode;Ljava/util/Set;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/FileValue;
-	public final fun float (Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
-	public static synthetic fun float$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floatRange (Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floatRange (Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public final fun floatRange (Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public static synthetic fun floatRange$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lkotlin/ranges/ClosedFloatingPointRange;Lkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floating (Ljava/lang/String;FFF)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floating (Ljava/lang/String;FFFLjava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floating (Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floating (Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun floating (Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun floating$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;FFFLjava/lang/String;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun floating$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;FLkotlin/ranges/ClosedFloatingPointRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public final fun getBase ()Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
 	public fun getBaseKey ()Ljava/lang/String;
 	public final fun getContainedValues ()[Lnet/ccbluex/liquidbounce/config/types/Value;
 	public synthetic fun inclusionGroup (Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public fun inclusionGroup (Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
-	public final fun int (Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
-	public static synthetic fun int$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun intRange (Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun intRange (Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public final fun intRange (Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public static synthetic fun intRange$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lkotlin/ranges/IntRange;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun integer (Ljava/lang/String;III)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun integer (Ljava/lang/String;IIILjava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun integer (Ljava/lang/String;ILkotlin/ranges/IntRange;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun integer (Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun integer (Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun integer$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;IIILjava/lang/String;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public static synthetic fun integer$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public final fun item (Ljava/lang/String;Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun itemList (Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryMutableListValue;
 	public final fun itemList (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/ItemListValue;
 	public final fun items (Ljava/lang/String;Ljava/util/SequencedSet;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryListValue;
+	public final fun key (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun key (Ljava/lang/String;I)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun key (Ljava/lang/String;Lcom/mojang/blaze3d/platform/InputConstants$Key;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public static synthetic fun key$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Lcom/mojang/blaze3d/platform/InputConstants$Key;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Value;
@@ -207,7 +233,10 @@ public class net/ccbluex/liquidbounce/config/types/group/ValueGroup : net/ccblue
 	public final fun modes (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;Ljava/util/function/ToIntFunction;Lkotlin/jvm/functions/Function1;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	protected final fun modes (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/types/group/Mode;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public static synthetic fun modes$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
+	public final fun multiEnumChoice (Ljava/lang/String;Ljava/lang/Class;Ljava/util/Collection;)Lnet/ccbluex/liquidbounce/config/types/list/MultiChoiceListValue;
+	public final fun multiEnumChoice (Ljava/lang/String;Ljava/lang/Class;Ljava/util/Collection;Z)Lnet/ccbluex/liquidbounce/config/types/list/MultiChoiceListValue;
 	public final fun multiEnumChoice (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;ZZ)Lnet/ccbluex/liquidbounce/config/types/list/MultiChoiceListValue;
+	public static synthetic fun multiEnumChoice$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;Ljava/lang/Class;Ljava/util/Collection;ZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/list/MultiChoiceListValue;
 	public final fun mutableList (Ljava/lang/String;Ljava/util/Collection;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/MutableListValue;
 	public fun prepareDeserialize (Lcom/google/gson/JsonObject;)V
 	public final fun regex (Ljava/lang/String;Lkotlin/text/Regex;)Lnet/ccbluex/liquidbounce/config/types/Value;
@@ -432,6 +461,8 @@ public final class net/ccbluex/liquidbounce/features/addon/AddonState : java/lan
 public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon : net/ccbluex/liquidbounce/event/EventListener {
 	public fun <init> ()V
 	public fun children ()Ljava/util/List;
+	public final fun config ()Lnet/ccbluex/liquidbounce/config/types/Config;
+	public final fun config (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/config/types/Config;
 	public final fun config (Ljava/lang/String;Ljava/util/Collection;)Lnet/ccbluex/liquidbounce/config/types/Config;
 	public static synthetic fun config$default (Lnet/ccbluex/liquidbounce/features/addon/LiquidBounceAddon;Ljava/lang/String;Ljava/util/Collection;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/Config;
 	public final fun getAuthors ()Ljava/util/List;
@@ -477,6 +508,14 @@ public final class net/ccbluex/liquidbounce/features/misc/FriendManager : net/cc
 }
 
 public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup, net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;I)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;Z)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZ)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZ)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZ)V
+	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZLjava/util/List;)V
 	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZLjava/util/List;Z)V
 	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;ILnet/ccbluex/liquidbounce/utils/input/InputBind$BindAction;ZZZZLjava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun enabledEffect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -522,6 +561,7 @@ public final class net/ccbluex/liquidbounce/features/module/ModuleCategories {
 }
 
 public final class net/ccbluex/liquidbounce/features/module/ModuleCategory : net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;)V
 	public synthetic fun <init> (Ljava/lang/String;Lnet/ccbluex/liquidbounce/config/OptionalInclusion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getInclusionGroup ()Lnet/ccbluex/liquidbounce/config/OptionalInclusion;
