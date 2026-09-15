@@ -18,10 +18,15 @@
  */
 package net.ccbluex.liquidbounce.addon
 
+import com.mojang.brigadier.arguments.ArgumentType
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.mojang.brigadier.builder.RequiredArgumentBuilder
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 
 /**
- * Client commands. Register them through
+ * Client commands are Brigadier trees over [ClientCommandSource]. Build one with [literal] and
+ * [argument], then register it through
  * [net.ccbluex.liquidbounce.features.addon.LiquidBounceAddon.registerCommand].
  */
 object Commands {
@@ -29,6 +34,13 @@ object Commands {
     @JvmStatic
     val prefix: String
         get() = CommandManager.GlobalSettings.prefix
+
+    @JvmStatic
+    fun literal(name: String): LiteralArgumentBuilder<ClientCommandSource> = LiteralArgumentBuilder.literal(name)
+
+    @JvmStatic
+    fun <T> argument(name: String, type: ArgumentType<T>): RequiredArgumentBuilder<ClientCommandSource, T> =
+        RequiredArgumentBuilder.argument(name, type)
 
     /**
      * Whether a command or alias named [name] exists, ignoring case like the dispatcher does.

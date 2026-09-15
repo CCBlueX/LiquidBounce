@@ -22,12 +22,20 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import java.util.function.Consumer
 
 /**
  * Event subscription without the Kotlin-only `handler<T> {}` DSL, so Java add-ons can listen too.
  */
 object Events {
+
+    /** Runs before everything else, e.g. to cancel. */
+    const val PRIORITY_FIRST: Short = EventPriorityConvention.FIRST_PRIORITY
+
+    /** Runs after everything else; the event is in its final state. */
+    const val PRIORITY_LAST: Short = EventPriorityConvention.READ_FINAL_STATE
 
     /**
      * Calls [handler] for every [type] event while [owner] is running. Higher [priority] runs first.
@@ -44,6 +52,13 @@ object Events {
         val hook = EventManager.registerEventHook(type, EventHook(owner, priority, handler))
         return AutoCloseable { EventManager.unregisterEventHook(type, hook) }
     }
+
+    /**
+     * [task] every game tick while [owner] is running.
+     */
+    @JvmStatic
+    fun onTick(owner: EventListener, task: Runnable): AutoCloseable =
+        subscribe(owner, GameTickEvent::class.java) { task.run() }
 
     @JvmStatic
     fun <E : Event> post(event: E): E = EventManager.callEvent(event)
