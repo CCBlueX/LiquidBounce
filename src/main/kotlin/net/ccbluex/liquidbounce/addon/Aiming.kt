@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 /**
  * Server-side rotations, shared with every module of the client. The highest priority request wins.
  */
-object Rotations {
+object Aiming {
 
     /** Roughly where the client's own combat and placement modules rank. */
     const val PRIORITY_NORMAL = 0

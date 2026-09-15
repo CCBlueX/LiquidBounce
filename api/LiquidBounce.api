@@ -6,6 +6,20 @@ public final class net/ccbluex/liquidbounce/LiquidBounce : net/ccbluex/liquidbou
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/addon/Aiming {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Aiming;
+	public static final field PRIORITY_COMBAT I
+	public static final field PRIORITY_NORMAL I
+	public static final field PRIORITY_PLACEMENT I
+	public static final fun getServerPitch ()F
+	public static final fun getServerYaw ()F
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FF)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFI)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFII)V
+	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;)V
+	public static synthetic fun request$default (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;ILjava/lang/Object;)V
+}
+
 public final class net/ccbluex/liquidbounce/addon/Chat {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Chat;
 	public static final fun error (Ljava/lang/String;)V
@@ -24,11 +38,13 @@ public final class net/ccbluex/liquidbounce/addon/Chat$Severity : java/lang/Enum
 	public static fun values ()[Lnet/ccbluex/liquidbounce/addon/Chat$Severity;
 }
 
-public final class net/ccbluex/liquidbounce/addon/ClickGui {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/ClickGui;
-	public static final fun isBoundToKey (II)Z
-	public static final fun isBoundToMouse (I)Z
-	public static final fun refresh ()V
+public final class net/ccbluex/liquidbounce/addon/ClientCommands {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/ClientCommands;
+	public static final fun argument (Ljava/lang/String;Lcom/mojang/brigadier/arguments/ArgumentType;)Lcom/mojang/brigadier/builder/RequiredArgumentBuilder;
+	public static final fun execute (Ljava/lang/String;)V
+	public static final fun getPrefix ()Ljava/lang/String;
+	public static final fun isRootTaken (Ljava/lang/String;)Z
+	public static final fun literal (Ljava/lang/String;)Lcom/mojang/brigadier/builder/LiteralArgumentBuilder;
 }
 
 public final class net/ccbluex/liquidbounce/addon/Combat {
@@ -43,15 +59,6 @@ public final class net/ccbluex/liquidbounce/addon/Combat {
 	public static final fun pauseRotations (I)V
 	public static final fun shouldBeAttacked (Lnet/minecraft/world/entity/Entity;)Z
 	public static final fun shouldBeShown (Lnet/minecraft/world/entity/Entity;)Z
-}
-
-public final class net/ccbluex/liquidbounce/addon/Commands {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Commands;
-	public static final fun argument (Ljava/lang/String;Lcom/mojang/brigadier/arguments/ArgumentType;)Lcom/mojang/brigadier/builder/RequiredArgumentBuilder;
-	public static final fun execute (Ljava/lang/String;)V
-	public static final fun getPrefix ()Ljava/lang/String;
-	public static final fun isRootTaken (Ljava/lang/String;)Z
-	public static final fun literal (Ljava/lang/String;)Lcom/mojang/brigadier/builder/LiteralArgumentBuilder;
 }
 
 public final class net/ccbluex/liquidbounce/addon/Events {
@@ -81,29 +88,6 @@ public final class net/ccbluex/liquidbounce/addon/Game {
 	public static final fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
 	public static final fun isInGame ()Z
 	public static final fun onClientThread (Ljava/lang/Runnable;)V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Hud {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Hud;
-	public static final fun refreshModuleList ()V
-}
-
-public final class net/ccbluex/liquidbounce/addon/Inventory {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Inventory;
-	public static final fun findHotbarSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
-	public static final fun findHotbarSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
-	public static final fun findSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
-	public static final fun findSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
-	public static final fun getServerSideSlot ()I
-	public static final fun isInventoryOpen ()Z
-	public static final fun isScreenOpen ()Z
-	public static final fun resetSilentSlot (Ljava/lang/Object;)V
-	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Z
-	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Z
-	public static synthetic fun selectSilently$default (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Z
-	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Lnet/minecraft/world/InteractionResult;
-	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Lnet/minecraft/world/InteractionResult;
-	public static synthetic fun useSlot$default (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Lnet/minecraft/world/InteractionResult;
 }
 
 public final class net/ccbluex/liquidbounce/addon/Modules {
@@ -157,18 +141,22 @@ public final class net/ccbluex/liquidbounce/addon/Render {
 	public static final fun textWidth (Lnet/minecraft/network/chat/Component;)F
 }
 
-public final class net/ccbluex/liquidbounce/addon/Rotations {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Rotations;
-	public static final field PRIORITY_COMBAT I
-	public static final field PRIORITY_NORMAL I
-	public static final field PRIORITY_PLACEMENT I
-	public static final fun getServerPitch ()F
-	public static final fun getServerYaw ()F
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FF)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFI)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFII)V
-	public static final fun request (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;)V
-	public static synthetic fun request$default (Lnet/ccbluex/liquidbounce/features/module/ClientModule;FFIILjava/lang/Runnable;ILjava/lang/Object;)V
+public final class net/ccbluex/liquidbounce/addon/Slots {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Slots;
+	public static final fun findHotbarSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
+	public static final fun findHotbarSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;
+	public static final fun findSlot (Ljava/util/function/Predicate;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public static final fun findSlot (Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/utils/inventory/ItemSlot;
+	public static final fun getServerSideSlot ()I
+	public static final fun isInventoryOpen ()Z
+	public static final fun isScreenOpen ()Z
+	public static final fun resetSilentSlot (Ljava/lang/Object;)V
+	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Z
+	public static final fun selectSilently (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Z
+	public static synthetic fun selectSilently$default (Ljava/lang/Object;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Z
+	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;)Lnet/minecraft/world/InteractionResult;
+	public static final fun useSlot (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;I)Lnet/minecraft/world/InteractionResult;
+	public static synthetic fun useSlot$default (Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/inventory/HotbarItemSlot;IILjava/lang/Object;)Lnet/minecraft/world/InteractionResult;
 }
 
 public final class net/ccbluex/liquidbounce/addon/Text {
@@ -179,6 +167,13 @@ public final class net/ccbluex/liquidbounce/addon/Text {
 	public static final fun translate (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
 	public static final fun variable (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
 	public static final fun warning (Ljava/lang/String;)Lnet/minecraft/network/chat/MutableComponent;
+}
+
+public final class net/ccbluex/liquidbounce/addon/Ui {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Ui;
+	public static final fun isBoundToKey (II)Z
+	public static final fun isBoundToMouse (I)Z
+	public static final fun refresh ()V
 }
 
 public final class net/ccbluex/liquidbounce/addon/World {

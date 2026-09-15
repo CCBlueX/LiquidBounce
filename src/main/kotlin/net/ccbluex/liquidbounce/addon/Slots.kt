@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.Slots as AllSlots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Item
@@ -34,20 +34,20 @@ import java.util.function.Predicate
  * The player's items, and the silent hotbar every module shares: the server sees the selected slot,
  * the player does not, and it switches back after the given ticks.
  */
-object Inventory {
+object Slots {
 
     @JvmStatic
-    fun findHotbarSlot(item: Item): HotbarItemSlot? = Slots.Hotbar.findSlot(item)
+    fun findHotbarSlot(item: Item): HotbarItemSlot? = AllSlots.Hotbar.findSlot(item)
 
     @JvmStatic
-    fun findHotbarSlot(predicate: Predicate<ItemStack>): HotbarItemSlot? = Slots.Hotbar.findSlot(predicate)
+    fun findHotbarSlot(predicate: Predicate<ItemStack>): HotbarItemSlot? = AllSlots.Hotbar.findSlot(predicate)
 
     /** Hotbar first, then the inventory. */
     @JvmStatic
-    fun findSlot(item: Item): ItemSlot? = Slots.HotbarAndInventory.findSlot(item)
+    fun findSlot(item: Item): ItemSlot? = AllSlots.HotbarAndInventory.findSlot(item)
 
     @JvmStatic
-    fun findSlot(predicate: Predicate<ItemStack>): ItemSlot? = Slots.HotbarAndInventory.findSlot(predicate)
+    fun findSlot(predicate: Predicate<ItemStack>): ItemSlot? = AllSlots.HotbarAndInventory.findSlot(predicate)
 
     /** The hotbar slot the server thinks is selected. */
     @JvmStatic

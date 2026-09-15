@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
  * [argument], then register it through
  * [net.ccbluex.liquidbounce.features.addon.LiquidBounceAddon.registerCommand].
  */
-object Commands {
+object ClientCommands {
 
     @JvmStatic
     val prefix: String
