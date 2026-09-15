@@ -19,16 +19,52 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
+import java.util.concurrent.CopyOnWriteArrayList
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 
+@AddonApi
+@Suppress("TooManyFunctions")
 object HudComponentManager {
 
-    val nativeComponents = listOf(MinimapHudComponent)
+    private val registeredComponents = CopyOnWriteArrayList<NativeHudComponent>()
+    private val registeredFactories = CopyOnWriteArrayList<HudComponentFactory.NativeHudComponentFactory>()
+
+    val nativeComponents: List<HudComponent>
+        get() = listOf(MinimapHudComponent) + registeredComponents
+
+    /**
+     * Not persisted; the caller keeps the component's state.
+     */
+    @AddonApi
+    fun register(component: NativeHudComponent) {
+        if (registeredComponents.addIfAbsent(component)) {
+            updateComponents()
+        }
+    }
+
+    @AddonApi
+    fun unregister(component: NativeHudComponent) {
+        if (registeredComponents.remove(component)) {
+            updateComponents()
+        }
+    }
+
+    @AddonApi
+    fun registerFactory(factory: HudComponentFactory.NativeHudComponentFactory) {
+        registeredFactories.addIfAbsent(factory)
+    }
+
+    @AddonApi
+    fun unregisterFactory(factory: HudComponentFactory.NativeHudComponentFactory) {
+        registeredFactories.remove(factory)
+    }
 
     val components: List<HudComponent>
         get() = nativeComponents + (ThemeManager.theme?.components ?: emptyList())
@@ -69,6 +105,14 @@ object HudComponentManager {
                 singleton = true,
                 canAdd = !component.enabled,
             )
+        } + registeredFactories.map { factory ->
+            Theme.ComponentCatalogEntry(
+                factory.name,
+                factory.description,
+                FACTORY_PREFIX + factory.name,
+                factory.singleton,
+                canAdd = !factory.singleton || registeredComponents.none { it.name == factory.name && it.enabled },
+            )
         } + theme.componentCatalog()
     }
 
@@ -85,6 +129,14 @@ object HudComponentManager {
     }
 
     fun addComponent(id: String): HudComponent? {
+        if (id.startsWith(FACTORY_PREFIX)) {
+            val factory = registeredFactories.find { FACTORY_PREFIX + it.name == id } ?: return null
+            val component = factory.createComponent() as NativeHudComponent
+            component.enabled = true
+            register(component)
+            return component
+        }
+
         nativeComponents.find { it.id.toString() == id }?.let { component ->
             if (component.enabled) {
                 return null
@@ -98,6 +150,8 @@ object HudComponentManager {
             .find { theme -> theme.components.any { it.id.toString() == id } }
             ?.addComponent(id)
     }
+
+    private const val FACTORY_PREFIX = "native:"
 
     fun updateComponents() {
         EventManager.callEvent(ComponentsUpdateEvent(

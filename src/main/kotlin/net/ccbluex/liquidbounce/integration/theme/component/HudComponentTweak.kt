@@ -20,10 +20,12 @@
 package net.ccbluex.liquidbounce.integration.theme.component
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
  * A set of tweaks that can be applied to the Original HUD by the component
  */
+@AddonApi
 enum class HudComponentTweak(override val tag: String) : Tagged {
 
     /**

@@ -957,6 +957,79 @@ public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : n
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public abstract class net/ccbluex/liquidbounce/integration/theme/component/HudComponent : net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup {
+	public fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment;
+	public final fun getComponentDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/util/UUID;
+	public final fun getTweaks ()[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public final fun getZIndex ()I
+	protected final fun registerComponentListen (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)V
+	public final fun resetAlignment ()V
+	public final fun setZIndex (I)V
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory : net/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;)V
+	public fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun getDescription ()Ljava/lang/String;
+	public fun getEnabled ()Z
+	public fun getName ()Ljava/lang/String;
+	public fun getSingleton ()Z
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentManager {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentManager;
+	public final fun addComponent (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun bringComponentToFront (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;)I
+	public final fun getComponent (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun getComponentCatalog (Ljava/lang/String;)Ljava/util/List;
+	public static final fun getComponentWithTweak (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun getComponents ()Ljava/util/List;
+	public final fun getComponents (Ljava/lang/String;)Ljava/util/List;
+	public final fun getNativeComponents ()Ljava/util/List;
+	public static final fun isTweakEnabled (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Z
+	public final fun register (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
+	public final fun registerFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
+	public final fun unregister (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
+	public final fun unregisterFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
+	public final fun updateComponents ()V
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field DISABLE_CROSSHAIR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_EXP_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_HELD_ITEM_TOOL_TIP Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_LOCATOR_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_OVERLAY_MESSAGE Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_SCOREBOARD Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_STATUS_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_STATUS_EFFECT_OVERLAY Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_SUBTITLE_OVERLAY Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field TWEAK_HOTBAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+}
+
+public abstract class net/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent : net/ccbluex/liquidbounce/integration/theme/component/HudComponent {
+	public fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun getGuiScaledBounds (FF)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public static synthetic fun getGuiScaledBounds$default (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;FFILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public abstract fun getGuiScaledHeight ()F
+	public abstract fun getGuiScaledWidth ()F
+	public final fun getHeight ()F
+	public final fun getWidth ()F
+}
+
 public final class net/ccbluex/liquidbounce/lang/LanguageKt {
 	public static final fun translation (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
 }
@@ -1804,5 +1877,19 @@ public final class net/ccbluex/liquidbounce/utils/movement/MovementUtilsKt {
 
 public final class net/ccbluex/liquidbounce/utils/network/NetworkUtilsKt {
 	public static final fun sendPacketSilently (Lnet/minecraft/network/protocol/Packet;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/render/Alignment : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/render/Alignment$Companion;
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisX;ILnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisY;I)V
+	public static final fun center ()Lnet/ccbluex/liquidbounce/utils/render/Alignment;
+	public final fun getBounds (FF)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public final fun getGuiScaledHorizontalOffset ()F
+	public final fun getGuiScaledVerticalOffset ()F
+	public final fun getHorizontalAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisX;
+	public final fun getHorizontalOffset ()I
+	public final fun getVerticalAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisY;
+	public final fun getVerticalOffset ()I
+	public final fun setFrom (Lnet/ccbluex/liquidbounce/utils/render/Alignment;)V
 }
 
