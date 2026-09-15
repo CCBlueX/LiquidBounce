@@ -53,7 +53,8 @@ import net.minecraft.network.chat.Style
  * A module also called 'hack' can be enabled and handle events
  */
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
-open class ClientModule(
+@AddonApi
+open class ClientModule @JvmOverloads constructor(
     name: String, // name parameter in configurable
     @Exclude val category: ModuleCategory, // module category
     bind: Int = InputConstants.UNKNOWN.value, // default bind
@@ -89,7 +90,8 @@ open class ClientModule(
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
-    internal val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
+    @AddonApi
+    val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {
@@ -97,6 +99,13 @@ open class ClientModule(
             }
         }
     val bind get() = bindValue.get()
+
+    /**
+     * True when something outside LiquidBounce acts on [bind], so the module manager leaves it alone.
+     */
+    @AddonApi
+    open val externalBind: Boolean
+        get() = false
 
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
@@ -202,6 +211,10 @@ open class ClientModule(
      * Requires that [ValueGroup.walkKeyPath] has previously been run.
      */
     fun verifyFallbackDescription() {
+        if (hasLiteralDescription) {
+            return
+        }
+
         if (!LanguageManager.hasFallbackTranslation(descriptionKey!!)) {
             logger.warn("$name is missing fallback description key $descriptionKey")
         }

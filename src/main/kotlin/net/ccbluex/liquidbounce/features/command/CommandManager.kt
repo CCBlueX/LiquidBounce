@@ -100,6 +100,7 @@ import kotlin.math.min
 @Suppress("detekt:TooManyFunctions")
 object CommandManager : EventListener {
 
+    @AddonApi
     object GlobalSettings : ValueGroup("Commands") {
 
         /**
@@ -239,6 +240,10 @@ object CommandManager : EventListener {
         names.forEach { dynamicCommandNodes.remove(it) }
         brigadierDispatcher = null
     }
+
+    @AddonApi
+    fun isRootTaken(name: String): Boolean =
+        getDispatcher().root.children.any { it.name.equals(name, ignoreCase = true) }
 
     /**
      * Drops the cached dispatcher so it is rebuilt with fresh argument state on next use.

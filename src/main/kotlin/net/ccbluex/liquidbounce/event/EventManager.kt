@@ -82,6 +82,7 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardCharEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
+import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MouseCursorEvent
@@ -144,6 +145,7 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -222,6 +224,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ValueChangedEvent::class.java,
     ModuleActivationEvent::class.java,
     ModuleToggleEvent::class.java,
+    FriendChangeEvent::class.java,
     NotificationEvent::class.java,
     ClientChatStateChange::class.java,
     ClientChatMessageEvent::class.java,
@@ -317,6 +320,7 @@ private class EventTables(@JvmField val classes: Set<Class<out Event>>, previous
 /**
  * A modern and fast event handler using lambda handlers
  */
+@AddonApi
 object EventManager {
 
     @Volatile

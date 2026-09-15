@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.NullableBypass
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.locale.Language
@@ -41,6 +42,7 @@ import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
+@AddonApi
 fun translation(key: String, vararg args: Any?): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 

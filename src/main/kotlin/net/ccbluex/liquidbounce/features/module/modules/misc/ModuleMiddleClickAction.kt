@@ -134,14 +134,14 @@ object ModuleMiddleClickAction : ClientModule(
                 val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {
-                    FriendManager.friends.remove(FriendManager.Friend(name, null))
+                    FriendManager.remove(name)
                     notification(
                         "FriendClicker",
                         message("removedFriend", name),
                         NotificationEvent.Severity.INFO
                     )
                 } else {
-                    FriendManager.friends.add(FriendManager.Friend(name, null))
+                    FriendManager.add(FriendManager.Friend(name, null))
 
                     notification(
                         "FriendClicker",

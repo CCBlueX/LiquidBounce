@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 
 /**
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
  * registers them through [CommandManager.register]. Scripts and add-ons register prebuilt
  * nodes through [CommandManager.registerNodes] instead.
  */
+@AddonApi
 fun interface CommandRegistrar {
 
     /**
