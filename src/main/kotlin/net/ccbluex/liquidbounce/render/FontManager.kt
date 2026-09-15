@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.io.createFont
@@ -35,6 +36,7 @@ import java.awt.Font
 import java.io.File
 import java.io.InputStream
 
+@AddonApi
 object FontManager {
 
     private val logger = clientLogger("FontManager")
@@ -96,6 +98,7 @@ object FontManager {
      *
      * TODO: Replaces this with Module-based Font Selection
      */
+    @JvmStatic
     val FONT_RENDERER
         get() = defaultFontFace.renderer
 

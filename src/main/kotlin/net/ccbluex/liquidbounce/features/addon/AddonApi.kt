@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.features.addon
  *
  * It will look unused from inside this repository. Removing it breaks published add-ons, so treat
  * it as public API and change it deliberately. `checkKotlinAbi` compares it, together with the
- * `net.ccbluex.liquidbounce.addon` package, against `api/LiquidBounce.api`.
+ * against `api/LiquidBounce.api`.
  */
 @Target(
     AnnotationTarget.FUNCTION,

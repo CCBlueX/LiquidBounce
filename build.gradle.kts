@@ -364,7 +364,6 @@ kotlin {
     abiValidation {
         filters {
             include {
-                byNames.add("net.ccbluex.liquidbounce.addon.**")
                 annotatedWith.add("net.ccbluex.liquidbounce.features.addon.AddonApi")
             }
         }

@@ -6,33 +6,6 @@ public final class net/ccbluex/liquidbounce/LiquidBounce : net/ccbluex/liquidbou
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/addon/Render {
-	public static final field INSTANCE Lnet/ccbluex/liquidbounce/addon/Render;
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;I)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;II)V
-	public static final fun blockBox (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZ)V
-	public static synthetic fun blockBox$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/core/BlockPos;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZILjava/lang/Object;)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;I)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;II)V
-	public static final fun box (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZ)V
-	public static synthetic fun box$default (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZILjava/lang/Object;)V
-	public static final fun line (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;I)V
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FF)F
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)F
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)F
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZF)F
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;)F
-	public static final fun text (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;)F
-	public static synthetic fun text$default (Lnet/ccbluex/liquidbounce/event/events/OverlayRenderEvent;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;ILjava/lang/Object;)F
-	public static final fun textWidth (Lnet/minecraft/network/chat/Component;)F
-}
-
 public final class net/ccbluex/liquidbounce/api/services/auth/OAuthClient : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -985,11 +958,83 @@ public final class net/ccbluex/liquidbounce/lang/LanguageKt {
 	public static final fun translation (Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;
 }
 
+public abstract class net/ccbluex/liquidbounce/render/AbstractFontRenderer {
+	public fun <init> ()V
+	public final fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;)F
+	public abstract fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
+	public final fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;)F
+	public abstract fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FF)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZF)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public abstract fun getHeight ()F
+	public final fun getScaleToVanillaFont ()F
+	public abstract fun getSize ()F
+	public abstract fun getStringWidth (Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Z)F
+	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;)F
+	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;F)F
+	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;FZ)F
+	public static synthetic fun getStringWidth$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;ZILjava/lang/Object;)F
+	public static synthetic fun getStringWidth$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/network/chat/Component;FZILjava/lang/Object;)F
+	public final fun process (Ljava/lang/String;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
+	public abstract fun process (Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
+	public static synthetic fun process$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Ljava/lang/String;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
+	public static synthetic fun process$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
+}
+
+public final class net/ccbluex/liquidbounce/render/FontManager {
+	public static final field DEFAULT_FONT_SIZE F
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/render/FontManager;
+	public final fun fontFace (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/render/FontFace;
+	public static final fun getFONT_RENDERER ()Lnet/ccbluex/liquidbounce/render/engine/font/FontRenderer;
+	public final fun getGlyphManager ()Lnet/ccbluex/liquidbounce/render/engine/font/FontGlyphPageManager;
+	public final fun queueFontFromStream (Ljava/io/InputStream;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
 public final class net/ccbluex/liquidbounce/render/Render2DKt {
 	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFF)V
 	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
 	public static final fun drawQuad (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
 	public static synthetic fun drawQuad$default (Lnet/minecraft/client/gui/GuiGraphicsExtractor;FFFFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)V
+}
+
+public final class net/ccbluex/liquidbounce/render/RenderShortcutsKt {
+	public static final field FULL_BOX Lnet/minecraft/world/phys/AABB;
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;)V
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)V
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;I)V
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;II)V
+	public static final fun drawBox (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZ)V
+	public static synthetic fun drawBox$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/AABB;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;IIZILjava/lang/Object;)V
+	public static final fun drawLine (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;I)V
+	public static final fun renderEnvironment (Lnet/ccbluex/liquidbounce/event/events/WorldRenderEvent;Lkotlin/jvm/functions/Function1;)V
+	public static final fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;DDDLjava/util/function/Consumer;)V
+	public static final synthetic fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;DDDLkotlin/jvm/functions/Function1;)V
+	public static final fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Ljava/util/function/Consumer;)V
+	public static final synthetic fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lkotlin/jvm/functions/Function1;)V
+	public static final fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/core/Vec3i;Ljava/util/function/Consumer;)V
+	public static final synthetic fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/core/Vec3i;Lkotlin/jvm/functions/Function1;)V
+	public static final fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/Vec3;Ljava/util/function/Consumer;)V
+	public static final synthetic fun withPositionRelativeToCamera (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/world/phys/Vec3;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class net/ccbluex/liquidbounce/render/WorldRenderEnvironment {
+	public final fun getCamera ()Lnet/minecraft/client/Camera;
+	public final fun getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;
+	public final fun getRenderTarget ()Lcom/mojang/blaze3d/pipeline/RenderTarget;
+	public final fun start (Lcom/mojang/blaze3d/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
+	public static synthetic fun start$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lcom/mojang/blaze3d/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
 }
 
 public final class net/ccbluex/liquidbounce/render/atlas/ItemImageAtlas : net/ccbluex/liquidbounce/event/EventListener {
@@ -1014,6 +1059,30 @@ public final class net/ccbluex/liquidbounce/render/engine/font/FontGlyphPageMana
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public abstract class net/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field CENTER Lnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;
+	public static final field END Lnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;
+	public static final field START Lnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;
+	public abstract fun anchorToDrawX (FFF)F
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;
+}
+
+public abstract class net/ccbluex/liquidbounce/render/engine/font/VerticalAnchor : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field BOTTOM Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;
+	public static final field MIDDLE Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;
+	public static final field TOP Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;
+	public abstract fun anchorToDrawY (FFF)F
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;
 }
 
 public final class net/ccbluex/liquidbounce/render/engine/type/Color4b : java/lang/Record {
