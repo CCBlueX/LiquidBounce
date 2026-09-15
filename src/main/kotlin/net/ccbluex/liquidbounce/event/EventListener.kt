@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -56,6 +59,51 @@ interface EventListener : DebuggedOwner {
      * Parent [EventListener]
      */
     fun parent(): EventListener? = null
+
+    /**
+     * Calls [handler] for every [type] event while this listener is running. Higher [priority] runs
+     * first. Close the result to stop early; [unregister] does the same for all of them.
+     */
+    @AddonApi
+    fun <E : Event> on(type: Class<E>, priority: Short, handler: Consumer<E>): AutoCloseable {
+        val hook = EventManager.registerEventHook(type, EventHook(this, priority, handler))
+        return AutoCloseable { EventManager.unregisterEventHook(type, hook) }
+    }
+
+    @AddonApi
+    fun <E : Event> on(type: Class<E>, handler: Consumer<E>): AutoCloseable = on(type, 0, handler)
+
+    /**
+     * [task] every game tick while this listener is running.
+     */
+    @AddonApi
+    fun onTick(task: Runnable): AutoCloseable = on(GameTickEvent::class.java) { task.run() }
+
+    /**
+     * Runs [task] once, [ticks] game ticks from now, unless this listener stops running first.
+     */
+    @AddonApi
+    fun after(ticks: Int, task: Runnable): AutoCloseable {
+        val job = eventListenerScope.launch {
+            waitTicks(ticks)
+            task.run()
+        }
+        return AutoCloseable { job.cancel() }
+    }
+
+    /**
+     * Runs [task] every [ticks] game ticks while this listener is running, the first time after [ticks].
+     */
+    @AddonApi
+    fun every(ticks: Int, task: Runnable): AutoCloseable {
+        val job = eventListenerScope.launch {
+            while (isActive) {
+                waitTicks(ticks)
+                task.run()
+            }
+        }
+        return AutoCloseable { job.cancel() }
+    }
 
     /**
      * Children [EventListener]

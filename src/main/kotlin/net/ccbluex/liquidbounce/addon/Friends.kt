@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.addon
 
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.minecraft.world.entity.Entity
 
+/**
+ * Friends are shared with every client module. A change fires
+ * [net.ccbluex.liquidbounce.event.events.FriendChangeEvent].
+ */
 object Friends {
 
     @JvmStatic
@@ -41,12 +43,5 @@ object Friends {
     @JvmStatic
     fun remove(name: String): Boolean = FriendManager.remove(name)
 
-    @JvmStatic
-    fun onChange(owner: EventListener, listener: Listener): AutoCloseable =
-        Events.subscribe(owner, FriendChangeEvent::class.java) { listener.onChange(it.name, it.added) }
-
-    fun interface Listener {
-        fun onChange(name: String, added: Boolean)
-    }
 
 }

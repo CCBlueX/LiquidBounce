@@ -19,15 +19,12 @@
 package net.ccbluex.liquidbounce.addon
 
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import java.util.function.Consumer
 
 /**
- * Event subscription without the Kotlin-only `handler<T> {}` DSL, so Java add-ons can listen too.
+ * Listening happens on the listener itself: `on(PacketEvent.class, handler)`, `onTick(task)`, `after(ticks, task)` and
+ * `every(ticks, task)` on any module, mode or add-on, or `handler<PacketEvent> {}` from Kotlin. This is the rest.
  */
 object Events {
 
@@ -36,29 +33,6 @@ object Events {
 
     /** Runs after everything else; the event is in its final state. */
     const val PRIORITY_LAST: Short = EventPriorityConvention.READ_FINAL_STATE
-
-    /**
-     * Calls [handler] for every [type] event while [owner] is running. Higher [priority] runs first.
-     * Close the result to stop listening; unregistering [owner] does the same.
-     */
-    @JvmStatic
-    @JvmOverloads
-    fun <E : Event> subscribe(
-        owner: EventListener,
-        type: Class<E>,
-        priority: Short = 0,
-        handler: Consumer<E>,
-    ): AutoCloseable {
-        val hook = EventManager.registerEventHook(type, EventHook(owner, priority, handler))
-        return AutoCloseable { EventManager.unregisterEventHook(type, hook) }
-    }
-
-    /**
-     * [task] every game tick while [owner] is running.
-     */
-    @JvmStatic
-    fun onTick(owner: EventListener, task: Runnable): AutoCloseable =
-        subscribe(owner, GameTickEvent::class.java) { task.run() }
 
     @JvmStatic
     fun <E : Event> post(event: E): E = EventManager.callEvent(event)
