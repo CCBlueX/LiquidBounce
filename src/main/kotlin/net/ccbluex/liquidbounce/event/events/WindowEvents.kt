@@ -23,6 +23,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screens.Screen
 
@@ -61,6 +62,7 @@ class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 @Tag("mouseCursor")
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
+@AddonApi
 @Tag("keyboardKey")
 class KeyboardKeyEvent(
     val key: InputConstants.Key,

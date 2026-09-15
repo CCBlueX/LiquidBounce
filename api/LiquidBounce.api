@@ -274,6 +274,136 @@ public final class net/ccbluex/liquidbounce/event/EventListener$DefaultImpls {
 	public static fun unregister (Lnet/ccbluex/liquidbounce/event/EventListener;)V
 }
 
+public final class net/ccbluex/liquidbounce/event/EventState : java/lang/Enum {
+	public static final field POST Lnet/ccbluex/liquidbounce/event/EventState;
+	public static final field PRE Lnet/ccbluex/liquidbounce/event/EventState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getStateName ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/event/EventState;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/event/EventState;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/AttackEntityEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+	public fun <init> (Lnet/minecraft/world/entity/Entity;)V
+	public final fun getEntity ()Lnet/minecraft/world/entity/Entity;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/ChatReceiveEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
+	public fun <init> (Ljava/lang/String;Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;Ljava/util/function/UnaryOperator;)V
+	public final fun getApplyChatDecoration ()Ljava/util/function/UnaryOperator;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
+	public final fun getTextData ()Lnet/minecraft/network/chat/Component;
+	public final fun getType ()Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field CHAT_MESSAGE Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+	public static final field DISGUISED_CHAT_MESSAGE Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+	public static final field GAME_MESSAGE Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/event/events/ChatReceiveEvent$ChatType;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/ChatSendEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getMessage ()Ljava/lang/String;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/DisconnectEvent : net/ccbluex/liquidbounce/event/Event, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/event/events/DisconnectEvent;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/FriendChangeEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun getAdded ()Z
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/GameTickEvent : net/ccbluex/liquidbounce/event/Event {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/event/events/GameTickEvent;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/KeyboardKeyEvent : net/ccbluex/liquidbounce/event/Event, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
+	public fun <init> (Lcom/mojang/blaze3d/platform/InputConstants$Key;IIIILnet/minecraft/client/gui/screens/Screen;)V
+	public synthetic fun <init> (Lcom/mojang/blaze3d/platform/InputConstants$Key;IIIILnet/minecraft/client/gui/screens/Screen;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAction ()I
+	public final fun getKey ()Lcom/mojang/blaze3d/platform/InputConstants$Key;
+	public final fun getKeyCode ()I
+	public final fun getMods ()I
+	public final fun getScanCode ()I
+	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
+	public final fun isPressed ()Z
+	public final fun isReleased ()Z
+	public final fun isRepeat ()Z
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PacketEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;Lnet/minecraft/network/protocol/Packet;Z)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;Lnet/minecraft/network/protocol/Packet;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getOrigin ()Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;
+	public final fun getOriginal ()Z
+	public final fun getPacket ()Lnet/minecraft/network/protocol/Packet;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PlayerMoveEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V
+	public final fun getMovement ()Lnet/minecraft/world/phys/Vec3;
+	public final fun getType ()Lnet/minecraft/world/entity/MoverType;
+	public final fun setMovement (Lnet/minecraft/world/phys/Vec3;)V
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PlayerNetworkMovementTickEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+	public fun <init> (Lnet/ccbluex/liquidbounce/event/EventState;DDDZ)V
+	public final fun getGround ()Z
+	public final fun getState ()Lnet/ccbluex/liquidbounce/event/EventState;
+	public final fun getX ()D
+	public final fun getY ()D
+	public final fun getZ ()D
+	public final fun setGround (Z)V
+	public final fun setX (D)V
+	public final fun setY (D)V
+	public final fun setZ (D)V
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PlayerPostTickEvent : net/ccbluex/liquidbounce/event/Event {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/event/events/PlayerPostTickEvent;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PlayerTickEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+	public fun <init> ()V
+}
+
+public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
+	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/TransferOrigin : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field INCOMING Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;
+	public static final field OUTGOING Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/event/events/TransferOrigin;
+}
+
+public final class net/ccbluex/liquidbounce/event/events/WorldChangeEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Lnet/minecraft/client/multiplayer/ClientLevel;)V
+	public final fun getWorld ()Lnet/minecraft/client/multiplayer/ClientLevel;
+}
+
 public final class net/ccbluex/liquidbounce/features/addon/AddonMetadata {
 	public fun <init> (Lnet/fabricmc/loader/api/ModContainer;)V
 	public final fun findPath (Ljava/lang/String;)Ljava/nio/file/Path;

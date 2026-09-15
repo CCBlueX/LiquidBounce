@@ -58,6 +58,7 @@ abstract class CancellableEvent : Event() {
 /**
  * MixinEntityRenderState of event. Might be PRE or POST.
  */
+@AddonApi
 enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }

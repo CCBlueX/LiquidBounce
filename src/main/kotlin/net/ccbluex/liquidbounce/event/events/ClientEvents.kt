@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
@@ -83,6 +84,7 @@ class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled
 @Tag("refreshArrayList")
 object RefreshArrayListEvent : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("friendChange")
 class FriendChangeEvent(val name: String, val added: Boolean) : Event()
 
