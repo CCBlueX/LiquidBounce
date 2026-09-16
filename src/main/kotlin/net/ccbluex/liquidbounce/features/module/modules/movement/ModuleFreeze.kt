@@ -49,6 +49,8 @@ import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -140,7 +142,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         missedOutTick++
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "MagicNumber")
     val renderHandler = handler<WorldRenderEvent> { event ->
         if (!balance || missedOutTick < 0 || warpInProgress) {
             return@handler
@@ -324,29 +326,110 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private object TickMovement : Mode("TickMovement") {
 
         private val interval by intRange("Interval", 20..20, 1..200, "ticks")
+        private val groundSpoof by boolean("GroundSpoof", true)
         private var ticksUntilMovement = 0
+
+        // Simulates falling on the server side while movement is frozen
+        private var serverY: Double = 0.0
+        private var isFalling = false
+        private var targetGroundY: Double = 0.0
+        private val gravity = 0.08
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
         override fun enable() {
             ticksUntilMovement = interval.random()
+            serverY = player.y
+            isFalling = false
+            targetGroundY = getGroundY(player.x, player.y, player.z)
         }
 
         override fun disable() {
             ticksUntilMovement = 0
+            isFalling = false
         }
 
         @Suppress("unused")
         private val movementTickHandler = handler<PlayerMovementTickEvent> { event ->
             if (--ticksUntilMovement <= 0) {
                 ticksUntilMovement = interval.random()
+                if (isFalling && serverY <= targetGroundY) {
+                    isFalling = false
+                }
                 return@handler
             }
 
             event.cancelEvent()
+
+            if (groundSpoof) {
+                if (!isFalling && !player.onGround()) {
+                    isFalling = true
+                    serverY = player.y
+                    targetGroundY = getGroundY(player.x, player.y, player.z)
+                }
+
+                if (isFalling) {
+                    serverY -= gravity
+                    if (serverY <= targetGroundY) {
+                        serverY = targetGroundY
+                        isFalling = false
+                    }
+
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.PosRot(
+                            player.x,
+                            serverY,
+                            player.z,
+                            player.yRot,
+                            player.xRot,
+                            !isFalling,
+                            player.horizontalCollision
+                        )
+                    )
+                } else {
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.PosRot(
+                            player.x,
+                            serverY,
+                            player.z,
+                            player.yRot,
+                            player.xRot,
+                            true,
+                            player.horizontalCollision
+                        )
+                    )
+                }
+            }
         }
 
+        private fun getGroundY(x: Double, y: Double, z: Double): Double {
+            val blockPos = BlockPos(
+                Math.floor(x).toInt(),
+                Math.floor(y - 0.01).toInt(),
+                Math.floor(z).toInt()
+            )
+            val blockState = player.level().getBlockState(blockPos)
+            if (!blockState.isAir) {
+                return blockPos.y.toDouble() + blockState.getCollisionShape(player.level(), blockPos).max(Direction.Axis.Y)
+            }
+            for (dy in 1..10) {
+                val below = blockPos.below(dy)
+                val state = player.level().getBlockState(below)
+                if (!state.isAir) {
+                    return below.y.toDouble() + state.getCollisionShape(player.level(), below).max(Direction.Axis.Y)
+                }
+            }
+            return y - 10.0
+        }
+
+        private val packetHandler = handler<PacketEvent> { event ->
+            if (event.packet is ClientboundPlayerPositionPacket) {
+                serverY = player.y
+                isFalling = false
+                targetGroundY = getGroundY(player.x, player.y, player.z)
+            }
+        }
     }
 
 }
