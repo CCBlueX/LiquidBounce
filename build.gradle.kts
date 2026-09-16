@@ -101,21 +101,21 @@ dependencies {
     api(libs.fabric.kotlin)
 
     // Mod menu
-    compileOnly(libs.modmenu)
+    api(libs.modmenu)
 
     // Recommended mods (on IDE)
-    compileOnly(libs.sodium)
-    compileOnly(libs.lithium)
-    compileOnly(libs.immediatelyFast)
-    compileOnly(libs.iris)
+    api(libs.sodium)
+    api(libs.lithium)
+    api(libs.immediatelyFast)
+    api(libs.iris)
 
     // ViaFabricPlus
-    compileOnly(libs.vfp.api)
-    compileOnly(libs.vfp)
+    api(libs.vfp.api)
+    api(libs.vfp)
 
     // Exploit Preventer
-    compileOnly(libs.exploitPreventer.api)
-    compileOnly(libs.exploitPreventer)
+    api(libs.exploitPreventer.api)
+    api(libs.exploitPreventer)
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
