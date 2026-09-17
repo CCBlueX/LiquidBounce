@@ -70,6 +70,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     private val expireTime by int("Expires", 5, 1..30, "secs")
+    private val titleFilter by regex("TitleFilter", Regex(".*"))
 
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -215,7 +216,9 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
          */
         val textList = mutableListOf<Component>()
 
-        val debuggedOwners = debugParameters.keys.groupBy { it.owner }
+        val debuggedOwners = debugParameters.keys
+            .filter { titleFilter.matches(it.owner.debugDisplayName.string) }
+            .groupBy { it.owner }
 
         val currentTime = System.currentTimeMillis()
 

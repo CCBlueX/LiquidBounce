@@ -114,8 +114,6 @@ import net.minecraft.world.level.block.RepeaterBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
 import net.minecraft.world.level.block.ShelfMushroomBlock
 import net.minecraft.world.level.block.ShulkerBoxBlock
-import net.minecraft.world.level.block.SlabBlock
-import net.minecraft.world.level.block.StairBlock
 import net.minecraft.world.level.block.StonecutterBlock
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SweetBerryBushBlock
@@ -140,14 +138,6 @@ fun Vec3i.toBlockPos() = BlockPos(this.x, this.y, this.z)
 
 @AddonApi
 val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
-
-@Deprecated(
-    "Use BlockPos.state or BlockPos.stateOrEmpty instead",
-    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"]),
-    level = DeprecationLevel.ERROR,
-)
-@JvmName("getState-deprecated")
-inline fun BlockPos.getState() = state
 
 @AddonApi
 val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()

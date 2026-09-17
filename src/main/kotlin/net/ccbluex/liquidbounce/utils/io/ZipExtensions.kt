@@ -56,7 +56,7 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
             throw SecurityException("Entry is outside of the target directory: ${entry.name}")
         }
 
-        newFile.outputStream().buffered().use { ais.copyTo(it) }
+        newFile.outputStream().buffered().use { ais.transferTo(it) }
     }
 }
 
@@ -80,7 +80,7 @@ fun Collection<File>.createZipArchive(file: File) {
             if (!item.isFile) continue
 
             aos.putArchiveEntry(ZipArchiveEntry(item, item.name))
-            item.inputStream().buffered().use { it.transferTo(aos) }
+            aos.write(item)
             aos.closeArchiveEntry()
         }
 
