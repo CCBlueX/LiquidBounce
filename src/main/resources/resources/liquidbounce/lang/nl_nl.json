@@ -263,6 +263,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "Configuratie voor %s toegepast.",
   "liquidbounce.module.autoConfig.messages.loading": "Laadt configuratie voor %s...",
   "liquidbounce.module.autoCrafter.description": "Maakt automatisch items met het receptenboek.",
+  "liquidbounce.module.autoDeposit.description": "Depositeert automatisch geconfigureerde items uit de inventaris van de speler in containers.",
   "liquidbounce.module.autoDisable.description": "Schakelt bepaalde modules automatisch uit in bepaalde situaties.",
   "liquidbounce.module.autoDodge.description": "Ontwijkt automatisch inkomende projectielen zoals pijlen.",
   "liquidbounce.module.autoF5.description": "Schakelt automatisch over naar F5-perspectief wanneer je je inventaris of een kist opent.",

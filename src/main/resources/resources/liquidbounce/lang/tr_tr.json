@@ -244,6 +244,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "%s için yapılandırma uygulandı.",
   "liquidbounce.module.autoConfig.messages.loading": "%s için yapılandırma yükleniyor...",
   "liquidbounce.module.autoCrafter.description": "Tarif Kitabı'nı kullanarak eşyaları otomatik olarak üretir.",
+  "liquidbounce.module.autoDeposit.description": "Yapılandırılan eşyaları oyuncu envanterinden otomatik olarak kaplara yatırır.",
   "liquidbounce.module.autoDisable.description": "Bazı modülleri otomatik olarak kapatır.",
   "liquidbounce.module.autoDodge.description": "Ok gibi mermilerden otomatik olarak kaçar.",
   "liquidbounce.module.autoF5.description": "Envanter veya sandık açıldığında otomatik olarak F5 modunu açar.",

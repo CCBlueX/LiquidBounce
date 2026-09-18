@@ -429,6 +429,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "已應用針對 %s 的設定。",
   "liquidbounce.module.autoConfig.messages.loading": "為 %s 載入設定...",
   "liquidbounce.module.autoCrafter.description": "使用配方書自動合成物品。",
+  "liquidbounce.module.autoDeposit.description": "自動將設定的物品從玩家背包存入容器。",
   "liquidbounce.module.autoDisable.description": "自動關閉特定模組。",
   "liquidbounce.module.autoDodge.description": "自動躲避箭矢等彈射物。",
   "liquidbounce.module.autoF5.description": "打開背包或箱子時自動切換到第三人稱視角(F5模式)。",
