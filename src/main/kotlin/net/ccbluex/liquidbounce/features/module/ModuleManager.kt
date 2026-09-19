@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
@@ -180,6 +179,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAn
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
+import net.ccbluex.liquidbounce.features.module.modules.player.autodeposit.ModuleAutoDeposit
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
@@ -606,6 +606,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleBlink,
             ModuleChestCleaner,
             ModuleChestStealer,
+            ModuleAutoDeposit,
             ModuleEagle,
             ModuleFastExp,
             ModuleFastUse,

@@ -126,6 +126,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
+import java.util.function.BiPredicate
 import java.util.function.Predicate
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -210,14 +211,14 @@ fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
 /**
  * Scan blocks around the position in a cuboid with filtering.
  */
-inline fun Vec3.searchBlocksInCuboid(
+fun Vec3.searchBlocksInCuboid(
     radius: Float,
-    crossinline filter: (BlockPos, BlockState) -> Boolean
+    filter: BiPredicate<BlockPos, BlockState>,
 ): Sequence<Pair<BlockPos, BlockState>> =
     searchBlocksInCuboid(radius).asSequence().mapNotNull {
         val state = it.state ?: return@mapNotNull null
 
-        if (filter(it, state)) {
+        if (filter.test(it, state)) {
             it.immutable() to state
         } else {
             null
@@ -231,11 +232,11 @@ inline fun Vec3.searchBlocksInCuboid(
  *
  * @return pairs of [BlockPos] and its [BlockState], sorted by distance to the center
  */
-inline fun Vec3.searchBlocksInRangeSorted(
+fun Vec3.searchBlocksInRangeSorted(
     range: Float,
     shapeGetter: ClipContext.ShapeGetter = ClipContext.Block.OUTLINE,
     collisionContext: CollisionContext = CollisionContext.of(player),
-    crossinline filter: (BlockPos, BlockState) -> Boolean,
+    filter: BiPredicate<BlockPos, BlockState>,
 ): List<Pair<BlockPos, BlockState>> =
     searchBlocksInCuboid(range + 1, filter)
         .weightedFilterSortedByAtMost(range.sq().toDouble()) { (pos, state) ->

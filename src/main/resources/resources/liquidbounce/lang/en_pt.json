@@ -235,6 +235,7 @@
   "liquidbounce.module.autoClicker.description": "Clicks automatically when holding down a mouse button.",
   "liquidbounce.module.autoConfig.description": "Autwomaticawwy appwies teh cowwect config fow teh sewwew u awe pwaying on",
   "liquidbounce.module.autoCrafter.description": "Autwomaticawwy cwafts items using teh Wecipe Book",
+  "liquidbounce.module.autoDeposit.description": "Automateecawwy depwosits configuwed itews fwom teh pwayew's inventowy into containews ^w^",
   "liquidbounce.module.autoDisable.description": "Autwomaticawwy disabwes cewtain mwoduwes",
   "liquidbounce.module.autoDodge.description": "Autwomaticawwy dodges pwjectiwes wike awrows",
   "liquidbounce.module.autoF5.description": "Autwomaticawwy enabwes F5 mode when opening teh inventowy ow a chest",

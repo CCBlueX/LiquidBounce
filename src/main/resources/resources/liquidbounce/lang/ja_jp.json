@@ -234,6 +234,7 @@
   "liquidbounce.module.autoClicker.description": "マウスボタンを押したままにすると、自動的にクリックします。",
   "liquidbounce.module.autoConfig.description": "プレイしているサーバーに適した設定を自動的に適用します。",
   "liquidbounce.module.autoCrafter.description": "レシピブックを使ってアイテムを自動的にクラフトします。",
+  "liquidbounce.module.autoDeposit.description": "設定したアイテムをプレイヤーのインベントリからコンテナへ自動的に預けます。",
   "liquidbounce.module.autoDisable.description": "特定のモジュールを自動的に無効にします。",
   "liquidbounce.module.autoDodge.description": "矢のような投射物を自動的に回避します。",
   "liquidbounce.module.autoF5.description": "インベントリやチェストを開くと、自動的にF5モードが有効になります。",
