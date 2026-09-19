@@ -187,6 +187,7 @@ tasks.processResources {
     val minLoaderVersion = libs.versions.fabric.loaderMin
     val fabricKotlinVersion = libs.versions.fabric.kotlin
     val viafabricplusVersion = libs.versions.viafabricplus
+    val viafabricplusMinVersion = libs.versions.viafabricplusMin
     val isGitHubCi = providers.environmentVariable("GITHUB_ACTIONS")
         .map { it.toBoolean() }
         .orElse(false)
@@ -210,6 +211,7 @@ tasks.processResources {
     inputs.property("min_loader_version", minLoaderVersion)
     inputs.property("fabric_kotlin_version", fabricKotlinVersion)
     inputs.property("viafabricplus_version", viafabricplusVersion)
+    inputs.property("viafabricplus_min_version", viafabricplusMinVersion)
     inputs.property("contributors", contributors)
 
     filesMatching("fabric.mod.json") {
@@ -222,7 +224,8 @@ tasks.processResources {
                 "min_loader_version" to minLoaderVersion.get(),
                 "contributors" to contributors.get(),
                 "fabric_kotlin_version" to fabricKotlinVersion.get(),
-                "viafabricplus_version" to viafabricplusVersion.get()
+                "viafabricplus_version" to viafabricplusVersion.get(),
+                "viafabricplus_min_version" to viafabricplusMinVersion.get()
             )
         )
     }
@@ -295,6 +298,9 @@ tasks.test {
         arrayOf(
             // ImmediatelyFast's platform service requires a fully initialized Fabric game process.
             "immediatelyfast",
+            // ViaFabricPlus mixins call its API, which only exists once the mod entrypoint ran.
+            "viafabricplus",
+            "viafabricplus-api",
             // Avoid loading Fabric Language Kotlin's nested Kotlin runtime alongside Gradle's test runtime.
             "org_jetbrains_kotlin_kotlin-reflect",
             "org_jetbrains_kotlin_kotlin-stdlib",

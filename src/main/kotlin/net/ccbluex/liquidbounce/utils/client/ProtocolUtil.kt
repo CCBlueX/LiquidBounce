@@ -18,26 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import com.viaversion.viafabricplus.ViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.vfp.VfpApi
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.SharedConstants
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 // Only runs once
-val usesViaFabricPlus = runCatching {
-    Class.forName("com.viaversion.viafabricplus.ViaFabricPlus")
-
-    // Register ViaFabricPlus protocol version change callback
-    ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
-        // Update the window title
+val usesViaFabricPlus = FabricLoader.getInstance().isModLoaded("viafabricplus") && runCatching {
+    VfpApi.INSTANCE.addChangeProtocolVersionListener { _, _ ->
         mc.execute {
             mc.updateTitle()
         }
     }
 
     true
+}.onFailure {
+    logger.error("Failed to hook ViaFabricPlus", it)
 }.getOrDefault(false)
 
 /**

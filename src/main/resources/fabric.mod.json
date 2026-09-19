@@ -40,7 +40,7 @@
     "viafabricplus": ">=${viafabricplus_version}"
   },
   "breaks": {
-    "viafabricplus": "<${viafabricplus_version}"
+    "viafabricplus": "<${viafabricplus_min_version}"
   },
   "accessWidener": "liquidbounce.accesswidener"
 }
