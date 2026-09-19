@@ -129,7 +129,8 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
             return@tickHandler
         }
 
-        val slot = ModuleAutoDeposit.matchingSlots(inventory = false).firstOrNull() as? HotbarItemSlot ?: return@tickHandler
+        val slot = ModuleAutoDeposit.matchingSlots(inventory = false)
+            .firstOrNull() as? HotbarItemSlot ?: return@tickHandler
 
         val rayTraceResult = if (rotateToTarget) {
             val targetBlockPos = currentTargetBlock ?: return@tickHandler
