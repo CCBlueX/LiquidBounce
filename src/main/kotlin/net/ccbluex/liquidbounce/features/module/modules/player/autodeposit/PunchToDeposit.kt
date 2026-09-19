@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autostore
+package net.ccbluex.liquidbounce.features.module.modules.player.autodeposit
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -48,7 +48,7 @@ import java.util.function.BooleanSupplier
 /**
  * (Server): When enabled allows you to punch a chest to deposit a stack of items.
  */
-internal object PunchToDeposit : ToggleableValueGroup(AutoDeposit, "PunchToDeposit", false) {
+internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchToDeposit", false) {
 
     private val interactionRange by float("Range", 3F, 1F..6F)
     private val wallInteractionRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -107,7 +107,7 @@ internal object PunchToDeposit : ToggleableValueGroup(AutoDeposit, "PunchToDepos
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        if (!rotateToTarget || AutoDeposit.matchingSlots(inventory = false).isEmpty()) {
+        if (!rotateToTarget || ModuleAutoDeposit.matchingSlots(inventory = false).isEmpty()) {
             return@handler
         }
 
@@ -119,18 +119,17 @@ internal object PunchToDeposit : ToggleableValueGroup(AutoDeposit, "PunchToDepos
                 state.block in validStorageBlocks
             },
             rotations,
-            AutoDeposit
+            ModuleAutoDeposit
         )
     }
 
     @Suppress("unused")
-    private val clickTask = tickHandler {
-        // A container is already open (being processed by ModuleAutoStore)
+    private val tickHandler = tickHandler {
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
-        val slot = AutoDeposit.matchingSlots(inventory = false).firstOrNull() as? HotbarItemSlot ?: return@tickHandler
+        val slot = ModuleAutoDeposit.matchingSlots(inventory = false).firstOrNull() as? HotbarItemSlot ?: return@tickHandler
 
         val rayTraceResult = if (rotateToTarget) {
             val targetBlockPos = currentTargetBlock ?: return@tickHandler

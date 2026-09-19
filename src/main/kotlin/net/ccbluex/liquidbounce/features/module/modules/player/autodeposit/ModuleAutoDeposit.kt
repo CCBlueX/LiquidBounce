@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autostore
+package net.ccbluex.liquidbounce.features.module.modules.player.autodeposit
 
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,7 +41,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen
  *
  * Automatically deposits configured items from the player inventory into containers.
  */
-object AutoDeposit : ClientModule(
+object ModuleAutoDeposit : ClientModule(
     "AutoDeposit", ModuleCategories.PLAYER,
     aliases = listOf("AutoStore", "ContainerStorer")
 ) {

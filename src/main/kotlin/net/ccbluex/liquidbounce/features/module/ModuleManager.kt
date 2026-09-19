@@ -179,8 +179,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAn
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
+import net.ccbluex.liquidbounce.features.module.modules.player.autodeposit.ModuleAutoDeposit
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
-import net.ccbluex.liquidbounce.features.module.modules.player.autostore.AutoDeposit
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
@@ -606,7 +606,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleBlink,
             ModuleChestCleaner,
             ModuleChestStealer,
-            AutoDeposit,
+            ModuleAutoDeposit,
             ModuleEagle,
             ModuleFastExp,
             ModuleFastUse,
