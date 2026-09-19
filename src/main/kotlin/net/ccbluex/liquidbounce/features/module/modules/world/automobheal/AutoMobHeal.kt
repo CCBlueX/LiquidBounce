@@ -145,7 +145,7 @@ object AutoMobHeal : ClientModule(
 
             protected open fun foodOptions(entity: T): List<MobFoodOption> = emptyList()
 
-            final override fun findSlot(entity: T): HotbarItemSlot? {
+            override fun findSlot(entity: T): HotbarItemSlot? {
                 val missingHealth = (entity.maxHealth - entity.health).coerceAtLeast(0f)
                 val candidates = Slots.OffhandWithHotbar.mapNotNull { slot ->
                     val option = foodOptions(entity).firstOrNull {
@@ -228,6 +228,15 @@ object AutoMobHeal : ClientModule(
             "Wolf",
             Wolf::class.java,
         ) {
+            private object Armor : ToggleableValueGroup(this@WolfTarget, "Armor", false) {
+                val equip by boolean("Equip", false)
+                val repairThreshold by float("RepairThreshold", 87.5f, 1f..100f, "%")
+            }
+
+            init {
+                tree(Armor)
+            }
+
             private val options = listOf(
                 MobFoodOption(ItemTags.WOLF_FOOD, healAmount2xNutrition),
             )
@@ -235,7 +244,41 @@ object AutoMobHeal : ClientModule(
             override fun foodOptions(entity: Wolf): List<MobFoodOption> = options
 
             override fun shouldHeal(entity: Wolf, minHealthRatio: Float): Boolean {
-                return entity.isTame && super.shouldHeal(entity, minHealthRatio)
+                return entity.isTame &&
+                    (super.shouldHeal(entity, minHealthRatio) || needsArmorRepair(entity) || needsArmorEquip(entity))
+            }
+
+            override fun findSlot(entity: Wolf): HotbarItemSlot? {
+                if (needsArmorEquip(entity)) {
+                    Slots.OffhandWithHotbar.findClosestSlot(Items.WOLF_ARMOR)?.let { return it }
+                }
+
+                super.findSlot(entity)?.let { return it }
+
+                if (needsArmorRepair(entity)) {
+                    Slots.OffhandWithHotbar.findClosestSlot(Items.ARMADILLO_SCUTE)?.let { return it }
+                }
+
+                return null
+            }
+
+            private fun needsArmorRepair(entity: Wolf): Boolean {
+                if (!Armor.enabled || !entity.isOwnedBy(player) || !entity.isWearingBodyArmor) {
+                    return false
+                }
+
+                val armorItem = entity.bodyArmorItem
+                if (armorItem.isEmpty || armorItem.maxDamage <= 0) {
+                    return false
+                }
+
+                val remainingRatio = (armorItem.maxDamage - armorItem.damageValue).toFloat() / armorItem.maxDamage
+                return remainingRatio <= (Armor.repairThreshold / 100f).coerceIn(0f, 1f)
+            }
+
+            private fun needsArmorEquip(entity: Wolf): Boolean {
+                return Armor.enabled && Armor.equip && !entity.isBaby &&
+                    entity.isOwnedBy(player) && !entity.isWearingBodyArmor
             }
         }
 
