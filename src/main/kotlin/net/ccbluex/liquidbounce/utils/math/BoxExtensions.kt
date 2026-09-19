@@ -194,3 +194,42 @@ fun AABB.getFace(direction: Direction): AlignedFace {
         )
     }
 }
+
+/**
+ * Get visible sides from [eyes] **outside** the box.
+ * @return size in [0..3], 0=inside
+ */
+fun AABB.visibleSidesTo(eyes: Vec3): List<Direction> {
+    val faces = ArrayList<Direction>(3)
+
+    if (eyes.x < this.minX) {
+        faces.add(Direction.WEST)
+    } else if (eyes.x > this.maxX) {
+        faces.add(Direction.EAST)
+    }
+
+    if (eyes.y < this.minY) {
+        faces.add(Direction.DOWN)
+    } else if (eyes.y > this.maxY) {
+        faces.add(Direction.UP)
+    }
+
+    if (eyes.z < this.minZ) {
+        faces.add(Direction.NORTH)
+    } else if (eyes.z > this.maxZ) {
+        faces.add(Direction.SOUTH)
+    }
+
+    return faces
+}
+
+fun AABB.isSideVisible(direction: Direction, eyes: Vec3): Boolean {
+    return when (direction) {
+        Direction.WEST -> eyes.x < this.minX
+        Direction.EAST -> eyes.x > this.maxX
+        Direction.DOWN -> eyes.y < this.minY
+        Direction.UP -> eyes.y > this.maxY
+        Direction.NORTH -> eyes.z < this.minZ
+        Direction.SOUTH -> eyes.z > this.maxZ
+    }
+}

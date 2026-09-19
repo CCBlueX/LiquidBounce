@@ -303,6 +303,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "Конфиг для %s применён.",
   "liquidbounce.module.autoConfig.messages.loading": "Загрузка конфига для %s...",
   "liquidbounce.module.autoCrafter.description": "Автоматически создаёт предметы с помощью книги рецептов.",
+  "liquidbounce.module.autoDeposit.description": "Автоматически помещает настроенные предметы из инвентаря игрока в контейнеры.",
   "liquidbounce.module.autoDisable.description": "Автоматически отключает определенные модули.",
   "liquidbounce.module.autoDodge.description": "Автоматически уклоняется от снарядов, таких как стрелы.",
   "liquidbounce.module.autoF5.description": "Автоматически включает режим F5 при открытии инвентаря или сундука.",

@@ -310,6 +310,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "Konfiguration geladen für %s.",
   "liquidbounce.module.autoConfig.messages.loading": "Läd Konfiguration für %s...",
   "liquidbounce.module.autoCrafter.description": "Stellt automatisch Gegenstände mit dem Rezeptbuch her.",
+  "liquidbounce.module.autoDeposit.description": "Lagert konfigurierte Gegenstände automatisch aus dem Inventar des Spielers in Container ein.",
   "liquidbounce.module.autoDisable.description": "Deaktiviert bestimmte Module automatisch.",
   "liquidbounce.module.autoDodge.description": "Weicht Projektilen wie Pfeilen automatisch aus.",
   "liquidbounce.module.autoF5.description": "Aktiviert automatisch den F5-Modus beim Öffnen eines Inventars oder einer Truhe.",

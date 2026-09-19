@@ -422,6 +422,7 @@
   "liquidbounce.module.autoConfig.messages.loaded": "已应用针对 %s 的配置。",
   "liquidbounce.module.autoConfig.messages.loading": "为 %s 加载配置...",
   "liquidbounce.module.autoCrafter.description": "使用配方书自动合成物品。",
+  "liquidbounce.module.autoDeposit.description": "自动将配置的物品从玩家背包存入容器。",
   "liquidbounce.module.autoDisable.description": "自动关闭特定模块。",
   "liquidbounce.module.autoDodge.description": "自动躲避箭矢等弹射物。",
   "liquidbounce.module.autoF5.description": "打开背包或箱子时自动切换到第三人称视角(F5模式)。",

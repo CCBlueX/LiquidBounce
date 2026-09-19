@@ -258,6 +258,7 @@
   "liquidbounce.module.autoClicker.description": "Автоматично натискає, поки ви тримаєте кнопку натиснутою.",
   "liquidbounce.module.autoConfig.description": "Автоматично застосовує правильний конфіг для сервера, на якому ви граєте.",
   "liquidbounce.module.autoCrafter.description": "Автоматично створює предмети за допомогою Книги рецептів.",
+  "liquidbounce.module.autoDeposit.description": "Автоматично кладе налаштовані предмети з інвентаря гравця в контейнери.",
   "liquidbounce.module.autoDisable.description": "Автоматично вимикає певні модулі.",
   "liquidbounce.module.autoDodge.description": "Автоматично ухиляється від снарядів, таких як стріли.",
   "liquidbounce.module.autoF5.description": "Опис автоматичного F5",

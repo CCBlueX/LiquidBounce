@@ -242,6 +242,7 @@
   "liquidbounce.module.autoClicker.description": "Clica automaticamente quando segura um botão do mouse.",
   "liquidbounce.module.autoConfig.description": "Aplica automaticamente a config correta para o servidor em que você está jogando.",
   "liquidbounce.module.autoCrafter.description": "Cria itens automaticamente usando o Livro de Receitas.",
+  "liquidbounce.module.autoDeposit.description": "Deposita automaticamente itens configurados do inventário do jogador em contêineres.",
   "liquidbounce.module.autoDisable.description": "Desativa automaticamente certos módulos.",
   "liquidbounce.module.autoDodge.description": "Desvia automaticamente de projéteis como flechas.",
   "liquidbounce.module.autoF5.description": "Ativa automaticamente o modo F5 ao abrir o inventário ou um baú.",

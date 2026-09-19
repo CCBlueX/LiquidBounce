@@ -21,11 +21,13 @@
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
@@ -35,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.firstHit
@@ -89,6 +92,46 @@ fun raytraceBlockRotation(
             Rotation.lookingAt(point = pos.center, from = eyes)
         ),
     )
+}
+
+/**
+ * Aims at the first block from [candidates] whose face is reachable within the given ranges and
+ * returns its position, or null if none is reachable. Skips setting the rotation target when
+ * [rotate] is false, e.g. when another module owns the rotation.
+ */
+fun selectBlockTarget(
+    eyePosition: Vec3,
+    range: Float,
+    wallsRange: Float,
+    candidates: Iterable<Pair<BlockPos, BlockState>>,
+    valueGroup: RotationsValueGroup,
+    provider: ClientModule,
+    considerInventory: Boolean = true,
+    rotate: Boolean = true,
+): BlockPos? {
+    for ((blockPos, state) in candidates) {
+        val (rotation, _) = raytraceBlockRotation(
+            eyePosition,
+            blockPos,
+            state,
+            range = range.toDouble(),
+            wallsRange = wallsRange.toDouble()
+        ) ?: continue
+
+        if (rotate) {
+            RotationManager.setRotationTarget(
+                rotation,
+                considerInventory = considerInventory,
+                valueGroup = valueGroup,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider
+            )
+        }
+
+        return blockPos
+    }
+
+    return null
 }
 
 /**
