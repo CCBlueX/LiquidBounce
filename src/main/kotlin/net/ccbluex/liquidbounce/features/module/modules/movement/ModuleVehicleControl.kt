@@ -112,22 +112,12 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
             else -> 0.0
         }
 
-        val spearDashVelocity =
-            if (ModuleSpearKill.enabled) {
-                val dashSpeed = ModuleSpearKill.currentAttackVelocity
-                if (dashSpeed != 0.0) {
-                    ModuleSpearKill.currentAttackDirection.scale(dashSpeed)
-                } else {
-                    null
-                }
-            } else {
-                null
-            }
-
         // Vehicle control velocity
         val input = DirectionalInput(player.input)
         val movementYaw = getMovementDirectionOfInput(vehicle.yRot, input)
-        vehicle.deltaMovement = spearDashVelocity
+        vehicle.deltaMovement = ModuleSpearKill
+            .takeIf { it.enabled }
+            ?.currentChargeAttackMovement
             ?: vehicle.deltaMovement
                 .copy(y = verticalSpeed)
                 .withStrafe(yaw = movementYaw, speed = horizontalSpeed)
