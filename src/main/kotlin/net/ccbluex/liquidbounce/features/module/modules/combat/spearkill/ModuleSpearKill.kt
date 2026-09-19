@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.spearkill
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -29,18 +29,13 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
-import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.item.component.KineticWeapon
-import net.minecraft.world.level.ClipContext
-import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 
@@ -88,37 +83,6 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         attackMovements.clear()
     }
 
-    private fun findTarget(): Pair<LivingEntity, Double>? {
-        val eye = player.eyePosition
-        val lookEnd = eye.add(player.lookAngle.scale(maxTargetDistance.toDouble()))
-        var best: Pair<LivingEntity, Double>? = null
-        var bestDist = Double.MAX_VALUE
-
-        for (entity in world.getEntitiesOfClass(
-            LivingEntity::class.java,
-            player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(player.bbWidth / 2.0)
-        ) { it !== player && it.isAlive && it.isWithinWorldBorder && it.boundingBox.clip(eye, lookEnd).isPresent }) {
-
-            val hitPosition = entity.boundingBox.clip(eye, lookEnd).orElse(null) ?: continue
-            val attackRange = player.getAttackRangeWith(player.useItem)
-            if (!hasLineOfSight(eye, hitPosition)) continue
-
-            val distanceToTarget = hitPosition.distanceTo(eye)
-            val distanceToDamage = (distanceToTarget - attackRange.effectiveMaxRange(player)).coerceAtLeast(0.0)
-            if (distanceToDamage <= 0.0) continue
-
-            val distSq = distanceToDamage * distanceToDamage
-            if (distSq >= bestDist) continue
-
-            val hit = traceFromPlayer(range = distanceToDamage, block = ClipContext.Block.COLLIDER)
-            if (hit.type == HitResult.Type.MISS || hit.location.distanceTo(eye) >= distanceToDamage) {
-                best = entity to distanceToDamage
-                bestDist = distSq
-            }
-        }
-        return best
-    }
-
     private fun createAttackMovement(target: LivingEntity, distance: Double) {
         val ticks = ceil(distance / maxAllowedSpeed).toInt().coerceAtLeast(1)
         val velocity = distance / ticks
@@ -144,7 +108,7 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
             return@handler
         }
 
-        val target = if (Preview.enabled) findTarget() else null
+        val target = if (Preview.enabled) SpearKillTargetFinder.findTarget(maxTargetDistance) else null
         previewTarget = target?.first
 
         val spear = player.useItem.get(DataComponents.KINETIC_WEAPON) ?: run {
@@ -170,7 +134,7 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
 
         if (!spear.isChargeAttackActive || !mc.options.keyAttack.isDown) return@handler
 
-        val (entity, distance) = target ?: findTarget() ?: return@handler
+        val (entity, distance) = target ?: SpearKillTargetFinder.findTarget(maxTargetDistance) ?: return@handler
         previewTarget = entity
         createAttackMovement(entity, distance)
     }
