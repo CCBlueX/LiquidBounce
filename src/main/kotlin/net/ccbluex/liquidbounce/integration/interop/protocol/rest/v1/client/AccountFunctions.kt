@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -48,35 +49,52 @@ private fun Route.getAccounts() = get {
 
         accounts.add(JsonObject().apply {
             addProperty("id", i)
-            addProperty("username", profile.username)
-            addProperty("uuid", profile.uuid.toString())
-            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+            addProperty("username", profile.name)
+            addProperty("uuid", profile.id.toString())
+            addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
             add("bans", interopGson.toJsonTree(account.bans))
-            addProperty("type", account.type.commonName)
+            addProperty("type", account.service.tag)
             addProperty("favorite", account.favorite)
         })
     }
     call.respond(accounts)
 }
 
-// POST /api/v1/client/accounts/new/microsoft
-private fun Route.postNewMicrosoftAccount() = post {
-    AccountManager.newMicrosoftAccount {
+// POST /api/v1/client/accounts/new/microsoft/device-code
+private fun Route.postNewMicrosoftAccount() = post("/device-code") {
+    AccountManager.newMicrosoftAccountViaDeviceCode {
         browseUrl(it)
         EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/new/microsoft/clipboard
-private fun Route.postClipboardMicrosoftAccount() = post("/clipboard") {
-    AccountManager.newMicrosoftAccount {
+// POST /api/v1/client/accounts/new/microsoft/device-code/clipboard
+private fun Route.postClipboardMicrosoftAccount() = post("/device-code/clipboard") {
+    AccountManager.newMicrosoftAccountViaDeviceCode {
         mc.execute {
             mc.keyboardHandler.clipboard = it
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
+}
+
+// POST /api/v1/client/accounts/new/microsoft/webview
+private fun Route.postWebViewMicrosoftAccount() = post("/webview") {
+    AccountManager.newMicrosoftAccountViaWebView()
+    EventManager.callEvent(AccountManagerMessageEvent("Opened Microsoft sign-in window"))
+    call.respond(HttpStatusCode.NoContent)
+}
+
+// POST /api/v1/client/accounts/new/microsoft/credentials
+private fun Route.postCredentialsMicrosoftAccount() = post("/credentials") {
+    data class AccountForm(val email: String, val password: String)
+
+    val accountForm = call.receive<AccountForm>()
+
+    AccountManager.newMicrosoftAccountViaCredentials(accountForm.email, accountForm.password)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/cracked
@@ -86,7 +104,7 @@ private fun Route.postNewCrackedAccount() = post("/cracked") {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/session
@@ -96,7 +114,7 @@ private fun Route.postNewSessionAccount() = post("/session") {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/altening
@@ -105,7 +123,7 @@ private fun Route.postNewAlteningAccount() = post {
 
     val accountForm = call.receive<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/altening/generate
@@ -115,7 +133,7 @@ private fun Route.postGenerateAlteningAccount() = post("/generate") {
     val accountForm = call.receive<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/swap
@@ -125,7 +143,7 @@ private fun Route.postSwapAccounts() = post("/swap") {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/order
@@ -135,7 +153,7 @@ private fun Route.postOrderAccounts() = post("/order") {
     val accountOrderRequest = call.receive<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/account/login
@@ -145,7 +163,7 @@ private fun Route.postLoginAccount() = post {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/account/login/cracked
@@ -155,7 +173,7 @@ private fun Route.postLoginCrackedAccount() = post("/cracked") {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/account/login/session
@@ -165,7 +183,7 @@ private fun Route.postLoginSessionAccount() = post("/session") {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/account/restore
@@ -181,7 +199,7 @@ private fun Route.putFavoriteAccount() = put {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/account/favorite
@@ -191,7 +209,7 @@ private fun Route.deleteFavoriteAccount() = delete {
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/account
@@ -205,11 +223,11 @@ private fun Route.deleteAccount() = delete {
         addProperty("id", accountForm.id)
 
         val profile = account.profile ?: return@apply
-        addProperty("username", profile.username)
-        addProperty("uuid", profile.uuid.toString())
-        addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+        addProperty("username", profile.name)
+        addProperty("uuid", profile.id.toString())
+        addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
 
-        addProperty("type", account.type.commonName)
+        addProperty("type", account.service.tag)
     })
 }
 
@@ -227,6 +245,8 @@ internal fun Route.accountRoutes() {
             route("/microsoft") {
                 postNewMicrosoftAccount()
                 postClipboardMicrosoftAccount()
+                postWebViewMicrosoftAccount()
+                postCredentialsMicrosoftAccount()
             }
             postNewCrackedAccount()
             postNewSessionAccount()

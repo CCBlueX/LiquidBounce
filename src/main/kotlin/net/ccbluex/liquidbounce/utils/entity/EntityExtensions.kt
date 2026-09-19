@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -176,6 +177,7 @@ val Entity.netherPosition: Vec3
         Vec3(x / 8.0, y, z / 8.0)
     }
 
+@AddonApi
 val LocalPlayer.moving
     get() = input.moveVector != Vec2.ZERO
 
@@ -345,9 +347,12 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = Dire
     return actualYaw
 }
 
+@AddonApi
 inline val Entity.horizontalSpeed: Double
     get() = deltaMovement.horizontalDistance()
 
+@AddonApi
+@JvmOverloads
 fun Vec3.withStrafe(
     speed: Double = horizontalDistance(),
     strength: Double = 1.0,
@@ -378,6 +383,16 @@ val Entity.rotation: Rotation
 
 val LocalPlayer.lastRotation: Rotation
     get() = Rotation(this.yRotLast, this.xRotLast, true)
+
+/**
+ * Check if the entity is inside the world border.
+ *
+ * Mirrors the server-side attack/interact border check.
+ *
+ * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleAttack
+ */
+val Entity.isWithinWorldBorder: Boolean
+    get() = level().worldBorder.isWithinBounds(blockPosition())
 
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())

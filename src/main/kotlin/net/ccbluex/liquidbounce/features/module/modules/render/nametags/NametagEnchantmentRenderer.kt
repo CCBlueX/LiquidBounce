@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.collection.LruCache
 import net.ccbluex.liquidbounce.utils.kotlin.mapString
@@ -36,6 +37,7 @@ import net.minecraft.tags.EnchantmentTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.EnchantmentHelper
+import kotlin.jvm.optionals.getOrNull
 
 private object EnchantmentDisplayHelper {
     private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(64)
@@ -117,6 +119,8 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
     private val scale by float("Scale", 0.8f, 0.25f..4f)
     private val maxCountPerItem by int("MaxCountPerItem", 4, 1..16)
     private val backgroundRadius by float("BackgroundRadius", 1.0f, 0f..8f)
+    private val enchantments by enchantments("Enchantments", sortedSetOf())
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
     private const val ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()
     private const val ITEM_CENTER_X = ITEM_SIZE * 0.5f
@@ -174,7 +178,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         for (itemEnchantment in EnchantmentHelper.getEnchantmentsForCrafting(itemStack).entrySet()) {
             val enchantment = itemEnchantment.key
             val level = itemEnchantment.intValue
-            if (level <= 0) continue
+            if (level <= 0 || !filter(enchantment.unwrapKey().getOrNull()?.identifier(), enchantments)) continue
             enchantmentList += EnchantmentDisplayHelper.getEnchantmentInfo(enchantment, level)
         }
 

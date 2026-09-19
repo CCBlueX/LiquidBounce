@@ -33,7 +33,11 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
 
 class ValueGroupSerializer(
-    private val withValueType: Boolean, private val includePrivate: Boolean, private val includeNotAnOption: Boolean
+    private val withValueType: Boolean,
+    private val includePrivate: Boolean,
+    private val includeNotAnOption: Boolean,
+    private val includeTransient: Boolean,
+    private val includeHidden: Boolean,
 ) : JsonSerializer<ValueGroup> {
 
     companion object {
@@ -43,7 +47,8 @@ class ValueGroupSerializer(
          */
         @JvmField
         val FILE_SERIALIZER = ValueGroupSerializer(
-            withValueType = false, includePrivate = true, includeNotAnOption = true
+            withValueType = false, includePrivate = true, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
         )
 
         /**
@@ -51,7 +56,8 @@ class ValueGroupSerializer(
          */
         @JvmField
         val INTEROP_SERIALIZER = ValueGroupSerializer(
-            withValueType = true, includePrivate = true, includeNotAnOption = false
+            withValueType = true, includePrivate = true, includeNotAnOption = false,
+            includeTransient = true, includeHidden = false
         )
 
         /**
@@ -59,7 +65,8 @@ class ValueGroupSerializer(
          */
         @JvmField
         val PUBLIC_SERIALIZER = ValueGroupSerializer(
-            withValueType = false, includePrivate = false, includeNotAnOption = true
+            withValueType = false, includePrivate = false, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
         )
 
         /**
@@ -99,6 +106,8 @@ class ValueGroupSerializer(
                     src.inner
                         .filter { includeNotAnOption || !it.notAnOption }
                         .filter { includePrivate || it.checkIfInclude() }
+                        .filter { includeTransient || it.isPersistent }
+                        .filter { includeHidden || it.visibleCondition.asBoolean }
                 )
             )
         } catch (e: Exception) {

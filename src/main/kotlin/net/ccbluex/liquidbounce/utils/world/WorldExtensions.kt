@@ -139,7 +139,7 @@ fun <B : Entity, T : B> LevelEntityGetter<B>.forEach(
 fun <B : Entity, T : B, C : MutableCollection<in T>> LevelEntityGetter<B>.filterTo(
     destination: C,
     type: EntityTypeTest<B, T>,
-    predicate: Predicate<T>,
+    predicate: Predicate<T> = Predicates.alwaysTrue(),
 ): C {
     this.forEach(type) { if (predicate.test(it)) destination += it }
     return destination

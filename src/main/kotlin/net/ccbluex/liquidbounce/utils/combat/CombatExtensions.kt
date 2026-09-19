@@ -27,6 +27,7 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
 import net.minecraft.client.CameraType
@@ -72,6 +74,7 @@ import net.minecraft.world.phys.Vec3
  *
  * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
+@AddonApi
 data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
         @JvmField
@@ -79,6 +82,7 @@ data class EntityTargetingInfo(val classification: EntityTargetClassification, v
     }
 }
 
+@AddonApi
 enum class EntityTargetClassification {
     TARGET,
     INTERESTING,
@@ -164,13 +168,15 @@ private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInf
 }
 
 // Extensions
+@AddonApi
 @JvmOverloads
 fun Entity?.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
     this?.let { enemyConf.shouldShow(it) } ?: false
 
+@AddonApi
 @JvmOverloads
 fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
-    this is Attackable && enemyConf.shouldAttack(this)
+    this is Attackable && enemyConf.shouldAttack(this) && this.isWithinWorldBorder
 
 /**
  * Mirrors the vanilla server-side invalid attack disconnect checks
@@ -186,6 +192,7 @@ private fun Entity.canBeAttackedWithVanillaPacket() =
 /**
  * Find the best enemy in the current world in a specific range.
  */
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
@@ -195,6 +202,7 @@ fun ClientLevel.findEnemy(
 /**
  * Find the best enemy in the current world in a specific range.
  */
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemy(
     minRange: Float,
@@ -203,6 +211,7 @@ fun ClientLevel.findEnemy(
 ) = findEnemies(minRange, maxRange, enemyConf)
     .minByOrNull { (_, distSqr) -> distSqr }?.key()
 
+@AddonApi
 @JvmOverloads
 fun ClientLevel.findEnemies(
     minRange: Float,
@@ -239,9 +248,12 @@ inline fun ClientLevel.getEntitiesBoxInRange(
 
 /**
  * @see net.minecraft.client.Minecraft.startAttack
+ * @return attacked or pierced
  */
+@AddonApi
 @Suppress("CognitiveComplexMethod")
-fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) {
+@JvmOverloads
+fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false): Boolean {
     val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
     val piercingWeapon = itemStack.get(DataComponents.PIERCING_WEAPON)
 
@@ -250,12 +262,12 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
     if (piercingWeapon != null && !interaction.isSpectator) {
         interaction.piercingAttack(piercingWeapon)
         swing.swing(InteractionHand.MAIN_HAND)
-        return
+        return true
     }
 
     if (!entity.canBeAttackedWithVanillaPacket()
         || EventManager.callEvent(AttackEntityEvent(entity)).isCancelled) {
-        return
+        return false
     }
 
     with(player) {
@@ -309,4 +321,6 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
             swing.swing(InteractionHand.MAIN_HAND)
         }
     }
+
+    return true
 }

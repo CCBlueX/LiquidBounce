@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -48,6 +49,7 @@ import net.minecraft.util.Util
  * @param action The action triggered by the bound key (e.g., TOGGLE, HOLD).
  */
 @JvmRecord
+@AddonApi
 data class InputBind(
     val boundKey: InputConstants.Key,
     val action: BindAction,
@@ -71,21 +73,6 @@ data class InputBind(
      */
     constructor(name: String) :
         this(inputByName(name), BindAction.TOGGLE, emptySet())
-
-    /**
-     * Retrieves the name of the key in uppercase format, excluding the category prefixes.
-     *
-     * @return A formatted string representing the bound key's name, or "None" if unbound.
-     */
-    val keyName: String
-        get() = when {
-            isUnbound -> "None"
-            else -> this.boundKey.name
-                .split('.')
-                .drop(2) // Drops the "key.keyboard" or "key.mouse" part
-                .joinToString(separator = "_") // Joins the remaining parts with underscores
-                .uppercase() // Converts the key name to uppercase
-        }
 
     /**
      * Checks if the key is unbound (i.e., set to UNKNOWN_KEY).
@@ -317,10 +304,8 @@ fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
 
 fun InputBind.renderText(): Component = buildText {
     add(
-        inputByName(keyName).let { key ->
-            variable(key.displayName.copy()).bold(true)
-                .copyable(copyContent = key.name)
-        }
+        variable(boundKey.displayName.copy()).bold(true)
+            .copyable(copyContent = boundKey.name)
     )
 
     val divider = regular(" + ")

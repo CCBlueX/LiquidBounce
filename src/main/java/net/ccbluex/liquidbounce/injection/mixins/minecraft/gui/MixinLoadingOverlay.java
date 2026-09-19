@@ -26,7 +26,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.ccbluex.liquidbounce.common.ClientLogoTexture;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LoadingOverlay;
@@ -63,7 +63,7 @@ public abstract class MixinLoadingOverlay {
 
     @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIIIIII)V"))
     private boolean drawMojangLogo(GuiGraphicsExtractor instance, RenderPipeline renderPipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
-        return HideAppearance.INSTANCE.isHidingNow();
+        return SelfDestruct.INSTANCE.isDestructed();
     }
 
     @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/packs/resources/ReloadInstance;getActualProgress()F"))
@@ -75,8 +75,7 @@ public abstract class MixinLoadingOverlay {
             CallbackInfo ci,
             @Local(name = "color") int color
     ) {
-        // Don't draw the logo if the appearance is hidden
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 
@@ -111,7 +110,7 @@ public abstract class MixinLoadingOverlay {
 
     @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;BRAND_BACKGROUND:Ljava/util/function/IntSupplier;", opcode = Opcodes.GETSTATIC))
     private IntSupplier withClientColor(IntSupplier original) {
-        return HideAppearance.INSTANCE.isHidingNow() ? original : CLIENT_ARGB;
+        return SelfDestruct.INSTANCE.isDestructed() ? original : CLIENT_ARGB;
     }
 
 }

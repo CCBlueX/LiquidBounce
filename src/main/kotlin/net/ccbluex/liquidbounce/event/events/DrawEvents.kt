@@ -23,6 +23,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
@@ -37,6 +38,7 @@ object GameRenderEvent : Event()
 @Tag("screenRender")
 class ScreenRenderEvent(val context: GuiGraphicsExtractor, val partialTicks: Float) : Event()
 
+@AddonApi
 @Tag("worldRender")
 class WorldRenderEvent(
     val poseStack: PoseStack,
@@ -68,6 +70,7 @@ class WorldRenderEvent(
  */
 @Tag("worldFeatureSubmit")
 class WorldFeatureSubmitEvent(
+    val poseStack: PoseStack,
     val camera: Camera,
     val submitNodeStorage: SubmitNodeStorage,
     val modelViewMatrix: Matrix4fc,
@@ -96,6 +99,7 @@ class DrawOutlinesEvent(
     }
 }
 
+@AddonApi
 @Tag("overlayRender")
 class OverlayRenderEvent(
     val context: GuiGraphicsExtractor,

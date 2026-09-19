@@ -18,20 +18,14 @@
  */
 package net.ccbluex.liquidbounce.config.types.group
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.OptionalInclusion
-import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -51,13 +45,11 @@ import net.ccbluex.liquidbounce.config.types.list.MutableListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.asTagged
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.core.Vec3i
@@ -76,7 +68,8 @@ import java.util.SequencedSet
 import java.util.function.ToIntFunction
 
 @Suppress("TooManyFunctions")
-open class ValueGroup(
+@AddonApi
+open class ValueGroup @JvmOverloads constructor(
     name: String,
     value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
@@ -177,64 +170,11 @@ open class ValueGroup(
     val containedValues: Array<Value<*>>
         get() = this.inner.toTypedArray()
 
-    fun collectValuesRecursively(): Array<Value<*>> {
-        val output = mutableListOf<Value<*>>()
-
-        this.collectValuesRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValuesRecursivelyInternal(output: MutableList<Value<*>>) {
-        for (currentValue in this.inner) {
-            if (currentValue is ToggleableValueGroup) {
-                output.add(currentValue)
-                currentValue.collectValuesRecursivelyInternal(output)
-            } else {
-                if (currentValue is ValueGroup) {
-                    currentValue.collectValuesRecursivelyInternal(output)
-                } else {
-                    output.add(currentValue)
-                }
-            }
-
-            if (currentValue is ModeValueGroup<*>) {
-                output.add(currentValue)
-
-                currentValue.modes.forEach {
-                    it.collectValuesRecursivelyInternal(output)
-                }
-            }
-        }
-    }
-
-    fun collectValueGroupsRecursively(): Array<ValueGroup> {
-        val output = mutableListOf<ValueGroup>()
-
-        this.collectValueGroupsRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    protected fun collectValueGroupsRecursivelyInternal(output: MutableList<ValueGroup>) {
-        output.add(this)
-        for (currentValue in this.inner) {
-            when (currentValue) {
-                is ModeValueGroup<*> -> {
-                    output.add(currentValue)
-                    currentValue.modes.forEach { it.collectValueGroupsRecursivelyInternal(output) }
-                }
-                is ValueGroup -> currentValue.collectValueGroupsRecursivelyInternal(output)
-            }
-        }
-    }
-
-    fun collectValuesRecursively(prefix: String): Sequence<Value<*>> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValuesRecursively(prefix: String = ""): Sequence<Value<*>> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<Value<*>>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             for (value in current.inner) {
@@ -256,12 +196,11 @@ open class ValueGroup(
         walk(this@ValueGroup)
     }
 
-    fun collectValueGroupsRecursively(prefix: String): Sequence<ValueGroup> = sequence {
-        val normalizedPrefix = prefix.lowercase()
+    fun collectValueGroupsRecursively(prefix: String = ""): Sequence<ValueGroup> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
 
         suspend fun SequenceScope<ValueGroup>.walk(current: ValueGroup) {
-            val currentKey = current.key?.lowercase()
-            if (!shouldWalkKey(currentKey, normalizedPrefix)) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
                 return
             }
             yield(current)
@@ -280,13 +219,10 @@ open class ValueGroup(
     }
 
     private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
-        if (prefix.isBlank()) {
-            return true
-        }
         if (currentKey == null) {
             return false
         }
-        return currentKey.startsWith(prefix) || prefix.startsWith(currentKey)
+        return currentKey.startsWith(prefix, ignoreCase = true) || prefix.startsWith(currentKey, ignoreCase = true)
     }
 
     /**
@@ -341,47 +277,74 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
-    /**
-     * Adds an inventory preset value to this value group.
-     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
-     */
-    @Suppress("unused")
-    fun inventoryPreset(): Value<InventoryPreset> = value(
-        name = "InventoryPreset",
-        defaultValue = InventoryPreset(),
-        valueType = ValueType.INVENTORY_PRESET,
-    )
+    // Inline bodies are compiled into add-on jars, so the reified builders only forward to these.
 
-    internal inline fun <T : MutableCollection<E>, reified E> list(
+    fun <T : MutableCollection<E>, E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java))
+        innerType: Class<E>,
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = innerType))
 
-    internal inline fun <T : MutableCollection<E>, reified E> mutableList(
+    inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(MutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = list(name, defaultValue, valueType, E::class.java)
 
-    internal inline fun <T : MutableSet<E>, reified E> itemList(
+    fun <T : MutableCollection<E>, E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(MutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = mutableList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableSet<E>, E> itemList(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
-    ) = value(ItemListValue(name, defaultValue, items, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(ItemListValue(name, defaultValue, items, valueType, innerType))
 
-    internal inline fun <T : SequencedSet<E>, reified E> registryList(
+    inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType,
+    ) = itemList(name, defaultValue, items, valueType, E::class.java)
+
+    fun <T : SequencedSet<E>, E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryListValue(name, defaultValue, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(RegistryListValue(name, defaultValue, valueType, innerType))
 
-    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+    inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryMutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = registryList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableList<E>, E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = registryMutableList(name, defaultValue, valueType, E::class.java)
 
     private fun <T : Any> rangedValue(
         name: String,
@@ -403,12 +366,18 @@ open class ValueGroup(
 
     // Fixed data types
 
+    // `boolean`, `int` and `float` are Java keywords, hence the JVM names.
+
+    @JvmName("bool")
+    @JvmOverloads
     fun boolean(
         name: String,
         default: Boolean,
         aliases: List<String> = emptyList(),
     ) = value(name, default, ValueType.BOOLEAN, aliases)
 
+    @JvmName("floating")
+    @JvmOverloads
     fun float(
         name: String,
         default: Float,
@@ -417,6 +386,12 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.FLOAT, aliases)
 
+    @JvmName("floating")
+    @JvmOverloads
+    fun float(name: String, default: Float, min: Float, max: Float, suffix: String = "") =
+        float(name, default, min..max, suffix)
+
+    @JvmOverloads
     fun floatRange(
         name: String,
         default: ClosedFloatingPointRange<Float>,
@@ -425,6 +400,8 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE, aliases)
 
+    @JvmName("integer")
+    @JvmOverloads
     fun int(
         name: String,
         default: Int,
@@ -433,6 +410,12 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.INT, aliases)
 
+    @JvmName("integer")
+    @JvmOverloads
+    fun int(name: String, default: Int, min: Int, max: Int, suffix: String = "") =
+        int(name, default, min..max, suffix)
+
+    @JvmOverloads
     fun intRange(
         name: String,
         default: IntRange,
@@ -441,6 +424,7 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.INT_RANGE, aliases)
 
+    @JvmOverloads
     fun bind(name: String, default: Int = InputConstants.UNKNOWN.value) = bind(
         name,
         InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
@@ -450,6 +434,7 @@ open class ValueGroup(
 
     fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
 
+    @JvmOverloads
     fun key(name: String, default: InputConstants.Key = InputConstants.UNKNOWN) =
         value(name, default, ValueType.KEY)
 
@@ -504,6 +489,9 @@ open class ValueGroup(
     fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
         registryList(name, default, ValueType.MOB_EFFECT)
 
+    fun <C : SequencedSet<Identifier>> enchantments(name: String, default: C) =
+        registryList(name, default, ValueType.ENCHANTMENT)
+
     fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
         registryList(name, default, ValueType.C2S_PACKET)
 
@@ -534,6 +522,17 @@ open class ValueGroup(
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
         supportedExtensions: Set<String>? = null,
     ) = value(FileValue(name, default, dialogMode, supportedExtensions))
+
+    /**
+     * Adds an inventory preset value to this value group.
+     * The preset is represented by a [InventoryPreset] and serialized through the dedicated gson adapters.
+     */
+    @Suppress("unused")
+    fun inventoryPreset(): Value<InventoryPreset> = value(
+        name = "InventoryPreset",
+        defaultValue = InventoryPreset(),
+        valueType = ValueType.INVENTORY_PRESET,
+    )
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -579,6 +578,25 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
 
+    /**
+     * For Java, which cannot call the reified overload.
+     */
+    fun <T> enumChoice(name: String, default: T): ChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        enumChoice(name, default, EnumSet.allOf(default.declaringJavaClass), emptyList())
+
+    /**
+     * For Java, which cannot call the reified overloads.
+     */
+    @JvmOverloads
+    fun <T> multiEnumChoice(
+        name: String,
+        type: Class<T>,
+        default: Collection<T>,
+        canBeNone: Boolean = true,
+    ): MultiChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, EnumSet.noneOf(type).apply { addAll(default) }, EnumSet.allOf(type), canBeNone, false)
+
+    @JvmOverloads
     fun <T : Tagged> enumChoice(
         name: String,
         default: T,

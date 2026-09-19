@@ -22,7 +22,7 @@ import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.support.listFilesOrdered
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
     alias(libs.plugins.fabric.loom)
@@ -31,6 +31,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.nodeGradle)
     alias(libs.plugins.dokka)
+    `maven-publish`
 }
 
 base {
@@ -116,8 +117,14 @@ dependencies {
     api(libs.exploitPreventer.api)
     runtimeOnly(libs.exploitPreventer)
 
-    // Minecraft Authlib
-    jij(libs.mcAuthlib)
+    // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
+    jij(libs.minecraftauth)
+
+    // TheAltening alt service
+    jij(libs.thealtening)
+
+    // Mojang REST APIs
+    jij(libs.bundles.retrofit)
 
     // LWJGL EGL
     jij(libs.lwjgl.egl)
@@ -136,11 +143,6 @@ dependencies {
     jij(libs.ktor.server.content.negotiation)
     jij(libs.ktor.server.status.pages)
     jij(libs.ktor.serialization.gson)
-
-    // ScriptAPI
-    jij(libs.polyglot)
-    jij(libs.polyglot.js)
-    jij(libs.polyglot.tools)
 
     // Machine Learning
     jij(libs.djl.api)
@@ -328,20 +330,6 @@ tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     exclude("**/resources/**", "**/build/**")
 }
 
-// i18n check
-
-tasks.register<CompareJsonKeysTask>("verifyI18nJsonKeys") {
-    val baselineFileName = "en_us.json"
-
-    group = "verification"
-    description = "Compare i18n JSON files with $baselineFileName as the baseline and report missing keys."
-
-    val languageFolder = file("src/main/resources/resources/liquidbounce/lang")
-    baselineFile.set(languageFolder.resolve(baselineFileName))
-    files.from(languageFolder.listFilesOrdered { it.extension.equals("json", ignoreCase = true) })
-    consoleOutputCount.set(5)
-}
-
 tasks.register<JavaExec>("liquidInstruction") {
     group = "other"
     description = "Run LiquidInstruction class."
@@ -370,6 +358,16 @@ kotlin {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
     }
+
+    // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        filters {
+            include {
+                annotatedWith.add("net.ccbluex.liquidbounce.features.addon.AddonApi")
+            }
+        }
+    }
 }
 
 tasks.jar {
@@ -392,6 +390,61 @@ tasks.jar {
     from("LICENSE") {
         rename {
             "${it}_${archivesBaseName.get()}"
+        }
+    }
+}
+
+val publishVersion: String = providers.gradleProperty("publish.version").orNull ?: run {
+    val base = "${providers.gradleProperty("mod_version").get()}+${libs.versions.minecraft.get()}"
+    val isRelease = providers.environmentVariable("GITHUB_EVENT_NAME").orNull == "release"
+
+    if (isRelease) base else "$base-SNAPSHOT"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            groupId = providers.gradleProperty("maven_group").get()
+            artifactId = providers.gradleProperty("archives_base_name").get()
+            version = publishVersion
+
+            // Dev and production are both Mojang names here, so there is no remapJar to publish.
+            artifact(tasks.jar)
+            artifact(tasks.named("sourcesJar")) { classifier = "sources" }
+
+            // No from(components["java"]): the POM would list com.mojang:minecraft, which no
+            // public repository serves.
+            pom {
+                name = "LiquidBounce"
+                description = "A free mixin-based injection hacked-client for Minecraft " +
+                    "using the Fabric modding toolchain."
+                url = "https://liquidbounce.net/"
+
+                licenses {
+                    license {
+                        name = "GNU General Public License v3.0"
+                        url = "https://www.gnu.org/licenses/gpl-3.0.txt"
+                    }
+                }
+
+                scm {
+                    url = "https://github.com/CCBlueX/LiquidBounce"
+                    connection = "scm:git:https://github.com/CCBlueX/LiquidBounce.git"
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "CCBlueX"
+            val channel = if (publishVersion.endsWith("-SNAPSHOT")) "snapshots" else "releases"
+            url = uri("https://maven.ccbluex.net/$channel")
+
+            credentials {
+                username = providers.environmentVariable("MAVEN_USERNAME").orNull
+                password = providers.environmentVariable("MAVEN_PASSWORD").orNull
+            }
         }
     }
 }

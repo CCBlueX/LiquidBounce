@@ -18,27 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
+import net.ccbluex.liquidbounce.render.submitTextAlwaysOnTop
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.textOf
-import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.EntityLookup.Companion.EntityLookup
 import net.ccbluex.liquidbounce.utils.world.filterTo
+import net.minecraft.client.gui.Font
+import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.network.chat.Style
+import net.minecraft.util.LightCoordsUtil
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.entity.item.PrimedTnt
 import kotlin.math.sin
 
 /**
@@ -55,17 +54,24 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
     val esp by boolean("ESP", true)
 
     private object ShowTimer : ToggleableValueGroup(this, "ShowTimer", false) {
-        val scale by float("Scale", 1.5F, 0.25F..4F)
-        val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
-        val ownerName by boolean("OwnerName", true)
-        val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
+        private val scale by float("Scale", 1.5F, 0.25F..4F)
+        private val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
+        private val ownerName by boolean("OwnerName", true)
+        private val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
+
+        private val tntEntities by EntityLookup { set ->
+            filterTo(set, EntityTypes.TNT) { it.fuse > 0 }
+        }
+
+        override fun onDisabled() {
+            tntEntities.clear()
+            super.onDisabled()
+        }
 
         @Suppress("unused")
-        private val render2DHandler = handler<OverlayRenderEvent> { event ->
+        private val renderHandler = handler<WorldFeatureSubmitEvent> { event ->
             for (tnt in tntEntities) {
                 val pos = tnt.boundingBox.center.add(0.0, renderY.toDouble(), 0.0)
-
-                val screenPos = WorldToScreen.calculateScreenPos(pos) ?: continue
 
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
@@ -83,12 +89,32 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
                     }
                 }
 
-                event.context.drawItemStackList(emptyList())
-                    .centerX(screenPos.x)
-                    .centerY(screenPos.y)
-                    .title(text)
-                    .scale(scale)
-                    .draw()
+                val formattedText = text.visualOrderText
+                val font = mc.font
+
+                val camera = event.camera
+                val cameraPos = camera.position()
+                event.poseStack.withPush {
+                    translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
+                    mulPose(event.camera.rotation())
+                    scale(
+                        EntityRenderer.NAMETAG_SCALE * scale,
+                        -EntityRenderer.NAMETAG_SCALE * scale,
+                        EntityRenderer.NAMETAG_SCALE * scale,
+                    )
+                    event.submitNodeStorage.submitTextAlwaysOnTop(
+                        this,
+                        -font.width(formattedText) * 0.5f,
+                        -font.lineHeight * 0.5f,
+                        formattedText,
+                        true,
+                        Font.DisplayMode.SEE_THROUGH,
+                        LightCoordsUtil.FULL_BRIGHT,
+                        color.argb,
+                        0,
+                        0,
+                    )
+                }
             }
         }
     }
@@ -105,17 +131,6 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
     fun getTntColor(fuse: Int): Color4b {
         val red = Mth.floor(255.0 * (1.0 + 0.5 * sin(2400.0 / (12 + fuse)))).coerceIn(0, 255)
         return Color4b(red, 0, 0)
-    }
-
-    private val tntEntities by computedOn<GameTickEvent, MutableSet<PrimedTnt>>(ReferenceOpenHashSet()) { _, set ->
-        set.clear()
-        world.entityGetter.filterTo(set, EntityTypes.TNT) { it.fuse > 0 }
-        set
-    }
-
-    override fun onDisabled() {
-        tntEntities.clear()
-        super.onDisabled()
     }
 
 }

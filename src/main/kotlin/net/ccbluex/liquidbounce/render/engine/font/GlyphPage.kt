@@ -22,6 +22,7 @@ import com.mojang.blaze3d.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import org.lwjgl.glfw.GLFW
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -192,11 +193,23 @@ abstract class GlyphPage {
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             synchronized(fontRasterizationLock) {
-                atlasGraphics.drawString(
-                    Character.toString(characterInfo.fontGlyph.codepoint),
-                    characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING,
-                    characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
-                )
+                val character = Character.toString(characterInfo.fontGlyph.codepoint)
+                val baselineX = characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING
+                val baselineY = characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
+
+                when (GLFW.glfwGetPlatform()) {
+                    GLFW.GLFW_PLATFORM_X11 -> {
+                        // Java2D's X11 bitmap glyph path can crash in FreeType; rendering the same outline avoids it.
+                        // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
+                        atlasGraphics.fill(
+                            atlasGraphics.font.createGlyphVector(fontRendererContext, character)
+                                .getGlyphOutline(0, baselineX.toFloat(), baselineY.toFloat())
+                        )
+                    }
+                    else -> {
+                        atlasGraphics.drawString(character, baselineX, baselineY)
+                    }
+                }
             }
         }
 
