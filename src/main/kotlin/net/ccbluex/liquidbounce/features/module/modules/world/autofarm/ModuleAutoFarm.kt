@@ -280,7 +280,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
                 // Keep only sides that are within reach and whose face points towards the eyes
                 sides.removeIf { side ->
                     box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared ||
-                        BlockTargetPlan(pos, side).calculateAngleToPlayerEyeCosine(eyesPos) < 0.0
+                        BlockTargetPlan(pos, side).isFacingAway(eyesPos)
                 }
 
                 pos to sides.ifEmpty { return@mapNotNullTo null }
