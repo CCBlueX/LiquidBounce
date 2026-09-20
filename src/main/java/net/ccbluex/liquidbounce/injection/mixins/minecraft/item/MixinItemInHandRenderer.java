@@ -95,7 +95,7 @@ public abstract class MixinItemInHandRenderer {
     ) {
         AbstractClientPlayer player = Minecraft.getInstance().player;
 
-        if (player == null || !ModuleAnimations.INSTANCE.getRunning() || !SwingAnimations.INSTANCE.getEnabled() || ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        if (player == null || !ModuleAnimations.INSTANCE.getRunning() || !SwingAnimations.INSTANCE.getEnabled() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
             return;
         }
 

@@ -41,6 +41,8 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -67,10 +69,9 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
-import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
-import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -208,7 +209,7 @@ object LiquidBounce : EventListener {
 
         // Initialize managers and features
         Client
-        initializeManagers(workerDispatcher, renderThreadDispatcher)
+        initializeManagers(renderThreadDispatcher)
         initializeFeatures()
         initializeResources(workerDispatcher)
         prepareGuiStage(renderThreadDispatcher)
@@ -234,6 +235,7 @@ object LiquidBounce : EventListener {
 
         // Load all configurations
         ConfigSystem.loadAll()
+        AddonManager.notifyStarted()
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
@@ -246,16 +248,8 @@ object LiquidBounce : EventListener {
      * Initializes managers for Event Listener registration.
      */
     private suspend fun initializeManagers(
-        workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
     ) = withContext(renderThreadDispatcher) {
-        // Script system
-        val scriptEngineJob = launch(workerDispatcher) {
-            runCatching(ScriptManager::initializeEngine).onFailure { error ->
-                logger.error("[ScriptAPI] Failed to initialize script engine.", error)
-            }
-        }
-
         // Config
         ConfigSystem
 
@@ -288,21 +282,19 @@ object LiquidBounce : EventListener {
         ItemImageAtlas
         EntityImageAtlas
 
-        scriptEngineJob.join()
+        AddonManager.discover()
     }
 
     /**
-     * Initializes in-built and script features.
+     * Initializes in-built and add-on features.
      */
     private fun initializeFeatures() {
         // Register commands and modules
         CommandManager.registerInbuilt()
         ModuleManager.registerInbuilt()
 
-        // Load user scripts
-        runCatching(ScriptManager::loadAll).onFailure { error ->
-            logger.error("ScriptManager was unable to load scripts.", error)
-        }
+        AddonManager.registerCategories()
+        AddonManager.initializeAddons()
     }
 
     /**
@@ -382,6 +374,7 @@ object LiquidBounce : EventListener {
             ThemeManager.init()
             // Preload marketplace items
             ConfigSystem.load(MarketplaceManager)
+            AddonInstaller.stageSubscribedAddons()
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }
@@ -449,6 +442,8 @@ object LiquidBounce : EventListener {
         ioScope.launch {
             ClientInteropServer.stop()
         }
+
+        AddonManager.notifyStopping()
 
         // Save all configurations
         ConfigSystem.storeAll()

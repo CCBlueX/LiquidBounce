@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
@@ -34,6 +35,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
+@AddonApi
 @JvmRecord
 data class Rotation @JvmOverloads constructor(
     val yaw: Float,

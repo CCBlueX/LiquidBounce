@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
@@ -152,8 +152,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
 
         // Disable the module and return if the inventory is full, and the setting for disabling the module is enabled
         if (disableOnFullInventory && !hasInventorySpace()) {
-            notification("Inventory is Full", "AutoFarm has been disabled", NotificationEvent.Severity.ERROR)
-            onDisabled()
+            notification(message("inventoryFull"), message("disabled"), NotificationEvent.Severity.ERROR)
             enabled = false
             return@tickHandler
         }
@@ -233,28 +232,18 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     }
 
     private fun updateTarget(possible: Iterable<Pair<BlockPos, BlockState>>): Boolean {
-        for ((pos, state) in possible) {
-            val (rotation, _) = raytraceBlockRotation(
-                player.eyePosition,
-                pos,
-                state,
-                range = range.toDouble() - 0.1,
-                wallsRange = wallRange.toDouble() - 0.1
-            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
+        val target = selectBlockTarget(
+            player.eyePosition,
+            range - 0.1f,
+            wallRange - 0.1f,
+            possible,
+            rotations,
+            this
+        ) ?: return false
 
-            // set currentTarget to the new target
-            currentTarget = pos
-            // aim at target
-            RotationManager.setRotationTarget(
-                rotation,
-                valueGroup = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider = this@ModuleAutoFarm
-            )
-
-            return true // We got a free angle at the block? No need to see more of them.
-        }
-        return false
+        // set currentTarget to the new target
+        currentTarget = target
+        return true
     }
 
     /** Searches for any blocks within the radius that need to be destroyed, such as crops. */

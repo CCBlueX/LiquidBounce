@@ -28,6 +28,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -45,6 +46,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import java.util.function.Consumer
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -60,6 +62,7 @@ import org.joml.Vector3fc
 val HAS_AMD_VEGA_APU = gpuDevice.deviceInfo.name.startsWith("AMD Radeon(TM) RX Vega") &&
     gpuDevice.deviceInfo.vendorName == "ATI Technologies Inc."
 
+@AddonApi
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
@@ -75,10 +78,13 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
     slice
 }
 
+@AddonApi
 inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
     environment.draw()
 }
 
+@AddonApi
+@JvmSynthetic
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
     poseStack.withPush {
         translate(camera.position().reverse())
@@ -86,6 +92,8 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRender
     }
 }
 
+@AddonApi
+@JvmSynthetic
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
     x: Double, y: Double, z: Double, draw: WorldRenderEnvironment.() -> Unit
 ) {
@@ -99,14 +107,38 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
 /**
  * Positions the render origin at the camera-relative coordinates of [pos] before drawing.
  */
+@AddonApi
+@JvmSynthetic
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
     withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
 
 /**
  * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
+@AddonApi
+@JvmSynthetic
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) =
     withPositionRelativeToCamera(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), draw)
+
+// The same for Java, which cannot pass the receiver lambdas above.
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: Consumer<WorldRenderEnvironment>
+) =
+    withPositionRelativeToCamera(x, y, z) { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera(pos) { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera(pos) { draw.accept(this) }
 
 internal inline fun RenderTarget.drawGenericBlockESP(
     renderState: CachedMeshStorage,
@@ -176,6 +208,7 @@ fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
 /**
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
+@AddonApi
 fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         addVertex(pose, p1).setColor(argb)
@@ -405,6 +438,8 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 /**
  * Function to draw a colored [box].
  */
+@AddonApi
+@JvmOverloads
 fun WorldRenderEnvironment.drawBox(
     box: AABB,
     faceColor: Color4b? = Color4b.TRANSPARENT,

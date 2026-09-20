@@ -91,6 +91,58 @@ class NoFallMlgPlacementTest {
         )
     }
 
+    @Test
+    fun `MLG aiming starts at the rotation and interaction boundary`() {
+        assertFalse(
+            shouldPrepareMlgAction(
+                collisionTick = 3,
+                rotationTicks = 1,
+                requiresSneak = false,
+                isSneaking = false,
+            ),
+        )
+        assertTrue(
+            shouldPrepareMlgAction(
+                collisionTick = 2,
+                rotationTicks = 1,
+                requiresSneak = false,
+                isSneaking = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `MLG aiming reserves a tick for pending sneak input`() {
+        assertTrue(
+            shouldPrepareMlgAction(
+                collisionTick = 3,
+                rotationTicks = 1,
+                requiresSneak = true,
+                isSneaking = false,
+            ),
+        )
+        assertFalse(
+            shouldPrepareMlgAction(
+                collisionTick = 3,
+                rotationTicks = 1,
+                requiresSneak = true,
+                isSneaking = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `water pickup is not gated by collision timing`() {
+        assertTrue(
+            shouldPrepareMlgAction(
+                collisionTick = null,
+                rotationTicks = 0,
+                requiresSneak = false,
+                isSneaking = false,
+            ),
+        )
+    }
+
     private fun waterloggedSlab() = Blocks.STONE_SLAB.defaultBlockState()
         .setValue(SlabBlock.WATERLOGGED, true)
 }

@@ -133,12 +133,12 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
             val targetSplit = suspected.displayName
                 ?.string
                 ?.stripMinecraftColorCodes()
-                ?.split(" ")
+                ?.split(' ', limit = 2)
 
             val clientSplit = player.displayName
                 ?.string
                 ?.stripMinecraftColorCodes()
-                ?.split(" ")
+                ?.split(' ', limit = 2)
 
             targetSplit != null
                 && clientSplit != null

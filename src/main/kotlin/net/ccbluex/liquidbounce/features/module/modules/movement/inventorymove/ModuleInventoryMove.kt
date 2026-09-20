@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -90,14 +91,6 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
             mc.options.keyShift, false,
         )
 
-    /**
-     * Restricts user from clicking while moving or sprinting in inventory.
-     */
-    val doNotAllowClicking
-        get() = behavior === Behaviour.SAFE && movementKeys.fastIterable().any {
-            it.booleanValue && shouldHandleInputs(it.key)
-        }
-
     init {
         tree(InventoryMoveSprintControlFeature)
         tree(InventoryMoveSneakControlFeature)
@@ -148,16 +141,24 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) {
+    private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) { event ->
         if (delayedContainerPackets.isEmpty()) return@handler
 
         val packetsSnapshot = delayedContainerPackets.toTypedArray()
         delayedContainerPackets.clear()
-        it.sneak = false
-        it.jump = false
-        it.directionalInput = DirectionalInput.NONE
+        event.sneak = false
+        event.jump = false
+        event.directionalInput = DirectionalInput.NONE
         // `schedule` will force the Runnable to be run in next loop
         mc.schedule { packetsSnapshot.forEach(::sendPacketSilently) }
+    }
+
+    @Suppress("unused")
+    private val playerContainerInputHandler = handler<PlayerContainerInputEvent> { event ->
+        if (behavior !== Behaviour.SAFE) return@handler
+
+        if (event.containerId != 0) return@handler
+        if (movementKeys.fastIterable().any { it.booleanValue && shouldHandleInputs(it.key) }) event.cancelEvent()
     }
 
     @Suppress("unused")

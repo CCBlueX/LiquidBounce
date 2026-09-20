@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.removeEventListenerScope
 import net.ccbluex.liquidbounce.features.misc.Toggleable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 
@@ -36,7 +36,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
  * to register event handlers that are only active when the state is on,
  * it also features [onEnabled] and [onDisabled] which are called when the state is toggled.
  */
-abstract class ToggleableValueGroup(
+@AddonApi
+abstract class ToggleableValueGroup @JvmOverloads constructor(
     @Exclude @ProtocolExclude val parent: EventListener? = null,
     name: String,
     enabled: Boolean,
@@ -44,13 +45,13 @@ abstract class ToggleableValueGroup(
 ) : ValueGroup(name, valueType = ValueType.TOGGLEABLE, aliases = aliases), EventListener, Toggleable,
     MinecraftShortcuts {
 
-    @ScriptApiRequired
+    @AddonApi
     @get:JvmName("getEnabledValue")
     val enabledValue: Value<Boolean> = boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
         .onChange(::onToggled)
 
-    @ScriptApiRequired
+    @AddonApi
     override var enabled by enabledValue
 
     open fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> {
@@ -93,10 +94,22 @@ abstract class ToggleableValueGroup(
     override val running: Boolean
         get() = super.running && enabled
 
+    // Declared here so Java subclasses override a plain method, not the interface default.
+    override fun onEnabled() = Unit
+
+    override fun onDisabled() = Unit
+
     final override fun parent() = parent
 
     protected fun <T : Mode> choices(name: String, active: T, choices: Array<T>) =
         modes(this, name, active, choices)
+
+    /**
+     * The first of [modes] starts active.
+     */
+    @Suppress("UNCHECKED_CAST")
+    protected fun <T : Mode> choices(name: String, vararg modes: T) =
+        modes(this, name, modes[0], modes as Array<T>)
 
     protected fun <T : Mode> choices(
         name: String,

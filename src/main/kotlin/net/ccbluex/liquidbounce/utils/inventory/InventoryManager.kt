@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -63,9 +64,11 @@ object InventoryManager : EventListener {
     override val running: Boolean
         get() = super.running && inGame
 
+    @AddonApi
     val isInventoryOpen
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
+    @AddonApi
     val isHandledScreenOpen
         get() = mc.gui.screen() is AbstractContainerScreen<*> || isInventoryOpenServerSide
 

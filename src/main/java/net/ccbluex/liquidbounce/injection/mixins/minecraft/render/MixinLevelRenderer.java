@@ -77,11 +77,16 @@ public abstract class MixinLevelRenderer {
         )
     )
     private void hookWorldFeatureSubmit(CallbackInfo ci, @Local(argsOnly = true, name = "modelViewMatrix") Matrix4fc modelViewMatrix) {
+        var poseStack = Pools.MatStack.borrow();
+
         EventManager.INSTANCE.callEvent(new WorldFeatureSubmitEvent(
+            poseStack,
             Minecraft.getInstance().gameRenderer.mainCamera(),
             this.submitNodeStorage,
             modelViewMatrix
         ));
+
+        Pools.MatStack.recycle(poseStack);
     }
 
     // TODO: removed because of vanilla changes

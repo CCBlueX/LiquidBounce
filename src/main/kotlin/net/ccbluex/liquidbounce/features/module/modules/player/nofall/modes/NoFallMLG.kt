@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -88,6 +90,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             Items.HAY_BLOCK,
             Items.SLIME_BLOCK,
             Items.HONEY_BLOCK,
+            Items.LADDER,
             // nether
             Items.TWISTING_VINES,
         )
@@ -138,13 +141,19 @@ internal object NoFallMLG : NoFallMode("MLG") {
             }
 
             val currentGoal = this.getCurrentGoal()
-
-            forceSneak = currentGoal?.requiresSneak == true
-            currentTarget = currentGoal?.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
-
-            if (currentGoal == null) {
+            if (currentGoal == null || !shouldPrepareMlgAction(
+                    currentGoal.collisionTick,
+                    rotations.calculateTicks(currentGoal.plan.placementTarget.rotation),
+                    currentGoal.requiresSneak,
+                    player.isShiftKeyDown,
+                )
+            ) {
+                currentTarget = null
                 return@handler
             }
+
+            forceSneak = currentGoal.requiresSneak
+            currentTarget = currentGoal.takeUnless { it.requiresSneak && !player.isShiftKeyDown }
 
             RotationManager.setRotationTarget(
                 currentGoal.plan.placementTarget.rotation,
@@ -157,20 +166,33 @@ internal object NoFallMLG : NoFallMode("MLG") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val action = currentTarget ?: return@handler
+
+        if (isOlderThan1_21) {
+            currentTarget = null
+            PostRotationExecutor.addTask(ModuleNoFall, postMove = true, priority = true) {
+                executePlacement(action)
+            }
+            return@handler
+        }
+
+        executePlacement(action)
+    }
+
+    private fun executePlacement(action: PlacementAction) {
         val target = action.plan
 
         val rotation = RotationManager.currentRotation ?: player.rotation
         val rayTraceResult = traceFromPlayer(rotation)
 
         if (!target.doesCorrespondTo(rayTraceResult)) {
-            return@handler
+            return
         }
 
-        if (target.hotbarItemSlot.itemStack.item != action.item ||
+        if (target.hotbarItemSlot.itemStack.item !== action.item ||
             !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
         ) {
             currentTarget = null
-            return@handler
+            return
         }
 
         val targetStateBefore = target.targetPos.state
@@ -281,10 +303,6 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 item === Items.WATER_BUCKET && plan.placementTarget.interactedBlockPos.state
                     ?.requiresSneakForAdjacentFluidPlacement(Fluids.WATER) == true
 
-            if (requiresSneak && !player.isShiftKeyDown) {
-                continue
-            }
-
             if (!plan.canPlaceBlockItemAtTarget()) {
                 continue
             }
@@ -305,7 +323,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             } else {
                 MlgPlacementActionType.MLG
             }
-            return PlacementAction(plan, type, item, requiresSneak)
+            return PlacementAction(plan, type, item, requiresSneak, collision.tick)
         }
 
         return null
@@ -368,22 +386,41 @@ internal object NoFallMLG : NoFallMode("MLG") {
         return bucketTarget == targetPos && targetPos.state?.canPlaceStandaloneFluid(Fluids.WATER) == true
     }
 
-    private fun PlacementAction.wasApplied(targetStateBefore: BlockState?): Boolean {
-        return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
-    }
-
     private data class PlacementAction(
         val plan: PlacementPlan,
         val type: MlgPlacementActionType,
         val item: Item,
         val requiresSneak: Boolean,
-    )
+        val collisionTick: Int? = null,
+    ) {
+        fun wasApplied(targetStateBefore: BlockState?): Boolean {
+            return wasMlgPlacementApplied(type, item, targetStateBefore, plan.targetPos.state)
+        }
+    }
 }
 
 internal enum class MlgPlacementActionType {
     MLG,
     SCAFFOLDING,
     PICKUP_WATER,
+}
+
+/**
+ * [FallingPlayer.findCollision] reports zero when the next movement tick lands.
+ * Reserve one tick for interaction, plus one for sneak input when it has not reached the player yet.
+ */
+internal fun shouldPrepareMlgAction(
+    collisionTick: Int?,
+    rotationTicks: Int,
+    requiresSneak: Boolean,
+    isSneaking: Boolean,
+): Boolean {
+    if (collisionTick == null) {
+        return true
+    }
+
+    val sneakPreparationTicks = if (requiresSneak && !isSneaking) 1 else 0
+    return collisionTick <= rotationTicks + 1 + sneakPreparationTicks
 }
 
 internal fun wasMlgPlacementApplied(
@@ -407,6 +444,7 @@ internal fun wasMlgPlacementApplied(
                     after.block === Blocks.WATER && after.fluidState.isSourceOfType(Fluids.WATER)
             }
             Items.POWDER_SNOW_BUCKET -> before.block !== Blocks.POWDER_SNOW && after.block === Blocks.POWDER_SNOW
+            Items.LADDER -> before.block !== Blocks.LADDER && after.block === Blocks.LADDER
             is BlockItem -> before.block !== item.block && after.block === item.block
             else -> false
         }
