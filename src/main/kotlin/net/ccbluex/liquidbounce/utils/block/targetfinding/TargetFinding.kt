@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -159,6 +160,7 @@ data class PlayerLocationOnPlacement(
  * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is
  * not the target pos, this will always point to it
  */
+@ValueClassCandidate
 data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,
     val interactionDirection: Direction,
@@ -172,63 +174,19 @@ data class BlockTargetPlan(
         AABB(blockPosToInteractWith).centerOnSide(interactionDirection)
 
     /**
-     * cosine of the angle between the expected player's eye position and the normal of the targeted face.
+     * Whether the targeted face points away from the player's eye position.
      */
-    fun calculateAngleToPlayerEyeCosine(eyePos: Vec3): Double {
-        val deltaToPlayerPos = eyePos.subtract(targetPositionOnBlock)
-
-        return deltaToPlayerPos.dot(interactionDirection.unitVec3) / deltaToPlayerPos.length()
-    }
+    fun isFacingAway(eyePos: Vec3): Boolean =
+        eyePos.subtract(targetPositionOnBlock).dot(interactionDirection.unitVec3) < 0
 
 }
 
-enum class BlockTargetingMode {
-    PLACE_AT_NEIGHBOR,
-    REPLACE_EXISTING_BLOCK
-}
-
-private fun findBestTargetPlanForTargetPosition(
-    posToInvestigate: BlockPos,
-    mode: BlockTargetingMode,
-    targetFindingOptions: BlockPlacementTargetFindingOptions
-): BlockTargetPlan? {
-    val directions = Direction.entries
-
-    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.eyePos
-
-    val options = directions.mapNotNull { direction ->
-        val targetPlan =
-            getTargetPlanForPositionAndDirection(posToInvestigate, direction, mode)
-                ?: return@mapNotNull null
-
-        // Check if the target face is pointing away from the player
-        if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&
-            targetPlan.calculateAngleToPlayerEyeCosine(playerEyePositionOnPlacement) < 0) {
-            return@mapNotNull null
-        }
-
-        return@mapNotNull targetPlan
-    }
-
-    val currentRotation = RotationManager.serverRotation
-
-    return options.minByOrNull {
-        val targetRotation = Rotation.lookingAt(point = it.targetPositionOnBlock, from = playerEyePositionOnPlacement)
-
-        currentRotation.rotationDeltaLengthTo(targetRotation)
-    }
-}
-
-/**
- * @return null if it is impossible to target the block with the given parameters
- */
-private fun getTargetPlanForPositionAndDirection(
-    pos: BlockPos,
-    direction: Direction,
-    mode: BlockTargetingMode
-): BlockTargetPlan? {
-    when (mode) {
-        BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
+private enum class BlockTargetingMode {
+    PLACE_AT_NEIGHBOR {
+        override fun getTargetPlanForPositionAndDirection(
+            pos: BlockPos,
+            direction: Direction
+        ): BlockTargetPlan? {
             val currPos = pos.relative(direction.opposite)
             val currState = currPos.state ?: return null
 
@@ -238,10 +196,43 @@ private fun getTargetPlanForPositionAndDirection(
 
             return BlockTargetPlan(currPos, direction)
         }
-        BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
-            return BlockTargetPlan(pos, direction)
+    },
+    REPLACE_EXISTING_BLOCK {
+        override fun getTargetPlanForPositionAndDirection(
+            pos: BlockPos,
+            direction: Direction
+        ) = BlockTargetPlan(pos, direction)
+    };
+
+    /**
+     * @return null if it is impossible to target the block with the given parameters
+     */
+    abstract fun getTargetPlanForPositionAndDirection(pos: BlockPos, direction: Direction): BlockTargetPlan?
+}
+
+private fun findBestTargetPlanForTargetPosition(
+    posToInvestigate: BlockPos,
+    mode: BlockTargetingMode,
+    targetFindingOptions: BlockPlacementTargetFindingOptions
+): BlockTargetPlan? {
+    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.eyePos
+    val considerFacingAwayFaces = targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces
+
+    // The face closest to the view direction also needs the least rotation.
+    val lookAngle = RotationManager.serverRotation.directionVector
+
+    // Rank the viable faces by how aligned the direction from the eye to the placement target position
+    // is with the current view direction; the top-ranked face needs the least rotation.
+    return Direction.entries
+        .mapNotNull { direction ->
+            mode.getTargetPlanForPositionAndDirection(posToInvestigate, direction)?.takeIf {
+                considerFacingAwayFaces || !it.isFacingAway(playerEyePositionOnPlacement)
+            }
         }
-    }
+        .maxByOrNull { plan ->
+            val toFace = plan.targetPositionOnBlock.subtract(playerEyePositionOnPlacement)
+            lookAngle.dot(toFace.normalize())
+        }
 }
 
 private data class PointOnFace(
@@ -397,7 +388,7 @@ data class BlockPlacementTarget(
 private fun isBlockSolid(state: BlockState, pos: BlockPos) =
     state.isFaceSturdy(mc.level!!, pos, Direction.UP, SupportType.CENTER)
 
-class PlacementPlan(
+data class PlacementPlan(
     val targetPos: BlockPos,
     val placementTarget: BlockPlacementTarget,
     val hotbarItemSlot: HotbarItemSlot
