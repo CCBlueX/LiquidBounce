@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.util.ARGB
+import java.util.function.Supplier
 
 /**
  * Module ItemChams
@@ -71,20 +72,26 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
         @JvmStatic
-        fun doOverride(op: Runnable) {
-            if (!this.running) return op.run()
-            prepare()
-            ScopedValue.where(OVERRIDE, this.textureView).run(op)
+        fun <T : Any> doOverride(op: ScopedValue.CallableOp<T, Throwable>): T {
+            if (!this.running || this.textureView == null) return op.call()
+            return ScopedValue.where(OVERRIDE, this.textureView).call(op)
         }
 
         /**
+         * Regenerates the chams lightmap texture on top of the vanilla lightmap.
+         *
+         * Must be called when no render pass is open.
+         *
          * @see net.minecraft.client.renderer.Lightmap
          */
-        private fun prepare() {
+        @JvmStatic
+        fun refresh(vanillaLightmapView: GpuTextureView) {
+            if (!this.running) return
+
             if (this.textureView == null) {
                 this.textureView = gpuDevice.createTexture(
                     "$name - Lightmap Texture",
-                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
                     GpuFormat.RGBA8_UNORM, 16, 16, 1, 1,
                 ).asView()
             }
@@ -105,8 +112,8 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
             textureView!!.createRenderPass({ "$name Pass" }).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-                pass.setUniform("texture0", textureView, sampler)
-                pass.setUniform("image", textureView, sampler)
+                pass.setUniform("texture0", vanillaLightmapView, sampler)
+                pass.setUniform("image", vanillaLightmapView, sampler)
                 pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
 
                 pass.draw(3, 1, 0, 0)
@@ -115,6 +122,8 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         override fun onDisabled() {
             uboDirty = true
+            textureView?.close()
+            textureView = null
             super.onDisabled()
         }
 

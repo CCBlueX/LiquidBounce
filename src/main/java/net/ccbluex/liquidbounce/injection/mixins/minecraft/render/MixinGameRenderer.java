@@ -25,7 +25,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -41,6 +40,8 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.Lightmap;
+import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
@@ -70,6 +71,10 @@ public abstract class MixinGameRenderer {
     @Shadow
     @Final
     private RenderTarget mainRenderTarget;
+
+    @Shadow
+    @Final
+    private Lightmap lightmap;
 
     /**
      * Hook game render event
@@ -141,13 +146,26 @@ public abstract class MixinGameRenderer {
         method = "renderItemInHand",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;renderAllFeatures(Lcom/mojang/renderpearl/api/commands/RenderPass;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V"
+            target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher;prepareFrame(Lnet/minecraft/client/renderer/SubmitNodeStorage;)Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;"
         )
     )
-    private void drawItemCharmsOnHandFeatureExecution(
-        RenderPass renderPass, FeatureRenderDispatcher.PreparedFrame frame, Operation<Void> original
+    private FeatureRenderDispatcher.PreparedFrame drawItemCharmsOnHandPrepareFrame(
+        FeatureRenderDispatcher instance, SubmitNodeStorage submitNodeStorage,
+        Operation<FeatureRenderDispatcher.PreparedFrame> original
     ) {
-        ModuleItemChams.Lightmap.doOverride(() -> original.call(renderPass, frame));
+        return ModuleItemChams.Lightmap.doOverride(() -> original.call(instance, submitNodeStorage));
+    }
+
+    @Inject(
+        method = "render",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/Lightmap;render(Lnet/minecraft/client/renderer/state/LightmapRenderState;)V",
+            shift = At.Shift.AFTER
+        )
+    )
+    private void hookItemChamsLightmapRefresh(CallbackInfo ci) {
+        ModuleItemChams.Lightmap.refresh(this.lightmap.getTextureView());
     }
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
