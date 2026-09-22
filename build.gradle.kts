@@ -295,6 +295,9 @@ tasks.test {
         arrayOf(
             // ImmediatelyFast's platform service requires a fully initialized Fabric game process.
             "immediatelyfast",
+            // ViaFabricPlus mixins call its API, which only exists once the mod entrypoint ran.
+            "viafabricplus",
+            "viafabricplus-api",
             // Avoid loading Fabric Language Kotlin's nested Kotlin runtime alongside Gradle's test runtime.
             "org_jetbrains_kotlin_kotlin-reflect",
             "org_jetbrains_kotlin_kotlin-stdlib",
