@@ -705,6 +705,7 @@
   "liquidbounce.module.targetLock.messages.outOfRange": "No longer locked on %s because they are out of range.",
   "liquidbounce.module.targetLock.messages.timeUp": "No longer locked on %s because the time is up.",
   "liquidbounce.module.targetStrafe.description": "Automatically strafes around enemies targeted by KillAura.",
+  "liquidbounce.module.targetStrafe.planner.ai.description": "The model picks the side, when to switch and when to walk straight, like the players it learned from. Your keys still decide whether you move, and a held side key wins.",
   "liquidbounce.module.targets.description": "Allows you to manage which entities are considered to be your targets.",
   "liquidbounce.module.teams.description": "Prevents KillAura from attacking team mates.",
   "liquidbounce.module.teleport.description": "Configuration for the Teleport command (.tp).",

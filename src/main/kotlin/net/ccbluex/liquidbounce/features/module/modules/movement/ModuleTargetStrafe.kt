@@ -23,6 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatPackets
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -31,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
 import net.ccbluex.liquidbounce.render.drawCircleOutline
@@ -38,11 +42,13 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.initial
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
@@ -187,6 +193,25 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         init {
             tree(Validation)
             tree(AdaptiveRange)
+            tree(Ai)
+        }
+
+        /**
+         * The model picks the side, when to switch and when to walk straight, the way the players it learned
+         * from fought. The keys still decide whether we move at all, and a held side key wins.
+         */
+        object Ai : ToggleableValueGroup(Planner, "AI", false) {
+            init {
+                CombatPackets.capture(this)
+            }
+
+            @Suppress("unused")
+            private val decisionHandler = handler<GameTickEvent> {
+                firstTarget()?.let { CombatController.decide(it, RotationManager.currentRotation ?: player.rotation) }
+            }
+
+            /** -1 or 1 for a side, 0 to walk straight, null without a decision. */
+            fun side(target: LivingEntity): Int? = KillAuraAi.live(target)?.let(KillAuraAi::side)
         }
 
         object Validation : ToggleableValueGroup(Planner, "Validation", true) {
@@ -369,17 +394,14 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             direction = -direction
         }
 
-        // Determine the direction to strafe
-        if (Planner.controlDirection && !(controlInput.left && controlInput.right)) {
-            when {
-                controlInput.left -> direction = -1
-                controlInput.right -> direction = 1
-            }
+        var side = strafeSide(target, controlInput) ?: run {
+            renderState.reset()
+            return null
         }
 
         val strafeYaw = atan2(targetPos.z - playerPos.z, targetPos.x - playerPos.x)
         fun createPlan(range: Float): StrafePlan {
-            val strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            val strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, side)
             val pointCoords = playerPos.add(strafeVec)
             return StrafePlan(
                 target = target,
@@ -395,6 +417,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         if (!plan.pointValid) {
             if (!Planner.AdaptiveRange.enabled) {
                 direction = -direction
+                side = -side
                 plan = createPlan(targetSelector.maxRange)
             } else {
                 var currentRange = Planner.AdaptiveRange.rangeStep
@@ -404,6 +427,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
                     if (currentRange > Planner.AdaptiveRange.maxRange) {
                         direction = -direction
+                        side = -side
                         plan = createPlan(targetSelector.maxRange)
                         break
                     }
@@ -417,6 +441,25 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         renderState.nextPointValid = plan.pointValid
 
         return plan
+    }
+
+    /**
+     * The side to strafe to: a held side key, otherwise the model's, otherwise the last one. Null while the model
+     * walks straight.
+     */
+    private fun strafeSide(target: LivingEntity, controlInput: DirectionalInput): Int? {
+        val sideKeyHeld = Planner.controlDirection && controlInput.left != controlInput.right
+        if (sideKeyHeld) {
+            direction = if (controlInput.left) -1 else 1
+        }
+        if (!Planner.Ai.running || sideKeyHeld) {
+            return direction
+        }
+        return when (val side = Planner.Ai.side(target)) {
+            null -> direction
+            0 -> null
+            else -> side
+        }
     }
 
     /**
