@@ -106,16 +106,16 @@ dependencies {
     // Recommended mods (on IDE)
     api(libs.sodium)
     api(libs.lithium)
-    api(libs.immediatelyFast)
-    api(libs.iris)
+    runtimeOnly(libs.immediatelyFast)
+    runtimeOnly(libs.iris)
 
     // ViaFabricPlus
     api(libs.vfp.api)
-    api(libs.vfp)
+    runtimeOnly(libs.vfp)
 
     // Exploit Preventer
     api(libs.exploitPreventer.api)
-    api(libs.exploitPreventer)
+    runtimeOnly(libs.exploitPreventer)
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
