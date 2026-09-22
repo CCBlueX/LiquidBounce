@@ -19,11 +19,26 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import java.io.IOException
 import java.io.OutputStream
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.Base64
 import kotlin.io.path.fileSize
 import kotlin.io.path.inputStream
+
+@Throws(IOException::class)
+fun Path.tryMoveReplacing(target: Path): Path =
+    try {
+        Files.move(this, target, StandardCopyOption.ATOMIC_MOVE)
+    } catch (_: AtomicMoveNotSupportedException) {
+        Files.move(this, target, StandardCopyOption.REPLACE_EXISTING)
+    } catch (_: FileAlreadyExistsException) {
+        Files.move(this, target, StandardCopyOption.REPLACE_EXISTING)
+    }
+
 
 private fun Path.readAsBase64(output: OutputStream) {
     this.inputStream().use { input ->
@@ -32,7 +47,6 @@ private fun Path.readAsBase64(output: OutputStream) {
         }
     }
 }
-
 
 fun Path.readAsBase64(): String {
     val output = FastByteArrayOutputStream(Math.toIntExact(((this.fileSize() + 2) / 3) * 4))

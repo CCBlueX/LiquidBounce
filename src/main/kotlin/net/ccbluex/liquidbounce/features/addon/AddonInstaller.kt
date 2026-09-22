@@ -23,12 +23,11 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.tryMoveReplacing
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import kotlin.io.path.copyTo
 
 /**
  * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
@@ -48,11 +47,10 @@ object AddonInstaller {
     // unstages the jar.
     private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
 
-    private fun managedFiles(filter: (File) -> Boolean = { true }): List<File> =
+    private fun managedFiles(filter: (File) -> Boolean = { true }): Array<File>? =
         modsFolder.listFiles { file: File -> file.isFile && file.name.startsWith(PREFIX) && filter(file) }
-            ?.toList().orEmpty()
 
-    private fun managedJarsFor(itemId: Int): List<File> =
+    private fun managedJarsFor(itemId: Int): Array<File>? =
         managedFiles { it.name.startsWith("$PREFIX$itemId-") && it.name.endsWith(".jar") }
 
     private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
@@ -70,12 +68,12 @@ object AddonInstaller {
                 .onFailure { error ->
                     logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
                     // Keep the working revision when an update fails.
-                    managedJarsFor(item.id).mapTo(expected) { it.name }
+                    managedJarsFor(item.id)?.mapTo(expected) { it.name }
                 }
         }
 
         // Unsubscribed, superseded, or a leftover .part.
-        for (file in managedFiles { it.name !in expected }) {
+        for (file in managedFiles { it.name !in expected } ?: return) {
             remove(file)
         }
     }
@@ -96,17 +94,13 @@ object AddonInstaller {
         check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
 
         // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
-        val part = File(modsFolder, target.name + PART_SUFFIX)
-        jars.single().copyTo(part, overwrite = true)
+        val part = File(modsFolder, target.name + PART_SUFFIX).toPath()
+        jars.single().toPath().copyTo(part, overwrite = true)
 
         // Old revisions go only once the copy succeeded.
-        managedJarsFor(item.id).forEach(::remove)
+        managedJarsFor(item.id)?.forEach(::remove)
 
-        try {
-            Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
+        part.tryMoveReplacing(target.toPath())
         AddonManager.markRestartRequired(item.id, "${item.name} installed")
         logger.info("Staged add-on '${item.name}' as ${target.name}; restart required")
     }
@@ -149,7 +143,7 @@ object AddonInstaller {
     }
 
     fun wipeManagedJars() {
-        for (file in managedFiles()) {
+        for (file in managedFiles() ?: return) {
             if (!file.delete()) {
                 file.deleteOnExit()
             }
