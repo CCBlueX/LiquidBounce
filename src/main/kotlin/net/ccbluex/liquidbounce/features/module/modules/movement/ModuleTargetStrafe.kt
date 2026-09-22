@@ -54,11 +54,13 @@ import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MoverType
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.phys.Vec3
 import net.ccbluex.liquidbounce.utils.math.yaw
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.sin
 
 /**
@@ -94,12 +96,13 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
     // Configuration options
     private val modes = choices("Mode", MotionMode, arrayOf(MotionMode, InputMode)).apply { tagBy(this) }
-    private val range = float("Range", 2.95f, 0.0f..8.0f)
-    private val targetSelector = TargetSelector(range = range)
-    private val followRangeValue = float("FollowRange", 4f, 0.0f..10.0f).onChange {
-        it.coerceAtLeast(targetSelector.maxRange)
-    }
-    private val followRange get() = followRangeValue.get()
+    private val reach = choices("Reach", KillAuraReach, arrayOf(KillAuraReach, ItemReach))
+    private val targetSelector = TargetSelector()
+    private val followRangeValue by float("FollowRange", 4f, 0.0f..10.0f)
+
+    /** The orbit radius, which is how far we can hit from. */
+    private val range get() = reach.activeMode.range
+    private val followRange get() = max(followRangeValue, range)
 
     private val requirements by multiEnumChoice<Requirements>("Requirements")
 
@@ -112,14 +115,28 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         get() = requirements.all { it.meets() }
 
     init {
-        range.onChanged { updatedRange ->
-            if (followRange < updatedRange) {
-                followRangeValue.set(updatedRange)
-            }
-        }
-
         tree(Planner)
         tree(Visuals)
+    }
+
+    sealed class Reach(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = reach
+
+        abstract val range: Float
+    }
+
+    /** Whatever KillAura is set up to hit at, so the orbit stays inside its reach. */
+    object KillAuraReach : Reach("KillAura") {
+        override val range get() = ModuleKillAura.range.interactionRange
+    }
+
+    /** The held item's own reach, adjusted like KillAura's Range group does. */
+    object ItemReach : Reach("Item") {
+        private val rangeIncrease by float("RangeIncrease", 0f, 0f..5f, "blocks")
+
+        override val range: Float
+            get() = player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE).toFloat() + rangeIncrease
     }
 
     private object Visuals : ToggleableValueGroup(ModuleTargetStrafe, "Visuals", true) {
@@ -390,12 +407,12 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
             )
         }
 
-        var plan = createPlan(targetSelector.maxRange)
+        var plan = createPlan(range)
 
         if (!plan.pointValid) {
             if (!Planner.AdaptiveRange.enabled) {
                 direction = -direction
-                plan = createPlan(targetSelector.maxRange)
+                plan = createPlan(range)
             } else {
                 var currentRange = Planner.AdaptiveRange.rangeStep
                 while (!plan.pointValid) {
@@ -404,7 +421,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
 
                     if (currentRange > Planner.AdaptiveRange.maxRange) {
                         direction = -direction
-                        plan = createPlan(targetSelector.maxRange)
+                        plan = createPlan(range)
                         break
                     }
                 }
