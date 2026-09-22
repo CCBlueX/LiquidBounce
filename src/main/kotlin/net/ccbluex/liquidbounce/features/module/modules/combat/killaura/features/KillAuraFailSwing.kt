@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import kotlin.math.pow
 
@@ -70,10 +71,11 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
 
         val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
         val entity = target ?: world.findEnemy(0f, range) ?: return
-        val raycastType = mc.hitResult?.type
+        val hitResult = mc.hitResult
+        val block = (hitResult as? BlockHitResult)?.takeIf { !world.getBlockState(it.blockPos).isAir }
 
         if (entity.isRemoved || entity.squaredBoxedDistanceTo(player) > range.pow(2)
-            || raycastType != HitResult.Type.MISS) {
+            || hitResult?.type == HitResult.Type.ENTITY || block == null && hitResult?.type != HitResult.Type.MISS) {
             return
         }
 
@@ -81,8 +83,11 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
         KillAuraAutoBlock.makeSeemBlock()
 
         prepareForAttack {
-            // [this.crosshairTarget == null] results in a limited attack speed
-            if (interaction.hasMissTime()) {
+            // A click on a block starts digging it; only one into the air has the miss cooldown, which limits the
+            // attack speed. See [net.minecraft.client.Minecraft.startAttack].
+            if (block != null) {
+                interaction.startDestroyBlock(block.blockPos, block.direction)
+            } else if (interaction.hasMissTime()) {
                 mc.missTime = 10
             }
 
