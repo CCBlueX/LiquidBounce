@@ -357,6 +357,7 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
+        optIn.add("net.ccbluex.liquidbounce.features.addon.UnstableAddonApi")
     }
 
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
@@ -365,6 +366,9 @@ kotlin {
         filters {
             include {
                 annotatedWith.add("net.ccbluex.liquidbounce.features.addon.AddonApi")
+            }
+            exclude {
+                annotatedWith.add("net.ccbluex.liquidbounce.features.addon.UnstableAddonApi")
             }
         }
     }
