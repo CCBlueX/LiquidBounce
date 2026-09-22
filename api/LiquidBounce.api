@@ -238,14 +238,6 @@ public final class net/ccbluex/liquidbounce/config/types/list/ChoiceListValue : 
 	public final fun getChoicesStrings ()[Ljava/lang/String;
 }
 
-public final class net/ccbluex/liquidbounce/deeplearn/ModelManager : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
-	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
-}
-
 public abstract class net/ccbluex/liquidbounce/event/CancellableEvent : net/ccbluex/liquidbounce/event/Event {
 	public fun <init> ()V
 	public final fun cancelEvent ()V
