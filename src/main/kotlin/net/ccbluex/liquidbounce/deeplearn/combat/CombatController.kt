@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.world.entity.LivingEntity
 import kotlin.random.Random
@@ -114,6 +115,9 @@ object CombatController : EventListener {
     init {
         CombatPackets
     }
+
+    /** [decide] from the rotation we are sending, for callers that do not aim themselves. */
+    fun decide(target: LivingEntity) = decide(target, RotationManager.currentRotation ?: player.rotation)
 
     /**
      * The decision for this tick, computed once from the state before any rotation or attack of

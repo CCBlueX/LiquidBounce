@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
@@ -166,7 +165,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
     private val decisionHandler = handler<GameTickEvent> {
         val target = targetTracker.target
         if (ai && target != null) {
-            CombatController.decide(target, RotationManager.currentRotation ?: player.rotation)
+            CombatController.decide(target)
         }
     }
 
@@ -216,12 +215,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
             return@handler
         }
         val target = targetTracker.target ?: return@handler
-        val sprint = KillAuraAi.live(target)?.let { it.sprint && event.directionalInput.forwards } ?: return@handler
-        when (event.source) {
-            SprintEvent.Source.INPUT -> event.sprint = sprint
-            SprintEvent.Source.MOVEMENT_TICK -> if (!sprint) event.sprint = false
-            SprintEvent.Source.NETWORK -> Unit
-        }
+        KillAuraAi.live(target)?.let { KillAuraAi.sprint(event, it) }
     }
 
     /**

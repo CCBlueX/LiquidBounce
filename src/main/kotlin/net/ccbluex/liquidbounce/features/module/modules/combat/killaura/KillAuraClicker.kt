@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
@@ -43,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
@@ -75,7 +73,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
 
     private fun aiClickAmount(): Int {
         val target = ModuleKillAura.targetTracker.target ?: return 0
-        val live = CombatController.decide(target, RotationManager.currentRotation ?: player.rotation) ?: return 0
+        val live = CombatController.decide(target) ?: return 0
         return if (live.heads.attacks && live.decision.attack) 1 else 0
     }
 

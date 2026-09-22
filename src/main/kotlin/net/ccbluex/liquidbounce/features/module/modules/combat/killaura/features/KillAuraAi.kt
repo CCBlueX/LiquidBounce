@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatLiveDecision
+import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
@@ -76,6 +77,19 @@ object KillAuraAi {
             safe(desired.normalize().scale(STEP_DISTANCE)) ->
                 getDirectionalInputForDegrees(DirectionalInput.NONE, getDegreesRelativeToView(desired))
             else -> null
+        }
+    }
+
+    /**
+     * The model's sprint, as the sprint key only: vanilla still refuses to sprint in shallow water or while
+     * blocking. Where the key is read it presses or releases it; during the movement tick it only ever stops.
+     */
+    fun sprint(event: SprintEvent, live: CombatLiveDecision) {
+        val sprint = live.sprint && event.directionalInput.forwards
+        when (event.source) {
+            SprintEvent.Source.INPUT -> event.sprint = sprint
+            SprintEvent.Source.MOVEMENT_TICK -> if (!sprint) event.sprint = false
+            SprintEvent.Source.NETWORK -> Unit
         }
     }
 
