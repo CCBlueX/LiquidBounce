@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce-gametest",
+  "version": "1.0.0",
+  "name": "LiquidBounce Game Tests",
+  "license": "GPL-3.0-or-later",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "net.ccbluex.liquidbounce.gametest.AiCombatGameTest"
+    ]
+  },
+  "depends": {
+    "liquidbounce": "*",
+    "fabric-client-gametest-api-v1": "*"
+  }
+}

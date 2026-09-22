@@ -23,6 +23,7 @@ import groovy.json.JsonOutput
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+import java.nio.file.Files
 
 plugins {
     alias(libs.plugins.fabric.loom)
@@ -89,6 +90,34 @@ allprojects {
 
 loom {
     accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "liquidbounce-gametest"
+        enableGameTests = false
+    }
+}
+
+loom.runs.named("clientGameTest") {
+    environmentVars.put("LB_BASIC_MODE", "true")
+    environmentVars.put("CI", "true")
+    systemProperties.put("fabric.noGui", "true")
+    systemProperties.put("ai.djl.pytorch.num_threads", "1")
+}
+
+tasks.named("runClientGameTest") {
+    doFirst {
+        mapOf("gametest.mcef" to "mcef/libraries", "gametest.engines" to "deeplearning/engines")
+            .forEach { (property, directory) ->
+                providers.gradleProperty(property).orNull?.let { source ->
+                    val target = layout.buildDirectory.dir("run/clientGameTest/LiquidBounce/$directory").get().asFile
+                    target.parentFile.mkdirs()
+                    Files.createSymbolicLink(target.toPath(), file(source).toPath())
+                }
+            }
+    }
 }
 
 dependencies {
