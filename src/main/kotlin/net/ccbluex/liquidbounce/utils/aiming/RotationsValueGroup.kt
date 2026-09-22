@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.FailRotationProcessor
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.ShortStopRotationProcessor
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AccelerationAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.InterpolationAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.LinearAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
@@ -52,6 +53,7 @@ open class RotationsValueGroup(
             SigmoidAngleSmooth(it),
             interpolationAngleSmooth,
             AccelerationAngleSmooth(it),
+            if (combatSpecific) AiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null
         ).toTypedArray()
     }
 
@@ -61,6 +63,9 @@ open class RotationsValueGroup(
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
     private val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+
+    internal val usesAiRotations: Boolean
+        get() = angleSmooth.activeMode is AiAngleSmooth
 
     @AddonApi
     fun toRotationTarget(
@@ -73,8 +78,8 @@ open class RotationsValueGroup(
         entity,
         listOfNotNull(
             angleSmooth.activeMode,
-            fail?.takeIf { it.running },
-            shortStop?.takeIf { it.running }
+            fail?.takeIf { it.running && !usesAiRotations },
+            shortStop?.takeIf { it.running && !usesAiRotations }
         ),
         ticksUntilReset,
         resetThreshold,

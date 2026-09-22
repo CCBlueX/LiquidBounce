@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import java.util.Arrays
+import java.util.EnumSet
 import java.util.Random
 
 /**
@@ -63,6 +64,7 @@ open class Clicker<T>(
     maxCps: Int = 60,
     name: String = "Clicker",
     simulateAttackKeyDown: Boolean = false,
+    techniques: Set<ClickPatterns> = ClickPatterns.SCHEDULED,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
@@ -79,10 +81,12 @@ open class Clicker<T>(
             fill()
         }
 
-    private val pattern by enumChoice("Technique", ClickPatterns.STABILIZED)
+    private val pattern by enumChoice("Technique", ClickPatterns.STABILIZED, techniques)
         .onChanged {
             fill()
         }
+
+    val technique: ClickPatterns get() = pattern
 
     init {
         itemCooldown?.let(this::tree)
@@ -133,7 +137,7 @@ open class Clicker<T>(
 
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
-    fun getClickAmount(tick: Int = 0): Int {
+    open fun getClickAmount(tick: Int = 0): Int {
         if (isEnforcedClick()) {
             return 1
         }
@@ -222,7 +226,7 @@ open class Clicker<T>(
 
         if (clickArray.advance()) {
             val cycleArray = IntArray(DEFAULT_CYCLE_LENGTH)
-            pattern.pattern.fill(cycleArray, cps, this)
+            pattern.pattern?.fill(cycleArray, cps, this)
             clickArray.push(cycleArray)
         }
 
@@ -239,7 +243,7 @@ open class Clicker<T>(
         val cycleArray = IntArray(DEFAULT_CYCLE_LENGTH)
         repeat(clickArray.iterations) {
             Arrays.fill(cycleArray, 0)
-            pattern.pattern.fill(cycleArray, cps, this)
+            pattern.pattern?.fill(cycleArray, cps, this)
             clickArray.push(cycleArray)
             clickArray.advance(DEFAULT_CYCLE_LENGTH)
         }
@@ -250,7 +254,7 @@ open class Clicker<T>(
     @Suppress("unused")
     enum class ClickPatterns(
         override val tag: String,
-        val pattern: ClickPattern
+        val pattern: ClickPattern?
     ) : Tagged {
         STABILIZED("Stabilized", StabilizedPattern),
         EFFICIENT("Efficient", EfficientPattern),
@@ -258,7 +262,16 @@ open class Clicker<T>(
         DOUBLE_CLICK("DoubleClick", DoubleClickPattern),
         DRAG("Drag", DragPattern),
         BUTTERFLY("Butterfly", ButterflyPattern),
-        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern);
+        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern),
+
+        /**
+         * Nothing is scheduled ahead; a clicker offering this decides each tick in [getClickAmount].
+         */
+        AI("AI", null);
+
+        companion object {
+            val SCHEDULED: Set<ClickPatterns> = EnumSet.copyOf(entries.filter { it.pattern != null })
+        }
     }
 
 }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
@@ -41,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
@@ -49,11 +52,32 @@ import kotlin.math.round
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
     mc.options.keyAttack,
-    KillAuraClickerItemCooldown()
+    KillAuraClickerItemCooldown(),
+    techniques = ClickPatterns.SCHEDULED + ClickPatterns.AI,
 ) {
+
+    /** Whether the model times the attacks. */
+    val usesAi get() = technique == ClickPatterns.AI
 
     override val isClickTick: Boolean
         get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.remainingAttackCount == 0)
+
+    /**
+     * The AI technique clicks when the model would, which is only known for this tick; later ticks answer with
+     * the item cooldown the model clicks against.
+     */
+    override fun getClickAmount(tick: Int): Int = when {
+        !usesAi -> super.getClickAmount(tick)
+        tick > 0 -> if (itemCooldown?.isCooldownPassed(tick) != false) 1 else 0
+        clickAmount != null -> 0
+        else -> aiClickAmount()
+    }
+
+    private fun aiClickAmount(): Int {
+        val target = ModuleKillAura.targetTracker.target ?: return 0
+        val live = CombatController.decide(target, RotationManager.currentRotation ?: player.rotation) ?: return 0
+        return if (live.heads.attacks && live.decision.attack) 1 else 0
+    }
 
     private class KillAuraClickerItemCooldown : ItemCooldown() {
 

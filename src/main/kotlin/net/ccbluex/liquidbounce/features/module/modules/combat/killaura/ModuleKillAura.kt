@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -111,6 +113,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     internal var waitTicks = 0
 
     init {
+        CombatController.reset()
         tree(KillAuraAutoBlock)
         tree(TargetRenderer(this) {
             targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
@@ -121,6 +124,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     override fun onDisabled() {
+        CombatController.reset()
         targetTracker.reset()
         failedHits.clear()
         KillAuraNotifyWhenFail.failedHitsIncrement = 0
@@ -190,7 +194,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return@tickHandler
         }
 
-        val rotation = (if (rotations.rotationTiming == ON_TICK) {
+        val rotation = (if (rotations.rotationTiming == ON_TICK && !rotations.usesAiRotations) {
             findRotation(target, range.interactionRange, range.interactionThroughWallsRange)?.rotation
         } else {
             null
@@ -264,7 +268,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
             if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
                 waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
-            }else if (KillAuraFailSwing.enabled) {
+            } else if (KillAuraFailSwing.enabled) {
                 dealWithFakeSwing(target)
             }
             return
@@ -343,18 +347,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
-        when (rotations.rotationTiming) {
+        when {
 
             // If our click scheduler is not going to click the moment we reach the target,
             // we should not start aiming towards the target just yet.
-            SNAP -> if (!clicker.willClickAt(ticks.coerceAtLeast(1))) {
-                return true
-            }
+            rotations.rotationTiming == SNAP && !rotations.usesAiRotations ->
+                if (!clicker.willClickAt(ticks.coerceAtLeast(1))) {
+                    return true
+                }
 
             // [ON_TICK] will always instantly aim onto the target on attack, however, if
             // our rotation is unable to be ready in time, we can at least start aiming towards
             // the target.
-            ON_TICK -> if (ticks <= 1) {
+            rotations.rotationTiming == ON_TICK && !rotations.usesAiRotations -> if (ticks <= 1) {
                 return true
             }
 
@@ -384,7 +389,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
-        if (rotations.lazyRotation) {
+        if (rotations.lazyRotation && !rotations.usesAiRotations) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentHit = isLookingAtEntity(
                 fromEntity = player,
@@ -437,7 +442,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     /**
      * Check if we can attack the target at the current moment
      */
-    internal fun canAttackNow(
+    @UnstableAddonApi
+    fun canAttackNow(
         target: Entity? = null,
         itemStack: ItemStack = player.mainHandItem,
     ): Boolean {
