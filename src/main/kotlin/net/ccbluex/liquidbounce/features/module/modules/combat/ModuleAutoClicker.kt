@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -96,8 +95,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
         fun isWeaponSelected(): Boolean = weapon.matchesAny(player.mainHandItem)
 
-        fun isCriticalHit(entity: Entity): Boolean {
-            return criticalsSelectionMode.isCriticalHit(entity)
+        fun isCriticalHit(): Boolean {
+            return criticalsSelectionMode.isCriticalHit()
         }
 
         suspend fun encounterItemUse(): Boolean {
@@ -215,7 +214,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
-                if (!isCriticalHit(crosshairTarget.entity)) {
+                if (!isCriticalHit()) {
                     return@run
                 }
             }

@@ -163,10 +163,10 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
         IGNORE("Ignore"),
         ALWAYS("Always");
 
-        fun isCriticalHit(target: Entity): Boolean {
+        fun isCriticalHit(): Boolean {
             return when (this) {
                 IGNORE -> true
-                SMART -> !shouldWaitForCrit(target, ignoreState = true)
+                SMART -> !shouldWaitForCrit(ignoreState = true)
                 ALWAYS -> wouldDoCriticalHit()
             }
         }
@@ -188,9 +188,9 @@ object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     }
 
-    fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false) = when {
+    fun shouldWaitForCrit(ignoreState: Boolean = false) = when {
         CriticalsBlink.running && CriticalsBlink.isInState -> false
-        else -> CriticalsJump.shouldWaitForCrit(target, ignoreState)
+        else -> CriticalsJump.shouldWaitForCrit(ignoreState)
     }
 
     private val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)

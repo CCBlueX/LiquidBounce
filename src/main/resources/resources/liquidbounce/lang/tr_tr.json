@@ -309,7 +309,6 @@
   "liquidbounce.module.damageParticles.description": "Varlıkların sağlık değişikliklerini gösterir.",
   "liquidbounce.module.dankBobbing.description": "Görüş sallanma efektini artırır.",
   "liquidbounce.module.debug.description": "Sadece geliştiriciler için ilgi çekici.",
-  "liquidbounce.module.debugRecorder.description": "Sadece geliştiriciler için ilgi çekici.",
   "liquidbounce.module.derp.description": "Diğer oyunculara deli gibi göründüğünüzü hissettirir.",
   "liquidbounce.module.disabler.description": "Sunucunun hile karşıtı sistemini devre dışı bırakmaya çalışır.",
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Bu Disabler’ı yeniden doğarken - uçma yeteneğiniz varken - açın. Etrafta uçabilir ve blok kırabilirsiniz, ama diğer oyunculara saldıramazsınız. Mümkün olduğunca çabuk kapatın, yoksa bağlantınız kesilir.",

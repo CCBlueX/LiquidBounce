@@ -486,7 +486,6 @@
   "liquidbounce.module.damageParticles.description": "Show health changes of entities.",
   "liquidbounce.module.dankBobbing.description": "Increases the view bobbing effect.",
   "liquidbounce.module.debug.description": "Only of interest to developers.",
-  "liquidbounce.module.debugRecorder.description": "Only of interest to developers.",
   "liquidbounce.module.derp.description": "Makes it look as if you were derping around to other players",
   "liquidbounce.module.disabler.description": "Attempts to disable the AntiCheat of the server.",
   "liquidbounce.module.disabler.messages.cubecraftCantEnableInSingleplayer": "Cubecraft Disabler cannot be enabled in single player.",

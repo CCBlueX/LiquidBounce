@@ -487,7 +487,6 @@
   "liquidbounce.module.damageParticles.description": "在實體生命值變化時顯示變化情況。",
   "liquidbounce.module.dankBobbing.description": "增加視角搖晃效果的幅度。",
   "liquidbounce.module.debug.description": "只有開發者會感興趣。",
-  "liquidbounce.module.debugRecorder.description": "只有開發者會感興趣。",
   "liquidbounce.module.derp.description": "讓你在其他玩家眼中看起來像是在瞎搗亂。",
   "liquidbounce.module.disabler.description": "嘗試禁用伺服器的反作弊。",
   "liquidbounce.module.disabler.messages.cubecraftCantEnableInSingleplayer": "Cubecraft Disabler 無法在單人遊戲中啟用。",

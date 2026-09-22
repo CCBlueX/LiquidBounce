@@ -327,7 +327,6 @@
   "liquidbounce.module.damageParticles.description": "Показує зміни здоров'я сутностей.",
   "liquidbounce.module.dankBobbing.description": "Збільшує ефект хитання.",
   "liquidbounce.module.debug.description": "Цікавий лише розробникам.",
-  "liquidbounce.module.debugRecorder.description": "Цікавий лише розробникам.",
   "liquidbounce.module.derp.description": "Змушує інших гравців бачити вас так, як ніби ви обертаєте головою у всі сторони.",
   "liquidbounce.module.disabler.description": "Вимикає певні античити.",
   "liquidbounce.module.disabler.vulcan.message": "Вам потрібно мати тризуб, зачарований на тягун в лівій руці, щоб вимкнути перевірки переміщення Vulcan.",

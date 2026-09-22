@@ -367,7 +367,6 @@
   "liquidbounce.module.damageParticles.description": "Показывает изменения здоровья сущностей.",
   "liquidbounce.module.dankBobbing.description": "Увеличивает эффект покачивания.",
   "liquidbounce.module.debug.description": "Представляет интерес только для разработчиков.",
-  "liquidbounce.module.debugRecorder.description": "Представляет интерес только для разработчиков.",
   "liquidbounce.module.derp.description": "Заставляет других игроков видеть вас так, как если бы вы вращали головой во все стороны",
   "liquidbounce.module.disabler.description": "Отключает определенные анти-читы.",
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Включите этот Disabler во время респауна - когда у вас есть способность летать. вы сможете летать и ломать блоки, но не сможете атаковать других игроков во время этого. Отключите его как можно скорее, иначе вы получите тайм-аут.",

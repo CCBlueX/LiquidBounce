@@ -375,7 +375,6 @@
   "liquidbounce.module.damageParticles.description": "Zeigt dir an, wie viel Schaden du an z.B. Spielern verteilst.",
   "liquidbounce.module.dankBobbing.description": "Erhöht den Wackeleffekt der Ansicht.",
   "liquidbounce.module.debug.description": "Nur für Entwickler interessant.",
-  "liquidbounce.module.debugRecorder.description": "Nur für Entwickler interessant.",
   "liquidbounce.module.derp.description": "Lässt dich so aussehen, als würdest du rumeumeln",
   "liquidbounce.module.disabler.description": "Versucht, das AntiCheat des Servers zu deaktivieren.",
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "Aktivier diesen Disabler beim Respawnen – wenn du Fliegen kannst. Du solltest in der Lage sein, herumzufliegen und Blöcke zu zerstören, dabei aber keine anderen Spieler angreifen können. Deaktivier den Disabler es so schnell wie möglich, sonst kommt es zu einer Zeitüberschreitung.",
