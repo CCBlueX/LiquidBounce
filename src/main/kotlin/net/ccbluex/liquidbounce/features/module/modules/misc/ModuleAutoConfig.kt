@@ -52,6 +52,8 @@ object ModuleAutoConfig : ClientModule(
     @Volatile
     private var isScheduled = false
 
+    private val onlyFeatured by boolean("OnlyFeatured", true)
+
     init {
         doNotIncludeAlways()
     }
@@ -108,14 +110,14 @@ object ModuleAutoConfig : ClientModule(
             return
         }
 
-        val autoConfig = runCatching { MarketplaceConfigs.findForServer(address) }
+        val autoConfig = runCatching { MarketplaceConfigs.findForServer(address, onlyFeatured) }
             .onFailure { logger.error("Failed to look up a config for $address.", it) }
             .getOrNull()
         val revisionId = autoConfig?.liveRevisionId
 
         if (autoConfig == null || revisionId == null) {
             notification(
-                "Auto Config", "There is no known config for $address.",
+                "Auto Config", "There is no ${if (onlyFeatured) "featured " else ""}config for $address.",
                 NotificationEvent.Severity.ERROR
             )
             return

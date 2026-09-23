@@ -61,6 +61,7 @@ object MarketplaceConfigs {
         name: String? = null,
         author: String? = null,
         targetServer: String? = null,
+        featured: Boolean? = null,
     ) = MarketplaceApi.getMarketplaceItems(
         page = page,
         limit = limit,
@@ -70,6 +71,7 @@ object MarketplaceConfigs {
         filter = MarketplaceApi.Filter(
             name = name,
             author = author,
+            featured = featured,
             tags = tags,
             targetServer = targetServer,
             sort = MarketplaceApi.Sort.SCORE
@@ -118,7 +120,10 @@ object MarketplaceConfigs {
     val MarketplaceItem.address: String
         get() = author?.let { "$it/$name" } ?: id.toString()
 
-    suspend fun findForServer(address: String): MarketplaceItem? =
-        list(limit = 1, targetServer = address).items.firstOrNull()
+    /**
+     * The best ranked config for [address], featured ones first.
+     */
+    suspend fun findForServer(address: String, onlyFeatured: Boolean): MarketplaceItem? =
+        list(limit = 1, targetServer = address, featured = if (onlyFeatured) true else null).items.firstOrNull()
 
 }

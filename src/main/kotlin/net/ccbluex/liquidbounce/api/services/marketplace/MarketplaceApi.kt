@@ -65,6 +65,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
             append("&featured=$featured")
             filter.name?.let { append("&name=${it.urlEncoded()}") }
             filter.author?.let { append("&author=${it.urlEncoded()}") }
+            filter.featured?.let { append("&is_featured=$it") }
             filter.tags.takeIf { it.isNotEmpty() }?.let { append("&tags=${it.joinToString(",")}") }
             filter.targetServer?.let { append("&target_server=${it.urlEncoded()}") }
             filter.forkedFrom?.let { append("&forked_from=$it") }
@@ -80,6 +81,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     data class Filter(
         val name: String? = null,
         val author: String? = null,
+        val featured: Boolean? = null,
         val tags: List<Int> = emptyList(),
         val targetServer: String? = null,
         val forkedFrom: Int? = null,
