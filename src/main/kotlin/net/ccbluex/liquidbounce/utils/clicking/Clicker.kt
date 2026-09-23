@@ -91,7 +91,12 @@ open class Clicker<T>(
             ClickTechnique.CONSTANT -> ConstantClickTiming
         }.nextInterval(recent, comboMs, cps, random)
     }).apply {
-        enforced = { tick -> player.hasCooldown && itemCooldown?.isCooldownPassed(tick) == true }
+        // Once, on the tick the cooldown fills up; one that is always ready would otherwise click every tick
+        enforced = { tick ->
+            val cooldown = itemCooldown
+            player.hasCooldown && cooldown != null &&
+                cooldown.isCooldownPassed(tick) && !cooldown.isCooldownPassed(tick - 1)
+        }
     }
 
     // Clicks that were executed by [click] in the current tick
