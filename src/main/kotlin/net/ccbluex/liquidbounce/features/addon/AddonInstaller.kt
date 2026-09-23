@@ -58,15 +58,21 @@ object AddonInstaller {
 
     private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
 
+    internal val minecraft: String
+        get() = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString
+
+    internal val liquidbounce: String
+        get() = FabricLoader.getInstance().getModContainer("liquidbounce").orElseThrow().metadata.version.friendlyString
+
     fun stageSubscribedAddons() {
         val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
         val expected = HashSet<String>(subscribed.size)
 
         for (item in subscribed) {
-            val revisionId = item.installedRevisionId ?: continue
-            val target = File(modsFolder, managedName(item.id, revisionId))
+            val revisionDir = item.installedRevisionDir ?: continue
+            val target = File(modsFolder, managedName(item.id, revisionDir.name.toInt()))
 
-            runCatching { stage(item, target) }
+            runCatching { stage(item, item.addonJar(revisionDir), target) }
                 .onSuccess { expected += target.name }
                 .onFailure { error ->
                     logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
@@ -81,24 +87,16 @@ object AddonInstaller {
         }
     }
 
-    private fun stage(item: SubscribedItem, target: File) {
+    private fun stage(item: SubscribedItem, jar: File, target: File) {
         if (target.exists()) {
             return
-        }
-
-        val folder = item.getInstallationFolder()
-            ?: error("Add-on ${item.id} has no installation folder")
-
-        val jars = folder.listFiles { file: File -> file.isFile && file.extension == "jar" }.orEmpty()
-        check(jars.size == 1) {
-            "Add-on revision must be an archive containing exactly one jar, found ${jars.size} in $folder"
         }
 
         check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
 
         // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
         val part = File(modsFolder, target.name + PART_SUFFIX).toPath()
-        jars.single().toPath().copyTo(part, overwrite = true)
+        jar.toPath().copyTo(part, overwrite = true)
 
         // Old revisions go only once the copy succeeded.
         managedJarsFor(item.id).forEach(::remove)
