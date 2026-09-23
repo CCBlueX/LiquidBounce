@@ -41,7 +41,9 @@ import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -86,6 +88,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         private set
     var itemUid by text("ItemUid", "")
         private set
+    var itemAuthor by text("ItemAuthor", "")
+        private set
     var revisionId by int("RevisionId", 0, 0..Int.MAX_VALUE)
         private set
     private var backupName by text("BackupName", "")
@@ -105,6 +109,11 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         }
 
     val hasBase get() = baseText.isNotEmpty()
+
+    /**
+     * `author/name` of the tracked config, or its name while the author is unknown.
+     */
+    val address get() = if (itemAuthor.isEmpty()) itemName else "$itemAuthor/$itemName"
 
     private var detectionJob: Job? = null
 
@@ -161,6 +170,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 itemId = item.id
                 itemName = item.name
                 itemUid = item.uid
+                itemAuthor = item.author.orEmpty()
                 this.revisionId = revisionId
                 chainText = encodeChain(chain)
                 baseText = base?.let(::encodeHashes).orEmpty()
@@ -437,6 +447,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         itemId = item.id
         itemName = item.name
         itemUid = item.uid
+        itemAuthor = item.author.orEmpty()
         revisionId = revision.id
         chainText = encodeChain(chain)
         baseText = base?.let(::encodeHashes).orEmpty()
@@ -587,6 +598,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         itemId = 0
         itemName = ""
         itemUid = ""
+        itemAuthor = ""
         revisionId = 0
         chainText = ""
         baseText = ""
@@ -611,6 +623,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         withoutDetection { block() }
         detectionJob?.cancel()
         ConfigSystem.store(this)
+        EventManager.callEvent(RefreshArrayListEvent)
     }
 
 }

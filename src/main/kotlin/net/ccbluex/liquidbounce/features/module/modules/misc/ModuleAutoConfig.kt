@@ -58,6 +58,13 @@ object ModuleAutoConfig : ClientModule(
         doNotIncludeAlways()
     }
 
+    override val tag: String?
+        get() = when (ConfigTracker.state) {
+            ConfigTracker.State.NONE -> null
+            ConfigTracker.State.TRACKED -> ConfigTracker.address
+            ConfigTracker.State.EDITING -> "${ConfigTracker.address}*"
+        }
+
     override suspend fun enabledEffect() {
         val currentServerEntry = mc.currentServer
 
