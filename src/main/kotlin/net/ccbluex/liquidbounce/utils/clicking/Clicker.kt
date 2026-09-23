@@ -62,11 +62,6 @@ open class Clicker<T>(
     private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
-    /**
-     * Pause after ten seconds of clicking, which starts a new combo. If set to 0, we stay in the combo.
-     */
-    private val breakCombo by intRange("BreakCombo", 0..0, 0..20, "ticks")
-
     init {
         itemCooldown?.let(this::tree)
     }
@@ -175,7 +170,6 @@ open class Clicker<T>(
 
         plan.cps = cps
         plan.maxPerTick = maxPerTick
-        plan.breakCombo = breakCombo
         plan.tick(Util.getMillis())
     }
 

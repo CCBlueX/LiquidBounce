@@ -143,18 +143,4 @@ class ClickPlanTest {
         assertTrue(plan.comboMs < 250, "combo is ${plan.comboMs} ms")
     }
 
-    @Test
-    fun `break combo pauses after the combo length`() {
-        val plan = humanPlan(11..14).apply {
-            breakCombo = 10..10
-            comboLengthMs = 2000L
-        }
-
-        val consumed = plan.run(20 * 10)
-        val longestGap = consumed.joinToString("") { if (it == 0) "0" else "1" }
-            .split('1').maxOf { it.length }
-
-        assertTrue(longestGap >= 10, "longest gap $longestGap ticks")
-    }
-
 }

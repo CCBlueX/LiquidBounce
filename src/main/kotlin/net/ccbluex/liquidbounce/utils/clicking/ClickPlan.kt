@@ -44,8 +44,6 @@ class ClickPlan(
 
     var cps = 11..14
     var maxPerTick = 2
-    var breakCombo = 0..0
-    var comboLengthMs = 10_000L
 
     /**
      * Adds a guaranteed click to tick `n` when nothing is planned for it.
@@ -164,24 +162,13 @@ class ClickPlan(
     private fun planNext() {
         val last = times.getLong(times.size - 1)
         var time = last + timing.nextInterval(intervals, last - comboStart, cps, random)
-
-        val breaks = breakCombo.last > 0 && time - comboStart > comboLengthMs
-        if (breaks) {
-            time += breakCombo.randomIn(random) * TICK_MS
-        }
-
         if (times.size >= maxPerTick) {
             time = maxOf(time, times.getLong(times.size - maxPerTick) + TICK_MS)
         }
 
-        if (breaks) {
-            comboStart = time
-            intervals.clear()
-        } else {
-            intervals.add(time - last)
-            if (intervals.size > HISTORY) {
-                intervals.removeLong(0)
-            }
+        intervals.add(time - last)
+        if (intervals.size > HISTORY) {
+            intervals.removeLong(0)
         }
         times.add(time)
     }
@@ -193,7 +180,5 @@ class ClickPlan(
             next -= excess
         }
     }
-
-    private fun IntRange.randomIn(random: Random) = first + random.nextInt(last - first + 1)
 
 }
