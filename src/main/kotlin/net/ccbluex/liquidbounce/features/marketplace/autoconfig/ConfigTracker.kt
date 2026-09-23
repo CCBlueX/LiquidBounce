@@ -35,7 +35,9 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.obj
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -45,9 +47,12 @@ import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.marketplace.InstallPlan
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
 import net.ccbluex.liquidbounce.features.marketplace.installDependencies
+import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
+import net.ccbluex.liquidbounce.features.marketplace.planInstalls
 import net.ccbluex.liquidbounce.features.marketplace.resolveDependencies
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
@@ -105,6 +110,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     private var baselineText by text("Baseline", "")
 
     val hasBackup get() = backupName.isNotEmpty()
+
+    private val needsBackup get() = !hasBackup || !backupFile(backupName).exists()
 
     /**
      * Config dependencies applied before the tracked config, in order.
@@ -188,12 +195,39 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         return LoadResult(
             installed,
-            installed.any {
-                it.type == MarketplaceItemType.ADDON ||
-                    it.type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(it.type)
-            },
+            installed.any { it.installNeedsRestart },
             unavailable
         )
+    }
+
+    /**
+     * What [load] installs, and the [modules] its configs set, to restrict a load to.
+     */
+    internal class LoadPlan(
+        val installs: InstallPlan,
+        val modules: List<String>
+    )
+
+    /**
+     * Plans loading [revisionId] of [item]. Only the revisions it applies are downloaded, to the
+     * cache [load] reads them from.
+     */
+    internal suspend fun plan(item: MarketplaceItem, revisionId: Int): LoadPlan {
+        val dependencies = resolveDependencies(item.id)
+        val steps = dependencies.configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
+        return LoadPlan(
+            installs = planInstalls(dependencies.installables),
+            modules = steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
+        )
+    }
+
+    /**
+     * The modules [revisionId] of [itemId] sets.
+     */
+    internal suspend fun modules(itemId: Int, revisionId: Int): List<String> {
+        val config = readConfig(revisionFile(itemId, revisionId))
+        val modules = if (config.string("name") == "modules") config else config.obj("modules")
+        return modules?.get("value")?.asJsonArray?.map { it.asJsonObject["name"].asString }.orEmpty()
     }
 
     /**
@@ -476,7 +510,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * @return the settings before the last config, when there was more than one
      */
     private fun apply(configs: List<JsonObject>, modules: Collection<ValueGroup>): Map<String, String>? {
-        val createdBackup = !hasBackup || !backupFile(backupName).exists()
+        val createdBackup = needsBackup
         if (createdBackup) {
             val name = "marketplace_preload_${System.currentTimeMillis()}"
             ConfigSystem.backup(name, backedUpConfigs)

@@ -41,6 +41,23 @@ internal class Installable(val item: MarketplaceItem, val needs: Set<Int>)
 internal data class Installed(val installed: List<MarketplaceItem>, val unavailable: List<Unavailable>)
 
 /**
+ * What [installDependencies] would do.
+ */
+internal class InstallPlan(val installs: List<PlannedInstall>, val leftOut: List<LeftOut>)
+
+internal class PlannedInstall(val item: MarketplaceItem, val resolution: RevisionResolution.Compatible)
+
+internal class LeftOut(val item: MarketplaceItem, val unavailable: Unavailable)
+
+/**
+ * Whether installing it takes effect only after a restart: for an add-on always, for a script while
+ * nothing runs scripts.
+ */
+internal val MarketplaceItem.installNeedsRestart
+    get() = type == MarketplaceItemType.ADDON ||
+        type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(type)
+
+/**
  * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order they are
  * applied, installables after the ones they need, so an add-on is checked with those installed.
  */
@@ -58,7 +75,10 @@ internal suspend fun resolveDependencies(rootId: Int): Dependencies {
 
         val needs = linkedSetOf<Int>()
         for (dependency in MarketplaceApi.getItemDependencies(id)) {
-            val item = dependency.author?.let { dependency.item.copy(author = it) } ?: dependency.item
+            val item = dependency.item.copy(
+                author = dependency.author ?: dependency.item.author,
+                liveRevisionId = dependency.liveRevision?.id ?: dependency.item.liveRevisionId
+            )
             when (item.type) {
                 MarketplaceItemType.CONFIG -> {
                     visit(item.id)
@@ -110,6 +130,37 @@ internal suspend fun installDependencies(installables: Collection<Installable>):
         }
     }
     return Installed(installed, leftOut.values.distinct())
+}
+
+/**
+ * Plans [installDependencies] without installing anything.
+ */
+internal suspend fun planInstalls(installables: Collection<Installable>): InstallPlan {
+    val installs = mutableListOf<PlannedInstall>()
+    val leftOut = mutableListOf<LeftOut>()
+    val missing = hashMapOf<Int, Unavailable>()
+    for (installable in installables) {
+        val item = installable.item
+        if (MarketplaceManager.isSubscribed(item.id)) {
+            continue
+        }
+
+        val reason = leftOutReason(installable, missing) ?: run {
+            val subscribed = SubscribedItem(item)
+            when (val resolution = subscribed.locked { subscribed.resolveRevision(known = item) }) {
+                is RevisionResolution.Compatible -> {
+                    installs += PlannedInstall(item, resolution)
+                    continue
+                }
+
+                is RevisionResolution.NoneCompatible -> resolution.unavailable
+            }
+        }
+
+        leftOut += LeftOut(item, reason)
+        missing[item.id] = reason
+    }
+    return InstallPlan(installs, leftOut)
 }
 
 /**
