@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.iterateBlockPos
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -190,7 +191,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val fluidShape = fluidState.getShape(level, pos)
-                            !fluidShape.isEmpty && boundingBox.intersects(fluidShape.bounds().move(pos))
+                            !fluidShape.isEmpty && fluidShape.move(pos) intersects boundingBox
                         }
                     }
                     Avoid.CACTI -> {
@@ -208,7 +209,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val shape = blockState.getShape(level, pos)
-                            !shape.isEmpty && boundingBox.intersects(shape.bounds().move(pos))
+                            !shape.isEmpty && shape.move(pos) intersects boundingBox
                         }
                     }
                 }
