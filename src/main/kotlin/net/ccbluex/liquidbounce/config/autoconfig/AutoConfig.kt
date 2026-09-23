@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.config.autoconfig
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
 import net.ccbluex.liquidbounce.config.gson.util.obj
@@ -40,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -73,23 +71,6 @@ object AutoConfig {
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
-    @Volatile
-    var configs: Array<AutoSettings>? = null
-        private set
-
-    /**
-     * Reloads auto settings list.
-     *
-     * @return successfully reloaded or not
-     */
-    suspend fun reloadConfigs(): Boolean = try {
-        configs = ClientApi.requestSettingsList()
-        true
-    } catch (e: Exception) {
-        logger.error("Failed to load auto configs", e)
-        false
-    }
-
     inline fun withLoading(block: () -> Unit) {
         loadingNow = true
         try {
@@ -97,10 +78,6 @@ object AutoConfig {
         } finally {
             loadingNow = false
         }
-    }
-
-    suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettings(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**
@@ -253,12 +230,18 @@ object AutoConfig {
 
     /**
      * Created an auto config, which stores the moduleConfigur
+     *
+     * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers].
+     * Loading such a config leaves everything it does not name untouched.
      */
+    @Suppress("LongParameterList")
     fun serializeAutoConfig(
         writer: Writer,
         includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
-        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
+        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING,
+        modules: Collection<String>? = null,
+        includeSpoofers: Boolean = modules == null
     ) {
         this.includeConfiguration = includeConfiguration
 
@@ -270,11 +253,19 @@ object AutoConfig {
             error("Root element is not a json object")
         }
 
+        if (modules != null) {
+            val values = moduleTree.asJsonObject["value"].asJsonArray
+            val kept = values.filter { it.asJsonObject["name"].asString in modules }
+            moduleTree.asJsonObject.add("value", JsonArray().apply { kept.forEach(::add) })
+        }
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("name", "autoconfig")
 
         jsonObject.add("modules", moduleTree.asJsonObject)
-        jsonObject.add("spoofers", spooferTree.asJsonObject)
+        if (includeSpoofers) {
+            jsonObject.add("spoofers", spooferTree.asJsonObject)
+        }
 
         val author = mc.user.name
 

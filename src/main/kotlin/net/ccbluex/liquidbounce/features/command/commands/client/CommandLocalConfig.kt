@@ -22,7 +22,6 @@ import com.mojang.brigadier.CommandDispatcher
 import kotlinx.coroutines.async
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -119,7 +118,7 @@ object CommandLocalConfig : CommandRegistrar {
                     val lastModified = Instant.ofEpochMilli(file.lastModified())
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime()
-                        .format(AutoSettings.FORMATTER)
+                        .format(AutoConfigMetadata.FORMATTER)
 
                     textOf(
                         "\u2B25 ".asPlainText(ChatFormatting.BLUE),

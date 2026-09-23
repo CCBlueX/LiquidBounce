@@ -32,5 +32,32 @@ data class MarketplaceItem(
     val featured: Boolean,
     @SerializedName("created_at")
     val createdAt: String,
-    val status: MarketplaceItemStatus
+    val status: MarketplaceItemStatus,
+    val author: String? = null,
+    @SerializedName("live_revision_id")
+    val liveRevisionId: Int? = null,
+    val tags: List<MarketplaceTag>? = null,
+    @SerializedName("target_servers")
+    val targetServers: List<String>? = null,
+    @SerializedName("forked_from_item_id")
+    val forkedFromItemId: Int? = null,
+    @SerializedName("forked_from_revision_id")
+    val forkedFromRevisionId: Int? = null,
+    val downloads: Int = 0,
+    val score: Double = 0.0,
+    val visibility: MarketplaceItemVisibility? = null,
+    @SerializedName("share_code")
+    val shareCode: String? = null,
+    @SerializedName("includes_binds")
+    val includesBinds: Boolean? = null,
+    @SerializedName("updated_at")
+    val updatedAt: String? = null,
+    @SerializedName("protocol_name")
+    val protocolName: String? = null,
+    @SerializedName("protocol_version")
+    val protocolVersion: Int? = null,
+    @SerializedName("recent_works")
+    val recentWorks: Int = 0,
+    @SerializedName("recent_fails")
+    val recentFails: Int = 0
 )

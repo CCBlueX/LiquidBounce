@@ -6,6 +6,22 @@ public final class net/ccbluex/liquidbounce/LiquidBounce : net/ccbluex/liquidbou
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field ADDON Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field CONFIG Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field OTHER Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field SCRIPT Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field THEME Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public final fun isListable ()Z
+	public final fun isSubscribable ()Z
+	public final fun reload (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+}
+
 public final class net/ccbluex/liquidbounce/api/services/auth/OAuthClient : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -621,6 +637,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerCommand (Lnet/ccbluex/liquidbounce/features/command/CommandRegistrar;)V
 	public final fun registerCommandNodes (Ljava/util/Collection;)V
 	public final fun registerListeners ([Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun registerMarketplaceHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public fun toString ()Ljava/lang/String;
@@ -729,7 +746,45 @@ public final class net/ccbluex/liquidbounce/features/global/GlobalSettingsAutoTr
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public abstract interface class net/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler {
+	public abstract fun reload (Ljava/util/List;)V
+}
+
 public final class net/ccbluex/liquidbounce/features/marketplace/MarketplaceManager : net/ccbluex/liquidbounce/config/types/Config, net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun hasHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)Z
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun registerHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
+	public final fun unregisterHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/marketplace/SubscribedItem {
+	public fun <init> (Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItem;)V
+	public final fun checkUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public final fun copy (Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()I
+	public final fun getInstallationFolder ()Ljava/io/File;
+	public final fun getInstalledRevisionId ()Ljava/lang/Integer;
+	public final fun getItemDir ()Ljava/io/File;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNewestRevisionId (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getType ()Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public fun hashCode ()I
+	public final fun install (ILnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun install$default (Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;ILnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/features/marketplace/autoconfig/ConfigTracker : net/ccbluex/liquidbounce/config/types/Config, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;

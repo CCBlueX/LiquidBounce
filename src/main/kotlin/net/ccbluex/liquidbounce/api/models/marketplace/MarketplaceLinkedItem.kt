@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.api.services.client
+package net.ccbluex.liquidbounce.api.models.marketplace
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.models.client.Build
-import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
+import com.google.gson.annotations.SerializedName
 
-object ClientApi : BaseApi(config.apiEndpointV1) {
-
-    suspend fun requestNewestBuildEndpoint(branch: String = API_BRANCH, release: Boolean = false) =
-        get<Build>("/version/newest/$branch${if (release) "/release" else ""}")
-
-    suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) =
-        get<MessageOfTheDay>("/client/$branch/motd")
-
-}
+/**
+ * An item as another one depends on it.
+ */
+data class MarketplaceLinkedItem(
+    val item: MarketplaceItem,
+    val author: String?,
+    @SerializedName("live_revision")
+    val liveRevision: MarketplaceItemRevision?
+)
