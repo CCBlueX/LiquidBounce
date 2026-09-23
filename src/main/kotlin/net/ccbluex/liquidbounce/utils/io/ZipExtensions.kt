@@ -34,9 +34,9 @@ import kotlin.io.path.outputStream
 /**
  * Extracts an [ArchiveInputStream] to a specified [folder] and closes it.
  */
+@Suppress("CognitiveComplexMethod")
 private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
-    val destDir = folder.toAbsolutePath().normalize()
-    destDir.createDirectories()
+    val destDir = folder.createDirectories().toRealPath()
 
     for (entry in ais) {
         if (entry is ZipArchiveEntry && entry.isUnixSymlink) {
