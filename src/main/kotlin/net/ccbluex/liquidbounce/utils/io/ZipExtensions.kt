@@ -32,7 +32,7 @@ import kotlin.io.path.createParentDirectories
 import kotlin.io.path.outputStream
 
 /**
- * Extracts an [ArchiveInputStream] to a specified [folder] and close it.
+ * Extracts an [ArchiveInputStream] to a specified [folder] and closes it.
  */
 private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
     val destDir = folder.toAbsolutePath().normalize()
