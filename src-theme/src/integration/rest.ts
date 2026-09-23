@@ -7,6 +7,7 @@ import type {
     ClientInfo,
     ClientUpdate,
     ClientUser,
+    ConfigTracker,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
@@ -15,6 +16,21 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    MarketplaceConfigDetail,
+    MarketplaceConfigDetails,
+    MarketplaceConfigPage,
+    MarketplaceConfigQuery,
+    MarketplaceContext,
+    MarketplaceInstalledItem,
+    MarketplaceInstallResult,
+    MarketplaceItem,
+    MarketplaceItemDetail,
+    MarketplaceItemPage,
+    MarketplaceItemType,
+    MarketplaceLoadPlan,
+    MarketplaceLoadResult,
+    MarketplacePublished,
+    MarketplaceReport,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -872,6 +888,134 @@ export async function logoutClientUser() {
             "Content-Type": "application/json"
         }
     });
+}
+
+export class MarketplaceError extends Error {
+    constructor(message: string, readonly status: number) {
+        super(message);
+    }
+}
+
+async function marketplaceRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+    const response = await fetch(`${API_BASE}/client/marketplace${path}`, {
+        method,
+        headers: body === undefined ? undefined : {
+            "Content-Type": "application/json"
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new MarketplaceError(error?.reason ?? response.statusText, response.status);
+    }
+
+    return response.status === 204 ? undefined as T : await response.json();
+}
+
+export async function getMarketplaceContext(): Promise<MarketplaceContext> {
+    return await marketplaceRequest("/context");
+}
+
+export async function getMarketplaceTags(): Promise<string[]> {
+    return await marketplaceRequest("/tags");
+}
+
+export async function getMarketplaceConfigs(query: MarketplaceConfigQuery): Promise<MarketplaceConfigPage> {
+    const searchParams = new URLSearchParams({
+        page: query.page.toString(),
+        query: query.query,
+        tags: query.tags.join(","),
+        server: query.server.toString(),
+        featured: query.featured.toString(),
+        sort: query.sort
+    });
+
+    return await marketplaceRequest(`/configs?${searchParams.toString()}`);
+}
+
+export async function getMarketplaceConfig(id: number): Promise<MarketplaceConfigDetail> {
+    return await marketplaceRequest(`/configs/${id}`);
+}
+
+export async function getMarketplaceLoadPlan(id: number): Promise<MarketplaceLoadPlan> {
+    return await marketplaceRequest(`/configs/${id}/plan`);
+}
+
+export async function loadMarketplaceConfig(id: number, modules: string[] | null): Promise<MarketplaceLoadResult> {
+    return await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
+}
+
+export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceReport> {
+    return works === null
+        ? await marketplaceRequest(`/configs/${id}/report`, "DELETE")
+        : await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
+}
+
+export async function copyMarketplaceShareCode(id: number): Promise<string> {
+    return (await marketplaceRequest<{ shareCode: string }>(`/configs/${id}/share-code`, "POST")).shareCode;
+}
+
+export async function setMarketplaceConfigDetails(id: number, details: MarketplaceConfigDetails) {
+    await marketplaceRequest(`/configs/${id}`, "PATCH", details);
+}
+
+export async function deleteMarketplaceConfig(id: number) {
+    await marketplaceRequest(`/configs/${id}`, "DELETE");
+}
+
+export async function getConfigTracker(): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker");
+}
+
+export async function changeConfigTracker(action: "revert" | "restore" | "detach"): Promise<ConfigTracker> {
+    return await marketplaceRequest(`/tracker/${action}`, "POST");
+}
+
+export async function publishMarketplaceConfig(
+    kind: "New" | "Overlay" | "Fork",
+    details: MarketplaceConfigDetails
+): Promise<MarketplacePublished> {
+    return await marketplaceRequest("/tracker/publish", "POST", {kind, ...details});
+}
+
+export async function updateTrackedConfig(changelog: string): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker/update", "POST", {changelog});
+}
+
+export async function getMarketplaceItems(
+    type: MarketplaceItemType,
+    page: number,
+    query: string,
+    sort: "top" | "new"
+): Promise<MarketplaceItemPage> {
+    const searchParams = new URLSearchParams({type, page: page.toString(), query, sort});
+
+    return await marketplaceRequest(`/items?${searchParams.toString()}`);
+}
+
+export async function getMarketplaceItemDetail(id: number): Promise<MarketplaceItemDetail> {
+    return await marketplaceRequest(`/items/${id}`);
+}
+
+export async function getInstalledMarketplaceItems(): Promise<MarketplaceInstalledItem[]> {
+    return await marketplaceRequest("/items/installed");
+}
+
+export async function installMarketplaceItem(id: number): Promise<MarketplaceInstallResult> {
+    return await marketplaceRequest(`/items/${id}/install`, "POST");
+}
+
+export async function updateMarketplaceItem(id: number): Promise<MarketplaceItem> {
+    return await marketplaceRequest(`/items/${id}/update`, "POST");
+}
+
+export async function removeMarketplaceItem(id: number) {
+    await marketplaceRequest(`/items/${id}/remove`, "POST");
+}
+
+export async function applyMarketplaceTheme(id: number) {
+    await marketplaceRequest(`/items/${id}/apply`, "POST");
 }
 
 export function itemTextureUrl(identifier: string) {

@@ -581,3 +581,210 @@ type KeyboardKeyName =
 export type MinecraftMouseKey = `key.mouse.${MouseKeyName}`;
 export type MinecraftKeyboardKey = `key.keyboard.${KeyboardKeyName}`;
 export type MinecraftKey = MinecraftMouseKey | MinecraftKeyboardKey;
+
+export type MarketplaceItemType = "Config" | "Theme" | "Addon" | "Script" | "Other";
+
+export type ConfigTrackerState = "None" | "Tracked" | "Editing";
+
+export type MarketplaceVisibility = "public" | "unlisted";
+
+export interface MarketplacePagination {
+    current: number;
+    pages: number;
+    items: number;
+}
+
+export interface MarketplaceContext {
+    server?: string;
+    autoConfig: boolean;
+    onlyFeatured: boolean;
+    user?: string;
+}
+
+export interface MarketplaceLinkedConfig {
+    id: number;
+    address: string;
+}
+
+export interface MarketplaceConfig {
+    id: number;
+    name: string;
+    address: string;
+    image?: string;
+    featured: boolean;
+    binds: boolean;
+    tags: string[];
+    servers: string[];
+    protocol?: string;
+    protocolMatches: boolean;
+    works: number;
+    fails: number;
+    downloads: number;
+    updatedAt?: number;
+    overlayOn?: MarketplaceLinkedConfig;
+    tracking: ConfigTrackerState;
+    own: boolean;
+    visibility?: MarketplaceVisibility;
+}
+
+export interface MarketplaceConfigPage {
+    items: MarketplaceConfig[];
+    pagination: MarketplacePagination;
+    code: boolean;
+    unfeatured: number;
+}
+
+export interface MarketplaceRevision {
+    id: number;
+    version: string;
+    liquidbounce?: string;
+    createdAt?: number;
+    changelog?: string;
+}
+
+export interface MarketplaceItem {
+    id: number;
+    type: MarketplaceItemType;
+    name: string;
+    author?: string;
+    image?: string;
+    summary: string;
+    featured: boolean;
+    downloads: number;
+    rating?: number;
+    reviews: number;
+    subscribed: boolean;
+    installable: boolean;
+    notFor?: string;
+    installed?: MarketplaceRevision;
+    update: boolean;
+    restartRequired: boolean;
+    inUse: boolean;
+}
+
+export interface MarketplaceItemPage {
+    items: MarketplaceItem[];
+    pagination: MarketplacePagination;
+}
+
+export interface MarketplaceVersion {
+    revision: MarketplaceRevision;
+    installed: boolean;
+    fits: boolean;
+}
+
+export interface MarketplaceItemDetail {
+    item: MarketplaceItem;
+    description: string;
+    liquidbounce: string;
+    versions: MarketplaceVersion[];
+}
+
+export interface MarketplaceDependency {
+    id: number;
+    type: MarketplaceItemType;
+    address: string;
+    image?: string;
+    order?: number;
+    featured: boolean;
+    protocol?: string;
+    protocolMatches: boolean;
+    status?: MarketplaceItem;
+}
+
+export interface MarketplaceConfigRevision {
+    id: number;
+    createdAt?: number;
+    changelog?: string;
+    works: number;
+    fails: number;
+    latest: boolean;
+    loaded: boolean;
+    first: boolean;
+}
+
+export interface MarketplaceConfigDetail {
+    config: MarketplaceConfig;
+    summary: string;
+    description: string;
+    createdAt?: number;
+    shareCode?: string;
+    forkOf?: MarketplaceLinkedConfig;
+    dependencies: MarketplaceDependency[];
+    revisions: MarketplaceConfigRevision[];
+    changes?: string[];
+    report?: boolean;
+}
+
+export interface MarketplaceLoadPlan {
+    installs: {
+        id: number;
+        type: MarketplaceItemType;
+        name: string;
+        author?: string;
+        image?: string;
+        revision: MarketplaceRevision;
+        restart: boolean;
+    }[];
+    leftOut: {
+        id: number;
+        type: MarketplaceItemType;
+        name: string;
+        image?: string;
+    }[];
+    modules: string[];
+}
+
+export interface MarketplaceLoadResult {
+    installed: string[];
+}
+
+export interface MarketplaceInstallResult {
+    installed: string[];
+}
+
+export interface MarketplaceReport {
+    works: number;
+    fails: number;
+    report?: boolean;
+}
+
+export interface ConfigTracker {
+    state: ConfigTrackerState;
+    id: number;
+    address: string;
+    image?: string;
+    own: boolean;
+    backup: boolean;
+    edited: string[];
+}
+
+export interface MarketplacePublished {
+    id: number;
+    address: string;
+    visibility?: MarketplaceVisibility;
+    shareCode?: string;
+}
+
+export interface MarketplaceInstalledItem {
+    id: number;
+    type: MarketplaceItemType;
+    name: string;
+}
+
+export interface MarketplaceConfigDetails {
+    name: string;
+    description: string;
+    tags: string[];
+    servers: string[];
+    visibility: MarketplaceVisibility;
+}
+
+export interface MarketplaceConfigQuery {
+    page: number;
+    query: string;
+    tags: string[];
+    server: boolean;
+    featured: boolean;
+    sort: "top" | "new";
+}
