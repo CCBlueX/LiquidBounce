@@ -32,11 +32,14 @@ import net.minecraft.world.entity.LivingEntity
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
+import kotlin.math.sign
 
 /**
  * Aims the way the model decides. [fallback] aims whenever it does not: without a model, while the fight
  * history fills up, and on the way back to the camera.
  */
+private const val VERTICAL_TOLERANCE = 8f
+
 class AiAngleSmooth(
     parent: ModeValueGroup<*>,
     private val fallback: AngleSmooth,
@@ -45,6 +48,12 @@ class AiAngleSmooth(
     private val maxTurn by float("MaxTurn", 60f, 10f..180f)
     private val randomness by float("Randomness", 0.5f, 0f..1f)
     private val prediction by int("Prediction", 2, 0..4, "ticks")
+
+    /**
+     * Share of the vertical miss closed per tick beyond [VERTICAL_TOLERANCE]. The model learned from 1.9+ fights,
+     * where nobody follows an opponent knocked high into the air; 1.8 combos need it.
+     */
+    private val verticalAssist by float("VerticalAssist", 0f, 0f..1f)
     private var lastSpeed = 1f
     private var fellBack = true
     private var notified: String? = null
@@ -71,7 +80,12 @@ class AiAngleSmooth(
         notified = null
         fellBack = false
         val yaw = (live.decision.yaw * speed).coerceIn(-maxTurn, maxTurn)
-        val pitch = (live.decision.pitch * speed).coerceIn(-maxTurn, maxTurn)
+        var pitch = live.decision.pitch * speed
+        val missed = targetRotation.pitch - (currentRotation.pitch + pitch)
+        if (abs(missed) > VERTICAL_TOLERANCE) {
+            pitch += (missed - sign(missed) * VERTICAL_TOLERANCE) * verticalAssist
+        }
+        pitch = pitch.coerceIn(-maxTurn, maxTurn)
         lastSpeed = max(abs(yaw), abs(pitch)).coerceAtLeast(1f)
         return Rotation(currentRotation.yaw + yaw, (currentRotation.pitch + pitch).coerceIn(-90f, 90f))
     }
