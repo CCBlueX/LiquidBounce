@@ -28,6 +28,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -60,6 +64,8 @@ object CombatController : EventListener {
     private const val WINDOW = CombatFeatures.LIVE_WINDOW
     private const val MAX_GAP = 20
     private const val WARM_DISTANCE = 8f
+    private val FORWARD_KEYS = arrayOf("back", null, "forward")
+    private val STRAFE_KEYS = arrayOf("right", null, "left")
 
     private class History {
         val self = ArrayDeque<CombatFrame>()
@@ -146,6 +152,7 @@ object CombatController : EventListener {
         gapTicks = 0
         capture(target, view)
         cached = predict()
+        debug(target, view, cached)
         return cached
     }
 
@@ -220,6 +227,33 @@ object CombatController : EventListener {
             clicks = if (attacked) 1 else swung(own))
         history.add(own, other, context, player.tickCount)
         attacked = false
+    }
+
+    /** What the model saw and decided this tick, for ModuleDebug. */
+    private fun debug(target: LivingEntity, view: Rotation, live: CombatLiveDecision?) {
+        debugParameter("Target") {
+            "%s, %.1f blocks, hurt %d".format(target.scoreboardName, target.distanceTo(player), target.hurtTime)
+        }
+        debugParameter("History") { "${self.size} ticks" }
+        val decision = live?.decision
+        debugParameter("Turn") {
+            decision?.let { "%.1f yaw, %.1f pitch%s".format(it.yaw, it.pitch, if (it.clamped) ", clamped" else "") }
+        }
+        debugParameter("Attack") { decision?.attack }
+        debugParameter("Keys") {
+            live?.let {
+                listOfNotNull(FORWARD_KEYS[it.forward], STRAFE_KEYS[it.strafe], "jump".takeIf { _ -> it.jump },
+                    "sprint".takeIf { _ -> it.sprint }).joinToString(" ").ifEmpty { "none" }
+            }
+        }
+        val eyes = player.eyePosition
+        debugGeometry("View") { DebuggedLineSegment(eyes, eyes.add(view.directionVector.scale(4.0)), Color4b.RED) }
+        debugGeometry("Decision") {
+            decision?.let {
+                val next = Rotation(view.yaw + it.yaw, view.pitch + it.pitch)
+                DebuggedLineSegment(eyes, eyes.add(next.directionVector.scale(4.0)), Color4b.GREEN)
+            }
+        }
     }
 
     private fun predict(): CombatLiveDecision? {
