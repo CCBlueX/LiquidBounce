@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config.autoconfig
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
@@ -229,12 +230,18 @@ object AutoConfig {
 
     /**
      * Created an auto config, which stores the moduleConfigur
+     *
+     * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers].
+     * Loading such a config leaves everything it does not name untouched.
      */
+    @Suppress("LongParameterList")
     fun serializeAutoConfig(
         writer: Writer,
         includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
-        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
+        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING,
+        modules: Collection<String>? = null,
+        includeSpoofers: Boolean = modules == null
     ) {
         this.includeConfiguration = includeConfiguration
 
@@ -246,11 +253,19 @@ object AutoConfig {
             error("Root element is not a json object")
         }
 
+        if (modules != null) {
+            val values = moduleTree.asJsonObject["value"].asJsonArray
+            val kept = values.filter { it.asJsonObject["name"].asString in modules }
+            moduleTree.asJsonObject.add("value", JsonArray().apply { kept.forEach(::add) })
+        }
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("name", "autoconfig")
 
         jsonObject.add("modules", moduleTree.asJsonObject)
-        jsonObject.add("spoofers", spooferTree.asJsonObject)
+        if (includeSpoofers) {
+            jsonObject.add("spoofers", spooferTree.asJsonObject)
+        }
 
         val author = mc.user.name
 
