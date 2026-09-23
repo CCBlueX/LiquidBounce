@@ -16,10 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.clicking.pattern
+package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-interface ClickPattern {
-    fun fill(clickArray: IntArray, cps: IntRange, clicker: Clicker<*>)
+enum class ClickTechnique(override val tag: String) : Tagged {
+    HUMAN("Human"),
+
+    /**
+     * Evenly spaced at the top of the CPS range, for anticheats that only look at the time since the last attack.
+     */
+    CONSTANT("Constant"),
 }
