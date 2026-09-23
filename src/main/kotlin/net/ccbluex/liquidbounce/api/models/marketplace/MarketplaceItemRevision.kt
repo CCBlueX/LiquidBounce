@@ -30,5 +30,7 @@ data class MarketplaceItemRevision(
     val changelog: String?,
     @SerializedName("created_at")
     val createdAt: String,
-    val status: MarketplaceItemStatus
+    val status: MarketplaceItemStatus,
+    @SerializedName("includes_binds")
+    val includesBinds: Boolean? = null
 )

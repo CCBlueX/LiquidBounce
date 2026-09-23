@@ -16,20 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.api.services.client
+package net.ccbluex.liquidbounce.api.models.marketplace
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.models.client.Build
-import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
+import com.google.gson.annotations.SerializedName
 
-object ClientApi : BaseApi(config.apiEndpointV1) {
+data class MarketplaceTag(
+    val id: Int,
+    val name: String
+)
 
-    suspend fun requestNewestBuildEndpoint(branch: String = API_BRANCH, release: Boolean = false) =
-        get<Build>("/version/newest/$branch${if (release) "/release" else ""}")
+data class MarketplaceConfigReport(
+    val id: Int,
+    @SerializedName("revision_id")
+    val revisionId: Int,
+    val works: Boolean,
+    @SerializedName("client_version")
+    val clientVersion: String?,
+    @SerializedName("server_address")
+    val serverAddress: String?,
+    @SerializedName("created_at")
+    val createdAt: String,
+    @SerializedName("updated_at")
+    val updatedAt: String
+)
 
-    suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) =
-        get<MessageOfTheDay>("/client/$branch/motd")
-
-}
+data class MarketplaceConfigReportSummary(
+    @SerializedName("revision_id")
+    val revisionId: Int,
+    val works: Int,
+    val fails: Int
+)
