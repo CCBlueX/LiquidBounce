@@ -25,9 +25,9 @@ import kotlin.math.ln
 import kotlin.math.roundToLong
 
 /**
- * Log-normal intervals around a CPS drawn once per combo, shifted by [fatigue] over the combo time in seconds.
+ * Log-normal intervals around a CPS drawn once per combo.
  */
-class HumanClickTiming(private val fatigue: (Float) -> Float) : ClickTiming {
+class HumanClickTiming : ClickTiming {
 
     companion object {
         private const val SIGMA = 0.45
@@ -42,9 +42,8 @@ class HumanClickTiming(private val fatigue: (Float) -> Float) : ClickTiming {
             comboCps = cps.first + random.nextDouble() * (cps.last - cps.first)
         }
 
-        val targetCps = (comboCps + fatigue(comboMs / 1000f)).coerceAtLeast(1.0)
         // mu shifted by -sigma^2/2 so the mean interval, not the median, lands on the target CPS
-        val mu = ln(1000.0 / targetCps) - SIGMA * SIGMA / 2
+        val mu = ln(1000.0 / comboCps) - SIGMA * SIGMA / 2
         return exp(mu + SIGMA * random.nextGaussian()).roundToLong().coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS)
     }
 

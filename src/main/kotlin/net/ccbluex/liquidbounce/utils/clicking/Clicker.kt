@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
@@ -30,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.vector2f
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.util.Util
@@ -59,25 +57,13 @@ open class Clicker<T>(
 
     companion object {
         private const val TICKS_AHEAD = 20
-        private const val DEFAULT_CURVE_WINDOW_SECONDS = 10f
     }
 
     private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
-    private val fatigue = curve(
-        "Fatigue",
-        mutableListOf(
-            0f vector2f 1f,
-            DEFAULT_CURVE_WINDOW_SECONDS / 2 vector2f 0f,
-            DEFAULT_CURVE_WINDOW_SECONDS vector2f -2f,
-        ),
-        xAxis = "Seconds" axis 0f..DEFAULT_CURVE_WINDOW_SECONDS,
-        yAxis = "CPS" axis -5f..5f,
-    )
-
     /**
-     * Pause after a combo as long as the [fatigue] curve, which starts a new one. If set to 0, we stay in the combo.
+     * Pause after ten seconds of clicking, which starts a new combo. If set to 0, we stay in the combo.
      */
     private val breakCombo by intRange("BreakCombo", 0..0, 0..20, "ticks")
 
@@ -101,9 +87,7 @@ open class Clicker<T>(
     private val passesMissCooldown
         get() = !(missCooldown?.get() == true && mc.missTime > 0)
 
-    private val plan = ClickPlan(HumanClickTiming { seconds ->
-        fatigue.transform(seconds.coerceIn(fatigue.xAxis.range))
-    }).apply {
+    private val plan = ClickPlan(HumanClickTiming()).apply {
         enforced = { tick -> player.hasCooldown && itemCooldown?.isCooldownPassed(tick) == true }
     }
 
@@ -192,7 +176,6 @@ open class Clicker<T>(
         plan.cps = cps
         plan.maxPerTick = maxPerTick
         plan.breakCombo = breakCombo
-        plan.comboLengthMs = (fatigue.xAxis.range.endInclusive * 1000).toLong()
         plan.tick(Util.getMillis())
     }
 

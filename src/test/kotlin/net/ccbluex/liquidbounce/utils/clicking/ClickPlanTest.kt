@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 class ClickPlanTest {
 
     private fun humanPlan(cps: IntRange, maxPerTick: Int = 2, seed: Long = 1337L) =
-        ClickPlan(HumanClickTiming { 0f }, Random(seed)).apply {
+        ClickPlan(HumanClickTiming(), Random(seed)).apply {
             this.cps = cps
             this.maxPerTick = maxPerTick
         }
