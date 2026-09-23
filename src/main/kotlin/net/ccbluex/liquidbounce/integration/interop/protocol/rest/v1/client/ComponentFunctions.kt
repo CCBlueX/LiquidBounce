@@ -68,6 +68,7 @@ private fun Route.getComponentCatalog() = get("/{id}/catalog") {
 private fun Route.postComponent() = post("/{id}") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     HudComponentManager.getComponent(id)
+        ?: HudComponentManager.getFactory(id)
         ?: call.notFound(id, "HUD component not found")
 
     withContext(Dispatchers.Minecraft) {

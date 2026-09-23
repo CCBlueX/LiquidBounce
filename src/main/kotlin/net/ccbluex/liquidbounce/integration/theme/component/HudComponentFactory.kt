@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.integration.theme.component
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.components.WebHudComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import java.util.UUID
 
 abstract class HudComponentFactory {
 
@@ -68,12 +71,16 @@ abstract class HudComponentFactory {
      * @param enabled Whether the component is enabled
      * @param function Function producing the component
      */
-    class NativeHudComponentFactory(
+    @AddonApi
+    class NativeHudComponentFactory @JvmOverloads constructor(
         override val name: String,
         override val enabled: Boolean = false,
         override val singleton: Boolean = false,
-        private val function: () -> HudComponent
+        val description: String = "",
+        private val function: () -> NativeHudComponent
     ) : HudComponentFactory() {
+        val id: UUID = UUID.randomUUID()
+
         override fun createComponent() = function()
     }
 
