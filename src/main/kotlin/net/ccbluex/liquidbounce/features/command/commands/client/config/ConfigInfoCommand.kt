@@ -111,10 +111,7 @@ object ConfigInfoCommand {
             field(warning(t("info.binds")))
         }
         field(regular(t("info.reports", votes(item))))
-        item.liveRevisionId?.let { revisionId ->
-            val revision = request { MarketplaceApi.getMarketplaceItemRevision(item.id, revisionId) }
-            field(regular(t("info.updated", variable(formatDate(revision.createdAt)))))
-        }
+        item.updatedAt?.let { field(regular(t("info.updated", ago(it)))) }
         item.shareCode?.let { code ->
             field(regular(t("info.shareCode", variable(code).copyable())))
         }

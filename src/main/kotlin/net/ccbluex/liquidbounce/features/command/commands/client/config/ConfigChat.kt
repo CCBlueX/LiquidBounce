@@ -39,6 +39,10 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 internal val plain = MessageMetadata(prefix = false)
 
@@ -105,14 +109,39 @@ internal fun protocolText(item: MarketplaceItem): MutableComponent? {
     return name.asText().withStyle(if (matches) ChatFormatting.GREEN else ChatFormatting.RED)
 }
 
+private const val DAYS_PER_WEEK = 7
+private const val DAYS_SHOWN_RELATIVE = 28
+
 /**
- * Servers, protocol and tags on one gray line, or null when the config declares none of them.
+ * How long ago [dateTime] (UTC, as the API sends it) was, with the exact date on hover. Beyond
+ * four weeks only the date.
  */
-internal fun details(item: MarketplaceItem): MutableComponent? {
+internal fun CmdI18n.ago(dateTime: String): MutableComponent {
+    val exact = formatDate(dateTime)
+    val days = runCatching {
+        ChronoUnit.DAYS.between(LocalDateTime.parse(dateTime).toLocalDate(), LocalDate.now(ZoneOffset.UTC))
+    }.getOrNull()
+
+    val text = when {
+        days == null || days > DAYS_SHOWN_RELATIVE -> variable(exact)
+        days <= 0L -> variable(t("date.today"))
+        days == 1L -> variable(t("date.yesterday"))
+        days < DAYS_PER_WEEK -> variable(t("date.days", days))
+        days < 2 * DAYS_PER_WEEK -> variable(t("date.week"))
+        else -> variable(t("date.weeks", days / DAYS_PER_WEEK))
+    }
+    return text.onHover(HoverEvent.ShowText(variable(exact)))
+}
+
+/**
+ * Servers, protocol, tags and the last update on one gray line, or null when there is none of it.
+ */
+internal fun CmdI18n.details(item: MarketplaceItem): MutableComponent? {
     val parts = listOfNotNull(
         item.targetServers?.takeIf { it.isNotEmpty() }?.let { variable(it.joinToString(", ")) },
         protocolText(item),
         item.tags?.takeIf { it.isNotEmpty() }?.let { tags -> regular(tags.joinToString(", ") { it.name }) },
+        item.updatedAt?.let { regular(t("list.updated", ago(it))) },
     )
     if (parts.isEmpty()) {
         return null
