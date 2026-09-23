@@ -272,6 +272,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         return revision
     }
 
+    fun renamed(item: MarketplaceItem) {
+        if (state != State.NONE && item.id == itemId && item.name != itemName) {
+            updateTracking { itemName = item.name }
+        }
+    }
+
     suspend fun delete(session: OAuthSession) {
         check(state != State.NONE) { "No tracked config" }
 

@@ -1,0 +1,113 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.command.commands.client.config
+
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
+import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.features.command.preset.accountOrException
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.variable
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
+    MarketplaceConfigs.index.map { item ->
+        if (item.name.any(Char::isWhitespace)) "\"${item.name}\"" else item.name
+    }
+}
+
+internal val visibilitySuggestions: SuggestionProvider<ClientCommandSource> =
+    suggestions(MarketplaceItemVisibility.entries.map { it.name.lowercase() })
+
+private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+internal fun formatDate(dateTime: String): String =
+    runCatching { LocalDateTime.parse(dateTime).format(DATE_FORMATTER) }.getOrDefault(dateTime.substringBefore('T'))
+
+internal suspend fun session(): OAuthSession = ClientAccountManager.accountOrException().takeSession()
+
+internal suspend fun ownUserId(): String? {
+    val account = ClientAccountManager.accountOrException()
+    if (account.userInformation == null) {
+        account.updateInfo()
+    }
+    return account.userInformation?.userId
+}
+
+internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
+    MarketplaceConfigs.find(input) ?: throw CommandException(t("error.notFound", variable(input)))
+
+internal fun CmdI18n.requireTracked() {
+    if (ConfigTracker.state == ConfigTracker.State.NONE) {
+        throw CommandException(t("error.notTracking"))
+    }
+}
+
+internal suspend fun CmdI18n.requireOwnTracked() {
+    requireTracked()
+    if (ownUserId() != ConfigTracker.itemUid) {
+        throw CommandException(t("error.notOwner", variable(ConfigTracker.itemName)))
+    }
+}
+
+internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility =
+    if (input == null) {
+        MarketplaceItemVisibility.PUBLIC
+    } else {
+        MarketplaceItemVisibility.entries.find { it.name.equals(input, ignoreCase = true) }
+            ?: throw CommandException(t("error.invalidVisibility", variable(input)))
+    }
+
+internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
+    if (names.isEmpty()) {
+        return emptyList()
+    }
+
+    val tags = request { MarketplaceApi.getTags() }
+    return names.map { name ->
+        tags.find { it.name.equals(name, ignoreCase = true) }?.id
+            ?: throw CommandException(t("error.unknownTag", variable(name)))
+    }
+}
+
+/**
+ * Turns an API failure into a chat error instead of a stack trace.
+ */
+internal suspend inline fun <T> CmdI18n.request(block: () -> T): T = try {
+    block()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: CommandException) {
+    throw e
+} catch (e: Exception) {
+    logger.error("Marketplace config request failed", e)
+    throw CommandException(t("error.request", variable(e.message ?: e.javaClass.simpleName)), e)
+}
