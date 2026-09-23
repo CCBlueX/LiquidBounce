@@ -383,13 +383,15 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         }
     }
 
-    suspend fun delete(session: OAuthSession) {
-        check(state != State.NONE) { "No tracked config" }
-
-        val id = itemId
+    /**
+     * Deletes the config [id] from the marketplace, and stops tracking it when it is the tracked one.
+     */
+    suspend fun delete(session: OAuthSession, id: Int) {
         MarketplaceApi.deleteMarketplaceItem(session, id)
         MarketplaceManager.marketplaceRoot.resolve("configs/$id").deleteRecursively()
-        detach()
+        if (state != State.NONE && id == itemId) {
+            detach()
+        }
     }
 
     /**
