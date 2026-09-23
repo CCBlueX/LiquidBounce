@@ -135,7 +135,7 @@ dependencies {
 
     // Ktor Server
     jij(libs.ktor.server.core)
-    jij(libs.ktor.server.netty)
+    jij(libs.ktor.server.cio)
     jij(libs.ktor.server.websockets)
     jij(libs.ktor.server.sse)
     jij(libs.ktor.server.cors)
