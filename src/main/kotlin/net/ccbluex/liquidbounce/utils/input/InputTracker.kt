@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -29,11 +28,9 @@ import net.minecraft.client.KeyMapping
 
 /**
  * Tracking if an input constant is pressed, released or repeated,
- * and when it was last pressed. Also tracks how long an input has been pressed repeatedly.
+ * and when it was last pressed.
  */
 object InputTracker : EventListener {
-
-    private const val COMBO_TIMEOUT_MS = 250L
 
     /**
      * Tracks the state of each mouse button.
@@ -48,11 +45,6 @@ object InputTracker : EventListener {
      * Map key is the [InputConstants.Key] with value being the last time it was pressed in milliseconds.
      */
     private val inputLastPressed = mutableMapOf<InputConstants.Key, Long>()
-
-    /**
-     * Tracks how long we have been pressing a key continuously.
-     */
-    private val inputComboStartTime = mutableMapOf<InputConstants.Key, Long>()
 
     /**
      * Extension property that checks if a key binding is pressed on either the keyboard or mouse.
@@ -96,14 +88,6 @@ object InputTracker : EventListener {
         get() = getTimeSinceInputPress(this.key)
 
     /**
-     * Extension property that gets the time elapsed since the key binding combo started.
-     *
-     * @return Milliseconds since combo start, or Long.MAX_VALUE if no combo is tracked.
-     */
-    val KeyMapping.timeSinceComboStart: Long
-        get() = getTimeSinceComboStart(this.key)
-
-    /**
      * Event handler for mouse button actions. It updates the mouseStates map
      * and tracks timing when a mouse button is pressed or released.
      */
@@ -121,15 +105,6 @@ object InputTracker : EventListener {
     private val handleKeyAction = handler<KeyboardKeyEvent> { event ->
         if (event.action == InputConstants.PRESS) {
             updateInputPress(event.key)
-        }
-    }
-
-    @Suppress("unused")
-    private val handleTick = handler<GameTickEvent> {
-        val now = System.currentTimeMillis()
-        inputComboStartTime.entries.removeIf { entry ->
-            val lastPressed = inputLastPressed[entry.key]
-            lastPressed == null || now - lastPressed > COMBO_TIMEOUT_MS
         }
     }
 
@@ -168,33 +143,8 @@ object InputTracker : EventListener {
         }
     }
 
-    /**
-     * Gets the time elapsed since the specified input combo started.
-     *
-     * @param keyCode The InputConstants key code.
-     * @return Milliseconds since combo start, or Long.MAX_VALUE if no combo is tracked.
-     */
-    fun getTimeSinceComboStart(keyCode: InputConstants.Key): Long {
-        val comboStart = inputComboStartTime[keyCode] ?: return Long.MAX_VALUE
-        return if (comboStart > 0) {
-            System.currentTimeMillis() - comboStart
-        } else {
-            Long.MAX_VALUE
-        }
-    }
-
-    /**
-     * Updates the last pressed time for the specified input.
-     */
-    fun updateInputPress(keyCode: InputConstants.Key) {
+    private fun updateInputPress(keyCode: InputConstants.Key) {
         inputLastPressed[keyCode] = System.currentTimeMillis()
-        if (!inputComboStartTime.containsKey(keyCode)) {
-            inputComboStartTime[keyCode] = System.currentTimeMillis()
-        }
-    }
-
-    fun resetCombo(keyCode: InputConstants.Key) {
-        inputComboStartTime.remove(keyCode)
     }
 
 }
