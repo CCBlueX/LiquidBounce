@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.boundsOrNull
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -135,14 +136,6 @@ fun Vec3i.toBlockPos() = BlockPos(this)
 
 @AddonApi
 val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
-
-@Deprecated(
-    "Use BlockPos.state or BlockPos.stateOrEmpty instead",
-    replaceWith = ReplaceWith("this.state", imports = ["net.ccbluex.liquidbounce.utils.block.state"]),
-    level = DeprecationLevel.ERROR,
-)
-@JvmName("getState-deprecated")
-inline fun BlockPos.getState() = state
 
 @AddonApi
 val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
@@ -454,7 +447,7 @@ inline fun AABB.collideBlockIntersects(
             continue
         }
 
-        if (intersects(shape.bounds())) {
+        if (shape intersects this) {
             return true
         }
     }
