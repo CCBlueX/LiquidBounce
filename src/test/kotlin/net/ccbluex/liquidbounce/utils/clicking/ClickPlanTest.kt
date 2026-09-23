@@ -86,6 +86,14 @@ class ClickPlanTest {
     }
 
     @Test
+    fun `constant clicks at the top of the range, evenly`() {
+        val plan = ClickPlan(ConstantClickTiming, Random(1L)).apply { cps = 10..20 }
+        val consumed = plan.run(20 * 60)
+
+        assertTrue(consumed.drop(1).all { it == 1 }, consumed.joinToString(""))
+    }
+
+    @Test
     fun `presses per tick never exceed the cap`() {
         for (cap in 1..3) {
             val plan = humanPlan(25..30, maxPerTick = cap)

@@ -59,6 +59,7 @@ open class Clicker<T>(
         private const val TICKS_AHEAD = 20
     }
 
+    private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
     private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
@@ -82,7 +83,14 @@ open class Clicker<T>(
     private val passesMissCooldown
         get() = !(missCooldown?.get() == true && mc.missTime > 0)
 
-    private val plan = ClickPlan(HumanClickTiming()).apply {
+    private val human = HumanClickTiming()
+
+    private val plan = ClickPlan(ClickTiming { recent, comboMs, cps, random ->
+        when (technique) {
+            ClickTechnique.HUMAN -> human
+            ClickTechnique.CONSTANT -> ConstantClickTiming
+        }.nextInterval(recent, comboMs, cps, random)
+    }).apply {
         enforced = { tick -> player.hasCooldown && itemCooldown?.isCooldownPassed(tick) == true }
     }
 
