@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
+import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -441,6 +442,13 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         state = State.TRACKED
     }
 
+    /**
+     * The modules changed since the tracked config was applied.
+     */
+    internal suspend fun changedModules(): Set<String> = withContext(MinecraftDispatcher) {
+        changedSince(decodeHashes(baselineText)).modules
+    }
+
     private class Subset(val modules: Set<String>, val spoofers: Boolean)
 
     private fun changedSince(hashes: Map<String, String>): Subset {
@@ -610,6 +618,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         detectionJob?.cancel()
         ConfigSystem.store(this)
         EventManager.callEvent(RefreshArrayListEvent)
+        EventManager.callEvent(ConfigTrackerChangeEvent)
     }
 
 }
