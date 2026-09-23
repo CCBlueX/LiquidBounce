@@ -39,8 +39,17 @@ private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
     destDir.createDirectories()
 
     for (entry in ais) {
+        if (entry is ZipArchiveEntry && entry.isUnixSymlink) {
+            throw SecurityException("Refusing symlink entry: ${entry.name}")
+        }
+
+        val relative = destDir.fileSystem.getPath(entry.name)
+        if (relative.isAbsolute) {
+            throw SecurityException("Absolute entry path: ${entry.name}")
+        }
+
         val target = destDir.resolve(entry.name).normalize()
-        if (!target.startsWith(destDir)) {
+        if (!target.startsWith(destDir) || target == destDir && !entry.isDirectory) {
             throw SecurityException("Entry is outside of the target directory: ${entry.name}")
         }
 
