@@ -161,7 +161,7 @@ data class PlayerLocationOnPlacement(
  * not the target pos, this will always point to it
  */
 @ValueClassCandidate
-data class BlockTargetPlan(
+private data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,
     val interactionDirection: Direction,
 ) {

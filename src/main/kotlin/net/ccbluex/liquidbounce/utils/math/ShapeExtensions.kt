@@ -85,7 +85,7 @@ fun VoxelShape.toAabbs(destination: MutableCollection<in AABB>) {
     this.forAllBoxes { x1, y1, z1, x2, y2, z2 -> destination.add(AABB(x1, y1, z1, x2, y2, z2)) }
 }
 
-fun VoxelShape.intersects(aabb: AABB): Boolean {
+infix fun VoxelShape.intersects(aabb: AABB): Boolean {
     if (this.isEmpty) return false
     var any = false
     this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
