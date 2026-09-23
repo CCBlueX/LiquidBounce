@@ -28,11 +28,13 @@ import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
 import java.io.FileFilter
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.copyTo
 
 /**
  * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
  */
+@Suppress("TooManyFunctions")
 object AddonInstaller {
 
     private val logger = clientLogger("AddonInstaller")
@@ -43,6 +45,23 @@ object AddonInstaller {
 
     private val modsFolder: File
         get() = System.getProperty("fabric.modsFolder")?.let(::File) ?: File(mc.gameDirectory, "mods")
+
+    internal val minecraft: String
+        get() = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString
+
+    internal val liquidbounce: String
+        get() = FabricLoader.getInstance().getModContainer("liquidbounce").orElseThrow().metadata.version.friendlyString
+
+    // Item id to the revision unpacked this session. Fabric refuses to start with an add-on that does not
+    // fit, and the user has to remove it, so a jar it did not load is never put back.
+    private val unpacked = ConcurrentHashMap<Int, Int>()
+
+    // Windows locks loaded jars. Unlike File.deleteOnExit, a jar that is wanted again can leave this.
+    private val removeOnExit = ConcurrentHashMap.newKeySet<File>()
+
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread { removeOnExit.forEach(File::delete) })
+    }
 
     // Named by item id, since unsubscribe deletes the item directory before the reload that
     // unstages the jar.
@@ -58,19 +77,30 @@ object AddonInstaller {
 
     private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
 
-    internal val minecraft: String
-        get() = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString
-
-    internal val liquidbounce: String
-        get() = FabricLoader.getInstance().getModContainer("liquidbounce").orElseThrow().metadata.version.friendlyString
-
+    /**
+     * Stages the revision of every subscribed add-on unpacked this session, keeps the loaded ones, and
+     * removes every other managed jar.
+     */
     fun stageSubscribedAddons() {
         val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
-        val expected = HashSet<String>(subscribed.size)
+        unpacked.keys.retainAll(subscribed.mapTo(HashSet()) { it.id })
 
+        stage(subscribed)
+    }
+
+    internal fun unpacked(item: SubscribedItem, revisionId: Int) {
+        unpacked[item.id] = revisionId
+    }
+
+    private fun stage(subscribed: List<SubscribedItem>) {
+        val expected = HashSet<String>()
         for (item in subscribed) {
             val revisionDir = item.installedRevisionDir ?: continue
-            val target = File(modsFolder, managedName(item.id, revisionDir.name.toInt()))
+            val revisionId = revisionDir.name.toInt()
+            val target = File(modsFolder, managedName(item.id, revisionId))
+            if (unpacked[item.id] != revisionId && !isLoaded(target)) {
+                continue
+            }
 
             runCatching { stage(item, item.addonJar(revisionDir), target) }
                 .onSuccess { expected += target.name }
@@ -80,6 +110,7 @@ object AddonInstaller {
                     managedJarsFor(item.id).mapTo(expected) { it.name }
                 }
         }
+        removeOnExit.removeIf { it.name in expected }
 
         // Unsubscribed, superseded, or a leftover .part.
         for (file in managedFiles { it.name !in expected }) {
@@ -107,16 +138,14 @@ object AddonInstaller {
     }
 
     /**
-     * Windows locks loaded jars, so a failed delete falls back to [File.deleteOnExit] and the next
-     * startup retries. A loaded jar needs a restart either way.
+     * A loaded jar needs a restart either way.
      */
     private fun remove(file: File) {
         val loaded = isLoaded(file)
 
-        if (file.delete()) {
+        if (deleteNowOrOnExit(file)) {
             logger.info("Removed staged add-on ${file.name}")
         } else {
-            file.deleteOnExit()
             logger.warn("Could not delete ${file.name} while it is loaded; scheduled for removal on exit")
         }
 
@@ -132,6 +161,18 @@ object AddonInstaller {
         }
     }
 
+    /**
+     * Windows locks loaded jars, so a failed delete is retried on exit and at the next startup.
+     */
+    private fun deleteNowOrOnExit(file: File): Boolean {
+        if (file.delete()) {
+            return true
+        }
+
+        removeOnExit += file
+        return false
+    }
+
     private fun isLoaded(file: File): Boolean {
         // Fabric records real paths.
         val path = file.toPath().let { path ->
@@ -144,11 +185,7 @@ object AddonInstaller {
     }
 
     fun wipeManagedJars() {
-        for (file in managedFiles()) {
-            if (!file.delete()) {
-                file.deleteOnExit()
-            }
-        }
+        managedFiles().forEach(::deleteNowOrOnExit)
     }
 
 }

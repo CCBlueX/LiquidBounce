@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
@@ -157,6 +158,9 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         commit(fetch(revisionId, subTask), revisionId)
+        if (type == MarketplaceItemType.ADDON) {
+            AddonInstaller.unpacked(this, revisionId)
+        }
         return true
     }
 
