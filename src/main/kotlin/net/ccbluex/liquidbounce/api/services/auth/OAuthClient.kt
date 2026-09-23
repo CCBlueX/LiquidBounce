@@ -19,15 +19,14 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.ktor.http.ContentType
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -37,7 +36,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.UUID
 import java.util.function.Consumer
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * OAuth client for handling the authentication flow
@@ -92,7 +90,7 @@ object OAuthClient : EventListener {
         val deferred = CompletableDeferred<String>()
         authCodeDeferred = deferred
 
-        val server = embeddedServer(Netty, host = "127.0.0.1", port = 0) {
+        val server = embeddedServer(CIO, host = "127.0.0.1", port = 0) {
             routing {
                 get("/") {
                     val code = call.request.queryParameters["code"]
