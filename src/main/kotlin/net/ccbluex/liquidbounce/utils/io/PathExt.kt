@@ -63,7 +63,7 @@ fun Path.atomicMoveTo(target: Path): Path {
         )
     } catch (first: AtomicMoveNotSupportedException) {
         replaceExisting(target, first)
-    } catch (first: FileAlreadyExistsException) {
+    } catch (first: java.nio.file.FileAlreadyExistsException) {
         replaceExisting(target, first)
     }
 }
