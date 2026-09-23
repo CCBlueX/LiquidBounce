@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 
@@ -42,8 +43,13 @@ object MarketplaceConfigs {
     var index: List<MarketplaceItem> = emptyList()
         private set
 
+    @Volatile
+    var tags: List<MarketplaceTag> = emptyList()
+        private set
+
     suspend fun refresh(): Boolean = runCatching {
         index = list(limit = INDEX_LIMIT).items
+        tags = MarketplaceApi.getTags()
     }.onFailure { logger.error("Failed to load the marketplace config index", it) }.isSuccess
 
     @Suppress("LongParameterList")

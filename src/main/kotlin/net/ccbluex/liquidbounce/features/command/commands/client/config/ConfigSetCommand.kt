@@ -51,9 +51,15 @@ object ConfigSetCommand {
                 }
             }
             literal("tags") {
-                optional("tags", StringArgumentType.greedyString(), default = "") { tags ->
+                // Comma-separated only: tag names can contain spaces.
+                optional(
+                    "tags",
+                    StringArgumentType.greedyString(),
+                    default = "",
+                    suggests = tagListSuggestions
+                ) { tags ->
                     execSuspend { ctx ->
-                        val ids = tagIds(ctx.get(tags).split(LIST_SEPARATOR).filter(String::isNotEmpty))
+                        val ids = tagIds(ctx.get(tags).split(',').map(String::trim).filter(String::isNotEmpty))
                         edit(details = MarketplaceApi.ItemDetails(tags = ids))
                     }
                 }

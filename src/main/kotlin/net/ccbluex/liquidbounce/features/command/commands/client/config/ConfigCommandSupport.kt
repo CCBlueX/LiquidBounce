@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.suggestion.SuggestionProvider
+import net.minecraft.commands.SharedSuggestionProvider
 import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
@@ -44,6 +45,22 @@ import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
     MarketplaceConfigs.index.map { quoted(it.address) }
+}
+
+internal val tagSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
+    MarketplaceConfigs.tags.map { quoted(it.name) }
+}
+
+/**
+ * Completes the tag after the last comma of a comma-separated list.
+ */
+internal val tagListSuggestions = SuggestionProvider<ClientCommandSource> { _, builder ->
+    val last = builder.remaining.lastIndexOf(',') + 1
+    val offset = last + builder.remaining.substring(last).takeWhile(Char::isWhitespace).length
+    SharedSuggestionProvider.suggest(
+        MarketplaceConfigs.tags.map { it.name },
+        builder.createOffset(builder.start + offset)
+    )
 }
 
 internal val visibilitySuggestions: SuggestionProvider<ClientCommandSource> =
@@ -109,7 +126,9 @@ internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
     val tags = request { MarketplaceApi.getTags() }
     return names.map { name ->
         tags.find { it.name.equals(name, ignoreCase = true) }?.id
-            ?: throw CommandException(t("error.unknownTag", variable(name)))
+            ?: throw CommandException(
+                t("error.unknownTag", variable(name), variable(tags.joinToString(", ") { it.name }))
+            )
     }
 }
 

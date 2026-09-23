@@ -64,21 +64,12 @@ object ConfigListCommand {
     fun CmdLiteralScope.search() {
         literal("search") {
             argument("query", ClientStringArgumentType.string()) { query ->
-                optional("tag", ClientStringArgumentType.word(), default = null) { tag ->
+                optional("tag", ClientStringArgumentType.string(), default = null, suggests = tagSuggestions) { tag ->
                     execSuspend { ctx ->
                         val tags = tagIds(listOfNotNull(ctx.get(tag)))
                         printPage(request { MarketplaceConfigs.list(query = ctx.get(query), tags = tags) })
                     }
                 }
-            }
-        }
-    }
-
-    fun CmdLiteralScope.tags() {
-        literal("tags") {
-            execSuspend {
-                val tags = request { MarketplaceApi.getTags() }
-                chat(regular(t("tags.list", variable(tags.joinToString(", ") { it.name }))))
             }
         }
     }

@@ -41,7 +41,6 @@ object CommandConfig : CommandRegistrar {
             with(ConfigListCommand) {
                 list()
                 search()
-                tags()
             }
             with(ConfigInfoCommand) { info() }
 
