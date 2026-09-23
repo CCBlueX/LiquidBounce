@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceReview
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceRevisionDependency
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
@@ -208,6 +209,20 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     fun downloadRevision(id: Int, revisionId: Int) = "$baseUrl/marketplace/$id/revisions/$revisionId/download"
 
     // Dependencies
+    suspend fun getItemDependencies(id: Int) =
+        get<List<MarketplaceLinkedItem>>("/marketplace/$id/dependencies")
+
+    suspend fun addItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) = post<Unit>(
+        "/marketplace/$id/dependencies",
+        JsonObject().apply {
+            addProperty("dependency_item_id", dependencyItemId)
+        }.toRequestBody(),
+        headers = { addAuth(session) }
+    )
+
+    suspend fun removeItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) =
+        delete<Unit>("/marketplace/$id/dependencies/$dependencyItemId", headers = { addAuth(session) })
+
     suspend fun getRevisionDependencies(id: Int, revisionId: Int) =
         get<List<MarketplaceRevisionDependency>>("/marketplace/$id/revisions/$revisionId/dependencies")
 

@@ -138,12 +138,19 @@ object ModuleAutoConfig : ClientModule(
                 "Auto Config", "Failed to load config ${autoConfig.name}.",
                 NotificationEvent.Severity.ERROR
             )
-        }.onSuccess {
+        }.onSuccess { result ->
             connectScreen?.updateStatus(regular(message("loaded", address)))
             notification(
                 "Auto Config", "Successfully loaded config ${autoConfig.name}.",
                 NotificationEvent.Severity.SUCCESS
             )
+            if (result.restartRequired) {
+                notification(
+                    "Auto Config",
+                    "Restart the game to finish installing ${result.installed.joinToString { it.name }}.",
+                    NotificationEvent.Severity.INFO
+                )
+            }
         }
     }
 

@@ -33,7 +33,9 @@ import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import java.time.LocalDateTime
 
@@ -93,6 +95,18 @@ internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
     return names.map { name ->
         tags.find { it.name.equals(name, ignoreCase = true) }?.id
             ?: throw CommandException(t("error.unknownTag", variable(name)))
+    }
+}
+
+internal fun CmdI18n.reportInstalled(result: ConfigTracker.LoadResult) {
+    if (result.installed.isEmpty()) {
+        return
+    }
+
+    val names = result.installed.joinToString(", ") { it.name }
+    chat(regular(t("load.installed", variable(names))))
+    if (result.restartRequired) {
+        chat(regular(t("load.restart")))
     }
 }
 

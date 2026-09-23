@@ -109,8 +109,9 @@ object ConfigLoadCommand {
 
         val item = resolveConfig(input)
         val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
-        request { ConfigTracker.load(item, revisionId, modules) }
+        val result = request { ConfigTracker.load(item, revisionId, modules) }
         chat(regular(t("load.loaded", variable(item.name))))
+        reportInstalled(result)
     }
 
 }

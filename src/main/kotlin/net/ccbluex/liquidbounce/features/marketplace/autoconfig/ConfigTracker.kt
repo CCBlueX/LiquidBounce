@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
@@ -57,6 +57,10 @@ import java.security.MessageDigest
  * A loaded config is [State.TRACKED] while the settings match what was loaded and
  * [State.EDITING] once they differ. The settings from before the first load are kept
  * as a backup until the user restores or detaches.
+ *
+ * A config's config dependencies are applied before it, depth-first in their order, and
+ * its add-on and script dependencies are installed. The settings after the dependencies are
+ * its base: an overlay only publishes what differs from it.
  */
 @Suppress("TooManyFunctions")
 object ConfigTracker : Config("MarketplaceConfig"), EventListener {
@@ -66,6 +70,13 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         TRACKED("Tracked"),
         EDITING("Editing")
     }
+
+    data class Step(val itemId: Int, val revisionId: Int)
+
+    /**
+     * Dependencies [load] installed; [restartRequired] when one only works after a restart.
+     */
+    data class LoadResult(val installed: List<MarketplaceItem>, val restartRequired: Boolean)
 
     var state by enumChoice("State", State.NONE)
         private set
@@ -78,9 +89,22 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     var revisionId by int("RevisionId", 0, 0..Int.MAX_VALUE)
         private set
     private var backupName by text("BackupName", "")
-    private var baselineHash by text("BaselineHash", "")
+    private var chainText by text("Chain", "")
+    private var baseText by text("Base", "")
+    private var baselineText by text("Baseline", "")
 
     val hasBackup get() = backupName.isNotEmpty()
+
+    /**
+     * Config dependencies applied before the tracked config, in order.
+     */
+    val chain: List<Step>
+        get() = chainText.split(',').filter(String::isNotEmpty).map { step ->
+            val (itemId, revisionId) = step.split(':').map(String::toInt)
+            Step(itemId, revisionId)
+        }
+
+    val hasBase get() = baseText.isNotEmpty()
 
     private var detectionJob: Job? = null
 
@@ -88,6 +112,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     private var suppressDetection = false
 
     private const val DETECTION_DELAY_MS = 500L
+    private const val SPOOFERS = "#spoofers"
 
     private val backedUpConfigs get() = listOf(ModuleManager.modulesConfig, SpooferManager)
 
@@ -110,14 +135,22 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Applies [revisionId] of [item]. A full load starts tracking it, a load restricted to
-     * [modules] only applies that slice.
+     * Applies [revisionId] of [item] after its config dependencies and installs its add-on and
+     * script dependencies. A full load starts tracking it, a load restricted to [modules] only
+     * applies that slice of every step.
      */
-    suspend fun load(item: MarketplaceItem, revisionId: Int, modules: Collection<ValueGroup> = emptyList()) {
-        val config = readConfig(revisionFile(item.id, revisionId))
+    suspend fun load(
+        item: MarketplaceItem,
+        revisionId: Int,
+        modules: Collection<ValueGroup> = emptyList()
+    ): LoadResult {
+        val dependencies = resolve(item.id)
+        val installed = install(dependencies.installables)
+        val chain = dependencies.configs
+        val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
         withContext(MinecraftDispatcher) {
-            apply(config, modules)
+            val base = apply(configs, modules)
 
             if (modules.isNotEmpty()) {
                 recheck()
@@ -129,10 +162,20 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 itemName = item.name
                 itemUid = item.uid
                 this.revisionId = revisionId
-                baselineHash = settingsHash()
+                chainText = encodeChain(chain)
+                baseText = base?.let(::encodeHashes).orEmpty()
+                baselineText = encodeHashes(snapshot())
                 state = State.TRACKED
             }
         }
+
+        return LoadResult(
+            installed,
+            installed.any {
+                it.type == MarketplaceItemType.ADDON ||
+                    it.type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(it.type)
+            }
+        )
     }
 
     /**
@@ -143,7 +186,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         val config = publicGson.newJsonReader(source.reader()).use { it.parseTree().asJsonObject }
 
         withContext(MinecraftDispatcher) {
-            apply(config, modules)
+            apply(listOf(config), modules)
 
             if (modules.isNotEmpty()) {
                 recheck()
@@ -154,16 +197,16 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Re-applies the tracked revision, dropping local edits.
+     * Re-applies the tracked revision and its config dependencies, dropping local edits.
      */
     suspend fun revert() {
         check(state != State.NONE) { "No tracked config" }
 
-        val config = readConfig(revisionFile(itemId, revisionId))
+        val configs = (chain + Step(itemId, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
         withContext(MinecraftDispatcher) {
-            apply(config, emptyList())
+            apply(configs, emptyList())
             updateTracking {
-                baselineHash = settingsHash()
+                baselineText = encodeHashes(snapshot())
                 state = State.TRACKED
             }
         }
@@ -204,30 +247,10 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         description: String,
         details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
-        val item = MarketplaceApi.createMarketplaceItem(
-            session,
-            name,
-            MarketplaceItemType.CONFIG,
-            description,
-            details.copy(branch = API_BRANCH)
-        )
-
-        val revision = try {
-            uploadSettings(session, item.id, null)
-        } catch (e: Exception) {
-            runCatching { MarketplaceApi.deleteMarketplaceItem(session, item.id) }
-            throw e
-        }
+        val (item, revision) = publish(session, name, description, details, null) { }
 
         withContext(MinecraftDispatcher) {
-            updateTracking {
-                itemId = item.id
-                itemName = item.name
-                itemUid = item.uid
-                this.revisionId = revision.id
-                baselineHash = settingsHash()
-                state = State.TRACKED
-            }
+            track(item, revision, emptyList(), null)
         }
         return item
     }
@@ -256,16 +279,51 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Uploads the edited settings as the tracked config's newest revision.
+     * Publishes only what was changed on top of the tracked config, as a new config that depends
+     * on it, and tracks that.
+     */
+    suspend fun overlay(
+        session: OAuthSession,
+        name: String,
+        description: String,
+        visibility: MarketplaceItemVisibility,
+    ): MarketplaceItem {
+        check(state == State.EDITING) { "Not editing a config" }
+
+        val base = decodeHashes(baselineText)
+        val chain = chain + Step(itemId, revisionId)
+        val baseId = itemId
+        val (item, revision) = publish(
+            session,
+            name,
+            description,
+            MarketplaceApi.ItemDetails(visibility = visibility),
+            withContext(MinecraftDispatcher) { changedSince(base) }
+        ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
+
+        withContext(MinecraftDispatcher) {
+            track(item, revision, chain, base)
+        }
+        return item
+    }
+
+    /**
+     * Uploads the edited settings as the tracked config's newest revision. With config
+     * dependencies, only what differs from them.
      */
     suspend fun update(session: OAuthSession, changelog: String?): MarketplaceItemRevision {
         check(state == State.EDITING) { "Not editing a config" }
 
-        val revision = uploadSettings(session, itemId, changelog)
+        val subset = if (hasBase) {
+            withContext(MinecraftDispatcher) { changedSince(decodeHashes(baseText)) }
+        } else {
+            null
+        }
+        val revision = uploadSettings(session, itemId, changelog, subset)
         withContext(MinecraftDispatcher) {
             updateTracking {
                 revisionId = revision.id
-                baselineHash = settingsHash()
+                baselineText = encodeHashes(snapshot())
                 state = State.TRACKED
             }
         }
@@ -287,15 +345,132 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         detach()
     }
 
+    private class Dependencies(val configs: List<Step>, val installables: Collection<MarketplaceItem>)
+
+    /**
+     * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
+     * they are applied; installables pull in what they need themselves.
+     */
+    private suspend fun resolve(rootId: Int): Dependencies {
+        val configs = mutableListOf<Step>()
+        val installables = linkedMapOf<Int, MarketplaceItem>()
+        val visiting = hashSetOf<Int>()
+        val done = hashSetOf<Int>()
+
+        suspend fun visit(id: Int) {
+            if (id in done || !visiting.add(id)) {
+                return
+            }
+
+            for (dependency in MarketplaceApi.getItemDependencies(id)) {
+                val item = dependency.item
+                when (item.type) {
+                    MarketplaceItemType.CONFIG -> {
+                        visit(item.id)
+                        val revision = dependency.liveRevision
+                            ?: error("Config dependency ${item.name} has nothing published")
+                        if (configs.none { it.itemId == item.id }) {
+                            configs += Step(item.id, revision.id)
+                        }
+                    }
+
+                    MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
+                        installables.putIfAbsent(item.id, item)
+                        visit(item.id)
+                    }
+
+                    else -> {}
+                }
+            }
+
+            visiting.remove(id)
+            done += id
+        }
+
+        visit(rootId)
+        return Dependencies(configs, installables.values)
+    }
+
+    private suspend fun install(items: Collection<MarketplaceItem>): List<MarketplaceItem> =
+        items.filter { item ->
+            !MarketplaceManager.isSubscribed(item.id) && item.status == MarketplaceItemStatus.ACTIVE
+        }.onEach { item ->
+            MarketplaceManager.subscribe(item)
+        }
+
+    /**
+     * Creates the item, runs [link] on it and uploads the settings (only [subset] when given). A
+     * failed step deletes the item again.
+     */
+    private suspend inline fun publish(
+        session: OAuthSession,
+        name: String,
+        description: String,
+        details: MarketplaceApi.ItemDetails,
+        subset: Subset?,
+        link: (MarketplaceItem) -> Unit,
+    ): Pair<MarketplaceItem, MarketplaceItemRevision> {
+        val item = MarketplaceApi.createMarketplaceItem(
+            session,
+            name,
+            MarketplaceItemType.CONFIG,
+            description,
+            details.copy(branch = API_BRANCH)
+        )
+
+        val revision = try {
+            link(item)
+            uploadSettings(session, item.id, null, subset)
+        } catch (e: Exception) {
+            runCatching { MarketplaceApi.deleteMarketplaceItem(session, item.id) }
+            throw e
+        }
+        return item to revision
+    }
+
+    private fun track(
+        item: MarketplaceItem,
+        revision: MarketplaceItemRevision,
+        chain: List<Step>,
+        base: Map<String, String>?
+    ) = updateTracking {
+        itemId = item.id
+        itemName = item.name
+        itemUid = item.uid
+        revisionId = revision.id
+        chainText = encodeChain(chain)
+        baseText = base?.let(::encodeHashes).orEmpty()
+        baselineText = encodeHashes(snapshot())
+        state = State.TRACKED
+    }
+
+    private class Subset(val modules: Set<String>, val spoofers: Boolean)
+
+    private fun changedSince(hashes: Map<String, String>): Subset {
+        val changed = snapshot().filter { (name, hash) -> hashes[name] != hash }.keys
+        return Subset(changed - SPOOFERS, SPOOFERS in changed)
+    }
+
     private suspend fun uploadSettings(
         session: OAuthSession,
         itemId: Int,
-        changelog: String?
+        changelog: String?,
+        subset: Subset?
     ): MarketplaceItemRevision {
         val file = File.createTempFile("marketplace_config", ".json")
         try {
             withContext(MinecraftDispatcher) {
-                file.bufferedWriter().use { AutoConfig.serializeAutoConfig(it) }
+                file.bufferedWriter().use { writer ->
+                    if (subset == null) {
+                        AutoConfig.serializeAutoConfig(writer)
+                    } else {
+                        AutoConfig.serializeAutoConfig(
+                            writer,
+                            modules = subset.modules,
+                            includeSpoofers = subset.spoofers
+                        )
+                    }
+                }
             }
 
             val revision = MarketplaceApi.createMarketplaceItemRevision(
@@ -329,10 +504,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
 
     /**
-     * Backs up the current settings unless a backup exists, then applies [config]. A failed
-     * apply puts back the backup it just took.
+     * Backs up the current settings unless a backup exists, then applies [configs] in order. A
+     * failed apply puts back the backup it just took.
+     *
+     * @return the settings before the last config, when there was more than one
      */
-    private fun apply(config: JsonObject, modules: Collection<ValueGroup>) {
+    private fun apply(configs: List<JsonObject>, modules: Collection<ValueGroup>): Map<String, String>? {
         val createdBackup = !hasBackup || !backupFile(backupName).exists()
         if (createdBackup) {
             val name = "marketplace_preload_${System.currentTimeMillis()}"
@@ -340,10 +517,16 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             updateTracking { backupName = name }
         }
 
+        var base: Map<String, String>? = null
         withoutDetection {
             try {
                 AutoConfig.withLoading {
-                    AutoConfig.loadAutoConfig(config, modules)
+                    configs.forEachIndexed { index, config ->
+                        if (index == configs.lastIndex && index > 0) {
+                            base = snapshot()
+                        }
+                        AutoConfig.loadAutoConfig(config, modules)
+                    }
                 }
             } catch (e: Exception) {
                 if (createdBackup) {
@@ -356,6 +539,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 throw e
             }
         }
+        return base
     }
 
     private fun recheck() {
@@ -363,26 +547,40 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             return
         }
 
-        val next = if (settingsHash() == baselineHash) State.TRACKED else State.EDITING
+        val next = if (snapshot() == decodeHashes(baselineText)) State.TRACKED else State.EDITING
         if (next != state) {
             updateTracking { state = next }
         }
     }
 
     /**
-     * Only modules and spoofers count; export metadata such as date and server would make
-     * every snapshot differ.
+     * A hash per module and one for the spoofers. Export metadata such as date and server
+     * would make every snapshot differ, so it stays out.
      */
-    private fun settingsHash(): String {
-        val snapshot = JsonArray().apply {
-            add(ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson))
-            add(ConfigSystem.serializeValueGroup(SpooferManager, publicGson))
+    private fun snapshot(): Map<String, String> {
+        val hashes = linkedMapOf<String, String>()
+        ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
+            .asJsonObject["value"].asJsonArray.forEach { module ->
+                hashes[module.asJsonObject["name"].asString] = sha256(module.toString())
+            }
+        hashes[SPOOFERS] = sha256(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
+        return hashes
+    }
+
+    private fun sha256(text: String) = MessageDigest.getInstance("SHA-256")
+        .digest(text.toByteArray())
+        .joinToString("") { "%02x".format(it) }
+
+    private fun encodeHashes(hashes: Map<String, String>) = publicGson.toJson(hashes)
+
+    private fun decodeHashes(text: String): Map<String, String> =
+        if (text.isEmpty()) {
+            emptyMap()
+        } else {
+            publicGson.fromJson(text, JsonObject::class.java).entrySet().associate { it.key to it.value.asString }
         }
 
-        return MessageDigest.getInstance("SHA-256")
-            .digest(snapshot.toString().toByteArray())
-            .joinToString("") { "%02x".format(it) }
-    }
+    private fun encodeChain(chain: List<Step>) = chain.joinToString(",") { "${it.itemId}:${it.revisionId}" }
 
     private fun clearItem() {
         state = State.NONE
@@ -390,7 +588,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         itemName = ""
         itemUid = ""
         revisionId = 0
-        baselineHash = ""
+        chainText = ""
+        baseText = ""
+        baselineText = ""
     }
 
     private fun reset() = updateTracking {
