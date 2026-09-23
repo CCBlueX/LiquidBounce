@@ -42,7 +42,7 @@ object AddonInstaller {
     private const val PART_SUFFIX = ".part"
 
     private val modsFolder: File
-        get() = File(mc.gameDirectory, "mods")
+        get() = System.getProperty("fabric.modsFolder")?.let(::File) ?: File(mc.gameDirectory, "mods")
 
     // Named by item id, since unsubscribe deletes the item directory before the reload that
     // unstages the jar.
