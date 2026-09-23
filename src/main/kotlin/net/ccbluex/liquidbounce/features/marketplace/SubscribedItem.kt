@@ -122,6 +122,23 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         (resolveRevision() as? RevisionResolution.Compatible)?.revision?.id?.takeIf { it != installedRevisionId }
     }
 
+    /**
+     * Whether [getNewestRevisionId] has one, without waiting for an install of this item. `false`
+     * while an install runs.
+     */
+    internal suspend fun hasUpdate(): Boolean {
+        if (!lock.tryLock()) {
+            return false
+        }
+
+        return try {
+            val revisionId = (resolveRevision() as? RevisionResolution.Compatible)?.revision?.id
+            revisionId != null && revisionId != installedRevisionId
+        } finally {
+            lock.unlock()
+        }
+    }
+
     suspend fun install(revisionId: Int, subTask: ResourceTask? = null) {
         locked {
             if (unpack(revisionId, subTask)) {
