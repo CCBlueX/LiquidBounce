@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
-import java.nio.file.AtomicMoveNotSupportedException
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import java.io.FileFilter
+import kotlin.io.path.copyTo
 
 /**
  * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
@@ -48,9 +48,10 @@ object AddonInstaller {
     // unstages the jar.
     private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
 
-    private fun managedFiles(filter: (File) -> Boolean = { true }): List<File> =
-        modsFolder.listFiles { file: File -> file.isFile && file.name.startsWith(PREFIX) && filter(file) }
-            ?.toList().orEmpty()
+    private fun managedFiles(filter: FileFilter = { true }): List<File> =
+        modsFolder.listFiles { file: File ->
+            file.isFile && file.name.startsWith(PREFIX) && filter.accept(file)
+        }?.asList().orEmpty()
 
     private fun managedJarsFor(itemId: Int): List<File> =
         managedFiles { it.name.startsWith("$PREFIX$itemId-") && it.name.endsWith(".jar") }
@@ -96,17 +97,13 @@ object AddonInstaller {
         check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
 
         // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
-        val part = File(modsFolder, target.name + PART_SUFFIX)
-        jars.single().copyTo(part, overwrite = true)
+        val part = File(modsFolder, target.name + PART_SUFFIX).toPath()
+        jars.single().toPath().copyTo(part, overwrite = true)
 
         // Old revisions go only once the copy succeeded.
         managedJarsFor(item.id).forEach(::remove)
 
-        try {
-            Files.move(part.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
+        part.atomicMoveTo(target.toPath())
         AddonManager.markRestartRequired(item.id, "${item.name} installed")
         logger.info("Staged add-on '${item.name}' as ${target.name}; restart required")
     }

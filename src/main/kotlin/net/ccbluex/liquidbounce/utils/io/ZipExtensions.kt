@@ -56,7 +56,7 @@ private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
             throw SecurityException("Entry is outside of the target directory: ${entry.name}")
         }
 
-        newFile.outputStream().buffered().use { ais.copyTo(it) }
+        newFile.outputStream().buffered().use { ais.transferTo(it) }
     }
 }
 
