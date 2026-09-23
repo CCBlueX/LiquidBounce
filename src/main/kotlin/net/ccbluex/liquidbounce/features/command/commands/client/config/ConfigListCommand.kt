@@ -21,26 +21,19 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
-import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
-import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
-import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.highlight
-import net.ccbluex.liquidbounce.utils.client.onClick
-import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.HoverEvent
 
 /**
  * Lists and searches marketplace configs
@@ -55,7 +48,9 @@ object ConfigListCommand {
                     if (ctx.get(page) == 1) {
                         MarketplaceConfigs.refresh()
                     }
-                    printPage(response)
+                    header(t("list.header"), t("list.page", response.pagination.current, response.pagination.pages))
+                    printItems(response.items)
+                    pageNavigation(response)
                 }
             }
         }
@@ -67,44 +62,55 @@ object ConfigListCommand {
                 optional("tag", ClientStringArgumentType.string(), default = null, suggests = tagSuggestions) { tag ->
                     execSuspend { ctx ->
                         val tags = tagIds(listOfNotNull(ctx.get(tag)))
-                        printPage(request { MarketplaceConfigs.list(query = ctx.get(query), tags = tags) })
+                        val response = request { MarketplaceConfigs.list(query = ctx.get(query), tags = tags) }
+                        header(t("search.header", ctx.get(query)), t("search.count", response.pagination.items))
+                        printItems(response.items)
                     }
                 }
             }
         }
     }
 
-    private fun CmdI18n.printPage(response: PaginatedResponse<MarketplaceItem>) {
-        if (response.items.isEmpty()) {
-            chat(regular(t("list.noConfigs")))
+    private fun CmdI18n.printItems(items: List<MarketplaceItem>) {
+        if (items.isEmpty()) {
+            chat(regular(t("list.noConfigs")), metadata = plain)
             return
         }
 
-        chat(
-            highlight(t("list.header", response.pagination.current, response.pagination.pages)),
-            metadata = MessageMetadata(prefix = false)
-        )
-        response.items.forEach { chat(row(it), metadata = MessageMetadata(prefix = false)) }
+        for (item in items) {
+            chat(
+                regular("⬥ ").withColor(ChatFormatting.BLUE)
+                    .append(addressText(item))
+                    .apply { trackedMarker(item)?.let(::append) }
+                    .append(regular("  "))
+                    .append(votes(item)),
+                metadata = plain
+            )
+            details(item)?.let { chat(it, metadata = plain) }
+        }
     }
 
-    private fun CmdI18n.row(item: MarketplaceItem) = regular("")
-        .append(variable(item.name))
-        .apply {
-            if (ConfigTracker.state != ConfigTracker.State.NONE && ConfigTracker.itemId == item.id) {
-                append(" *".asPlainText(ChatFormatting.GREEN))
-            }
-            item.author?.let { append(regular(" ")).append(regular(t("list.by", variable(it)))) }
-            append(regular(" | "))
-            append("✔ ${item.recentWorks}".asPlainText(ChatFormatting.GREEN))
-            append(regular(" "))
-            append("✘ ${item.recentFails}".asPlainText(ChatFormatting.RED))
-            item.targetServers?.takeIf { it.isNotEmpty() }?.let {
-                append(regular(" | ${it.joinToString(", ")}"))
-            }
+    private fun CmdI18n.pageNavigation(response: PaginatedResponse<MarketplaceItem>) {
+        val (current, pages) = response.pagination.current to response.pagination.pages
+        if (pages <= 1) {
+            return
         }
-        .onClick(
-            ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config load ${quoted(item.address)}")
+
+        fun arrow(symbol: String, page: Int) = if (page in 1..pages) {
+            variable(symbol).onClickRun {
+                runCatching { CommandManager.execute("config list $page") }
+                    .onFailure(CommandExecutor::handleExceptions)
+            }
+        } else {
+            regular(symbol).withColor(ChatFormatting.DARK_GRAY)
+        }
+
+        chat(
+            arrow("«", current - 1)
+                .append(regular("  ${t("list.page", current, pages).string}  "))
+                .append(arrow("»", current + 1)),
+            metadata = plain
         )
-        .onHover(HoverEvent.ShowText(regular(t("list.hover", variable(item.address)))))
+    }
 
 }

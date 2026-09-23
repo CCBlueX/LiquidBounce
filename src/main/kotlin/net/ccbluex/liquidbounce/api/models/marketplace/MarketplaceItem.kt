@@ -50,6 +50,10 @@ data class MarketplaceItem(
     val shareCode: String? = null,
     @SerializedName("includes_binds")
     val includesBinds: Boolean? = null,
+    @SerializedName("protocol_name")
+    val protocolName: String? = null,
+    @SerializedName("protocol_version")
+    val protocolVersion: Int? = null,
     @SerializedName("recent_works")
     val recentWorks: Int = 0,
     @SerializedName("recent_fails")

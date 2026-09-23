@@ -20,8 +20,11 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -30,35 +33,48 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 
 /**
- * Tells other players whether the tracked config works
+ * Tells other players whether a config works, by default the tracked one
  */
 object ConfigReportCommand {
 
     fun CmdLiteralScope.report() {
         literal("report") {
-            literal("works") {
-                execSuspend { report(works = true) }
-            }
-            literal("broken") {
-                execSuspend { report(works = false) }
+            for (works in listOf(true, false)) {
+                literal(if (works) "works" else "broken") {
+                    optional(
+                        "config",
+                        ClientStringArgumentType.string(),
+                        default = null,
+                        suggests = configSuggestions
+                    ) { config ->
+                        execSuspend { ctx -> report(works, ctx.get(config)) }
+                    }
+                }
             }
         }
     }
 
-    private suspend fun CmdI18n.report(works: Boolean) {
-        requireTracked()
+    private suspend fun CmdI18n.report(works: Boolean, input: String?) {
+        val (itemId, revisionId, name) = if (input == null) {
+            requireTracked()
+            Triple(ConfigTracker.itemId, ConfigTracker.revisionId, ConfigTracker.itemName)
+        } else {
+            val item = resolveConfig(input)
+            val revisionId = item.liveRevisionId ?: throw CommandException(t("load.noRevision", variable(item.name)))
+            Triple(item.id, revisionId, item.name)
+        }
 
         request {
             MarketplaceApi.putConfigReport(
                 session(),
-                ConfigTracker.itemId,
-                ConfigTracker.revisionId,
+                itemId,
+                revisionId,
                 works,
                 LiquidBounce.clientVersion,
                 mc.currentServer?.ip?.dropPort()
             )
         }
-        chat(regular(t("report.reported", variable(ConfigTracker.itemName))))
+        chat(regular(t("report.reported", variable(name))))
     }
 
 }

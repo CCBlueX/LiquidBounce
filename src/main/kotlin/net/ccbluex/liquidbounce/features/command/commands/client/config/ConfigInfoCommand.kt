@@ -28,14 +28,17 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
 
 /**
  * Shows a marketplace config, by default the tracked one
@@ -70,50 +73,50 @@ object ConfigInfoCommand {
     }
 
     private suspend fun CmdI18n.printInfo(item: MarketplaceItem) {
-        val metadata = MessageMetadata(prefix = false)
-        val tracked = ConfigTracker.state != ConfigTracker.State.NONE && ConfigTracker.itemId == item.id
-
-        chat(highlight(item.name), metadata = metadata)
-        item.author?.let { chat(regular(t("list.by", variable(it))), metadata = metadata) }
-        if (tracked) {
-            val state = t("state.${ConfigTracker.state.tag.lowercase()}")
-            chat(regular(t("info.state", variable(state))), metadata = metadata)
+        val byline = regular("").apply {
+            item.author?.let { append(t("list.by", variable(it))) }
+            if (isTracked(item)) {
+                val state = t("state.${ConfigTracker.state.tag.lowercase()}")
+                append(regular("  ")).append(state.withColor(ChatFormatting.GREEN))
+            }
         }
+        header(variable(item.name), byline)
+
+        fun field(text: Component) = chat(regular("   ").append(text), metadata = plain)
 
         item.description.lineSequence().firstOrNull { it.isNotBlank() }?.let {
-            chat(regular(it.take(DESCRIPTION_PREVIEW)), metadata = metadata)
-        }
-        item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
-            chat(regular(t("info.tags", variable(tags.joinToString(", ") { it.name }))), metadata = metadata)
+            field(regular(it.take(DESCRIPTION_PREVIEW)).withStyle(ChatFormatting.ITALIC))
         }
         item.targetServers?.takeIf { it.isNotEmpty() }?.let {
-            chat(regular(t("info.servers", variable(it.joinToString(", ")))), metadata = metadata)
+            field(regular(t("info.servers", variable(it.joinToString(", ")))))
         }
-        item.forkedFromItemId?.let { source ->
-            chat(
-                regular(t("info.forkedFrom", variable(source.toString())))
-                    .onClick(ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config info $source")),
-                metadata = metadata
-            )
+        protocolText(item)?.let { field(regular(t("info.protocol", it))) }
+        item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+            field(regular(t("info.tags", variable(tags.joinToString(", ") { it.name }))))
         }
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
-            val names = dependencies.joinToString(", ") { "${it.item.name} (${it.item.type.tag})" }
-            chat(regular(t("info.dependencies", variable(names))), metadata = metadata)
+            val names = dependencies.joinToString(", ") {
+                "${it.author?.let { author -> "$author/${it.item.name}" } ?: it.item.address} (${it.item.type.tag})"
+            }
+            field(regular(t("info.dependencies", variable(names))))
+        }
+        item.forkedFromItemId?.let { source ->
+            field(
+                regular(t("info.forkedFrom", variable(source.toString())))
+                    .onClick(ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config info $source"))
+            )
         }
         if (item.includesBinds == true) {
-            chat(regular(t("info.binds")), metadata = metadata)
+            field(warning(t("info.binds")))
         }
-        chat(
-            regular(t("info.reports", variable(item.recentWorks.toString()), variable(item.recentFails.toString()))),
-            metadata = metadata
-        )
+        field(regular(t("info.reports", votes(item))))
         item.liveRevisionId?.let { revisionId ->
             val revision = request { MarketplaceApi.getMarketplaceItemRevision(item.id, revisionId) }
-            chat(regular(t("info.updated", variable(formatDate(revision.createdAt)))), metadata = metadata)
+            field(regular(t("info.updated", variable(formatDate(revision.createdAt)))))
         }
         item.shareCode?.let { code ->
-            chat(regular(t("info.shareCode", variable(code).copyable())), metadata = metadata)
+            field(regular(t("info.shareCode", variable(code).copyable())))
         }
     }
 
