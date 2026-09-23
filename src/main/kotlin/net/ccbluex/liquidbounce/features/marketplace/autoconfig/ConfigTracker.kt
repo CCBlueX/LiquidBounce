@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
@@ -47,8 +46,9 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
+import net.ccbluex.liquidbounce.features.marketplace.installDependencies
+import net.ccbluex.liquidbounce.features.marketplace.resolveDependencies
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
@@ -79,7 +79,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     /**
      * Dependencies [load] installed; [restartRequired] when one only works after a restart. [unavailable]
-     * are the ones left out since no revision of them loads with this game.
+     * are the ones left out since they or what they need do not load with this game.
      */
     data class LoadResult(
         val installed: List<MarketplaceItem>,
@@ -160,9 +160,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = resolve(item.id)
-        val (installed, unavailable) = install(dependencies.installables)
-        val chain = dependencies.configs
+        val dependencies = resolveDependencies(item.id)
+        val (installed, unavailable) = installDependencies(dependencies.installables)
+        val chain = dependencies.configs.map { Step(it.item.id, it.revision.id) }
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
         withContext(MinecraftDispatcher) {
@@ -361,75 +361,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         MarketplaceApi.deleteMarketplaceItem(session, id)
         MarketplaceManager.marketplaceRoot.resolve("configs/$id").deleteRecursively()
         detach()
-    }
-
-    private class Dependencies(val configs: List<Step>, val installables: Collection<MarketplaceItem>)
-
-    /**
-     * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
-     * they are applied, installables after the ones they need, so an add-on is checked with those
-     * installed.
-     */
-    private suspend fun resolve(rootId: Int): Dependencies {
-        val configs = mutableListOf<Step>()
-        val installables = linkedMapOf<Int, MarketplaceItem>()
-        val visiting = hashSetOf<Int>()
-        val done = hashSetOf<Int>()
-
-        suspend fun visit(id: Int) {
-            if (id in done || !visiting.add(id)) {
-                return
-            }
-
-            for (dependency in MarketplaceApi.getItemDependencies(id)) {
-                val item = dependency.item
-                when (item.type) {
-                    MarketplaceItemType.CONFIG -> {
-                        visit(item.id)
-                        val revision = dependency.liveRevision
-                            ?: error("Config dependency ${item.name} has nothing published")
-                        if (configs.none { it.itemId == item.id }) {
-                            configs += Step(item.id, revision.id)
-                        }
-                    }
-
-                    MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                        visit(item.id)
-                        installables.putIfAbsent(item.id, item)
-                    }
-
-                    else -> {}
-                }
-            }
-
-            visiting.remove(id)
-            done += id
-        }
-
-        visit(rootId)
-        return Dependencies(configs, installables.values)
-    }
-
-    /**
-     * Subscribes to the [items] that are missing. One that does not load with this game does not stop
-     * the load; the second list holds those.
-     */
-    private suspend fun install(items: Collection<MarketplaceItem>): Pair<List<MarketplaceItem>, List<Unavailable>> {
-        val installed = mutableListOf<MarketplaceItem>()
-        val unavailable = mutableListOf<Unavailable>()
-        for (item in items) {
-            if (MarketplaceManager.isSubscribed(item.id) || item.status != MarketplaceItemStatus.ACTIVE) {
-                continue
-            }
-
-            try {
-                MarketplaceManager.subscribe(item)
-                installed += item
-            } catch (e: NoCompatibleRevisionException) {
-                unavailable += e.unavailable
-            }
-        }
-        return installed to unavailable
     }
 
     /**
