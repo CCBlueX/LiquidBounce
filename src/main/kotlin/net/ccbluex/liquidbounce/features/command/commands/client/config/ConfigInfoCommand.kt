@@ -96,6 +96,11 @@ object ConfigInfoCommand {
                 metadata = metadata
             )
         }
+        val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
+        if (dependencies.isNotEmpty()) {
+            val names = dependencies.joinToString(", ") { "${it.item.name} (${it.item.type.tag})" }
+            chat(regular(t("info.dependencies", variable(names))), metadata = metadata)
+        }
         if (item.includesBinds == true) {
             chat(regular(t("info.binds")), metadata = metadata)
         }

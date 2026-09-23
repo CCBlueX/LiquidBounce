@@ -80,6 +80,24 @@ object ConfigPublishCommand {
         }
     }
 
+    fun CmdLiteralScope.overlay() {
+        literal("overlay") {
+            publishArguments { name, visibility, description ->
+                requireTracked()
+                if (ConfigTracker.state != ConfigTracker.State.EDITING) {
+                    throw CommandException(t("overlay.notEditing", variable(ConfigTracker.itemName)))
+                }
+
+                val base = ConfigTracker.itemName
+                val item = request {
+                    ConfigTracker.overlay(session(), name, description, parseVisibility(visibility))
+                }
+                published(item)
+                chat(regular(t("overlay.basedOn", variable(base))))
+            }
+        }
+    }
+
     fun CmdLiteralScope.update() {
         literal("update") {
             optional("changelog", StringArgumentType.greedyString(), default = null) { changelog ->

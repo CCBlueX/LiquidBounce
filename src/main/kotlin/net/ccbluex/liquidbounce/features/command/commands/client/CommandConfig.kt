@@ -22,6 +22,7 @@ import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigDependCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigInfoCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigListCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigLoadCommand
@@ -53,9 +54,11 @@ object CommandConfig : CommandRegistrar {
             with(ConfigPublishCommand) {
                 publish()
                 fork()
+                overlay()
                 update()
                 delete()
             }
+            with(ConfigDependCommand) { depend() }
             with(ConfigSetCommand) { set() }
             with(ConfigReportCommand) { report() }
         }

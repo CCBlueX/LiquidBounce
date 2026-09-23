@@ -81,6 +81,26 @@ object MarketplaceConfigs {
         }
     }.onFailure { logger.info("No config found for $input", it) }.getOrNull()
 
+    /**
+     * Like [find], for anything a config can depend on: configs first, then add-ons and scripts
+     * of that exact name.
+     */
+    suspend fun findDependency(input: String): MarketplaceItem? = runCatching {
+        when {
+            input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
+                MarketplaceApi.getMarketplaceItemByCode(input)
+            input.toIntOrNull() != null -> MarketplaceApi.getMarketplaceItem(input.toInt())
+            else -> list(limit = 1, name = input).items.firstOrNull()
+                ?: sequenceOf(MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT).firstNotNullOfOrNull { type ->
+                    MarketplaceApi.getMarketplaceItems(
+                        limit = 1,
+                        type = type,
+                        filter = MarketplaceApi.Filter(name = input, sort = MarketplaceApi.Sort.SCORE)
+                    ).items.firstOrNull()
+                }
+        }
+    }.onFailure { logger.info("No dependency found for $input", it) }.getOrNull()
+
     suspend fun findForServer(address: String): MarketplaceItem? =
         list(limit = 1, targetServer = address).items.firstOrNull()
 
