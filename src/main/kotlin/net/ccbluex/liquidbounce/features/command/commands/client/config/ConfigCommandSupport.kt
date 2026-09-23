@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -35,8 +36,6 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.variable
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
     MarketplaceConfigs.index.map { item ->
@@ -47,10 +46,9 @@ internal val configSuggestions: SuggestionProvider<ClientCommandSource> = sugges
 internal val visibilitySuggestions: SuggestionProvider<ClientCommandSource> =
     suggestions(MarketplaceItemVisibility.entries.map { it.name.lowercase() })
 
-private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-
 internal fun formatDate(dateTime: String): String =
-    runCatching { LocalDateTime.parse(dateTime).format(DATE_FORMATTER) }.getOrDefault(dateTime.substringBefore('T'))
+    runCatching { LocalDateTime.parse(dateTime).format(AutoConfigMetadata.FORMATTER) }
+        .getOrDefault(dateTime.substringBefore('T'))
 
 internal suspend fun session(): OAuthSession = ClientAccountManager.accountOrException().takeSession()
 

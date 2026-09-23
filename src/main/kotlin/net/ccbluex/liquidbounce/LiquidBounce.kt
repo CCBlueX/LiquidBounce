@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
@@ -328,10 +327,6 @@ object LiquidBounce : EventListener {
             launch {
                 // Download player heads
                 HeadsCreativeModeTab.heads.getFinalState()
-            }
-            launch {
-                // Load configs
-                AutoConfig.reloadConfigs()
             }
             launch {
                 MarketplaceConfigs.refresh()

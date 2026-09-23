@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.config.autoconfig
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
 import net.ccbluex.liquidbounce.config.gson.util.obj
@@ -40,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -73,23 +70,6 @@ object AutoConfig {
 
     var includeConfiguration = IncludeConfiguration.DEFAULT
 
-    @Volatile
-    var configs: Array<AutoSettings>? = null
-        private set
-
-    /**
-     * Reloads auto settings list.
-     *
-     * @return successfully reloaded or not
-     */
-    suspend fun reloadConfigs(): Boolean = try {
-        configs = ClientApi.requestSettingsList()
-        true
-    } catch (e: Exception) {
-        logger.error("Failed to load auto configs", e)
-        false
-    }
-
     inline fun withLoading(block: () -> Unit) {
         loadingNow = true
         try {
@@ -97,10 +77,6 @@ object AutoConfig {
         } finally {
             loadingNow = false
         }
-    }
-
-    suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettings(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**
