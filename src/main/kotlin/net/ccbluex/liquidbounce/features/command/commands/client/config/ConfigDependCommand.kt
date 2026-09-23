@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
@@ -62,6 +61,6 @@ object ConfigDependCommand {
     }
 
     private suspend fun CmdI18n.resolveDependency(input: String): MarketplaceItem =
-        MarketplaceConfigs.findDependency(input) ?: throw CommandException(t("error.notFound", variable(input)))
+        single(input, MarketplaceConfigs.findDependency(input))
 
 }

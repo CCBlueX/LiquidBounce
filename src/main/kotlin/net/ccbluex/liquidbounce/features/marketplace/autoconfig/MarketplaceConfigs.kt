@@ -46,12 +46,14 @@ object MarketplaceConfigs {
         index = list(limit = INDEX_LIMIT).items
     }.onFailure { logger.error("Failed to load the marketplace config index", it) }.isSuccess
 
+    @Suppress("LongParameterList")
     suspend fun list(
         page: Int = 1,
         limit: Int = PAGE_LIMIT,
         query: String? = null,
         tags: List<Int> = emptyList(),
         name: String? = null,
+        author: String? = null,
         targetServer: String? = null,
     ) = MarketplaceApi.getMarketplaceItems(
         page = page,
@@ -61,6 +63,7 @@ object MarketplaceConfigs {
         branch = API_BRANCH,
         filter = MarketplaceApi.Filter(
             name = name,
+            author = author,
             tags = tags,
             targetServer = targetServer,
             sort = MarketplaceApi.Sort.SCORE
@@ -68,38 +71,46 @@ object MarketplaceConfigs {
     )
 
     /**
-     * Accepts a share code, an item id or an exact name. Among configs of the same name,
-     * the best ranked one wins.
+     * Configs [input] names: a share code, an item id, `author/name` or a bare name. More than
+     * one result means the bare name is ambiguous.
      */
-    suspend fun find(input: String): MarketplaceItem? = runCatching {
-        when {
-            input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
-                MarketplaceApi.getMarketplaceItemByCode(input)
-            input.toIntOrNull() != null ->
-                MarketplaceApi.getMarketplaceItem(input.toInt()).takeIf { it.type == MarketplaceItemType.CONFIG }
-            else -> list(limit = 1, name = input).items.firstOrNull()
-        }
-    }.onFailure { logger.info("No config found for $input", it) }.getOrNull()
+    suspend fun find(input: String): List<MarketplaceItem> = lookup(input, listOf(MarketplaceItemType.CONFIG))
 
     /**
-     * Like [find], for anything a config can depend on: configs first, then add-ons and scripts
-     * of that exact name.
+     * Like [find], for anything a config can depend on: configs first, then add-ons and scripts.
      */
-    suspend fun findDependency(input: String): MarketplaceItem? = runCatching {
+    suspend fun findDependency(input: String): List<MarketplaceItem> = lookup(
+        input,
+        listOf(MarketplaceItemType.CONFIG, MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT)
+    )
+
+    private suspend fun lookup(input: String, types: List<MarketplaceItemType>) = runCatching {
         when {
             input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
-                MarketplaceApi.getMarketplaceItemByCode(input)
-            input.toIntOrNull() != null -> MarketplaceApi.getMarketplaceItem(input.toInt())
-            else -> list(limit = 1, name = input).items.firstOrNull()
-                ?: sequenceOf(MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT).firstNotNullOfOrNull { type ->
-                    MarketplaceApi.getMarketplaceItems(
-                        limit = 1,
-                        type = type,
-                        filter = MarketplaceApi.Filter(name = input, sort = MarketplaceApi.Sort.SCORE)
-                    ).items.firstOrNull()
-                }
-        }
-    }.onFailure { logger.info("No dependency found for $input", it) }.getOrNull()
+                listOf(MarketplaceApi.getMarketplaceItemByCode(input))
+            input.toIntOrNull() != null -> listOf(MarketplaceApi.getMarketplaceItem(input.toInt()))
+            else -> {
+                val author = input.substringBefore('/', "").takeIf(String::isNotEmpty)
+                val name = input.substringAfter('/')
+                types.firstNotNullOfOrNull { type -> byName(type, name, author).takeIf(List<*>::isNotEmpty) }
+                    .orEmpty()
+            }
+        }.filter { it.type in types }
+    }.onFailure { logger.info("Nothing found for $input", it) }.getOrDefault(emptyList())
+
+    private suspend fun byName(type: MarketplaceItemType, name: String, author: String?) =
+        MarketplaceApi.getMarketplaceItems(
+            limit = PAGE_LIMIT,
+            type = type,
+            branch = API_BRANCH.takeIf { type == MarketplaceItemType.CONFIG },
+            filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE)
+        ).items
+
+    /**
+     * How commands name an item: `author/name`, or its id while the author is unknown.
+     */
+    val MarketplaceItem.address: String
+        get() = author?.let { "$it/$name" } ?: id.toString()
 
     suspend fun findForServer(address: String): MarketplaceItem? =
         list(limit = 1, targetServer = address).items.firstOrNull()

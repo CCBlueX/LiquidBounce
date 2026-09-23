@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -110,7 +111,9 @@ object ConfigListCommand {
                 append(regular(" | ${it.joinToString(", ")}"))
             }
         }
-        .onClick(ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config load ${item.id}"))
-        .onHover(HoverEvent.ShowText(regular(t("list.hover", variable(item.name)))))
+        .onClick(
+            ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config load ${quoted(item.address)}")
+        )
+        .onHover(HoverEvent.ShowText(regular(t("list.hover", variable(item.address)))))
 
 }

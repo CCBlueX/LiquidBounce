@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.suggestion.SuggestionProvider
@@ -33,6 +35,7 @@ import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -40,9 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
-    MarketplaceConfigs.index.map { item ->
-        if (item.name.any(Char::isWhitespace)) "\"${item.name}\"" else item.name
-    }
+    MarketplaceConfigs.index.map { quoted(it.address) }
 }
 
 internal val visibilitySuggestions: SuggestionProvider<ClientCommandSource> =
@@ -63,7 +64,21 @@ internal suspend fun ownUserId(): String? {
 }
 
 internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
-    MarketplaceConfigs.find(input) ?: throw CommandException(t("error.notFound", variable(input)))
+    single(input, MarketplaceConfigs.find(input))
+
+/**
+ * The one item [input] names. A bare name that several authors use is refused with their
+ * `author/name` forms, so a config never loads by accident.
+ */
+internal fun CmdI18n.single(input: String, matches: List<MarketplaceItem>): MarketplaceItem = when (matches.size) {
+    0 -> throw CommandException(t("error.notFound", variable(input)))
+    1 -> matches.single()
+    else -> throw CommandException(
+        t("error.ambiguous", variable(input), variable(matches.joinToString(", ") { quoted(it.address) }))
+    )
+}
+
+internal fun quoted(argument: String) = if (argument.any(Char::isWhitespace)) "\"$argument\"" else argument
 
 internal fun CmdI18n.requireTracked() {
     if (ConfigTracker.state == ConfigTracker.State.NONE) {
