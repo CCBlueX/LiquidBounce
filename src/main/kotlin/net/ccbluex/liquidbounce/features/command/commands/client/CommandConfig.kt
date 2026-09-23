@@ -22,13 +22,12 @@ import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigDependCommand
+import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigEditCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigInfoCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigListCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigLoadCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigPublishCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigReportCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.config.ConfigSetCommand
 
 /**
  * Config Command
@@ -45,22 +44,17 @@ object CommandConfig : CommandRegistrar {
                 tags()
             }
             with(ConfigInfoCommand) { info() }
+
             with(ConfigLoadCommand) {
                 load()
                 revert()
                 restore()
                 detach()
             }
-            with(ConfigPublishCommand) {
-                publish()
-                fork()
-                overlay()
-                update()
-                delete()
-            }
-            with(ConfigDependCommand) { depend() }
-            with(ConfigSetCommand) { set() }
             with(ConfigReportCommand) { report() }
+
+            with(ConfigPublishCommand) { publish() }
+            with(ConfigEditCommand) { edit() }
         }
     }
 

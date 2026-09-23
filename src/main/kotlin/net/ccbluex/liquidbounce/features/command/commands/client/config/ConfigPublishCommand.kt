@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
-import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -37,12 +36,20 @@ import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 
 /**
- * Publishes the current settings to the marketplace
+ * Publishes the current settings to the marketplace as a new config
  */
 object ConfigPublishCommand {
 
     fun CmdLiteralScope.publish() {
         literal("publish") {
+            new()
+            fork()
+            overlay()
+        }
+    }
+
+    private fun CmdLiteralScope.new() {
+        literal("new") {
             publishArguments { name, visibility, description ->
                 val server = mc.currentServer?.ip?.dropPort()?.rootDomain()
                 val item = request {
@@ -61,7 +68,7 @@ object ConfigPublishCommand {
         }
     }
 
-    fun CmdLiteralScope.fork() {
+    private fun CmdLiteralScope.fork() {
         literal("fork") {
             publishArguments { name, visibility, description ->
                 requireTracked()
@@ -80,7 +87,7 @@ object ConfigPublishCommand {
         }
     }
 
-    fun CmdLiteralScope.overlay() {
+    private fun CmdLiteralScope.overlay() {
         literal("overlay") {
             publishArguments { name, visibility, description ->
                 requireTracked()
@@ -94,34 +101,6 @@ object ConfigPublishCommand {
                 }
                 published(item)
                 chat(regular(t("overlay.basedOn", variable(base))))
-            }
-        }
-    }
-
-    fun CmdLiteralScope.update() {
-        literal("update") {
-            optional("changelog", StringArgumentType.greedyString(), default = null) { changelog ->
-                execSuspend { ctx ->
-                    requireOwnTracked()
-                    if (ConfigTracker.state != ConfigTracker.State.EDITING) {
-                        throw CommandException(t("update.notEditing", variable(ConfigTracker.itemName)))
-                    }
-
-                    request { ConfigTracker.update(session(), ctx.get(changelog)) }
-                    chat(regular(t("update.updated", variable(ConfigTracker.itemName))))
-                }
-            }
-        }
-    }
-
-    fun CmdLiteralScope.delete() {
-        literal("delete") {
-            execSuspend {
-                requireOwnTracked()
-                val name = ConfigTracker.itemName
-                request { ConfigTracker.delete(session()) }
-                MarketplaceConfigs.refresh()
-                chat(regular(t("delete.deleted", variable(name))))
             }
         }
     }

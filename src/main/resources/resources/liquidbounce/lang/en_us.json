@@ -87,7 +87,7 @@
   "liquidbounce.command.config.error.request": "Marketplace request failed: %s",
   "liquidbounce.command.config.error.unknownTag": "Unknown tag %s, see .config tags.",
   "liquidbounce.command.config.fork.notEditing": "Change a setting of %s before forking it.",
-  "liquidbounce.command.config.fork.ownConfig": "%s is yours, use .config update instead.",
+  "liquidbounce.command.config.fork.ownConfig": "%s is yours, use .config edit update instead.",
   "liquidbounce.command.config.info.binds": "Includes binds",
   "liquidbounce.command.config.info.dependencies": "Needs: %s",
   "liquidbounce.command.config.info.forkedFrom": "Fork of #%s",
