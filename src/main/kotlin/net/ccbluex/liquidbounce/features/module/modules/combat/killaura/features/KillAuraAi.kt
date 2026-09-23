@@ -43,6 +43,7 @@ object KillAuraAi {
     private const val STEER_DISTANCE = 4f
     private const val FIGHT_DISTANCE = 6f
     private const val STEP_DISTANCE = 0.8
+    private const val RESPRINT_DISTANCE = 3.5f
 
     /** Whether KillAura fights with the model in any way. */
     val active
@@ -84,14 +85,21 @@ object KillAuraAi {
      * The model's sprint, as the sprint key only: vanilla still refuses to sprint in shallow water or while
      * blocking. Where the key is read it presses or releases it; during the movement tick it only ever stops.
      */
-    fun sprint(event: SprintEvent, live: CombatLiveDecision) {
-        val sprint = live.sprint && event.directionalInput.forwards
+    fun sprint(event: SprintEvent, live: CombatLiveDecision, target: LivingEntity) {
+        val sprint = event.directionalInput.forwards && (live.sprint || resprint(target))
         when (event.source) {
             SprintEvent.Source.INPUT -> event.sprint = sprint
             SprintEvent.Source.MOVEMENT_TICK -> if (!sprint) event.sprint = false
             SprintEvent.Source.NETWORK -> Unit
         }
     }
+
+    /**
+     * Sprint pressed again once the next hit is ready, the W-tap players who beat the model use: vanilla ends the
+     * sprint on every hit, and only a hit landed sprinting deals the sprint knockback.
+     */
+    private fun resprint(target: LivingEntity) = target.distanceTo(player) <= RESPRINT_DISTANCE &&
+        KillAuraClicker.willClickAt(1) && !ModuleKillAura.shouldBlockSprinting
 
     /** The side the model strafes to, -1 for left and 1 for right, or 0 while it walks straight. */
     fun side(live: CombatLiveDecision) = when (live.strafe) {

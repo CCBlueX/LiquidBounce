@@ -215,7 +215,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
             return@handler
         }
         val target = targetTracker.target ?: return@handler
-        KillAuraAi.live(target)?.let { KillAuraAi.sprint(event, it) }
+        KillAuraAi.live(target)?.let { KillAuraAi.sprint(event, it, target) }
     }
 
     /**
