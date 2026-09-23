@@ -16,10 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
@@ -29,21 +31,112 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
+import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
+import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
+import net.ccbluex.liquidbounce.integration.interop.HttpStatusException
 import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.unauthorized
 import net.ccbluex.liquidbounce.utils.client.logger
+import java.io.IOException
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 /**
  * Extract a required integer path parameter or respond with 403 Forbidden
  */
-private suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
+internal suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
     return parameters[parameter]?.toIntOrNull() ?: this.forbidden("Invalid $parameter: ${parameters[parameter]}")
+}
+
+/**
+ * Runs [block] against the marketplace: an unreachable marketplace answers 503, a refused request
+ * the marketplace's own status and reason.
+ */
+internal suspend inline fun <T> ApplicationCall.marketplace(block: () -> T): T = try {
+    block()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    throw marketplaceFailure(e)
+}
+
+internal fun marketplaceFailure(e: Exception): HttpStatusException {
+    val http = e.httpException
+    return when {
+        http != null -> {
+            logger.warn("Marketplace request failed: ${http.message}")
+            HttpStatusException(
+                HttpStatusCode.fromValue(http.code),
+                mapOf("reason" to runCatching { JsonParser.parseString(http.content).asJsonObject["error"].asString }
+                    .getOrDefault(http.content))
+            )
+        }
+
+        e is IOException -> HttpStatusException(
+            HttpStatusCode.ServiceUnavailable,
+            mapOf("reason" to "Can't reach the marketplace")
+        )
+
+        e is IllegalStateException || e is IllegalArgumentException || e is NoCompatibleRevisionException ->
+            HttpStatusException(HttpStatusCode.BadRequest, mapOf("reason" to (e.message ?: e.javaClass.simpleName)))
+
+        else -> {
+            logger.error("Marketplace request failed", e)
+            HttpStatusException(
+                HttpStatusCode.InternalServerError,
+                mapOf("reason" to (e.message ?: e.javaClass.simpleName))
+            )
+        }
+    }
+}
+
+internal suspend fun ApplicationCall.requireSession(): OAuthSession {
+    val account = ClientAccountManager.clientAccount
+    if (account == EMPTY_ACCOUNT) {
+        unauthorized("Not logged in")
+    }
+    return marketplace { account.takeSession() }
+}
+
+/**
+ * The session of the account, `null` while logged out or when it cannot be renewed, so browsing goes on
+ * without it.
+ */
+internal suspend fun optionalSession(): OAuthSession? {
+    val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
+    return runCatching { account.takeSession() }
+        .onFailure { logger.debug("Failed to renew the session", it) }
+        .getOrNull()
+}
+
+/**
+ * The marketplace user of the account, `null` while logged out or unknown.
+ */
+internal suspend fun ownUser(): UserInformation? {
+    val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
+    if (account.userInformation == null) {
+        runCatching { account.updateInfo() }.onFailure { logger.debug("Failed to load the account", it) }
+    }
+    return account.userInformation
+}
+
+internal suspend fun ownUserId() = ownUser()?.userId
+
+/**
+ * The API sends UTC without a zone.
+ */
+internal fun epochMillis(dateTime: String?): Long? = dateTime?.let {
+    runCatching { LocalDateTime.parse(it).toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
 }
 
 /**

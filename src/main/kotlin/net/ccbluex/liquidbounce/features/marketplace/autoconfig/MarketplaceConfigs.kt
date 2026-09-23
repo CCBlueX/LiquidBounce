@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
@@ -62,6 +63,8 @@ object MarketplaceConfigs {
         author: String? = null,
         targetServer: String? = null,
         featured: Boolean? = null,
+        sort: MarketplaceApi.Sort = MarketplaceApi.Sort.SCORE,
+        session: OAuthSession? = null,
     ) = MarketplaceApi.getMarketplaceItems(
         page = page,
         limit = limit,
@@ -74,8 +77,9 @@ object MarketplaceConfigs {
             featured = featured,
             tags = tags,
             targetServer = targetServer,
-            sort = MarketplaceApi.Sort.SCORE
-        )
+            sort = sort
+        ),
+        session = session
     )
 
     /**

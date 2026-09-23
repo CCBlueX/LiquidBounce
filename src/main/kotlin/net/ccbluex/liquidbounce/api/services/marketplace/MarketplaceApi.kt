@@ -224,6 +224,8 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
 
     fun downloadRevision(id: Int, revisionId: Int) = "$baseUrl/marketplace/$id/revisions/$revisionId/download"
 
+    fun fileUrl(pid: String) = "$baseUrl/file/$pid"
+
     // Dependencies
     suspend fun getItemDependencies(id: Int) =
         get<List<MarketplaceLinkedItem>>("/marketplace/$id/dependencies")
