@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -314,7 +313,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -322,11 +321,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(
-                visibility = visibility,
-                forkedFromItemId = itemId,
-                forkedFromRevisionId = revisionId
-            )
+            details.copy(forkedFromItemId = itemId, forkedFromRevisionId = revisionId)
         )
     }
 
@@ -338,7 +333,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -349,7 +344,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(visibility = visibility),
+            details,
             withContext(MinecraftDispatcher) { changedSince(base) }
         ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
 
