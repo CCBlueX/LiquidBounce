@@ -20,17 +20,9 @@ package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
 
-data class MarketplaceItemRevision(
-    val id: Int,
-    @SerializedName("item_id")
-    val itemId: Int,
-    val version: String,
-    @SerializedName("file_pid")
-    val filePid: String,
-    val changelog: String?,
-    @SerializedName("created_at")
-    val createdAt: String,
-    val status: MarketplaceItemStatus,
-    @SerializedName("includes_binds")
-    val includesBinds: Boolean? = null
-)
+enum class MarketplaceItemVisibility {
+    @SerializedName("public")
+    PUBLIC,
+    @SerializedName("unlisted")
+    UNLISTED
+}

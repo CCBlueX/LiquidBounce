@@ -20,17 +20,29 @@ package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
 
-data class MarketplaceItemRevision(
+data class MarketplaceTag(
     val id: Int,
-    @SerializedName("item_id")
-    val itemId: Int,
-    val version: String,
-    @SerializedName("file_pid")
-    val filePid: String,
-    val changelog: String?,
+    val name: String
+)
+
+data class MarketplaceConfigReport(
+    val id: Int,
+    @SerializedName("revision_id")
+    val revisionId: Int,
+    val works: Boolean,
+    @SerializedName("client_version")
+    val clientVersion: String?,
+    @SerializedName("server_address")
+    val serverAddress: String?,
     @SerializedName("created_at")
     val createdAt: String,
-    val status: MarketplaceItemStatus,
-    @SerializedName("includes_binds")
-    val includesBinds: Boolean? = null
+    @SerializedName("updated_at")
+    val updatedAt: String
+)
+
+data class MarketplaceConfigReportSummary(
+    @SerializedName("revision_id")
+    val revisionId: Int,
+    val works: Int,
+    val fails: Int
 )
