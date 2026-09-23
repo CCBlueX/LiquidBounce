@@ -53,6 +53,12 @@ object ThemeManager : Config("theme") {
         field = mutableListOf()
     val themeIds get() = themes.map { theme -> theme.metadata.id }
 
+    /**
+     * The loaded theme of each subscribed marketplace theme, by item id.
+     */
+    internal val marketplaceThemes: Map<Int, Theme>
+        field = HashMap()
+
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
         mc.execute {
@@ -128,15 +134,18 @@ object ThemeManager : Config("theme") {
     }
 
     suspend fun load() {
-        fun Theme.addIfUnloaded() {
-            if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
+        fun Theme.addIfUnloaded(): Boolean {
+            val unloaded = themes.none { it.metadata.id.equals(this.metadata.id, true) }
+            if (unloaded) {
                 themes.add(this)
             } else {
                 logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
             }
+            return unloaded
         }
 
         themes.clear()
+        marketplaceThemes.clear()
 
         // 1st priority
         themesFolder.listFiles { it.isDirectory }
@@ -158,8 +167,10 @@ object ThemeManager : Config("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
-                    .addIfUnloaded()
+                val theme = Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
+                if (theme.addIfUnloaded()) {
+                    marketplaceThemes[item.id] = theme
+                }
             }.onFailure { err ->
                 logger.error("Failed to load theme '${item.name}'.", err)
             }

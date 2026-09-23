@@ -133,6 +133,14 @@ internal suspend fun installDependencies(installables: Collection<Installable>):
 }
 
 /**
+ * Subscribes to [item] after what it needs, as [installDependencies] does.
+ */
+internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
+    val dependencies = resolveDependencies(item.id)
+    return installDependencies(dependencies.installables + Installable(item, dependencies.needs))
+}
+
+/**
  * Plans [installDependencies] without installing anything.
  */
 internal suspend fun planInstalls(installables: Collection<Installable>): InstallPlan {
