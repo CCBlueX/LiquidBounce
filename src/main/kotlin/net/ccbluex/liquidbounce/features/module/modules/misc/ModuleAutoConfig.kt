@@ -20,11 +20,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -107,16 +108,12 @@ object ModuleAutoConfig : ClientModule(
             return
         }
 
-        // Get config with the shortest name, as it is most likely the correct one.
-        // There can be multiple configs for the same server, but with different names
-        // and the global config is likely named e.g "hypixel", while the more specific ones are named
-        // "hypixel-csgo", "hypixel-legit", etc.
-        val autoConfig = (AutoConfig.configs ?: return).filter { config ->
-            config.serverAddress?.rootDomain().equals(address, true) ||
-                config.serverAddress.equals(address, true)
-        }.minByOrNull { config -> config.name.length }
+        val autoConfig = runCatching { MarketplaceConfigs.findForServer(address) }
+            .onFailure { logger.error("Failed to look up a config for $address.", it) }
+            .getOrNull()
+        val revisionId = autoConfig?.liveRevisionId
 
-        if (autoConfig == null) {
+        if (autoConfig == null || revisionId == null) {
             notification(
                 "Auto Config", "There is no known config for $address.",
                 NotificationEvent.Severity.ERROR
@@ -124,9 +121,16 @@ object ModuleAutoConfig : ClientModule(
             return
         }
 
+        // Loading again would throw away the user's edits or re-apply what already runs
+        if (ConfigTracker.state != ConfigTracker.State.NONE && ConfigTracker.itemId == autoConfig.id &&
+            (ConfigTracker.state == ConfigTracker.State.EDITING || ConfigTracker.revisionId == revisionId)
+        ) {
+            return
+        }
+
         connectScreen?.updateStatus(regular(message("loading", address)))
         runCatching {
-            AutoConfig.loadAutoConfig(autoConfig)
+            ConfigTracker.load(autoConfig, revisionId)
         }.onFailure { error ->
             logger.error("Failed to load config ${autoConfig.name} for $address.", error)
             connectScreen?.updateStatus(markAsError(message("failed", address)))
