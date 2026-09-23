@@ -36,10 +36,12 @@ class HumanClickTiming : ClickTiming {
     }
 
     private var comboCps = 0.0
+    private var range: IntRange? = null
 
     override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random): Long {
-        if (comboMs == 0L || comboCps == 0.0) {
+        if (comboMs == 0L || cps != range) {
             comboCps = cps.first + random.nextDouble() * (cps.last - cps.first)
+            range = cps
         }
 
         // mu shifted by -sigma^2/2 so the mean interval, not the median, lands on the target CPS

@@ -86,6 +86,34 @@ class ClickPlanTest {
     }
 
     @Test
+    fun `settings changed mid combo apply right away`() {
+        val plan = humanPlan(11..14, maxPerTick = 1)
+        fun cps(from: Int, until: Int): Double {
+            var clicks = 0
+            for (tick in from until until) {
+                plan.tick(tick * ClickPlan.TICK_MS)
+                clicks += plan.consume({ true }) { true }
+            }
+            return clicks / ((until - from) / 20.0)
+        }
+
+        cps(0, 200)
+        plan.cps = 4..5
+        val slow = cps(200, 400)
+        assertTrue(slow <= 5.5, "$slow cps after lowering the range")
+
+        plan.cps = 25..30
+        cps(400, 420)
+        val capped = cps(420, 620)
+        assertTrue(capped <= 20.0, "$capped cps with one press per tick")
+
+        plan.maxPerTick = 3
+        cps(620, 640)
+        val fast = cps(640, 840)
+        assertTrue(fast >= 24.0, "$fast cps after raising the cap")
+    }
+
+    @Test
     fun `constant clicks at the top of the range, evenly`() {
         val plan = ClickPlan(ConstantClickTiming, Random(1L)).apply { cps = 10..20 }
         val consumed = plan.run(20 * 60)

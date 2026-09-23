@@ -43,7 +43,20 @@ class ClickPlan(
     }
 
     var cps = 11..14
+        set(value) {
+            if (field != value) {
+                field = value
+                replan()
+            }
+        }
+
     var maxPerTick = 2
+        set(value) {
+            if (field != value) {
+                field = value
+                replan()
+            }
+        }
 
     /**
      * Adds a guaranteed click to tick `n` when nothing is planned for it.
@@ -151,6 +164,19 @@ class ClickPlan(
         }
         consumed++
         return true
+    }
+
+    /**
+     * Drops the presses planned after this tick, so they are planned again with changed settings.
+     */
+    private fun replan() {
+        val keep = maxOf(next, 1)
+        if (times.size <= keep) {
+            return
+        }
+        val dropped = times.size - keep
+        times.removeElements(keep, times.size)
+        intervals.removeElements(maxOf(0, intervals.size - dropped), intervals.size)
     }
 
     private fun planUntil(time: Long) {
