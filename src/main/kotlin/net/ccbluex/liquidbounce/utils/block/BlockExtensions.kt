@@ -441,13 +441,7 @@ inline fun AABB.collideBlockIntersects(
             return true
         }
 
-        val shape = blockState.getCollisionShape(mc.level!!, blockPos)
-
-        if (shape.isEmpty) {
-            continue
-        }
-
-        if (shape intersects this) {
+        if (blockState.getCollisionShape(mc.level!!, blockPos).move(blockPos) intersects this) {
             return true
         }
     }
