@@ -55,6 +55,8 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -276,6 +278,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
+        ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
@@ -329,6 +332,9 @@ object LiquidBounce : EventListener {
             launch {
                 // Load configs
                 AutoConfig.reloadConfigs()
+            }
+            launch {
+                MarketplaceConfigs.refresh()
             }
             launch {
                 IpInfoApi.original
