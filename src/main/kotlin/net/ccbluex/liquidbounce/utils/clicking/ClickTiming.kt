@@ -16,10 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.clicking.pattern
+package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import it.unimi.dsi.fastutil.longs.LongList
+import java.util.Random
 
-interface ClickPattern {
-    fun fill(clickArray: IntArray, cps: IntRange, clicker: Clicker<*>)
+/**
+ * Source of the time between two presses of a [ClickPlan].
+ */
+fun interface ClickTiming {
+
+    /**
+     * @param recent intervals of the current combo in milliseconds, oldest first
+     * @param comboMs time from the combo start to the press the interval starts at
+     * @return milliseconds until the next press
+     */
+    fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random): Long
+
 }
