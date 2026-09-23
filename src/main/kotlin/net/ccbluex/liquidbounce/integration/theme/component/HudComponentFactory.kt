@@ -22,8 +22,10 @@ package net.ccbluex.liquidbounce.integration.theme.component
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.components.WebHudComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import java.util.UUID
 
 abstract class HudComponentFactory {
 
@@ -75,8 +77,10 @@ abstract class HudComponentFactory {
         override val enabled: Boolean = false,
         override val singleton: Boolean = false,
         val description: String = "",
-        private val function: () -> HudComponent
+        private val function: () -> NativeHudComponent
     ) : HudComponentFactory() {
+        val id: UUID = UUID.randomUUID()
+
         override fun createComponent() = function()
     }
 

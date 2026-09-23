@@ -109,7 +109,7 @@ object HudComponentManager {
             Theme.ComponentCatalogEntry(
                 factory.name,
                 factory.description,
-                FACTORY_PREFIX + factory.name,
+                factory.id.toString(),
                 factory.singleton,
                 canAdd = !factory.singleton || registeredComponents.none { it.name == factory.name && it.enabled },
             )
@@ -128,10 +128,12 @@ object HudComponentManager {
         return zIndex
     }
 
+    fun getFactory(id: String): HudComponentFactory.NativeHudComponentFactory? =
+        registeredFactories.find { it.id.toString() == id }
+
     fun addComponent(id: String): HudComponent? {
-        if (id.startsWith(FACTORY_PREFIX)) {
-            val factory = registeredFactories.find { FACTORY_PREFIX + it.name == id } ?: return null
-            val component = factory.createComponent() as NativeHudComponent
+        getFactory(id)?.let { factory ->
+            val component = factory.createComponent()
             component.enabled = true
             register(component)
             return component
@@ -150,8 +152,6 @@ object HudComponentManager {
             .find { theme -> theme.components.any { it.id.toString() == id } }
             ?.addComponent(id)
     }
-
-    private const val FACTORY_PREFIX = "native:"
 
     fun updateComponents() {
         EventManager.callEvent(ComponentsUpdateEvent(

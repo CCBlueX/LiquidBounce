@@ -976,9 +976,11 @@ public final class net/ccbluex/liquidbounce/integration/theme/component/HudCompo
 	public fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;)V
 	public synthetic fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;)V
-	public fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public synthetic fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;
 	public final fun getDescription ()Ljava/lang/String;
 	public fun getEnabled ()Z
+	public final fun getId ()Ljava/util/UUID;
 	public fun getName ()Ljava/lang/String;
 	public fun getSingleton ()Z
 }
@@ -992,6 +994,7 @@ public final class net/ccbluex/liquidbounce/integration/theme/component/HudCompo
 	public static final fun getComponentWithTweak (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
 	public final fun getComponents ()Ljava/util/List;
 	public final fun getComponents (Ljava/lang/String;)Ljava/util/List;
+	public final fun getFactory (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;
 	public final fun getNativeComponents ()Ljava/util/List;
 	public static final fun isTweakEnabled (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Z
 	public final fun register (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
