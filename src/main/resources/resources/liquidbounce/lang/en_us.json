@@ -568,7 +568,6 @@
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.maxTurn.description": "Largest turn per tick.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.randomness.description": "How much of the model's variation to keep. 0 always aims the same way.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.prediction.description": "Aims this many ticks ahead of a moving opponent, making up for the reaction time learned from players.",
-  "liquidbounce.module.killAura.rotations.angleSmooth.ai.verticalAssist.description": "Follows an opponent knocked far up or down, which the model rarely saw. 0 leaves the pitch to the model.",
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
   "liquidbounce.module.liquidFiller.description": "Places blocks inside of liquid source blocks within range of you.",
   "liquidbounce.module.liquidFiller.value.placeOrder.description": "Controls the order in which liquid source blocks are queued for placing.",
