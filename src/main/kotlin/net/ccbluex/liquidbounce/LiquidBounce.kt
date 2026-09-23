@@ -369,11 +369,14 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
+
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        AddonInstaller.stageSubscribedAddons()
+        MarketplaceManager.reloadHandlers()
+
         if (!ClientInteropServer.isSkipping) {
             ThemeManager.init()
-            // Preload marketplace items
-            ConfigSystem.load(MarketplaceManager)
-            AddonInstaller.stageSubscribedAddons()
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }

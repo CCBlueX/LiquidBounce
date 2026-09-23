@@ -24,12 +24,14 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
+import java.util.EnumMap
 
 /**
  * Outcome of a single [MarketplaceManager.update] call.
@@ -46,11 +48,49 @@ sealed interface UpdateResult {
 }
 
 /**
+ * Runs subscribed items of a type the client does not handle itself. Called on the render thread
+ * with every subscribed item of that type once at startup and whenever one is installed, updated
+ * or removed.
+ */
+@AddonApi
+fun interface MarketplaceItemHandler {
+    fun reload(items: List<SubscribedItem>)
+}
+
+/**
  * Marketplace manager for subscribing and updating items.
  */
+@Suppress("TooManyFunctions")
 object MarketplaceManager : Config("marketplace"), EventListener {
 
     private val logger = clientLogger("MarketplaceManager")
+
+    private val handlers = EnumMap<MarketplaceItemType, MarketplaceItemHandler>(MarketplaceItemType::class.java)
+
+    @AddonApi
+    fun registerHandler(type: MarketplaceItemType, handler: MarketplaceItemHandler) {
+        check(handlers.putIfAbsent(type, handler) == null) { "Items of type $type are handled already" }
+    }
+
+    @AddonApi
+    fun unregisterHandler(type: MarketplaceItemType, handler: MarketplaceItemHandler) {
+        handlers.remove(type, handler)
+    }
+
+    @AddonApi
+    fun hasHandler(type: MarketplaceItemType) = type in handlers
+
+    internal fun reloadHandled(type: MarketplaceItemType) {
+        val handler = handlers[type] ?: return
+        runCatching { handler.reload(getSubscribedItemsOfType(type)) }
+            .onFailure { logger.error("Failed to reload $type items", it) }
+    }
+
+    /**
+     * Hands every handler its subscribed items once they are loaded, before module settings are,
+     * so what the items register gets its settings back.
+     */
+    internal fun reloadHandlers() = handlers.keys.forEach(::reloadHandled)
 
     val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 
