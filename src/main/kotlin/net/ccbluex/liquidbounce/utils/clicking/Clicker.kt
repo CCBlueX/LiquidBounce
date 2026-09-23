@@ -20,28 +20,18 @@ package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.ButterflyPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.DoubleClickPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.DragPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.EfficientPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.NormalDistributionPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.SpammingPattern
-import net.ccbluex.liquidbounce.utils.clicking.pattern.patterns.StabilizedPattern
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
-import java.util.Arrays
-import java.util.Random
+import net.minecraft.util.Util
 
 /**
  * An attack scheduler
@@ -53,36 +43,25 @@ import java.util.Random
  * }
  * @see [Minecraft.handleKeybinds]
  *
- * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
- * This allows us to predict future actions and behave accordingly.
+ * Presses are planned in milliseconds by a [ClickTiming] and batched into ticks by a [ClickPlan],
+ * so we can predict future clicks and behave accordingly.
  */
 open class Clicker<T>(
     val parent: T,
     val keyBinding: KeyMapping,
     val itemCooldown: ItemCooldown? = ItemCooldown(),
-    maxCps: Int = 60,
+    maxCps: Int = 30,
     name: String = "Clicker",
     simulateAttackKeyDown: Boolean = false,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
-        internal val RNG = Random()
-        private const val DEFAULT_CYCLE_LENGTH = 20
-        private var lastClickTime = 0L
-        private val lastClickPassed
-            get() = System.currentTimeMillis() - lastClickTime
+        private const val TICKS_AHEAD = 20
     }
 
-    // Options
-    private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
-        .onChanged {
-            fill()
-        }
-
-    private val pattern by enumChoice("Technique", ClickPatterns.STABILIZED)
-        .onChanged {
-            fill()
-        }
+    private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
+    private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
+    private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
     init {
         itemCooldown?.let(this::tree)
@@ -95,19 +74,29 @@ open class Clicker<T>(
      * This is useful for anti-cheats that detect if you are ignoring this cooldown.
      * Applies to the FailSwing feature as well.
      */
-    private val attackCooldown: Value<Boolean>? = if (keyBinding == mc.options.keyAttack) {
-        boolean("AttackCooldown", true)
+    private val missCooldown: Value<Boolean>? = if (keyBinding == mc.options.keyAttack) {
+        boolean("MissCooldown", true, aliases = listOf("AttackCooldown"))
     } else {
         null
     }
 
-    private val passesAttackCooldown
-        get() = !(attackCooldown?.get() == true && mc.missTime > 0)
+    private val passesMissCooldown
+        get() = !(missCooldown?.get() == true && mc.missTime > 0)
 
-    private val clickArray = RollingClickArray(DEFAULT_CYCLE_LENGTH, 2)
+    private val human = HumanClickTiming()
 
-    init {
-        fill()
+    private val plan = ClickPlan(ClickTiming { recent, comboMs, cps, random ->
+        when (technique) {
+            ClickTechnique.HUMAN -> human
+            ClickTechnique.CONSTANT -> ConstantClickTiming
+        }.nextInterval(recent, comboMs, cps, random)
+    }).apply {
+        // Once, on the tick the cooldown fills up; one that is always ready would otherwise click every tick
+        enforced = { tick ->
+            val cooldown = itemCooldown
+            player.hasCooldown && cooldown != null &&
+                cooldown.isCooldownPassed(tick) && !cooldown.isCooldownPassed(tick - 1)
+        }
     }
 
     // Clicks that were executed by [click] in the current tick
@@ -118,37 +107,17 @@ open class Clicker<T>(
         get() = willClickAt(0)
 
     val ticksUntilClick: Int
-        get() {
-            for (i in 0 until clickArray.iterations) {
-                if (willClickAt(i)) {
-                    return i
-                }
-            }
-
-            return clickArray.iterations
-        }
+        get() = (0 until TICKS_AHEAD).firstOrNull(::willClickAt) ?: TICKS_AHEAD
 
     var ticksSinceLastClick = 0
         private set
 
     fun willClickAt(tick: Int = 1) = getClickAmount(tick) > 0
 
-    fun getClickAmount(tick: Int = 0): Int {
-        if (isEnforcedClick()) {
-            return 1
-        }
-        return clickArray.get(tick)
-    }
-
-    private fun isEnforcedClick(tick: Int = 0): Boolean {
-        val hasCooldown = player.hasCooldown
-        debugParameter("HasCooldown") { hasCooldown }
-        if (hasCooldown && itemCooldown?.isCooldownPassed(tick) == true) {
-            return true
-        }
-
-        return lastClickPassed + (tick * 50L) >= 1000L
-    }
+    /**
+     * Presses consumed by the tick [tick] ticks from now.
+     */
+    fun getClickAmount(tick: Int = 0) = plan.clicksAt(tick)
 
     init {
         if (simulateAttackKeyDown && keyBinding == mc.options.keyAttack) {
@@ -167,34 +136,26 @@ open class Clicker<T>(
     }
 
     /**
-     * Clicks [cps] times per call (tick). If the cooldown is not passed, it will not click.
+     * Uses the presses of this tick. If the cooldown is not passed, the press is dropped.
      * [block] should return true if the click was successful. Otherwise, it will not count as a click.
      */
     fun click(block: () -> Boolean) {
-        val clicks = getClickAmount()
-
-        debugParameter("Current Clicks") { clicks }
-        debugParameter("Peek Clicks") { clickArray.get(1) }
-        debugParameter("Last Click Passed") { lastClickPassed }
-        debugParameter("Attack Cooldown") { mc.missTime }
+        debugParameter("Current Clicks") { getClickAmount() }
+        debugParameter("Peek Clicks") { getClickAmount(1) }
+        debugParameter("Combo") { plan.comboMs }
+        debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
-        var clickAmount = 0
-
-        repeat(clicks) {
-            if (!passesAttackCooldown) {
-                return@repeat
-            }
-
-            if (itemCooldown?.isCooldownPassed() != false && block()) {
-                clickAmount++
-                itemCooldown?.newCooldown()
-                lastClickTime = System.currentTimeMillis()
-                ticksSinceLastClick = 0
+        val clicks = plan.consume({ passesMissCooldown && itemCooldown?.isCooldownPassed() != false }) {
+            block().also { success ->
+                if (success) {
+                    itemCooldown?.newCooldown()
+                    ticksSinceLastClick = 0
+                }
             }
         }
 
-        this.clickAmount = clickAmount
+        this.clickAmount = (this.clickAmount ?: 0) + clicks
     }
 
     /**
@@ -206,7 +167,7 @@ open class Clicker<T>(
             return false
         }
 
-        if (!passesAttackCooldown) {
+        if (!passesMissCooldown) {
             return false
         }
 
@@ -220,45 +181,11 @@ open class Clicker<T>(
         ticksSinceLastClick++
         clickAmount = null
 
-        if (clickArray.advance()) {
-            val cycleArray = IntArray(DEFAULT_CYCLE_LENGTH)
-            pattern.pattern.fill(cycleArray, cps, this)
-            clickArray.push(cycleArray)
-        }
-
-        debugParameter("Click Technique") { pattern.tag }
-        debugParameter("Click Array") {
-            clickArray.array.withIndex().joinToString { (i, v) ->
-                if (i == clickArray.head) "*$v" else v.toString()
-            }
-        }
-    }
-
-    private fun fill() {
-        clickArray.clear()
-        val cycleArray = IntArray(DEFAULT_CYCLE_LENGTH)
-        repeat(clickArray.iterations) {
-            Arrays.fill(cycleArray, 0)
-            pattern.pattern.fill(cycleArray, cps, this)
-            clickArray.push(cycleArray)
-            clickArray.advance(DEFAULT_CYCLE_LENGTH)
-        }
+        plan.cps = cps
+        plan.maxPerTick = maxPerTick
+        plan.tick(Util.getMillis())
     }
 
     override fun parent() = parent
-
-    @Suppress("unused")
-    enum class ClickPatterns(
-        override val tag: String,
-        val pattern: ClickPattern
-    ) : Tagged {
-        STABILIZED("Stabilized", StabilizedPattern),
-        EFFICIENT("Efficient", EfficientPattern),
-        SPAMMING("Spamming", SpammingPattern),
-        DOUBLE_CLICK("DoubleClick", DoubleClickPattern),
-        DRAG("Drag", DragPattern),
-        BUTTERFLY("Butterfly", ButterflyPattern),
-        NORMAL_DISTRIBUTION("NormalDistribution", NormalDistributionPattern);
-    }
 
 }
