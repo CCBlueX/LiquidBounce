@@ -22,19 +22,24 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
-import java.io.FileFilter
+import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.copyTo
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 
 /**
  * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
  */
-@Suppress("TooManyFunctions")
 object AddonInstaller {
 
     private val logger = clientLogger("AddonInstaller")
@@ -43,10 +48,9 @@ object AddonInstaller {
 
     private const val PART_SUFFIX = ".part"
 
-    private val managedName = Regex("""${Regex.escape(PREFIX)}(\d+)-(\d+)\.jar""")
-
-    private val modsFolder: File
-        get() = System.getProperty("fabric.modsFolder")?.let(::File) ?: File(mc.gameDirectory, "mods")
+    // Where Fabric Loader looks for mods.
+    private val modsDir: Path = System.getProperty("fabric.modsFolder")?.let(Path::of)
+        ?: FabricLoader.getInstance().gameDir.resolve("mods")
 
     /**
      * LiquidLauncher rebuilds the mods folder at every start and stages the add-ons itself, so it is
@@ -54,36 +58,43 @@ object AddonInstaller {
      */
     val launcherManaged = System.getProperty("minecraft.launcher.brand") == "LiquidLauncher"
 
-    internal val minecraft: String
-        get() = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString
+    internal val minecraft by lazy { versionOf("minecraft") }
 
-    internal val liquidbounce: String
-        get() = FabricLoader.getInstance().getModContainer("liquidbounce").orElseThrow().metadata.version.friendlyString
+    internal val liquidbounce by lazy { versionOf("liquidbounce") }
+
+    private fun versionOf(modId: String) =
+        FabricLoader.getInstance().getModContainer(modId).orElseThrow().metadata.version.friendlyString
 
     // Item id to the revision unpacked this session. Fabric refuses to start with an add-on that does not
     // fit, and the user has to remove it, so a jar it did not load is never put back.
     private val unpacked = ConcurrentHashMap<Int, Int>()
 
     // Windows locks loaded jars. Unlike File.deleteOnExit, a jar that is wanted again can leave this.
-    private val removeOnExit = ConcurrentHashMap.newKeySet<File>()
+    private val removeOnExit = ConcurrentHashMap.newKeySet<Path>()
 
     init {
-        Runtime.getRuntime().addShutdownHook(Thread { removeOnExit.forEach(File::delete) })
+        Runtime.getRuntime().addShutdownHook(Thread { removeOnExit.forEach { runCatching { it.deleteIfExists() } } })
     }
 
-    // Named by item id, since unsubscribe deletes the item directory before the reload that
-    // unstages the jar. LiquidLauncher names the jars it stages the same way.
-    private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
+    /**
+     * The jar of [revisionId] of add-on [itemId] in the mods folder. Named by item id, since unsubscribe
+     * deletes the item directory before the reload that unstages the jar. LiquidLauncher names the jars
+     * it stages the same way.
+     */
+    private data class Staged(val itemId: Int, val revisionId: Int) {
 
-    private fun managedFiles(filter: FileFilter = { true }): List<File> =
-        modsFolder.listFiles { file: File ->
-            file.isFile && file.name.startsWith(PREFIX) && filter.accept(file)
-        }?.asList().orEmpty()
+        val fileName get() = "$PREFIX$itemId-$revisionId.jar"
 
-    private fun managedJarsFor(itemId: Int): List<File> =
-        managedFiles { it.name.startsWith("$PREFIX$itemId-") && it.name.endsWith(".jar") }
+        val loaded get() = AddonInstaller.loaded[itemId]?.revisionId == revisionId
 
-    private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
+        companion object {
+            private val pattern = Regex("""${Regex.escape(PREFIX)}(\d+)-(\d+)\.jar""")
+
+            fun of(path: Path) = pattern.matchEntire(path.name)?.let { match ->
+                Staged(match.groupValues[1].toInt(), match.groupValues[2].toInt())
+            }
+        }
+    }
 
     private class Loaded(val revisionId: Int, val name: String)
 
@@ -95,9 +106,7 @@ object AddonInstaller {
             .filter { it.origin.kind == ModOrigin.Kind.PATH }
             .flatMap { mod ->
                 mod.origin.paths.mapNotNull { path ->
-                    managedName.matchEntire(path.fileName?.toString().orEmpty())?.let { match ->
-                        match.groupValues[1].toInt() to Loaded(match.groupValues[2].toInt(), mod.metadata.name)
-                    }
+                    Staged.of(path)?.let { it.itemId to Loaded(it.revisionId, mod.metadata.name) }
                 }
             }
             .toMap()
@@ -139,95 +148,84 @@ object AddonInstaller {
     }
 
     private fun stage(subscribed: List<SubscribedItem>) {
-        val expected = HashSet<String>()
+        val expected = HashSet<Path>()
         for (item in subscribed) {
             val revisionDir = item.installedRevisionDir ?: continue
-            val revisionId = revisionDir.name.toInt()
-            val target = File(modsFolder, managedName(item.id, revisionId))
-            if (unpacked[item.id] != revisionId && !isLoaded(target)) {
+            val staged = Staged(item.id, revisionDir.name.toInt())
+            if (unpacked[item.id] != staged.revisionId && !staged.loaded) {
                 continue
             }
 
+            val target = modsDir.resolve(staged.fileName)
             runCatching { stage(item, item.addonJar(revisionDir), target) }
-                .onSuccess { expected += target.name }
+                .onSuccess { expected.add(target) }
                 .onFailure { error ->
                     logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
                     // Keep the working revision when an update fails.
-                    managedJarsFor(item.id).mapTo(expected) { it.name }
+                    expected.addAll(managedJarsFor(item.id))
                 }
         }
-        removeOnExit.removeIf { it.name in expected }
+        removeOnExit.removeAll(expected)
 
         // Unsubscribed, superseded, or a leftover .part.
-        for (file in managedFiles { it.name !in expected }) {
-            remove(file)
-        }
+        managedFiles().filterNot(expected::contains).forEach(::remove)
     }
 
-    private fun stage(item: SubscribedItem, jar: File, target: File) {
+    private fun stage(item: SubscribedItem, jar: File, target: Path) {
         if (target.exists()) {
             return
         }
 
-        check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
+        modsDir.createDirectories()
 
         // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
-        val part = File(modsFolder, target.name + PART_SUFFIX).toPath()
+        val part = target.resolveSibling(target.name + PART_SUFFIX)
         jar.toPath().copyTo(part, overwrite = true)
 
         // Old revisions go only once the copy succeeded.
         managedJarsFor(item.id).forEach(::remove)
 
-        part.atomicMoveTo(target.toPath())
+        part.atomicMoveTo(target)
         AddonManager.markRestartRequired(item.id, "${item.name} installed")
         logger.info("Staged add-on '${item.name}' as ${target.name}; restart required")
     }
 
+    private fun managedFiles(): List<Path> = if (modsDir.isDirectory()) {
+        modsDir.listDirectoryEntries("$PREFIX*").filter { it.isRegularFile() }
+    } else {
+        emptyList()
+    }
+
+    private fun managedJarsFor(itemId: Int) = managedFiles().filter { Staged.of(it)?.itemId == itemId }
+
     /**
      * A loaded jar needs a restart either way.
      */
-    private fun remove(file: File) {
-        val loaded = isLoaded(file)
-
+    private fun remove(file: Path) {
         if (deleteNowOrOnExit(file)) {
             logger.info("Removed staged add-on ${file.name}")
         } else {
             logger.warn("Could not delete ${file.name} while it is loaded; scheduled for removal on exit")
         }
 
-        if (file.name.endsWith(PART_SUFFIX)) {
-            return
-        }
-
-        val itemId = itemIdOf(file) ?: return
-        if (loaded) {
-            AddonManager.markRestartRequired(itemId, "${file.name} removed")
+        val staged = Staged.of(file) ?: return
+        if (staged.loaded) {
+            AddonManager.markRestartRequired(staged.itemId, "${file.name} removed")
         } else {
-            AddonManager.clearRestartRequired(itemId)
+            AddonManager.clearRestartRequired(staged.itemId)
         }
     }
 
     /**
      * Windows locks loaded jars, so a failed delete is retried on exit and at the next startup.
      */
-    private fun deleteNowOrOnExit(file: File): Boolean {
-        if (file.delete()) {
+    private fun deleteNowOrOnExit(file: Path): Boolean {
+        if (runCatching { file.deleteIfExists() }.isSuccess) {
             return true
         }
 
-        removeOnExit += file
+        removeOnExit.add(file)
         return false
-    }
-
-    private fun isLoaded(file: File): Boolean {
-        // Fabric records real paths.
-        val path = file.toPath().let { path ->
-            runCatching { path.toRealPath() }.getOrDefault(path.toAbsolutePath().normalize())
-        }
-
-        return FabricLoader.getInstance().allMods.any { mod ->
-            mod.origin.kind == ModOrigin.Kind.PATH && path in mod.origin.paths
-        }
     }
 
     fun wipeManagedJars() {
