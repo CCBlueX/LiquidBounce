@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
 import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
@@ -133,6 +134,8 @@ internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
 }
 
 internal fun CmdI18n.reportInstalled(result: ConfigTracker.LoadResult) {
+    result.unavailable.forEach { chat(warning(it.text())) }
+
     if (result.installed.isEmpty()) {
         return
     }

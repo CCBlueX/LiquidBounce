@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -372,6 +373,7 @@ object LiquidBounce : EventListener {
 
         // Preload marketplace items
         ConfigSystem.load(MarketplaceManager)
+        MarketplaceManager.subscribedItems.forEach(SubscribedItem::restoreRetired)
         AddonInstaller.stageSubscribedAddons()
         MarketplaceManager.reloadHandlers()
 

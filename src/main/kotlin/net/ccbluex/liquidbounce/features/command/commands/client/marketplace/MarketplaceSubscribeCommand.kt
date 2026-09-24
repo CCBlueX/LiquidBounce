@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -56,13 +57,16 @@ object MarketplaceSubscribeCommand {
                         MarketplaceManager.subscribe(item)
                         chat(regular(t("subscribe.success", variable(itemId.toString()))))
                     }.onFailure { e ->
-                        logger.error("Failed to subscribe to marketplace item", e)
-                        throw CommandException(
+                        val text = if (e is NoCompatibleRevisionException) {
+                            e.unavailable.text()
+                        } else {
+                            logger.error("Failed to subscribe to marketplace item", e)
                             t("error.installFailed",
                                 itemId,
                                 e.message ?: "Unknown error"
                             )
-                        )
+                        }
+                        throw CommandException(text)
                     }
                 }
             }

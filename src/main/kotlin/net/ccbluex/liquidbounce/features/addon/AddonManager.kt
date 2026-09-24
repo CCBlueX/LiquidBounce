@@ -54,6 +54,8 @@ object AddonManager {
 
     val restartReasons: Collection<String> get() = pendingRestarts.values
 
+    internal val restartRequiredItems: Set<Int> get() = pendingRestarts.keys.toSet()
+
     operator fun get(id: String): LiquidBounceAddon? = loadedAddons.find { it.id.equals(id, true) }
 
     fun discover() {

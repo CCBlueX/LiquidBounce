@@ -365,6 +365,8 @@
   "liquidbounce.liquidchat.states.loggedIn": "身份验证成功！",
   "liquidbounce.liquidchat.writeMessage": "发送消息: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "发送私信: %s",
+  "liquidbounce.marketplace.unavailable.nothing": "%s 没有可安装的内容。",
+  "liquidbounce.marketplace.unavailable.version": "%s 不适用于 LiquidBounce %s。",
   "liquidbounce.module.ESP.description": "允许你透过墙看到你选中的目标实体。",
   "liquidbounce.module.abortBreaking.description": "允许你在停止破坏方块的时候不会丢失破坏进度。",
   "liquidbounce.module.aimbot.description": "自动瞄准附近的目标。",

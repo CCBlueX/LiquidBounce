@@ -47,6 +47,8 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
+import net.ccbluex.liquidbounce.features.marketplace.Unavailable
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
@@ -76,9 +78,14 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     data class Step(val itemId: Int, val revisionId: Int)
 
     /**
-     * Dependencies [load] installed; [restartRequired] when one only works after a restart.
+     * Dependencies [load] installed; [restartRequired] when one only works after a restart. [unavailable]
+     * are the ones left out since no revision of them loads with this game.
      */
-    data class LoadResult(val installed: List<MarketplaceItem>, val restartRequired: Boolean)
+    data class LoadResult(
+        val installed: List<MarketplaceItem>,
+        val restartRequired: Boolean,
+        val unavailable: List<Unavailable>
+    )
 
     var state by enumChoice("State", State.NONE)
         private set
@@ -154,7 +161,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
         val dependencies = resolve(item.id)
-        val installed = install(dependencies.installables)
+        val (installed, unavailable) = install(dependencies.installables)
         val chain = dependencies.configs
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
@@ -184,7 +191,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             installed.any {
                 it.type == MarketplaceItemType.ADDON ||
                     it.type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(it.type)
-            }
+            },
+            unavailable
         )
     }
 
@@ -359,7 +367,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     /**
      * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
-     * they are applied; installables pull in what they need themselves.
+     * they are applied, installables after the ones they need, so an add-on is checked with those
+     * installed.
      */
     private suspend fun resolve(rootId: Int): Dependencies {
         val configs = mutableListOf<Step>()
@@ -385,8 +394,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                     }
 
                     MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                        installables.putIfAbsent(item.id, item)
                         visit(item.id)
+                        installables.putIfAbsent(item.id, item)
                     }
 
                     else -> {}
@@ -401,12 +410,27 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         return Dependencies(configs, installables.values)
     }
 
-    private suspend fun install(items: Collection<MarketplaceItem>): List<MarketplaceItem> =
-        items.filter { item ->
-            !MarketplaceManager.isSubscribed(item.id) && item.status == MarketplaceItemStatus.ACTIVE
-        }.onEach { item ->
-            MarketplaceManager.subscribe(item)
+    /**
+     * Subscribes to the [items] that are missing. One that does not load with this game does not stop
+     * the load; the second list holds those.
+     */
+    private suspend fun install(items: Collection<MarketplaceItem>): Pair<List<MarketplaceItem>, List<Unavailable>> {
+        val installed = mutableListOf<MarketplaceItem>()
+        val unavailable = mutableListOf<Unavailable>()
+        for (item in items) {
+            if (MarketplaceManager.isSubscribed(item.id) || item.status != MarketplaceItemStatus.ACTIVE) {
+                continue
+            }
+
+            try {
+                MarketplaceManager.subscribe(item)
+                installed += item
+            } catch (e: NoCompatibleRevisionException) {
+                unavailable += e.unavailable
+            }
         }
+        return installed to unavailable
+    }
 
     /**
      * Creates the item, runs [link] on it and uploads the settings (only [subset] when given). A

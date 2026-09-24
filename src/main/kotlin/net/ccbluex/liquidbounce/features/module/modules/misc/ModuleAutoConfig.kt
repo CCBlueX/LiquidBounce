@@ -160,6 +160,9 @@ object ModuleAutoConfig : ClientModule(
                     NotificationEvent.Severity.INFO
                 )
             }
+            for (unavailable in result.unavailable) {
+                notification("Auto Config", unavailable.describe(), NotificationEvent.Severity.ERROR)
+            }
         }
     }
 

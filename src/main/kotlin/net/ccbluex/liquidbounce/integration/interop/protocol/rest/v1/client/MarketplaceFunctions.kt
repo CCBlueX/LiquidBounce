@@ -87,10 +87,15 @@ private fun Route.getMarketplaceItem() = get {
     val id = call.requireId()
 
     val item = MarketplaceApi.getMarketplaceItem(id)
+    val subscribed = MarketplaceManager.getItem(id)
+    val hasUpdate = subscribed != null && runCatching { subscribed.hasUpdate() }
+        .onFailure { logger.warn("Failed to check marketplace item $id for updates", it) }
+        .getOrDefault(false)
+
     call.respond(JsonObject().apply {
         add("item", interopGson.toJsonTree(item))
-        addProperty("isSubscribed", MarketplaceManager.isSubscribed(id))
-        addProperty("hasUpdate", false) // TODO: Implement version check
+        addProperty("isSubscribed", subscribed != null)
+        addProperty("hasUpdate", hasUpdate)
     })
 }
 

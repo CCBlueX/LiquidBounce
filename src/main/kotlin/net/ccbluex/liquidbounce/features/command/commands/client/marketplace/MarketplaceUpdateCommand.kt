@@ -80,7 +80,7 @@ object MarketplaceUpdateCommand {
 
         chat(regular(t("update.updatingAll")), metadata = MessageMetadata(id = MESSAGE_ID))
         val results = MarketplaceManager.updateAll().onEach { report(it) }
-        val failed = results.count { it is UpdateResult.Failed }
+        val failed = results.count { it is UpdateResult.Failed || it is UpdateResult.Incompatible }
         if (failed > 0) {
             throw CommandException(t("update.updatedAllWithFailures", failed, results.size))
         }
@@ -115,6 +115,10 @@ object MarketplaceUpdateCommand {
             )
             is UpdateResult.NoUpdate -> chat(
                 regular(t("update.noUpdate", variable(result.item.id.toString()))),
+                metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
+            )
+            is UpdateResult.Incompatible -> chat(
+                markAsError(result.unavailable.text()),
                 metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
             )
             is UpdateResult.Failed -> chat(
