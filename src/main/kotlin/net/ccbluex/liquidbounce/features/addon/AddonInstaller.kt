@@ -43,8 +43,16 @@ object AddonInstaller {
 
     private const val PART_SUFFIX = ".part"
 
+    private val managedName = Regex("""${Regex.escape(PREFIX)}(\d+)-(\d+)\.jar""")
+
     private val modsFolder: File
         get() = System.getProperty("fabric.modsFolder")?.let(::File) ?: File(mc.gameDirectory, "mods")
+
+    /**
+     * LiquidLauncher rebuilds the mods folder at every start and stages the add-ons itself, so it is
+     * left alone here. Minecraft's launch profile passes the launcher name as this property.
+     */
+    val launcherManaged = System.getProperty("minecraft.launcher.brand") == "LiquidLauncher"
 
     internal val minecraft: String
         get() = FabricLoader.getInstance().getModContainer("minecraft").orElseThrow().metadata.version.friendlyString
@@ -64,7 +72,7 @@ object AddonInstaller {
     }
 
     // Named by item id, since unsubscribe deletes the item directory before the reload that
-    // unstages the jar.
+    // unstages the jar. LiquidLauncher names the jars it stages the same way.
     private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
 
     private fun managedFiles(filter: FileFilter = { true }): List<File> =
@@ -77,19 +85,57 @@ object AddonInstaller {
 
     private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
 
+    private class Loaded(val revisionId: Int, val name: String)
+
+    /**
+     * Item id to each add-on this game loaded.
+     */
+    private val loaded: Map<Int, Loaded> by lazy {
+        FabricLoader.getInstance().allMods
+            .filter { it.origin.kind == ModOrigin.Kind.PATH }
+            .flatMap { mod ->
+                mod.origin.paths.mapNotNull { path ->
+                    managedName.matchEntire(path.fileName?.toString().orEmpty())?.let { match ->
+                        match.groupValues[1].toInt() to Loaded(match.groupValues[2].toInt(), mod.metadata.name)
+                    }
+                }
+            }
+            .toMap()
+    }
+
     /**
      * Stages the revision of every subscribed add-on unpacked this session, keeps the loaded ones, and
-     * removes every other managed jar.
+     * removes every other managed jar. Under LiquidLauncher only tells which add-ons change at the next
+     * start.
      */
     fun stageSubscribedAddons() {
         val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
         unpacked.keys.retainAll(subscribed.mapTo(HashSet()) { it.id })
 
-        stage(subscribed)
+        if (launcherManaged) {
+            trackLauncherChanges(subscribed)
+        } else {
+            stage(subscribed)
+        }
     }
 
     internal fun unpacked(item: SubscribedItem, revisionId: Int) {
         unpacked[item.id] = revisionId
+    }
+
+    private fun trackLauncherChanges(subscribed: List<SubscribedItem>) {
+        val wanted = subscribed.associateBy { it.id }
+        for (itemId in wanted.keys + loaded.keys + AddonManager.restartRequiredItems) {
+            val item = wanted[itemId]
+            val running = loaded[itemId]
+            val next = unpacked[itemId]
+            when {
+                item == null && running != null -> AddonManager.markRestartRequired(itemId, "${running.name} removed")
+                item != null && next != null && next != running?.revisionId ->
+                    AddonManager.markRestartRequired(itemId, "${item.name} installed")
+                else -> AddonManager.clearRestartRequired(itemId)
+            }
+        }
     }
 
     private fun stage(subscribed: List<SubscribedItem>) {
