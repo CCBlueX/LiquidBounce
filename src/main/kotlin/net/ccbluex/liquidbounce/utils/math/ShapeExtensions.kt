@@ -454,19 +454,19 @@ private class ShapeSurfaceMesh(
 
     private fun index(x: Int, y: Int, z: Int): Int = (x * ySize + y) * zSize + z
 
-    companion object {
+    companion {
         /**
          * @see VoxelShape.findIndex
          */
-        private fun DoubleArray.findIndex(value: Double): Int {
+        private fun findIndex(doubles: DoubleArray, value: Double): Int {
             var low = 0
-            var high = size
+            var high = doubles.size
             while (low < high) {
                 val mid = (low + high) ushr 1
-                if (value < this[mid]) high = mid else low = mid + 1
+                if (value < doubles[mid]) high = mid else low = mid + 1
             }
             val index = low - 1
-            if (index !in indices || this[index] != value) {
+            if (index !in doubles.indices || doubles[index] != value) {
                 throw IllegalArgumentException("Could not resolve coordinate index for $value")
             }
 
@@ -485,12 +485,12 @@ private class ShapeSurfaceMesh(
             val mesh = ShapeSurfaceMesh(xs, ys, zs, occupancy)
 
             shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val startX = xs.findIndex(minX)
-                val startY = ys.findIndex(minY)
-                val startZ = zs.findIndex(minZ)
-                val endX = xs.findIndex(maxX)
-                val endY = ys.findIndex(maxY)
-                val endZ = zs.findIndex(maxZ)
+                val startX = findIndex(xs, minX)
+                val startY = findIndex(ys, minY)
+                val startZ = findIndex(zs, minZ)
+                val endX = findIndex(xs, maxX)
+                val endY = findIndex(ys, maxY)
+                val endZ = findIndex(zs, maxZ)
 
                 for (x in startX until endX) {
                     for (y in startY until endY) {

@@ -31,8 +31,7 @@ import net.minecraft.network.protocol.game.ServerboundUseItemPacket
  */
 internal class NoSlowSharedGrim2371(override val parent: ModeValueGroup<*>) : Mode("Grim2371") {
 
-    companion object {
-        @JvmStatic
+    companion {
         var shouldPreventNoSlow = false
             private set
     }
