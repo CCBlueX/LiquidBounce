@@ -32,5 +32,13 @@ data class MarketplaceItemRevision(
     val createdAt: String,
     val status: MarketplaceItemStatus,
     @SerializedName("includes_binds")
-    val includesBinds: Boolean? = null
+    val includesBinds: Boolean? = null,
+    /**
+     * The LiquidBounce versions an add-on revision works with, `null` when no build is known to.
+     */
+    val liquidbounce: LiquidBounceRange? = null
 )
+
+data class LiquidBounceRange(val min: String, val max: String) {
+    override fun toString() = if (min == max) "LiquidBounce v$min" else "LiquidBounce v$min - $max"
+}

@@ -176,8 +176,20 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         get<MarketplaceItem>("/marketplace/code/${shareCode.urlEncoded()}")
 
     // Revisions
-    suspend fun getMarketplaceItemRevisions(id: Int, page: Int = 1, limit: Int = 10) =
-        get<PaginatedResponse<MarketplaceItemRevision>>("/marketplace/$id/revisions?page=$page&limit=$limit")
+    /**
+     * With [minecraft], an add-on only lists the revisions that work with that version.
+     */
+    suspend fun getMarketplaceItemRevisions(
+        id: Int,
+        page: Int = 1,
+        limit: Int = 10,
+        minecraft: String? = null,
+        liquidbounce: String? = null
+    ) = get<PaginatedResponse<MarketplaceItemRevision>>(buildString {
+        append("/marketplace/$id/revisions?page=$page&limit=$limit")
+        minecraft?.let { append("&minecraft=${it.urlEncoded()}") }
+        liquidbounce?.let { append("&liquidbounce=${it.urlEncoded()}") }
+    })
 
     suspend fun getMarketplaceItemRevision(id: Int, revisionId: Int) =
         get<MarketplaceItemRevision>("/marketplace/$id/revisions/$revisionId")
