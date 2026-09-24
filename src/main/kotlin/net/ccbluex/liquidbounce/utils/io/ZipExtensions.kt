@@ -26,10 +26,47 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import java.io.File
 import java.io.InputStream
+import java.nio.file.LinkOption
 import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.createDirectories
-import kotlin.io.path.createParentDirectories
+import kotlin.io.path.createDirectory
 import kotlin.io.path.outputStream
+import kotlin.io.path.readAttributes
+
+@Suppress("ThrowsCount")
+private fun Path.createDirectoryNoFollow(relative: Path) {
+    fun Path.readAttrsNoFollow(): BasicFileAttributes? =
+        try {
+            readAttributes(LinkOption.NOFOLLOW_LINKS)
+        } catch (_: java.nio.file.NoSuchFileException) {
+            null
+        }
+
+    var current = this
+    for (part in relative) {
+        current = current.resolve(part)
+        val attrs = current.readAttrsNoFollow()
+        when {
+            attrs == null -> current.createDirectory()
+            attrs.isSymbolicLink -> throw SecurityException("Symlink in extraction path: $current")
+            attrs.isDirectory -> {}
+            else -> throw java.nio.file.FileAlreadyExistsException(current.toString())
+        }
+
+        val after = current.readAttrsNoFollow()
+            ?: throw SecurityException("Directory vanished: $current")
+        if (!after.isDirectory) {
+            throw SecurityException("Path component is not a real directory: $current")
+        }
+        // toRealPath() resolves any junction/symlink in the chain;
+        // deviating from the lexical path means a link was followed
+        if (current.toRealPath() != current) {
+            throw SecurityException("Symlink in extraction path: $current")
+        }
+    }
+}
 
 /**
  * Extracts an [ArchiveInputStream] to a specified [folder] and closes it.
@@ -54,7 +91,7 @@ private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
         }
 
         if (entry.isDirectory) {
-            target.createDirectories()
+            destDir.createDirectoryNoFollow(destDir.relativize(target))
             continue
         }
 
@@ -62,8 +99,10 @@ private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
             continue
         }
 
-        target.createParentDirectories()
-        FastBufferedOutputStream(target.outputStream()).use { ais.transferTo(it) }
+        destDir.createDirectoryNoFollow(destDir.relativize(target.parent ?: destDir))
+        FastBufferedOutputStream(
+            target.outputStream(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)
+        ).use { ais.transferTo(it) }
     }
 }
 
@@ -76,17 +115,17 @@ fun extractZip(zipStream: InputStream, folder: File) = extractZip(zipStream, fol
  * Extracts a ZIP archive from an [InputStream] to a specified [folder] and close it
  */
 fun extractZip(zipStream: InputStream, folder: Path) =
-    ZipArchiveInputStream(FastBufferedInputStream(zipStream)).extractTo(folder)
+    ZipArchiveInputStream(zipStream).extractTo(folder)
 
 /**
  * Extracts a ZIP file to a specified [folder]
  */
-fun extractZip(zipFile: File, folder: File) = extractZip(zipFile.inputStream(), folder)
+fun extractZip(zipFile: File, folder: File) = extractZip(zipFile, folder.toPath())
 
 /**
  * Extracts a ZIP file to a specified [folder]
  */
-fun extractZip(zipFile: File, folder: Path) = extractZip(zipFile.inputStream(), folder)
+fun extractZip(zipFile: File, folder: Path) = extractZip(FastBufferedInputStream(zipFile.inputStream()), folder)
 
 /**
  * Creates a ZIP file from multiple files (flatten)
