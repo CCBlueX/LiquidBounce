@@ -36,8 +36,7 @@ class StaticGlyphPage(
     override val texture: GlyphAtlasTexture,
     val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
 ): GlyphPage() {
-    companion object {
-        @JvmStatic
+    companion {
         fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> =
             prepareGlyphPages(chars).map(PreparedStaticGlyphPage::materialize)
 
@@ -60,7 +59,6 @@ class StaticGlyphPage(
         /**
          * Creates a bitmap which contains all [chars].
          */
-        @JvmStatic
         fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
             val (preparedPage, remainingGlyphs) = prepareGlyphPageWithFittingCharacters(chars)
             return preparedPage.materialize() to remainingGlyphs
@@ -85,7 +83,6 @@ class StaticGlyphPage(
          * Tries to fit all characters on a page.
          * If it does not fit, it reduces the list of characters to place by 20% and retries.
          */
-        @JvmStatic
         private fun tryCharacterPlacementWithShrinking(
             chars: List<FontGlyph>
         ): Pair<GlyphPlacementResult, List<FontGlyph>>? {
@@ -104,7 +101,6 @@ class StaticGlyphPage(
             return null
         }
 
-        @JvmStatic
         private fun prepareGlyphPage(placementPlan: GlyphPlacementResult): PreparedStaticGlyphPage {
             val atlas = createBufferedImageWithDimensions(placementPlan.atlasDimension)
 
@@ -123,7 +119,6 @@ class StaticGlyphPage(
          *
          * @return null if the resulting atlas is bigger than the maximum texture size.
          */
-        @JvmStatic
         private fun tryCharacterPlacement(chars: List<FontGlyph>): GlyphPlacementResult? {
             // Get information about the glyphs and sort them by their height
             val glyphsToRender = chars
@@ -158,7 +153,6 @@ class StaticGlyphPage(
          *
          * @return The height of the resulting texture. Is at least (1, 1)
          */
-        @JvmStatic
         private fun placeCharacters(glyphs: List<CharacterGenerationInfo>, atlasWidth: Int): Dimension {
             var currentX = 0
             var currentY = 0

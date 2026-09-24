@@ -327,8 +327,7 @@ enum class ArmorItemSlot(@JvmField val equipmentSlot: EquipmentSlot) : ItemSlot 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) =
         if (screen == null) 8 - this.equipmentSlot.index else null
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmName("of")
         operator fun invoke(equipmentSlot: EquipmentSlot): ArmorItemSlot {
             require(equipmentSlot.type == EquipmentSlot.Type.HUMANOID_ARMOR) {

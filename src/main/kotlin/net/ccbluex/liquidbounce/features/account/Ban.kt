@@ -37,7 +37,7 @@ data class Ban(val serverName: String, val reason: String, val bannedUntil: Long
         addProperty("bannedUntil", bannedUntil)
     }
 
-    companion object {
+    companion {
         fun fromJson(json: JsonObject) = Ban(
             serverName = json.string("serverName")
                 ?: throw IllegalArgumentException("'$json' is not a valid Ban"),

@@ -117,8 +117,7 @@ class GenericDistanceHSBColorMode<T : Any>(
         )
     }
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmOverloads
         fun entity(parent: ModeValueGroup<*>, fixedAlpha: Float? = null) =
             GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {

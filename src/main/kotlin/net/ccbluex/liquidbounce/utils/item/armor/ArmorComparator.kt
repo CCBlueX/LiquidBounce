@@ -48,11 +48,10 @@ value class ArmorKitParameters private constructor(
 ) {
     fun getParametersForSlot(slotType: EquipmentSlot) = this.slots[slotType]!!
 
-    companion object {
+    companion {
         /**
          * Returns for each slot the summed up armor parameters without that slot.
          */
-        @JvmStatic
         fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorKitParameters {
             // Sum up all parameters
             val totalArmorKitParameters =

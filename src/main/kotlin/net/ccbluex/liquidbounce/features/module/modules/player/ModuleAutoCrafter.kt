@@ -148,7 +148,7 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
         BLAST_FURNACE("BlastFurnace", RecipeBookType.BLAST_FURNACE, SearchRecipeBookCategory.BLAST_FURNACE),
         SMOKER("Smoker", RecipeBookType.SMOKER, SearchRecipeBookCategory.SMOKER);
 
-        companion object {
+        companion {
             fun fromMenu(menu: RecipeBookMenu) = when (menu) {
                 is InventoryMenu -> INVENTORY
                 is CraftingMenu -> CRAFTING_TABLE

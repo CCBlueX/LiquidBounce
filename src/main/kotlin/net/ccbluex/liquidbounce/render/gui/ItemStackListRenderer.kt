@@ -193,8 +193,7 @@ object ItemStackListRenderer : EventListener {
 
         class Texture(parent: ModeValueGroup<*>) : BackgroundMode("Texture", parent)
 
-        companion object {
-            @JvmStatic
+        companion {
             internal fun backgroundChoices(parent: ModeValueGroup<*>) = arrayOf(
                 Rect(parent),
                 Texture(parent),

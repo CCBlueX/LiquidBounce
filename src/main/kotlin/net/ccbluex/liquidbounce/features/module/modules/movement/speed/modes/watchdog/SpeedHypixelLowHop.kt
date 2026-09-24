@@ -36,7 +36,7 @@ import net.minecraft.world.effect.MobEffects
  */
 class SpeedHypixelLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
-    companion object {
+    companion {
         var shouldStrafe = false
     }
 

@@ -75,11 +75,11 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
 
         val request = Request.Builder()
             .url("$baseUrl/authenticate")
-            .post(GSON.makeRequestBody(AuthenticationRequest(Agent.MINECRAFT, username, password)))
+            .post(gson.makeRequestBody(AuthenticationRequest(Agent.MINECRAFT, username, password)))
             .build()
 
         val response = HttpClient.client.newCall(request).execute().use {
-            it.body.charStream().readJson<AuthenticationResponse>(GSON)
+            it.body.charStream().readJson<AuthenticationResponse>(gson)
         }
 
         check(response.clientToken == clientIdentifier) { "Client identifier mismatch" }
@@ -93,11 +93,11 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
         return YggdrasilSession(profile, response.accessToken)
     }
 
-    companion object {
+    companion {
         /**
          * Plain Gson: these are protocol types with no client-side adapters.
          */
-        private val GSON = Gson()
+        private val gson = Gson()
     }
 
 }

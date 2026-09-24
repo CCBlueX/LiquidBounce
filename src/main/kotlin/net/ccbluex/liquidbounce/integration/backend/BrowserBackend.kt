@@ -66,7 +66,7 @@ interface BrowserBackend {
      */
     fun createBrowser(
         url: String,
-        position: BrowserViewport = BrowserViewport.FULLSCREEN,
+        position: BrowserViewport = BrowserViewport.fullscreen(),
         settings: BrowserSettings = ScreenManager.browserSettings,
         priority: Short = 0,
         incognito: Boolean = false,

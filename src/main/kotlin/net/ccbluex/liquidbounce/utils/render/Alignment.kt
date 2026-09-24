@@ -32,8 +32,7 @@ class Alignment(
     verticalOffset: Int,
 ) : ValueGroup("Alignment") {
 
-    companion object {
-        @JvmStatic
+    companion {
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
     }
 

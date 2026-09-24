@@ -67,17 +67,16 @@ data class BrowserViewport(
     fun transformMouse(mouseX: Double, mouseY: Double, quality: Float): Vector2ic =
         Vector2i((mouseX * quality).toInt(), (mouseY * quality).toInt())
 
-    companion object {
+    companion {
         /**
          * Creates a fullscreen viewport matching the current window dimensions
          */
-        val FULLSCREEN
-            get() = BrowserViewport(
-                x = 0,
-                y = 0,
-                width = mc.window.width,
-                height = mc.window.height,
-                fullScreen = true
-            )
+        fun fullscreen() = BrowserViewport(
+            x = 0,
+            y = 0,
+            width = mc.window.width,
+            height = mc.window.height,
+            fullScreen = true
+        )
     }
 }

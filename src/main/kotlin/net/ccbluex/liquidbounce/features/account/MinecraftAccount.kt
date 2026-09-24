@@ -144,12 +144,11 @@ sealed class MinecraftAccount(val service: AccountService) {
         return bans.values.toList()
     }
 
-    companion object {
+    companion {
 
         /**
          * @throws IllegalArgumentException if [json] is not a valid account
          */
-        @JvmStatic
         fun fromJson(json: JsonObject): MinecraftAccount {
             val serialName = json.string("type")
                 ?: throw IllegalArgumentException("'$json' is not a valid MinecraftAccount")

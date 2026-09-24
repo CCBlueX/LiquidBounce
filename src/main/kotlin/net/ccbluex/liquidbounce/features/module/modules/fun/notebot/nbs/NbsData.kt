@@ -56,7 +56,7 @@ data class NbsNoteBlock(
 
 data class InstrumentNote(val instrument: Int, val noteValue: Int) {
 
-    companion object {
+    companion {
         /**
          * Maps vanilla NBS instrument ids to Minecraft note block instruments.
          *

@@ -178,7 +178,7 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
     @JvmRecord
     data class SidebarEntry(val name: Component, val score: Component)
 
-    companion object {
+    companion {
 
         /**
          * Creates a [ScoreboardData] from the players's scoreboard
@@ -188,7 +188,6 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
          * @see net.minecraft.client.gui.Hud.extractScoreboardSidebar
          * @see net.minecraft.client.gui.Hud.displayScoreboardSidebar
          */
-        @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
             scoreboard ?: return null
 

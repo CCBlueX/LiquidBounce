@@ -357,6 +357,8 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(libs.versions.jdk.get().toInt())
+        freeCompilerArgs.add("-Xcollection-literals")
+        freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
     }
 
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.

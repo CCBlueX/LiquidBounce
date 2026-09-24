@@ -67,8 +67,7 @@ class FileValue(
      */
     val absoluteFile: File get() = if (inner.isAbsolute) inner else ConfigSystem.rootFolder.resolve(inner)
 
-    companion object {
-        @JvmStatic
+    companion {
         private fun normalizeToClientFolder(file: File): File {
             return if (file.startsWith(ConfigSystem.rootFolder)) {
                 file.relativeTo(ConfigSystem.rootFolder)
