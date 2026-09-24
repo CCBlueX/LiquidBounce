@@ -140,9 +140,7 @@ dependencies {
     jij(libs.ktor.server.sse)
     jij(libs.ktor.server.cors)
     jij(libs.ktor.server.compression)
-    jij(libs.ktor.server.content.negotiation) {
-        exclude("io.ktor", "ktor-server-routing-openapi")
-    }
+    jij(libs.ktor.server.content.negotiation)
     jij(libs.ktor.server.status.pages)
     jij(libs.ktor.serialization.gson)
 
