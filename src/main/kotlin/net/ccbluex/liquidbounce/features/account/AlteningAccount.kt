@@ -89,7 +89,7 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
         hypixelRank = string("hypixelRank").orEmpty()
     }
 
-    companion object {
+    companion {
 
         fun fromToken(accountToken: String) = AlteningAccount(accountToken).apply { refresh() }
 

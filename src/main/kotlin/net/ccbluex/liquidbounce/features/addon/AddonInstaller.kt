@@ -87,7 +87,7 @@ object AddonInstaller {
 
         val loaded get() = AddonInstaller.loaded[itemId]?.revisionId == revisionId
 
-        companion object {
+        companion {
             private val pattern = Regex("""${Regex.escape(PREFIX)}(\d+)-(\d+)\.jar""")
 
             fun of(path: Path) = pattern.matchEntire(path.name)?.let { match ->
