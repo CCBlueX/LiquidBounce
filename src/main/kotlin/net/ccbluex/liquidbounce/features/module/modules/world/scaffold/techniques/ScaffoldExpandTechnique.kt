@@ -25,8 +25,10 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FailedClick
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -76,15 +78,9 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
         return Rotation.lookingAt(point = blockCenter, from = player.eyePosition)
     }
 
-    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
-        val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
-
-        if (crosshairTarget != null && target.doesCrosshairTargetMatchRequirements(crosshairTarget)) {
-            return crosshairTarget
-        }
-
-        return target.blockHitResult
-    }
+    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
+        // Expanding must be able to place behind blocks, so a non-visible hit result is allowed
+        target?.verifyClick(rotation, onFailure = FailedClick.PLANNED_HIT)
 
     private fun expandPos(position: Vec3, expand: Int, yaw: Float = player.yRot) = position.toBlockPos().offset(
         (-sin(yaw.toRadians()) * expand).toInt(),

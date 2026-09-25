@@ -94,6 +94,22 @@ infix fun VoxelShape.intersects(aabb: AABB): Boolean {
     return any
 }
 
+/**
+ * @see AABB.contains
+ */
+operator fun VoxelShape.contains(vec: Vec3): Boolean {
+    if (this.isEmpty) return false
+    var any = false
+    @Suppress("ComplexCondition")
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        any = any || (
+            vec.x >= x1 && vec.x < x2 &&
+            vec.y >= y1 && vec.y < y2 &&
+            vec.z >= z1 && vec.z < z2)
+    }
+    return any
+}
+
 fun VoxelShape.clipAllBoxes(
     base: BlockPos,
     from: Vec3,
