@@ -44,10 +44,13 @@ import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickTrace
 import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickableCenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FailedClick
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -56,7 +59,6 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -254,14 +256,14 @@ class BlockPlacer(
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
         var hasPlaced = false
 
+        val searchOptions = createSearchOptions(itemStack)
+
         for (entry in blocks.fastIterator()) {
             val posAsLong = entry.longKey
 
             if (inaccessible.contains(posAsLong) || isBlocked(posAsLong)) {
                 continue
             }
-
-            val searchOptions = createSearchOptions(itemStack)
 
             // TODO prioritize faces where sneaking is not required
             val pos = blockPosCache.set(posAsLong)
@@ -360,25 +362,13 @@ class BlockPlacer(
         return false
     }
 
-    private fun raytraceTarget(placementTarget: BlockPlacementTarget, providedRotation: Rotation): BlockHitResult? {
-        val pos = placementTarget.interactedBlockPos
-        val blockHitResult = raytraceBlock(
-            range = max(range, wallRange).toDouble(),
+    private fun raytraceTarget(placementTarget: BlockPlacementTarget, providedRotation: Rotation): BlockHitResult? =
+        placementTarget.verifyClick(
             rotation = providedRotation,
-            pos = pos,
-            state = pos.stateOrEmpty
+            range = max(range, wallRange).toDouble(),
+            trace = ClickTrace.TARGET_SHAPE,
+            onFailure = if (constructFailResult) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
         )
-
-        if (blockHitResult != null && placementTarget.doesCrosshairTargetMatchRequirements(blockHitResult)) {
-            return blockHitResult
-        }
-
-        if (constructFailResult) {
-            return placementTarget.blockHitResult
-        }
-
-        return null
-    }
 
     /**
      * Builds the target-finding options used for block placements, shared by the actual placement
@@ -389,7 +379,7 @@ class BlockPlacer(
             BlockOffsetOptions.Default,
             FaceHandlingOptions(ClickableCenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
             stackToPlaceWith = stackToPlaceWith,
-            PlayerLocationOnPlacement(position = player.position()),
+            PlayerLocationOnPlacement(),
         )
 
     /**
@@ -430,16 +420,12 @@ class BlockPlacer(
         val placementTarget = findBestBlockPlacementTarget(pos, createSearchOptions(Items.SANDSTONE.defaultInstance))
             ?: return false
 
-        // Strict occlusion check. canReach would accept anything inside wall range, and raytraceBlock /
-        // clipWithInteractionOverride only clips the given block's shape (accepting a block behind a wall),
-        // so trace the whole world and require the ray to hit the target block AND the intended face.
-        val raycast = raycastHitResult(
-            placementTarget.interactedBlockPos,
-            placementTarget.rotation,
-            max(range, wallRange).toDouble(),
-        ) ?: return false
-
-        return placementTarget.doesCrosshairTargetMatchRequirements(raycast)
+        // Strict occlusion check. canReach would accept anything inside wall range, and a TARGET_SHAPE trace only
+        // clips the given block's shape (accepting a block behind a wall), so trace the whole world and require the
+        // ray to hit the target block AND the intended face.
+        return placementTarget.verifyClick(
+            range = max(range, wallRange).toDouble(),
+        ) != null
     }
 
     /**

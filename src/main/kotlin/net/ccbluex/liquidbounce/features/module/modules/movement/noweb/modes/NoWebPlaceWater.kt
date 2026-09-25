@@ -193,7 +193,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             slot = plan.hotbarItemSlot,
             rotation = plan.placementTarget.rotation,
             resolveHitResult = { rayTraceResult ->
-                if (plan.doesCorrespondTo(rayTraceResult)) rayTraceResult else null
+                if (plan.placementTarget.doesCrosshairTargetMatchRequirements(rayTraceResult)) rayTraceResult else null
             },
             onSuccess = {
                 markWebPlacementSuccess(webPos)

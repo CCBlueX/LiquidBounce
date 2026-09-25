@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -68,8 +69,11 @@ data class Rotation @JvmOverloads constructor(
     val directionVector: Vec3
         get() = Vec3.directionFromRotation(pitch, yaw)
 
-    val xRot: Float get() = pitch
-    val yRot: Float get() = yaw
+    val viewVector: Vec3
+        get() = SimulatedPlayer.calculateViewVector(pitch, yaw)
+
+    val xRot: Float inline get() = pitch
+    val yRot: Float inline get() = yaw
 
     @JvmOverloads
     fun toQuaternion(dest: Quaternionf = Quaternionf()): Quaternionf =

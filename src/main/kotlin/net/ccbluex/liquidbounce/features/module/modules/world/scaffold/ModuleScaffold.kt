@@ -93,6 +93,7 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.math.topCenter
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.core.BlockPos
@@ -527,6 +528,13 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             RotationManager.currentRotation ?: player.rotation
         }.normalize()
         val currentCrosshairTarget = technique.getCrosshairTarget(target, currentRotation)
+        // The clicker decides on the hit the technique would place with, falling back to the raw crosshair hit when
+        // the technique has none: it also fires without a placement target, and on hits the technique rejected.
+        val clickerTarget = if (SimulatePlacementAttempts.enabled) {
+            currentCrosshairTarget ?: traceFromPlayer(currentRotation)
+        } else {
+            null
+        }
         val currentDelay = delay.random()
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getItem(player.inventory.selectedSlot))
@@ -549,12 +557,12 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             ScaffoldSprintControlFeature.onBlockPlacement()
         }
 
-        if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
+        if (simulatePlacementAttempts(clickerTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, currentRotation, suitableHand!!, {
-                    commonPlaceSucceed(currentCrosshairTarget.targetBlockPos)
+                doPlacement(clickerTarget!!, currentRotation, suitableHand!!, {
+                    commonPlaceSucceed(clickerTarget.targetBlockPos)
                     true
                 }, swingMode = swingMode)
                 true
@@ -566,9 +574,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
 
         // Does the crosshair target meet the requirements?
-        if (!target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget) ||
-            !isValidCrosshairTarget(currentCrosshairTarget)
-        ) {
+        if (!isValidCrosshairTarget(currentCrosshairTarget)) {
             return@tickHandler
         }
 
