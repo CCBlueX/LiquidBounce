@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
+import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -181,6 +182,23 @@ object MarketplaceManager : Config("marketplace"), EventListener {
 
         ConfigSystem.store(this)
         subscribed.reload()
+    }
+
+    /**
+     * Looks up the author of subscriptions saved before it was kept.
+     */
+    internal suspend fun fillAuthors() {
+        val unknown = subscribedItems.filter { it.author == null }
+        if (unknown.isEmpty()) {
+            return
+        }
+
+        for (item in unknown) {
+            runCatching { MarketplaceApi.getMarketplaceItem(item.id) }
+                .onSuccess { item.author = it.author }
+                .onFailure { logger.warn("Failed to look up the author of item ${item.id}", it) }
+        }
+        ConfigSystem.store(this)
     }
 
     suspend fun unsubscribe(itemId: Int) {

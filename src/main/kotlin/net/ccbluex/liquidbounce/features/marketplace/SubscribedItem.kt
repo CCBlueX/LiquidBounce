@@ -76,7 +76,14 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     constructor(item: MarketplaceItem) : this(item.name, item.id, item.type) {
         require(item.type.isSubscribable) { "Type ${item.type} is not subscribable" }
+        author = item.author
     }
+
+    /**
+     * Tells apart subscriptions that share a name. Unknown for ones saved before it was kept, until
+     * [MarketplaceManager.fillAuthors] looks it up.
+     */
+    internal var author: String? = null
 
     val itemDir
         get() = MarketplaceManager.marketplaceRoot.resolve("items/$id")

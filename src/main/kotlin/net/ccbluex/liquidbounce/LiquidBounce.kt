@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceItems
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
@@ -331,6 +332,12 @@ object LiquidBounce : EventListener {
             }
             launch {
                 MarketplaceConfigs.refresh()
+            }
+            launch {
+                MarketplaceItems.refresh()
+            }
+            launch {
+                MarketplaceManager.fillAuthors()
             }
             launch {
                 IpInfoApi.original
