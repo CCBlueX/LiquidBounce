@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce-gametest",
+  "version": "1.0.0",
+  "name": "LiquidBounce Game Tests",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "net.ccbluex.liquidbounce.gametest.CommandGameTest"
+    ]
+  },
+  "depends": {
+    "liquidbounce": "*",
+    "fabric-client-gametest-api-v1": "*"
+  }
+}
