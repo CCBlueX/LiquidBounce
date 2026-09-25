@@ -200,6 +200,7 @@
   "liquidbounce.command.localconfig.load.loaded": "Local configuration file named %s has been loaded.",
   "liquidbounce.command.localconfig.load.name.description": "Name of the configuration file.",
   "liquidbounce.command.localconfig.load.notFound": "Local configuration file named %s does not exist.",
+  "liquidbounce.command.localconfig.load.untracked": "No longer tracking %s, the local config replaced its settings.",
   "liquidbounce.command.localconfig.save.alreadyExists": "Configuration file named %s already exists.",
   "liquidbounce.command.localconfig.save.created": "Configuration file named %s has been created.",
   "liquidbounce.command.localconfig.save.failedToCreate": "Failed to create configuration file named %s.",

@@ -233,6 +233,9 @@ object AutoConfig {
      *
      * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers].
      * Loading such a config leaves everything it does not name untouched.
+     *
+     * [marketplaceItemId] is the marketplace config the settings come from, kept so loading them back
+     * can go on tracking it.
      */
     @Suppress("LongParameterList")
     fun serializeAutoConfig(
@@ -241,7 +244,8 @@ object AutoConfig {
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
         statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING,
         modules: Collection<String>? = null,
-        includeSpoofers: Boolean = modules == null
+        includeSpoofers: Boolean = modules == null,
+        marketplaceItemId: Int? = null
     ) {
         this.includeConfiguration = includeConfiguration
 
@@ -290,6 +294,7 @@ object AutoConfig {
 
         jsonObject.add("type", publicGson.toJsonTree(autoSettingsType))
         jsonObject.add("status", publicGson.toJsonTree(statusType))
+        marketplaceItemId?.let { jsonObject.addProperty("marketplaceItemId", it) }
 
         publicGson.newJsonWriter(writer).use {
             publicGson.toJson(jsonObject, it)
