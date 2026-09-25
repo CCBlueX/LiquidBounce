@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
-import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.features.marketplace.UpdateResult
@@ -44,28 +43,21 @@ object MarketplaceUpdateCommand {
     fun CmdLiteralScope.update() {
         literal("update") {
             optional(
-                "id",
-                IntegerArgumentType.integer(1),
+                "item",
+                ClientStringArgumentType.string(),
                 default = null,
-                suggestions { MarketplaceManager.subscribedItems.map { it.id.toString() } },
-            ) { id ->
+                subscribedSuggestions,
+            ) { input ->
                 execSuspend { ctx ->
-                    this@update.update(ctx.get(id))
+                    this@update.update(ctx.get(input))
                 }
             }
         }
     }
 
-    private suspend fun CmdI18n.update(id: Int?) {
-        if (id != null) {
-            val item = MarketplaceManager.getItem(id)
-                ?: throw CommandException(
-                    t("error.itemNotFound",
-                        variable(id.toString())
-                    )
-                )
-
-            updateSingle(item)
+    private suspend fun CmdI18n.update(input: String?) {
+        if (input != null) {
+            updateSingle(subscribedItem(input))
         } else {
             updateAll()
         }
