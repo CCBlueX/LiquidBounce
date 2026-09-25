@@ -23,7 +23,6 @@ import com.mojang.brigadier.CommandDispatcher
 import kotlinx.coroutines.async
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
@@ -31,6 +30,8 @@ import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
 import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.int
+import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
@@ -44,6 +45,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.command.preset.pagedList
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -120,7 +122,7 @@ object CommandLocalConfig : CommandRegistrar {
                     val lastModified = Instant.ofEpochMilli(file.lastModified())
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime()
-                        .format(AutoSettings.FORMATTER)
+                        .format(AutoConfigMetadata.FORMATTER)
 
                     textOf(
                         "\u2B25 ".asPlainText(ChatFormatting.BLUE),
@@ -209,7 +211,11 @@ object CommandLocalConfig : CommandRegistrar {
             }
 
             file.createNewFile()
-            serializeAutoConfig(file.bufferedWriter(), includeConfiguration)
+            serializeAutoConfig(
+                file.bufferedWriter(),
+                includeConfiguration,
+                marketplaceItemId = ConfigTracker.trackedItemId
+            )
             chat(regular(t("save.created", variable(name))))
         } catch (e: Exception) {
             chat(regular(t("save.failedToCreate", variable(name))))
@@ -231,16 +237,19 @@ object CommandLocalConfig : CommandRegistrar {
                 return 1
             }
 
-            bufferedReader().use { r ->
-                AutoConfig.withLoading {
-                    AutoConfig.loadAutoConfig(r, modules)
-                }
+            val config = bufferedReader().use { r -> publicGson.newJsonReader(r).parseTree().asJsonObject }
+            AutoConfig.withLoading {
+                AutoConfig.loadAutoConfig(config, modules)
             }
+            config.int("marketplaceItemId")
         }.onFailure { error ->
             logger.error("Failed to load config $name", error)
             chat(markAsError(t("load.failedToLoad", variable(name))))
-        }.onSuccess {
+        }.onSuccess { origin ->
             chat(regular(t("load.loaded", variable(name))))
+            ConfigTracker.loadedLocal(name, origin, partial = modules.isNotEmpty())?.let { untracked ->
+                chat(regular(t("load.untracked", variable(untracked))))
+            }
         }
         return 1
     }

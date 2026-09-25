@@ -87,12 +87,10 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
         hypixelRank = string("hypixelRank").orEmpty()
     }
 
-    companion object {
+    companion {
 
-        @JvmStatic
         fun fromToken(accountToken: String) = AlteningAccount(accountToken).apply { refresh() }
 
-        @JvmStatic
         @Throws(TheAlteningException::class)
         fun generateAccount(apiToken: String): AlteningAccount {
             val alteningAccount = TheAltening.newBasicRetriever(apiToken).account

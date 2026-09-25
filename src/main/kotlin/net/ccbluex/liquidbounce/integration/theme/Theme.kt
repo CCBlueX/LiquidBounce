@@ -346,7 +346,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.tag}, url=$baseUrl)"
 
-    companion object {
+    companion {
 
         private val logger = clientLogger("Theme")
 

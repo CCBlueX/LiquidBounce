@@ -55,8 +55,7 @@ class ErrorHandler private constructor(
     private val additionalMessage: String? = null,
     private val needToReport: Boolean = true
 ) {
-    companion object {
-        @JvmStatic
+    companion {
         @JvmOverloads
         fun fatal(
             error: Throwable,

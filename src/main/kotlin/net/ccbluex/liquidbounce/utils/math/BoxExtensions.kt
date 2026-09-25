@@ -144,66 +144,28 @@ private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): 
         Direction.EAST -> Vec3(maxX, y, z)
     }
 
-fun AABB.getFace(direction: Direction): AlignedFace {
-    return when (direction) {
-        Direction.DOWN -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.minY, this.maxZ)
-        )
-
-        Direction.UP -> AlignedFace(
-            Vec3(this.minX, this.maxY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.SOUTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.maxZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.NORTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.minZ)
-        )
-
-        Direction.EAST -> AlignedFace(
-            Vec3(this.maxX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.WEST -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.minX, this.maxY, this.maxZ)
-        )
-    }
-}
-
 /**
  * Get visible sides from [eyes] **outside** the box.
  * @return size in [0..3], 0=inside
  */
-fun AABB.visibleSidesTo(eyes: Vec3): List<Direction> {
-    val faces = ArrayList<Direction>(3)
-
-    if (eyes.x < this.minX) {
-        faces.add(Direction.WEST)
-    } else if (eyes.x > this.maxX) {
-        faces.add(Direction.EAST)
+fun AABB.visibleSidesTo(eyes: Vec3): List<Direction> = buildList(3) {
+    if (eyes.x < minX) {
+        this.add(Direction.WEST)
+    } else if (eyes.x > maxX) {
+        this.add(Direction.EAST)
     }
 
-    if (eyes.y < this.minY) {
-        faces.add(Direction.DOWN)
-    } else if (eyes.y > this.maxY) {
-        faces.add(Direction.UP)
+    if (eyes.y < minY) {
+        this.add(Direction.DOWN)
+    } else if (eyes.y > maxY) {
+        this.add(Direction.UP)
     }
 
-    if (eyes.z < this.minZ) {
-        faces.add(Direction.NORTH)
-    } else if (eyes.z > this.maxZ) {
-        faces.add(Direction.SOUTH)
+    if (eyes.z < minZ) {
+        this.add(Direction.NORTH)
+    } else if (eyes.z > maxZ) {
+        this.add(Direction.SOUTH)
     }
-
-    return faces
 }
 
 fun AABB.isSideVisible(direction: Direction, eyes: Vec3): Boolean {

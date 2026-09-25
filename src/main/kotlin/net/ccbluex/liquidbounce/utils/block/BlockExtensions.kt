@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFa
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -64,8 +65,6 @@ import net.minecraft.world.InteractionResult.SwingSource
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.AbstractBedBlock
@@ -186,6 +185,9 @@ val BlockPos.collisionShape: VoxelShape
 
 val BlockPos.outlineShape: VoxelShape
     get() = state?.getShape(world, this) ?: Shapes.empty()
+
+fun BlockPos.outlineShape(collisionContext: CollisionContext): VoxelShape =
+    state?.getShape(world, this, collisionContext) ?: Shapes.empty()
 
 fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     val outlineShape = this.getShape(world, blockPos)
@@ -447,13 +449,7 @@ inline fun AABB.collideBlockIntersects(
             return true
         }
 
-        val shape = blockState.getCollisionShape(mc.level!!, blockPos)
-
-        if (shape.isEmpty) {
-            continue
-        }
-
-        if (shape intersects this) {
+        if (blockState.getCollisionShape(mc.level!!, blockPos).move(blockPos) intersects this) {
             return true
         }
     }
@@ -466,23 +462,6 @@ val AABB.collidingRegion: BoundingBox
         floor(this.minX).toInt(), floor(this.minY).toInt(), floor(this.minZ).toInt(),
         ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt(),
     )
-
-fun BlockState.canBeReplacedWith(
-    pos: BlockPos,
-    usedStack: ItemStack,
-): Boolean {
-    val placementContext =
-        BlockPlaceContext(
-            mc.player!!,
-            InteractionHand.MAIN_HAND,
-            usedStack,
-            BlockHitResult(Vec3.atLowerCornerOf(pos), Direction.UP, pos, false),
-        )
-
-    return canBeReplaced(
-        placementContext,
-    )
-}
 
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
 
@@ -581,13 +560,10 @@ fun doPlacement(
         BlockOffsetOptions.Default,
         FaceHandlingOptions(CenterTargetPositionFactory),
         stackToPlaceWith = player.getItemInHand(hand),
-        PlayerLocationOnPlacement(position = player.position()),
+        PlayerLocationOnPlacement(),
     )
     val target = findBestBlockPlacementTarget(pos, options) ?: return false
-    val hit = traceFromPlayer(target.rotation)
-    if (hit.type != HitResult.Type.BLOCK) {
-        return false
-    }
+    val hit = target.verifyClick() ?: return false
     doPlacement(hit, target.rotation, hand = hand, swingMode = swingMode)
     return true
 }

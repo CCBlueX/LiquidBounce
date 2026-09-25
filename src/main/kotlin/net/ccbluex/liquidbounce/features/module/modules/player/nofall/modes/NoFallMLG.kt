@@ -38,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.block.liquid.requiresSneakForAdjacentFluid
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.resolvePlacementAt
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
@@ -48,7 +50,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
@@ -182,11 +183,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
         val target = action.plan
 
         val rotation = RotationManager.currentRotation ?: player.rotation
-        val rayTraceResult = traceFromPlayer(rotation)
-
-        if (!target.doesCorrespondTo(rayTraceResult)) {
-            return
-        }
+        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return
 
         if (target.hotbarItemSlot.itemStack.item !== action.item ||
             !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
@@ -372,12 +369,11 @@ internal object NoFallMLG : NoFallMode("MLG") {
             stack,
             placementTarget.blockHitResult,
         )
-        if (!blockItem.block.isEnabled(world.enabledFeatures()) || !context.canPlace()) {
-            return false
-        }
 
-        val updatedContext = blockItem.updatePlacementContext(context) ?: return false
-        return updatedContext.clickedPos == targetPos && blockItem.getPlacementState(updatedContext) != null
+        // Beyond where the click lands, the placement state also rejects a spot the block cannot survive in or that
+        // an entity obstructs.
+        val resolved = context.resolvePlacementAt(targetPos) ?: return false
+        return blockItem.getPlacementState(resolved) != null
     }
 
     private fun PlacementPlan.canPlaceExposedWaterAtTarget(): Boolean {

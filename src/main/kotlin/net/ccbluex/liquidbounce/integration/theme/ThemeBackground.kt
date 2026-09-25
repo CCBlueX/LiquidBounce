@@ -204,16 +204,14 @@ sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
                 )
                 backgroundView?.close()
                 backgroundView = background!!.asView()
-                textureSetup = backgroundView!!.asTextureSetup(SAMPLER)
+                textureSetup = backgroundView!!.asTextureSetup(sampler)
             }
         }
 
-        companion object {
+        companion {
 
-            @JvmStatic
-            private val SAMPLER = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
+            private val sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
 
-            @JvmStatic
             fun build(
                 metadata: ThemeMetadata,
                 background: Background,

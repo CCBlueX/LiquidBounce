@@ -16,32 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.clicking.pattern.patterns
+package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.clicking.pattern.ClickPattern
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
- * Keeps at least one-tick interval between each click.
+ * Boots the real client and runs a LiquidBounce command on the client thread.
  */
-object EfficientPattern : ClickPattern {
+class CommandGameTest : FabricClientGameTest {
 
-    override fun fill(
-        clickArray: IntArray,
-        cps: IntRange,
-        clicker: Clicker<*>
-    ) {
-        val clicks = cps.random()
-
-        // Efficient will introduce wide gaps when the CPS is lower than half of the cycle length,
-        // so we will use StabilizedPattern instead.
-        if (clicks < 10) {
-            return StabilizedPattern.fill(clickArray, cps, clicker)
-        }
-
-        for (i in 0 until clicks) {
-            clickArray[i * 2 % clickArray.size]++
-        }
+    override fun runTest(context: ClientGameTestContext) {
+        context.waitForClient()
+        context.command("help")
     }
 
 }

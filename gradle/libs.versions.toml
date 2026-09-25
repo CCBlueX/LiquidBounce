@@ -25,7 +25,7 @@ djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 okhttp = "5.5.0"
 
-ktor = "3.5.2"
+ktor = "3.6.0"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.8"
@@ -44,12 +44,12 @@ iris = "1.11.6+26.3-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
-kotlin = "2.4.0"
+kotlin = "2.4.20"
 # Kotlin test
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.11.0"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
-fabric-kotlin = "1.13.12+kotlin.2.4.0"
+fabric-kotlin = "1.14.1+kotlin.2.4.20"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
@@ -95,7 +95,7 @@ djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref =
 
 # Ktor
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
-ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
+ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio", version.ref = "ktor" }
 ktor-server-websockets = { group = "io.ktor", name = "ktor-server-websockets", version.ref = "ktor" }
 ktor-server-sse = { group = "io.ktor", name = "ktor-server-sse", version.ref = "ktor" }
 ktor-server-cors = { group = "io.ktor", name = "ktor-server-cors", version.ref = "ktor" }

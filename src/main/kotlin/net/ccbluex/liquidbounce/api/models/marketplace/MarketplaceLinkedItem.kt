@@ -16,10 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.clicking.pattern
+package net.ccbluex.liquidbounce.api.models.marketplace
 
-import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import com.google.gson.annotations.SerializedName
 
-interface ClickPattern {
-    fun fill(clickArray: IntArray, cps: IntRange, clicker: Clicker<*>)
-}
+/**
+ * An item as another one depends on it.
+ */
+data class MarketplaceLinkedItem(
+    val item: MarketplaceItem,
+    val author: String?,
+    @SerializedName("live_revision")
+    val liveRevision: MarketplaceItemRevision?
+)

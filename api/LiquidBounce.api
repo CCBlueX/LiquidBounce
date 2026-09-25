@@ -6,6 +6,22 @@ public final class net/ccbluex/liquidbounce/LiquidBounce : net/ccbluex/liquidbou
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field ADDON Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field CONFIG Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field OTHER Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field SCRIPT Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static final field THEME Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public final fun isListable ()Z
+	public final fun isSubscribable ()Z
+	public final fun reload (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+}
+
 public final class net/ccbluex/liquidbounce/api/services/auth/OAuthClient : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -621,6 +637,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerCommand (Lnet/ccbluex/liquidbounce/features/command/CommandRegistrar;)V
 	public final fun registerCommandNodes (Ljava/util/Collection;)V
 	public final fun registerListeners ([Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun registerMarketplaceHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public fun toString ()Ljava/lang/String;
@@ -730,7 +747,45 @@ public final class net/ccbluex/liquidbounce/features/global/GlobalSettingsAutoTr
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public abstract interface class net/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler {
+	public abstract fun reload (Ljava/util/List;)V
+}
+
 public final class net/ccbluex/liquidbounce/features/marketplace/MarketplaceManager : net/ccbluex/liquidbounce/config/types/Config, net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun hasHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)Z
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun registerHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
+	public final fun unregisterHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/marketplace/SubscribedItem {
+	public fun <init> (Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItem;)V
+	public final fun checkUpdate (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public final fun copy (Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;)Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;Ljava/lang/String;ILnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()I
+	public final fun getInstallationFolder ()Ljava/io/File;
+	public final fun getInstalledRevisionId ()Ljava/lang/Integer;
+	public final fun getItemDir ()Ljava/io/File;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNewestRevisionId (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getType ()Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;
+	public fun hashCode ()I
+	public final fun install (ILnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun install$default (Lnet/ccbluex/liquidbounce/features/marketplace/SubscribedItem;ILnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class net/ccbluex/liquidbounce/features/marketplace/autoconfig/ConfigTracker : net/ccbluex/liquidbounce/config/types/Config, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -956,6 +1011,82 @@ public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : n
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public abstract class net/ccbluex/liquidbounce/integration/theme/component/HudComponent : net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup {
+	public fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment;
+	public final fun getComponentDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/util/UUID;
+	public final fun getTweaks ()[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public final fun getZIndex ()I
+	protected final fun registerComponentListen (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)V
+	public final fun resetAlignment ()V
+	public final fun setZIndex (I)V
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory : net/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;ZZLjava/lang/String;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;ZZLkotlin/jvm/functions/Function0;)V
+	public synthetic fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public fun createComponent ()Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;
+	public final fun getDescription ()Ljava/lang/String;
+	public fun getEnabled ()Z
+	public final fun getId ()Ljava/util/UUID;
+	public fun getName ()Ljava/lang/String;
+	public fun getSingleton ()Z
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentManager {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentManager;
+	public final fun addComponent (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun bringComponentToFront (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;)I
+	public final fun getComponent (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun getComponentCatalog (Ljava/lang/String;)Ljava/util/List;
+	public static final fun getComponentWithTweak (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponent;
+	public final fun getComponents ()Ljava/util/List;
+	public final fun getComponents (Ljava/lang/String;)Ljava/util/List;
+	public final fun getFactory (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;
+	public final fun getNativeComponents ()Ljava/util/List;
+	public static final fun isTweakEnabled (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Z
+	public final fun register (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
+	public final fun registerFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
+	public final fun unregister (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
+	public final fun unregisterFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
+	public final fun updateComponents ()V
+}
+
+public final class net/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field DISABLE_CROSSHAIR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_EXP_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_HELD_ITEM_TOOL_TIP Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_LOCATOR_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_OVERLAY_MESSAGE Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_SCOREBOARD Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_STATUS_BAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_STATUS_EFFECT_OVERLAY Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field DISABLE_SUBTITLE_OVERLAY Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static final field TWEAK_HOTBAR Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;
+}
+
+public abstract class net/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent : net/ccbluex/liquidbounce/integration/theme/component/HudComponent {
+	public fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected final fun getGuiScaledBounds (FF)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public static synthetic fun getGuiScaledBounds$default (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;FFILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public abstract fun getGuiScaledHeight ()F
+	public abstract fun getGuiScaledWidth ()F
+	public final fun getHeight ()F
+	public final fun getWidth ()F
 }
 
 public final class net/ccbluex/liquidbounce/lang/LanguageKt {
@@ -1247,6 +1378,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/la
 	public static synthetic fun toQuaternion$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lorg/joml/Quaternionf;ILjava/lang/Object;)Lorg/joml/Quaternionf;
 	public fun toString ()Ljava/lang/String;
 	public final fun towardsLinear (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FF)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
+	public final fun viewVector ()Lnet/minecraft/world/phys/Vec3;
 	public final fun xRot ()F
 	public final fun yRot ()F
 	public final fun yaw ()F
@@ -1805,5 +1937,18 @@ public final class net/ccbluex/liquidbounce/utils/movement/MovementUtilsKt {
 
 public final class net/ccbluex/liquidbounce/utils/network/NetworkUtilsKt {
 	public static final fun sendPacketSilently (Lnet/minecraft/network/protocol/Packet;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/render/Alignment : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisX;ILnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisY;I)V
+	public static final fun center ()Lnet/ccbluex/liquidbounce/utils/render/Alignment;
+	public final fun getBounds (FF)Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;
+	public final fun getGuiScaledHorizontalOffset ()F
+	public final fun getGuiScaledVerticalOffset ()F
+	public final fun getHorizontalAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisX;
+	public final fun getHorizontalOffset ()I
+	public final fun getVerticalAlignment ()Lnet/ccbluex/liquidbounce/utils/render/Alignment$ScreenAxisY;
+	public final fun getVerticalOffset ()I
+	public final fun setFrom (Lnet/ccbluex/liquidbounce/utils/render/Alignment;)V
 }
 

@@ -22,12 +22,20 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.tryMoveReplacing
+import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.metadata.ModOrigin
 import java.io.File
+import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.copyTo
+import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 
 /**
  * Fabric discovers mods only at launch, so nothing staged here takes effect before a restart.
@@ -40,114 +48,188 @@ object AddonInstaller {
 
     private const val PART_SUFFIX = ".part"
 
-    private val modsFolder: File
-        get() = File(mc.gameDirectory, "mods")
+    // Where Fabric Loader looks for mods.
+    private val modsDir: Path = System.getProperty("fabric.modsFolder")?.let(Path::of)
+        ?: FabricLoader.getInstance().gameDir.resolve("mods")
 
-    // Named by item id, since unsubscribe deletes the item directory before the reload that
-    // unstages the jar.
-    private fun managedName(itemId: Int, revisionId: Int) = "$PREFIX$itemId-$revisionId.jar"
+    /**
+     * LiquidLauncher rebuilds the mods folder at every start and stages the add-ons itself, so it is
+     * left alone here. Minecraft's launch profile passes the launcher name as this property.
+     */
+    val launcherManaged = System.getProperty("minecraft.launcher.brand") == "LiquidLauncher"
 
-    private fun managedFiles(filter: (File) -> Boolean = { true }): Array<File>? =
-        modsFolder.listFiles { file: File -> file.isFile && file.name.startsWith(PREFIX) && filter(file) }
+    internal val minecraft by lazy { versionOf("minecraft") }
 
-    private fun managedJarsFor(itemId: Int): Array<File>? =
-        managedFiles { it.name.startsWith("$PREFIX$itemId-") && it.name.endsWith(".jar") }
+    internal val liquidbounce by lazy { versionOf("liquidbounce") }
 
-    private fun itemIdOf(file: File): Int? = file.name.removePrefix(PREFIX).substringBefore('-').toIntOrNull()
+    private fun versionOf(modId: String) =
+        FabricLoader.getInstance().getModContainer(modId).orElseThrow().metadata.version.friendlyString
 
-    fun stageSubscribedAddons() {
-        val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
-        val expected = HashSet<String>(subscribed.size)
+    // Item id to the revision unpacked this session. Fabric refuses to start with an add-on that does not
+    // fit, and the user has to remove it, so a jar it did not load is never put back.
+    private val unpacked = ConcurrentHashMap<Int, Int>()
 
-        for (item in subscribed) {
-            val revisionId = item.installedRevisionId ?: continue
-            val target = File(modsFolder, managedName(item.id, revisionId))
+    // Windows locks loaded jars. Unlike File.deleteOnExit, a jar that is wanted again can leave this.
+    private val removeOnExit = ConcurrentHashMap.newKeySet<Path>()
 
-            runCatching { stage(item, target) }
-                .onSuccess { expected += target.name }
-                .onFailure { error ->
-                    logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
-                    // Keep the working revision when an update fails.
-                    managedJarsFor(item.id)?.mapTo(expected) { it.name }
-                }
-        }
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread { removeOnExit.forEach { runCatching { it.deleteIfExists() } } })
+    }
 
-        // Unsubscribed, superseded, or a leftover .part.
-        for (file in managedFiles { it.name !in expected } ?: return) {
-            remove(file)
+    /**
+     * The jar of [revisionId] of add-on [itemId] in the mods folder. Named by item id, since unsubscribe
+     * deletes the item directory before the reload that unstages the jar. LiquidLauncher names the jars
+     * it stages the same way.
+     */
+    private data class Staged(val itemId: Int, val revisionId: Int) {
+
+        val fileName get() = "$PREFIX$itemId-$revisionId.jar"
+
+        val loaded get() = AddonInstaller.loaded[itemId]?.revisionId == revisionId
+
+        companion {
+            private val pattern = Regex("""${Regex.escape(PREFIX)}(\d+)-(\d+)\.jar""")
+
+            fun of(path: Path) = pattern.matchEntire(path.name)?.let { match ->
+                Staged(match.groupValues[1].toInt(), match.groupValues[2].toInt())
+            }
         }
     }
 
-    private fun stage(item: SubscribedItem, target: File) {
+    private class Loaded(val revisionId: Int, val name: String)
+
+    /**
+     * Item id to each add-on this game loaded.
+     */
+    private val loaded: Map<Int, Loaded> by lazy {
+        FabricLoader.getInstance().allMods
+            .filter { it.origin.kind == ModOrigin.Kind.PATH }
+            .flatMap { mod ->
+                mod.origin.paths.mapNotNull { path ->
+                    Staged.of(path)?.let { it.itemId to Loaded(it.revisionId, mod.metadata.name) }
+                }
+            }
+            .toMap()
+    }
+
+    /**
+     * Stages the revision of every subscribed add-on unpacked this session, keeps the loaded ones, and
+     * removes every other managed jar. Under LiquidLauncher only tells which add-ons change at the next
+     * start.
+     */
+    fun stageSubscribedAddons() {
+        val subscribed = MarketplaceManager.getSubscribedItemsOfType(MarketplaceItemType.ADDON)
+        unpacked.keys.retainAll(subscribed.mapTo(HashSet()) { it.id })
+
+        if (launcherManaged) {
+            trackLauncherChanges(subscribed)
+        } else {
+            stage(subscribed)
+        }
+    }
+
+    internal fun unpacked(item: SubscribedItem, revisionId: Int) {
+        unpacked[item.id] = revisionId
+    }
+
+    private fun trackLauncherChanges(subscribed: List<SubscribedItem>) {
+        val wanted = subscribed.associateBy { it.id }
+        for (itemId in wanted.keys + loaded.keys + AddonManager.restartRequiredItems) {
+            val item = wanted[itemId]
+            val running = loaded[itemId]
+            val next = unpacked[itemId]
+            when {
+                item == null && running != null -> AddonManager.markRestartRequired(itemId, "${running.name} removed")
+                item != null && next != null && next != running?.revisionId ->
+                    AddonManager.markRestartRequired(itemId, "${item.name} installed")
+                else -> AddonManager.clearRestartRequired(itemId)
+            }
+        }
+    }
+
+    private fun stage(subscribed: List<SubscribedItem>) {
+        val expected = HashSet<Path>()
+        for (item in subscribed) {
+            val revisionDir = item.installedRevisionDir ?: continue
+            val staged = Staged(item.id, revisionDir.name.toInt())
+            if (unpacked[item.id] != staged.revisionId && !staged.loaded) {
+                continue
+            }
+
+            val target = modsDir.resolve(staged.fileName)
+            runCatching { stage(item, item.addonJar(revisionDir), target) }
+                .onSuccess { expected.add(target) }
+                .onFailure { error ->
+                    logger.error("Failed to stage add-on '${item.name}' (${item.id})", error)
+                    // Keep the working revision when an update fails.
+                    expected.addAll(managedJarsFor(item.id))
+                }
+        }
+        removeOnExit.removeAll(expected)
+
+        // Unsubscribed, superseded, or a leftover .part.
+        managedFiles().filterNot(expected::contains).forEach(::remove)
+    }
+
+    private fun stage(item: SubscribedItem, jar: File, target: Path) {
         if (target.exists()) {
             return
         }
 
-        val folder = item.getInstallationFolder()
-            ?: error("Add-on ${item.id} has no installation folder")
-
-        val jars = folder.listFiles { file: File -> file.isFile && file.extension == "jar" }.orEmpty()
-        check(jars.size == 1) {
-            "Add-on revision must be an archive containing exactly one jar, found ${jars.size} in $folder"
-        }
-
-        check(modsFolder.isDirectory || modsFolder.mkdirs()) { "Could not create the mods folder" }
+        modsDir.createDirectories()
 
         // Fabric ignores non-jars, so a crash mid-copy leaves no truncated jar behind.
-        val part = File(modsFolder, target.name + PART_SUFFIX).toPath()
-        jars.single().toPath().copyTo(part, overwrite = true)
+        val part = target.resolveSibling(target.name + PART_SUFFIX)
+        jar.toPath().copyTo(part, overwrite = true)
 
         // Old revisions go only once the copy succeeded.
-        managedJarsFor(item.id)?.forEach(::remove)
+        managedJarsFor(item.id).forEach(::remove)
 
-        part.tryMoveReplacing(target.toPath())
+        part.atomicMoveTo(target)
         AddonManager.markRestartRequired(item.id, "${item.name} installed")
         logger.info("Staged add-on '${item.name}' as ${target.name}; restart required")
     }
 
-    /**
-     * Windows locks loaded jars, so a failed delete falls back to [File.deleteOnExit] and the next
-     * startup retries. A loaded jar needs a restart either way.
-     */
-    private fun remove(file: File) {
-        val loaded = isLoaded(file)
+    private fun managedFiles(): List<Path> = if (modsDir.isDirectory()) {
+        modsDir.listDirectoryEntries("$PREFIX*").filter { it.isRegularFile() }
+    } else {
+        emptyList()
+    }
 
-        if (file.delete()) {
+    private fun managedJarsFor(itemId: Int) = managedFiles().filter { Staged.of(it)?.itemId == itemId }
+
+    /**
+     * A loaded jar needs a restart either way.
+     */
+    private fun remove(file: Path) {
+        if (deleteNowOrOnExit(file)) {
             logger.info("Removed staged add-on ${file.name}")
         } else {
-            file.deleteOnExit()
             logger.warn("Could not delete ${file.name} while it is loaded; scheduled for removal on exit")
         }
 
-        if (file.name.endsWith(PART_SUFFIX)) {
-            return
-        }
-
-        val itemId = itemIdOf(file) ?: return
-        if (loaded) {
-            AddonManager.markRestartRequired(itemId, "${file.name} removed")
+        val staged = Staged.of(file) ?: return
+        if (staged.loaded) {
+            AddonManager.markRestartRequired(staged.itemId, "${file.name} removed")
         } else {
-            AddonManager.clearRestartRequired(itemId)
+            AddonManager.clearRestartRequired(staged.itemId)
         }
     }
 
-    private fun isLoaded(file: File): Boolean {
-        // Fabric records real paths.
-        val path = file.toPath().let { path ->
-            runCatching { path.toRealPath() }.getOrDefault(path.toAbsolutePath().normalize())
+    /**
+     * Windows locks loaded jars, so a failed delete is retried on exit and at the next startup.
+     */
+    private fun deleteNowOrOnExit(file: Path): Boolean {
+        if (runCatching { file.deleteIfExists() }.isSuccess) {
+            return true
         }
 
-        return FabricLoader.getInstance().allMods.any { mod ->
-            mod.origin.kind == ModOrigin.Kind.PATH && path in mod.origin.paths
-        }
+        removeOnExit.add(file)
+        return false
     }
 
     fun wipeManagedJars() {
-        for (file in managedFiles() ?: return) {
-            if (!file.delete()) {
-                file.deleteOnExit()
-            }
-        }
+        managedFiles().forEach(::deleteNowOrOnExit)
     }
 
 }

@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
@@ -54,7 +53,11 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceItems
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -276,6 +279,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
+        ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
@@ -327,8 +331,13 @@ object LiquidBounce : EventListener {
                 HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
-                // Load configs
-                AutoConfig.reloadConfigs()
+                MarketplaceConfigs.refresh()
+            }
+            launch {
+                MarketplaceItems.refresh()
+            }
+            launch {
+                MarketplaceManager.fillAuthors()
             }
             launch {
                 IpInfoApi.original
@@ -368,11 +377,15 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
+
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        MarketplaceManager.subscribedItems.forEach(SubscribedItem::restoreRetired)
+        AddonInstaller.stageSubscribedAddons()
+        MarketplaceManager.reloadHandlers()
+
         if (!ClientInteropServer.isSkipping) {
             ThemeManager.init()
-            // Preload marketplace items
-            ConfigSystem.load(MarketplaceManager)
-            AddonInstaller.stageSubscribedAddons()
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }

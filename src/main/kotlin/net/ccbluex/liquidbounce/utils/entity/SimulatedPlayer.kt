@@ -159,6 +159,20 @@ class SimulatedPlayer(
                 player.fluidInteraction.deepCopy(),
             )
         }
+
+        /**
+         * TODO(26.3): should be replaced
+         */
+        @JvmStatic
+        fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
+            val realXRot = xRot * (Math.PI.toFloat() / 180f)
+            val realYRot = -yRot * (Math.PI.toFloat() / 180f)
+            val yCos = Mth.cos(realYRot.toDouble())
+            val ySin = Mth.sin(realYRot.toDouble())
+            val xCos = Mth.cos(realXRot.toDouble())
+            val xSin = Mth.sin(realXRot.toDouble())
+            return Vec3((ySin * xCos).toDouble(), (-xSin).toDouble(), (yCos * xCos).toDouble())
+        }
     }
 
     private var simulatedTicks: Int = 0
@@ -859,20 +873,6 @@ class SimulatedPlayer(
      * @see net.minecraft.world.entity.Entity.getViewVector
      */
     private fun getViewVector(): Vec3 = calculateViewVector(this.xRot, this.yRot)
-
-    /**
-     * Mirrors 26.1 `Entity#calculateViewVector(float, float)`.
-     * @see net.minecraft.world.entity.Entity.calculateViewVector
-     */
-    private fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
-        val realXRot = xRot * (Math.PI.toFloat() / 180f)
-        val realYRot = -yRot * (Math.PI.toFloat() / 180f)
-        val yCos = Mth.cos(realYRot.toDouble())
-        val ySin = Mth.sin(realYRot.toDouble())
-        val xCos = Mth.cos(realXRot.toDouble())
-        val xSin = Mth.sin(realXRot.toDouble())
-        return Vec3((ySin * xCos).toDouble(), (-xSin).toDouble(), (yCos * xCos).toDouble())
-    }
 
     private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
         val instance = player.getEffect(effect) ?: return false

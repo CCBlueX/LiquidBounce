@@ -44,7 +44,7 @@ class MojangApiClient internal constructor(
     val mcServicesApi: MinecraftServicesApi,
     val sessionServerApi: SessionServerApi,
 ) {
-    private companion object {
+    companion {
         private val apiGson by lazy {
             GsonBuilder()
                 .setStrictness(Strictness.LENIENT)

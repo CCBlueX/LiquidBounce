@@ -64,7 +64,7 @@ fun traceFromPlayer(
         block = block,
         fluid = fluid,
         start = player.getEyePosition(tickDelta),
-        direction = rotation.directionVector
+        direction = rotation.viewVector
     )
 }
 

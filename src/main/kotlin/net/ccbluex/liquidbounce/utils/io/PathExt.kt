@@ -29,21 +29,58 @@ import java.util.Base64
 import kotlin.io.path.fileSize
 import kotlin.io.path.inputStream
 
+/**
+ * Moves this path to [target], replacing [target] if it already exists.
+ *
+ * The move is performed atomically when the platform and file stores allow it
+ * (`StandardCopyOption.ATOMIC_MOVE`). If an atomic replace is not supported
+ * (for example when source and target are on different file stores) or the
+ * implementation refuses to replace an existing target under `ATOMIC_MOVE`,
+ * the operation falls back to a non-atomic `REPLACE_EXISTING` move.
+ *
+ * The fallback is not crash-safe: a failure or interruption in the middle may
+ * leave [target] deleted, truncated, or otherwise inconsistent. Callers that
+ * require an all-or-nothing replace must keep source and target on the same
+ * file store and treat [AtomicMoveNotSupportedException] as fatal instead of
+ * using this helper.
+ *
+ * Replacing a non-empty directory is not supported and still fails with
+ * [java.nio.file.DirectoryNotEmptyException] or another [IOException].
+ *
+ * @return [target]
+ * @throws IOException if the move fails
+ * @throws java.nio.file.DirectoryNotEmptyException if [target] is a non-empty directory
+ * @throws SecurityException if the security manager denies the operation
+ */
 @Throws(IOException::class)
-fun Path.tryMoveReplacing(target: Path): Path =
-    try {
-        Files.move(this, target, StandardCopyOption.ATOMIC_MOVE)
-    } catch (_: AtomicMoveNotSupportedException) {
-        Files.move(this, target, StandardCopyOption.REPLACE_EXISTING)
-    } catch (_: FileAlreadyExistsException) {
-        Files.move(this, target, StandardCopyOption.REPLACE_EXISTING)
+fun Path.atomicMoveTo(target: Path): Path {
+    return try {
+        Files.move(
+            this,
+            target,
+            StandardCopyOption.ATOMIC_MOVE,
+            StandardCopyOption.REPLACE_EXISTING,
+        )
+    } catch (first: AtomicMoveNotSupportedException) {
+        replaceExisting(target, first)
+    } catch (first: java.nio.file.FileAlreadyExistsException) {
+        replaceExisting(target, first)
     }
+}
 
+@Throws(IOException::class)
+private fun Path.replaceExisting(target: Path, cause: IOException): Path =
+    try {
+        Files.move(this, target, StandardCopyOption.REPLACE_EXISTING)
+    } catch (e: IOException) {
+        e.addSuppressed(cause)
+        throw e
+    }
 
 private fun Path.readAsBase64(output: OutputStream) {
     this.inputStream().use { input ->
         Base64.getEncoder().wrap(output).use { base64 ->
-            input.copyTo(base64)
+            input.transferTo(base64)
         }
     }
 }

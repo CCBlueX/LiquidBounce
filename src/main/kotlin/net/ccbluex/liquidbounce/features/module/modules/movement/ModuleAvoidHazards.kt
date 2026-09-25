@@ -61,8 +61,8 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     private var mode by enumChoice("Mode", AvoidMode.SHAPE)
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
-    // Conflicts with AvoidHazards
-    val cobWebs get() = Avoid.COBWEB in avoid
+    // Solid webs keep NoWeb from ever handling one; steering around them does not
+    val cobWebs get() = mode == AvoidMode.SHAPE && Avoid.COBWEB in avoid
 
     private const val MOVEMENT_PREDICTION_TICKS = 2
     private const val CACTUS_BLOCK_MARGIN = 0.001

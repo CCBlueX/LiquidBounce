@@ -39,11 +39,9 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.block.state
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockTargetPlan
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -53,6 +51,8 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.getNearestPointOnSide
+import net.ccbluex.liquidbounce.utils.math.ifEmpty
+import net.ccbluex.liquidbounce.utils.math.isSideVisible
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -256,35 +256,32 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     }
 
     // Searches for any blocks suitable for placing crops or nether wart on
-    // returns ture if it found a target
+    // returns true if it found a target
     private fun updateTargetToPlantable(radius: Float, eyesPos: Vec3): Boolean {
         val hotbarItems = Slots.OffhandWithHotbar.items
         val radiusSquared = radius * radius
 
-        val allowedTypes = AutoFarmTrackedState.Plantable.entries.filter { type ->
+        val allowedTypes = AutoFarmTrackedState.Plantable.entries.filterTo(enumSetOf()) { type ->
             hotbarItems.any { it in type.items }
-        }
-
-        if (allowedTypes.isEmpty()) return false
+        }.ifEmpty { return false }
 
         val blocksToPlace =
             eyesPos.searchBlocksInCuboid(radius) { _, state ->
                 !state.isAir && allowedTypes.any { it.isBlockMatches(state) }
-            }.mapNotNullTo(mutableListOf()) { (pos, state) ->
-                val sides = allowedTypes.findPlantableSides(pos, state).ifEmpty { return@mapNotNullTo null }
-                val outlineShape = state.getShape(world, pos)
+            }.mapNotNull { (pos, state) ->
+                val outlineShape = state.getShape(world, pos).ifEmpty { return@mapNotNull null }
+                val sides = allowedTypes.findPlantableSides(pos, state).ifEmpty { return@mapNotNull null }
 
-                if (outlineShape.isEmpty) return@mapNotNullTo null
                 // getShape is block-local, move it to world space before measuring distance to the eyes
                 val box = outlineShape.bounds().move(pos)
                 // Keep only sides that are within reach and whose face points towards the eyes
                 sides.removeIf { side ->
-                    box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared ||
-                        BlockTargetPlan(pos, side).isFacingAway(eyesPos)
+                    !box.isSideVisible(side, eyesPos) ||
+                        box.getNearestPointOnSide(eyesPos, side).distanceToSqr(eyesPos) > radiusSquared
                 }
 
-                pos to sides.ifEmpty { return@mapNotNullTo null }
-            }.sortedBy { it.first.getCenterDistanceSquared() }
+                pos to sides.ifEmpty { return@mapNotNull null }
+            }.sortedBy { it.first.distToCenterSqr(eyesPos) }
 
         val collisionContext = CollisionContext.of(player)
         for ((pos, sides) in blocksToPlace) {
