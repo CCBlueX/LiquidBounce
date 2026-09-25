@@ -60,7 +60,7 @@ object ModuleAutoConfig : ClientModule(
 
     override val tag: String?
         get() = when (ConfigTracker.state) {
-            ConfigTracker.State.NONE -> null
+            ConfigTracker.State.NONE -> ConfigTracker.localName.ifEmpty { null }
             ConfigTracker.State.TRACKED -> ConfigTracker.address
             ConfigTracker.State.EDITING -> "${ConfigTracker.address}*"
         }
@@ -82,6 +82,15 @@ object ModuleAutoConfig : ClientModule(
     @Suppress("unused")
     private val handleServerConnect = handler<ServerConnectEvent> { event ->
         if (isScheduled) {
+            return@handler
+        }
+
+        // A local config the user loaded stays until they load another one or turn AutoConfig on again
+        if (ConfigTracker.localName.isNotEmpty()) {
+            notification(
+                "Auto Config", "Keeping local config ${ConfigTracker.localName}.",
+                NotificationEvent.Severity.INFO
+            )
             return@handler
         }
 

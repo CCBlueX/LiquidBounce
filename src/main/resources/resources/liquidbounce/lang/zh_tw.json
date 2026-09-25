@@ -137,6 +137,7 @@
   "liquidbounce.command.localconfig.load.loaded": "已載入名為 %s 的本地設定檔。",
   "liquidbounce.command.localconfig.load.name.description": "設定檔的名稱。",
   "liquidbounce.command.localconfig.load.notFound": "名為 %s 的本地設定檔不存在。",
+  "liquidbounce.command.localconfig.load.untracked": "已停止追蹤 %s，本機設定已取代其設定。",
   "liquidbounce.command.localconfig.save.alreadyExists": "名為 %s 的設定檔已存在。",
   "liquidbounce.command.localconfig.save.created": "已創建名為 %s 的設定檔。",
   "liquidbounce.command.localconfig.save.failedToCreate": "創建名為 %s 的設定檔失敗。",
