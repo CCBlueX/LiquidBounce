@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
-import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -38,9 +37,10 @@ object MarketplaceSubscribeCommand {
 
     fun CmdLiteralScope.subscribe() {
         literal("subscribe") {
-            argument("id", IntegerArgumentType.integer(1)) { id ->
+            argument("item", ClientStringArgumentType.string(), suggests = subscribableSuggestions) { input ->
                 execSuspend { ctx ->
-                    val itemId = ctx.get(id)
+                    val item = marketplaceItem(ctx.get(input))
+                    val itemId = item.id
 
                     if (MarketplaceManager.isSubscribed(itemId)) {
                         chat(regular(t("subscribe.alreadySubscribed", variable(itemId.toString()))))
@@ -48,8 +48,7 @@ object MarketplaceSubscribeCommand {
                     }
 
                     runCatching {
-                        // Verify the item exists and is not pending
-                        val item = MarketplaceApi.getMarketplaceItem(itemId)
+                        // An item named by its id can still be pending
                         if (item.status != MarketplaceItemStatus.ACTIVE) {
                             throw CommandException(t("error.itemPending"))
                         }
