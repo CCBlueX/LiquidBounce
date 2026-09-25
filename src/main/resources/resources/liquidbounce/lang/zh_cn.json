@@ -133,6 +133,7 @@
   "liquidbounce.command.localconfig.load.loaded": "已加载名为 %s 的本地配置文件。",
   "liquidbounce.command.localconfig.load.name.description": "配置文件的名称。",
   "liquidbounce.command.localconfig.load.notFound": "名为 %s 的本地配置文件不存在。",
+  "liquidbounce.command.localconfig.load.untracked": "已停止跟踪 %s，本地配置已替换其设置。",
   "liquidbounce.command.localconfig.save.alreadyExists": "名为 %s 的配置文件已存在。",
   "liquidbounce.command.localconfig.save.created": "已创建名为 %s 的配置文件。",
   "liquidbounce.command.localconfig.save.failedToCreate": "创建名为 %s 的配置文件失败。",
