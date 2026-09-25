@@ -224,3 +224,46 @@ jobs:
         if: success() || failure()
         with:
           sarif_file: build/reports/detekt/detekt.sarif
+
+  gametest:
+    runs-on: ubuntu-latest
+    needs: extract-versions
+    # nextgen fills the library cache that pull requests read
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/nextgen'
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Cache npm dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('src-theme/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+      - name: Setting up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
+      - name: Grant permissions to src-theme
+        run: sudo chmod -R 777 src-theme
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
+      - name: Install EGL
+        # MCEF loads it to pick the browser's rendering and crashes the game without it
+        run: sudo apt-get update && sudo apt-get install -y libegl1
+      - name: Library versions
+        id: libraries
+        run: echo "key=$(grep -E '^(mcef|djl) *=' gradle/libs.versions.toml | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      - name: Cache JCEF and the deep learning engine
+        uses: actions/cache@v5
+        with:
+          path: ~/.gradle/liquidbounce-gametest
+          key: gametest-libraries-${{ runner.os }}-${{ steps.libraries.outputs.key }}
+      - name: Client game tests
+        env:
+          CI: true
+        run: xvfb-run -a ./gradlew runClientGameTest

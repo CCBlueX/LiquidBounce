@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.env
+import java.io.File
 import java.util.Locale
 
 object DeepLearningEngine {
@@ -42,7 +44,11 @@ object DeepLearningEngine {
         mkdirs()
     }
 
-    val enginesCacheFolder = deepLearningFolder.resolve("engines").apply {
+    // The game tests keep it outside the game directory, which they wipe before every run
+    val enginesCacheFolder = (
+        env("LB_DEEPLEARNING_ENGINES", "net.ccbluex.liquidbounce.deeplearning.engines")?.let(::File)
+            ?: deepLearningFolder.resolve("engines")
+    ).apply {
         mkdirs()
     }
 

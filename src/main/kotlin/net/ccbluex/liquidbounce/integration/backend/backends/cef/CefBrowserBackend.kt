@@ -33,11 +33,13 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFAccelerationSupport
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
+import java.io.File
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLifeSpanHandlerAdapter
@@ -64,7 +66,9 @@ private const val CACHE_CLEANUP_THRESHOLD = 1000 * 60 * 60 * 24 * 7 // 7 days
 class CefBrowserBackend : BrowserBackend, EventListener {
 
     private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
-    private val librariesFolder = mcefFolder.resolve("libraries")
+    // The game tests keep it outside the game directory, which they wipe before every run
+    private val librariesFolder = env("LB_BROWSER_LIBRARIES", "net.ccbluex.liquidbounce.browser.libraries")
+        ?.let(::File) ?: mcefFolder.resolve("libraries")
     private val cacheFolder = mcefFolder.resolve("cache")
 
     override val isInitialized: Boolean
