@@ -1377,7 +1377,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/la
 	public static synthetic fun toQuaternion$default (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;Lorg/joml/Quaternionf;ILjava/lang/Object;)Lorg/joml/Quaternionf;
 	public fun toString ()Ljava/lang/String;
 	public final fun towardsLinear (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;FF)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
-    public final fun viewVector ()Lnet/minecraft/world/phys/Vec3;
+	public final fun viewVector ()Lnet/minecraft/world/phys/Vec3;
 	public final fun xRot ()F
 	public final fun yRot ()F
 	public final fun yaw ()F
