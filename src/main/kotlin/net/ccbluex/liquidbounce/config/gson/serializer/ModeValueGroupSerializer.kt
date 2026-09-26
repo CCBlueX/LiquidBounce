@@ -22,11 +22,20 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import java.lang.reflect.Type
 
-object ModeValueGroupSerializer : JsonSerializer<ModeValueGroup<Mode>> {
+class ModeValueGroupSerializer private constructor(
+    private val withValueType: Boolean,
+    private val includePrivate: Boolean,
+    private val includeNotAnOption: Boolean,
+    private val includeTransient: Boolean,
+    private val includeHidden: Boolean,
+) : JsonSerializer<ModeValueGroup<Mode>> {
 
     override fun serialize(
         src: ModeValueGroup<Mode>, typeOfSrc: Type, context: JsonSerializationContext
@@ -35,18 +44,51 @@ object ModeValueGroupSerializer : JsonSerializer<ModeValueGroup<Mode>> {
 
         obj.addProperty("name", src.name)
         obj.addProperty("active", src.activeMode.tag)
-        obj.add("value", context.serialize(src.inner))
+        obj.add(
+            "value",
+            context.serialize(
+                src.inner
+                    .filter { includeNotAnOption || !it.notAnOption }
+                    .filter { includePrivate || it.checkIfInclude() }
+                    .filter { includeTransient || it.isPersistent }
+                    .filter { includeHidden || it.visibleCondition.asBoolean }
+            )
+        )
 
         val choices = JsonObject()
 
         for (choice in src.modes) {
-            choices.add(choice.name, context.serialize(choice))
+            if (includePrivate || choice.checkIfInclude()) {
+                choices.add(choice.name, context.serialize(choice))
+            }
         }
 
         obj.add("choices", choices)
-        obj.add("valueType", context.serialize(src.valueType))
+        if (withValueType) {
+            obj.add("valueType", context.serialize(src.valueType))
+        }
 
         return obj
+    }
+
+    companion object {
+        @JvmField
+        val INTEROP_SERIALIZER = ModeValueGroupSerializer(
+            withValueType = true, includePrivate = true, includeNotAnOption = false,
+            includeTransient = true, includeHidden = false
+        )
+
+        @JvmField
+        val FILE_SERIALIZER = ModeValueGroupSerializer(
+            withValueType = false, includePrivate = true, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
+        )
+
+        @JvmField
+        val PUBLIC_CONFIG_SERIALIZER = ModeValueGroupSerializer(
+            withValueType = false, includePrivate = false, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
+        )
     }
 
 }

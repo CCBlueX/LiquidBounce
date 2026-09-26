@@ -34,7 +34,7 @@ import net.minecraft.world.effect.MobEffects
  *
  * Tested on both anticheat-test.com and loyisa.cn
  */
-class SpeedVulcan286(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan286", parent) {
+class SpeedVulcan286(parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan286", parent) {
 
     private inline val goingSideways: Boolean
         get() = player.input.movementSideways != 0f

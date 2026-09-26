@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.text.rootDomain
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 
@@ -68,7 +68,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", ModuleCategories.MISC) {
         serverStaffList[address] = emptySet()
 
         // Keeps us from loading the staff list multiple times
-        tickUntil { inGame && mc.screen != null }
+        tickUntil { inGame && mc.gui.screen() != null }
 
         // Load the staff list
         loadStaffList(address)

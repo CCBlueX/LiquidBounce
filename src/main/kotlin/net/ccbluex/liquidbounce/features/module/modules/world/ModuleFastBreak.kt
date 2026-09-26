@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
@@ -36,14 +36,16 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  */
 object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
 
+    private const val VANILLA_DESTROY_DELAY = 5
+
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
     private val onlyTool by boolean("OnlyTool", false)
 
     private val modeChoice = choices("Mode", 0) { arrayOf(NoneMode(it), AbortAnother) }.apply(::tagBy)
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (onlyTool && !player.mainHandItem.isMiningTool) {
-            return@tickHandler
+            return@handler
         }
 
         interaction.destroyDelay = 0
@@ -51,6 +53,11 @@ object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
         if (interaction.destroyProgress > breakDamage) {
             interaction.destroyProgress = 1f
         }
+    }
+
+    override fun onDisabled() {
+        interaction.destroyDelay = VANILLA_DESTROY_DELAY
+        super.onDisabled()
     }
 
     /**

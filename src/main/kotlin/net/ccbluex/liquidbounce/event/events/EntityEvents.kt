@@ -20,7 +20,9 @@
 package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetingInfo
@@ -29,10 +31,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 
+@AddonApi
 @Tag("attack")
 class AttackEntityEvent(
     val entity: Entity
-) : Event()
+) : CancellableEvent()
 
 @Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
@@ -40,6 +43,7 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 @Tag("entityHealthUpdate")
 class EntityHealthUpdateEvent(val entity: LivingEntity, val old: Float, val new: Float, val max: Float) : Event()
 
+@AddonApi
 @Tag("tagEntityEvent")
 class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {
     val color: PriorityField<Color4b?> = PriorityField(null, Priority.NOT_IMPORTANT)

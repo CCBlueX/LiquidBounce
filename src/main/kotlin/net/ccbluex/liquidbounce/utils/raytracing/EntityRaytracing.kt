@@ -45,7 +45,7 @@ fun Entity.findEntityInCrosshair(
         cameraVec,
         vec3d3,
         box,
-        if (predicate != null) EntitySelector.CAN_BE_PICKED.or(predicate) else EntitySelector.CAN_BE_PICKED,
+        if (predicate != null) EntitySelector.CAN_BE_PICKED.and(predicate) else EntitySelector.CAN_BE_PICKED,
         range.sq()
     )
 
@@ -53,7 +53,7 @@ fun Entity.findEntityInCrosshair(
         val distanceSqr = cameraVec.distanceToSqr(hitResult.location)
 
         distanceSqr <= throughWallsRange.sq() ||
-            distanceSqr <= range.sq() && hasLineOfSight(cameraVec, hitResult.location)
+            distanceSqr <= range.sq() && hasLineOfSight(cameraVec, hitResult.location, this)
     }
 }
 
@@ -65,19 +65,35 @@ fun findEntityInCrosshair(
 ): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, throughWallsRange, rotation, predicate)
 
 fun entitySelector(selected: Entity) = Predicate<Entity> { entity ->
-    entity == selected
+    entity === selected
 }
 
 fun attackableSelector() = Predicate<Entity> { entity ->
     entity.shouldBeAttacked()
 }
 
+/**
+ * Ray-traces from the current camera entity and returns a hit result when the traced entity equals [toEntity].
+ *
+ * @param toEntity target entity that must be hit by the ray.
+ * @param range maximum ray-trace distance.
+ * @param rotation yaw/pitch used to build the ray direction.
+ */
 fun isLookingAtEntity(
     toEntity: Entity,
     range: Double,
     rotation: Rotation,
 ) = findEntityInCrosshair(range, range, rotation, entitySelector(toEntity))
 
+/**
+ * Ray-traces from [fromEntity] and validates whether [toEntity] is hit with the given [rotation].
+ *
+ * @param fromEntity entity whose eye position is used as ray origin.
+ * @param toEntity target entity that must be hit by the ray.
+ * @param rotation yaw/pitch used to build the ray direction.
+ * @param range maximum non-wall-bypass distance.
+ * @param throughWallsRange distance that is allowed without line-of-sight.
+ */
 fun isLookingAtEntity(
     fromEntity: Entity = mc.cameraEntity!!,
     toEntity: Entity,

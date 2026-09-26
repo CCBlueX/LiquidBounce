@@ -19,17 +19,15 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.pipeline.TextureTarget
-import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuSampler
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuSampler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.utils.render.clearColor
-import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.render.setPipeline
 
 /**
  * @param blitPipeline should use `core/screenquad` for drawing
@@ -41,7 +39,7 @@ abstract class OverlayShaderRenderer(
     private val needDefaultUniforms: Boolean = false,
 ) : MinecraftShortcuts {
 
-    private var framebuffer: RenderTarget? = null
+    private val renderTargetHolder = LazyRenderTargetHolder("Custom shader FBO $name", useDepth)
     private val sampler: GpuSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
     var dirty: Boolean = false
 
@@ -50,23 +48,7 @@ abstract class OverlayShaderRenderer(
     fun prepareRenderTarget(): RenderTarget {
         require(!dirty) { "OverlayShaderRenderer $name is dirty, draw it before starting another render pass" }
 
-        val width = mc.window.width
-        val height = mc.window.height
-
-        return framebuffer?.apply {
-            if (width != this.width || height != this.height) {
-                this.resize(width, height) // Resizing includes clearing the framebuffer
-            } else if (useDepth) {
-                this.clearColorAndDepth()
-            } else {
-                this.colorTexture!!.clearColor()
-            }
-        } ?: TextureTarget(
-            "Custom shader FBO $name",
-            width,
-            height,
-            useDepth,
-        ).also { framebuffer = it }
+        return renderTargetHolder.initAndGet()
     }
 
     protected open fun preRender() {
@@ -89,17 +71,17 @@ abstract class OverlayShaderRenderer(
 
         preRender()
 
-        val colorTexture = framebuffer?.colorTextureView
-        requireNotNull(colorTexture) { "Framebuffer color attachment view is null" }
+        val colorTexture = this.renderTargetHolder.get()?.colorTextureView
+        requireNotNull(colorTexture) { "Overlay shader $name FBO color texture view is null" }
 
         target.createRenderPass({ "Overlay Shader $name blit pass" }).use { pass ->
             pass.setPipeline(blitPipeline)
             if (needDefaultUniforms) {
                 RenderSystem.bindDefaultUniforms(pass)
             }
-            pass.bindTexture("InSampler", colorTexture, sampler)
+            pass.setUniform("InSampler", colorTexture, sampler)
             onRender(pass)
-            pass.draw(0, 3)
+            pass.draw(3, 1, 0, 0)
         }
 
         postRender()

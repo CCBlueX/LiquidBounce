@@ -23,8 +23,10 @@ import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.minecraft.core.Registry
 import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceKey
 import java.io.File
 import java.util.Locale
 import kotlin.jvm.optionals.getOrNull
@@ -58,6 +60,13 @@ object HumanInputDeserializer {
         }
     }
 
+    fun <T : Any> registryItemDeserializer(key: ResourceKey<Registry<T>>) = StringDeserializer {
+        val registry = key.getOrNull() ?: error("No registry '$key'")
+        val item = registry.getOptional(Identifier.read(StringReader(it))).getOrNull()
+
+        requireNotNull(item) { "Unknown item '$it'" }
+    }
+
     fun <T : Any> registryItemDeserializer(registry: Registry<T>) = StringDeserializer {
         val item = registry.getOptional(Identifier.read(StringReader(it))).getOrNull()
 
@@ -75,7 +84,7 @@ object HumanInputDeserializer {
     val fileDeserializer: StringDeserializer<File> = StringDeserializer(::File)
 
     fun <T> parseArray(str: String, componentDeserializer: StringDeserializer<T>): MutableList<T> {
-        return str.split(",").mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
+        return str.split(',').mapTo(ArrayList(), componentDeserializer::deserializeThrowing)
     }
 
     private inline fun <N, R> parseRange(

@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.minecraft.client.Camera
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec3
+import org.joml.Vector3fc
 import kotlin.math.sqrt
 
 @Suppress("TooManyFunctions")
@@ -30,6 +33,7 @@ import kotlin.math.sqrt
 data class Vec3f(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
     constructor(vec: Position) : this(vec.x(), vec.y(), vec.z())
+    constructor(vec: Vector3fc) : this(vec.x(), vec.y(), vec.z())
     constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun add(x: Float, y: Float, z: Float): Vec3f {
@@ -76,10 +80,25 @@ data class Vec3f(val x: Float, val y: Float, val z: Float) {
 
     operator fun unaryMinus(): Vec3f = Vec3f(-this.x, -this.y, -this.z)
 
+    fun fma(scale: Float, other: Vec3f): Vec3f = Vec3f(
+        Math.fma(scale, other.x, this.x),
+        Math.fma(scale, other.y, this.y),
+        Math.fma(scale, other.z, this.z),
+    )
+
     fun toVec3d() = Vec3(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
 
     companion object {
-        @JvmField
-        val ZERO = Vec3f(0f, 0f, 0f)
+        @JvmField val ZERO = Vec3f(0f, 0f, 0f)
+        @JvmField val X_AXIS = Vec3f(1f, 0f, 0f)
+        @JvmField val Y_AXIS = Vec3f(0f, 1f, 0f)
+        @JvmField val Z_AXIS = Vec3f(0f, 0f, 1f)
+
+        @JvmStatic
+        fun eyeVector(camera: Camera): Vec3f {
+            return Z_AXIS
+                .rotateX(-camera.xRot().toRadians())
+                .rotateY(-camera.yRot().toRadians())
+        }
     }
 }

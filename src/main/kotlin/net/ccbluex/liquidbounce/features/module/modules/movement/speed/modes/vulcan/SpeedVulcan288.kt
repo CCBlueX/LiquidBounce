@@ -37,7 +37,7 @@ import kotlin.math.abs
  * BHop Speed for Vulcan 288
  * Tested on both anticheat-test.com and loyisa.cn
  */
-class SpeedVulcan288(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan288", parent) {
+class SpeedVulcan288(parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan288", parent) {
 
     @Suppress("unused")
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {

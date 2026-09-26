@@ -23,15 +23,15 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.joinToText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.textOf
-import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.entity.shortName
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -40,18 +40,21 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import java.util.function.Function
+import net.minecraft.world.level.GameType
 import kotlin.math.roundToInt
 
-private val COUNT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.AQUA, ChatFormatting.BOLD)
-
-private val BOT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
-
-private val BABY_TEXT = "Baby ".asPlainText()
-
-private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
-
 internal object NametagTextFormatter : ValueGroup("Text") {
+
+    private val COUNT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.AQUA, ChatFormatting.BOLD)
+
+    private val BOT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
+
+    private val BABY_TEXT = "Baby ".asPlainText()
+
+    private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
+
+    private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
+    private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
 
     private val parts by multiEnumChoice(
         "Parts",
@@ -59,22 +62,19 @@ internal object NametagTextFormatter : ValueGroup("Text") {
         canBeNone = false
     )
 
-    private enum class Part(override val tag: String) : Tagged, Function<Entity, Component?> {
+    private enum class Part(override val tag: String) : Tagged {
         DISTANCE("Distance") {
-            override fun apply(t: Entity): Component? {
-                if (t === player) return null
+            override fun apply(entity: Entity): Component? {
+                if (entity === player) return null
 
-                val playerDistanceRounded = player.distanceTo(t).roundToInt()
+                val playerDistanceRounded = player.distanceTo(entity).roundToInt()
                 return "${playerDistanceRounded}m".asPlainText(ChatFormatting.GRAY)
             }
         },
 
         PING("Ping") {
-            private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
-            private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
-
-            override fun apply(t: Entity): Component? {
-                val entity = t as? Player ?: return null
+            override fun apply(entity: Entity): Component? {
+                if (entity !is Player) return null
 
                 val playerPing = entity.ping
 
@@ -114,8 +114,8 @@ internal object NametagTextFormatter : ValueGroup("Text") {
         },
 
         HEALTH("Health") {
-            override fun apply(t: Entity): Component? {
-                val entity = t as? LivingEntity ?: return null
+            override fun apply(entity: Entity): Component? {
+                if (entity !is LivingEntity) return null
 
                 val actualHealth = (entity.getActualHealth() +
                     if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
@@ -130,11 +130,34 @@ internal object NametagTextFormatter : ValueGroup("Text") {
             }
         },
 
-        BOT_MARK("BotMark") {
-            override fun apply(t: Entity): Component? {
-                return if (t.isBot) BOT_TEXT else null
+        GAME_MODE("GameMode") {
+            override fun apply(entity: Entity): Component? {
+                if (entity !is Player) return null
+
+                val gameMode = entity.gameMode() ?: return null
+
+                val gameModeColor = when (gameMode) {
+                    GameType.SURVIVAL -> ChatFormatting.GREEN
+                    GameType.CREATIVE -> ChatFormatting.RED
+                    GameType.ADVENTURE -> ChatFormatting.YELLOW
+                    GameType.SPECTATOR -> ChatFormatting.GRAY
+                }
+
+                return textOf(
+                    leftBracket,
+                    gameMode.shortName().asPlainText(gameModeColor),
+                    rightBracket,
+                )
             }
         },
+
+        BOT_MARK("BotMark") {
+            override fun apply(entity: Entity): Component? {
+                return if (entity.isBot) BOT_TEXT else null
+            }
+        };
+
+        abstract fun apply(entity: Entity): Component?
     }
 
     fun format(entity: Entity): Component {

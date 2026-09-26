@@ -51,6 +51,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     val stuckChronometer = Chronometer()
     var desyncPlayerPosition: Vec3? = null
 
+    private val wireframePlayer = WireframePlayer()
+
     @Suppress("unused")
     private val attackRepeatable = tickHandler {
         val position = desyncPlayerPosition ?: player.position()
@@ -67,8 +69,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val (yaw, pitch) = RotationManager.currentRotation ?: player.rotation
-        val wireframePlayer = WireframePlayer(desyncPlayerPosition ?: return@handler, yaw, pitch)
+        wireframePlayer.pos = desyncPlayerPosition ?: return@handler
+        wireframePlayer.setRotation(RotationManager.currentRotation ?: player.rotation)
         wireframePlayer.render(event, Color4b(36, 32, 147, 87), Color4b(36, 32, 147, 255))
     }
 

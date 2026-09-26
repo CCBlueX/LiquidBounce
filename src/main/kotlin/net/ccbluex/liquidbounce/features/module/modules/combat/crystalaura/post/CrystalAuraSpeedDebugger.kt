@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
  * Counts how many crystals the crystal aura places.
@@ -29,19 +30,13 @@ import java.util.concurrent.ConcurrentLinkedDeque
  */
 object CrystalAuraSpeedDebugger : CrystalPostAttackTracker() {
 
-    private val cps = ConcurrentLinkedDeque<Long>()
+    private val cps = ConcurrentLinkedQueue<Long>()
 
     @Suppress("unused")
-    val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         val currentTime = System.currentTimeMillis()
         val cpsTime = currentTime - 1000L
-        while (cps.isNotEmpty()) {
-            if (cps.first >= cpsTime) {
-                break
-            }
-
-            cps.removeFirst()
-        }
+        cps.removeIf { it < cpsTime }
 
         ModuleDebug.debugParameter(
             ModuleCrystalAura,
@@ -51,11 +46,11 @@ object CrystalAuraSpeedDebugger : CrystalPostAttackTracker() {
     }
 
     override fun confirmed(id: Int) {
-        cps.add(System.currentTimeMillis())
+        cps.offer(System.currentTimeMillis())
     }
 
     override fun cleared() {
-        attackedIds.clear()
+        cps.clear()
     }
 
     override val running

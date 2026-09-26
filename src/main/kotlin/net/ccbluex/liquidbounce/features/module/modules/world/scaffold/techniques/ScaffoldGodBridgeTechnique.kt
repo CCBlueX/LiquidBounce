@@ -19,22 +19,23 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.rawInput
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeAction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -42,14 +43,15 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.core.Direction
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import java.util.EnumSet
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.round
 import kotlin.math.sin
-import kotlin.random.Random
 
 object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedgeExtension {
 
@@ -60,12 +62,18 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
          * Might not be as consistent as the other modes.
          */
         STOP_INPUT("StopInput"),
-        BACKWARDS("Backwards"),
-        RANDOM("Random")
+        BACKWARDS("Backwards");
+
+        fun createAction(): LedgeAction = when (this) {
+            JUMP -> LedgeAction(jump = true)
+            SNEAK -> LedgeAction(sneakTime = sneakTime.random())
+            STOP_INPUT -> LedgeAction(stopInput = true)
+            BACKWARDS -> LedgeAction(stepBack = true)
+        }
     }
 
-    private var mode by enumChoice("Mode", Mode.JUMP)
-    private var forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
+    private val modes by multiEnumChoice("Modes", Mode.JUMP, canBeNone = false)
+    private val forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
     private val sneakTime by intRange("SneakTime", 1..1, 1..10)
 
     override fun ledge(
@@ -83,7 +91,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         // but we hope it does not. :)
         val snapshotOne = simulatedPlayerCache.getSnapshotAt(1)
 
-        ModuleDebug.debugParameter(this, "Snapshot Ledged", snapshotOne.clipLedged)
+        debugParameter("Snapshot Ledged") { snapshotOne.clipLedged }
 
         return if (snapshotOne.clipLedged) {
             val cameraPosition = snapshotOne.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
@@ -96,8 +104,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             val targetFulfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
             val isValidCrosshairTarget = ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)
 
-            ModuleDebug.debugParameter(this, "targetFulfillsRequirements", targetFulfillsRequirements.toString())
-            ModuleDebug.debugParameter(this, "isValidCrosshairTarget", isValidCrosshairTarget.toString())
+            debugParameter("targetFulfillsRequirements") { targetFulfillsRequirements }
+            debugParameter("isValidCrosshairTarget") { isValidCrosshairTarget }
 
             // Does the crosshair target meet the requirements?
             if (targetFulfillsRequirements && isValidCrosshairTarget) {
@@ -106,20 +114,16 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
             // If the crosshair target does not meet the requirements,
             // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
-            when {
-                ModuleScaffold.blockCount < forceSneakBelowCount -> {
-                    LedgeAction(sneakTime = sneakTime.random())
-                }
-                mode == Mode.JUMP -> LedgeAction(jump = true)
-                mode == Mode.SNEAK -> LedgeAction(sneakTime = sneakTime.random())
-                mode == Mode.STOP_INPUT -> LedgeAction(stopInput = true)
-                mode == Mode.BACKWARDS -> LedgeAction(stepBack = true)
-                mode == Mode.RANDOM -> if (Random.nextBoolean()) {
-                    LedgeAction(jump = true, sneakTime = 0)
-                } else {
-                    LedgeAction(jump = false, sneakTime = sneakTime.random())
-                }
-                else -> LedgeAction.NO_LEDGE
+            val currentMode = if (ModuleScaffold.blockCount < forceSneakBelowCount) Mode.SNEAK else modes.random()
+            val effectiveMode = if (currentMode == Mode.JUMP && jumpApexHeight() >= 2.0) {
+                val filtered = EnumSet.copyOf(modes).apply { remove(Mode.JUMP) }
+                filtered.randomOrNull() ?: Mode.SNEAK
+            } else {
+                currentMode
+            }
+
+            effectiveMode.createAction().also {
+                debugParameter("LastLedgeAction") { it }
             }
         } else {
             LedgeAction.NO_LEDGE
@@ -136,8 +140,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
     ): BlockPlacementTarget? {
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                NORMAL_INVESTIGATION_OFFSETS,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                BlockPosOffsets.NORMAL.offsets,
+                BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bestStack,
@@ -154,7 +158,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(player.yRot, rawInput) + 180
+        val direction = player.getMovementDirectionOfInput(rawInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45
@@ -177,8 +181,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
                 .relative(Direction.fromYRot(movingYaw.toDouble()), 0.6)
                 .toBlockPos()
 
-            val isLeaningOffBlock = player.blockPosition().below().getState()?.isAir == true
-            val nextBlockIsAir = posInDirection.below().getState()?.isAir == true
+            val isLeaningOffBlock = player.blockPosition().below().state?.isAir == true
+            val nextBlockIsAir = posInDirection.below().state?.isAir == true
 
             if (isLeaningOffBlock && nextBlockIsAir) {
                 isOnRightSide = !isOnRightSide
@@ -200,6 +204,22 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         val pitch = 75f
 
         return Rotation(yaw, pitch)
+    }
+
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.getJumpPower
+     * @see net.minecraft.world.entity.LivingEntity.travelInAir
+     */
+    private fun jumpApexHeight(): Double {
+        var motion = player.jumpPower.toDouble()
+        var height = 0.0
+
+        while (motion > 0.0) {
+            height += motion
+            motion = (motion - LivingEntity.DEFAULT_BASE_GRAVITY) * LivingEntity.BASE_VERTICAL_AIR_DRAG
+        }
+
+        return height
     }
 
 }

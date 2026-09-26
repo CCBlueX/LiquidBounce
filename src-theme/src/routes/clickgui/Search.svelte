@@ -17,6 +17,21 @@
     let query: string;
     let filteredModules: Module[] = [];
     let selectedIndex = 0;
+    let hasFocus = false;
+
+    type SearchableModule = {
+        raw: Module;
+        lowerName: string;
+        lowerAliases: string[];
+    };
+
+    // Cache lowercase names/aliases to avoid repeated toLowerCase() per keystroke.
+    let searchableModules: SearchableModule[] = [];
+    $: searchableModules = modules.map(m => ({
+        raw: m,
+        lowerName: m.name.toLowerCase(),
+        lowerAliases: m.aliases.map(a => a.toLowerCase()),
+    }));
 
     function reset() {
         filteredModules = [];
@@ -24,19 +39,22 @@
         $highlightModuleName = null;
     }
 
-    function filterModules() {
+    function filterModules(resetIndex: boolean) {
         if (!query) {
             reset();
             return;
         }
 
-        selectedIndex = 0;
+        if (resetIndex) {
+            selectedIndex = 0;
+        }
 
         const pureQuery = query.toLowerCase().replaceAll(" ", "");
 
-        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(pureQuery)
-            || m.aliases.some(a => a.toLowerCase().includes(pureQuery))
-        );
+        filteredModules = searchableModules.filter(({ raw, lowerName, lowerAliases }) => {
+            return lowerName.includes(pureQuery)
+                || lowerAliases.some(a => a.includes(pureQuery));
+        }).map(it => it.raw);
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
@@ -88,9 +106,14 @@
     }
 
     function handleWindowClick(e: MouseEvent) {
-        if (!searchContainerElement.contains(e.target as Node)) {
+        if (!searchContainerElement.contains(e.target as Node) && !hasFocus) {
             reset();
         }
+    }
+
+    function handleMouseOut() {
+        hasFocus = false;
+        reset();
     }
 
     function handleWindowKeyDown() {
@@ -122,7 +145,9 @@
             return;
         }
         mod.enabled = e.enabled;
-        filteredModules = filteredModules;
+
+        // Refilter modules to update enabled state
+        filterModules(false);
     });
 
     listen("keyboardKey", handleKeyDown);
@@ -134,10 +159,14 @@
 
 <svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
         class="search"
         class:has-results={query}
+        class:has-focus={hasFocus}
         bind:this={searchContainerElement}
+        on:mouseenter={() => hasFocus = true}
+        on:mouseleave={handleMouseOut}
 >
     <input
             type="text"
@@ -146,7 +175,7 @@
             spellcheck="false"
             bind:value={query}
             bind:this={searchInputElement}
-            on:input={filterModules}
+            on:input={() => filterModules(true)}
             on:keydown={handleBrowserKeyDown}
             on:focusin={async () => await setTyping(true)}
             on:focusout={async () => await setTyping(false)}
@@ -184,31 +213,31 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
 
   .search {
     position: fixed;
     left: 50%;
     top: 70px;
     transform: translateX(-50%);
-    background-color: rgba($clickgui-base-color, 0.9);
+    background-color: var(--clickgui-search-background-color);
     width: 600px;
     border-radius: 30px;
     overflow: hidden;
     transition: ease border-radius 0.2s;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    box-shadow: 0 0 10px var(--clickgui-search-shadow-color);
 
     &.has-results {
       border-radius: 10px;
     }
 
-    &:focus-within {
+    &:focus-within,
+    &.has-focus {
       z-index: 9999999999;
     }
   }
 
   .results {
-    border-top: solid 2px $accent-color;
+    border-top: solid 2px var(--clickgui-search-border-color);
     padding: 5px 25px;
     max-height: 250px;
     overflow: auto;
@@ -222,18 +251,18 @@
       grid-template-columns: max-content 1fr max-content;
 
       .module-name {
-        color: $clickgui-text-dimmed-color;
+        color: var(--clickgui-text-dimmed-color);
         transition: ease color 0.2s;
       }
 
       &.enabled {
         .module-name {
-          color: $accent-color;
+          color: var(--clickgui-search-enabled-color);
         }
       }
 
       .aliases {
-        color: rgba($clickgui-text-dimmed-color, .6);
+        color: var(--clickgui-search-alias-color);
         margin-left: 10px;
       }
 
@@ -242,18 +271,18 @@
       }
 
       &:hover {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
 
         &::after {
           content: "Right-click to locate";
-          color: rgba($clickgui-text-color, 0.4);
+          color: var(--clickgui-search-hint-color);
           font-size: 12px;
         }
       }
     }
 
     .placeholder {
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-text-dimmed-color);
       font-size: 16px;
       padding: 10px 0;
     }
@@ -269,7 +298,7 @@
     border: none;
     font-family: "Inter", sans-serif;
     font-size: 16px;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     width: 100%;
   }
 </style>

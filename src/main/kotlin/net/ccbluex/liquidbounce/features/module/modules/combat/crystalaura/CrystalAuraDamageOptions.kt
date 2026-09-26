@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Modul
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
-import net.ccbluex.liquidbounce.utils.kotlin.LruCache
+import net.ccbluex.liquidbounce.utils.collection.LruCache
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player

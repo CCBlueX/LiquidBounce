@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.EventListener
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
+import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
@@ -89,7 +91,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
 
-        loadedChunks.add(ChunkPos.asLong(event.x, event.z))
+        loadedChunks.add(ChunkPos.pack(event.x, event.z))
 
         if (subscribers.isEmpty()) return@handler
 
@@ -98,18 +100,27 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
-        if (subscribers.isEmpty() || event.isCancelled) return@handler
+        if (event.isCancelled) return@handler
 
         when (val packet = event.packet) {
-            is ClientboundBlockUpdatePacket ->
+            is ClientboundBlockUpdatePacket -> {
+                if (subscribers.isEmpty()) return@handler
+
                 UpdateRequest.BlockUpdate(packet.pos, packet.blockState).runAsync()
+            }
 
             // All updates are in one section
-            is ClientboundSectionBlocksUpdatePacket ->
+            is ClientboundSectionBlocksUpdatePacket -> {
+                if (subscribers.isEmpty()) return@handler
+
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
+            }
 
             is ClientboundForgetLevelChunkPacket -> mc.execute {
-                loadedChunks.remove(packet.pos.toLong())
+                loadedChunks.remove(packet.pos.pack())
+
+                if (subscribers.isEmpty()) return@execute
+
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
             }
         }
@@ -155,40 +166,26 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     /**
      * @see LevelChunk.getBlockState
+     * @see net.minecraft.world.level.chunk.LevelChunkSection.hasOnlyAir
      */
     private suspend fun scanChunkSections(
         chunk: LevelChunk,
         action: BiConsumer<BlockPos, BlockState>
-    ) {
-        // 0 rangeTo chunk.highestNonEmptySection
-        Array(chunk.highestFilledSectionIndex + 1) { sectionIndex ->
-            scope.launch {
-                val startX = chunk.pos.minBlockX
-                val startZ = chunk.pos.minBlockZ
-                val blockPos = threadLocalBlockPos.get()
-                val section = chunk.getSection(sectionIndex)
-
-                for (sectionY in 0..15) {
-                    // index == (y >> 4) - (bottomY >> 4)
-                    val y = (sectionIndex + (chunk.minY shr 4)) shl 4 or sectionY
-                    for (x in 0..15) {
-                        for (z in 0..15) {
-                            val blockState = section.getBlockState(x, sectionY, z)
-                            val pos = blockPos.set(startX or x, y, startZ or z)
-                            action.accept(pos, blockState)
-                        }
-                    }
+    ) = coroutineScope {
+        chunk.sections.forEachIndexed { sectionIndex, section ->
+            if (!section.hasOnlyAir()) {
+                launch {
+                    val mutable = threadLocalBlockPos.get()
+                    chunk.forEachSectionBlock(sectionIndex, mutable, action::accept)
                 }
             }
-        }.joinAll()
+        }
     }
 
-    sealed interface UpdateRequest {
+    sealed interface UpdateRequest : suspend (CoroutineScope) -> Unit {
         fun runAsync() {
-            scope.launch { run() }
+            scope.launch(block = this)
         }
-
-        suspend fun run()
 
         /**
          * Scans loaded chunks for new subscriber
@@ -196,7 +193,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          * @param chunks should be non-empty
          */
         class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: List<LevelChunk>) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 val duration = measureTime {
                     chunks.forEach {
                         subscriber.chunkUpdate(it)
@@ -217,15 +214,20 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         /**
-         * Scans single new chunk
+         * Scans single new chunk or replaced chunk.
+         *
+         * @see net.minecraft.client.multiplayer.ClientChunkCache.replaceWithPacketData
          *
          * @param chunk should be non-empty
          */
         class ChunkLoad(val chunk: LevelChunk) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 val duration = measureTime {
                     subscribers.mapToArray {
-                        scope.launch { it.chunkUpdate(chunk) }
+                        scope.launch {
+                            it.clearChunk(chunk.pos)
+                            it.chunkUpdate(chunk)
+                        }
                     }.joinAll()
 
                     // Contains all subscriber that want recordBlock called on a chunk update
@@ -249,7 +251,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class ChunkSectionUpdate(val packet: ClientboundSectionBlocksUpdatePacket) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 packet.runUpdates { blockPos, state ->
                     subscribers.forEach {
                         it.recordBlock(blockPos, state, cleared = false)
@@ -259,7 +261,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class ChunkUnload(val pos: ChunkPos) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 subscribers.forEach {
                     it.clearChunk(pos)
                 }
@@ -267,7 +269,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         }
 
         class BlockUpdate(val blockPos: BlockPos, val newState: BlockState) : UpdateRequest {
-            override suspend fun run() {
+            override suspend fun invoke(scope: CoroutineScope) {
                 subscribers.forEach {
                     it.recordBlock(blockPos, newState, cleared = false)
                 }

@@ -33,8 +33,9 @@ import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,20 +46,13 @@ public abstract class MixinRenderLayer {
     @Unique
     private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 120).argb();
 
-    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
+    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"))
     private static <S> void injectTrueSight(
         OrderedSubmitNodeCollector instance,
         Model<? super S> model,
-        S state,
-        PoseStack matrices,
-        RenderType renderLayer,
-        int light,
-        int overlay,
-        int tintedColor,
-        TextureAtlasSprite sprite,
-        int outlineColor,
-        ModelFeatureRenderer.CrumblingOverlay crumblingOverlay,
-        Operation<Void> original
+        S state, PoseStack poseStack, RenderType renderType,
+        int light, int overlay, int tintedColor, @Nullable UvMapping uvMapping,
+        int outlineColor, Operation<Void> original
     ) {
         if (state instanceof LivingEntityRenderState rs) {
             var trueSightModule = ModuleTrueSight.INSTANCE;
@@ -72,19 +66,18 @@ public abstract class MixinRenderLayer {
         }
         original.call(
             instance, model,
-            state, matrices,
-            renderLayer, light,
+            state, poseStack,
+            renderType, light,
             overlay, tintedColor,
-            sprite, outlineColor,
-            crumblingOverlay
+            uvMapping, outlineColor
         );
     }
 
-    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;entityCutoutNoCull(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
+    @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/rendertype/RenderTypes;entityCutout(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
     private static RenderType injectTrueSight(
-        Identifier texture, Operation<RenderType> original, @Local(argsOnly = true) LivingEntityRenderState state) {
+        Identifier texture, Operation<RenderType> original, @Local(argsOnly = true, name = "state") LivingEntityRenderState state) {
         if (ModuleTrueSight.canRenderEntities(state) || ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderTypes.itemEntityTranslucentCull(texture);
+            return RenderTypes.entityTranslucentCull(texture);
         }
         return original.call(texture);
     }

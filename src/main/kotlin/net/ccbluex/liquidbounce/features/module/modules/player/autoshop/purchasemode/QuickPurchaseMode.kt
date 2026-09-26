@@ -26,6 +26,6 @@ object QuickPurchaseMode : Mode("Quick") {
     override val parent: ModeValueGroup<*>
         get() = ModuleAutoShop.purchaseMode
 
-    val delay by intRange("Delay", 50..70, 0..150, "ms")
+    val delayMs by intRange("Delay", 50..70, 0..150, "ms")
     val waitForItems by boolean("WaitForItems", true)
 }

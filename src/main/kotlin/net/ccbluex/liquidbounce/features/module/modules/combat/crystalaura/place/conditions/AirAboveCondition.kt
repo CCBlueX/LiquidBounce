@@ -22,27 +22,41 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.minecraft.core.BlockPos
 
 /**
  * In 1.13+ crystals need one block air above to be placed.
+ *
+ * @see net.minecraft.world.item.EndCrystalItem
  */
 object AirAboveCondition : PlacementCondition {
 
     override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
-        return cache.up.getState()!!.isAir
+        val state = cache.up.stateOrEmpty
+        return if (SubmoduleCrystalPlacer.oldVersion) {
+            state.isAir || state.canBeReplaced()
+        } else {
+            state.isAir
+        }
     }
 
 }
 
 /**
  * In 1.12.2 crystals need two blocks air above to be placed.
+ *
+ * [MCP940 net.minecraft.item.ItemEndCrystal](https://github.com/WangTingZheng/mcp940/blob/d0c030a4139ce7cf3f284b180f0d9ea87bdf8141/src/minecraft/net/minecraft/item/ItemEndCrystal.java#L30)
  */
 object AirOldVersionCondition : PlacementCondition {
 
     override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
-        return !SubmoduleCrystalPlacer.oldVersion || candidate.above(2).getState()!!.isAir
+        if (!SubmoduleCrystalPlacer.oldVersion) {
+            return true
+        }
+
+        val state = candidate.above(2).stateOrEmpty
+        return state.isAir || state.canBeReplaced()
     }
 
 }

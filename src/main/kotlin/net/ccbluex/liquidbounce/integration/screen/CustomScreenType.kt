@@ -51,8 +51,9 @@ enum class CustomScreenType(
     val routeName: String,
     private val recognizer: Predicate<Screen> = Predicates.alwaysFalse(),
     val isInGame: Boolean = false,
+    val hasBasicMenu: Boolean = false,
     private val open: Runnable = Runnable {
-        mc.setScreen(CustomSharedMinecraftScreen(byName(routeName)!!))
+        mc.gui.setScreen(CustomSharedMinecraftScreen(byName(routeName)!!))
     }
 ) {
 
@@ -60,30 +61,33 @@ enum class CustomScreenType(
     CLICK_GUI("clickgui"),
     ALT_MANAGER("altmanager"),
     PROXY_MANAGER("proxymanager"),
+    BASIC_MENU("basicmenu"),
 
     TITLE(
         "title",
         recognizer = { it is TitleScreen || it.isLunar },
-        open = { mc.setScreen(TitleScreen()) }
+        hasBasicMenu = true,
+        open = { mc.gui.setScreen(TitleScreen()) }
     ),
 
     MULTIPLAYER(
         "multiplayer",
         recognizer = { it is JoinMultiplayerScreen || it is SafetyScreen },
-        open = { mc.setScreen(JoinMultiplayerScreen(ScreenManager.parent)) }
+        hasBasicMenu = true,
+        open = { mc.gui.setScreen(JoinMultiplayerScreen(ScreenManager.parent)) }
     ),
 
     MULTIPLAYER_REALMS(
         "multiplayer_realms",
         recognizer = { it is RealmsMainScreen },
-        open = { mc.setScreen(RealmsMainScreen(ScreenManager.parent)) }
+        open = { mc.gui.setScreen(RealmsMainScreen(ScreenManager.parent)) }
     ),
 
     SINGLEPLAYER(
         "singleplayer",
         recognizer = { it is SelectWorldScreen },
         open = {
-            mc.setScreen(SelectWorldScreen(ScreenManager.parent))
+            mc.gui.setScreen(SelectWorldScreen(ScreenManager.parent))
         }
     ),
 
@@ -97,7 +101,7 @@ enum class CustomScreenType(
             CreateWorldScreen.openFresh(mc) {
                 // Return to SelectWorldScreen instead of the stored parent,
                 // as this is the expected navigation flow from Create World
-                mc.setScreen(SelectWorldScreen(parentScreen))
+                mc.gui.setScreen(SelectWorldScreen(parentScreen))
             }
         }
     ),
@@ -106,7 +110,7 @@ enum class CustomScreenType(
         "options",
         recognizer = { it is OptionsScreen },
         open = {
-            mc.setScreen(OptionsScreen(ScreenManager.parent, mc.options))
+            mc.gui.setScreen(OptionsScreen(ScreenManager.parent, mc.options))
         }
     ),
 
@@ -140,10 +144,9 @@ enum class CustomScreenType(
 
     fun open() = mc.execute(open)
 
-    companion object {
-        @JvmStatic
+    companion {
         fun byName(name: String) = entries.find { it.routeName == name }
-        @JvmStatic
+
         fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 

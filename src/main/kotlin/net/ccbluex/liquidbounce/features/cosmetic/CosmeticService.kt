@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import kotlinx.coroutines.Job
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
@@ -32,10 +31,9 @@ import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.util.UUID
 
 /**
@@ -50,7 +48,7 @@ import java.util.UUID
  */
 object CosmeticService : EventListener, ValueGroup("Cosmetics") {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/CosmeticService")
+    private val logger = clientLogger("CosmeticService")
 
     private const val REFRESH_DELAY = 60000L // Every minute should update
 
@@ -70,7 +68,7 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
      * and then call out [done].
      * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
      */
-    fun refreshCarriers(force: Boolean = false, done: () -> Unit) {
+    fun refreshCarriers(force: Boolean = false, done: Runnable) {
         // Check if there is not another task running which could conflict.
         if (task == null) {
             // Check if the required time in milliseconds has passed of the REFRESH_DELAY
@@ -91,7 +89,7 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
                 }
             } else {
                 // Call out done immediate because there is no refresh required at the moment
-                done()
+                done.run()
             }
         }
     }

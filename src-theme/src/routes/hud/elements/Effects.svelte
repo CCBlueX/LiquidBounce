@@ -45,13 +45,12 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .effects {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background-color: $effects-background-color;
+    background-color: var(--effects-background-color);
     border-radius: 5px;
     padding: 4px 6px;
   }
@@ -72,17 +71,17 @@
     }
 
     .name {
-      color: $effects-name-color;
+      color: var(--effects-name-color);
     }
 
     .amplifier {
-      color: $effects-amplifier-color;
+      color: var(--effects-amplifier-color);
     }
 
     .duration {
       margin-left: auto;
       font-family: monospace;
-      color: $effects-duration-color;
+      color: var(--effects-duration-color);
       font-size: 12px;
     }
   }

@@ -53,7 +53,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * - Avoid edge bump
  *
  */
-class SpeedCustom(override val parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
+class SpeedCustom(parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
 
     private class HorizontalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "HorizontalModification", true) {

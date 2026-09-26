@@ -22,9 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.core.BlockPos
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.level.block.BambooStalkBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.BonemealSource
 import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.CactusBlock
 import net.minecraft.world.level.block.CocoaBlock
@@ -47,7 +49,7 @@ private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
 internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     return when (val block = state.block) {
         is CropBlock, is StemBlock, is CocoaBlock, is SweetBerryBushBlock ->
-            block.isValidBonemealTarget(world, this, state)
+            block.isValidBonemealTarget(world, this, state, BonemealSource.INTERACTION)
         else -> false
     }
 }
@@ -93,3 +95,9 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         else -> false
     }
 }
+
+inline val BlockState.supportsCrops: Boolean get() = `is`(BlockTags.SUPPORTS_CROPS)
+
+inline val BlockState.supportsCocoa: Boolean get() = `is`(BlockTags.SUPPORTS_COCOA)
+
+inline val BlockState.supportsNetherWart: Boolean get() = `is`(BlockTags.SUPPORTS_NETHER_WART)

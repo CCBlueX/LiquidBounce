@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView;
 import net.minecraft.client.model.object.crystal.EndCrystalModel;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -39,7 +38,7 @@ public abstract class MixinEndCrystalModel {
         return original;
     }
 
-    @ModifyVariable(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;)V", at = @At(value = "STORE", opcode = Opcodes.FSTORE, ordinal = 0))
+    @ModifyVariable(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/EndCrystalRenderState;)V", at = @At(value = "STORE", ordinal = 0), name = "animationSpeed")
     public float injectSpinSpeedMultiplier(float original) {
         var crystalView = ModuleCrystalView.INSTANCE;
         if (crystalView.getRunning()) {

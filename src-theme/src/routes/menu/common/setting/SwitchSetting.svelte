@@ -17,8 +17,6 @@
 </label>
 
 <style lang="scss">
-  @use "sass:color";
-  @use "../../../../colors.scss" as *;
 
   .switch-setting {
     display: flex;
@@ -27,7 +25,7 @@
   }
 
   .title {
-    color: $menu-text-color;
+    color: var(--menu-text-color);
     font-size: 20px;
     margin-left: 10px;
     font-weight: 500;
@@ -39,7 +37,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: color.adjust($menu-text-color, $lightness: -55%);
+    background-color: var(--menu-switch-track-color);
     transition: ease 0.4s;
     height: 14px;
     border-radius: 10px;
@@ -51,7 +49,7 @@
       width: 21px;
       top: -4px;
       left: -10px;
-      background-color: $menu-text-color;
+      background-color: var(--menu-switch-thumb-color);
       transition: ease 0.4s;
       border-radius: 50%;
     }
@@ -70,12 +68,12 @@
     }
 
     input:checked + .slider {
-      background-color: color.adjust($accent-color, $saturation: -60%, $lightness: -15%);
+      background-color: var(--menu-switch-track-active-color);
     }
 
     input:checked + .slider:before {
       transform: translateX(27px);
-      background-color: $accent-color;
+      background-color: var(--menu-switch-thumb-active-color);
     }
   }
 </style>

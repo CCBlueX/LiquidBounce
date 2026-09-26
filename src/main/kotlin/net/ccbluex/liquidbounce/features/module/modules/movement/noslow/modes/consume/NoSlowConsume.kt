@@ -44,6 +44,7 @@ object NoSlowConsume : NoSlowUseActionHandler("Consume") {
             NoSlowSharedGrim2364MC18(it),
             NoSlowSharedInvalidHand(it),
             NoSlowSharedGrim2371(it),
+            NoSlowConsumeJump(it),
             NoSlowConsumeIntave14(it),
             NoSlowConsumeRelease(it)
         )

@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -65,7 +65,7 @@ abstract class PredictFeature(name: String) : ToggleableValueGroup(ModuleCrystal
      */
     private val checkIntersect by boolean("CheckIntersect", true)
 
-    companion object {
+    companion {
         fun willBeBlocked(box: AABB, target: LivingEntity, basePlace: Boolean): Boolean {
             return SelfPredict.willBeBlocked(box, null, basePlace) ||
                 (target is Player && TargetPredict.willBeBlocked(box, target, basePlace))

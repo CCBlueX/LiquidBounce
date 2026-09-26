@@ -23,133 +23,147 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.common.base.CaseFormat
 import com.google.gson.JsonObject
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
+import net.ccbluex.liquidbounce.utils.item.getOrNull
 import net.ccbluex.liquidbounce.utils.network.packetRegistry
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpForbidden
-import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.core.BlockPos
 import net.minecraft.core.DefaultedRegistry
+import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.resources.Identifier
-import net.minecraft.tags.BlockTags
-import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 import java.util.Locale
 import kotlin.jvm.optionals.getOrNull
 
+private fun itemTag(name: String): TagKey<Item> =
+    TagKey.create(Registries.ITEM, Identifier.withDefaultNamespace(name))
+
+private fun blockTag(name: String): TagKey<Block> =
+    TagKey.create(Registries.BLOCK, Identifier.withDefaultNamespace(name))
+
 private val ACCEPTED_ITEM_TAGS =
     arrayOf(
-        ItemTags.WOOL,
-        ItemTags.PLANKS,
-        ItemTags.STONE_BRICKS,
-        ItemTags.BUTTONS,
-        ItemTags.WOOL_CARPETS,
-        ItemTags.FENCE_GATES,
-        ItemTags.WOODEN_PRESSURE_PLATES,
-        ItemTags.DOORS,
-        ItemTags.LOGS,
-        ItemTags.BANNERS,
-        ItemTags.SAND,
-        ItemTags.STAIRS,
-        ItemTags.SLABS,
-        ItemTags.WALLS,
-        ItemTags.ANVIL,
-        ItemTags.RAILS,
-        ItemTags.SMALL_FLOWERS,
-        ItemTags.SAPLINGS,
-        ItemTags.LEAVES,
-        ItemTags.TRAPDOORS,
-        ItemTags.BEDS,
-        ItemTags.FENCES,
-        ItemTags.GOLD_ORES,
-        ItemTags.IRON_ORES,
-        ItemTags.DIAMOND_ORES,
-        ItemTags.REDSTONE_ORES,
-        ItemTags.LAPIS_ORES,
-        ItemTags.COAL_ORES,
-        ItemTags.EMERALD_ORES,
-        ItemTags.COPPER_ORES,
-        ItemTags.CANDLES,
-        ItemTags.DIRT,
-        ItemTags.TERRACOTTA,
-        ItemTags.BOATS,
-        ItemTags.FISHES,
-        ItemTags.SIGNS,
-        ItemTags.CREEPER_DROP_MUSIC_DISCS,
-        ItemTags.COALS,
-        ItemTags.ARROWS,
-        ItemTags.COMPASSES,
-        ItemTags.TRIM_MATERIALS,
-        ItemTags.SWORDS,
-        ItemTags.AXES,
-        ItemTags.HOES,
-        ItemTags.PICKAXES,
-        ItemTags.SHOVELS,
+        itemTag("wool"),
+        itemTag("planks"),
+        itemTag("stone_bricks"),
+        itemTag("buttons"),
+        itemTag("wool_carpets"),
+        itemTag("fence_gates"),
+        itemTag("wooden_pressure_plates"),
+        itemTag("doors"),
+        itemTag("logs"),
+        itemTag("banners"),
+        itemTag("sand"),
+        itemTag("stairs"),
+        itemTag("slabs"),
+        itemTag("walls"),
+        itemTag("anvil"),
+        itemTag("rails"),
+        itemTag("small_flowers"),
+        itemTag("saplings"),
+        itemTag("leaves"),
+        itemTag("trapdoors"),
+        itemTag("beds"),
+        itemTag("fences"),
+        itemTag("gold_ores"),
+        itemTag("iron_ores"),
+        itemTag("diamond_ores"),
+        itemTag("redstone_ores"),
+        itemTag("lapis_ores"),
+        itemTag("coal_ores"),
+        itemTag("emerald_ores"),
+        itemTag("copper_ores"),
+        itemTag("candles"),
+        itemTag("dirt"),
+        itemTag("terracotta"),
+        itemTag("boats"),
+        itemTag("fishes"),
+        itemTag("signs"),
+        itemTag("creeper_drop_music_discs"),
+        itemTag("coals"),
+        itemTag("arrows"),
+        itemTag("compasses"),
+        itemTag("trim_materials"),
+        itemTag("swords"),
+        itemTag("axes"),
+        itemTag("hoes"),
+        itemTag("pickaxes"),
+        itemTag("shovels"),
     )
 
 private val ACCEPTED_BLOCK_TAGS =
     arrayOf(
-        BlockTags.WOOL,
-        BlockTags.PLANKS,
-        BlockTags.STONE_BRICKS,
-        BlockTags.BUTTONS,
-        BlockTags.WOOL_CARPETS,
-        BlockTags.PRESSURE_PLATES,
-        BlockTags.DOORS,
-        BlockTags.FLOWERS,
-        BlockTags.SAPLINGS,
-        BlockTags.LOGS,
-        BlockTags.BANNERS,
-        BlockTags.SAND,
-        BlockTags.STAIRS,
-        BlockTags.SLABS,
-        BlockTags.WALLS,
-        BlockTags.ANVIL,
-        BlockTags.RAILS,
-        BlockTags.LEAVES,
-        BlockTags.TRAPDOORS,
-        BlockTags.BEDS,
-        BlockTags.FENCES,
-        BlockTags.GOLD_ORES,
-        BlockTags.IRON_ORES,
-        BlockTags.DIAMOND_ORES,
-        BlockTags.REDSTONE_ORES,
-        BlockTags.LAPIS_ORES,
-        BlockTags.COAL_ORES,
-        BlockTags.EMERALD_ORES,
-        BlockTags.COPPER_ORES,
-        BlockTags.CANDLES,
-        BlockTags.DIRT,
-        BlockTags.TERRACOTTA,
-        BlockTags.FLOWER_POTS,
-        BlockTags.ICE,
-        BlockTags.CORALS,
-        BlockTags.ALL_SIGNS,
-        BlockTags.BEEHIVES,
-        BlockTags.CROPS,
-        BlockTags.PORTALS,
-        BlockTags.FIRE,
-        BlockTags.NYLIUM,
-        BlockTags.SHULKER_BOXES,
-        BlockTags.CAMPFIRES,
-        BlockTags.FENCE_GATES,
-        BlockTags.CAULDRONS,
-        BlockTags.SNOW,
+        blockTag("wool"),
+        blockTag("planks"),
+        blockTag("stone_bricks"),
+        blockTag("buttons"),
+        blockTag("wool_carpets"),
+        blockTag("pressure_plates"),
+        blockTag("doors"),
+        blockTag("flowers"),
+        blockTag("saplings"),
+        blockTag("logs"),
+        blockTag("banners"),
+        blockTag("sand"),
+        blockTag("stairs"),
+        blockTag("slabs"),
+        blockTag("walls"),
+        blockTag("anvil"),
+        blockTag("rails"),
+        blockTag("leaves"),
+        blockTag("trapdoors"),
+        blockTag("beds"),
+        blockTag("fences"),
+        blockTag("gold_ores"),
+        blockTag("iron_ores"),
+        blockTag("diamond_ores"),
+        blockTag("redstone_ores"),
+        blockTag("lapis_ores"),
+        blockTag("coal_ores"),
+        blockTag("emerald_ores"),
+        blockTag("copper_ores"),
+        blockTag("candles"),
+        blockTag("dirt"),
+        blockTag("terracotta"),
+        blockTag("flower_pots"),
+        blockTag("ice"),
+        blockTag("corals"),
+        blockTag("all_signs"),
+        blockTag("beehives"),
+        blockTag("crops"),
+        blockTag("portals"),
+        blockTag("fire"),
+        blockTag("nylium"),
+        blockTag("shulker_boxes"),
+        blockTag("campfires"),
+        blockTag("fence_gates"),
+        blockTag("cauldrons"),
+        blockTag("snow"),
     )
 
 private fun <T : Any> constructMap(
     registry: DefaultedRegistry<T>,
     tagKeys: Array<TagKey<T>>,
 ): Map<Identifier, Identifier> {
-    val map = hashMapOf<Identifier, Identifier>()
+    val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
         val get = registry.get(acceptedTag).getOrNull() ?: continue
@@ -169,178 +183,173 @@ private fun <T : Any> constructMap(
     return map
 }
 
-// GET /api/v1/client/registry/:name
-@Suppress("UNUSED_PARAMETER")
-fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    fun iconUrl(id: Identifier) =
-        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+private inline fun <T : Any> Registry<T>.buildOutput(
+    name: (Identifier, T) -> String,
+    iconUrl: (Identifier) -> String? = { null },
+): Map<String, RegistryItemOutput> {
+    val obj = Object2ObjectOpenHashMap<String, RegistryItemOutput>(this.size())
+    for (item in this) {
+        val id = this.getKey(item) ?: continue
+        obj[id.toString()] = RegistryItemOutput(name(id, item), iconUrl(id))
+    }
+    return obj
+}
 
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
-    when (registryName.lowercase(Locale.ENGLISH)) {
+@JvmRecord
+private data class RegistryItemOutput(val name: String, val icon: String?)
+
+// GET /api/v1/client/registry/{name}
+private fun Route.getRegistry() = get {
+    fun itemIconUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/itemTexture?id=$id"
+    fun effectTextureUrl(id: Identifier) =
+        "${ClientInteropServer.url}/api/v1/client/resource/effectTexture?id=$id"
+
+    val registryName = call.parameters["name"]
+        ?: call.forbidden("Missing registry name parameter")
+
+    val result = when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks", "block" -> {
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val id = BuiltInRegistries.BLOCK.getKey(block)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", block.name.string)
-                    addProperty("icon", iconUrl(id))
-                })
-            }
+            BuiltInRegistries.BLOCK.buildOutput(
+                name = { _, id -> id.name.string },
+                iconUrl = ::itemIconUrl,
+            )
         }
 
         "items", "item" -> {
-            BuiltInRegistries.ITEM.forEach { item ->
-                val id = BuiltInRegistries.ITEM.getKey(item)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", item.name.string)
-                    addProperty("icon", iconUrl(id))
-                })
-            }
+            BuiltInRegistries.ITEM.buildOutput(
+                name = { id, item -> item.components()[DataComponents.ITEM_NAME]?.string ?: id.toString() },
+                iconUrl = ::itemIconUrl,
+            )
         }
 
         "sounds", "sound_event" -> {
             val soundDiscId = BuiltInRegistries.ITEM.getKey(Items.MUSIC_DISC_13)
+            val icon = itemIconUrl(soundDiscId)
 
-            BuiltInRegistries.SOUND_EVENT.forEach { soundEvent ->
-                val id = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", soundEvent.location.toName())
-                    addProperty("icon", iconUrl(soundDiscId))
-                })
+            BuiltInRegistries.SOUND_EVENT.buildOutput(
+                name =  { _, id -> id.location.toName() },
+            ) { icon }
+        }
+
+        "mob_effect" -> {
+            BuiltInRegistries.MOB_EFFECT.buildOutput(
+                name =  { _, id -> id.displayName.string },
+                iconUrl = ::effectTextureUrl,
+            )
+        }
+
+        "enchantment" -> {
+            val registry = Registries.ENCHANTMENT.getOrNull()
+                ?: call.serviceUnavailable("Registry not loaded")
+            registry.buildOutput(name = { _, id -> id.description.string })
+        }
+
+        "c2s_packet" -> {
+            packetRegistry[PacketFlow.SERVERBOUND]!!.associate {
+                it.toString() to RegistryItemOutput(it.toName(), null)
             }
         }
 
-        "statuseffects", "mob_effect" -> {
-            val potionId = BuiltInRegistries.ITEM.getKey(Items.POTION)
-
-            BuiltInRegistries.MOB_EFFECT.forEach { effect ->
-                val id = BuiltInRegistries.MOB_EFFECT.getKey(effect)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", effect.displayName.string)
-                    addProperty("icon", iconUrl(potionId))
-                })
-            }
-        }
-
-        "clientpackets", "c2s_packet" -> {
-            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
-
-            packetRegistry[PacketFlow.SERVERBOUND]?.forEach { packetId ->
-                add(packetId.toString(), JsonObject().apply {
-                    addProperty("name", packetId.toName())
-                    addProperty("icon", iconUrl(iconId))
-                })
-            }
-        }
-
-        "serverpackets", "s2c_packet" -> {
-            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
-
-            packetRegistry[PacketFlow.CLIENTBOUND]?.forEach { packetId ->
-                add(packetId.toString(), JsonObject().apply {
-                    addProperty("name", packetId.toName())
-                    addProperty("icon", iconUrl(iconId))
-                })
+        "s2c_packet" -> {
+            packetRegistry[PacketFlow.CLIENTBOUND]!!.associate {
+                it.toString() to RegistryItemOutput(it.toName(), null)
             }
         }
 
         "entity_type" -> {
-            BuiltInRegistries.ENTITY_TYPE.forEach { entityType ->
-                val id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", entityType.description.string)
-                    addProperty("icon", iconUrl(id)) // TODO: fix icon
-                })
-            }
+            BuiltInRegistries.ENTITY_TYPE.buildOutput(name = { _, id -> id.description.string })
         }
 
         "screen_handler", "menu" -> {
             val converter = CaseFormat.LOWER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL)
-            BuiltInRegistries.MENU.forEach { screenHandlerType ->
-                val id = BuiltInRegistries.MENU.getKey(screenHandlerType) ?: return@forEach
-                add(id.toString(), JsonObject().apply {
-                    addProperty("name", converter.convert(id.toName()))
-                })
-            }
+            BuiltInRegistries.MENU.buildOutput(name = { id, _ -> converter.convert(id.toName())!! })
         }
 
         "client_module" -> {
-            ModuleManager.forEach { module ->
-                add(module.name, JsonObject().apply {
-                    addProperty("name", module.name)
-                })
+            ModuleManager.associate {
+                it.name to RegistryItemOutput(it.name, null)
             }
         }
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
+        else -> call.forbidden("Invalid registry name: $registryName")
     }
-})
+
+    call.respond(result)
+}
 
 
-// GET /api/v1/client/registry/:name/groups
-@Suppress("UNUSED_PARAMETER", "CognitiveComplexMethod")
-fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val registryName = requestObject.params["name"]
-        ?: return httpForbidden("Missing registry name parameter")
-    when (registryName.lowercase(Locale.ENGLISH)) {
-        "items" -> {
-            for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
-                add(
-                    k.toString(),
-                    JsonObject().apply {
-                        addProperty("relation", "group")
-                        addProperty("relative", v.toString())
-                    }
-                )
-            }
-        }
-
-        "blocks" -> {
-            val parentMap = hashMapOf<Identifier, Identifier>()
-            val world = mc.level ?: return httpForbidden("No world")
-
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
-                val id = BuiltInRegistries.BLOCK.getKey(block)
-
-                when (val item = pickStack.item) {
-                    is BlockItem -> {
-                        if (item.block != block) {
-                            parentMap[id] = BuiltInRegistries.BLOCK.getKey(item.block)
+// GET /api/v1/client/registry/{name}/groups
+@Suppress("CognitiveComplexMethod")
+private fun Route.getRegistryGroups() = get("/groups") {
+    call.respond(JsonObject().apply {
+        val registryName = call.parameters["name"]
+            ?: call.forbidden("Missing registry name parameter")
+        when (registryName.lowercase(Locale.ENGLISH)) {
+            "items" -> {
+                for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
+                    add(
+                        k.toString(),
+                        JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", v.toString())
                         }
-                    }
-
-                    else -> {
-                        if (!pickStack.isEmpty) {
-                            logger.warn("Invalid pick stack for $id: $pickStack")
-                        }
-                    }
+                    )
                 }
             }
 
-            val constructedMap = constructMap(BuiltInRegistries.BLOCK, ACCEPTED_BLOCK_TAGS)
+            "blocks" -> {
+                val parentMap = hashMapOf<Identifier, Identifier>()
+                val world = mc.level ?: call.forbidden("No world")
 
-            BuiltInRegistries.BLOCK.forEach { block ->
-                val id = BuiltInRegistries.BLOCK.getKey(block)
+                BuiltInRegistries.BLOCK.forEach { block ->
+                    val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
+                    val id = BuiltInRegistries.BLOCK.getKey(block)
 
-                val obj = when (id) {
-                    in parentMap -> JsonObject().apply {
-                        addProperty("relation", "parent")
-                        addProperty("relative", parentMap[id]!!.toString())
+                    when (val item = pickStack.item) {
+                        is BlockItem -> {
+                            if (item.block != block) {
+                                parentMap[id] = BuiltInRegistries.BLOCK.getKey(item.block)
+                            }
+                        }
+
+                        else -> {
+                            if (!pickStack.isEmpty) {
+                                logger.warn("Invalid pick stack for $id: $pickStack")
+                            }
+                        }
                     }
-
-                    in constructedMap -> JsonObject().apply {
-                        addProperty("relation", "group")
-                        addProperty("relative", constructedMap[id]!!.toString())
-                    }
-
-                    else -> return@forEach
                 }
 
-                add(id.toString(), obj)
-            }
-        }
+                val constructedMap = constructMap(BuiltInRegistries.BLOCK, ACCEPTED_BLOCK_TAGS)
 
-        else -> return httpForbidden("Invalid registry name: $registryName")
-    }
-})
+                BuiltInRegistries.BLOCK.forEach { block ->
+                    val id = BuiltInRegistries.BLOCK.getKey(block)
+
+                    val obj = when (id) {
+                        in parentMap -> JsonObject().apply {
+                            addProperty("relation", "parent")
+                            addProperty("relative", parentMap[id]!!.toString())
+                        }
+
+                        in constructedMap -> JsonObject().apply {
+                            addProperty("relation", "group")
+                            addProperty("relative", constructedMap[id]!!.toString())
+                        }
+
+                        else -> return@forEach
+                    }
+
+                    add(id.toString(), obj)
+                }
+            }
+
+            else -> call.forbidden("Invalid registry name: $registryName")
+        }
+    })
+}
+
+internal fun Route.registryRoutes() = route("/registry/{name}") {
+    getRegistry()
+    getRegistryGroups()
+}

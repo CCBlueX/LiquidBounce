@@ -38,7 +38,7 @@ object CriticalsTimer : Mode("Timer") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        world.findEnemy(0.0f..range) ?: return@handler
+        world.findEnemy(0.0f, range) ?: return@handler
 
         if (wouldDoCriticalHit(ignoreSprint = true)) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleCriticals)

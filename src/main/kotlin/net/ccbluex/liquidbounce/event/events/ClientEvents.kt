@@ -27,12 +27,14 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
@@ -41,6 +43,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Block
+
+@Tag("themeColorChange")
+class ThemeColorChangeEvent(val themeId: String, val name: String, val value: Color4b) : Event(), WebSocketEvent
 
 @Deprecated(
     "The `clickGuiScaleChange` event has been deprecated.",
@@ -51,7 +56,9 @@ import net.minecraft.world.level.block.Block
 class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
 @Tag("clickGuiValueChange")
-class ClickGuiValueChangeEvent(val valueGroup: ValueGroup) : Event(), WebSocketEvent
+class ClickGuiValueChangeEvent(val configurable: ValueGroup) : Event(), WebSocketEvent {
+    override val serializeAsync get() = false
+}
 
 @Tag("spaceSeperatedNamesChange")
 class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
@@ -71,14 +78,22 @@ class ValueChangedEvent(val value: Value<*>) : Event(), WebSocketEvent
 @Tag("moduleActivation")
 class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("moduleToggle")
 class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("refreshArrayList")
 object RefreshArrayListEvent : Event(), WebSocketEvent
 
+@AddonApi
+@Tag("friendChange")
+class FriendChangeEvent(val name: String, val added: Boolean) : Event()
+
+@AddonApi
 @Tag("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
+    @AddonApi
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
@@ -182,8 +197,22 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
 @Tag("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(
+    val source: Source,
+    val components: List<HudComponent>,
+    val themeId: String? = null,
+) : Event(), WebSocketEvent {
+    enum class Source {
+        @SerializedName("native")
+        NATIVE,
+
+        @SerializedName("theme")
+        THEME,
+    }
+
     override val serializer get() = accessibleInteropGson
+
+    override val serializeAsync get() = false
 }
 
 @Tag("rotationUpdate")
@@ -234,4 +263,3 @@ object UserLoggedInEvent : Event(), WebSocketEvent
 
 @Tag("userLoggedOut")
 object UserLoggedOutEvent : Event(), WebSocketEvent
-

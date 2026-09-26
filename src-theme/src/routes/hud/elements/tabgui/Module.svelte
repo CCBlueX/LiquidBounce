@@ -32,11 +32,10 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .module {
         font-weight: 500;
-        color: $tabgui-text-dimmed-color;
+        color: var(--tabgui-text-dimmed-color);
         font-size: 12px;
         padding: 6px 15px 6px 10px;
         transition: ease color 0.2s;
@@ -46,7 +45,7 @@
         }
 
         &.selected {
-            background-color: rgba($tabgui-base-color, 0.36);
+            background-color: var(--tabgui-module-selected-background-color);
 
             .name {
                 transform: translateX(5px);
@@ -54,7 +53,7 @@
         }
 
         &.enabled {
-            color: $tabgui-text-color;
+            color: var(--tabgui-text-color);
         }
     }
 </style>

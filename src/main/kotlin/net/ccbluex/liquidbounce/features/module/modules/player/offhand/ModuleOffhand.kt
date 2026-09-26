@@ -18,8 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
-import net.ccbluex.liquidbounce.config.types.list.Tagged
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
@@ -34,23 +35,21 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
-import net.ccbluex.liquidbounce.utils.client.sendSwapItemWithOffhand
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.core.component.DataComponents
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import org.lwjgl.glfw.GLFW
 import java.util.function.Predicate
 
 /**
@@ -66,7 +65,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
     )
     private val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
-    private val cycleSlots by key("Cycle", GLFW.GLFW_KEY_H)
+    private val cycleSlots by key("Cycle", InputConstants.KEY_H)
 
     private object Gapple : ToggleableValueGroup(this, "Gapple", true) {
         object WhileHoldingSword : ToggleableValueGroup(this, "WhileHoldingSword", true) {
@@ -114,7 +113,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private var lastMode: Mode? = null
     private var lastTagMode: Mode = Mode.NONE
     private var staticMode = Mode.NONE
-    private var last: Pair<Item, ItemSlot>? = null
+    private var last: LastSwitch? = null
 
     override val tag: String
         get() = activeMode.modeName
@@ -130,7 +129,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
     @Suppress("unused")
     val keyHandler = handler<KeyEvent> {
-        if (it.action != GLFW.GLFW_PRESS) {
+        if (it.action != InputConstants.PRESS) {
             return@handler
         }
 
@@ -195,12 +194,12 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         lastMode = activeMode
 
         // the item is already located in Off-hand slot
-        if (slot == OffHandSlot) {
+        if (slot == HotbarItemSlot.OFFHAND) {
             return@handler
         }
 
         if (Totem.Health.switchBack) {
-            last = slot.itemStack.item to slot
+            last = LastSwitch(slot.itemStack.item, slot)
         }
 
         val actions = switchMode.performSwitch(slot)
@@ -219,25 +218,27 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private fun performSwitch(from: ItemSlot, smart: Boolean): List<InventoryAction.Click> {
         return if (smart && from is HotbarItemSlot) {
             val selectedSlot = player.inventory.selectedSlot
-            val targetSlot = from.hotbarSlot
+            val targetSlot = from.inventorySlot
             if (selectedSlot != targetSlot) {
-                network.send(ServerboundSetCarriedItemPacket(targetSlot))
+                network.sendHeldItemChange(targetSlot)
             }
             network.sendSwapItemWithOffhand()
             if (selectedSlot != targetSlot) {
-                network.send(ServerboundSetCarriedItemPacket(selectedSlot))
+                network.sendHeldItemChange(selectedSlot)
             }
             emptyList()
         } else {
             buildList(3) {
                 this += InventoryAction.Click.performPickup(slot = from)
-                this += InventoryAction.Click.performPickup(slot = OffHandSlot)
-                if (!OffHandSlot.itemStack.isEmpty) {
+                this += InventoryAction.Click.performPickup(slot = HotbarItemSlot.OFFHAND)
+                if (!player.offhandItem.isEmpty) {
                     this += InventoryAction.Click.performPickup(slot = from)
                 }
             }
         }
     }
+
+    private data class LastSwitch(val item: Item, val slot: ItemSlot)
 
     fun isOperating() = running && activeMode != Mode.NONE
 
@@ -308,7 +309,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
         BACK("Back") {
             override fun getSlot(): ItemSlot? {
                 return last?.let {
-                    if (it.first == it.second.itemStack.item) it.second else null
+                    if (it.item == it.slot.itemStack.item) it.slot else null
                 }
             }
         },
@@ -352,7 +353,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             }
 
             if (item.test(player.offhandItem)) {
-                return OffHandSlot
+                return HotbarItemSlot.OFFHAND
             }
 
             val slots = if (getPrioritizedInventoryPart() == 0) {
@@ -361,13 +362,13 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
                 INVENTORY_HOTBAR_PRIORITY
             }
 
-            var itemSlot = slots.findSlot(item::test)
+            var itemSlot = slots.findSlot(item)
             if (itemSlot == null && fallBackItem != null) {
                 if (fallBackItem.test(player.offhandItem)) {
-                    return OffHandSlot
+                    return HotbarItemSlot.OFFHAND
                 }
 
-                itemSlot = slots.findSlot(fallBackItem::test)
+                itemSlot = slots.findSlot(fallBackItem)
             }
 
             return itemSlot
@@ -395,7 +396,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             override fun performSwitch(from: ItemSlot) = listOf(
                 InventoryAction.Click.performSwap(
                     from = from,
-                    to = OffHandSlot
+                    to = HotbarItemSlot.OFFHAND
                 )
             )
         },

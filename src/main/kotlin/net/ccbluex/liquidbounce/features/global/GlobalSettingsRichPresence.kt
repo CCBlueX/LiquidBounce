@@ -18,19 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.global
 
-import com.jagrosh.discordipc.IPCClient
-import com.jagrosh.discordipc.entities.ActivityType
-import com.jagrosh.discordipc.entities.RichPresence
-import com.jagrosh.discordipc.entities.StatusDisplayType
-import com.jagrosh.discordipc.entities.pipe.PipeStatus
-import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.clientBranch
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
-import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
-import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
@@ -39,10 +31,18 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.text.hideSensitiveAddress
+import net.ccbluex.discordipc.DiscordActivity
+import net.ccbluex.discordipc.DiscordIpcClient
+import net.ccbluex.discordipc.DiscordIpcPlatform
+import net.ccbluex.discordipc.NoDiscordClientException
+import net.minecraft.SharedConstants
+import net.minecraft.util.Util
+import java.time.Instant
+import java.util.concurrent.Executors
 
 /**
  * Discord Rich Presence
@@ -66,13 +66,12 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     private val detailsParts by multiEnumChoice(
         "DetailsParts",
         RichPresencePart.CLIENT_NAME,
-        RichPresencePart.CLIENT_VERSION,
-        RichPresencePart.CLIENT_AUTHOR
+        RichPresencePart.CLIENT_VERSION
     )
     private val stateParts by multiEnumChoice(
         "StateParts",
         RichPresencePart.MODULES_SUMMARY,
-        RichPresencePart.PROTOCOL,
+        RichPresencePart.CLIENT_COMMIT,
     )
 
     private object LargeImageConfig : ToggleableValueGroup(
@@ -83,7 +82,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         val asset by enumChoice("Asset", PresenceAsset.LOGO)
         val parts by multiEnumChoice(
             "Parts",
-            RichPresencePart.PROTOCOL,
+            RichPresencePart.PROTOCOL_VERSION,
         )
     }
 
@@ -95,30 +94,24 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         val asset by enumChoice("Asset", PresenceAsset.LOGO)
         val parts by multiEnumChoice(
             "Parts",
-            RichPresencePart.BRANCH,
-            RichPresencePart.COMMIT
+            RichPresencePart.CLIENT_BRANCH,
+            RichPresencePart.CLIENT_COMMIT
         )
     }
 
     private val largeImage = tree(LargeImageConfig)
     private val smallImage = tree(SmallImageConfig)
 
-    private val buttons = jsonArrayOf(
-        jsonObject {
-            "label"("Website")
-            "url"("https://liquidbounce.net")
-        },
-        jsonObject {
-            "label"("LiquidProxy")
-            "url"("https://liquidproxy.net")
-        },
+    private val buttons = listOf(
+        DiscordActivity.Button("Website", "https://liquidbounce.net"),
+        DiscordActivity.Button("LiquidProxy", "https://liquidproxy.net"),
     )
 
     // IPC Client
-    private var ipcClient: IPCClient? = null
+    private var ipcClient: DiscordIpcClient? = null
 
     @Volatile
-    private var timestamp = System.currentTimeMillis()
+    private var timestamp = Instant.now()
 
     private var doNotTryToConnect = false
 
@@ -127,17 +120,22 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     }
 
     override fun onEnabled() {
-        timestamp = System.currentTimeMillis()
+        timestamp = Instant.now()
         doNotTryToConnect = false
     }
 
     private fun connectIpc() {
-        if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
+        if (doNotTryToConnect || ipcClient?.state == DiscordIpcClient.State.CONNECTED) {
             return
         }
 
         runCatching {
-            ipcClient = IPCClient(IPC_APP_ID).also { it.connect() }
+            ipcClient?.close()
+            ipcClient = DiscordIpcClient(
+                applicationId = IPC_APP_ID,
+                platform = Util.getPlatform().toDiscordIpcPlatform(),
+                Executors.newVirtualThreadPerTaskExecutor(),
+            ).also { it.connect() }
         }.onFailure {
             if (it is NoDiscordClientException) {
                 notification(
@@ -162,10 +160,8 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     }
 
     private fun shutdownIpc() {
-        val ipcClient = ipcClient
-        if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
-            return
-        }
+        val ipcClient = ipcClient ?: return
+        this.ipcClient = null
 
         runCatching {
             ipcClient.close()
@@ -188,30 +184,29 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
 
         val ipcClient = ipcClient
         // Check ipc client is connected and send rpc
-        if (ipcClient == null || ipcClient.status != PipeStatus.CONNECTED) {
+        if (ipcClient == null || ipcClient.state != DiscordIpcClient.State.CONNECTED) {
             return@tickHandler
         }
 
-        ipcClient.sendRichPresence {
-            setActivityType(activityType.activityType)
-            setStatusDisplayType(statusDisplayType.statusDisplayType)
-            setStartTimestamp(timestamp)
+        val activity = DiscordActivity(
+            type = activityType.activityType,
+            statusDisplayType = statusDisplayType.statusDisplayType,
+            startTimestamp = timestamp,
+            details = buildText(detailsParts),
+            state = buildText(stateParts),
+            largeImage = largeImage.takeIf { it.enabled }?.asset?.assetValue?.let { assetValue ->
+                DiscordActivity.Image(assetValue, buildText(largeImage.parts))
+            },
+            smallImage = smallImage.takeIf { it.enabled }?.asset?.assetValue?.let { assetValue ->
+                DiscordActivity.Image(assetValue, buildText(smallImage.parts))
+            },
+            buttons = buttons,
+        )
 
-            if (largeImage.enabled) {
-                largeImage.asset.assetValue?.let { assetValue ->
-                    setLargeImageWithTooltip(assetValue, buildText(largeImage.parts))
-                }
-            }
-            if (smallImage.enabled) {
-                smallImage.asset.assetValue?.let { assetValue ->
-                    setSmallImageWithTooltip(assetValue, buildText(smallImage.parts))
-                }
-            }
-
-            setDetails(buildText(detailsParts))
-            setState(buildText(stateParts))
-
-            setButtons(buttons)
+        runCatching {
+            ipcClient.sendActivity(activity)
+        }.onFailure {
+            logger.warn("Failed to update Discord Rich Presence.", it)
         }
     }
 
@@ -221,10 +216,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     }
 
     private fun buildText(parts: Set<RichPresencePart>): String {
-        val pieces = RichPresencePart.entries
-            .filter { it in parts }
-            .mapNotNull { it.getText() }
-            .filter { it.isNotBlank() }
+        val pieces = parts.mapNotNull { it.getText()?.takeIf(String::isNotBlank) }
 
         if (pieces.isEmpty()) {
             return ""
@@ -233,33 +225,32 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         return pieces.joinToString(separatorText)
     }
 
-    private inline fun IPCClient.sendRichPresence(builderAction: RichPresence.Builder.() -> Unit) =
-        sendRichPresence(RichPresence.Builder().apply(builderAction).build())
-
     /**
      * Always running after initialized
      */
     override val running get() = LiquidBounce.isInitialized
 
     private enum class RichPresencePart(override val tag: String) : Tagged {
-        CLIENT_NAME("Client Name"),
-        CLIENT_VERSION("Client Version"),
-        CLIENT_AUTHOR("Client Author"),
+        CLIENT_NAME("ClientName"),
+        CLIENT_VERSION("ClientVersion"),
+        CLIENT_AUTHOR("ClientAuthor"),
+        CLIENT_BRANCH("ClientBranch"),
+        CLIENT_COMMIT("ClientCommit"),
         MODULES_SUMMARY("Modules"),
-        PROTOCOL("Protocol"),
-        SERVER("Server"),
-        BRANCH("Branch"),
-        COMMIT("Commit");
+        MINECRAFT_VERSION("MinecraftVersion"),
+        PROTOCOL_VERSION("ProtocolVersion"),
+        SERVER("Server");
 
         fun getText(): String? = when (this) {
             CLIENT_NAME -> LiquidBounce.CLIENT_NAME
             CLIENT_VERSION -> clientVersion
             CLIENT_AUTHOR -> LiquidBounce.CLIENT_AUTHOR
             MODULES_SUMMARY -> "${ModuleManager.count { it.running }}/${ModuleManager.count()} modules"
-            PROTOCOL -> protocolVersion.let { "${it.name} (${it.version})" }
+            MINECRAFT_VERSION -> SharedConstants.getCurrentVersion().name().let { "Minecraft $it" }
+            PROTOCOL_VERSION -> protocolVersion.let { "Joined with Minecraft ${it.name}" }
             SERVER -> (mc.currentServer?.ip ?: "none").hideSensitiveAddress()
-            BRANCH -> clientBranch
-            COMMIT -> clientCommit
+            CLIENT_BRANCH -> clientBranch
+            CLIENT_COMMIT -> clientCommit
         }
 
     }
@@ -267,22 +258,22 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
     @Suppress("unused")
     private enum class PresenceActivityType(
         override val tag: String,
-        val activityType: ActivityType,
+        val activityType: DiscordActivity.Type,
     ) : Tagged {
-        PLAYING("Playing", ActivityType.Playing),
-        LISTENING("Listening", ActivityType.Listening),
-        WATCHING("Watching", ActivityType.Watching),
-        COMPETING("Competing", ActivityType.Competing),
+        PLAYING("Playing", DiscordActivity.Type.PLAYING),
+        LISTENING("Listening", DiscordActivity.Type.LISTENING),
+        WATCHING("Watching", DiscordActivity.Type.WATCHING),
+        COMPETING("Competing", DiscordActivity.Type.COMPETING),
     }
 
     @Suppress("unused")
     private enum class PresenceStatusDisplayType(
         override val tag: String,
-        val statusDisplayType: StatusDisplayType,
+        val statusDisplayType: DiscordActivity.StatusDisplayType,
     ) : Tagged {
-        NAME("Name", StatusDisplayType.Name),
-        STATE("State", StatusDisplayType.State),
-        DETAILS("Details", StatusDisplayType.Details),
+        NAME("Name", DiscordActivity.StatusDisplayType.NAME),
+        STATE("State", DiscordActivity.StatusDisplayType.STATE),
+        DETAILS("Details", DiscordActivity.StatusDisplayType.DETAILS),
     }
 
     private enum class PresenceAsset(
@@ -292,4 +283,10 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         LOGO("Logo", "liquidbounce"),
     }
 
+}
+
+private fun Util.OS.toDiscordIpcPlatform(): DiscordIpcPlatform = when (this) {
+    Util.OS.WINDOWS -> DiscordIpcPlatform.WINDOWS
+    Util.OS.LINUX, Util.OS.OSX -> DiscordIpcPlatform.UNIX
+    Util.OS.SOLARIS, Util.OS.UNKNOWN -> DiscordIpcPlatform.UNSUPPORTED
 }

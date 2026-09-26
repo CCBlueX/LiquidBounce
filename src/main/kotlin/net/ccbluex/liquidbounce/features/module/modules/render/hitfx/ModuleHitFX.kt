@@ -26,18 +26,12 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
 
-@Suppress("MagicNumber")
 object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
-
-    init {
-        HitFXRegistry
-    }
 
     enum class Particle(override val tag: String) : Tagged {
         BLOOD("Blood"),
@@ -46,48 +40,21 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         WATER("Water"),
         SMOKE("Smoke"),
         MAGIC("Magic"),
-        CRITS("Crits")
-    }
-
-    @Suppress("unused")
-    enum class Sound(
-        override val tag: String,
-        val sounds: Array<SoundEvent>
-    ) : Tagged {
-        HIT("Hit", arrayOf(SoundEvents.ARROW_HIT)),
-        ORB("Orb", arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
-        BONK("Bonk", HitFXRegistry.BONK),
-        BOYKISSER("Boykisser", HitFXRegistry.BOYKISSER),
-        BRING("Bring", HitFXRegistry.BRING),
-        GLASS("Glass", HitFXRegistry.GLASS),
-        CLICK("Click", HitFXRegistry.CLICK),
-        MEOW("Meow", HitFXRegistry.MEOW),
-        MOAN("Moan", HitFXRegistry.MOAN),
-        MAGICSQUASH("MagicSquash", HitFXRegistry.MAGICSQUASH),
-        NYA("NYA", HitFXRegistry.NYA),
-        POP("Pop", HitFXRegistry.POP),
-        SOFT("Soft", HitFXRegistry.SOFT),
-        SQUASH("Squash", HitFXRegistry.SQUASH),
-        TUNG("Tung", HitFXRegistry.TUNG),
-        UWU("UWU", HitFXRegistry.UWU),
+        CRITS("Crits"),
     }
 
     private val particles by multiEnumChoice("Particle", Particle.FIRE)
-    private val particleAmount by int("ParticleAmount", 1, 1..20)
+    private val particleAmount by intRange("ParticleAmount", 1..1, 1..20)
 
-    private val otherSoundSet by multiEnumChoice("OtherSound",
-        Sound.POP
-    )
+    private val otherSoundSet by multiEnumChoice("OtherSound", HitFXRegistry.POP)
 
-    val otherSound
+    private val otherSound
         get() = otherSoundSet.randomOrNull()?.sounds?.randomOrNull()
 
     val selfSound
         get() = selfSoundSet.randomOrNull()?.sounds?.randomOrNull()
 
-    private val selfSoundSet by multiEnumChoice("SelfSound",
-        Sound.BOYKISSER
-    )
+    private val selfSoundSet by multiEnumChoice("SelfSound", HitFXRegistry.BOYKISSER)
 
     private var lastTargetId: Int? = null
 
@@ -100,38 +67,42 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         SoundEvents.PLAYER_ATTACK_SWEEP,
         SoundEvents.PLAYER_ATTACK_WEAK,
         SoundEvents.SPEAR_HIT,
-        SoundEvents.PLAYER_HURT
+        SoundEvents.PLAYER_HURT,
     )
 
     @Suppress("unused")
     private val effectHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ClientboundSoundPacket) {
-            val source = packet.source
-            val sound = packet.sound.value()
+        if (packet !is ClientboundSoundPacket) {
+            return@handler
+        }
 
-            // Cannot be from any living entity.
-            if (source != SoundSource.PLAYERS && source != SoundSource.NEUTRAL && source != SoundSource.HOSTILE) {
-                return@handler
-            }
+        val source = packet.source
+        val sound = packet.sound.value()
 
-            if (sound !in vanillaHitSounds) {
-                return@handler
-            }
+        // Cannot be from any living entity.
+        if (source != SoundSource.PLAYERS && source != SoundSource.NEUTRAL && source != SoundSource.HOSTILE) {
+            return@handler
+        }
 
-            val lastTarget = lastTargetId?.let { world.getEntity(it) as? LivingEntity } ?: return@handler
-            if (!lastTarget.isAlive) {
-                return@handler
-            }
+        if (sound !in vanillaHitSounds) {
+            return@handler
+        }
 
-            val distanceToSq = lastTarget.distanceToSqr(packet.x, packet.y, packet.z)
-            if (distanceToSq > 8.0) {
-                return@handler
-            }
+        val lastTarget = lastTargetId?.let { world.getEntity(it) as? LivingEntity } ?: return@handler
+        if (!lastTarget.isAlive) {
+            return@handler
+        }
 
-            playEffect(lastTarget)
-            otherSound?.let { sound ->
+        val distanceToSq = lastTarget.distanceToSqr(packet.x, packet.y, packet.z)
+        if (distanceToSq > 16.0) {
+            return@handler
+        }
+
+        playEffect(lastTarget)
+        otherSound?.let { sound ->
+            mc.execute {
                 world.playSeededSound(
                     player,
                     packet.x,
@@ -143,10 +114,10 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                     packet.pitch,
                     packet.seed
                 )
-                event.cancelEvent()
             }
-            this.lastTargetId = null
+            event.cancelEvent()
         }
+        this.lastTargetId = null
     }
 
     @Suppress("unused")
@@ -162,20 +133,22 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         }
     }
 
-    private fun playEffect(target: LivingEntity) = repeat(particleAmount) {
-        when (particles.randomOrNull()) {
-            Particle.BLOOD -> world.addDestroyBlockEffect(
-                target.blockPosition().above(1),
-                Blocks.REDSTONE_BLOCK.defaultBlockState()
-            )
+    private fun playEffect(target: LivingEntity) = mc.execute {
+        val particles = particles.ifEmpty { return@execute }
+        repeat(particleAmount.random()) {
+            when (particles.random()) {
+                Particle.BLOOD -> world.addDestroyBlockEffect(
+                    target.blockPosition().above(1),
+                    Blocks.REDSTONE_BLOCK.defaultBlockState()
+                )
 
-            Particle.FIRE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.LAVA)
-            Particle.HEART -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.HEART)
-            Particle.WATER -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.FALLING_WATER)
-            Particle.SMOKE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.SMOKE)
-            Particle.MAGIC -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.ENCHANTED_HIT)
-            Particle.CRITS -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.CRIT)
-            else -> return
+                Particle.FIRE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.LAVA)
+                Particle.HEART -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.HEART)
+                Particle.WATER -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.FALLING_WATER)
+                Particle.SMOKE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.SMOKE)
+                Particle.MAGIC -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.ENCHANTED_HIT)
+                Particle.CRITS -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.CRIT)
+            }
         }
     }
 

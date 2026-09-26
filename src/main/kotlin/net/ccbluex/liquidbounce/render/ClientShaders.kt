@@ -19,18 +19,20 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.shaders.ShaderSource
-import com.mojang.blaze3d.shaders.ShaderType
+import com.mojang.renderpearl.api.pipeline.ShaderSource
+import com.mojang.renderpearl.api.pipeline.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.resources.Identifier
 
-object ClientShaders : ShaderSource {
+sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
     private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
-    object Vertex {
+    protected operator fun String.invoke(path: String): Identifier = newShader("${type.getName()}/${this}", path = path)
+
+    object Vertex : ClientShaders(ShaderType.VERTEX) {
+
         @JvmField
         val PlainPosTex = "plain_pos_tex"("shaders/position_tex.vert")
 
@@ -46,12 +48,27 @@ object ClientShaders : ShaderSource {
         @JvmField
         val PlainProjection = "plane_projection"("shaders/plane_projection.vert")
 
-        private operator fun String.invoke(path: String): Identifier = newShader("vsh/${this}", path = path)
+        @JvmField
+        val Circle = "circle"("shaders/circle/circle.vsh")
+
+        @JvmField
+        val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.vsh")
+
+        @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
+
+        @JvmField
+        val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
+
     }
 
-    object Fragment {
+    object Fragment : ClientShaders(ShaderType.FRAGMENT) {
+
         @JvmField
         val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
+
+        @JvmField
+        val FontMask = "font_mask"("shaders/font_mask.frag")
 
         @JvmField
         val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.fsh")
@@ -60,10 +77,16 @@ object ClientShaders : ShaderSource {
         val Blit = "blit"("shaders/blit.frag")
 
         @JvmField
+        val Chams = "chams"("shaders/chams.frag")
+
+        @JvmField
         val Blend = "blend"("shaders/blend.frag")
 
         @JvmField
-        val GuiBlur = "blur"("shaders/blur/ui_blur.frag")
+        val GuiBlurH = "blur_h"("shaders/blur/ui_blur_h.frag")
+
+        @JvmField
+        val GuiBlurV = "blur_v"("shaders/blur/ui_blur_v.frag")
 
         @JvmField
         val Glow = "glow"("shaders/glow/glow.frag")
@@ -71,14 +94,21 @@ object ClientShaders : ShaderSource {
         @JvmField
         val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
 
-        private operator fun String.invoke(path: String): Identifier = newShader("fsh/${this}", path = path)
-    }
+        @JvmField
+        val RoundedRect = "rounded_rect"("shaders/circle/rounded_rect.fsh")
 
-    init {
-        Vertex
-        Fragment
+        @JvmField
+        val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.fsh")
 
-        logger.info("Loaded ${shaders.size} client shaders.")
+        @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
+
+        @JvmField
+        val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
+
+        @JvmField
+        val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
+
     }
 
     private fun newShader(id: String, path: String): Identifier {
@@ -90,8 +120,28 @@ object ClientShaders : ShaderSource {
         return k
     }
 
-    override fun get(identifier: Identifier, type: ShaderType): String {
-        return shaders[identifier] ?: error("Unknown identifier: $identifier")
+    override fun getShader(identifier: Identifier, type: ShaderType): String? {
+        if (type != this.type) return null
+        return shaders[identifier]
+    }
+
+    override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+
+    override fun close() {
+        // NOOP
+    }
+
+    companion object Source : ShaderSource {
+        override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
+            ShaderType.VERTEX -> Vertex.getShader(identifier, shaderType)
+            ShaderType.FRAGMENT -> Fragment.getShader(identifier, shaderType)
+        }
+
+        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+
+        override fun close() {
+            // NOOP
+        }
     }
 
 }

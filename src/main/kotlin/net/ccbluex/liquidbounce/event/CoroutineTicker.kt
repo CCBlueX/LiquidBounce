@@ -19,25 +19,43 @@
 package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.minecraft.ReportedException
+import org.slf4j.LoggerFactory
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
 import kotlin.coroutines.resume
 
-typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
+object CoroutineTicker {
 
-object CoroutineTicker : EventListener {
+    private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
+
+    // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
+    private var minecraftTickDepth = 0
 
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
 
     // Next tick callbacks
     private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    fun beginMinecraftTick() {
+        minecraftTickDepth++
+    }
+
+    fun endMinecraftTick() {
+        if (minecraftTickDepth <= 0) {
+            logger.warn("CoroutineTicker minecraftTickDepth underflow")
+            minecraftTickDepth = 0
+            return
+        }
+
+        minecraftTickDepth--
+    }
 
     /**
      * Registers a task to be ticked.
@@ -49,15 +67,26 @@ object CoroutineTicker : EventListener {
     }
 
     /**
-     * We want it to run before everything else, so we set the priority to [FIRST_PRIORITY]
-     * This is because we want to tick the existing tasks before new ones are added and might be ticked
-     * in the same tick
+     * We want it to run before everything else, this is because we want to tick the existing tasks before
+     * new ones are added and might be ticked in the same tick
      */
-    @Suppress("unused")
-    private val taskTicker = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    fun tick() {
+        if (minecraftTickDepth > 1) {
+            return
+        }
+
         runningList.addAll(pendingList)
         pendingList.clear()
-        runningList.removeIf(Predicate(BooleanSupplier::getAsBoolean))
+        runningList.removeIf(Predicate {
+            try {
+                it.asBoolean
+            } catch (e: ReportedException) {
+                throw e
+            } catch (e: Throwable) {
+                logger.error("Unhandled exception thrown by callback", e)
+                false
+            }
+        })
     }
 
 }
@@ -78,8 +107,16 @@ object CoroutineTicker : EventListener {
 suspend fun tickUntil(
     stopAt: IntPredicate,
 ): Int = suspendCancellableCoroutine { continuation ->
-    var elapsedTicks = 0
-    CoroutineTicker.register {
+    CoroutineTicker.register(TickUntilCallback(continuation, stopAt))
+}
+
+private class TickUntilCallback(
+    private val continuation: CancellableContinuation<Int>,
+    private val stopAt: IntPredicate,
+) : BooleanSupplier {
+    private var elapsedTicks = 0
+
+    override fun getAsBoolean(): Boolean =
         when {
             !continuation.isActive -> true
             stopAt.test(++elapsedTicks) -> {
@@ -89,7 +126,9 @@ suspend fun tickUntil(
 
             else -> false
         }
-    }
+
+    override fun toString(): String =
+        "TickUntilCallback(elapsedTicks=$elapsedTicks, continuation=$continuation, stopAt=$stopAt)"
 }
 
 /**

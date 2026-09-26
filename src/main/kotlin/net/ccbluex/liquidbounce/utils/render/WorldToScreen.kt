@@ -18,96 +18,122 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.vertices
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.sub
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.client.renderer.GameRenderer
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
+import org.joml.Matrix4fc
 import org.joml.Vector3f
+import org.joml.Vector4f
 import java.text.NumberFormat
 
 /**
  * This util should only be called from main thread
  */
-object WorldToScreen : MinecraftShortcuts, EventListener {
+object WorldToScreen {
 
-    private val mvpMatrix = Matrix4f()
-    private val projectionMatrix = Matrix4f()
+    private val projModelViewMatrix = Matrix4f()
+    private var cachedCameraPos: Vec3 = Vec3.ZERO
 
-    private val cacheMatrix = Matrix4f()
+    private val cacheMat4f = Matrix4f()
     private val cacheVec3f = Vector3f()
+    private val cacheVec4f = Vector4f()
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>(priority = READ_FINAL_STATE) { event ->
-        val matrixStack = event.matrixStack
-
-        this.mvpMatrix.set(matrixStack.last().pose())
-
-        // Important: here we need this buffer to be USAGE_MAP_READ, so add mixins at all sources.
-        // Usages (2025/11/09, 1.21.6):
-        // - PostEffectPass
-        // - CubeMapRenderer
-        // - GuiRenderer
-        // - SpecialGuiElementRenderer
-        // - GameRenderer -> renderWorld (we need this within event callback) (@see MixinRawProjectionMatrix)
-        val projMat = RenderSystem.getProjectionMatrixBuffer() ?: return@handler
-
-        projMat.mapBuffer(read = true, write = false).use {
-            this.projectionMatrix.set(it.data())
-        }
+    @JvmStatic
+    fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc, cameraPos: Vec3) {
+        this.projModelViewMatrix.set(projectionMatrix).mul(modelViewMatrix)
+        this.cachedCameraPos = cameraPos
     }
 
+    /**
+     * @see GameRenderer.projectPointToScreen
+     */
     @JvmStatic
     @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3,
-        cameraPos: Vec3 = mc.gameRenderer.mainCamera.position(),
+        cameraPos: Vec3 = this.cachedCameraPos,
     ): Vec3f? {
-        val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
+        val transformedPos = cacheVec4f.set(
+            (pos.x - cameraPos.x).toFloat(),
+            (pos.y - cameraPos.y).toFloat(),
+            (pos.z - cameraPos.z).toFloat(),
+            1.0F
+        ).mul(this.projModelViewMatrix)
+
+        if (!transformedPos.x.isFinite() || !transformedPos.y.isFinite() ||
+            !transformedPos.z.isFinite() || !transformedPos.w.isFinite() ||
+            transformedPos.w <= 0.0F
+        ) {
+            return null
+        }
+
+        val ndc = transformedPos.div(transformedPos.w)
 
         val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
-        val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
+        val screenPos = cacheVec3f.set(ndc)
+            .mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
+            .mul(
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().width,
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().height,
+                1.0F,
+            )
 
-        return if (transformedPos.z < 1.0F) Vec3f(screenPos.x, screenPos.y, transformedPos.z) else null
+        return Vec3f(screenPos)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = mc.gameRenderer.mainCamera.position()): Line {
+    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = this.cachedCameraPos): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 
         val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.mainRenderTarget.width),
-            1.0F / (guiScaleMul * mc.mainRenderTarget.height),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().width),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().height),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 
         val relativePos = cacheVec3f.set(transformedPos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix).invert())
+            .mulProject(this.projModelViewMatrix.invert(cacheMat4f))
 
         ModuleProjectileAimbot.debugParameter("s2w") {
             relativePos.toString(NumberFormat.getInstance())
         }
 
         return Line(cameraPos, relativePos.toVec3d())
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun calculateScreenRect(box: AABB, cameraPos: Vec3 = this.cachedCameraPos): Rect? {
+        var minX = Float.POSITIVE_INFINITY
+        var minY = Float.POSITIVE_INFINITY
+        var maxX = Float.NEGATIVE_INFINITY
+        var maxY = Float.NEGATIVE_INFINITY
+        for (vertex in box.vertices) {
+            val (x, y, _) = calculateScreenPos(vertex, cameraPos) ?: continue
+            if (minX > x) minX = x
+            if (minY > y) minY = y
+            if (maxX < x) maxX = x
+            if (maxY < y) maxY = y
+        }
+
+        if (maxX <= minX || maxY <= minY) return null
+        return Rect(minX, minY, maxX, maxY)
     }
 
 }

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -36,24 +36,15 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
 import org.joml.Quaternionf
-import org.joml.Vector2f
-import org.joml.Vector3f
-import kotlin.math.cos
-import kotlin.math.sin
 
 private val ROTATION = Quaternionf()
 
-/**
- * @author minecrrrr
- */
 abstract class HatsMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = modes
 
     // --- Settings ---
     private val followRotation by boolean("FollowRotation", false)
-
-    protected val height by float("HeightOffset", 0.2f, 0f..2f)
 
     private class EquipOffset : ValueGroup("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
@@ -76,35 +67,36 @@ abstract class HatsMode(name: String) : Mode(name) {
     protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val player = mc.player ?: return@handler
 
-        for (entity in world.players()) {
-            val isMe = entity == player
-            val isFriend = FriendManager.isFriend(entity)
-            val inDistance = player.distanceTo(entity) <= friendsOptions.distance
+        event.renderEnvironment {
+            for (entity in world.players()) {
+                val isMe = entity == player
+                val isFriend = FriendManager.isFriend(entity)
+                val inDistance = player.distanceTo(entity) <= friendsOptions.distance
 
-            val shouldRender = if (isMe) {
-                !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
-            } else {
-                inDistance && (isFriend && friendsOptions.friendView)
-            }
-
-            if (shouldRender) {
-                val hurtMarked = entity.hurtTime > 0 && hurtMarked
-                val pos = entity.interpolateCurrentPosition(it.partialTicks)
-                val rotation = entity.interpolateCurrentRotation(it.partialTicks)
-
-                val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
-                    equipOffset.equipmentOffset
+                val shouldRender = if (isMe) {
+                    !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
                 } else {
-                    0.0F
+                    inDistance && isFriend && friendsOptions.friendView
                 }
 
-                renderEnvironmentForWorld(it.matrixStack) {
+                if (shouldRender) {
+                    val hurtMarked = entity.hurtTime > 0 && hurtMarked
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                    val rotation = entity.interpolateCurrentRotation(event.partialTicks)
+
+                    val height = ModuleHats.HeightOffset.current()
+                    val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
+                        equipOffset.equipmentOffset
+                    } else {
+                        0.0F
+                    }
+
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
-                        matrixStack.withPush {
-                            if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
+                        poseStack.withPush {
+                            if (followRotation) rotate(rotation.toQuaternion(ROTATION))
                             translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
                             drawHat(hurtMarked)
                         }
@@ -114,104 +106,15 @@ abstract class HatsMode(name: String) : Mode(name) {
         }
     }
 
-    protected fun innerI(
-        innerSegments: Int,
-        angles: Angles,
-        radiuses: Radiuses,
-        innerI: Int
-    ): TorusQuad {
-        val innerCurAngle = getAngle(innerI, innerSegments)
-        val innerNextAngle = getNextAngle(innerI, innerSegments)
-
-        val radii = Vector2f(radiuses.outerCurRadius, radiuses.outerNextRadius)
-
-        val angles = TorusAngles(
-            angles.outerCurAngle,
-            angles.outerNextAngle,
-            innerCurAngle,
-            innerNextAngle,
-            angles.rotationAngle,
-        )
-        val pos = getToroidalMeshCords(
-            angles,
-            radii,
-            radiuses.innerRadius,
-        )
-        return pos
+    protected inline fun WorldRenderEnvironment.withHatRotation(
+        angle: Float,
+        block: WorldRenderEnvironment.() -> Unit,
+    ) {
+        poseStack.withPush {
+            if (!Mth.equal(angle, 0f)) rotate(Quaternionf().rotationY(angle))
+            block()
+        }
     }
-
-    private fun getTorusPoints(
-        mainAngle: Float,
-        tubeAngle: Float,
-        radius: Float,
-        tubeRadius: Float
-    ): Vector3f {
-        val x = ((radius + tubeRadius * cos(tubeAngle)) * sin(mainAngle))
-        val y = (tubeRadius * sin(tubeAngle))
-        val z = ((radius + tubeRadius * cos(tubeAngle)) * cos(mainAngle))
-
-        return Vector3f(x, y, z)
-    }
-
-    private fun getToroidalMeshCords(
-        angles: TorusAngles,
-        radii: Vector2f,
-        innerRadius: Float
-    ): TorusQuad {
-        val currentRadius = radii.x
-        val nextRadius = radii.y
-        return TorusQuad(
-            getTorusPoints(
-                angles.outerCurrentAngle + angles.rotationAngle,
-                angles.innerCurrentAngle, currentRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerCurrentAngle + angles.rotationAngle,
-                angles.innerNextAngle, currentRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerNextAngle + angles.rotationAngle,
-                angles.innerCurrentAngle, nextRadius, innerRadius
-            ),
-            getTorusPoints(
-                angles.outerNextAngle + angles.rotationAngle,
-                angles.innerNextAngle, nextRadius, innerRadius
-            ),
-        )
-    }
-
-    // --- Data Classes ---
-    protected data class TorusQuad(
-        val p1: Vector3f,
-        val p2: Vector3f,
-        val p3: Vector3f,
-        val p4: Vector3f,
-    )
-
-    protected data class TorusAngles(
-        val outerCurrentAngle: Float,
-        val outerNextAngle: Float,
-        val innerCurrentAngle: Float,
-        val innerNextAngle: Float,
-        val rotationAngle: Float,
-    )
-
-    protected data class Angles(
-        val outerCurAngle: Float,
-        val outerNextAngle: Float,
-        val rotationAngle: Float,
-    )
-
-    protected data class Radiuses(
-        val outerCurRadius: Float,
-        val outerNextRadius: Float,
-        val innerRadius: Float,
-    )
-
-    // Math functions
-
-    protected fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
-    protected fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
 
     protected fun getRotationAngle(speed: Float): Float {
         return if (Mth.equal(speed, 0f)) {
@@ -220,6 +123,5 @@ abstract class HatsMode(name: String) : Mode(name) {
             (System.currentTimeMillis() % 360000) * 0.001F * speed
         }
     }
-
 
 }

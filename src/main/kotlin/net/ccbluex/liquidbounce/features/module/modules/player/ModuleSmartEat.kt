@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
 import net.minecraft.world.InteractionResult
@@ -136,9 +138,9 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                 val scaledHeight = dc.guiHeight()
                 val i: Int = scaledWidth / 2
                 val x = i - 91 - 26 - offset
-                val y = scaledHeight - 16 - 3
-                dc.renderItemDecorations(mc.font, currentFood.itemStack, x, y)
-                dc.renderItem(currentFood.itemStack, x, y)
+                val y = scaledHeight - GuiRenderer.DEFAULT_ITEM_SIZE - 3
+                dc.itemDecorations(mc.font, currentFood.itemStack, x, y)
+                dc.item(currentFood.itemStack, x, y)
                 dc.blitSprite(
                     RenderPipelines.GUI_TEXTURED,
                     HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
@@ -184,15 +186,15 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
         }
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             val useAction = player.useItem.useAnimation
 
             if (useAction != ItemUseAnimation.EAT && useAction != ItemUseAnimation.DRINK) {
-                return@tickHandler
+                return@handler
             }
 
             if (!SilentHotbar.isSlotModifiedBy(this@SilentOffhand)) {
-                return@tickHandler
+                return@handler
             }
 
             // if we are already eating, we want to keep the silent slot
@@ -203,6 +205,9 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
             tree(RenderSlot)
         }
 
+        override fun onDisabled() {
+            SilentHotbar.resetSlot(this)
+        }
     }
 
     private object AutoEat : ToggleableValueGroup(this, "AutoEat", true) {
@@ -233,6 +238,10 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
                 event.isPressed = true
             }
+        }
+
+        override fun onDisabled() {
+            SilentHotbar.resetSlot(this)
         }
 
         fun eat() {

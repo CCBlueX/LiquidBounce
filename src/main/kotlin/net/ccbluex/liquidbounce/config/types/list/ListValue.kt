@@ -169,6 +169,30 @@ private val VALUE_TYPE_TO_REGISTRY_NAME = enumMapOf(
     ValueType.C2S_PACKET, "c2s_packet",
     ValueType.S2C_PACKET, "s2c_packet",
     ValueType.ENTITY_TYPE, "entity_type",
+    ValueType.ENCHANTMENT, "enchantment",
     ValueType.MENU, "menu",
     ValueType.CLIENT_MODULE, "client_module",
 )
+
+
+class RegistryMutableListValue<T : MutableList<E>, E>(
+    name: String,
+    value: T,
+    innerValueType: ValueType = ValueType.INVALID,
+    innerType: Class<E>,
+) : ListValue<T, E>(
+    name,
+    value,
+    ValueType.REGISTRY_MUTABLE_LIST,
+    innerValueType,
+    innerType
+) {
+
+    /**
+     * This is used to determine the registry endpoint for the API.
+     */
+    @Exclude
+    val registry: String =
+        VALUE_TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
+
+}

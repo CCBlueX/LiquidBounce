@@ -26,8 +26,8 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.authlib.utils.array
-import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.config.gson.util.array
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import java.lang.reflect.Type
@@ -56,7 +56,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
             // Bind Action goes missing as we cannot access the action that is located
             // one element above - Sorry!
             return InputBind(
-                InputConstants.Type.KEYSYM.getOrCreate(primitive.asInt),
+                InputConstants.Type.KEYBOARD.getOrCreate(primitive.asInt),
                 InputBind.BindAction.TOGGLE,
                 emptySet(),
             )
@@ -67,9 +67,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
             jsonObject.get("boundKey"),
             InputConstants.Key::class.java
         )
-        val actionStr = jsonObject.string("action")
-        val action = InputBind.BindAction.entries.find { it.tag.equals(actionStr, ignoreCase = true) }
-            ?: InputBind.BindAction.TOGGLE
+        val action = InputBind.BindAction.of(jsonObject.string("action")) ?: InputBind.BindAction.TOGGLE
         val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(enumSetOf<InputBind.Modifier>()) { element ->
             InputBind.Modifier.of(element.asString)
         }.orEmpty()

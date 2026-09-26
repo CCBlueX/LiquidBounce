@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -28,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * ReverseStep module
@@ -50,15 +51,16 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
      */
     private var initiatedJump = false
 
+    private val UNWANTED_BLOCKS = referenceHashSetOf(
+        Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK,
+    )
+
     private val unwantedBlocksBelow: Boolean
         get() {
             val collision = FallingPlayer
                 .fromPlayer(player)
                 .findCollision(20)?.pos ?: return false
-            return collision.getBlock() in arrayOf(
-                Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
-                Blocks.SLIME_BLOCK
-            )
+            return collision.getBlock() in UNWANTED_BLOCKS
         }
 
     @Suppress("unused")
@@ -165,7 +167,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
         // If there is no collision after maximum fall distance, we do not want to reverse step and
         // risk falling deep.
         val boundingBox = player.boundingBox.move(0.0, (-maximumFallDistance).toDouble(), 0.0)
-        return world.getBlockCollisions(player, boundingBox).all { shape -> shape == Shapes.empty() }
+        return world.getBlockCollisions(player, boundingBox).allEmpty()
     }
 
 }

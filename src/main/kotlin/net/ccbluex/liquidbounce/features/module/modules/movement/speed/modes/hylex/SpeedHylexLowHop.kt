@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
-class SpeedHylexLowHop(override val parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
+class SpeedHylexLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
     private var airTicks = 0
 

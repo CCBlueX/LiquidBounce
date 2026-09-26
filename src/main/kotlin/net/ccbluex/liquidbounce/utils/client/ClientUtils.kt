@@ -18,21 +18,32 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import com.mojang.blaze3d.Blaze3D
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.Minecraft
-import net.minecraft.util.Util
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.net.URI
+
+/**
+ * Get a [Logger] with client name prefix
+ */
+internal fun clientLogger(name: String): Logger = LogManager.getLogger("$CLIENT_NAME/$name")
 
 val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
+@AddonApi
 val inGame: Boolean
-    get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
+    get() = mc()?.let { mc -> mc.player != null && mc.level != null } == true
+
+inline val clientStartDurationMs: Long
+    get() = System.currentTimeMillis() - mc.clientStartTimeMs
 
 /**
  * Open uri in browser
  */
-fun browseUrl(url: String) = Util.getPlatform().openUri(url)
+fun browseUrl(url: String) = Blaze3D.openUri(URI(url))
 
 /**
  * Get environment variable or system property.

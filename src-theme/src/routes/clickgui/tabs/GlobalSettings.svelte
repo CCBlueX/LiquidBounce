@@ -4,6 +4,7 @@
     import {getGlobalSettings, setGlobalSettings} from "../../../integration/rest";
     import ConfigurableSetting from "../setting/ConfigurableSetting.svelte";
     import WindowPanel from "./WindowPanel.svelte";
+    import ScaledClickGuiContent from "../ScaledClickGuiContent.svelte";
 
     let globalSettings = $state<ConfigurableSettingData | null>(null);
 
@@ -19,37 +20,37 @@
     }
 
     onMount(() => {
-        void fetchGlobalSettings();
+        fetchGlobalSettings();
     });
 </script>
 
-<WindowPanel title="Global Settings" icon="client">
-    <div class="settings-grid">
-        {#if globalSettings}
-            {#each globalSettings.value as _, i (globalSettings.value[i].name)}
-                {#if globalSettings.value[i].valueType === "CONFIGURABLE" ||
-                globalSettings.value[i].valueType === "TOGGLEABLE"}
-                    <div class="setting-item">
-                        <ConfigurableSetting
-                                path="clickgui.global"
-                                bind:setting={globalSettings.value[i]}
-                                hideExpandControl={true}
-                                on:change={updateGlobalSettings}
-                        />
-                    </div>
-                {/if}
-            {/each}
-        {/if}
-    </div>
-</WindowPanel>
+<ScaledClickGuiContent>
+    <WindowPanel title="Global Settings" icon="client">
+        <div class="settings-grid">
+            {#if globalSettings}
+                {#each globalSettings.value as _, i (globalSettings.value[i].name)}
+                    {#if globalSettings.value[i].valueType === "CONFIGURABLE" ||
+                    globalSettings.value[i].valueType === "TOGGLEABLE"}
+                        <div class="setting-item">
+                            <ConfigurableSetting
+                                    path="clickgui.global"
+                                    bind:setting={globalSettings.value[i]}
+                                    hideExpandControl={true}
+                                    on:change={updateGlobalSettings}
+                            />
+                        </div>
+                    {/if}
+                {/each}
+            {/if}
+        </div>
+    </WindowPanel>
+</ScaledClickGuiContent>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
-
   .settings-grid {
     column-count: 2;
     column-gap: 25px;
-    column-rule: 1px solid rgba($clickgui-text-color, 0.12);
+    column-rule: 1px solid var(--clickgui-global-settings-divider-color);
     column-fill: balance;
     overflow: visible;
   }

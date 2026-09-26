@@ -21,17 +21,17 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 class SimulatedArrow(
-    val world: ClientLevel,
+    val level: Level,
     var pos: Vec3,
     var velocity: Vec3,
     private val collideEntities: Boolean = true
@@ -69,15 +69,13 @@ class SimulatedArrow(
 
     @Suppress("CognitiveComplexMethod")
     private fun updateCollision(pos: Vec3, newPos: Vec3): HitResult? {
-        val world = this.world
-
         val arrowEntity = Arrow(
-            this.world, this.pos.x, this.pos.y, this.pos.z,
+            this.level, this.pos.x, this.pos.y, this.pos.z,
             Items.ARROW.defaultInstance, null
         )
 
         // Get landing position
-        val blockHitResult = world.clip(
+        val blockHitResult = this.level.clip(
             ClipContext(
                 pos,
                 newPos,
@@ -92,7 +90,7 @@ class SimulatedArrow(
             val size = 0.45
 
             val entityHitResult = ProjectileUtil.getEntityHitResult(
-                this.world,
+                this.level,
                 arrowEntity,
                 pos,
                 newPos,

@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -75,7 +74,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
-        val wireframePlayer = WireframePlayer(Vec3.ZERO, 0f, 0f)
+        val wireframePlayer = WireframePlayer()
         var creationTime = 0L
         var finished = true
 

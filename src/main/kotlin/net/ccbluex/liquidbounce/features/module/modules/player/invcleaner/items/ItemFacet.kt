@@ -23,20 +23,16 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.item.durability
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
-import net.minecraft.world.item.ItemStack
+import net.minecraft.core.component.DataComponents
 
-open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
+open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
     open val category: ItemCategory
         get() = ItemType.NONE.defaultCategory
 
     open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = emptyList()
-
-    val itemStack: ItemStack
-        get() = this.itemSlot.itemStack
 
     val isInHotbar: Boolean
         get() = this.itemSlot.slotType == ItemSlot.Type.HOTBAR || this.itemSlot.slotType == ItemSlot.Type.OFFHAND
@@ -50,18 +46,23 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
      */
     open fun shouldKeep(): Boolean = false
 
-    override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
+    override fun compareTo(other: ItemFacet): Int = compareValuesBy(this, other, ItemFacet::isInHotbar)
 
     companion object {
         @JvmField
-        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
+        protected val PREFER_ENCHANTABLE: Comparator<in ItemStackHolder> = Comparator.comparingInt {
+            it.itemStack[DataComponents.ENCHANTABLE]?.value ?: 0
+        }
 
         @JvmField
-        protected val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
+        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareBy(ItemFacet::isInHotbar)
+
+        @JvmField
+        protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.hashCode()
         }
         @JvmField
-        protected val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
+        protected val PREFER_BETTER_DURABILITY: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.durability
         }
     }

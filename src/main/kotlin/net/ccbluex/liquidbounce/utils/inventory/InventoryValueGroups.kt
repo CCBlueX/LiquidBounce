@@ -20,23 +20,33 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.ccbluex.liquidbounce.utils.text.StringMatchMode
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import java.util.EnumSet
 import java.util.function.Predicate
 
@@ -59,16 +69,14 @@ open class InventoryConstraints : ValueGroup("Constraints") {
         choices = requirementChoices(),
     )
 
-    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetOf(
-        InventoryRequirements.NO_MOVEMENT,
-        InventoryRequirements.NO_ROTATION
-    )
+    protected open fun requirementChoices(): EnumSet<InventoryRequirements> =
+        enumSetAllOf<InventoryRequirements>().also { it.remove(InventoryRequirements.OPEN_INVENTORY) }
 
     /**
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
      */
     fun passesRequirements(action: InventoryAction) =
-        requirements.all { it.test(action) }
+        requirements.matchesAll(action)
 
 }
 
@@ -79,9 +87,7 @@ open class InventoryConstraints : ValueGroup("Constraints") {
 class PlayerInventoryConstraints : InventoryConstraints() {
     val requiresOpenInventory get() = InventoryRequirements.OPEN_INVENTORY in requirements
 
-    override fun requirementChoices(): EnumSet<InventoryRequirements> {
-        return super.requirementChoices().also { it += InventoryRequirements.OPEN_INVENTORY }
-    }
+    override fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetAllOf()
 }
 
 enum class InventoryRequirements(
@@ -90,6 +96,12 @@ enum class InventoryRequirements(
     NO_MOVEMENT("NoMovement"),
 
     NO_ROTATION("NoRotation"),
+
+    NOT_USING_ITEM("NotUsingItem"),
+
+    NOT_BREAKING("NotBreaking"),
+
+    NOT_DURING_COMBAT("NotDuringCombat"),
 
     /**
      * When this option is not enabled, the inventory will be opened silently
@@ -110,6 +122,9 @@ enum class InventoryRequirements(
     override fun test(action: InventoryAction): Boolean = when (this) {
         NO_MOVEMENT -> player.input.moveVector.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
+        NOT_USING_ITEM -> !player.isUsingItem
+        NOT_BREAKING -> mc.gameMode?.isDestroying == false
+        NOT_DURING_COMBAT -> !CombatManager.isInCombat
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
 }
@@ -140,7 +155,7 @@ class CheckScreenTitleValueGroup(
         enumSetOf(
             ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
             ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
-            ContainerTitle.CHEST_MINECART,
+            ContainerTitle.CHEST_MINECART, ContainerTitle.CHEST_BOAT,
         ),
     )
     private val customTitles by textList("Custom", ObjectRBTreeSet())
@@ -150,9 +165,7 @@ class CheckScreenTitleValueGroup(
         if (!running) return true
 
         val titleString = screen.title.string
-        val matches = titles.any {
-            Component.translatable(it.translatableKey).string == titleString
-        } || titleString in customTitles
+        val matches = titles.any { it.matches(titleString) } || titleString in customTitles
 
         return when (filter) {
             Filter.WHITELIST -> matches
@@ -161,7 +174,10 @@ class CheckScreenTitleValueGroup(
     }
 
     @Suppress("unused")
-    private enum class ContainerTitle(override val tag: String, val translatableKey: String) : Tagged {
+    private enum class ContainerTitle(
+        override val tag: String,
+        private vararg val translatableKeys: String,
+    ) : Tagged {
         BARREL("Barrel", "container.barrel"),
         BEACON("Beacon", "container.beacon"),
         BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
@@ -176,6 +192,57 @@ class CheckScreenTitleValueGroup(
         SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
         SMOKER("Smoker", "container.smoker"),
         CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
+        /**
+         * Chest boats use their entity display name as the container title.
+         *
+         * @see net.minecraft.world.entity.Entity.getDisplayName
+         * @see net.minecraft.world.entity.vehicle.boat.AbstractChestBoat.createMenu
+         */
+        CHEST_BOAT(
+            "ChestBoat",
+            "entity.minecraft.chest_boat",
+            "entity.minecraft.acacia_chest_boat",
+            "entity.minecraft.bamboo_chest_raft",
+            "entity.minecraft.birch_chest_boat",
+            "entity.minecraft.cherry_chest_boat",
+            "entity.minecraft.dark_oak_chest_boat",
+            "entity.minecraft.jungle_chest_boat",
+            "entity.minecraft.mangrove_chest_boat",
+            "entity.minecraft.oak_chest_boat",
+            "entity.minecraft.pale_oak_chest_boat",
+            "entity.minecraft.poplar_chest_boat",
+            "entity.minecraft.spruce_chest_boat",
+        ),
         HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
+        ;
+
+        fun matches(title: String): Boolean = translatableKeys.any {
+            Component.translatable(it).string == title
+        }
     }
+}
+
+sealed class SingleItemStackPickMode(
+    final override val parent: ModeValueGroup<*>,
+    name: String,
+) : Mode(name), Predicate<ItemStack> {
+
+    abstract override fun test(itemStack: ItemStack): Boolean
+
+    class ByName(parent: ModeValueGroup<*>) : SingleItemStackPickMode(parent, "Name") {
+        private val names by textList("Names", objectRBTreeSetOf("Paper"))
+        private val mode by enumChoice("Mode", StringMatchMode.EQUALS)
+
+        override fun test(itemStack: ItemStack): Boolean {
+            val string = itemStack.hoverName.string
+            return names.any { mode.test(string, it) }
+        }
+    }
+
+    class ByItem(parent: ModeValueGroup<*>) : SingleItemStackPickMode(parent, "Item") {
+        private val items by items("Items", itemSortedSetOf(Items.PAPER))
+
+        override fun test(itemStack: ItemStack): Boolean = itemStack.item in items
+    }
+
 }

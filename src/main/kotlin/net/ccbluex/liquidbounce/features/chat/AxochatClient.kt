@@ -45,21 +45,13 @@ import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
-import net.ccbluex.liquidbounce.features.chat.packet.S2CErrorPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CMojangInfoPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CNewJWTPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPrivateMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
 import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
-import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
-import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
 import net.ccbluex.liquidbounce.features.chat.packet.C2SBanUserPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginMojangPacket
@@ -68,11 +60,19 @@ import net.ccbluex.liquidbounce.features.chat.packet.C2SPrivateMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestMojangInfoPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SUnbanUserPacket
+import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
+import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
+import net.ccbluex.liquidbounce.features.chat.packet.S2CErrorPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CMojangInfoPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CNewJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CPrivateMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
-import net.ccbluex.netty.http.coroutines.syncSuspend
+import net.ccbluex.liquidbounce.utils.netty.clientChannelAndGroup
+import net.ccbluex.liquidbounce.utils.netty.syncSuspend
 import java.net.URI
 import java.util.UUID
 
@@ -225,23 +225,23 @@ class AxochatClient {
     /**
      * Ban user from server
      */
-    fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
+    suspend fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
 
     /**
      * Unban user from server
      */
-    fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
+    suspend fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
 
     /**
      * Convert username or uuid to UUID
      */
-    private fun toUUID(target: String): String {
+    private suspend fun toUUID(target: String): String {
         return try {
             UUID.fromString(target)
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = GameProfileRepository.Default.fetchUuidByUsername(target)
+            val incomingUUID = lookupUuidByName(target)
             incomingUUID.toString()
         }
     }

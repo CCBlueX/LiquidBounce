@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -27,6 +28,9 @@ import java.time.temporal.TemporalQuery
 
 private fun <T : Temporal> temporalAsStringAdapter(formatter: DateTimeFormatter, temporalQuery: TemporalQuery<T>) =
     SimpleStringTypeAdapter({ formatter.parse(it, temporalQuery) }, formatter::format)
+
+@JvmField
+val InstantAdapter = temporalAsStringAdapter(DateTimeFormatter.ISO_INSTANT, Instant::from)
 
 @JvmField
 val LocalDateAdapter = temporalAsStringAdapter(DateTimeFormatter.ISO_LOCAL_DATE, LocalDate::from)

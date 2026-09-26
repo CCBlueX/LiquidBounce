@@ -110,7 +110,7 @@ enum class FailProcedure {
     PAUSE {
 
         override fun execute(mineTarget: MineTarget): Boolean {
-            with (ModulePacketMine) {
+            with(ModulePacketMine) {
                 mode.activeMode.onCannotLookAtTarget(mineTarget)
 
                 // if required, we already switch

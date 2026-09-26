@@ -39,14 +39,14 @@ open class Task(val name: String) {
      * Creates or gets an existing sub-task
      */
     fun getOrCreateTask(subTaskName: String): Task {
-        return subTasks.getOrPut(subTaskName) { Task(subTaskName) }
+        return subTasks.computeIfAbsent(subTaskName, ::Task)
     }
 
     /**
      * Creates or gets an existing download sub-task
      */
     fun getOrCreateFileTask(subTaskName: String): ResourceTask {
-        return subTasks.getOrPut(subTaskName) { ResourceTask(subTaskName) } as ResourceTask
+        return subTasks.computeIfAbsent(subTaskName, ::ResourceTask) as ResourceTask
     }
 
     /**
