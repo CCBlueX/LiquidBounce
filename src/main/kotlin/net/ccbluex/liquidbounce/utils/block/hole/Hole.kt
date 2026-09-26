@@ -18,35 +18,102 @@
  */
 package net.ccbluex.liquidbounce.utils.block.hole
 
-import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 
-@JvmRecord
-data class Hole(
-    val type: Type,
-    val positions: BoundingBox,
-    val bedrockOnly: Boolean = false,
-    val blockInvalidators: BoundingBox = positions.copy(maxY = positions.maxY() + 2),
-) : Comparable<Hole> {
+sealed interface Hole : Comparable<Hole> {
+
+    val pos: BlockPos
+    val bedrockOnly: Boolean
+
+    val positions: BoundingBox
+
+    val size: Int
+
+    fun asList(): List<BlockPos>
 
     override fun compareTo(other: Hole): Int {
-        val yDiff = this.positions.maxY() - other.positions.maxY()
-        val zDiff = this.positions.maxZ() - other.positions.maxZ()
-        val xDiff = this.positions.minX() - other.positions.minX()
-        return when {
-            yDiff != 0 -> yDiff
-            zDiff != 0 -> zDiff
-            else -> xDiff
-        }
+        return this.pos compareTo other.pos
     }
 
     operator fun contains(pos: Vec3i): Boolean = positions.isInside(pos)
 
-    enum class Type(val size: Int) {
-        ONE_ONE(1),
-        ONE_TWO(2),
-        TWO_TWO(4),
+    /**
+     * Checks whether placing a block at [pos] would invalidate this hole.
+     *
+     * A block can invalidate the hole if its position falls within the hole's
+     * area, extended upward by 2 blocks to account for the player's height.
+     */
+    fun isInvalidatedByFilling(pos: Vec3i): Boolean {
+        return pos.x in this.positions.minX()..this.positions.maxX()
+            && pos.y in this.positions.minY()..this.positions.maxY() + 2
+            && pos.z in this.positions.minZ()..this.positions.maxZ()
     }
 
+
+    /**
+     * ```
+     * ? x ?
+     * x o x
+     * ? x ?
+     * ```
+     */
+    data class OneByOne(
+        override val pos: BlockPos,
+        override val bedrockOnly: Boolean = false,
+    ) : Hole {
+        override val positions: BoundingBox = BoundingBox(pos)
+
+        override val size: Int get() = 1
+
+        override fun asList(): List<BlockPos> = listOf(pos)
+    }
+
+    /**
+     * ```
+     * ? x x ?
+     * x o o x
+     * ? x x ?
+     * ```
+     */
+    data class OneByTwo(
+        override val pos: BlockPos,
+        val axis: Direction.Axis,
+        override val bedrockOnly: Boolean = false,
+    ) : Hole {
+        init {
+            require(axis.isHorizontal) { "OneByTwo axis must be horizontal" }
+        }
+
+        private val other: BlockPos = pos.relative(
+            if (axis == Direction.Axis.X) Direction.EAST else Direction.SOUTH
+        )
+
+        override val positions: BoundingBox = BoundingBox.fromCorners(pos, other)
+
+        override val size: Int get() = 2
+
+        override fun asList(): List<BlockPos> = listOf(pos, other)
+    }
+
+    /**
+     * ```
+     * ? x x ?
+     * x o o x
+     * x o o x
+     * ? x x ?
+     * ```
+     */
+    data class TwoByTwo(
+        override val pos: BlockPos,
+        override val bedrockOnly: Boolean = false,
+    ) : Hole {
+        override val positions: BoundingBox = BoundingBox(pos.x, pos.y, pos.z, pos.x + 1, pos.y, pos.z + 1)
+
+        override val size: Int get() = 4
+
+        override fun asList(): List<BlockPos> = listOf(pos, pos.east(), pos.south(), pos.east().south())
+    }
 }

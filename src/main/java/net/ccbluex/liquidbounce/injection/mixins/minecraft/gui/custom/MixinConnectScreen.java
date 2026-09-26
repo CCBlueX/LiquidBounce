@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
@@ -36,7 +36,7 @@ import net.minecraft.client.multiplayer.TransferState;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -80,7 +80,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         var clientConnection = this.connection;
         var serverAddress = this.serverAddress;
 
-        if (clientConnection == null || this.serverAddress == null || HideAppearance.INSTANCE.isHidingNow()) {
+        if (clientConnection == null || this.serverAddress == null || SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 

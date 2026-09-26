@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.ccbluex.liquidbounce.utils.block.BlockExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -37,7 +37,7 @@ public abstract class MixinLevel {
 
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At("RETURN"))
     private void injectBlockStateChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
-        if (Minecraft.getInstance().level != (Object) this || ChunkUpdateFlag.chunkDeltaUpdating) {
+        if (Minecraft.getInstance().level != (Object) this || ChunkUpdateFlag.isChunkDeltaUpdating()) {
             return;
         }
 

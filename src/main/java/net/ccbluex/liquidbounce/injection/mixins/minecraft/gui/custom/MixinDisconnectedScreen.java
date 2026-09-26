@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
@@ -54,7 +54,7 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
 
     @Inject(method = "init", at = @At("HEAD"))
     private void injectButtons(final CallbackInfo callback) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 
@@ -66,8 +66,8 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
         int x = this.width - 140;
         int y = this.height - 30;
         disconnectButton = (this.minecraft.allowsMultiplayer() ?
-                Button.builder(this.buttonText, button -> this.minecraft.setScreen(this.parent)) :
-                Button.builder(TO_TITLE, button -> this.minecraft.setScreen(new TitleScreen()))
+                Button.builder(this.buttonText, button -> this.minecraft.gui.setScreen(this.parent)) :
+                Button.builder(TO_TITLE, button -> this.minecraft.gui.setScreen(new TitleScreen()))
         ).bounds(x, y, 120, 20).build();
         addRenderableWidget(disconnectButton);
     }

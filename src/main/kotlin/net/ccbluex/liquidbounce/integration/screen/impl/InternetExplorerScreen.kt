@@ -50,7 +50,7 @@ class InternetExplorerScreen(val url: String, title: Component = PlainText.EMPTY
 
         if (browserBrowsers.isEmpty()) {
             val browser = BrowserBackendManager.backend ?: return
-            browser.createBrowser(url, viewport, priority = 20) { mc.screen == this }
+            browser.createBrowser(url, viewport, priority = 20) { mc.gui.screen() == this }
                 .also { browserBrowsers.add(it) }
             return
         }

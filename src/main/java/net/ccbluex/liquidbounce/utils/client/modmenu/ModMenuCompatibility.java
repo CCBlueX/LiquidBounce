@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.utils.client.modmenu;
 
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.util.mod.Mod;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 public enum ModMenuCompatibility {
     INSTANCE;
 
@@ -39,16 +37,5 @@ public enum ModMenuCompatibility {
         var rootMod = ModMenu.ROOT_MODS.remove(id);
 
         return mod == null ? rootMod : mod;
-    }
-
-    /**
-     * SAFETY: The method doesn't check if {@link ModMenu} is present and loaded
-     *
-     * @param id modid to associate the mod container
-     * @param mod mod container in the {@link ModMenu} system to add
-     */
-    public final void addModUnchecked(String id, Mod mod) {
-        ModMenu.MODS.put(id, mod);
-        ModMenu.ROOT_MODS.put(id, mod);
     }
 }

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.fastutil.objectDoubleMapOf
+import java.util.function.Function
 import java.util.function.Predicate
 
 /**
@@ -29,7 +30,7 @@ import java.util.function.Predicate
 fun <T> dijkstraShortestPath(
     start: T,
     isGoal: Predicate<T>,
-    neighbors: (T) -> Iterable<WeightedEdge<T>>,
+    neighbors: Function<T, Iterable<WeightedEdge<T>>>,
     maxIterations: Int = Int.MAX_VALUE,
     maxCost: Double = Double.POSITIVE_INFINITY,
 ): ShortestPath<T>? = aStarShortestPath(

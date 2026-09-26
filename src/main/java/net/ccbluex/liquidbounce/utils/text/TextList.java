@@ -39,9 +39,8 @@ public final class TextList implements Component {
 
     private final List<Component> siblings;
 
-    private FormattedCharSequence ordered = FormattedCharSequence.EMPTY;
-    @Nullable
-    private Language language;
+    private FormattedCharSequence visualOrderText = FormattedCharSequence.EMPTY;
+    private @Nullable Language decomposedWith;
 
     TextList(@Nullable List<Component> siblings) {
         this.siblings = siblings == null ? Collections.emptyList() : siblings;
@@ -73,11 +72,11 @@ public final class TextList implements Component {
     @Override
     public FormattedCharSequence getVisualOrderText() {
         Language language = Language.getInstance();
-        if (this.language != language) {
-            this.ordered = language.getVisualOrder(this);
-            this.language = language;
+        if (this.decomposedWith != language) {
+            this.visualOrderText = language.getVisualOrder(this);
+            this.decomposedWith = language;
         }
 
-        return this.ordered;
+        return this.visualOrderText;
     }
 }

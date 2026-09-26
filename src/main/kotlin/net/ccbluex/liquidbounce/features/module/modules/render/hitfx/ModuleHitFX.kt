@@ -33,10 +33,6 @@ import net.minecraft.world.level.block.Blocks
 
 object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
-    init {
-        HitFXRegistry.registerAll()
-    }
-
     enum class Particle(override val tag: String) : Tagged {
         BLOOD("Blood"),
         FIRE("Fire"),
@@ -100,7 +96,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         }
 
         val distanceToSq = lastTarget.distanceToSqr(packet.x, packet.y, packet.z)
-        if (distanceToSq > 8.0) {
+        if (distanceToSq > 16.0) {
             return@handler
         }
 

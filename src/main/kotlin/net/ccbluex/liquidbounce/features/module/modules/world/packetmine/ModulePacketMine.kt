@@ -40,13 +40,16 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
+import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
@@ -66,7 +69,7 @@ import kotlin.math.max
  * @author ccetl
  */
 @Suppress("TooManyFunctions")
-object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
+object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), BreakingProgress.Provider {
 
     val mode = modes(
         this,
@@ -118,6 +121,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
             clump = false
         )
     )
+    private val progressRenderer = targetRenderer.tree(BreakingProgressRenderer(targetRenderer, this))
 
     private val chronometer = Chronometer()
     private var rotation: Rotation? = null
@@ -322,6 +326,18 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
         )
     }
 
+    override fun breakingProgress(): BreakingProgress? {
+        val target = _target?.takeIf { it.started } ?: return null
+        val damage = breakDamage
+        val progress = if (damage > 0f) {
+            target.progress / damage
+        } else {
+            1f
+        }
+
+        return BreakingProgress(target.targetPos, progress.coerceIn(0f, 1f))
+    }
+
     fun switch(slot: HotbarItemSlot?, mineTarget: MineTarget) {
         if (slot == null) {
             return
@@ -335,22 +351,21 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
-        val openScreen = mc.screen != null
+        val openScreen = mc.gui.screen() != null
         val unchangeableActive = !mode.activeMode.canManuallyChange && _target != null
         if (openScreen || unchangeableActive || !player.abilities.mayBuild) {
             return@handler
         }
 
-        val isLeftClick = event.button == 0
         // without adding a little delay before being able to unselect / select again, selecting would be impossible
         val hasTimePassed = chronometer.hasElapsed(selectDelay.toLong())
         val hitResult = mc.hitResult
-        if (!isLeftClick || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
+        if (!event.isLeftButton || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
             return@handler
         }
 
         val blockPos = hitResult.blockPos
-        val state = blockPos.getState()!!
+        val state = blockPos.stateOrEmpty
         val activeTarget = _target
 
         val shouldTargetBlock = mode.activeMode.shouldTarget(blockPos, state)
@@ -408,7 +423,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
     }
 
     fun setTarget(blockPos: BlockPos) {
-        val state = blockPos.getState()
+        val state = blockPos.state
         val shouldTargetBlock = state != null && mode.activeMode.shouldTarget(blockPos, state)
         if (!shouldTargetBlock || !world.worldBorder.isWithinBounds(blockPos)) {
             return

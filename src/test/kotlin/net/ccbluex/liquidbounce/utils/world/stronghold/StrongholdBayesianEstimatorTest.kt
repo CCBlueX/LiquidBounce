@@ -22,21 +22,19 @@ import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.minecraft.util.Mth
 import net.minecraft.util.Mth.wrapDegrees
 import net.minecraft.world.level.ChunkPos
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import java.util.Random
 import kotlin.math.atan2
 
 class StrongholdBayesianEstimatorTest {
 
     companion object {
-        @JvmStatic
-        @BeforeAll
-        fun bootstrapMinecraft() {
+        init {
+            // Stronghold generation reads vanilla bootstrap state without starting the game.
             MinecraftBootstrap.ensureInitialized()
         }
     }

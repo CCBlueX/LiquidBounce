@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import org.joml.Vector2f
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class CurveUtilTest {
 
@@ -33,7 +33,7 @@ class CurveUtilTest {
 
     @Test
     fun `transform throws on empty input`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertFailsWith<IllegalArgumentException> {
             CurveUtil.transform(emptyList(), 0f, 0.5f)
         }
         assertTrue(exception.message!!.contains("must not be empty"))

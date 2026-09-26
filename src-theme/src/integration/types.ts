@@ -1,4 +1,3 @@
-
 export interface Metadata {
     id: string;
     name: string;
@@ -16,6 +15,11 @@ export interface Metadata {
         name: string;
         types: string[];
     }[];
+}
+
+export interface ModuleCategory {
+    name: string;
+    icon: string | null;
 }
 
 export interface Module {
@@ -46,6 +50,7 @@ export type ModuleSetting =
     | ListSetting
     | RegistryListSetting
     | ItemListSetting
+    | RegistryMutableListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
@@ -161,6 +166,10 @@ export interface ListSetting extends Setting<string[]> {
 }
 
 export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface RegistryMutableListSetting extends Setting<string[]> {
     registry: string;
 }
 
@@ -300,6 +309,7 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
+    lan?: boolean;
 }
 
 export interface TextComponent {
@@ -386,8 +396,19 @@ export interface Theme {
 
 export interface HudComponent {
     name: string;
+    description: string;
     id: string;
     settings: { [name: string]: any };
+    width?: number;
+    height?: number;
+}
+
+export interface HudComponentCatalogEntry {
+    name: string;
+    description: string;
+    id: string;
+    singleton: boolean;
+    canAdd: boolean;
 }
 
 export interface Alignment {

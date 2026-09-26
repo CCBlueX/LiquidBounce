@@ -105,9 +105,9 @@ private enum class TitleType(
     val setText: (Component) -> Unit
 ) : Tagged {
     TITLE("Title", {
-        mc.gui.title = it
+        mc.gui.hud.setTitle(it)
     }),
     SUBTITLE("Subtitle", {
-        mc.gui.subtitle = it
+        mc.gui.hud.setSubtitle(it)
     })
 }

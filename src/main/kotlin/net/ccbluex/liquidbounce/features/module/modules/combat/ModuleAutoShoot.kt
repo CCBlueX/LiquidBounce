@@ -195,7 +195,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
         val rotation = getRotation(target, slot)
 
         // Check the difference between server and client rotation
-        val rotationDifference = RotationManager.serverRotation.angleTo(rotation ?: return@tickHandler)
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation ?: return@tickHandler)
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {
@@ -264,12 +264,10 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
         abstract fun rotationFor(target: LivingEntity): Rotation?
 
-        companion object {
-            @JvmStatic
+        companion {
             fun from(slot: HotbarItemSlot): GravityType =
                 from(slot.itemStack.item)
 
-            @JvmStatic
             fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {

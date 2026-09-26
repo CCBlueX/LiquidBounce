@@ -18,16 +18,19 @@
  */
 package net.ccbluex.liquidbounce.api.services.auth
 
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.UUID
 
 object PKCEUtils {
-    fun generatePKCE(): Pair<String, String> {
-        val codeVerifier = UUID.randomUUID().toString().replace("-", "")
+    data class PKCEPair(val codeVerifier: String, val codeChallenge: String)
+
+    fun generatePKCE(): PKCEPair {
+        val codeVerifier = UUID.randomUUID().toUndashedString()
         val codeChallenge = Base64.getEncoder().encodeToString(
-            MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray())
-        ).replace("=", "").replace("+", "-").replace("/", "_")
-        return codeVerifier to codeChallenge
+            MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
+        ).replace("=", "").replace('+', '-').replace('/', '_')
+        return PKCEPair(codeVerifier, codeChallenge)
     }
 }

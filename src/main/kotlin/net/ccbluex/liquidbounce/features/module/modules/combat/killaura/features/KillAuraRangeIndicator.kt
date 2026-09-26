@@ -145,7 +145,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
             (hideWhenSpectator && player.isSpectator) ||
             (hideInVehicle && player.vehicle != null) ||
             (respectInventorySetting && !ModuleKillAura.ignoreOpenInventory &&
-                (isInventoryOpen || mc.screen is ContainerScreen)))
+                (isInventoryOpen || mc.gui.screen() is ContainerScreen)))
     }
 
     private fun WorldRenderEnvironment.drawRangeCircle(

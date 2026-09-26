@@ -3,7 +3,7 @@
     import type {Module as TModule} from "../../integration/types";
     import {listen} from "../../integration/ws";
     import Module from "./Module.svelte";
-    import type {ModuleToggleEvent} from "../../integration/events";
+    import type {KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {
@@ -19,6 +19,7 @@
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
+    export let icon: string | undefined = undefined;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -40,6 +41,10 @@
         expanded: boolean;
         scrollTop: number;
         zIndex: number;
+    }
+
+    function showFallbackIcon(event: Event) {
+        (event.currentTarget as HTMLImageElement).src = "img/clickgui/icon-client.svg";
     }
 
     function clamp(number: number, min: number, max: number) {
@@ -94,7 +99,7 @@
         offsetX = e.clientX * (2 / $scaleFactor) - panelConfig.left;
         offsetY = e.clientY * (2 / $scaleFactor) - panelConfig.top;
         panelConfig.zIndex = ++$maxPanelZIndex;
-        
+
         $showGrid = $snappingEnabled && !expandButtonElement.contains(e.target as HTMLElement);
     }
 
@@ -121,8 +126,26 @@
     function toggleExpanded() {
         panelConfig.expanded = !panelConfig.expanded;
 
-        fixPosition();
         savePanelConfig();
+    }
+
+    /**
+     * The panel only reaches its new height once the `max-height` transition of the module
+     * list has finished, so the position can only be clamped here. Doing it right after the
+     * toggle would measure the height the panel had *before* it was expanded or collapsed.
+     */
+    function handleModulesTransitionEnd(e: TransitionEvent) {
+        if (e.target !== modulesElement || e.propertyName !== "max-height") {
+            return;
+        }
+
+        const {left, top} = panelConfig;
+
+        fixPosition();
+
+        if (panelConfig.left !== left || panelConfig.top !== top) {
+            savePanelConfig();
+        }
     }
 
     function handleModulesScroll() {
@@ -169,17 +192,11 @@
         });
     });
 
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === "Shift") {
-            ignoreGrid = true;
+    listen("keyboardKey", (e: KeyboardKeyEvent) => {
+        if (e.key === "key.keyboard.left.shift") {
+            ignoreGrid = e.action === 1;
         }
-    }
-
-    function handleKeyup(e: KeyboardEvent) {
-        if (e.key === "Shift") {
-            ignoreGrid = false;
-        }
-    }
+    });
 
     function snapToGrid(value: number): number {
         if (ignoreGrid || !$snappingEnabled) return value;
@@ -188,7 +205,7 @@
     }
 </script>
 
-<svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove} on:keydown={handleKeydown} on:keyup={handleKeyup}/>
+<svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove}/>
 
 <div
         class="panel"
@@ -204,8 +221,9 @@
     >
         <img
                 class="icon"
-                src="img/clickgui/icon-{category.toLowerCase()}.svg"
+                src={icon ?? `img/clickgui/icon-${category.toLowerCase()}.svg`}
                 alt="icon"
+                on:error={showFallbackIcon}
         />
         <span class="category">{category}</span>
 
@@ -219,6 +237,7 @@
             class="modules"
             class:expanded={panelConfig.expanded}
             on:scroll={handleModulesScroll}
+            on:transitionend={handleModulesTransitionEnd}
             bind:this={modulesElement}
     >
         {#each modules as {name, enabled, description, aliases} (name)}
@@ -268,10 +287,15 @@
     &.expanded {
       max-height: 545px;
     }
-  }
 
-  .modules::-webkit-scrollbar {
-    width: 0;
+    &::-webkit-scrollbar {
+      width: 2px;
+      height: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+    }
   }
 
   .expand-toggle {
