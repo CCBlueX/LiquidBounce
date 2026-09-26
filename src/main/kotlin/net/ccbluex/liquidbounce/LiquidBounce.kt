@@ -23,8 +23,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.internal.isMissing
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -89,7 +91,6 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -196,6 +197,7 @@ object LiquidBounce : EventListener {
      *
      * The thread should be the main render thread.
      */
+    @OptIn(InternalCoroutinesApi::class)
     private fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
@@ -208,6 +210,7 @@ object LiquidBounce : EventListener {
 
         // Ensure we are on the render thread
         RenderSystem.assertOnRenderThread()
+        check(!Dispatchers.Main.isMissing())
 
         // Initialize managers and features
         Client
@@ -492,7 +495,7 @@ object LiquidBounce : EventListener {
                 // Run resource reloader directly as fallback
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
-                    renderThreadDispatcher = Dispatchers.Minecraft,
+                    renderThreadDispatcher = Dispatchers.Main,
                 ).thenCompose {
                     ThemeManager.reloader.reload()
                 }

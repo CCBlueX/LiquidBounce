@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.io.createFont
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
@@ -87,7 +86,7 @@ object FontManager {
         put(COMMON_FONT.name, COMMON_FONT)
     }
 
-    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Minecraft) {
+    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Main) {
         if (fontFaces.put(fontFace.name, fontFace) != null) {
             logger.warn("FontFace ${fontFace.name} already exists, previous one has been replaced")
         }

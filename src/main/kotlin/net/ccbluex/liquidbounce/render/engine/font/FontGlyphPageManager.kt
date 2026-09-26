@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicFontCacheManager
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicGlyphPage
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 
@@ -132,7 +131,7 @@ class FontGlyphPageManager(
             return
         }
 
-        val registered = withContext(Dispatchers.Minecraft) {
+        val registered = withContext(Dispatchers.Main) {
             materializeAndRegister(preparedPages)
         }
         if (registered) {

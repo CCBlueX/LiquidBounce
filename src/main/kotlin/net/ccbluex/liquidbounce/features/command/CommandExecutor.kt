@@ -23,6 +23,7 @@ import com.mojang.brigadier.Command
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -44,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import okio.appendingSink
@@ -88,7 +88,7 @@ object CommandExecutor : EventListener {
      * Render thread scope
      */
     private val commandCoroutineScope = CoroutineScope(
-        MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
+        Dispatchers.Main + SupervisorJob() + coroutineExceptionHandler
     )
 
     internal fun handleExceptions(e: Throwable) {
