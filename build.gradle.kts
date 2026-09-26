@@ -162,9 +162,6 @@ dependencies {
     api(libs.mcef)
     include(libs.mcef)
 
-    // Ultralight Support, its natives are downloaded along with the Ultralight runtime
-    jij(libs.ujr.core)
-    jij(libs.ujr.platform.jni)
 
     // Ktor Server
     jij(libs.ktor.server.core)

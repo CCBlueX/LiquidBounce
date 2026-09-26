@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.browser
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 
 /**
  * Browser interface for web content rendering and interaction
  */
+@AddonApi
 interface Browser : AutoCloseable {
 
     val isInitialized: Boolean

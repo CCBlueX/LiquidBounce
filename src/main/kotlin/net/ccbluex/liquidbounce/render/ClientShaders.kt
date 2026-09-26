@@ -60,12 +60,6 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
 
-        @JvmField
-        val UltralightFill = "ultralight_fill"("shaders/ultralight/fill.vert")
-
-        @JvmField
-        val UltralightFillPath = "ultralight_fill_path"("shaders/ultralight/fill_path.vert")
-
     }
 
     object Fragment : ClientShaders(ShaderType.FRAGMENT) {
@@ -114,12 +108,6 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         @JvmField
         val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
-
-        @JvmField
-        val UltralightFill = "ultralight_fill"("shaders/ultralight/fill.frag")
-
-        @JvmField
-        val UltralightFillPath = "ultralight_fill_path"("shaders/ultralight/fill_path.frag")
 
     }
 

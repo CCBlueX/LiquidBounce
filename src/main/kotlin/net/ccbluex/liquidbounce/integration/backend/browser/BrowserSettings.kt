@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
@@ -45,6 +46,11 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
     val quality by float("Quality", 1f, 0.5f..1f).onChanged {
         BrowserBackendManager.forceUpdate()
     }
+
+    /**
+     * The browser backend the player picked, used from the next start on.
+     */
+    var backendId by text("Backend", "")
 
     /**
      * Uses GPU acceleration for rendering the browser.
@@ -72,6 +78,7 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
 
 }
 
+@AddonApi
 open class BrowserSettings(
     fpsLimit: Int = 0,
     update: Runnable,

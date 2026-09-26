@@ -18,15 +18,20 @@
  */
 package net.ccbluex.liquidbounce.integration.backend
 
+import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.systems.RenderSystem
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.future.await
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSystemBrowserBackend
-import net.ccbluex.liquidbounce.integration.backend.backends.ultralight.UltralightBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -35,7 +40,10 @@ import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
-val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend") ?: "cef"
+/**
+ * The backend to use regardless of what the player picked, if set.
+ */
+val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend")
 var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
     ?: false
 val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
@@ -48,6 +56,50 @@ object BrowserBackendManager : EventListener {
     val isInitialized: Boolean
         get() = backend?.isInitialized ?: false
     var backend: BrowserBackend? = null
+
+    private const val DEFAULT_BACKEND = "cef"
+
+    private val providers = linkedMapOf<String, BrowserBackendProvider>()
+
+    /**
+     * The backends the player can pick from, in the order they were registered.
+     */
+    val selectableBackends: List<BrowserBackendProvider>
+        get() = providers.values.filter(BrowserBackendProvider::selectable)
+
+    /**
+     * Completed with the backend the player picks, while they are asked.
+     */
+    var pendingSelection: CompletableDeferred<BrowserBackendProvider>? = null
+        private set
+
+    init {
+        registerBackend(BrowserBackendProvider(
+            DEFAULT_BACKEND,
+            "Chromium",
+            "The browser LiquidBounce comes with (Chromium)."
+        ) { CefBrowserBackend() })
+        registerBackend(BrowserBackendProvider(
+            "external",
+            "System browser",
+            "Opens pages in the browser of the system.",
+            selectable = false
+        ) { ExternalSystemBrowserBackend() })
+    }
+
+    /**
+     * Offers another backend, before the browser starts.
+     */
+    @AddonApi
+    fun registerBackend(provider: BrowserBackendProvider) {
+        check(providers.putIfAbsent(provider.id, provider) == null) {
+            "Browser backend '${provider.id}' is already registered"
+        }
+    }
+
+    internal fun unregisterBackend(provider: BrowserBackendProvider) {
+        providers.remove(provider.id, provider)
+    }
 
     fun init() {
         PersistentLocalStorage
@@ -63,17 +115,62 @@ object BrowserBackendManager : EventListener {
             return
         }
 
-        val browserBackend = when (browserBackend) {
-            "none" -> {
-                logger.warn("Environment variable 'LB_BROWSER_BACKEND' is set to 'none'.")
-                isBrowserDisabled = true
-                return
-            }
-            "cef" -> CefBrowserBackend()
-            "external" -> ExternalSystemBrowserBackend()
-            "ultralight" -> UltralightBrowserBackend()
-            else -> error("Unknown browser backend: $browserBackend")
+        if (browserBackend == "none") {
+            logger.warn("Environment variable 'LB_BROWSER_BACKEND' is set to 'none'.")
+            isBrowserDisabled = true
+            return
         }
+
+        val provider = chosenBackend()
+        if (provider != null) {
+            use(provider, taskManager)
+            return
+        }
+
+        // The libraries of a backend may clash with another one's, so none are loaded before the player picks
+        val selection = CompletableDeferred<BrowserBackendProvider>()
+        pendingSelection = selection
+        logger.info("Asking which browser backend to use.")
+        mc.execute { mc.gui.setScreen(BrowserSelectionScreen(selectableBackends, selection)) }
+        taskManager.launch("Browser") {
+            val picked = selection.await()
+            pendingSelection = null
+
+            GlobalBrowserSettings.backendId = picked.id
+            ConfigSystem.store(GlobalManager)
+            // Before this task completes, so the tasks of the backend keep the loading screen up
+            mc.submit { use(picked, taskManager) }.await()
+        }
+    }
+
+    /**
+     * Picks the backend without asking: the one `LB_BROWSER_BACKEND` names, or the one picked before. Returns
+     * null when the player should be asked, which is when there is a choice and nothing was picked yet, or
+     * shift is held during start.
+     */
+    private fun chosenBackend(): BrowserBackendProvider? {
+        browserBackend?.let { id ->
+            return providers[id] ?: error("Unknown browser backend: $id")
+        }
+
+        val selectable = selectableBackends
+        if (selectable.size <= 1) {
+            return selectable.firstOrNull() ?: providers.getValue(DEFAULT_BACKEND)
+        }
+
+        val shiftHeld = InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) ||
+            InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)
+        if (shiftHeld) {
+            logger.info("Shift is held, asking for the browser backend.")
+            return null
+        }
+
+        return selectable.firstOrNull { it.id == GlobalBrowserSettings.backendId }
+    }
+
+    private fun use(provider: BrowserBackendProvider, taskManager: TaskManager) {
+        logger.info("Using the '${provider.id}' browser backend.")
+        val browserBackend = provider.create()
         this.backend = browserBackend
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }

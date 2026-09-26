@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.minecraft.client.gui.render.TextureSetup
 
 /**
@@ -33,6 +34,7 @@ import net.minecraft.client.gui.render.TextureSetup
  * @param v2 The bottom edge of the page in the texture.
  */
 @JvmRecord
+@AddonApi
 data class BrowserTexture(
     val textureSetup: TextureSetup,
     val width: Int,

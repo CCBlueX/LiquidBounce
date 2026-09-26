@@ -160,64 +160,6 @@ object ClientRenderPipelines {
         }
     }
 
-    /**
-     * Draws the pages of the Ultralight browser backend, see
-     * [net.ccbluex.liquidbounce.integration.backend.backends.ultralight.UltralightGpuDriver].
-     */
-    object ULTRALIGHT {
-        private fun RenderPipeline.Builder.ultralightSnippet(blend: Boolean) {
-            withBindGroupLayout {
-                withUniform("UltralightState", UniformType.UNIFORM_BUFFER)
-            }
-            withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-            withCull(false)
-            withDepthStencilState(optional())
-            withColorTargetState(
-                if (blend) ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA) else ColorTargetState.DEFAULT
-            )
-        }
-
-        private fun RenderPipeline.Builder.fillSnippet() {
-            withVertexShader(ClientShaders.Vertex.UltralightFill)
-            withFragmentShader(ClientShaders.Fragment.UltralightFill)
-            withBindGroupLayout {
-                withSampler("Texture1")
-                withSampler("Texture2")
-            }
-            withVertexBinding(0, ClientVertexFormats.ULTRALIGHT_FILL)
-        }
-
-        private fun RenderPipeline.Builder.fillPathSnippet() {
-            withVertexShader(ClientShaders.Vertex.UltralightFillPath)
-            withFragmentShader(ClientShaders.Fragment.UltralightFillPath)
-            withVertexBinding(0, ClientVertexFormats.ULTRALIGHT_FILL_PATH)
-        }
-
-        @JvmField
-        val FILL = newPipeline("ultralight/fill") {
-            ultralightSnippet(blend = false)
-            fillSnippet()
-        }
-
-        @JvmField
-        val FILL_BLENDED = newPipeline("ultralight/fill_blended") {
-            ultralightSnippet(blend = true)
-            fillSnippet()
-        }
-
-        @JvmField
-        val FILL_PATH = newPipeline("ultralight/fill_path") {
-            ultralightSnippet(blend = false)
-            fillPathSnippet()
-        }
-
-        @JvmField
-        val FILL_PATH_BLENDED = newPipeline("ultralight/fill_path_blended") {
-            ultralightSnippet(blend = true)
-            fillPathSnippet()
-        }
-    }
-
     object GUI {
         private fun RenderPipeline.Builder.guiPosColorSnippet(mode: PrimitiveTopology) {
             withSnippet(RenderPipelines.GUI_SNIPPET)
@@ -612,7 +554,6 @@ object ClientRenderPipelines {
     fun precompile() {
         JCEF
         GUI
-        ULTRALIGHT
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
             gpuDevice.compilePipeline(pipeline, ClientShaders, Util.backgroundExecutor())

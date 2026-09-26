@@ -16,17 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration.backend.input
+package net.ccbluex.liquidbounce.integration.backend
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
- * Functional interface to determine if a browser should accept input
+ * A browser engine the client can render its pages with. Add-ons offer more of them through
+ * [net.ccbluex.liquidbounce.features.addon.LiquidBounceAddon.registerBrowserBackend].
+ *
+ * @param id Stored as the chosen backend and matched by `LB_BROWSER_BACKEND`.
+ * @param name Shown when the player picks a backend.
+ * @param description Shown under [name], a line on what sets the backend apart.
+ * @param selectable Whether the player can pick it, rather than only `LB_BROWSER_BACKEND`.
+ * @param create Called once the backend was chosen, before any of its libraries are loaded.
  */
 @AddonApi
-fun interface InputAcceptor {
-    /**
-     * Returns true if the browser should accept input events
-     */
-    fun acceptsInput(): Boolean
-}
+class BrowserBackendProvider @JvmOverloads constructor(
+    val id: String,
+    val name: String,
+    val description: String,
+    val selectable: Boolean = true,
+    val create: () -> BrowserBackend,
+)
