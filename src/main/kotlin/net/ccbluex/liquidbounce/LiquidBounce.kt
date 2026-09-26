@@ -60,6 +60,7 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
+import net.ccbluex.liquidbounce.features.misc.proxy.liquidproxy.LiquidProxy
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
@@ -264,6 +265,7 @@ object LiquidBounce : EventListener {
         ModuleManager
         CommandManager
         ProxyManager
+        LiquidProxy
         AccountManager
 
         // Utility managers

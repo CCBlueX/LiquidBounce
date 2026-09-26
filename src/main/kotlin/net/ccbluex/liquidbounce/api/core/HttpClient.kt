@@ -292,3 +292,12 @@ fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
 
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
     : Exception("${method.name} $url failed with code $code: $content")
+
+/**
+ * The [HttpException] behind this. OkHttp wraps what an interceptor throws in an [IOException].
+ */
+val Throwable.httpException: HttpException?
+    get() = generateSequence(this) { it.cause }
+        .flatMap { sequenceOf(it) + it.suppressed }
+        .filterIsInstance<HttpException>()
+        .firstOrNull()

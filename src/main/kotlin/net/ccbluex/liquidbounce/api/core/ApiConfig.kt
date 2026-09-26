@@ -29,6 +29,7 @@ class ApiConfig(
 ) {
 
     val apiEndpointV1 = "$url/api/v1"
+    val apiEndpointV2 = "$url/api/v2"
     val apiEndpointV3 = "$url/api/v3"
 
     companion object {
