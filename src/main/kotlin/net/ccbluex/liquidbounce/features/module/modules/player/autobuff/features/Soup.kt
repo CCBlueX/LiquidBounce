@@ -64,7 +64,7 @@ internal object Soup : HealthBasedBuff("Soup") {
         val slot = pendingBowlSlot ?: return@handler
         pendingBowlSlot = null
 
-        if (slot is OffHandSlot) return@handler
+        if (slot == HotbarItemSlot.OFFHAND) return@handler
 
         val shouldStack = SoupStacker.assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL)
         if (!shouldStack) return@handler
