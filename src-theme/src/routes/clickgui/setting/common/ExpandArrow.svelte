@@ -19,7 +19,8 @@
   @use "../../icon-settings-expand" as *;
 
   .arrow {
-    width: 20px;
+    width: 9px;
+    margin-left: 11px;
     position: relative;
     cursor: pointer;
     background-color: transparent;

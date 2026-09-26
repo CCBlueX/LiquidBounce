@@ -1,0 +1,40 @@
+﻿{
+  "name": "InventoryStatistics",
+  "description": "Tracks configured items in your inventory.",
+  "enabled": false,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 220,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 15
+  },
+  "values": [
+    {
+      "type": "REGISTRY_LIST",
+      "name": "Items",
+      "innerValueType": "ITEM",
+      "value": [
+        "minecraft:emerald",
+        "minecraft:diamond",
+        "minecraft:gold_ingot",
+        "minecraft:iron_ingot",
+        "minecraft:copper_ingot"
+      ]
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "ShowEmpty",
+      "value": true
+    },
+    {
+      "type": "INT",
+      "name": "RowLength",
+      "value": 1,
+      "range": {
+        "min": 1,
+        "max": 9
+      }
+    }
+  ]
+}

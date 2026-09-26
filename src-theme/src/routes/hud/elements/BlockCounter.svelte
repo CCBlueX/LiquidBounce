@@ -6,7 +6,9 @@
 
     export let settings: { [name: string]: any };
 
-    const cSettings = settings as HudBlockCounterSettings;
+    let cSettings: HudBlockCounterSettings;
+
+    $: cSettings = settings as HudBlockCounterSettings;
 
     let nextBlock: string | undefined = undefined;
     let count: number | undefined = undefined;
@@ -36,10 +38,9 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .counter {
-    background-color: rgba($blockcounter-base-color, 0.68);
+    background-color: var(--blockcounter-background-color);
     border-radius: 5px;
     white-space: nowrap;
     padding: 5px 8px;

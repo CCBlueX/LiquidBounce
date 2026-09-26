@@ -30,7 +30,7 @@ val usesViaFabricPlus = runCatching {
     Class.forName("com.viaversion.viafabricplus.ViaFabricPlus")
 
     // Register ViaFabricPlus protocol version change callback
-    ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
+    ViaFabricPlus.api().addChangeProtocolVersionListener { _, _ ->
         // Update the window title
         mc.execute {
             mc.updateTitle()
@@ -52,7 +52,7 @@ val protocolVersion: ClientProtocolVersion
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (usesViaFabricPlus) {
-            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()!!
         } else {
             return@runCatching defaultProtocolVersion
         }
@@ -72,6 +72,7 @@ val protocolVersions: Array<ClientProtocolVersion>
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(arrayOf(defaultProtocolVersion))
 
+@JvmRecord
 data class ClientProtocolVersion(val name: String, val version: Int)
 
 val isEqual1_8: Boolean
@@ -81,6 +82,9 @@ val isEqual1_8: Boolean
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
+
+val isBlocksAttacksExisting: Boolean
+    get() = isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5
 
 val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
@@ -104,6 +108,63 @@ val isNewerThanOrEquals1_16: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
     }.onFailure {
         logger.error("Failed to check if the server is using 1.16+", it)
+    }.getOrDefault(true)
+
+/**
+ * Offhand cannot be used as a SWAP target in any container on 1.15.2 and below.
+ *
+ * https://github.com/ViaVersion/ViaFabricPlus/blame/b03638ee999f658856e8284f135bcbf55fc596a8/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/interaction/container_clicking/MixinMultiPlayerGameMode.java#L101
+ */
+val isOlderThanOrEqual1_15_2: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_15_2
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.15.2", it)
+    }.getOrDefault(false)
+
+val isOlderThanOrEqual1_12_2: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_2
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.12.2", it)
+    }.getOrDefault(false)
+
+/**
+ * 1.21 added rotation fields to [net.minecraft.network.protocol.game.ServerboundUseItemPacket].
+ * Older protocols need the movement rotation packet to be sent before a use-item interaction.
+ */
+val isOlderThan1_21: Boolean
+    get() = runCatching {
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-1.21 protocol", it)
+    }.getOrDefault(false)
+
+/**
+ * Since 1.21.2 falling on slime block while sneaking won't cause damage.
+ * (Yes this is a bug, not feature)
+ */
+val isOlderThan1_21_2: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21_2
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.2(3)", it)
+    }.getOrDefault(false)
+
+/**
+ * 1.21.4 client + 1.8 server can block with sword,
+ * but the [net.minecraft.world.item.ItemStack] has no
+ * [net.minecraft.core.component.DataComponents.BLOCKS_ATTACKS]
+ */
+val isEqual1_21_4: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isEqual1_21_4
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.4", it)
     }.getOrDefault(false)
 
 /**
@@ -115,7 +176,7 @@ val isNewerThanOrEquals1_21_5: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_5
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.5+", it)
-    }.getOrDefault(false)
+    }.getOrDefault(true)
 
 /**
  * Since 1.21.6 the [ServerboundPlayerCommandPacket.Action] removed 2 entries for sneaking
@@ -126,7 +187,7 @@ val isNewerThanOrEquals1_21_6: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_6
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.6+", it)
-    }.getOrDefault(false)
+    }.getOrDefault(true)
 
 /**
  * Since 1.21.9 the byte format of [net.minecraft.world.phys.Vec3] have been rewritten
@@ -138,6 +199,18 @@ val isNewerThanOrEquals1_21_9: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_9
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.9+", it)
+    }.getOrDefault(true)
+
+/**
+ * Since 26.1 [net.minecraft.network.protocol.game.ServerboundInteractPacket] has only one mode
+ * with entity and relative position (previous `INTERACT_AT`).
+ */
+val isOlderThanOrEquals1_21_11: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_21_11
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.11", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

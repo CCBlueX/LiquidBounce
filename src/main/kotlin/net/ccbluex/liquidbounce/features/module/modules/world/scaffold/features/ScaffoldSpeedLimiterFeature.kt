@@ -31,7 +31,7 @@ object ScaffoldSpeedLimiterFeature : ToggleableValueGroup(ModuleScaffold, "Speed
     private val speedLimit by float("SpeedLimit", 0.11f, 0.01f..0.4f)
 
     @Suppress("unused")
-    val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    private val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         if (player.horizontalSpeed > speedLimit) {
             it.directionalInput = DirectionalInput.NONE
         }

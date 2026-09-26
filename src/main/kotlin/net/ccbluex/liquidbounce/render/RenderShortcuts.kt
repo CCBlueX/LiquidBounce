@@ -21,37 +21,32 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectObjectMapOf
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
+import net.ccbluex.liquidbounce.render.utils.VertexList
+import net.ccbluex.liquidbounce.render.utils.forEachVertex
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import org.joml.Matrix4fc
+import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.lwjgl.opengl.GL11C
-import java.util.function.Supplier
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
+import java.util.function.Consumer
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -64,9 +59,10 @@ import kotlin.contracts.contract
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = (GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
-    GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = gpuDevice.deviceInfo.name.startsWith("AMD Radeon(TM) RX Vega") &&
+    gpuDevice.deviceInfo.vendorName == "ATI Technologies Inc."
 
+@AddonApi
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
@@ -82,88 +78,75 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
     slice
 }
 
-private val ROUNDED_RECT_AS_FILLED_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE) {
-    val slice = ClientUniformDefine.ROUNDED_RECT.createSingleBuffer()
-    slice.writeStd140 {
-        putVec2(1f, 1f)
-        putFloat(0f)
-    }
-    slice
+@AddonApi
+inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
+    environment.draw()
 }
 
-/**
- * Helper function to render an environment with the specified [matrixStack] and [draw] block.
- *
- * @param matrixStack The matrix stack for rendering.
- * @param draw The block of code to be executed in the rendering environment.
- */
-@OptIn(ExperimentalContracts::class)
-inline fun renderEnvironmentForWorld(
-    matrixStack: PoseStack,
-    framebuffer: RenderTarget = mc.mainRenderTarget,
-    draw: WorldRenderEnvironment.() -> Unit,
-) {
-    contract {
-        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
-    }
-
-    val camera = mc.entityRenderDispatcher.camera ?: return
-
-    GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-
-    val environment = WorldRenderEnvironment(framebuffer, matrixStack, camera)
-    draw(environment)
-    if (environment.isBatchMode) environment.commitBatch()
-
-    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-}
-
+@AddonApi
+@JvmSynthetic
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
+    poseStack.withPush {
         translate(camera.position().reverse())
         draw()
     }
 }
 
-/**
- * Shorthand for `withPosition(relativeToCamera(pos))`
- */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
-        translate(relativeToCamera(pos))
+@AddonApi
+@JvmSynthetic
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: WorldRenderEnvironment.() -> Unit
+) {
+    poseStack.withPush {
+        val cameraPos = camera.position()
+        translate(x - cameraPos.x, y - cameraPos.y, z - cameraPos.z)
         draw()
     }
 }
 
 /**
- * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
+ * Positions the render origin at the camera-relative coordinates of [pos] before drawing.
  */
-inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
-        translate(relativeToCamera(pos))
-        draw()
-    }
-}
+@AddonApi
+@JvmSynthetic
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x, pos.y, pos.z, draw)
 
 /**
- * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
+ * Shortcut of `withPositionRelativeToCamera(Vec3.atLowerCornerOf(pos))`
  */
-inline fun WorldRenderEnvironment.longLines(draw: WorldRenderEnvironment.() -> Unit) {
-    if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-    try {
-        draw()
-    } finally {
-        if (HAS_AMD_VEGA_APU) GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-    }
-}
+@AddonApi
+@JvmSynthetic
+inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) =
+    withPositionRelativeToCamera(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), draw)
+
+// The same for Java, which cannot pass the receiver lambdas above.
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(
+    x: Double, y: Double, z: Double, draw: Consumer<WorldRenderEnvironment>
+) =
+    withPositionRelativeToCamera(x, y, z) { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3, draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera(pos) { draw.accept(this) }
+
+@AddonApi
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: Consumer<WorldRenderEnvironment>) =
+    withPositionRelativeToCamera(pos) { draw.accept(this) }
 
 internal inline fun RenderTarget.drawGenericBlockESP(
-    renderState: RenderPassRenderState,
+    renderState: CachedMeshStorage,
     pipeline: RenderPipeline,
     distanceFade: DistanceFadeUniformValueGroup,
     dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,
 ): Boolean {
-    if (!renderState.ready) return false
+    if (!renderState.isReady) return false
 
     distanceFade.updateIfDirty()
     val dynamicTransforms = dynamicTransforms()
@@ -173,114 +156,43 @@ internal inline fun RenderTarget.drawGenericBlockESP(
         pass.bindProjectionUniform()
         pass.bindGlobalsUniform()
         pass.bindDynamicTransformsUniform(dynamicTransforms)
+        renderState.bindUniform(pass)
         distanceFade.bindUniform(pass)
         renderState.bindAndDraw(pass)
     }
     return true
 }
 
+/**
+ * Variant of [drawCustomMesh] that binds [sampler0] as `Sampler0`.
+ */
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
     sampler0: AbstractTexture,
-    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
-    drawer: VertexConsumer.(Matrix4fc) -> Unit,
-) {
-    val matrix = matrixStack.last().pose()
-
-    val buffer = getOrCreateBuffer(sampler0)
-
-    drawer(buffer, matrix)
-
-    if (!isBatchMode) {
-        buffer.build()?.let {
-            draw(pipeline, it, shaderTextureProvider = objectObjectMapOf("Sampler0", sampler0))
-        }
-    }
-}
-
-inline fun WorldRenderEnvironment.drawCustomMesh(
-    pipeline: RenderPipeline,
+    pipeline: RenderPipeline = ClientRenderPipelines.texQuads(noDepthTest = true),
+    uniforms: Map<String, GpuBufferSlice> = emptyMap(),
     drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
-) {
-    val matrix = matrixStack.last()
-
-    val buffer = getOrCreateBuffer(pipeline)
-
-    drawer(buffer, matrix)
-
-    if (!isBatchMode) {
-        buffer.build()?.let {
-            draw(pipeline, it, emptyMap())
-        }
-    }
-}
-
-private val sharedVboMap = Object2ObjectArrayMap<VertexFormat, GrowableMappableRingBuffer>()
-private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
-    sharedVboMap.computeIfAbsent(vertexFormat) {
-        GrowableMappableRingBuffer(
-            "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
-            GpuBuffer.USAGE_VERTEX,
-            GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 13)
-        )
-    }
-
-private val sharedIboMap = enumMapOf<VertexFormat.IndexType, GrowableMappableRingBuffer>()
-private fun getIbo(indexType: VertexFormat.IndexType): GrowableMappableRingBuffer =
-    sharedIboMap.computeIfAbsent(indexType) {
-        GrowableMappableRingBuffer(
-            "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
-            GpuBuffer.USAGE_INDEX,
-        )
-    }
+) = drawCustomMesh(
+    pipeline = pipeline,
+    textures = objectObjectMapOf("Sampler0", sampler0),
+    uniforms = uniforms,
+    drawer = drawer,
+)
 
 /**
- * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
- * @see net.minecraft.client.renderer.rendertype.RenderType.draw
+ * Preferred mesh draw helper for world rendering code.
  */
-@Suppress("detekt:all")
-internal fun drawMesh(
+inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    meshData: MeshData,
-    renderTarget: RenderTarget = mc.mainRenderTarget,
-    colorModulator: Color4b = Color4b.WHITE,
-    renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextures: Map<String, AbstractTexture> = emptyMap(),
+    textures: Map<String, AbstractTexture> = emptyMap(),
     uniforms: Map<String, GpuBufferSlice> = emptyMap(),
-) = meshData.use { meshData ->
-    val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
-
-    if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
-        meshData.sortQuads(
-            ClientTesselator.Shared,
-            RenderSystem.getProjectionType().vertexSorting(),
-        )
-    }
-
-    val vertexSlice = getVbo(pipeline.vertexFormat).upload(meshData.vertexBuffer())
-
-    val rawIndices = meshData.indexBuffer()
-    val indexCount = meshData.drawState().indexCount
-    val indexSlice: GpuBufferSlice
-    val indexType: VertexFormat.IndexType
-    if (rawIndices == null) {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.vertexFormatMode)
-        indexType = shapeIndexBuffer.type()
-        indexSlice = shapeIndexBuffer.getBuffer(indexCount)
-            .slice(0L, indexCount.toLong() * indexType.bytes)
-    } else {
-        indexType = meshData.drawState().indexType
-        indexSlice = getIbo(indexType).upload(rawIndices)
-    }
-
-    renderTarget.createRenderPass(renderPassLabelGetter, allowOverride = true).use { renderPass ->
-        renderPass.setPipeline(pipeline)
-        renderPass.setupRenderTypeScissor()
-        renderPass.bindDefaultUniforms()
-        renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-        renderPass.bindTextures(shaderTextures)
-        renderPass.setUniforms(uniforms)
-
-        renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
+    drawer: VertexConsumer.(PoseStack.Pose) -> Unit,
+) {
+    start(
+        pipeline = pipeline,
+        textures = textures,
+        uniforms = uniforms,
+    ).use { scope ->
+        drawer(scope.consumer, poseStack.last())
     }
 }
 
@@ -288,7 +200,17 @@ internal fun drawMesh(
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
 fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
-    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+    drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+        addVertex(pose, p1).setColor(argb)
+        addVertex(pose, p2).setColor(argb)
+    }
+
+/**
+ * Draws a line with endpoint [p1] and [p2] and color [argb].
+ */
+@AddonApi
+fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+    drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         addVertex(pose, p1).setColor(argb)
         addVertex(pose, p2).setColor(argb)
     }
@@ -318,6 +240,31 @@ fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, vararg po
     }
 }
 
+fun WorldRenderEnvironment.drawLinesWithWidth(argb: Int, width: Float, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    val p1 = Vector3f()
+    val p2 = Vector3f()
+    val norm1 = Vector3f()
+    drawCustomMesh(pipeline = ClientRenderPipelines.LinesWithWidth) { pose ->
+        for (i in 0 until positions.size step 2) {
+            positions.vec(i, p1)
+            positions.vec(i + 1, p2)
+            val norm1 = p1.sub(p2, norm1).normalize()
+
+            addVertex(pose, p1)
+                .setColor(argb)
+                .setNormal(pose, norm1)
+                .setLineWidth(width)
+            addVertex(pose, p2)
+                .setColor(argb)
+                .setNormal(pose, norm1.negate())
+                .setLineWidth(width)
+        }
+    }
+}
+
 /**
  * Function to draw lines using the specified [positions] vectors.
  *
@@ -327,9 +274,20 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg positions: Vec3f) {
     if (positions.isEmpty()) return
     require(positions.size and 1 == 0)
 
-    drawCustomMesh(pipeline = ClientRenderPipelines.Lines) { pose ->
+    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
         for (pos in positions) {
             addVertex(pose, pos).setColor(argb)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawLines(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
+    require(positions.size and 1 == 0)
+
+    drawCustomMesh(pipeline = ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }
@@ -349,22 +307,12 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
     }
 }
 
-/**
- * Function to draw a 'line strip' using the specified [positions] vectors,
- * actual pipeline is [ClientRenderPipelines.Lines].
- *
- * @param positions The vectors representing the line strip, the size should be even.
- */
-fun WorldRenderEnvironment.drawLineStripAsLines(argb: Int, positions: Collection<Vec3>) {
-    if (positions.isEmpty()) return
-    require(positions.size and 1 == 0)
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, positions: VertexList) {
+    if (positions.size == 0) return
 
-    drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
-        positions.forEachIndexed { index, pos ->
-            if (index != 0 && index != positions.size - 1) {
-                addVertex(pose, pos).setColor(argb)
-            }
-            addVertex(pose, pos).setColor(argb)
+    drawCustomMesh(pipeline = ClientRenderPipelines.LineStrip) { pose ->
+        positions.forEachVertex { x, y, z ->
+            addVertex(pose, x, y, z).setColor(argb)
         }
     }
 }
@@ -381,30 +329,106 @@ fun WorldRenderEnvironment.drawTexQuad(
     }
 }
 
+
 fun WorldRenderEnvironment.drawSquareTexture(
     sampler0: AbstractTexture,
     size: Float,
     argb: Int,
-) = drawCustomMeshTextured(sampler0) { matrix ->
-    addVertex(matrix, 0.0f, -size, 0.0f)
+    anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
+    noDepthTest: Boolean = false,
+) = drawCustomMeshTextured(sampler0, pipeline = ClientRenderPipelines.texQuads(noDepthTest) ) { matrix ->
+    val minX = size * anchor.xFactor
+    val maxX = minX + size
+    val minY = size * anchor.yFactor
+    val maxY = minY + size
+
+    addVertex(matrix, minX, maxY, 0.0f)
         .setUv(0.0f, 0.0f)
         .setColor(argb)
 
-    addVertex(matrix, -size, -size, 0.0f)
+    addVertex(matrix, minX, minY, 0.0f)
         .setUv(0.0f, 1.0f)
         .setColor(argb)
 
-    addVertex(matrix, -size, 0.0f, 0.0f)
+    addVertex(matrix, maxX, minY, 0.0f)
         .setUv(1.0f, 1.0f)
         .setColor(argb)
 
-    addVertex(matrix, 0.0f, 0.0f, 0.0f)
+    addVertex(matrix, maxX, maxY, 0.0f)
         .setUv(1.0f, 0.0f)
         .setColor(argb)
+
 }
 
-fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+fun WorldRenderEnvironment.drawSquareTextureGradient(
+    sampler0: AbstractTexture,
+    outerRadius: Float,
+    innerRadius: Float,
+    outerColor: Color4b,
+    innerColor: Color4b,
+    anchor: AnchorPoint = AnchorPoint.TOP_LEFT,
+    subdivisions: Int = 16,
+    startOffset: Float = 0.5f,
+    noDepthTest: Boolean = true,
+) {
+    if (outerRadius <= 0f || (outerColor.isTransparent && innerColor.isTransparent)) {
+        return
+    }
+
+    val size = outerRadius * 2f
+    val minX = size * anchor.xFactor
+    val minY = size * anchor.yFactor
+
+    val step = size / subdivisions
+    val centerX = minX + outerRadius
+    val centerY = minY + outerRadius
+
+    val baseRatio = (innerRadius / outerRadius).coerceIn(0f, 1f)
+    val effectiveRatio = maxOf(baseRatio, startOffset.coerceIn(0f, 0.99f))
+
+    fun getColorForPos(x: Float, y: Float): Int {
+        val dx = x - centerX
+        val dy = y - centerY
+        val distRatio = (kotlin.math.sqrt(dx * dx + dy * dy) / outerRadius).coerceIn(0f, 1f)
+
+        val t = when (distRatio <= effectiveRatio) {
+            true -> 0.0
+            else -> ((distRatio - effectiveRatio) / (1.0 - effectiveRatio)).coerceIn(0.0, 1.0)
+        }
+
+        return innerColor.interpolateTo(outerColor, t).argb
+    }
+
+    drawCustomMeshTextured(sampler0, ClientRenderPipelines.texQuads(noDepthTest)) { matrix ->
+        for (row in 0 until subdivisions) {
+            for (col in 0 until subdivisions) {
+                val x1 = minX + col * step
+                val x2 = x1 + step
+                val y1 = minY + row * step
+                val y2 = y1 + step
+
+                val u1 = col.toFloat() / subdivisions
+                val u2 = (col + 1).toFloat() / subdivisions
+                val v1 = row.toFloat() / subdivisions
+                val v2 = (row + 1).toFloat() / subdivisions
+
+                val c11 = getColorForPos(x1, y1)
+                val c12 = getColorForPos(x1, y2)
+                val c22 = getColorForPos(x2, y2)
+                val c21 = getColorForPos(x2, y1)
+
+                addVertex(matrix, x1, y2, 0.0f).setUv(u1, v2).setColor(c12)
+                addVertex(matrix, x1, y1, 0.0f).setUv(u1, v1).setColor(c11)
+                addVertex(matrix, x2, y1, 0.0f).setUv(u2, v1).setColor(c21)
+                addVertex(matrix, x2, y2, 0.0f).setUv(u2, v2).setColor(c22)
+            }
+        }
+    }
+}
+
+@JvmOverloads
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int, noDepthTest: Boolean = true) {
+    drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest)) { matrix ->
         addVertex(matrix, p1).setColor(argb)
         addVertex(matrix, p2).setColor(argb)
         addVertex(matrix, p3).setColor(argb)
@@ -414,22 +438,63 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 /**
  * Function to draw a colored [box].
  */
+@AddonApi
+@JvmOverloads
 fun WorldRenderEnvironment.drawBox(
     box: AABB,
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
     faceVertices: Int = -1,
     outlineVertices: Int = -1,
+    noDepthTest: Boolean = true,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest)) { pose ->
             addBoxFaces(pose.pose(), box, color = faceColor, verticesToUse = faceVertices)
         }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawCustomMesh(ClientRenderPipelines.Lines) { pose ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest)) { pose ->
             addBoxOutlines(pose.pose(), box, outlineColor, outlineVertices)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShape(
+    shape: VoxelShape,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
+            addShapeFaces(pose.pose(), shape, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+            addShapeOutlines(pose.pose(), shape, outlineColor)
+        }
+    }
+}
+
+fun WorldRenderEnvironment.drawShapeSide(
+    shape: VoxelShape,
+    side: Direction,
+    hitPos: Vec3,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
+            addShapeSideFaces(pose.pose(), shape, side, hitPos, color = faceColor)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
+            addShapeSideOutlines(pose.pose(), shape, side, hitPos, outlineColor)
         }
     }
 }
@@ -473,11 +538,12 @@ fun WorldRenderEnvironment.drawPlane(
     sizeX: Float,
     sizeZ: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
-    outlineColor: Color4b? = Color4b.TRANSPARENT
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+    noDepthTest: Boolean = true
 ) {
     if (fillColor != null && !fillColor.isTransparent) {
         val argb = fillColor.argb
-        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = noDepthTest)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
             addVertex(matrix, sizeX, 0f, sizeZ).setColor(argb)
@@ -487,7 +553,7 @@ fun WorldRenderEnvironment.drawPlane(
 
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.argb
-        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = noDepthTest)) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
 
@@ -519,6 +585,17 @@ fun WorldRenderEnvironment.drawGradientCircle(
     innerOffset: Vector3fc = Vector3f(),
     noDepthTest: Boolean = true,
 ) {
+    if (outerRadius <= 0f || outerColor.isTransparent && innerColor.isTransparent) {
+        return
+    }
+
+    if (Mth.equal(innerOffset.lengthSquared(), 0f)) {
+        val innerRatio = (innerRadius / outerRadius).coerceIn(0f, 1f)
+
+        drawGradientCircleQuad(outerRadius, outerColor, innerColor, innerRatio, noDepthTest)
+        return
+    }
+
     drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest)) { matrix ->
         val innerP = Vector3f()
         val outerP = Vector3f()
@@ -532,8 +609,58 @@ fun WorldRenderEnvironment.drawGradientCircle(
     }
 }
 
-private fun WorldRenderEnvironment.drawCircleXZNoUniform(radius: Float, argb: Int, noDepthTest: Boolean) {
-    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest)) { pose ->
+private fun WorldRenderEnvironment.drawGradientCircleQuad(
+    radius: Float,
+    outerColor: Color4b,
+    innerColor: Color4b,
+    innerRatio: Float,
+    noDepthTest: Boolean,
+) {
+    fun packColorRG(color: Color4b): Int =
+        ((color.r and 0xFF) shl 8) or (color.g and 0xFF)
+
+    fun packColorBA(color: Color4b): Int =
+        ((color.b and 0xFF) shl 8) or (color.a and 0xFF)
+
+    val outerRg = packColorRG(outerColor)
+    val outerBa = packColorBA(outerColor)
+    val innerRg = packColorRG(innerColor)
+    val innerBa = packColorBA(innerColor)
+
+    drawCustomMesh(ClientRenderPipelines.gradientCircle(noDepthTest)) { matrix ->
+        addVertex(matrix, -radius, 0f, -radius)
+            .setUv(0f, 0f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, -radius, 0f, radius)
+            .setUv(0f, 1f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, radius, 0f, radius)
+            .setUv(1f, 1f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+        addVertex(matrix, radius, 0f, -radius)
+            .setUv(1f, 0f)
+            .setUv1(outerRg, outerBa)
+            .setUv2(innerRg, innerBa)
+            .setLineWidth(innerRatio)
+    }
+}
+
+private fun WorldRenderEnvironment.drawRoundedRectQuad(
+    radius: Float,
+    argb: Int,
+    noDepthTest: Boolean,
+    uniform: GpuBufferSlice,
+) {
+    drawCustomMesh(
+        pipeline = ClientRenderPipelines.roundedRect(noDepthTest),
+        uniforms = objectObjectMapOf(ClientUniformDefine.ROUNDED_RECT.uboName, uniform),
+    ) { pose ->
         addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(argb)
         addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(argb)
         addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(argb)
@@ -545,46 +672,17 @@ fun WorldRenderEnvironment.drawCircle(
     radius: Float,
     color: Color4b,
 ) {
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb, noDepthTest = true)
-}
-
-fun WorldRenderEnvironment.drawCircle(
-    radius: Float,
-    innerColor: Color4b,
-    outerColor: Color4b,
-) {
-    if (innerColor == outerColor) {
-        drawCircle(radius, color = innerColor)
+    if (radius <= 0f || color.isTransparent) {
         return
     }
 
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_FILLED_CIRCLE_UBO)
-    drawCustomMesh(ClientRenderPipelines.roundedRect(noDepthTest = true)) { pose ->
-        // Quad 1 (NW)
-        addVertex(pose, -radius, 0f, -radius).setUv(0f, 0f).setColor(outerColor)
-        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
-
-        // Quad 2 (NE)
-        addVertex(pose, radius, 0f, -radius).setUv(1f, 0f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, -radius).setUv(0.5f, 0f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
-
-        // Quad 3 (SE)
-        addVertex(pose, radius, 0f, radius).setUv(1f, 1f).setColor(outerColor)
-        addVertex(pose, radius, 0f, 0f).setUv(1f, 0.5f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
-
-        // Quad 4 (SW)
-        addVertex(pose, -radius, 0f, radius).setUv(0f, 1f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, radius).setUv(0.5f, 1f).setColor(outerColor)
-        addVertex(pose, 0f, 0f, 0f).setUv(0.5f, 0.5f).setColor(innerColor)
-        addVertex(pose, -radius, 0f, 0f).setUv(0f, 0.5f).setColor(outerColor)
-    }
+    drawGradientCircleQuad(
+        radius = radius,
+        outerColor = color,
+        innerColor = color,
+        innerRatio = 0f,
+        noDepthTest = true,
+    )
 }
 
 /**
@@ -595,8 +693,16 @@ fun WorldRenderEnvironment.drawCircle(
  */
 @JvmOverloads
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color: Color4b, noDepthTest: Boolean = true) {
-    uniform(ClientUniformDefine.ROUNDED_RECT.uboName, ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO)
-    drawCircleXZNoUniform(radius, color.argb, noDepthTest)
+    if (radius <= 0f || color.isTransparent) {
+        return
+    }
+
+    drawRoundedRectQuad(
+        radius = radius,
+        argb = color.argb,
+        noDepthTest = noDepthTest,
+        uniform = ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO,
+    )
 }
 
 fun WorldRenderEnvironment.drawGradientSides(
@@ -609,7 +715,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         return
     }
 
-    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+    drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
         addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
         addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
         addVertex(pose, box.maxX, height, box.minZ).setColor(topColor)
@@ -630,4 +736,11 @@ fun WorldRenderEnvironment.drawGradientSides(
         addVertex(pose, box.minX, height, box.minZ).setColor(topColor)
         addVertex(pose, box.minX, 0.0, box.minZ).setColor(baseColor)
     }
+}
+
+@Suppress("unused")
+enum class AnchorPoint(val xFactor: Float, val yFactor: Float) {
+    TOP_LEFT(-1.0f, 0.0f),    TOP_CENTER(-0.5f, 0.0f),    TOP_RIGHT(0.0f, 0.0f),
+    CENTER_LEFT(-1.0f, -0.5f), CENTER(-0.5f, -0.5f),      CENTER_RIGHT(0.0f, -0.5f),
+    BOTTOM_LEFT(-1.0f, -1.0f), BOTTOM_CENTER(-0.5f, -1.0f), BOTTOM_RIGHT(0.0f, -1.0f)
 }

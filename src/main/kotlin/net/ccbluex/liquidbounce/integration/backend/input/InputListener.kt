@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.utils.client.mc
-import org.lwjgl.glfw.GLFW
+import org.joml.component1
+import org.joml.component2
 import java.lang.AutoCloseable
 
 /**
@@ -52,10 +53,10 @@ class InputListener(
             return@handler
         }
 
-        if (event.action == GLFW.GLFW_PRESS) {
+        if (event.isPressed) {
             val (transformedX, transformedY) = browser.viewport.transform(mouseX, mouseY)
             inputHandler.mouseClicked(transformedX, transformedY, event.button)
-        } else if (event.action == GLFW.GLFW_RELEASE) {
+        } else if (event.isReleased) {
             val (transformedX, transformedY) = browser.viewport.transform(mouseX, mouseY)
             inputHandler.mouseReleased(transformedX, transformedY, event.button)
         }
@@ -98,14 +99,13 @@ class InputListener(
             return@handler
         }
 
-        val action = event.action
         val key = event.keyCode
         val scancode = event.scanCode
         val modifiers = event.mods
 
-        if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
+        if (event.isPressed || event.isRepeat) {
             inputHandler.keyPressed(key, scancode, modifiers)
-        } else if (action == GLFW.GLFW_RELEASE) {
+        } else if (event.isReleased) {
             inputHandler.keyReleased(key, scancode, modifiers)
         }
     }
@@ -116,7 +116,7 @@ class InputListener(
             return@handler
         }
 
-        inputHandler.charTyped(ev.codePoint.toChar(), ev.modifiers)
+        inputHandler.charTyped(ev.codePoint)
     }
 
     override fun close() {

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render.placement
 
+import net.ccbluex.liquidbounce.utils.math.longFrom32
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Direction.DOWN
@@ -51,7 +52,8 @@ private const val EDGE_SOUTH_UP = ((1 shl 20) or (1 shl (21)))
 private const val EDGE_WEST_UP = ((1 shl 22) or (1 shl (23)))
 
 // TODO check whether the Boxes actually touch
-internal class BlockCuller(val owner: Owner) {
+@JvmInline
+internal value class BlockCuller(val owner: Owner) {
 
     interface Owner {
         operator fun contains(pos: Long): Boolean
@@ -102,7 +104,7 @@ internal class BlockCuller(val owner: Owner) {
 
         // combines the data in a single long and inverts it, so that all vertices that are to be rendered are
         // represented by 1s
-        return ((faces.toLong() shl 32) or edges.toLong())
+        return longFrom32(faces, edges)
     }
 
     /**

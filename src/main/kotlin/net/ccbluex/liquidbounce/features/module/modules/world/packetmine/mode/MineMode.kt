@@ -45,6 +45,10 @@ sealed class MineMode(
 
     open fun onCannotLookAtTarget(mineTarget: MineTarget) {}
 
+    open fun shouldPreventTargetChange(mineTarget: MineTarget): Boolean {
+        return false
+    }
+
     abstract fun start(mineTarget: MineTarget)
 
     abstract fun finish(mineTarget: MineTarget)

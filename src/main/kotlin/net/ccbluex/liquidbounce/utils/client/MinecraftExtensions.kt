@@ -19,11 +19,12 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import com.mojang.authlib.GameProfileRepository
-import com.mojang.authlib.minecraft.MinecraftSessionService
-import com.mojang.authlib.yggdrasil.ServicesKeySet
+import com.mojang.authlib.minecraft.SessionService
+import com.mojang.authlib.services.ServicesKeySet
 import com.mojang.blaze3d.platform.Window
-import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.device.GpuDevice
+import net.ccbluex.liquidbounce.utils.kotlin.IntIntValuePair
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -34,10 +35,10 @@ import net.minecraft.server.players.ProfileResolver
 import net.minecraft.server.players.UserNameToIdResolver
 
 val Window.dimensions
-    get() = intArrayOf(screenWidth, screenHeight)
+    get() = IntIntValuePair(screenWidth, screenHeight)
 
 val Window.scaledDimension
-    get() = intArrayOf(guiScaledWidth, guiScaledHeight)
+    get() = IntIntValuePair(guiScaledWidth, guiScaledHeight)
 
 val mc: Minecraft
     inline get() = Minecraft.getInstance()
@@ -53,7 +54,7 @@ val gpuDevice: GpuDevice
     inline get() = RenderSystem.getDevice()
 
 fun Services.with(
-    sessionService: MinecraftSessionService = this.sessionService,
+    sessionService: SessionService = this.sessionService,
     servicesKeySet: ServicesKeySet = this.servicesKeySet,
     profileRepository: GameProfileRepository = this.profileRepository,
     nameToIdCache: UserNameToIdResolver = this.nameToIdCache,
@@ -66,3 +67,12 @@ fun Services.with(
         profileResolver
     )
 }
+
+// Copied from 26.1.2
+val Minecraft.isSingleplayer: Boolean
+    get() {
+        val singleplayerServer = this.singleplayerServer
+        return singleplayerServer != null && !singleplayerServer.isPublished
+    }
+
+// Copied from 26.1.2 end

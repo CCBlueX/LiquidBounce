@@ -56,5 +56,5 @@ interface InputHandler {
     /**
      * Handles character typed events
      */
-    fun charTyped(char: Char, modifiers: Int)
+    fun charTyped(codepoint: Int)
 }

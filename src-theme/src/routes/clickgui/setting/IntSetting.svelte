@@ -17,12 +17,17 @@
     let apiSlider: API;
 
     onMount(() => {
+        // The value can sit outside the declared range (e.g. set through the `.value` command),
+        // so widen the slider instead of letting noUiSlider clamp it away.
+        const min = Math.min(cSetting.range.from, cSetting.value);
+        const max = Math.max(cSetting.range.to, cSetting.value);
+
         apiSlider = noUiSlider.create(slider, {
             start: cSetting.value,
             connect: "lower",
             range: {
-                min: cSetting.range.from,
-                max: cSetting.range.to,
+                min,
+                max,
             },
             step: 1,
         });
@@ -53,7 +58,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
 
     .setting {
         padding: 7px 0 2px 0;
@@ -78,7 +82,7 @@
     .suffix,
     .setting,
     .value {
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         font-weight: 500;
         font-size: 12px;
     }

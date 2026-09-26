@@ -31,7 +31,7 @@ object InventoryMoveTimerFeature : ToggleableValueGroup(ModuleInventoryMove, "Ti
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (mc.screen is AbstractContainerScreen<*>) {
+        if (mc.gui.screen() is AbstractContainerScreen<*>) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_2, ModuleInventoryMove)
         }
     }

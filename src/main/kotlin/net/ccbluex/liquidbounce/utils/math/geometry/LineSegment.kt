@@ -18,51 +18,27 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.world.phys.Vec3
 
-class LineSegment(position: Vec3, direction: Vec3, val phiRange: ClosedFloatingPointRange<Double>) :
-    Line(position, direction) {
+data class LineSegment(
+    val start: Vec3,
+    val end: Vec3,
+) : LinearGeometry3 {
+
+    init {
+        require(!end.subtract(start).isLikelyZero) {
+            "Line segment must not have zero length, actual: $start -> $end"
+        }
+    }
+
+    override val anchor: Vec3
+        get() = start
+
+    override val direction: Vec3
+        get() = end.subtract(start)
+
     val length: Double
-        get() = direction.scale(phiRange.endInclusive - phiRange.start).length()
+        get() = direction.length()
 
-    val endPoints: Pair<Vec3, Vec3>
-        get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
-
-    override fun getNearestPointTo(point: Vec3): Vec3 {
-        val plane = NormalizedPlane(point, direction)
-
-        // If there is no intersection between the created plane and this line it means that the point is in the line.
-        val intersection = plane.intersectionPhi(this)
-
-        val phi = intersection ?: getPhiForPoint(point)
-
-        return getPosition(phi.coerceIn(phiRange))
-    }
-
-    override fun calculateNearestPhiTo(other: Line): Double? {
-        return super.calculateNearestPhiTo(other)?.coerceIn(phiRange)
-    }
-
-    override fun getPosition(phi: Double): Vec3 {
-        require(phi in phiRange) {
-            "Phi must be in range $phiRange"
-        }
-
-        return super.getPosition(phi)
-    }
-
-    override fun getPositionChecked(phi: Double): Vec3? {
-        if (phi !in phiRange) {
-            return null
-        }
-
-        return super.getPosition(phi)
-    }
-
-    companion object {
-        @JvmStatic
-        fun fromPoints(a: Vec3, b: Vec3): LineSegment {
-            return LineSegment(a, b.subtract(a), 0.0..1.0)
-        }
-    }
 }

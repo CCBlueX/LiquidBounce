@@ -54,7 +54,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
@@ -62,7 +61,7 @@
 
   .name {
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     margin-bottom: 5px;
   }
@@ -73,12 +72,12 @@
 
     input.value {
       width: 100%;
-      background-color: rgba($clickgui-base-color, .36);
+      background-color: var(--clickgui-input-background-color);
       font-family: monospace;
       font-size: 12px;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       border: none;
-      border-bottom: solid 2px $accent-color;
+      border-bottom: solid 2px var(--clickgui-input-border-color);
       padding: 5px;
       border-radius: 3px;
       transition: ease border-color .2s;
@@ -101,7 +100,7 @@
       background-color: transparent;
       border: none;
       cursor: pointer;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       font-size: 12px;
       text-align: right;
     }

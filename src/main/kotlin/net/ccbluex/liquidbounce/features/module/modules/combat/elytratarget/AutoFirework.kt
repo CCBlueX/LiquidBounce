@@ -24,10 +24,9 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -113,11 +112,12 @@ internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFir
         PACKET("Packet") {
             override fun useFireworkSlot(slot: HotbarItemSlot, resetDelay: Int) {
                 val curSlot = player.inventory.selectedSlot
-                val slotUpdateFlag = slot !is OffHandSlot && slot.hotbarSlotForServer != curSlot
+                val hotbarIndex = slot.hotbarIndex
+                val slotUpdateFlag = hotbarIndex != null && hotbarIndex != curSlot
 
                 if (slotUpdateFlag) {
-                    player.inventory.selectedSlot = slot.hotbarSlotForServer
-                    network.sendHeldItemChange(slot.hotbarSlotForServer)
+                    player.inventory.selectedSlot = hotbarIndex!!
+                    network.sendHeldItemChange(hotbarIndex)
                 }
 
                 interaction.startPrediction(world) { sequence ->

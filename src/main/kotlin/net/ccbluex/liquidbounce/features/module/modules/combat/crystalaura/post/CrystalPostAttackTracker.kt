@@ -19,12 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
+import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
 import net.minecraft.sounds.SoundEvents
@@ -37,7 +39,7 @@ abstract class CrystalPostAttackTracker : EventListener {
     protected val attackedIds = Int2LongLinkedOpenHashMap().synchronized()
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent>(FIRST_PRIORITY) {
         val currentTime = System.currentTimeMillis()
         val attackTime = currentTime - timeOutAfter()
         attackedIds.int2LongEntrySet().removeIf { entry ->
@@ -72,7 +74,7 @@ abstract class CrystalPostAttackTracker : EventListener {
             }
 
             is ClientboundRemoveEntitiesPacket -> {
-                packet.entityIds.forEach { id ->
+                packet.entityIds.forEachInt { id ->
                     if (attackedIds.remove(id) != 0L) {
                         confirmed(id)
                     }

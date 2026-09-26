@@ -78,7 +78,7 @@ object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", fa
 
             player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
         } else {
-            player.deltaMovement.withStrafe(speed = speed.toDouble())
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
         }
     }
 }

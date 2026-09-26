@@ -21,6 +21,13 @@ package net.ccbluex.liquidbounce.utils.kotlin
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.fastutil.fastIterator
+import java.util.function.Function
+
+fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K, V>): Function<K, V> =
+    Function { key -> map.computeIfAbsent(key, mappingFunction) }
+
+inline fun <K : Any, V : Any> Map<K, V>.immutableCopy(): Map<K, V> =
+    java.util.Map.copyOf(this)
 
 /**
  * Sums the values for matching keys from another map to this map.

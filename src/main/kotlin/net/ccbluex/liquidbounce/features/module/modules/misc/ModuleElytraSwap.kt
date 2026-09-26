@@ -22,14 +22,15 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isChestArmor
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 
 /**
  * ModuleElytraSwap
@@ -48,23 +49,22 @@ object ModuleElytraSwap : ClientModule(
 
     private val constraints = tree(PlayerInventoryConstraints())
 
-    private val slotsToSearch = Slots.Hotbar + Slots.Inventory + Slots.OffHand
-    private val chestplateSlot = Slots.Armor[2]
+    private val slotsToSearch = Slots.Hotbar + Slots.Inventory + HotbarItemSlot.OFFHAND
 
     @Suppress("unused")
     private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent>(
         EventPriorityConvention.CRITICAL_MODIFICATION
     ) { event ->
-        val elytraItem = slotsToSearch.findSlot { it.isElytra() && !it.nextDamageWillBreak() }
+        val elytraItem = slotsToSearch.findSlot { it.isGlider && !it.nextDamageWillBreak() }
         val chestplateItem = slotsToSearch.findSlot { it.isChestArmor }
 
-        val chestplateStack = chestplateSlot.itemStack
+        val chestplateStack = ArmorItemSlot.CHEST.itemStack
         when {
             // put on elytra
             chestplateStack.isEmpty && elytraItem != null -> event.doSwap(elytraItem)
 
             // replacing of elytra with a chestplate
-            chestplateStack.isElytra() && chestplateItem != null -> event.doSwap(chestplateItem)
+            chestplateStack.isGlider && chestplateItem != null -> event.doSwap(chestplateItem)
 
             // replacing the chestplate with elytra
             chestplateStack.isChestArmor && elytraItem != null -> event.doSwap(elytraItem)
@@ -75,19 +75,17 @@ object ModuleElytraSwap : ClientModule(
 
     private fun ScheduleInventoryActionEvent.doSwap(slot: ItemSlot) {
         var exchange: InventoryAction? = null
-        if (!chestplateSlot.itemStack.isEmpty) {
+        if (!ArmorItemSlot.CHEST.itemStack.isEmpty) {
             exchange = InventoryAction.Click.performPickup(slot = slot)
         }
 
         val actions = listOfNotNull(
             InventoryAction.Click.performPickup(slot = slot),
-            InventoryAction.Click.performPickup(slot = chestplateSlot),
+            InventoryAction.Click.performPickup(slot = ArmorItemSlot.CHEST),
             exchange
         )
 
         schedule(constraints, actions)
     }
-
-    private fun ItemStack.isElytra() = this.item == Items.ELYTRA
 
 }

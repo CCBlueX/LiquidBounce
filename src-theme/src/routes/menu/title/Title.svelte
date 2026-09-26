@@ -1,6 +1,7 @@
 <script lang="ts">
     import MainButton from "./buttons/MainButton.svelte";
     import ChildButton from "./buttons/ChildButton.svelte";
+    import ConfettiBackground from "./ConfettiBackground.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
@@ -9,12 +10,13 @@
         exitClient,
         getClientUpdate,
         openScreen,
-        toggleBackgroundShaderEnabled
+        toggleBackgroundShaderEnabled,
+        toggleBasicMode
     } from "../../../integration/rest";
-    import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
+    import {isAnniversary} from "../../../util/utils";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -49,7 +51,11 @@
     }
 </script>
 
-<Menu>
+<div class="title-screen">
+    {#if isAnniversary()}
+        <ConfettiBackground/>
+    {/if}
+
     <div class="content">
         <div class="main-buttons">
             {#if regularButtonsShown}
@@ -75,8 +81,8 @@
         <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
-                <IconTextButton icon="icon-change-background.svg" title="Toggle Shader"
-                                on:click={toggleBackgroundShaderEnabled}/>
+                <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
+                <IconButton icon="change-background" title="Toggle Shader" on:click={toggleBackgroundShaderEnabled}/>
             </ButtonContainer>
         </div>
 
@@ -92,9 +98,17 @@
             </ButtonContainer>
         </div>
     </div>
-</Menu>
+</div>
 
 <style>
+    .title-screen {
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
     .content {
         flex: 1;
         display: grid;

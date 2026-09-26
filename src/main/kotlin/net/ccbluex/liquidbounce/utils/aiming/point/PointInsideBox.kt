@@ -34,21 +34,20 @@ data class PointInsideBox private constructor(val pos: Vec3, val box: AABB) : Po
 
     fun distanceTo(point: Vec3) = pos.distanceTo(point)
 
-    fun squaredDistanceTo(point: PointInsideBox) = pos.distanceToSqr(point.pos)
+    fun distanceToSqr(point: PointInsideBox) = pos.distanceToSqr(point.pos)
 
-    fun squaredDistanceTo(point: Vec3) = pos.distanceToSqr(point)
+    fun distanceToSqr(point: Vec3) = pos.distanceToSqr(point)
 
-    operator fun plus(other: Position) = Companion(pos + other, box + other)
+    operator fun plus(other: Position) = invoke(pos + other, box + other)
 
-    operator fun minus(other: Position) = Companion(pos - other, box - other)
+    operator fun minus(other: Position) = invoke(pos - other, box - other)
 
     // Delegation
     override fun x(): Double = pos.x()
     override fun y(): Double = pos.y()
     override fun z(): Double = pos.z()
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmName("of")
         operator fun invoke(pos: Vec3, box: AABB) = PointInsideBox(box.getNearestPoint(pos), box)
     }

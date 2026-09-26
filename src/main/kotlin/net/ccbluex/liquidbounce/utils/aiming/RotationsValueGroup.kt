@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.FailRotationProcessor
@@ -36,6 +37,7 @@ import net.minecraft.world.entity.Entity
 /**
  * Configurable to configure the dynamic rotation engine
  */
+@AddonApi
 open class RotationsValueGroup(
     owner: EventListener,
     movementCorrection: MovementCorrection = MovementCorrection.SILENT,
@@ -55,13 +57,14 @@ open class RotationsValueGroup(
         ).toTypedArray()
     }
 
-    private var shortStop = ShortStopRotationProcessor(owner).takeIf { combatSpecific }?.also { tree(it) }
-    private val fail = FailRotationProcessor(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private val shortStop = if (combatSpecific) tree(ShortStopRotationProcessor(owner)) else null
+    private val fail = if (combatSpecific) tree(FailRotationProcessor(owner)) else null
 
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
     private val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
 
+    @AddonApi
     fun toRotationTarget(
         rotation: Rotation,
         entity: Entity? = null,
@@ -72,8 +75,8 @@ open class RotationsValueGroup(
         entity,
         listOfNotNull(
             angleSmooth.activeMode,
-            fail.takeIf { failFocus -> failFocus?.running == true },
-            shortStop.takeIf { shortStop -> shortStop?.running == true }
+            fail?.takeIf { it.running },
+            shortStop?.takeIf { it.running }
         ),
         ticksUntilReset,
         resetThreshold,

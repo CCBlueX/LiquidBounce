@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
  *
  * @see net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
  */
+@Deprecated("Disabled this feature")
 object OutlineShaderRenderer : OverlayShaderRenderer(
     "Outline",
     ClientRenderPipelines.Outline,

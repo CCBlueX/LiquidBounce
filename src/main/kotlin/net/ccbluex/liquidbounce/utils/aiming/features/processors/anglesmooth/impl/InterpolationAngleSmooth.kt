@@ -24,8 +24,11 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.FactorAngleSmooth
+import net.minecraft.world.phys.Vec2
 import kotlin.math.abs
 import kotlin.math.exp
+
+internal fun normalizeDirectionChange(angle: Float): Float = (angle / 180f).coerceIn(0f, 1f)
 
 class InterpolationAngleSmooth(
     parent: ModeValueGroup<*>,
@@ -40,20 +43,13 @@ class InterpolationAngleSmooth(
 
     private val midpoint by float("Midpoint", 0.35f, 0.0f..1.0f)
 
-    private class Sigmoid {
-        fun transform(t: Float): Float {
-            return 1f / (1f + exp(-0.5f * (t - 0.3f)))
-        }
+    private fun sigmoid(t: Float): Float {
+        return 1f / (1f + exp(-0.5f * (t - 0.3f)))
     }
 
-    private class Bezier {
-        fun transform(start: Float, end: Float, t: Float): Float {
-            return (1f - t) * (1f - t) * start + 2f * (1f - t) * t * 1f + t * t * end
-        }
+    private fun bezier(start: Float, end: Float, t: Float): Float {
+        return (1f - t) * (1f - t) * start + 2f * (1f - t) * t * 1f + t * t * end
     }
-
-    private val sigmoid = Sigmoid()
-    private val bezier = Bezier()
 
     /**
      * Calculate the factors for the rotation towards the target rotation.
@@ -65,13 +61,14 @@ class InterpolationAngleSmooth(
         rotationTarget: RotationTarget?,
         currentRotation: Rotation,
         targetRotation: Rotation
-    ): Pair<Float, Float> {
+    ): Vec2 {
         val (yawDiff, pitchDiff) = currentRotation.rotationDeltaTo(targetRotation)
         ModuleDebug.debugParameter(this, "Yaw Diff", yawDiff)
         ModuleDebug.debugParameter(this, "Pitch Diff", pitchDiff)
 
         val directionChange = RotationManager.previousRotationTarget.takeIf { rotationTarget != null }?.run {
-            rotation.angleTo(targetRotation).coerceIn(0f, 1f) * (directionChangeFactor.random().toFloat() / 100.0f)
+            normalizeDirectionChange(rotation.rotationDeltaLengthTo(targetRotation)) *
+                (directionChangeFactor.random().toFloat() / 100.0f)
         } ?: 0f
         ModuleDebug.debugParameter(this, "Direction Change", directionChange)
 
@@ -97,16 +94,16 @@ class InterpolationAngleSmooth(
 
         // Multiplying the factor with the difference in yaw and pitch allows us
         // to bypass the linear [towardsLinear] method
-        return horizontalFactor * abs(yawDiff) to verticalFactor * abs(pitchDiff)
+        return Vec2(horizontalFactor * abs(yawDiff), verticalFactor * abs(pitchDiff))
     }
 
     private fun calculateFactor(name: String, rotationDifference: Float, turnSpeed: Float,
                                 directionChange: Float): Float {
-        val t = (rotationDifference / 180f).coerceIn(0f, 1f)
+        val t = normalizeDirectionChange(rotationDifference)
         ModuleDebug.debugParameter(this, "$name T", t)
 
-        val bezierSpeed = bezier.transform(0.05f, 1f, 1f - t)
-        val sigmoidSpeed = sigmoid.transform(t)
+        val bezierSpeed = bezier(0.05f, 1f, 1f - t)
+        val sigmoidSpeed = sigmoid(t)
 
         ModuleDebug.debugParameter(this, "$name Bezier", bezierSpeed)
         ModuleDebug.debugParameter(this, "$name Sigmoid", sigmoidSpeed)

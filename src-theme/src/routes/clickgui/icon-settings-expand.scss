@@ -18,7 +18,10 @@
  */
 
 @mixin icon-settings-expand(
-  $size: 10px,
+  /* NOTE: Uneven number is required for a properly centered transformation origin.
+           This prevents a glitching transition when the icon is rotated.
+   */
+  $size: 11px,
   $right: 10px,
   $rotate: -90deg,
 ) {
@@ -33,6 +36,7 @@
   background-position: center;
   background-repeat: no-repeat;
   transform-origin: 50% 50%;
-  transform: translateY(-50%) rotate($rotate);
+  // NOTE: Subtract 1 pixel to still properly center the arrow after increasing height to 11px.
+  transform: translateY(calc(-50% - 1px)) rotate($rotate);
   transition: ease opacity 0.2s, ease transform 0.4s;
 }

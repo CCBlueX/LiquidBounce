@@ -43,13 +43,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import kotlin.math.ceil
 import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * AutoShop module
@@ -59,7 +60,7 @@ import kotlin.math.min
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
-    private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
+    private val shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
     }
 
@@ -162,12 +163,12 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             return
         }
 
-        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
-        interaction.handleInventoryMouseClick(
-            (mc.screen as ContainerScreen).menu.containerId,
+        val prevShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
+        interaction.handleContainerInput(
+            (mc.gui.screen() as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
-            ClickType.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -183,11 +184,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
-        interaction.handleInventoryMouseClick(
-            (mc.screen as ContainerScreen).menu.containerId,
+        interaction.handleContainerInput(
+            (mc.gui.screen() as ContainerScreen).menu.containerId,
             itemSlot,
             0,
-            ClickType.PICKUP,
+            NormalPurchaseMode.action.input,
             mc.player!!
         )
 
@@ -219,22 +220,22 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
     private suspend fun buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
-        val slotsToClick = simulationResult.first
+        val slotsToClick = simulationResult.slots
         val prevInventory = AutoShopInventoryManager.getInventoryItems()
-        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
+        val prevShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
         slotsToClick.forEachInt { slot ->
             if (slot == -1) {
                 return@forEachInt // it looks as if it doesn't require to switch an item category anymore
             }
 
-            delay(QuickPurchaseMode.delay.random().toLong())
+            delay(QuickPurchaseMode.delayMs.random().milliseconds)
 
-            interaction.handleInventoryMouseClick(
-                (mc.screen as ContainerScreen).menu.containerId,
+            interaction.handleContainerInput(
+                (mc.gui.screen() as ContainerScreen).menu.containerId,
                 slot,
                 0,
-                ClickType.PICKUP,
+                ContainerInput.PICKUP,
                 mc.player!!
             )
 
@@ -251,18 +252,18 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         // expects to get items later
         val newPendingItems = if (QuickPurchaseMode.waitForItems) {
             val map = Object2IntOpenHashMap<String>()
-            simulationResult.second.fastIterator().forEach {
+            simulationResult.expectedItems.fastIterator().forEach {
                 if (it.key.isArmorItem()) map.put(it.key, it.intValue)
             }
             map
         } else {
-            simulationResult.second
+            simulationResult.expectedItems
         }
         AutoShopInventoryManager.addPendingItems(newPendingItems)
 
         // waits for an inventory update and for an item category update
         tickUntil {
-            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
+            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.expectedItems)
                 && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks)))
         }
 
@@ -271,11 +272,10 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
-        val currentShopStacks = (mc.screen as ContainerScreen).stacks()
+        val currentShopStacks = (mc.gui.screen() as ContainerScreen).stacks()
 
-        val difference = currentShopStacks
-            .filter { !prevShopStacks.contains(it) }
-            .union(prevShopStacks.filter { !currentShopStacks.contains(it) })
+        val difference = (currentShopStacks - prevShopStacks)
+            .union(prevShopStacks - currentShopStacks)
 
         return difference.size > 1
     }
@@ -324,10 +324,10 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private fun simulateNextPurchases(
         remainingElements: List<ShopElement>,
         onlySameCategory: Boolean,
-    ): Pair<IntList, Object2IntMap<String>> {
+    ): PurchaseSimulationResult {
 
         if (remainingElements.isEmpty()) {
-            return Pair(intListOf(), Object2IntMaps.emptyMap())
+            return PurchaseSimulationResult(intListOf(), Object2IntMaps.emptyMap())
         }
 
         val initialCategorySlot = remainingElements.first().categorySlot
@@ -378,9 +378,13 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         slots.add(nextCategorySlot)
-        return Pair(slots, expectedItems)
+        return PurchaseSimulationResult(slots, expectedItems)
     }
 
+    private data class PurchaseSimulationResult(
+        val slots: IntList,
+        val expectedItems: Object2IntMap<String>,
+    )
 
     /**
      * Returns the limited items and their amounts required to buy an item
@@ -405,7 +409,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         // checks if the player is capable of buying a better item so that this item is not actually needed
         if (shopElement.item.id.isItemWithTiers() && remainingElements != null) {
             val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = false)
-            val hasBetterItem = hasBetterTierItem(shopElement.item.id, simulationResult.second)
+            val hasBetterItem = hasBetterTierItem(shopElement.item.id, simulationResult.expectedItems)
             if (hasBetterItem) {
                 return null
             }
@@ -454,7 +458,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     }
 
     private fun isShopOpen(): Boolean {
-        val screen = mc.screen as? ContainerScreen ?: return false
+        val screen = mc.gui.screen() as? ContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()
         val isTitleValid = currentConfig.traderTitles.any {

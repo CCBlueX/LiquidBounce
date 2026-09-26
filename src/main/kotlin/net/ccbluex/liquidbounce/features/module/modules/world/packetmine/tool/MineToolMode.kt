@@ -27,15 +27,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.FluidTags
 import net.minecraft.world.effect.MobEffectUtil
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 
 /**
@@ -56,7 +54,7 @@ sealed class MineToolMode(
             return state.getDestroyProgress(player, world, pos)
         }
 
-        return calcBlockBreakingDelta(pos, state, itemStack)
+        return getDestroyProgress(pos, state, itemStack)
     }
 
     fun getSlot(state: BlockState): HotbarItemSlot? {
@@ -77,26 +75,24 @@ sealed class MineToolMode(
 /**
  * @see net.minecraft.world.level.block.state.BlockBehaviour.getDestroyProgress
  */
-private fun calcBlockBreakingDelta(pos: BlockPos, state: BlockState, stack: ItemStack): Float {
+private fun getDestroyProgress(pos: BlockPos, state: BlockState, stack: ItemStack): Float {
     val hardness = state.getDestroySpeed(world, pos)
     if (hardness == -1f) {
         return 0f
     }
 
     val suitableMultiplier = if (!state.requiresCorrectToolForDrops() || stack.isCorrectToolForDrops(state)) 30 else 100
-    return getBlockBreakingSpeed(state, stack) / hardness / suitableMultiplier
+    return getDestroySpeed(player, state, stack) / hardness / suitableMultiplier
 }
 
-private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
+/**
+ * @see net.minecraft.world.entity.player.Player.getDestroySpeed
+ */
+private fun getDestroySpeed(player: Player, state: BlockState, stack: ItemStack): Float {
     var speed = stack.getDestroySpeed(state)
 
-    val enchantmentLevel = stack.getEnchantment(Enchantments.EFFICIENCY)
-    if (speed > 1f && enchantmentLevel != 0) {
-        /**
-         * See: [Attributes.MINING_EFFICIENCY]
-         */
-        val enchantmentAddition = enchantmentLevel.sq() + 1f
-        speed += enchantmentAddition.coerceIn(0f..1024f)
+    if (speed > 1f) {
+        speed += player.getAttributeValue(Attributes.MINING_EFFICIENCY).toFloat()
     }
 
     if (MobEffectUtil.hasDigSpeed(player)) {
@@ -108,7 +104,6 @@ private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
             0 -> 0.3f
             1 -> 0.09f
             2 -> 0.0027f
-            3 -> 8.1E-4f
             else -> 8.1E-4f
         }
 

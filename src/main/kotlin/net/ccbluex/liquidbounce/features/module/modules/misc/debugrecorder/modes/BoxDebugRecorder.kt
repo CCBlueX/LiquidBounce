@@ -20,35 +20,37 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.io.toJsonObject
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 
 object BoxDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Box") {
 
-    val repeatable = tickHandler {
+    private const val RANGE = 10.0
+
+    val repeatable = handler<GameTickEvent> {
         val crosshairTarget = mc.hitResult
 
         if (crosshairTarget?.type != HitResult.Type.ENTITY || crosshairTarget !is EntityHitResult) {
-            return@tickHandler
+            return@handler
         }
 
         recordPacket(JsonObject().apply {
-            world.entitiesForRendering().filter {
-                it.shouldBeAttacked() && it.distanceTo(player) < 10.0f && crosshairTarget.entity.id == it.id
+            world.getEntitiesInCube<LivingEntity>(player.position(), RANGE) {
+                it.shouldBeAttacked() && it.distanceToSqr(player) < RANGE * RANGE
+                    && crosshairTarget.entity.id == it.id
             }.minByOrNull {
-                it.distanceTo(player)
+                it.distanceToSqr(player)
             }?.let {
-                val vector = it.box.center - crosshairTarget.location
-                add("vec", JsonObject().apply {
-                    addProperty("x", vector.x)
-                    addProperty("y", vector.y)
-                    addProperty("z", vector.z)
-                })
+                val vector = it.boundingBox.center - crosshairTarget.location
+                add("vec", vector.toJsonObject())
             }
         })
     }

@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
 
 object SphereNukerArea : NukerArea("Sphere") {
 
@@ -34,16 +33,14 @@ object SphereNukerArea : NukerArea("Sphere") {
 
         val positions = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             isPositionAvailable(eyesPos, rangeSquared, pos, state)
-        }.toMutableList()
-
-        positions.sortBy { (pos, _) ->
+        }.sortedBy { (pos, _) ->
             // If there is a last target, sort by distance to it, otherwise go by hardness
-            wasTarget?.let { pos.distSqr(it) } ?: pos.distSqr(player.blockPosition())
+            pos.distSqr(wasTarget ?: player.blockPosition())
         }
 
         val boundingBox = player.box.move(0.0, -1.0, 0.0)
         val nonStandingPositions = positions.filter { (pos, _) ->
-            !boundingBox.intersects(AABB(pos))
+            !boundingBox.intersects(pos)
         }
 
         // If there are more than one target, we should remove blocks that we are standing on

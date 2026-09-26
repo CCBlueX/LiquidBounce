@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspLegacy2DMode
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -49,6 +50,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
+        EspLegacy2DMode,
 //        EspOutlineMode,
         EspGlowMode
     ))
@@ -61,6 +63,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
             GenericRainbowColorMode(it)
         )
     }
+    private val invisibleColor by color("Invisible", Color4b.ORANGE)
     private val friendColor by color("Friends", Color4b.GREEN)
 
     internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
@@ -76,6 +79,10 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     fun getColor(entity: LivingEntity): Color4b {
         if (entity.hurtTime > 0) {
             return Color4b.RED
+        }
+
+        if (entity.isInvisible) {
+            return invisibleColor
         }
 
         if (entity is Player) {

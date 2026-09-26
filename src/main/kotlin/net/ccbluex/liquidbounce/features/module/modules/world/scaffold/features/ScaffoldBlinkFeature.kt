@@ -26,8 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import java.util.function.Predicate
 
 object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", false) {
 
@@ -47,7 +49,7 @@ object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", fals
             return@handler
         }
 
-        if (pulseTimer.hasElapsed(pulseTime) || flushOn.any { it.cond(event.packet) }) {
+        if (pulseTimer.hasElapsed(pulseTime) || flushOn.matchesAny(event.packet)) {
             pulseTimer.reset()
             return@handler
         }
@@ -60,8 +62,8 @@ object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", fals
     @Suppress("unused")
     private enum class FlushOn(
         override val tag: String,
-        val cond: (packet: Packet<*>?) -> Boolean
-    ) : Tagged {
+        private val cond: Predicate<Packet<*>?>,
+    ) : Tagged, Predicate<Packet<*>?> by cond {
         PLACE("Place", { packet ->
             packet is ServerboundUseItemOnPacket
         }),

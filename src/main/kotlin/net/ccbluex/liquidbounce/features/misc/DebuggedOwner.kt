@@ -19,4 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.misc
 
-interface DebuggedOwner
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+
+interface DebuggedOwner {
+    val debugDisplayName: Component
+        get() = this.javaClass.simpleName.asPlainText(ChatFormatting.BLUE)
+
+    val debugOwnerId: String
+        get() = this.javaClass.name
+}

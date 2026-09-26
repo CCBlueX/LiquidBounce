@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.NeutralMob
-import net.minecraft.world.entity.monster.Monster
+import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
 
@@ -197,7 +197,7 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
         private fun weight(entity: LivingEntity): Int =
             when (entity) {
                 is Player -> 0
-                is Monster -> 1
+                is Enemy -> 1
                 is NeutralMob if entity.persistentAngerTarget == player.uuid -> 2
                 else -> Int.MAX_VALUE
             }

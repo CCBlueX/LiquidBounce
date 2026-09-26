@@ -18,39 +18,40 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
+import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction
 import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
 
 /**
  * Finds the minimum between min and max.
  */
-inline fun findFunctionMinimumByBisect(
+fun findFunctionMinimumByBisect(
     from: Double,
     to: Double,
     minDelta: Double = 1E-4,
-    function: (Double) -> Double
+    function: Double2DoubleFunction,
 ): DoubleDoublePair {
+    require(from.isFinite() && to.isFinite()) { "Search interval must be finite" }
+    require(from <= to) { "Search interval must satisfy from <= to" }
+    require(minDelta.isFinite() && minDelta > 0.0) { "minDelta must be finite and greater than 0" }
+
     var lowerBound = from
     var upperBound = to
 
-    var t = 0
-
     while (upperBound - lowerBound > minDelta) {
-        val mid = (lowerBound + upperBound) / 2
+        val mid = (lowerBound + upperBound) * 0.5
 
-        val leftValue = function((lowerBound + mid) / 2)
-        val rightValue = function((mid + upperBound) / 2)
+        val leftValue = function.get((lowerBound + mid) * 0.5)
+        val rightValue = function.get((mid + upperBound) * 0.5)
 
         if (leftValue < rightValue) {
             upperBound = mid
         } else {
             lowerBound = mid
         }
-
-        t++
     }
 
-    val x = (lowerBound + upperBound) / 2
-    val y = function(x)
+    val x = (lowerBound + upperBound) * 0.5
+    val y = function.get(x)
 
     return DoubleDoublePair.of(x, y)
 }
