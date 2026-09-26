@@ -45,7 +45,7 @@ public abstract class MixinEntityHitboxDebugRenderer {
             ),
         }
     )
-    private AABB getBoundingBox(AABB original, @Local(argsOnly = true) Entity entity) {
+    private AABB getBoundingBox(AABB original, @Local(argsOnly = true, name = "entity") Entity entity) {
         var moduleHitBox = ModuleHitbox.INSTANCE;
         if (entity != null && moduleHitBox.getRunning()
             && moduleHitBox.getApplyToDebugHitbox() && CombatExtensionsKt.shouldBeAttacked(entity)) {

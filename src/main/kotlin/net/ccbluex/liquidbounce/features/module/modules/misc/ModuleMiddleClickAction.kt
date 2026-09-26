@@ -55,6 +55,7 @@ object ModuleMiddleClickAction : ClientModule(
     private val mode = modes(this, "Mode", FriendClicker, arrayOf(FriendClicker, Pearl))
 
     override fun onDisabled() {
+        SilentHotbar.resetSlot(Pearl)
         Pearl.disable()
     }
 
@@ -65,7 +66,7 @@ object ModuleMiddleClickAction : ClientModule(
         private var wasPressed = false
 
         val repeatable = handler<GameTickEvent> {
-            if (mc.screen != null) {
+            if (mc.gui.screen() != null) {
                 wasPressed = false
                 return@handler
             }
@@ -133,14 +134,14 @@ object ModuleMiddleClickAction : ClientModule(
                 val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {
-                    FriendManager.friends.remove(FriendManager.Friend(name, null))
+                    FriendManager.remove(name)
                     notification(
                         "FriendClicker",
                         message("removedFriend", name),
                         NotificationEvent.Severity.INFO
                     )
                 } else {
-                    FriendManager.friends.add(FriendManager.Friend(name, null))
+                    FriendManager.add(FriendManager.Friend(name, null))
 
                     notification(
                         "FriendClicker",

@@ -34,11 +34,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.client.Camera
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
@@ -80,20 +79,21 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
             return@handler
         }
 
-        val matrixStack = event.matrixStack
         val color = if (colorRainbow) rainbow() else color
 
-        renderEnvironmentForWorld(matrixStack) {
-            val camera = mc.entityRenderDispatcher.camera ?: return@handler
-            val time = System.currentTimeMillis()
-            val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-            val lines = height == 0f
-            drawCustomMesh(
-                if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads
-            ) { pose ->
-                val renderData = RenderData(pose.pose(), this, colorF, lines)
+        val time = System.currentTimeMillis()
+        val colorF = color.toVector4f()
+        val lines = height == 0f
+
+        event.renderEnvironment {
+            drawCustomMesh(if (lines) {
+                ClientRenderPipelines.lines(noDepthTest = true)
+            } else {
+                ClientRenderPipelines.quads(noDepthTest = true)
+            }) {
+                val renderData = RenderData(poseStack.last().pose(), this, colorF, lines)
                 trails.forEach { (entity, trail) ->
-                    trail.verifyAndRenderTrail(renderData, camera, entity, time)
+                    trail.verifyAndRenderTrail(renderData, event.camera.position(), entity, time)
                 }
             }
         }
@@ -108,7 +108,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
 
         if (onlyOwn) {
             updateEntityTrail(time, player)
-            trails.keys.retainAll { it === player || !it.isAlive }
+            trails.keys.removeIf { it !== player && it.isAlive }
             return@handler
         }
 
@@ -126,7 +126,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         }
 
         lastPositions[entity] = entity.position().copy()
-        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
+        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.position(), time))
     }
 
     @Suppress("unused")
@@ -140,7 +140,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
     }
 
     @JvmRecord
-    private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
+    private data class TrailPart(val pos: Vec3, val creationTime: Long)
 
     private class RenderData(
         val pose: Matrix4fc,
@@ -153,7 +153,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
 
         val positions = ArrayDeque<TrailPart>()
 
-        fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
+        fun verifyAndRenderTrail(renderData: RenderData, cameraPos: Vec3, entity: Entity, time: Long) {
             val aliveDurationF = TemporaryValueGroup.alive.toFloat()
             val initialAlpha = renderData.color.w
 
@@ -181,21 +181,23 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
                     initialAlpha
                 }
 
-                val point = calculatePoint(camera, position.x, position.y, position.z)
+                val point = calculateRelativePos(cameraPos, position.pos)
                 ObjectFloatMutablePair.of(point, alpha)
             }
 
             val interpolatedPos = entity.getPosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
-            val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
+            val point = calculateRelativePos(cameraPos, interpolatedPos)
             pointsWithAlpha.last().left(point)
 
             addVerticesToBuffer(renderData, pointsWithAlpha)
         }
 
-        private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
-            val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
-            point.sub(camera.position().x.toFloat(), camera.position().y.toFloat(), camera.position().z.toFloat())
-            return point
+        private fun calculateRelativePos(cameraPos: Vec3, pos: Vec3): Vector3f {
+            return Vector3f().set(
+                pos.x - cameraPos.x,
+                pos.y - cameraPos.y,
+                pos.z - cameraPos.z,
+            )
         }
 
         private fun addVerticesToBuffer(renderData: RenderData, list: Array<out ObjectFloatPair<Vector3f>>) {

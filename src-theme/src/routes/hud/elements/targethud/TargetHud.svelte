@@ -38,13 +38,23 @@
             <div class="name">{target.username}</div>
             <div class="health-stats">
                 <div class="stat">
-                    <div class="value">{Math.floor(target.actualHealth + target.absorption)}</div>
+                    <div class="value">{Math.floor(target.actualHealth)}</div>
                     <img
                             class="icon"
                             src="img/hud/targethud/icon-health.svg"
                             alt="health"
                     />
                 </div>
+                {#if target.absorption > 0}
+                    <div class="stat">
+                        <div class="value">{Math.floor(target.absorption)}</div>
+                        <img
+                                class="icon"
+                                src="img/hud/targethud/icon-absorption.svg"
+                                alt="absorption"
+                        />
+                    </div>
+                {/if}
                 <div class="stat">
                     <div class="value">{Math.floor(target.armor)}</div>
                     <img
@@ -75,10 +85,9 @@
 {/if}
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .targethud {
-        background-color: rgba($targethud-base-color, 0.68);
+        background-color: var(--targethud-background-color);
         border-radius: 5px;
         overflow: hidden;
     }
@@ -94,7 +103,7 @@
 
     .name {
         grid-area: b;
-        color: $targethud-text-color;
+        color: var(--targethud-text-color);
         font-weight: 500;
         align-self: flex-end;
     }
@@ -106,7 +115,7 @@
 
         .stat {
             .value {
-                color: $targethud-text-dimmed-color;
+                color: var(--targethud-text-dimmed-color);
                 font-size: 14px;
                 min-width: 18px;
                 display: inline-block;

@@ -19,103 +19,118 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.httpBadRequest
-import net.ccbluex.netty.http.util.httpNoContent
-import net.ccbluex.netty.http.util.httpOk
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
 // GET /api/v1/client/browser
-@Suppress("UNUSED_PARAMETER")
-fun getBrowserInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen ?: return@apply
-    val browser = internetExplorerScreen.browserBrowser ?: return@apply
+private fun Route.getBrowserInfo() = get {
+    call.respond(JsonObject().apply {
+        val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen ?: return@apply
+        val browser = internetExplorerScreen.browserBrowser ?: return@apply
 
-    addProperty("url", browser.url)
-})
+        addProperty("url", browser.url)
+    })
+}
 
 // POST /api/v1/client/browser/navigate
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserNavigate(requestObject: RequestObject) = with(requestObject.asJson<Navigate>()) {
+private fun Route.postBrowserNavigate() = post("/navigate") { with(call.receive<Navigate>()) {
     val url = this.url
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.url = url
-    httpNoContent()
-}
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+} }
 
 private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
-    if (mc.screen !is InternetExplorerScreen) return@with httpBadRequest("No browser screen")
-    mc.setScreen(null)
-    httpNoContent()
-}
+private fun Route.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
+    if (mc.gui.screen() !is InternetExplorerScreen) {
+        call.badRequest("No browser screen")
+    } else {
+        mc.gui.setScreen(null)
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    }
+} }
 
 // POST /api/v1/client/browser/reload
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserReload(requestObject: RequestObject) = with(requestObject) {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+private fun Route.postBrowserReload() = post("/reload") {
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.reload()
-    httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/forceReload
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserForceReload(requestObject: RequestObject) = with(requestObject) {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+private fun Route.postBrowserForceReload() = post("/forceReload") {
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.forceReload()
-    httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/forward
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserForward(requestObject: RequestObject) = with(requestObject) {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+private fun Route.postBrowserForward() = post("/forward") {
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goForward()
-    httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/back
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserBack(requestObject: RequestObject) = with(requestObject) {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+private fun Route.postBrowserBack() = post("/back") {
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
 
     browser.goBack()
-    httpNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browser/closeTab
-@Suppress("UNUSED_PARAMETER")
-fun postBrowserCloseTab(requestObject: RequestObject) = with(requestObject) {
-    val internetExplorerScreen = mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+private fun Route.postBrowserCloseTab() = post("/closeTab") {
+    val internetExplorerScreen = mc.gui.screen() as? InternetExplorerScreen
+        ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
-        ?: return@with httpBadRequest("No browser tab")
+        ?: call.badRequest("No browser tab")
+    withContext(Dispatchers.Minecraft) {
+        browser.close()
+        browserBrowsers.remove(browser)
+    }
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+}
 
-    browser.close()
-    browserBrowsers.remove(browser)
-    httpNoContent()
+internal fun Route.browserRoutes() = route("/browser") {
+    getBrowserInfo()
+    postBrowserNavigate()
+    postBrowserClose()
+    postBrowserReload()
+    postBrowserForceReload()
+    postBrowserForward()
+    postBrowserBack()
+    postBrowserCloseTab()
 }

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.text
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import java.util.function.BiPredicate
-import kotlin.text.equals
 
 /**
  * A mode for matching strings.

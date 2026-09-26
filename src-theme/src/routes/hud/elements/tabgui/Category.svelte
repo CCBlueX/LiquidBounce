@@ -3,23 +3,20 @@
 
     export let name: string;
     export let selected: boolean;
+
+    $: iconPath = `img/hud/tabgui/${name.toLowerCase()}.svg`;
 </script>
 
 <div class="category" class:selected>
     <div class="icon">
-        {#if selected}
-            <img
-                transition:fade={{ duration: 200 }}
-                src="img/hud/tabgui/{name.toLowerCase()}-active.svg"
-                alt="icon"
-            />
-        {:else}
-            <img
-                transition:fade={{ duration: 200 }}
-                src="img/hud/tabgui/{name.toLowerCase()}.svg"
-                alt="icon"
-            />
-        {/if}
+        <span
+            class="category-icon"
+            aria-hidden="true"
+            transition:fade={{ duration: 200 }}
+            style={`mask-image: url('${location.origin}${location.pathname}/${iconPath}');`}
+        >
+            <img class="category-icon-size" src={iconPath} alt="" />
+        </span>
     </div>
     <div class="name">
         {name}
@@ -27,19 +24,18 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .name {
         font-weight: 500;
-        color: $tabgui-text-color;
+        color: var(--tabgui-text-color);
         font-size: 14px;
         width: 100%;
         padding: 7px 12px 7px 12px;
 
         background: linear-gradient(
             to left,
-            rgba(0, 0, 0, 0.5) 50%,
-            $accent-color 50%
+            var(--tabgui-category-background-color) 50%,
+            var(--tabgui-category-active-background-color) 50%
         );
         background-size: 200% 100%;
         background-position: right bottom;
@@ -51,23 +47,35 @@
     .category {
         display: flex;
 
+        &.selected .icon {
+            color: var(--accent-color);
+        }
+
         &.selected .name {
             background-position: left bottom;
         }
     }
 
     .icon {
-        background-color: rgba($tabgui-base-color, 0.68);
+        background-color: var(--tabgui-icon-background-color);
+        color: var(--tabgui-text-color);
         width: 62px;
-        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease-out;
+    }
 
-        img {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin: auto;
-        }
+    .category-icon {
+        display: inline-block;
+        background-color: currentColor;
+        mask-position: center;
+        mask-repeat: no-repeat;
+        mask-size: contain;
+    }
+
+    .category-icon-size {
+        display: block;
+        visibility: hidden;
     }
 </style>

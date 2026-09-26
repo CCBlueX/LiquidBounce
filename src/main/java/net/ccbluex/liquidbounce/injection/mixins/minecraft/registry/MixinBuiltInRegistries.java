@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.registry;
 
 import net.ccbluex.liquidbounce.features.creativetab.CustomCreativeModeTabs;
-import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,7 +31,6 @@ public abstract class MixinBuiltInRegistries {
     @Inject(method = "bootStrap", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/registries/BuiltInRegistries;freeze()V"))
     private static void injectInitializeTabs(CallbackInfo ci) {
         CustomCreativeModeTabs.INSTANCE.init();
-        HitFXRegistry.INSTANCE.init();
     }
 
 }

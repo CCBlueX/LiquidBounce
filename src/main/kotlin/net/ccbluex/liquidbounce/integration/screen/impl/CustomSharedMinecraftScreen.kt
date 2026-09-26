@@ -19,19 +19,21 @@
 
 package net.ccbluex.liquidbounce.integration.screen.impl
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 
 class CustomSharedMinecraftScreen(
     val screenType: CustomScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
-    val parentScreen: Screen? = mc.screen
+    val parentScreen: Screen? = mc.gui.screen()
 ) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
@@ -40,12 +42,23 @@ class CustomSharedMinecraftScreen(
 
     override fun onClose() {
         if (parentScreen is CustomSharedMinecraftScreen) {
-            mc.setScreen(parentScreen)
+            mc.gui.setScreen(parentScreen)
         } else {
             ScreenManager.closeScreen()
             mc.mouseHandler.grabMouse()
             super.onClose()
         }
+    }
+
+    /**
+     * Disable [Screen.extractBlurredBackground]
+     */
+    override fun isInGameUi(): Boolean {
+        return screenType == CustomScreenType.CLICK_GUI && ModuleHud.hudEditorSelected
+    }
+
+    override fun extractTransparentBackground(graphics: GuiGraphicsExtractor) {
+        // NOOP because we want no background for HUD editor
     }
 
     override fun isPauseScreen() = false

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.cameraclip
 
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,8 +29,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.client.CameraType
-import org.lwjgl.glfw.GLFW
+import net.minecraft.util.Mth
 
 /**
  * CameraClip module
@@ -42,15 +44,35 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
     private val cameraDistance = float("CameraDistance", 4f, 1f..48f)
 
     init {
+        tree(Animation)
         tree(ScrollAdjust)
     }
 
     val distance
-        get() = if (ScrollAdjust.running) {
-            ScrollAdjust.scrolledDistance
-        } else {
-            cameraDistance.get()
+        get() = when {
+            ScrollAdjust.running -> ScrollAdjust.scrolledDistance
+            else -> cameraDistance.get()
         }
+
+    @Suppress("unused")
+    private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+        event.noClip = true
+    }
+
+    private object Animation: ToggleableValueGroup(this, "Animation", true) {
+        private val speed by float("Speed", 0.6f, 0.1f..1f)
+        private val easing by easing("Easing", Easing.LINEAR)
+
+        @Suppress("unused")
+        private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+            if (event.lastPerspective != event.perspective) {
+                event.lastDistance = 0f
+            }
+            if (event.perspective != CameraType.FIRST_PERSON) {
+                event.distance = Mth.lerp(easing.transform(speed), event.lastDistance, distance)
+            }
+        }
+    }
 
     private object ScrollAdjust : ScrollAdjustValueGroup(
         ModuleCameraClip,
@@ -58,7 +80,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         true,
         { delta -> ScrollAdjust.scrolledDistance += delta },
         ScrollAdjustOptions(
-            modifierKeyDefault = GLFW.GLFW_KEY_LEFT_CONTROL,
+            modifierKeyDefault = InputConstants.KEY_LCONTROL,
             sensitivityDefault = 0.3f,
             sensitivityRange = 0.1f..2f
         )
@@ -80,15 +102,15 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         @Suppress("unused")
         private val resetHandler = handler<PerspectiveEvent>(
             priority = EventPriorityConvention.READ_FINAL_STATE
-        ) {
-            if (it.perspective == CameraType.FIRST_PERSON) {
+        ) { event ->
+            if (event.perspective == CameraType.FIRST_PERSON) {
                 reset()
             }
         }
 
         @Suppress("unused")
         private val releaseModifierHandler = handler<KeyboardKeyEvent> {
-            if (it.key == modifierKey && it.action == GLFW.GLFW_RELEASE) {
+            if (it.key == modifierKey && it.isReleased) {
                 reset()
             }
         }

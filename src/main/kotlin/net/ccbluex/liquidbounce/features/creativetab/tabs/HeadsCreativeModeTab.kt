@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.features.creativetab.CustomCreativeModeTab
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponentPatch

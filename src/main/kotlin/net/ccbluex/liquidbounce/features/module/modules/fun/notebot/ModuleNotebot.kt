@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.textLoadingBar
+import net.ccbluex.liquidbounce.utils.text.textLoadingBar
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent
@@ -57,8 +57,7 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
  */
 object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQuit = true) {
 
-    // LWJGL native bug (windows)
-    private val song = file("Song") // , supportedExtensions = setOf("nbs")
+    private val song = file("Song", supportedExtensions = setOf("nbs"))
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)
@@ -94,7 +93,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
 
     override suspend fun enabledEffect() {
         val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
-        mc.gui.chat.removeMessage(messageMetadata.id)
+        mc.gui.hud.chat.removeMessage(messageMetadata.id)
 
         if (!checkRequirements()) {
             this.enabled = false
@@ -196,7 +195,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
     private val progressMessageMetadata = MessageMetadata(id = "M$name#progress", remove = false)
 
     private fun removeProgressMessage() {
-        mc.gui.chat.removeMessage(progressMessageMetadata.id)
+        mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
     }
 
     fun sendNewProgressMessage(name: MutableComponent, progress: Int, total: Int) {

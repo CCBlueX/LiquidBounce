@@ -17,12 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import java.util.Optional
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.OptionalLong
+
+inline fun <T : Any> optional() = Optional.empty<T>()
 
 inline fun <T : Any> optional(value: T?) = Optional.ofNullable(value)
 
@@ -33,3 +36,9 @@ inline fun optional(value: Int): OptionalInt = OptionalInt.of(value)
 inline fun optional(value: Long): OptionalLong = OptionalLong.of(value)
 
 inline fun optional(value: Double): OptionalDouble = OptionalDouble.of(value)
+
+inline fun OptionalInt.toNullable(): Int? = if (isPresent) asInt else null
+
+inline fun OptionalLong.toNullable(): Long? = if (isPresent) asLong else null
+
+inline fun OptionalDouble.toNullable(): Double? = if (isPresent) asDouble else null

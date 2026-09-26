@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -50,7 +49,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -106,6 +105,13 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
+    /**
+     * The use of suspend [waitTicks] is a bit too
+     * risky for a large and complex module
+     * such as KillAura. So back to the basics.
+     */
+    internal var waitTicks = 0
+
     init {
         tree(KillAuraAutoBlock)
         tree(TargetRenderer(this) {
@@ -124,16 +130,20 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        renderFailedHits(event.matrixStack)
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
+            renderFailedHits()
             KillAuraRangeIndicator.render(this, event.partialTicks)
         }
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        if (waitTicks > 0) {
+            waitTicks--
+        }
+
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen = isInventoryOpen || mc.screen is ContainerScreen
+        val isInInventoryScreen = isInventoryOpen || mc.gui.screen() is ContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDeadOrDying || !requirementsMet
 
         if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
@@ -168,10 +178,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             // Deal with fake swing when there is no target
             if (KillAuraFailSwing.enabled && requirementsMet) {
-                if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.currentTickOff)
+                if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                    waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+                } else {
+                    dealWithFakeSwing(null)
                 }
-                dealWithFakeSwing(null)
             }
             return@tickHandler
         }
@@ -220,7 +231,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     @Suppress("CognitiveComplexMethod", "CyclomaticComplexMethod")
-    private suspend fun attackTarget(target: Entity, rotation: Rotation) {
+    private fun attackTarget(target: Entity, rotation: Rotation) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
@@ -243,21 +254,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Check if our target is in range, otherwise deal with auto block
         if (!isInRange) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
-                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
-            ) {
-                KillAuraAutoBlock.startBlocking()
+                player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()) {
+                if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
+                    KillAuraAutoBlock.startBlocking()
+                }
+
                 return
             }
 
             // Make sure we are not blocking
             val hasUnblocked = KillAuraAutoBlock.stopBlocking()
-
-            // Deal with fake swing
-            if (KillAuraFailSwing.enabled) {
-                if (hasUnblocked) {
-                    waitTicks(KillAuraAutoBlock.currentTickOff)
-                }
-
+            if (hasUnblocked && KillAuraAutoBlock.pauseOnUnblockTicks > 0) {
+                waitTicks = KillAuraAutoBlock.pauseOnUnblockTicks
+            }else if (KillAuraFailSwing.enabled) {
                 dealWithFakeSwing(target)
             }
             return
@@ -268,17 +277,19 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val mainHandStack = player.mainHandItem
 
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && canAttackNow(target, mainHandStack)) {
-            clicker.attack(rotation) {
+        if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
+            !KillAuraAutoBlock.isPrioritizingBlocking) {
+            clicker.prepareForAttack(rotation) {
                 // On each click, we check if we are still ready to attack
                 if (!canAttackNow(target, mainHandStack)) {
-                    return@attack false
+                    return@prepareForAttack false
                 }
 
                 // Attack enemy
                 attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
                 range.update()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
+                KillAuraAutoBlock.hasBlockedSinceAttack = false
 
                 GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                     add("player", GenericDebugRecorder.debugObject(player))
@@ -287,17 +298,14 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
                 true
             }
-        } else if (KillAuraAutoBlock.currentTickOff > 0 && clicker.willClickAt(KillAuraAutoBlock.currentTickOff)
-            && KillAuraAutoBlock.shouldUnblockToHit) {
-            KillAuraAutoBlock.stopBlocking(pauses = true)
-        } else {
+        } else if (KillAuraClicker.ticksSinceLastClick >= KillAuraAutoBlock.reblockTicks) {
             KillAuraAutoBlock.startBlocking()
         }
     }
 
     private fun updateTarget() {
         // Calculate maximum range based on enemy distance
-        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.scanRange.sq()) {
+        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.interactionRange.sq()) {
             range.scanRange
         } else {
             range.interactionRange
@@ -383,6 +391,23 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+        if (rotations.lazyRotation) {
+            val currentRotation = RotationManager.currentRotation ?: player.rotation
+            val currentHit = isLookingAtEntity(
+                fromEntity = player,
+                toEntity = entity,
+                rotation = currentRotation,
+                range = range.toDouble(),
+                throughWallsRange = wallsRange.toDouble(),
+            )
+
+            if (currentHit != null) {
+                debugParameter("Lazy Rotation") { true }
+                return RotationWithVector(currentRotation, currentHit.location)
+            }
+        }
+
+        debugParameter("Lazy Rotation") { false }
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 

@@ -18,37 +18,36 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.minecraft.client.renderer.LightTexture;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
+import net.minecraft.client.renderer.Lightmap;
+import net.minecraft.client.renderer.state.LightmapRenderState;
 import org.jspecify.annotations.NullMarked;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @NullMarked
-@Mixin(LightTexture.class)
+@Mixin(Lightmap.class)
 public abstract class MixinLightmap {
 
     @Shadow
     @Final
     private GpuTexture texture;
 
-    /**
-     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
-     */
-    @ModifyArg(
-        method = "<init>",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/GpuDevice;createTexture(Ljava/lang/String;ILcom/mojang/blaze3d/textures/TextureFormat;IIII)Lcom/mojang/blaze3d/textures/GpuTexture;"),
-        index = 1
+    @ModifyReturnValue(
+        method = "getTextureView",
+        at = @At("RETURN")
     )
-    private int makeTextureCopiable(int usage) {
-        return usage | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
+    private GpuTextureView lightmapOverride(GpuTextureView original) {
+        return ModuleItemChams.Lightmap.OVERRIDE.orElse(original);
     }
 
     /**
@@ -56,12 +55,14 @@ public abstract class MixinLightmap {
      * this.dirty = false;
      * </pre>
      */
-    @Inject(method = "updateLightTexture(F)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/LightTexture;updateLightTexture:Z", ordinal = 1), cancellable = true)
-    private void injectCustomClearColor(float tickProgress, CallbackInfo ci) {
-        if (ModuleCustomAmbience.CustomLightmap.INSTANCE.getRunning()) {
-            RenderSystem.getDevice().createCommandEncoder()
-                .clearColorTexture(this.texture, ModuleCustomAmbience.CustomLightmap.INSTANCE.getColor().argb());
-
+    @Inject(
+        method = "render(Lnet/minecraft/client/renderer/state/LightmapRenderState;)V",
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/LightmapRenderState;needsUpdate:Z", ordinal = 0, opcode = Opcodes.GETFIELD),
+        cancellable = true
+    )
+    private void injectCustomClearColor(LightmapRenderState renderState, CallbackInfo ci) {
+        ModuleCustomAmbience.CustomLightmap customLightmap = ModuleCustomAmbience.CustomLightmap.INSTANCE;
+        if (customLightmap.getRunning() && customLightmap.getMode().getActiveMode().edit(this.texture, renderState)) {
             ci.cancel();
         }
     }

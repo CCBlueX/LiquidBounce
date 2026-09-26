@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.config.autoconfig
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
-import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
-import net.ccbluex.liquidbounce.authlib.utils.obj
-import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.config.gson.util.obj
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeValueGroup
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -36,18 +35,17 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.text.rootDomain
 import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -71,24 +69,7 @@ object AutoConfig {
             }
         }
 
-    var includeConfiguration = IncludeConfiguration.Companion.DEFAULT
-
-    @Volatile
-    var configs: Array<AutoSettings>? = null
-        private set
-
-    /**
-     * Reloads auto settings list.
-     *
-     * @return successfully reloaded or not
-     */
-    suspend fun reloadConfigs(): Boolean = try {
-        configs = ClientApi.requestSettingsList()
-        true
-    } catch (e: Exception) {
-        logger.error("Failed to load auto configs", e)
-        false
-    }
+    var includeConfiguration = IncludeConfiguration.DEFAULT
 
     inline fun withLoading(block: () -> Unit) {
         loadingNow = true
@@ -97,10 +78,6 @@ object AutoConfig {
         } finally {
             loadingNow = false
         }
-    }
-
-    suspend fun loadAutoConfig(autoConfig: AutoSettings) = withLoading {
-        ClientApi.requestSettingsScript(autoConfig.settingId).use(::loadAutoConfig)
     }
 
     /**
@@ -253,12 +230,22 @@ object AutoConfig {
 
     /**
      * Created an auto config, which stores the moduleConfigur
+     *
+     * With [modules] set, only those modules are written, and spoofers only with [includeSpoofers].
+     * Loading such a config leaves everything it does not name untouched.
+     *
+     * [marketplaceItemId] is the marketplace config the settings come from, kept so loading them back
+     * can go on tracking it.
      */
+    @Suppress("LongParameterList")
     fun serializeAutoConfig(
         writer: Writer,
-        includeConfiguration: IncludeConfiguration = IncludeConfiguration.Companion.DEFAULT,
+        includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
-        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
+        statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING,
+        modules: Collection<String>? = null,
+        includeSpoofers: Boolean = modules == null,
+        marketplaceItemId: Int? = null
     ) {
         this.includeConfiguration = includeConfiguration
 
@@ -270,11 +257,19 @@ object AutoConfig {
             error("Root element is not a json object")
         }
 
+        if (modules != null) {
+            val values = moduleTree.asJsonObject["value"].asJsonArray
+            val kept = values.filter { it.asJsonObject["name"].asString in modules }
+            moduleTree.asJsonObject.add("value", JsonArray().apply { kept.forEach(::add) })
+        }
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("name", "autoconfig")
 
         jsonObject.add("modules", moduleTree.asJsonObject)
-        jsonObject.add("spoofers", spooferTree.asJsonObject)
+        if (includeSpoofers) {
+            jsonObject.add("spoofers", spooferTree.asJsonObject)
+        }
 
         val author = mc.user.name
 
@@ -299,12 +294,13 @@ object AutoConfig {
 
         jsonObject.add("type", publicGson.toJsonTree(autoSettingsType))
         jsonObject.add("status", publicGson.toJsonTree(statusType))
+        marketplaceItemId?.let { jsonObject.addProperty("marketplaceItemId", it) }
 
         publicGson.newJsonWriter(writer).use {
             publicGson.toJson(jsonObject, it)
         }
 
-        this.includeConfiguration = IncludeConfiguration.Companion.DEFAULT
+        this.includeConfiguration = IncludeConfiguration.DEFAULT
     }
 
     /**

@@ -1,69 +1,88 @@
 {
   description = "LiquidBounce development environment";
 
-  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05"; };
+  inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05"; };
 
   outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+
+      # nixpkgs freetype 2.14.2 compiles the harfbuzz shaper in by default
+      # (FT_CONFIG_OPTION_USE_HARFBUZZ) and dlopens libharfbuzz.so.0 at runtime.
+      # The modern harfbuzz (12/13) pulled in by pango/cairo/gtk3 is ABI-
+      # incompatible with that 2023-era shaper, which segfaults the JVM in
+      # sun.font (FT_Load_Glyph -> af_shaper_get_coverage_hb) while rendering
+      # LiquidBounce's font atlas, crashing runClient. Rebuild freetype with
+      # the harfbuzz shaper disabled so it never touches harfbuzz.
+      freetype = pkgs.freetype.overrideAttrs (o: {
+        configureFlags = (o.configureFlags or [ ]) ++ [ "--without-harfbuzz" ];
+      });
+
       jcef_src = pkgs.fetchFromGitHub {
         owner = "CCBlueX";
         repo = "java-cef";
-        rev = "94489ce55f5b599c6c8b73189539687ccdf02a91";
-        hash = "sha256-IZbgA1o/g8RgZ6gj3oO1IUjSOR+e8MVBY+/r33HrH14=";
+        rev = "aa20e50dbfb858ea50d3cf405b8202462dd10d96";
+        hash = "sha256-gLDiARy35KixTnS/G8U5NQvm2hjz4yl+O6dgnWNrGMY=";
       };
       jcef = pkgs.callPackage jcef_src { };
       libs = with pkgs; [
-        temurin-bin
-        pciutils
-        nodejs_24
-        libpulseaudio
-        libGL
-        glfw
-        openal
-        # stdenv.cc.cc.lib
-        git
-        xorg.libX11
-        xorg.libXcursor
-        flite
-
-        # CEF (chromium) dependencies
-        # libcef
-
-        libgbm
-        glib
-        nss
-        nspr
+        alsa-lib
         atk
         at-spi2-atk
-        libdrm
-        expat
-        xorg.libxcb
-        libxkbcommon
-        xorg.libX11
-        xorg.libXcomposite
-        xorg.libXdamage
-        xorg.libXext
-        xorg.libXfixes
-        xorg.libXrandr
-        libgbm
-        gtk3
-        pango
-        cairo
-        alsa-lib
-        dbus
         at-spi2-core
+        cairo
         cups
-        xorg.libxshmfence
+        dbus
+        expat
+        flite
+        git
+        glib
+        sdl3
+        gtk3
+        libGL
+        libX11
+        libXcomposite
+        libXcursor
+        libXdamage
+        libdrm
+        libXext
+        libXfixes
+        libgbm
+        libpulseaudio
+        libxcb
+        libxkbcommon
+        libxshmfence
+        libXrandr
+    
+        # CEF (chromium) dependencies
+        # libcef
+    
+        nodejs_24
+        nspr
+        nss
+        openal
+        pango
+        pciutils
+    
+        # Provides libstdc++.so.6 / libgcc_s.so.1 needed by LWJGL's bundled
+        # libopenal.so at runtime (without it runClient crashes on startup).
+        stdenv.cc.cc.lib
+    
+        temurin-bin-25
+        wayland
       ];
+      # Must come BEFORE the JDK on the library path so the JDK's libfontmanager
+      # resolves libfreetype.so to the harfbuzz-free build above instead of the
+      # bundled/stock one (which crashes on modern harfbuzz).
+      libraryPath = pkgs.lib.makeLibraryPath ([ freetype ] ++ libs);
 
     in {
       devShells.${system}.default = pkgs.mkShell {
-        packages = libs;
+        packages = [ freetype ] ++ libs;
         buildInputs = libs;
 
-        LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
+        LD_LIBRARY_PATH = "${freetype}/lib:${libraryPath}";
         PROVIDED_JCEF_PATH = "${jcef}";
       };
     };

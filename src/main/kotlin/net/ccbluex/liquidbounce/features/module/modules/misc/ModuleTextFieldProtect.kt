@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.repeat
+import net.ccbluex.liquidbounce.utils.text.repeat
 
 /**
  * TextFieldProtect Module

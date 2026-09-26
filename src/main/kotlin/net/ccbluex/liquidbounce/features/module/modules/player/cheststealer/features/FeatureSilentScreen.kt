@@ -27,12 +27,13 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundMode.Companion.backgroundChoices
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -62,7 +63,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
         private fun getRenderPos(): Vec3f? {
             val pos = lastInteractedBlock ?: return null
-            val state = pos.getState() ?: return null
+            val state = pos.state ?: return null
             val anotherPartDirection = state.anotherChestPartDirection()
 
             // Double chest
@@ -83,7 +84,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.screen as AbstractContainerScreen<*>
+            val containerScreen = mc.gui.screen() as AbstractContainerScreen<*>
 
             event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })

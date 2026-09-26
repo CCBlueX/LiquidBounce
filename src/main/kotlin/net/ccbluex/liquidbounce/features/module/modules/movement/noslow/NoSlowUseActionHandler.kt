@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
-import it.unimi.dsi.fastutil.floats.FloatFloatPair
-import net.ccbluex.fastutil.pair
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
 import net.minecraft.world.item.component.UseEffects
+import net.minecraft.world.phys.Vec2
 
 /**
  * @see UseEffects
@@ -32,12 +31,12 @@ abstract class NoSlowUseActionHandler(name: String) : ToggleableValueGroup(Modul
     private val forwardMultiplier by float("Forward", 1f, 0f..1f)
     private val sidewaysMultiplier by float("Sideways", 1f, 0f..1f)
 
-    open fun getMultiplier(forward: Float, sideways: Float): FloatFloatPair {
+    open fun getMultiplier(forward: Float, sideways: Float): Vec2 {
         if (!this.enabled || NoSlowSharedGrim2371.shouldPreventNoSlow) {
-            return forward pair sideways
+            return Vec2(forward, sideways)
         }
 
-        return forwardMultiplier pair sidewaysMultiplier
+        return Vec2(forwardMultiplier, sidewaysMultiplier)
     }
 
 }

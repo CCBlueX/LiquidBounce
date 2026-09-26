@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
-import net.ccbluex.liquidbounce.utils.block.shrink
+import net.ccbluex.liquidbounce.utils.math.shrink
 
 /**
  * Shrinks the block collision shape and allows you to walk on it.

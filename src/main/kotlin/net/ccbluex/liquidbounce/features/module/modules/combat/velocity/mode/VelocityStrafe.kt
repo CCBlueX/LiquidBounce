@@ -57,7 +57,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (!OnlyFacing.enabled) return@handler
-        val target = world.findEnemy(0f..OnlyFacing.range) ?: return@handler
+        val target = world.findEnemy(0f, OnlyFacing.range) ?: return@handler
 
         shouldStrafe = isLookingAtEntity(
             target,

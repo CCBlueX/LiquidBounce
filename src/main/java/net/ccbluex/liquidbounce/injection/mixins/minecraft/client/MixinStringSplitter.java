@@ -48,7 +48,7 @@ public abstract class MixinStringSplitter {
 
         MutableFloat mutableFloat = new MutableFloat();
         text.visit((style, asString) -> {
-            StringDecomposer.iterateFormatted(ModuleNameProtect.INSTANCE.replace(asString), style, (unused, stylex, codePoint) -> {
+            StringDecomposer.iterateFormatted(ModuleNameProtect.INSTANCE.replace(asString), style, (_, stylex, codePoint) -> {
                 mutableFloat.add(widthProvider.getWidth(codePoint, stylex));
                 return true;
             });

@@ -17,32 +17,28 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("detekt:TooManyFunctions")
+@file:Suppress("detekt:TooManyFunctions", "NOTHING_TO_INLINE")
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.BufferBuilder
-import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.Tesselator
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
-import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
+import net.ccbluex.liquidbounce.render.mesh.BatchCollector
+import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.Camera
+import net.minecraft.client.gui.Font
+import net.minecraft.client.renderer.SubmitNodeStorage
+import net.minecraft.client.renderer.feature.TextFeatureRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
-import net.minecraft.core.Position
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
-import net.minecraft.world.phys.Vec3
-import org.joml.Vector3fc
-import java.util.Collections.singletonMap
-import java.util.function.Function
+import net.minecraft.util.FormattedCharSequence
+import org.joml.Matrix4f
 
 inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
     val matrices = Pools.MatStack.borrow()
@@ -62,133 +58,84 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
     }
 }
 
+inline fun PoseStack.translate(x: Int, y: Int, z: Int) =
+    translate(x.toFloat(), y.toFloat(), z.toFloat())
+
 inline fun PoseStack.translate(vec3i: Vec3i) =
-    translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
+    translate(vec3i.x, vec3i.y, vec3i.z)
+
+/**
+ * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
+ * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
+ */
+inline fun PoseStack.translate(blockPos: Long, origin: BlockPos) {
+    translate(
+        BlockPos.getX(blockPos) - origin.x,
+        BlockPos.getY(blockPos) - origin.y,
+        BlockPos.getZ(blockPos) - origin.z,
+    )
+}
 
 /**
  * Context representing the rendering environment.
  *
  * @param renderTarget The render target framebuffer.
  */
-class WorldRenderEnvironment(
+@AddonApi
+class WorldRenderEnvironment internal constructor(
     val renderTarget: RenderTarget,
-    val matrixStack: PoseStack,
-    val camera: Camera = mc.gameRenderer.mainCamera,
+    val poseStack: PoseStack,
+    val camera: Camera,
+    private val batchCollector: BatchCollector,
 ) {
-
-    fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
-
-    fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)
-
-    fun relativeToCamera(pos: Vec3i): Vec3 = pos.relativeTo(camera)
-
-    var shaderColor = Color4b.WHITE
-
-    var isBatchMode: Boolean = false
-        private set
-
-    fun uniform(name: String, value: GpuBufferSlice) {
-        uniforms[name] = value
-    }
-
-    fun getOrCreateBuffer(texture: AbstractTexture): BufferBuilder {
-        return if (isBatchMode) {
-            texQuadsBatchBuffer.computeIfAbsent(texture) {
-                ClientTesselator.begin(texture.textureView)
-            }
-        } else {
-            val pipeline = ClientRenderPipelines.TexQuads
-            Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
-        }
-    }
-
-    fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
-        return if (isBatchMode) {
-            batchBuffer.computeIfAbsent(pipeline, Function(ClientTesselator::begin))
-        } else {
-            Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
-        }
-    }
-
-    fun startBatch() {
-        if (isBatchMode) commitBatch()
-        isBatchMode = true
-    }
-
-    fun commitBatch() {
-        require(isBatchMode) {
-            "Current environment is not in batch mode!"
-        }
-
-        batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
-            bufferBuilder.build()?.let {
-                draw(pipeline, it, emptyMap())
-                ClientTesselator.allocator(pipeline).clear()
-            }
-        }
-        batchBuffer.clear()
-
-        texQuadsBatchBuffer.fastIterator().forEach { (texture, bufferBuilder) ->
-            bufferBuilder.build()?.let {
-                draw(ClientRenderPipelines.TexQuads, it, singletonMap("Sampler0", texture))
-                ClientTesselator.allocator(texture.textureView).clear()
-            }
-        }
-        texQuadsBatchBuffer.clear()
-
-        uniforms.clear()
-    }
-
-    fun draw(
+    /**
+     * Low-level draw entrypoint.
+     *
+     * The returned scope must be closed after writing vertices.
+     *
+     * Prefer [net.ccbluex.liquidbounce.render.drawCustomMesh] for regular use.
+     */
+    fun start(
         pipeline: RenderPipeline,
-        meshData: MeshData,
-        shaderTextureProvider: Map<String, AbstractTexture>,
-    ) = drawMesh(
-        pipeline,
-        meshData,
-        this.renderTarget,
-        colorModulator = shaderColor,
-        shaderTextures = shaderTextureProvider,
-        uniforms = uniforms,
-    )
-
-    companion object {
-        @JvmStatic
-        private val batchBuffer =
-            Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
-
-        /**
-         * @see ClientRenderPipelines.TexQuads
-         */
-        @JvmStatic
-        private val texQuadsBatchBuffer =
-            Reference2ReferenceOpenHashMap<AbstractTexture, BufferBuilder>()
-
-        @JvmStatic
-        private val uniforms = Object2ObjectOpenHashMap<String, GpuBufferSlice>()
+        textures: Map<String, AbstractTexture> = emptyMap(),
+        uniforms: Map<String, GpuBufferSlice> = emptyMap(),
+    ): MeshBuildScope {
+        val key = RenderDrawKey.of(
+            pipeline,
+            textures,
+            uniforms,
+        )
+        return batchCollector.start(key)
     }
 }
 
-private fun Vec3f.relativeTo(camera: Camera): Vec3 = Vec3(
-    x - camera.position().x,
-    y - camera.position().y,
-    z - camera.position().z,
-)
-
-private fun Position.relativeTo(camera: Camera): Vec3 = Vec3(
-    x() - camera.position().x,
-    y() - camera.position().y,
-    z() - camera.position().z,
-)
-
-private fun Vec3i.relativeTo(camera: Camera): Vec3 = Vec3(
-    x.toDouble() - camera.position().x,
-    y.toDouble() - camera.position().y,
-    z.toDouble() - camera.position().z,
-)
-
-private fun Vector3fc.relativeTo(camera: Camera): Vec3 = Vec3(
-    x() - camera.position().x,
-    y() - camera.position().y,
-    z() - camera.position().z,
+/**
+ * @see SubmitNodeStorage.submitText
+ */
+fun SubmitNodeStorage.submitTextAlwaysOnTop(
+    poseStack: PoseStack,
+    x: Float,
+    y: Float,
+    string: FormattedCharSequence,
+    dropShadow: Boolean,
+    displayMode: Font.DisplayMode,
+    lightCoords: Int,
+    color: Int,
+    backgroundColor: Int,
+    outlineColor: Int,
+) = this.seeThrough().submit(
+    TextFeatureRenderer.Submit(
+        Matrix4f(poseStack.last().pose()),
+        displayMode,
+        lightCoords,
+        TextFeatureRenderer.Content.Text(
+            x,
+            y,
+            string,
+            dropShadow,
+            color,
+            backgroundColor,
+            outlineColor,
+        )
+    )
 )

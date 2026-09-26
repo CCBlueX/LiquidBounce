@@ -24,19 +24,26 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
@@ -49,10 +56,11 @@ import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.CameraType
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
-import org.lwjgl.glfw.GLFW
+import java.util.function.Predicate
+import kotlin.math.abs
 
 /**
  * FreeCam module
@@ -71,14 +79,44 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val lookAt by boolean("LookAt", true)
     }
 
+    private class CancelTrigger<E : Event>(val eventType: Class<E>, val predicate: Predicate<E>)
+    private inline fun <reified E : Event> cancelTrigger(predicate: Predicate<E>) =
+        CancelTrigger(E::class.java, predicate)
+
     /**
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private enum class CancelOn(override val tag: String) : Tagged {
-        DAMAGE("Damage"),
-        MOVE("Move"),
-        LIQUID("Liquid"),
+    private enum class CancelOn(
+        override val tag: String,
+        private val trigger: CancelTrigger<out Event>,
+    ) : Tagged {
+        DAMAGE("Damage", cancelTrigger<HealthUpdateEvent> { event ->
+            event.health < event.previousHealth
+        }),
+        TELEPORT("Teleport", cancelTrigger<PacketEvent> { event ->
+            // ClientboundPlayerPositionPacket not trigger PlayerMoveEvent
+            event.packet is ClientboundPlayerPositionPacket
+        }),
+        MOVE("Move", cancelTrigger<PlayerMoveEvent> { event ->
+            // Don't check movement.y because it's gravity / falling motion
+            abs(event.movement.x) > 0 || abs(event.movement.z) > 0
+        }),
+        LIQUID("Liquid", cancelTrigger<PlayerTickEvent> {
+            player.isInLiquid
+        });
+
+        init {
+            EventManager.registerEventHook(
+                this.trigger.eventType,
+                @Suppress("UNCHECKED_CAST")
+                newEventHook { event ->
+                    if (this in cancelOn && (this.trigger.predicate as Predicate<Event>).test(event)) {
+                        ModuleFreeCam.enabled = false
+                    }
+                }
+            )
+        }
     }
 
     private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
@@ -103,7 +141,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         /**
          * Calculates the desired position to move towards
          *
-         * @return Target position as Vec3d
+         * @return Target position as [Vec3]
          */
         override fun calculateGoalPosition(context: Unit): Vec3? {
             return if (shouldBeGoing) {
@@ -126,31 +164,48 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         tree(Navigation)
     }
 
-    private object PositionState {
+    object PositionState {
         var available: Boolean = false
             set(value) {
                 if (value) {
                     pos = player.eyePosition
                     lastPos = pos
+
+                    rot = player.rotation
+                    lastRot = rot
                 } else {
                     pos = Vec3.ZERO
                     lastPos = Vec3.ZERO
+
+                    rot = Rotation.ZERO
+                    lastRot = rot
                 }
                 field = value
             }
 
-        var pos: Vec3 = Vec3.ZERO
-            private set
-        private var lastPos: Vec3 = Vec3.ZERO
+        @JvmField var pos: Vec3 = Vec3.ZERO
+        @JvmField var lastPos: Vec3 = Vec3.ZERO
+        @JvmField var rot: Rotation = Rotation.ZERO
+        @JvmField var lastRot: Rotation = Rotation.ZERO
 
         fun set(target: Vec3) {
             lastPos = pos
             pos = target
         }
+        fun set(target: Rotation) {
+            lastRot = rot
+            rot = target
+        }
 
         fun update(velocity: Vec3) = set(pos + velocity)
-
-        fun interpolate(tickDelta: Float) = lastPos.lerp(pos, tickDelta.toDouble())
+        fun rotation(xDelta: Double, yDelta: Double) = set(
+            Rotation(
+                rot.yRot + xDelta.toFloat(),
+                (rot.xRot + yDelta.toFloat()).coerceIn(-90f..90f)
+            )
+        )
+        fun interpolate(partialTicks: Float) = lastPos.lerp(pos, partialTicks.toDouble())
+        fun interpolateRot(partialTicks: Float) = lastRot.interpolateTo(rot, partialTicks)
     }
 
     override fun onEnabled() {
@@ -160,18 +215,12 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
     override fun onDisabled() {
         PositionState.available = false
-
-        // Reset player rotation
-        val rotation = RotationManager.currentRotation ?: RotationManager.serverRotation
-        player.yRot = rotation.yaw
-        player.xRot = rotation.pitch
         super.onDisabled()
     }
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        if (midClickCameraTeleport &&
-            event.action == GLFW.GLFW_PRESS && event.button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (midClickCameraTeleport && event.isMiddleClick) {
             val target = getCameraLookingAt() ?: return@handler
 
             // interpolate to prevent tp into block
@@ -181,23 +230,34 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
     @Suppress("unused")
     private val inputHandler = handler<MovementInputEvent>(priority = FIRST_PRIORITY) { event ->
-        val speed = this.speed.toDouble()
-        val yAxisMovement = when {
-            event.jump -> 1.0f
-            event.sneak -> -1.0f
-            else -> 0.0f
-        }
+        event.directionalInput = DirectionalInput.NONE
+        event.jump = false
+        event.sneak = false
+    }
 
-        ModuleDebug.debugParameter(this, "DirectionalInput", event.directionalInput)
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> { event ->
+        val directionalInput = DirectionalInput(mc.options)
+        var yAxisMovement = 0.0
+
+        if (mc.options.keyJump.isDown) yAxisMovement += 1.0f
+        if (mc.options.keyShift.isDown) yAxisMovement -= 1.0f
+
+        val speed = this.speed.toDouble()
+
+        ModuleDebug.debugParameter(this, "DirectionalInput", directionalInput)
         val velocity = Vec3.ZERO
-            .withStrafe(speed, input = event.directionalInput)
+            .withStrafe(
+                speed = speed,
+                input = directionalInput,
+                yaw = getMovementDirectionOfInput(PositionState.rot.yaw, directionalInput)
+            )
             .with(Direction.Axis.Y, yAxisMovement * speed)
         ModuleDebug.debugParameter(this, "Velocity", velocity)
         PositionState.update(velocity)
 
-        event.directionalInput = DirectionalInput.NONE
-        event.jump = false
-        event.sneak = false
+        ModuleDebug.debugParameter(this, "Position", PositionState.pos)
+        ModuleDebug.debugParameter(this, "Rotation", PositionState.rot)
     }
 
     @Suppress("unused")
@@ -230,58 +290,23 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     }
 
     @Suppress("unused")
-    private val healthHandler = handler<HealthUpdateEvent> { event ->
-        val tookDamage = event.health < event.previousHealth
-
-        if (CancelOn.DAMAGE in cancelOn && tookDamage) {
-            this.enabled = false
-        }
+    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
+        // If not, will get stuck when world change
+        enabled = false
     }
 
-    @Suppress("unused")
-    private val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Don't check movement.y because it's gravity / falling motion
-        if (CancelOn.MOVE in cancelOn && (event.movement.y > 0 || event.movement.z > 0)) {
-            this.enabled = false
-        }
-    }
-
-    @Suppress("unused")
-    private val tickHandler = handler<PlayerTickEvent> { event ->
-        if (CancelOn.LIQUID in cancelOn && player.isInLiquid) {
-            this.enabled = false
-        }
-    }
-
-    fun applyCameraPosition(entity: Entity, tickDelta: Float) {
+    fun applyCameraPosition(entity: Entity?, partialTicks: Float) {
         if (!running || entity != player || !PositionState.available) {
             return
         }
 
-        val camera = mc.gameRenderer.mainCamera
+        val camera = mc.gameRenderer.mainCamera()
 
-        return camera.setPosition(PositionState.interpolate(tickDelta))
+        return camera.setPosition(PositionState.interpolate(partialTicks))
     }
 
-    fun renderPlayerFromAllPerspectives(entity: LivingEntity): Boolean {
-        if (!running || entity != player) {
-            return entity.isSleeping
-        }
-
-        return entity.isSleeping || !mc.gameRenderer.mainCamera.isDetached
-    }
-
-    /**
-     * Modify the raycast position
-     */
-    fun modifyRaycast(original: Vec3, entity: Entity, tickDelta: Float): Vec3 {
-        if (!running || entity != mc.player || !CameraInteract.running || !PositionState.available) {
-            return original
-        }
-
-        return PositionState.interpolate(tickDelta)
-    }
-
+    @JvmStatic
+    fun shouldCameraInteractActive() = running && CameraInteract.running
     fun shouldDisableCameraInteract() = running && !CameraInteract.running
 
     private fun getCameraLookingAt(): Vec3? {
@@ -291,7 +316,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         val target = traceFromPoint(
             range = 200.0,
             start = cameraPosition,
-            direction = mc.cameraEntity?.rotation?.directionVector ?: return null
+            direction = PositionState.rot.directionVector
         )
 
         return target.location

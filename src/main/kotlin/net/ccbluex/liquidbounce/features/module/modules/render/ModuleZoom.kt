@@ -49,7 +49,7 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
         @Suppress("unused")
         val onScroll = handler<MouseScrollInHotbarEvent> {
             previousFov = getFov(true)
-            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1..179)
+            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1, 179)
             reset()
             it.cancelEvent()
         }
@@ -88,7 +88,11 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
             return original
         }
 
-        val factor = (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F..1F)
+        val factor = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
+            1f
+        } else {
+            (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
+        }
         if (!enabled && factor == 1f) {
             disableAnimationFinished = true
         }

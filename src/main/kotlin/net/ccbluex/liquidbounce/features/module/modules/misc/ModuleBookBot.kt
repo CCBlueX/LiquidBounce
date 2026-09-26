@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -247,7 +248,7 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
         }
 
         fun addPage(page: String) {
-            filteredPages.add(Filterable.passThrough(Component.literal(page)))
+            filteredPages.add(Filterable.passThrough(page.asPlainText()))
             pages.add(page)
         }
 
@@ -308,7 +309,7 @@ internal sealed class GenerationMode(
     object File : GenerationMode("File") {
         private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
         private val cyclic by boolean("Cyclic", true)
-        private val source = file("Source")
+        private val source = file("Source", supportedExtensions = setOf("txt"))
 
         /**
          * @author sqlerrorthing, MukjepScarlet

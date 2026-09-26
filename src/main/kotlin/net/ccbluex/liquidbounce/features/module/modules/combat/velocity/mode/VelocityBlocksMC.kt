@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**

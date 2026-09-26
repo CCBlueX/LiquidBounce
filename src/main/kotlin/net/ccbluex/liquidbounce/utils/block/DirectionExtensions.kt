@@ -22,20 +22,20 @@ import net.minecraft.core.Direction
 
 @JvmField
 val DIRECTIONS_EXCLUDING_UP = arrayOf(
+    Direction.DOWN,
     Direction.WEST,
     Direction.EAST,
     Direction.NORTH,
     Direction.SOUTH,
-    Direction.DOWN,
 )
 
 @JvmField
 val DIRECTIONS_EXCLUDING_DOWN = arrayOf(
+    Direction.UP,
     Direction.WEST,
     Direction.EAST,
     Direction.NORTH,
     Direction.SOUTH,
-    Direction.UP,
 )
 
 @JvmField

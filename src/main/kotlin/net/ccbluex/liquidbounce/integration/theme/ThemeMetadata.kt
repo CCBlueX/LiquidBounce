@@ -27,6 +27,7 @@ data class ThemeMetadata(
     val name: String,
     val version: String,
     val authors: List<String>,
+    val colors: Map<String, String>?,
     val screens: List<String>,
     val overlays: List<String>,
     val components: List<String>,

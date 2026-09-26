@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.doOptimizationsPreventJump
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet.Companion.COMPARING_LUNGE_AND_SPEED
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -113,7 +112,7 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
         val piercingWeapon = slot.itemStack[DataComponents.PIERCING_WEAPON]!!
 
         SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
-        interaction.piercingAttack(piercingWeapon)
+        interaction.piercingAttack(slot.itemStack.attackAnimation, piercingWeapon)
         swingMode.swing(InteractionHand.MAIN_HAND)
 
         if (waitForCooldown) {

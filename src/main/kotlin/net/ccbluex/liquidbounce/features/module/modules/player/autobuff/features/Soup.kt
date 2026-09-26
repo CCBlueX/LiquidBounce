@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.util.Prediction
 
 internal object Soup : HealthBasedBuff("Soup") {
 
@@ -93,9 +94,9 @@ internal object Soup : HealthBasedBuff("Soup") {
     private suspend fun handleDropAfterUse(slot: HotbarItemSlot) {
         waitTicks(wait.random())
 
-        if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot !is OffHandSlot) {
-            if (player.drop(true)) {
-                player.swing(InteractionHand.MAIN_HAND)
+        if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != HotbarItemSlot.OFFHAND) {
+            if (player.drop(slot.itemStack, true, Prediction.PREDICTED) != null) {
+                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
             }
         }
     }
