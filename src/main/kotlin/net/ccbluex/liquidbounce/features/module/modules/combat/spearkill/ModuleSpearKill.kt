@@ -120,7 +120,9 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
             return@handler
         }
 
-        if (mc.options.keyUse.isDown && spear.isChargeSpent) {
+        // Restarting while a lunge is in flight would reset the charge, clearing the lunge and dropping its
+        // return leg, so the player would be left where the lunge took them.
+        if (mc.options.keyUse.isDown && spear.isChargeSpent && attackMovements.isEmpty()) {
             val hand = player.usedItemHand
             interaction.releaseUsingItem(player)
             useItem(hand)
