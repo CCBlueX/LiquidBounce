@@ -350,7 +350,7 @@ object AutoMobHeal : ClientModule(
             }
         }
 
-        companion object {
+        companion {
             private val healAmount1xNutrition = ToFloatFunction<ItemStack> { stack -> foodNutritionHeal(stack, 1f) }
             private val healAmount2xNutrition = ToFloatFunction<ItemStack> { stack -> foodNutritionHeal(stack, 2f) }
 

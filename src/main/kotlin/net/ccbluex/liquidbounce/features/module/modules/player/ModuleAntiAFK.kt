@@ -166,8 +166,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
         val swingRepeatable = tickHandler {
             if (Swing.enabled && !player.isSwinging) {
                 waitTicks(Swing.delay)
-                val heldItem = player.getItemInHand(InteractionHand.MAIN_HAND)
-                player.swing(InteractionHand.MAIN_HAND, heldItem.getAttackAnimation(), false)
+                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
             }
         }
 

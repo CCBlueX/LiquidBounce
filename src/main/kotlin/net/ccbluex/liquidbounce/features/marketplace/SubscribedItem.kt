@@ -103,7 +103,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     private val revisionDirs: List<File>
         get() = itemDir.listFiles { file: File -> file.isDirectory && file.name.toIntOrNull() != null }
-            ?.toList().orEmpty()
+            ?.asList().orEmpty()
 
     private val lock
         get() = itemLocks.computeIfAbsent(id) { Mutex() }
