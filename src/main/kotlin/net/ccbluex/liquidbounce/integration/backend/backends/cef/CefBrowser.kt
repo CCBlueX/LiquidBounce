@@ -271,7 +271,7 @@ class CefBrowser(
             return
         }
 
-        if (isLinux && handleLinuxClipboardShortcut(keyCode, modifiers)) {
+        if (isLinux && handleLinuxClipboardShortcut(scanCode, modifiers)) {
             return
         }
 
@@ -294,13 +294,13 @@ class CefBrowser(
      *
      * @return whether the key press was consumed
      */
-    private fun handleLinuxClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
+    private fun handleLinuxClipboardShortcut(scanCode: Int, modifiers: Int): Boolean {
         if (modifiers and InputConstants.MOD_CONTROL == 0) {
             return false
         }
 
         val frame = browserApi.focusedFrame ?: return false
-        return when (keyCode) {
+        return when (scanCode) {
             // Chromium would paste its own clipboard on top of the one we just inserted.
             InputConstants.KEY_V -> CefClipboardBridge.paste(frame)
             InputConstants.KEY_C, InputConstants.KEY_X -> {
