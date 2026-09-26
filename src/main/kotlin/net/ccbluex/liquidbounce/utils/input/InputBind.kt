@@ -84,11 +84,14 @@ data class InputBind(
     /**
      * Determines if the specified key matches the bound key.
      *
+     * An unbound key never matches, because [InputConstants.UNKNOWN] is scan code `0`, the value SDL reports
+     * for keys it cannot map.
+     *
      * @param scanCode The scan code to check.
      * @return True if the SDL scan code matches the bound key, false otherwise.
      */
     fun matchesKey(scanCode: Int): Boolean {
-        return this.boundKey.type == InputConstants.Type.KEYBOARD && this.boundKey.value == scanCode
+        return !isUnbound && this.boundKey.type == InputConstants.Type.KEYBOARD && this.boundKey.value == scanCode
     }
 
     /**
