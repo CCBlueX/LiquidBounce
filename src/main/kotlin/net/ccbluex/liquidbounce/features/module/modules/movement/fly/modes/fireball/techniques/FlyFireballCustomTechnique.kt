@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,41 +15,41 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.MovementType
+import net.minecraft.world.entity.MoverType
 
-object FlyFireballCustomTechnique : Choice("Custom") {
+object FlyFireballCustomTechnique : Mode("Custom") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = FlyFireball.technique
 
     private val disableDelay by int("DisableDelay", 10, 0..20)
     private val throwDelay by int("ThrowDelay", 2, 0..20)
 
-    object Jump : ToggleableConfigurable(this, "Jump", true) {
+    object Jump : ToggleableValueGroup(this, "Jump", true) {
         val delay by int("JumpDelay", 1, 0..20, "ticks")
     }
 
-    object YVelocity : ToggleableConfigurable(this, "YVelocity", true) {
+    object YVelocity : ToggleableValueGroup(this, "YVelocity", true) {
         val velocity by float("Velocity", 0f, -5f..5f)
         val delay by int("Delay", 0, 0..20, "ticks")
     }
@@ -58,7 +58,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     //  Stop moving when module is active to avoid falling off, for example a bridge
     val stopMove by boolean("StopMove", true)
 
-    object Rotations : RotationsConfigurable(this) {
+    object Rotations : RotationsValueGroup(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 
@@ -71,10 +71,10 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     }
 
     @Suppress("unused")
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        RotationManager.aimAt(
-            Rotation(player.yaw, Rotations.pitch),
-            configurable = Rotations,
+    private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        RotationManager.setRotationTarget(
+            Rotation(player.yRot, Rotations.pitch),
+            valueGroup = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )
@@ -82,31 +82,33 @@ object FlyFireballCustomTechnique : Choice("Custom") {
 
     @Suppress("unused")
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
-        if (stopMove && !canMove)
+        if (stopMove && !canMove) {
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
+        }
     }
 
     @Suppress("unused")
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
-        if (it.type != MovementType.SELF) return@sequenceHandler
+        if (it.type != MoverType.SELF) return@sequenceHandler
 
-        if (player.isOnGround) {
+        if (player.onGround()) {
             if (Jump.enabled) {
                 waitTicks(Jump.delay)
-                player.jump()
+                player.jumpFromGround()
             }
 
             waitTicks(throwDelay)
 
             FlyFireball.throwFireball()
 
-            if (sprint)
+            if (sprint) {
                 player.isSprinting = true
+            }
         }
 
         if (YVelocity.enabled) {
             waitTicks(YVelocity.delay)
-            player.velocity.y = YVelocity.velocity.toDouble()
+            player.deltaMovement.y = YVelocity.velocity.toDouble()
         }
 
         waitTicks(disableDelay)

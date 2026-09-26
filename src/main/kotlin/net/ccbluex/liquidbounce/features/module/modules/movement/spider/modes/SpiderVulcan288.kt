@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
 /**
@@ -35,24 +36,24 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSp
  * TODO: Detection for how many blocks you've gone up. Anything over 40ish seems to flag for Invalid (C)
  *   Proper implementation if there's something above you needs to be added.
  */
-internal object SpiderVulcan288 : Choice("Vulcan288") {
+internal object SpiderVulcan288 : Mode("Vulcan288") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
     private var requiresStop = false
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (player.horizontalCollision) {
-            if (!player.isClimbing) {
+            if (!player.onClimbable()) {
                 requiresStop = true
                 waitTicks(2)
-                player.velocity.y = 9.6599696
+                player.deltaMovement.y = 9.6599696
                 waitTicks(2)
-                player.setVelocity(0.0, 0.0001, 0.0)
+                player.setDeltaMovement(0.0, 0.0001, 0.0)
             }
         }else if (requiresStop) {
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
             requiresStop = false
         }
     }

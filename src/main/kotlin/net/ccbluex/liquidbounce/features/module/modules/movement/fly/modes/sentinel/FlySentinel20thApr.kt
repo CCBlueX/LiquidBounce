@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -34,9 +33,9 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Sentinel
@@ -47,7 +46,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * Thanks to the_bi11iona1re for making me aware that Sentinal folds to Verus Damage exploit.
  */
-internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
+internal object FlySentinel20thApr : Mode("Sentinel20thApr") {
 
     private val horizontalSpeed by float("HorizontalSpeed", 3.5f, 0.1f..10f)
     private val constantSpeed by boolean("ConstantSpeed", false)
@@ -56,7 +55,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     private val boostOnce by boolean("BoostOnce", false)
     private val nostalgia by boolean("Nostalgia", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private var hasBeenHurt = false
@@ -79,23 +78,23 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     }
 
     override fun disable() {
-        player.zeroXZ()
+        player.stopXZVelocity()
     }
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         boost()
         waitTicks(reboostTicks)
 
         if (boostOnce) {
             ModuleFly.enabled = false
-            player.zeroXZ()
+            player.stopXZVelocity()
         }
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.hurtTime > 0  && !hasBeenHurt) {
             hasBeenHurt = true
-            player.strafe(speed = horizontalSpeed.toDouble())
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = horizontalSpeed.toDouble())
             notification(
                 "Fly",
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
@@ -105,7 +104,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
             // Nostalgia mode
             if (!hasBeenTeleported && nostalgia) {
                 hasBeenTeleported = true
-                player.setPosition(
+                player.setPos(
                     player.x,
                     player.y + 0.42,
                     player.z
@@ -118,25 +117,30 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
         }
 
         event.movement.y = when {
-            player.input.jumping -> verticalSpeed.toDouble()
-            player.input.sneaking -> (-verticalSpeed).toDouble()
+            mc.options.keyJump.isDown -> verticalSpeed.toDouble()
+            mc.options.keyShift.isDown -> (-verticalSpeed).toDouble()
             else -> 0.0
         }
 
         if (constantSpeed) {
-            event.movement.strafe(speed = horizontalSpeed.toDouble(), keyboardCheck = true)
+            event.movement = event.movement.withStrafe(speed = horizontalSpeed.toDouble())
         }
     }
 
     private fun boost() {
         hasBeenHurt = false
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z,
-            false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
+            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y + 3.25, player.z,
+            false, player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
+            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true,
+            player.horizontalCollision))
     }
-
-
 
 }

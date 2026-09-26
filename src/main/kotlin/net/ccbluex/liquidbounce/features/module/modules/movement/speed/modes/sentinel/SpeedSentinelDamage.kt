@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
-import net.minecraft.entity.MovementType
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.entity.MoverType
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -43,7 +41,7 @@ import kotlin.math.floor
  * @anticheatVersion 30.06.2024
  * @testedOn cubecraft.net
  */
-class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("SentinelDamage") {
+class SpeedSentinelDamage(override val parent: ModeValueGroup<*>) : Mode("SentinelDamage") {
 
     private val speed by float("Speed", 0.5f, 0.1f..5f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
@@ -68,9 +66,9 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         super.enable()
     }
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (!player.moving) {
-            return@repeatable
+            return@tickHandler
         }
 
         if (externalDamageAdjust != 0) {
@@ -83,7 +81,7 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
     }
 
     override fun disable() {
-        player.zeroXZ()
+        player.stopXZVelocity()
     }
 
     @Suppress("unused")
@@ -105,16 +103,15 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
             return@handler
         }
 
-        if (event.type == MovementType.SELF && player.moving) {
-            val movement = event.movement
-            movement.strafe(player.directionYaw, strength = 1.0, speed = speed.toDouble())
+        if (event.type == MoverType.SELF && player.moving) {
+            event.movement = event.movement.withStrafe(strength = 1.0, speed = speed.toDouble())
         }
     }
 
     @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent> {
-        if (player.moving && hasBeenHurt) {
-            it.jumping = true
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
+        if (event.directionalInput.isMoving && hasBeenHurt) {
+            event.jump = true
         }
     }
 
@@ -122,13 +119,13 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         externalDamageAdjust = 0
         hasBeenHurt = false
         enabledTime = System.currentTimeMillis()
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(
-            PlayerMoveC2SPacket.PositionAndOnGround(
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false, false))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
                 player.x, player.y + 3.25, player.z,
-            false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+            false, false))
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false, false))
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
     }
 
 }

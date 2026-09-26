@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,104 +15,185 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
-import com.google.gson.annotations.SerializedName
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.session.Session
-import net.minecraft.text.Text
+import net.minecraft.client.CameraType
+import net.minecraft.client.KeyMapping
+import net.minecraft.client.Minecraft
+import net.minecraft.client.User
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.multiplayer.TransferState
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.item.ItemStack
+import java.util.function.UnaryOperator
 
-@Nameable("gameTick")
-class GameTickEvent : Event()
+@AddonApi
+@Tag("gameTick")
+object GameTickEvent : Event()
 
-@Nameable("key")
-@WebSocketEvent
-class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
+/**
+ * We can use this event to populate the render task queue with tasks that should be
+ * executed in the same frame. This is useful for more responsive task execution
+ * and allows to also schedule tasks off-schedule.
+ */
+@Tag("gameRenderTaskQueue")
+object GameRenderTaskQueueEvent : Event()
 
-    data class Key(
-        @SerializedName("code")
-        val keyCode: Int,
-        @SerializedName("name")
-        val translationKey: String
-    )
-}
+@Tag("tickPacketProcess")
+object TickPacketProcessEvent : Event()
+
+@Tag("key")
+class KeyEvent(
+    val key: InputConstants.Key,
+    val action: Int,
+) : Event(), WebSocketEvent
 
 // Input events
-@Nameable("inputHandle")
-class InputHandleEvent : Event()
+@Tag("inputHandle")
+object InputHandleEvent : Event()
 
-@Nameable("movementInput")
-class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Boolean, var sneaking: Boolean) : Event()
+@AddonApi
+@Tag("movementInput")
+class MovementInputEvent(
+    var directionalInput: DirectionalInput,
+    var jump: Boolean,
+    var sneak: Boolean,
+) : Event()
 
-@Nameable("mouseRotation")
-class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
+@Tag("sprint")
+class SprintEvent(
+    val directionalInput: DirectionalInput,
+    var sprint: Boolean,
+    val source: Source,
+) : Event() {
+    enum class Source {
+        INPUT,
+        MOVEMENT_TICK,
+        NETWORK,
+    }
+}
 
-@Nameable("keybindChange")
-@WebSocketEvent
-class KeybindChangeEvent: Event()
+@Tag("mouseRotation")
+class MouseRotationEvent(
+    var cursorDeltaX: Double,
+    var cursorDeltaY: Double,
+) : CancellableEvent()
 
-@Nameable("useCooldown")
-class UseCooldownEvent(var cooldown: Int) : Event()
+@Tag("keybindChange")
+object KeybindChangeEvent : Event(), WebSocketEvent
 
-@Nameable("cancelBlockBreaking")
+@Tag("keybindIsPressed")
+class KeybindIsPressedEvent(
+    val keyBinding: KeyMapping,
+    var isPressed: Boolean,
+) : Event()
+
+@Tag("useCooldown")
+class UseCooldownEvent(
+    var cooldown: Int,
+) : Event()
+
+@Tag("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
+
+@Tag("allowAutoJump")
+class AllowAutoJumpEvent(
+    var isAllowed: Boolean,
+) : Event()
 
 /**
  * All events which are related to the minecraft client
  */
 
-@Nameable("session")
-@WebSocketEvent
-class SessionEvent(val session: Session) : Event()
+@Tag("session")
+class SessionEvent(
+    val session: User,
+) : Event(), WebSocketEvent
 
-@Nameable("screen")
-class ScreenEvent(val screen: Screen?) : CancellableEvent()
+@AddonApi
+@Tag("screen")
+class ScreenEvent(
+    val screen: Screen?,
+) : CancellableEvent()
 
-@Nameable("chatSend")
-@WebSocketEvent
-class ChatSendEvent(val message: String) : CancellableEvent()
+@AddonApi
+@Tag("chatSend")
+class ChatSendEvent(
+    val message: String,
+) : CancellableEvent(), WebSocketEvent
 
-@Nameable("chatReceive")
-@WebSocketEvent
+@AddonApi
+@Tag("chatReceive")
 class ChatReceiveEvent(
     val message: String,
-    val textData: Text,
+    val textData: Component,
     val type: ChatType,
-    val applyChatDecoration: (Text) -> Text
-) : CancellableEvent() {
-
-    enum class ChatType {
-        CHAT_MESSAGE,
-        DISGUISED_CHAT_MESSAGE,
-        GAME_MESSAGE
+    @ProtocolExclude
+    val applyChatDecoration: UnaryOperator<Component>,
+) : CancellableEvent(), WebSocketEvent {
+    @AddonApi
+    enum class ChatType(override val tag: String) : Tagged {
+        CHAT_MESSAGE("ChatMessage"),
+        DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
+        GAME_MESSAGE("GameMessage"),
     }
-
 }
 
-@Nameable("splashOverlay")
-@WebSocketEvent
-class SplashOverlayEvent(val showingSplash: Boolean) : Event()
+@Tag("serverConnect")
+class ServerConnectEvent(
+    val connectScreen: ConnectScreen,
+    val address: ServerAddress,
+    val serverInfo: ServerData,
+    val cookieStorage: TransferState?,
+) : CancellableEvent()
 
-@Nameable("splashProgress")
-@WebSocketEvent
-class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()
+@AddonApi
+@Tag("disconnect")
+object DisconnectEvent : Event(), WebSocketEvent
 
-@Nameable("serverConnect")
-@WebSocketEvent
-class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+@Tag("overlayMessage")
+class OverlayMessageEvent(
+    val text: Component,
+    val tinted: Boolean,
+) : Event(), WebSocketEvent
 
-@Nameable("disconnect")
-@WebSocketEvent
-class DisconnectEvent : Event()
+@Tag("perspective")
+object PerspectiveEvent : Event() {
+    var perspective: CameraType = CameraType.FIRST_PERSON
+    var distance: Float = 0f
+    var noClip: Boolean = false
 
-@Nameable("overlayMessage")
-@WebSocketEvent
-class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()
+    var lastPerspective: CameraType = CameraType.FIRST_PERSON
+    var lastDistance: Float = 0f
+
+    fun update(mc: Minecraft, entity: Entity?) {
+        lastDistance = distance
+        lastPerspective = perspective
+
+        perspective = mc.options.cameraType
+        noClip = false
+        distance = entity.cameraDistance
+    }
+}
+
+@Tag("itemLoreQuery")
+class ItemLoreQueryEvent(
+    val itemStack: ItemStack,
+    val lore: ArrayList<Component>,
+) : Event()

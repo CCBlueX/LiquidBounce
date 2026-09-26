@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,47 +18,46 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bow
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.NoneChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.util.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
-internal object NoSlowBow : ToggleableConfigurable(ModuleNoSlow, "Bow", true) {
+internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
 
-    val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
-    val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+    private val animations = enumSetOf(
+        ItemUseAnimation.BOW,
+        ItemUseAnimation.CROSSBOW,
+        ItemUseAnimation.TRIDENT,
+    )
 
-    val modes = choices<Choice>(this, "Choice", { it.choices[0] }) {
+    val modes = modes(this, "Choice") {
         arrayOf(
-            NoneChoice(it),
+            NoneMode(it),
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
+            NoSlowSharedGrim2371(it),
             NoSlowSharedInvalidHand(it),
         )
     }
 
-    override fun handleEvents(): Boolean {
-        if (!super.handleEvents() || !inGame) {
-            return false
+    override val running: Boolean
+        get() {
+            if (!super.running || !inGame) {
+                return false
+            }
+
+            // Check if we are using a block item
+            return player.isUsingItem && player.useItem.useAnimation in animations
         }
 
-        // Check if we are using a block item
-        return player.isUsingItem && player.activeItem.useAction in arrayOf(
-            UseAction.BOW,
-            UseAction.CROSSBOW,
-            UseAction.SPEAR
-        )
-    }
-
     @Suppress("unused")
-    private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == UseAction.BOW || action == UseAction.CROSSBOW || action == UseAction.SPEAR
-    })
+    private val noBlockInteract = tree(NoSlowNoBlockInteract(this, animations::contains))
 
 }

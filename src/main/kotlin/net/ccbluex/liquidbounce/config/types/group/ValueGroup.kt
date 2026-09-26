@@ -1,0 +1,640 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.config.types.group
+
+import com.google.gson.JsonObject
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetAllOf
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.forEachIsInstance
+import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.config.types.BindValue
+import net.ccbluex.liquidbounce.config.types.Config
+import net.ccbluex.liquidbounce.config.types.CurveValue
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
+import net.ccbluex.liquidbounce.config.types.FileDialogMode
+import net.ccbluex.liquidbounce.config.types.FileValue
+import net.ccbluex.liquidbounce.config.types.RangedValue
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.Vec3Value
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.ItemListValue
+import net.ccbluex.liquidbounce.config.types.list.ListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MutableListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.math.Easing
+import net.minecraft.core.Vec3i
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.item.Item
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.Vec3
+import org.joml.Vector2f
+import org.joml.Vector2fc
+import java.io.File
+import java.util.EnumSet
+import java.util.SequencedSet
+import java.util.function.ToIntFunction
+
+@Suppress("TooManyFunctions")
+@AddonApi
+open class ValueGroup @JvmOverloads constructor(
+    name: String,
+    value: MutableCollection<Value<*>> = mutableListOf(),
+    valueType: ValueType = ValueType.CONFIGURABLE,
+
+    /**
+     * Signalizes that the [ValueGroup]'s translation key
+     * should not depend on another [ValueGroup].
+     * This means the [baseKey] will be directly used.
+     *
+     * The options should be used in common options, so that
+     * descriptions don't have to be written twice.
+     */
+    independentDescription: Boolean = false,
+    /**
+     * Used for backwards compatibility when renaming.
+     */
+    aliases: List<String> = emptyList(),
+) : Value<MutableCollection<Value<*>>>(
+    name,
+    aliases,
+    defaultValue = value,
+    valueType,
+    independentDescription = independentDescription
+) {
+
+    /**
+     * Allows dynamic groups to create their children before stored values are applied.
+     */
+    open fun prepareDeserialize(jsonObject: JsonObject) = Unit
+
+    /**
+     * Stores the [ValueGroup] in which
+     * the [ValueGroup] is included, can be null.
+     */
+    var base: ValueGroup? = null
+
+    /**
+     * The base key used when [base] is null,
+     * otherwise the [baseKey] from [base]
+     * is used when its base is null and so on.
+     */
+    open val baseKey: String
+        get() = "${ConfigSystem.KEY_PREFIX}.${name.toLowerCamelCase()}"
+
+    open fun walkInit() {
+        inner.forEachIsInstance<ValueGroup> { valueGroup ->
+            valueGroup.walkInit()
+        }
+    }
+
+    /**
+     * Walks the path of the [ValueGroup] and its children
+     */
+    fun walkKeyPath(previousBaseKey: String? = null) {
+        this.key = if (previousBaseKey != null) {
+            "$previousBaseKey.${name.toLowerCamelCase()}"
+        } else {
+            constructBaseKey()
+        }
+
+        // Update children
+        for (currentValue in this.inner) {
+            if (currentValue is ValueGroup) {
+                currentValue.walkKeyPath(this.key)
+            } else {
+                currentValue.key = "${this.key}.${currentValue.name.toLowerCamelCase()}"
+            }
+
+            if (currentValue is ModeValueGroup<*>) {
+                val currentKey = currentValue.key
+
+                currentValue.modes.forEach { choice -> choice.walkKeyPath(currentKey) }
+            }
+        }
+    }
+
+    /**
+     * Joins the names of all bases and this and the [baseKey] of the lowest
+     * base together to create a translation base key.
+     */
+    private fun constructBaseKey(): String {
+        val values = mutableListOf<String>()
+        var current: ValueGroup? = this
+        while (current != null) {
+            val base1 = current.base
+            if (base1 == null) {
+                values.add(current.baseKey)
+            } else {
+                values.add(current.name.toLowerCamelCase())
+            }
+            current = base1
+        }
+        values.reverse()
+        return values.joinToString(".")
+    }
+
+    @get:JvmName("getContainedValues")
+    val containedValues: Array<Value<*>>
+        get() = this.inner.toTypedArray()
+
+    fun collectValuesRecursively(prefix: String = ""): Sequence<Value<*>> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
+
+        suspend fun SequenceScope<Value<*>>.walk(current: ValueGroup) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
+                return
+            }
+            for (value in current.inner) {
+                when (value) {
+                    is ToggleableValueGroup -> {
+                        yield(value)
+                        walk(value)
+                    }
+                    is ModeValueGroup<*> -> {
+                        yield(value)
+                        value.modes.forEach { walk(it) }
+                    }
+                    is ValueGroup -> walk(value)
+                    else -> yield(value)
+                }
+            }
+        }
+
+        walk(this@ValueGroup)
+    }
+
+    fun collectValueGroupsRecursively(prefix: String = ""): Sequence<ValueGroup> = sequence {
+        val shouldFilterByPrefix = prefix.isNotBlank()
+
+        suspend fun SequenceScope<ValueGroup>.walk(current: ValueGroup) {
+            if (shouldFilterByPrefix && !shouldWalkKey(current.key, prefix)) {
+                return
+            }
+            yield(current)
+            for (value in current.inner) {
+                when (value) {
+                    is ModeValueGroup<*> -> {
+                        walk(value)
+                        value.modes.forEach { walk(it) }
+                    }
+                    is ValueGroup -> walk(value)
+                }
+            }
+        }
+
+        walk(this@ValueGroup)
+    }
+
+    private fun shouldWalkKey(currentKey: String?, prefix: String): Boolean {
+        if (currentKey == null) {
+            return false
+        }
+        return currentKey.startsWith(prefix, ignoreCase = true) || prefix.startsWith(currentKey, ignoreCase = true)
+    }
+
+    /**
+     * Restore all values to their default values
+     */
+    override fun restore() {
+        inner.forEach(Value<*>::restore)
+    }
+
+    override fun inclusionGroup(group: OptionalInclusion) = apply {
+        super.inclusionGroup(group)
+
+        for (v in inner) {
+            v.inclusionGroup(group)
+        }
+    }
+
+    // Common value types
+
+    fun <T : ValueGroup> tree(valueGroup: T): T {
+        require(valueGroup !is Config) {
+            "ValueGroup '${valueGroup.name}' is a Config and cannot be added to another ValueGroup."
+        }
+
+        if (valueGroup.base != null) {
+            logger.warn("ValueGroup '${valueGroup.name}' is already added to a parent '${valueGroup.base?.name}'")
+        }
+
+        value(valueGroup)
+        valueGroup.base = this
+        return valueGroup
+    }
+
+    fun <T : ValueGroup> treeAll(vararg valueGroups: T) {
+        valueGroups.forEach(this::tree)
+    }
+
+    fun <T : ValueGroup> drop(valueGroup: T): T {
+        require(valueGroup.base === this) {
+            "ValueGroup '${valueGroup.name}' is not a child of '${this.name}'."
+        }
+
+        inner.remove(valueGroup)
+        valueGroup.base = null
+        return valueGroup
+    }
+
+    fun <T : Any> value(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType = ValueType.INVALID,
+        aliases: List<String> = emptyList(),
+    ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
+
+    // Inline bodies are compiled into add-on jars, so the reified builders only forward to these.
+
+    fun <T : MutableCollection<E>, E> list(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = innerType))
+
+    inline fun <T : MutableCollection<E>, reified E> list(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = list(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableCollection<E>, E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(MutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = mutableList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableSet<E>, E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(ItemListValue(name, defaultValue, items, valueType, innerType))
+
+    inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType,
+    ) = itemList(name, defaultValue, items, valueType, E::class.java)
+
+    fun <T : SequencedSet<E>, E> registryList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(RegistryListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : SequencedSet<E>, reified E> registryList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = registryList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableList<E>, E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = registryMutableList(name, defaultValue, valueType, E::class.java)
+
+    private fun <T : Any> rangedValue(
+        name: String,
+        defaultValue: T,
+        range: ClosedRange<*>,
+        suffix: String,
+        valueType: ValueType,
+        aliases: List<String> = emptyList(),
+    ) = value(
+        RangedValue(
+            name,
+            aliases = aliases,
+            defaultValue = defaultValue,
+            range = range,
+            suffix = suffix,
+            valueType = valueType,
+        )
+    )
+
+    // Fixed data types
+
+    // `boolean`, `int` and `float` are Java keywords, hence the JVM names.
+
+    @JvmName("bool")
+    @JvmOverloads
+    fun boolean(
+        name: String,
+        default: Boolean,
+        aliases: List<String> = emptyList(),
+    ) = value(name, default, ValueType.BOOLEAN, aliases)
+
+    @JvmName("floating")
+    @JvmOverloads
+    fun float(
+        name: String,
+        default: Float,
+        range: ClosedFloatingPointRange<Float>,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT, aliases)
+
+    @JvmName("floating")
+    @JvmOverloads
+    fun float(name: String, default: Float, min: Float, max: Float, suffix: String = "") =
+        float(name, default, min..max, suffix)
+
+    @JvmOverloads
+    fun floatRange(
+        name: String,
+        default: ClosedFloatingPointRange<Float>,
+        range: ClosedFloatingPointRange<Float>,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE, aliases)
+
+    @JvmName("integer")
+    @JvmOverloads
+    fun int(
+        name: String,
+        default: Int,
+        range: IntRange,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.INT, aliases)
+
+    @JvmName("integer")
+    @JvmOverloads
+    fun int(name: String, default: Int, min: Int, max: Int, suffix: String = "") =
+        int(name, default, min..max, suffix)
+
+    @JvmOverloads
+    fun intRange(
+        name: String,
+        default: IntRange,
+        range: IntRange,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.INT_RANGE, aliases)
+
+    @JvmOverloads
+    fun bind(name: String, default: Int = InputConstants.UNKNOWN.value) = bind(
+        name,
+        InputBind(InputConstants.Type.KEYBOARD, default, InputBind.BindAction.TOGGLE)
+    )
+
+    fun bind(name: String, default: InputBind) = value(BindValue(name, defaultValue = default))
+
+    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYBOARD.getOrCreate(default))
+
+    @JvmOverloads
+    fun key(name: String, default: InputConstants.Key = InputConstants.UNKNOWN) =
+        value(name, default, ValueType.KEY)
+
+    fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
+
+    fun regex(name: String, default: Regex) = value(name, default, ValueType.TEXT)
+
+    fun <C : MutableCollection<String>> textList(name: String, default: C) =
+        mutableList<C, String>(name, default, ValueType.TEXT)
+
+    fun <C : MutableCollection<Regex>> regexList(name: String, default: C) =
+        mutableList<C, Regex>(name, default, ValueType.TEXT)
+
+    fun easing(name: String, default: Easing) = enumChoice(name, default)
+
+    fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
+
+    fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
+
+    fun vec2f(name: String, default: Vector2fc) = value(name, default, ValueType.VECTOR2_F)
+
+    @JvmOverloads
+    fun vec3i(
+        name: String,
+        default: Vec3i = Vec3i.ZERO,
+        useLocateButton: Boolean = true,
+        aliases: List<String> = emptyList(),
+    ): Value<Vec3i> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I))
+
+    @JvmOverloads
+    fun vec3d(
+        name: String,
+        default: Vec3 = Vec3.ZERO,
+        useLocateButton: Boolean = true,
+        aliases: List<String> = emptyList(),
+    ): Value<Vec3> = value(Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D))
+
+    fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
+        registryList(name, default, ValueType.BLOCK)
+
+    fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
+
+    fun <C : SequencedSet<Item>> items(name: String, default: C) =
+        registryList(name, default, ValueType.ITEM)
+
+    fun <C : MutableList<Item>> itemList(name: String, default: C) =
+        registryMutableList(name, default, ValueType.ITEM)
+
+    fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
+        registryList(name, default, ValueType.SOUND_EVENT)
+
+    fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
+        registryList(name, default, ValueType.MOB_EFFECT)
+
+    fun <C : SequencedSet<Identifier>> enchantments(name: String, default: C) =
+        registryList(name, default, ValueType.ENCHANTMENT)
+
+    fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
+        registryList(name, default, ValueType.C2S_PACKET)
+
+    fun <C : SequencedSet<Identifier>> s2cPackets(name: String, default: C) =
+        registryList(name, default, ValueType.S2C_PACKET)
+
+    fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
+        registryList(name, default, ValueType.ENTITY_TYPE)
+
+    @Suppress("LongParameterList")
+    fun curve(
+        name: String,
+        default: MutableList<Vector2f>,
+        xAxis: Axis,
+        yAxis: Axis,
+        tension: Float = CurveValue.DEFAULT_TENSION,
+    ) = value(CurveValue(name, default, xAxis, yAxis, tension))
+
+    inline fun curve(name: String, block: CurveValue.Builder.() -> Unit): CurveValue {
+        val builder = CurveValue.Builder()
+        builder.name = name
+        return value(builder.apply(block).build())
+    }
+
+    fun file(
+        name: String,
+        default: File? = null,
+        dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
+        supportedExtensions: Set<String>? = null,
+    ) = value(FileValue(name, default, dialogMode, supportedExtensions))
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        vararg default: T,
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: Iterable<T>,
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: EnumSet<T> = enumSetOf(),
+        choices: EnumSet<T> = enumSetAllOf(),
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: SequencedSet<T>,
+        choices: EnumSet<T> = enumSetAllOf(),
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
+
+    fun <T : Tagged> multiEnumChoice(
+        name: String,
+        default: MutableSet<T>,
+        choices: Set<T>,
+        canBeNone: Boolean,
+        isOrderSensitive: Boolean,
+    ) = value(MultiChoiceListValue(name, default, choices, canBeNone, isOrderSensitive))
+
+    inline fun <reified T> enumChoice(
+        name: String,
+        default: T,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
+
+    /**
+     * For Java, which cannot call the reified overload.
+     */
+    fun <T> enumChoice(name: String, default: T): ChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        enumChoice(name, default, EnumSet.allOf(default.declaringJavaClass), emptyList())
+
+    /**
+     * For Java, which cannot call the reified overloads.
+     */
+    @JvmOverloads
+    fun <T> multiEnumChoice(
+        name: String,
+        type: Class<T>,
+        default: Collection<T>,
+        canBeNone: Boolean = true,
+    ): MultiChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, EnumSet.noneOf(type).apply { addAll(default) }, EnumSet.allOf(type), canBeNone, false)
+
+    @JvmOverloads
+    fun <T : Tagged> enumChoice(
+        name: String,
+        default: T,
+        choices: Set<T>,
+        aliases: List<String> = emptyList(),
+    ): ChoiceListValue<T> = value(ChoiceListValue(name, defaultValue = default, choices = choices, aliases = aliases))
+
+    fun interface ModeBuilder {
+        fun ValueGroup.build()
+    }
+
+    protected fun <T : Mode> modes(
+        eventListener: EventListener?,
+        name: String,
+        active: T,
+        modes: Array<T>,
+    ): ModeValueGroup<T> {
+        return modes(eventListener, name, { modes ->
+            val idx = modes.indexOf(active)
+
+            check(idx != -1) {
+                "The active choice $active is not contained within the choice array" +
+                    " (${modes.joinToString { it.name }})"
+            }
+
+            idx
+        }) { modes }
+    }
+
+    fun <T : Mode> modes(
+        eventListener: EventListener?,
+        name: String,
+        activeCallback: ToIntFunction<List<T>>,
+        modesCallback: (ModeValueGroup<T>) -> Array<T>,
+    ): ModeValueGroup<T> {
+        return value(ModeValueGroup(eventListener, name, activeCallback, modesCallback).apply {
+            this.base = this@ValueGroup
+        })
+    }
+
+    protected fun <T : Mode> modes(
+        eventListener: EventListener,
+        name: String,
+        activeIndex: Int = 0,
+        choicesCallback: (ModeValueGroup<T>) -> Array<T>,
+    ) = modes(eventListener, name, { activeIndex }, choicesCallback)
+
+    fun <V : Value<*>> value(value: V) = value.apply {
+        this@ValueGroup.inner.add(this)
+        this@ValueGroup.inclusionGroup?.let { this.inclusionGroup(it) }
+    }
+
+}

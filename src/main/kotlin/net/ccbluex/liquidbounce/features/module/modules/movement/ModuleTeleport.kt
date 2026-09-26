@@ -1,20 +1,53 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
+import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlin.math.floor
 
-object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("tp")) {
+/**
+ * Teleport Module
+ *
+ * Configuration for teleport commands.
+ *
+ * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
+ */
+object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, aliases = listOf("tp")) {
 
     private val allFull by boolean("AllFullPacket", false)
     private val paperExploit by boolean("PaperBypass", false)
@@ -28,32 +61,29 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
 
     private val decimalFormat = DecimalFormat("##0.000")
 
-    enum class GroundMode(override val choiceName: String) : NamedChoice {
+    enum class GroundMode(override val tag: String) : Tagged {
         TRUE("True"),
         FALSE("False"),
         CORRECT("Correct")
     }
 
-    private var indicatedTeleport: Vec3d? = null
+    private var indicatedTeleport: Vec3? = null
     private var teleportsToWait: Int = 0
 
-    override fun enable() {
+    override fun onEnabled() {
         if (indicatedTeleport == null) {
             chat(warning(message("useCommand")))
 
             // Disables module on next render tick
-            RenderSystem.recordRenderCall {
+            mc.execute {
                 this.enabled = false
             }
         }
-
-        super.enable()
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         indicatedTeleport = null
         teleportsToWait = 0
-        super.disable()
     }
 
     fun indicateTeleport(x: Double = player.x, y: Double = player.y, z: Double = player.z) {
@@ -62,7 +92,7 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
             return
         }
 
-        this.indicatedTeleport = Vec3d(x, y, z)
+        this.indicatedTeleport = Vec3(x, y, z)
         this.teleportsToWait = functionAfterServerTeleport
         this.enabled = true
 
@@ -75,7 +105,7 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket) {
+        if (it.packet is ClientboundPlayerPositionPacket) {
             val indicatedTeleport = indicatedTeleport ?: return@handler
 
             if (teleportsToWait > 1) {
@@ -85,11 +115,12 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
             }
 
             sendPacketSilently(MovePacketType.FULL.generatePacket().apply {
-                this.x = it.packet.x
-                this.y = it.packet.y
-                this.z = it.packet.z
-                this.yaw = it.packet.yaw
-                this.pitch = it.packet.pitch
+                val change = it.packet.change
+                this.x = change.position.x
+                this.y = change.position.y
+                this.z = change.position.z
+                this.yRot = change.yRot
+                this.xRot = change.xRot
                 this.onGround = false
             })
 
@@ -104,46 +135,47 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
     }
 
     fun teleport(x: Double = player.x, y: Double = player.y, z: Double = player.z) {
-        val deltaX = x - player.x
-        val deltaY = y - player.y
-        val deltaZ = z - player.z
-
         if (paperExploit) {
+            val deltaX = x - player.x
+            val deltaY = y - player.y
+            val deltaZ = z - player.z
+
             val times = (floor((abs(deltaX) + abs(deltaY) + abs(deltaZ)) / 10) - 1).toInt()
             val packetToSend = if (allFull) MovePacketType.FULL else MovePacketType.POSITION_AND_ON_GROUND
             repeat(times) {
-                network.sendPacket(packetToSend.generatePacket().apply {
+                network.send(packetToSend.generatePacket().apply {
                     this.x = player.x
                     this.y = player.y
                     this.z = player.z
-                    this.yaw = player.yaw
-                    this.pitch = player.pitch
+                    this.yRot = player.yRot
+                    this.xRot = player.xRot
                     this.onGround = when (groundMode) {
                         GroundMode.TRUE -> true
                         GroundMode.FALSE -> false
-                        GroundMode.CORRECT -> player.isOnGround
+                        GroundMode.CORRECT -> player.onGround()
                     }
                 })
             }
 
-            network.sendPacket(packetToSend.generatePacket().apply {
+            network.send(packetToSend.generatePacket().apply {
                 this.x = x
                 this.y = y
                 this.z = z
-                this.yaw = player.yaw
-                this.pitch = player.pitch
+                this.yRot = player.yRot
+                this.xRot = player.xRot
                 this.onGround = when (groundMode) {
                     GroundMode.TRUE -> true
                     GroundMode.FALSE -> false
-                    GroundMode.CORRECT -> player.isOnGround
+                    GroundMode.CORRECT -> player.onGround()
                 }
             })
         }
 
-        player.updatePosition(x, y, z)
+        val entity = player.vehicle ?: player
+        entity.absSnapTo(x, y, z)
 
         if (resetMotion) {
-            player.velocity = player.velocity.multiply(0.0, 0.0, 0.0)
+            entity.deltaMovement = entity.deltaMovement.multiply(0.0, 0.0, 0.0)
         }
 
         chat(regular(

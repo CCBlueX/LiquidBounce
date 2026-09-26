@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.utils.render
@@ -25,8 +23,11 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.math.max
 import kotlin.math.min
 
-const val CHROME_MAX_REFRESH_RATE = 240
-const val LOWEST_REFRESH_RATE = 60
+private const val CHROME_MAX_REFRESH_RATE = 240F
+private const val LOWEST_REFRESH_RATE = 60F
 
-val refreshRate: Int
-    get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))
+val refreshRate: Float
+    get() = min(
+        CHROME_MAX_REFRESH_RATE,
+        max(LOWEST_REFRESH_RATE, mc.window.activeVideoMode?.refreshRate ?: LOWEST_REFRESH_RATE),
+    )

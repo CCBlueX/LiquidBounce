@@ -1,11 +1,36 @@
+export interface Metadata {
+    id: string;
+    name: string;
+    version: string;
+    authors: string[];
+    colors: {
+        Accent: string;
+        Tint: string;
+    }
+    screens: string[];
+    overlays: string[];
+    components: string[];
+    fonts: string[];
+    backgrounds: {
+        name: string;
+        types: string[];
+    }[];
+}
+
+export interface ModuleCategory {
+    name: string;
+    icon: string | null;
+}
+
 export interface Module {
     name: string;
     category: string;
-    keyBind: number;
+    keyBind: InputBind;
     enabled: boolean;
     description: string;
     hidden: boolean;
     aliases: string[];
+    tag: string | null;
 }
 
 export interface GroupedModules {
@@ -14,7 +39,6 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
-    | KeySetting
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting
@@ -22,124 +46,158 @@ export type ModuleSetting =
     | IntRangeSetting
     | ChoiceSetting
     | ChooseSetting
+    | MultiChooseSetting
+    | ListSetting
+    | RegistryListSetting
+    | ItemListSetting
+    | RegistryMutableListSetting
     | ConfigurableSetting
     | TogglableSetting
     | ColorSetting
     | TextSetting
-    | TextArraySetting;
+    | BindSetting
+    | Vec2Setting
+    | Vec3Setting
+    | KeySetting
+    | FileSetting
+    | CurveSetting;
 
-export interface BlocksSetting {
-    valueType: string;
-    name: string;
-    value: string[];
+export type File = string;
+
+export type FileDialogMode = "OPEN_FILE" | "OPEN_FOLDER" | "SAVE_FILE";
+
+export interface FileSelectDialog {
+    mode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface TextSetting {
-    valueType: string;
-    name: string;
-    value: string;
+export interface FileSelectResult {
+    file: File | undefined;
 }
 
-export interface TextArraySetting {
+export interface Setting<V> {
     valueType: string;
     name: string;
-    value: string[];
+    value: V;
+    description: string | undefined;
+    key: string | undefined;
 }
 
-export interface ColorSetting {
-    valueType: string;
-    name: string;
-    value: number;
+export interface FileSetting extends Setting<File> {
+    dialogMode: FileDialogMode;
+    supportedExtensions: string[] | undefined;
 }
 
-export interface KeySetting {
-    valueType: string;
-    name: string;
-    value: number;
+export interface CurveSetting extends Setting<Vec2[]> {
+    xAxis: {
+        label: string;
+        range: Range;
+    },
+    yAxis: {
+        label: string;
+        range: Range;
+    }
+    tension: number;
 }
 
-export interface BooleanSetting {
-    valueType: string;
-    name: string;
-    value: boolean;
+export interface BlocksSetting extends Setting<string[]> {
 }
 
-export interface FloatSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface KeySetting extends Setting<string> {
+}
+
+export interface BindSetting extends Setting<InputBind> {
+    defaultValue: InputBind;
+}
+
+export interface TextSetting extends Setting<string> {
+}
+
+export interface Vec2Setting extends Setting<Vec2> {
+}
+
+export interface Vec3Setting extends Setting<Vec3> {
+    useLocateButton: boolean;
+}
+
+export interface ColorSetting extends Setting<number> {
+}
+
+export interface BooleanSetting extends Setting<boolean> {
+}
+
+export interface FloatSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface FloatRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface FloatRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface IntSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntSetting extends Setting<number> {
+    range: Range;
     suffix: string;
-    value: number;
 }
 
-export interface IntRangeSetting {
-    valueType: string;
-    name: string;
-    range: {
-        from: number;
-        to: number;
-    };
+export interface IntRangeSetting extends Setting<Range> {
+    range: Range;
     suffix: string;
-    value: {
-        from: number,
-        to: number
-    };
 }
 
-export interface ChoiceSetting {
-    valueType: string;
-    name: string;
+export interface ChoiceSetting extends Setting<ModuleSetting[]> {
     active: string;
     choices: { [name: string]: ModuleSetting }
-    value: ModuleSetting[];
 }
 
-export interface ChooseSetting {
-    valueType: string;
-    name: string;
+export interface ChooseSetting extends Setting<string> {
     choices: string[];
+}
+
+export interface MultiChooseSetting extends Setting<string[]> {
+    choices: string[];
+    canBeNone: boolean;
+    isOrderSensitive: boolean;
+}
+
+export interface ListSetting extends Setting<string[]> {
+    innerValueType: string;
+}
+
+export interface RegistryListSetting extends ListSetting {
+    registry: string;
+}
+
+export interface RegistryMutableListSetting extends Setting<string[]> {
+    registry: string;
+}
+
+export interface ItemListSetting extends ListSetting {
+    items: NamedItem[];
+}
+
+export interface NamedItem {
+    name: string;
     value: string;
+    icon: string | undefined;
 }
 
-export interface ConfigurableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface ConfigurableSetting extends Setting<ModuleSetting[]> {
 }
 
-export interface TogglableSetting {
-    valueType: string;
-    name: string;
-    value: ModuleSetting[];
+export interface TogglableSetting extends Setting<ModuleSetting[]> {
 }
+
+export interface InputBind {
+    boundKey: string;
+    action: BindAction;
+    modifiers: BindModifier[];
+}
+
+export type BindAction = "Toggle" | "Hold" | "Smart";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface PersistentStorageItem {
     key: string;
@@ -148,7 +206,6 @@ export interface PersistentStorageItem {
 
 export interface VirtualScreen {
     name: string;
-    showingSplash: boolean;
 }
 
 export interface Scoreboard {
@@ -162,12 +219,17 @@ export interface Scoreboard {
 export interface PlayerData {
     username: string;
     uuid: string;
+    position: Vec3;
+    blockPosition: Vec3;
+    velocity: Vec3;
     selectedSlot: number;
     gameMode: string;
     health: number,
     actualHealth: number;
     maxHealth: number;
     absorption: number;
+    yaw: number;
+    pitch: number;
     armor: number;
     food: number;
     air: number;
@@ -193,12 +255,23 @@ export interface StatusEffect {
     color: number;
 }
 
+export interface Vec2 extends Vec<"x" | "y"> {
+}
+
+export interface Vec3 extends Vec<"x" | "y" | "z"> {
+}
+
+export type VecAxis = "x" | "y" | "z" | "w";
+
+export type Vec<D extends VecAxis> = Record<D, number>;
+
 export interface ItemStack {
     identifier: string;
     count: number;
     damage: number;
     maxDamage: number;
     displayName: TextComponent | string;
+    enchantments?: Record<string, number>;
 }
 
 export interface PrintableKey {
@@ -211,22 +284,12 @@ export interface MinecraftKeybind {
     key: PrintableKey;
 }
 
-export interface Registries {
-    blocks: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
-    items: {
-        identifier: string;
-        name: string;
-    }[] | undefined;
-}
-
 export interface Session {
     username: string;
-    accountType: string;
+    type: string;
+    service: string;
     avatar: string;
-    premium: boolean;
+    online: boolean;
     uuid: string;
 }
 
@@ -246,6 +309,7 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
+    lan?: boolean;
 }
 
 export interface TextComponent {
@@ -292,6 +356,8 @@ export interface Proxy {
     id: number;
     host: string;
     port: number;
+    type: 'HTTP' | 'SOCKS5';
+    forwardAuthentication: boolean;
     favorite: boolean;
     credentials: {
         username: string;
@@ -318,28 +384,74 @@ export interface GameWindow {
     guiScale: number;
 }
 
-export interface Component {
+export interface Theme {
     name: string;
+    id: string;
+    colors: {
+        accent: number;
+        tint: number;
+    };
     settings: { [name: string]: any };
 }
 
+export interface HudComponent {
+    name: string;
+    description: string;
+    id: string;
+    settings: { [name: string]: any };
+    width?: number;
+    height?: number;
+}
+
+export interface HudComponentCatalogEntry {
+    name: string;
+    description: string;
+    id: string;
+    singleton: boolean;
+    canAdd: boolean;
+}
+
+export interface Alignment {
+    horizontalAlignment: HorizontalAlignment;
+    verticalAlignment: VerticalAlignment;
+    horizontalOffset: number;
+    verticalOffset: number;
+}
+
+export enum HorizontalAlignment {
+    LEFT = "Left",
+    RIGHT = "Right",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export enum VerticalAlignment {
+    TOP = "Top",
+    BOTTOM = "Bottom",
+    CENTER = "Center",
+    CENTER_TRANSLATED = "CenterTranslated",
+}
+
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;
     development: boolean;
     fps: number;
-    gameDir: string;
+    gameDir: File;
+    clientDir: File;
     inGame: boolean;
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
 }
 
 export interface ClientUpdate {
-    updateAvailable: boolean;
     development: boolean;
     commit: string;
-    newestVersion: {
+    update: {
         buildId: number | undefined;
         commitId: string | undefined;
         branch: string | undefined;
@@ -349,5 +461,123 @@ export interface ClientUpdate {
         date: string;
         message: string;
         url: string;
-    }
+    } | undefined;
 }
+
+export interface Browser {
+    url: string
+}
+
+export interface HitResult {
+    type: "block" | "entity" | "miss";
+    pos: Vec3;
+}
+
+export interface BlockHitResult extends HitResult {
+    blockPos: Vec3;
+    side: string;
+    isInsideBlock: boolean;
+}
+
+export interface EntityHitResult extends HitResult {
+    entityName: string;
+    entityType: string;
+    entityPos: Vec3;
+}
+
+export interface GeneratorResult {
+    name: string;
+}
+
+export interface Screen {
+    class: string,
+    title: string,
+}
+
+export interface ClientUser {
+    userId: string;
+    email: string;
+    name: string | null;
+    nickname: string | null;
+    groups: string[];
+    premium: boolean;
+    admin: boolean;
+}
+
+export interface RegistryItem {
+    name: string;
+    icon: string | undefined;
+}
+
+export interface Range {
+    from: number;
+    to: number;
+}
+
+export interface BedState {
+    block: string;
+    trackedBlockPos: Vec3;
+    pos: Vec3;
+    surroundingBlocks: SurroundingBlock[];
+    compactSurroundingBlocks: SurroundingBlock[];
+}
+
+export interface SurroundingBlock {
+    block: string;
+    count: number;
+    layer: number;
+}
+
+type MouseKeyName =
+    | "left"
+    | "right"
+    | "middle"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8";
+
+type KeyboardKeyName =
+    | "unknown"
+    | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+    | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+    | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+    | "u" | "v" | "w" | "x" | "y" | "z"
+    | `f${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25}`
+    | "escape"
+    | "enter"
+    | "tab"
+    | "space"
+    | "backspace"
+    | "caps.lock"
+    | "left.shift" | "right.shift"
+    | "left.control" | "right.control"
+    | "left.alt" | "right.alt"
+    | "left.win" | "right.win"
+    | "menu"
+    | "print.screen"
+    | "scroll.lock"
+    | "pause"
+    | "insert"
+    | "delete"
+    | "home"
+    | "end"
+    | "page.up" | "page.down"
+    | "up" | "down" | "left" | "right"
+    | "num.lock"
+    | "keypad.0" | "keypad.1" | "keypad.2" | "keypad.3"
+    | "keypad.4" | "keypad.5" | "keypad.6" | "keypad.7"
+    | "keypad.8" | "keypad.9"
+    | "keypad.add" | "keypad.subtract"
+    | "keypad.multiply" | "keypad.divide"
+    | "keypad.enter" | "keypad.decimal" | "keypad.equal"
+    | "semicolon" | "equal" | "comma"
+    | "minus" | "period" | "slash"
+    | "grave.accent" | "left.bracket" | "backslash"
+    | "right.bracket" | "apostrophe"
+    | "world.1" | "world.2";
+
+export type MinecraftMouseKey = `key.mouse.${MouseKeyName}`;
+export type MinecraftKeyboardKey = `key.keyboard.${KeyboardKeyName}`;
+export type MinecraftKey = MinecraftMouseKey | MinecraftKeyboardKey;

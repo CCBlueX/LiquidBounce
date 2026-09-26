@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,68 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.*
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.minecraft.item.Items
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.isGlider
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
  * AutoArmor module
  *
- * Automatically put on the best armor.
+ * Automatically puts on the best armor.
  */
-object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
+object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
 
-    private val inventoryConstraints = tree(PlayerInventoryConstraints())
+    val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     /**
-     * Should the module use the hotbar to equip armor pieces.
+     * Should the module use the hotbar to equip armor pieces?
      * If disabled, it will only use inventory moves.
      */
-    private val useHotbar by boolean("Hotbar", true)
+    object UseHotbar : ToggleableValueGroup(this, "Hotbar", true) {
+        /**
+         * Defines whether the [UseHotbar] option supports the armor swap from MC 1.19.4+.
+         */
+        val canSwapArmor by boolean("CanSwapArmor", false)
+    }
 
+    init {
+        tree(UseHotbar)
+        tree(AutoArmorSaveArmor)
+    }
+
+    @Suppress("unused")
     private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-        // Filter out already equipped armor pieces
-        val armorToEquip = ArmorEvaluation.findBestArmorPieces().values.filterNotNull().filter {
-            !it.isAlreadyEquipped
+        if (player.isSpectator) {
+            return@handler
         }
 
+        // Filter out already equipped armor pieces
+        val durabilityThreshold = if (AutoArmorSaveArmor.enabled) durabilityThreshold else Int.MIN_VALUE
+
+        val armorToEquip = ArmorEvaluation
+            .findBestArmorPieces(durabilityThreshold = durabilityThreshold)
+            .values.filterNotNull().filter { !it.isAlreadyEquipped }
+
         for (armorPiece in armorToEquip) {
-            event.schedule(inventoryConstraints, equipArmorPiece(armorPiece) ?: continue)
+            event.schedule(
+                inventoryConstraints,
+                equipArmorPiece(armorPiece) ?: continue,
+                Priority.IMPORTANT_FOR_PLAYER_LIFE
+            )
         }
     }
 
@@ -64,22 +91,13 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
      * @return false if a move was not possible, true if a move occurred
      */
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
-        val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
+        val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
-        if (stackInArmor.item == Items.ELYTRA) {
+        if (stackInArmor.isGlider) {
             return null
         }
 
-        val inventorySlot = armorPiece.itemSlot
-        val armorPieceSlot = ArmorItemSlot(armorPiece.entitySlotId)
-
-        return if (!stackInArmor.isNothing()) {
-            // Clear current armor
-            performMoveOrHotbarClick(armorPieceSlot, isInArmorSlot = true)
-        } else {
-            // Equip new armor
-            performMoveOrHotbarClick(inventorySlot, isInArmorSlot = false)
-        }
+        return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isEmpty)
     }
 
     /**
@@ -93,21 +111,26 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
      * @return True if a move occurred.
      */
     private fun performMoveOrHotbarClick(
-        slot: ItemSlot,
+        armorPiece: ArmorPiece,
         isInArmorSlot: Boolean
     ): InventoryAction {
-        val canTryHotbarMove = !isInArmorSlot && useHotbar && !InventoryManager.isInventoryOpenServerSide
-        if (slot is HotbarItemSlot && canTryHotbarMove) {
-            return UseInventoryAction(slot)
+        val inventorySlot = armorPiece.itemSlot
+        val armorPieceSlot = if (isInArmorSlot) ArmorItemSlot(armorPiece.slotType) else inventorySlot
+
+        val canTryHotbarMove = UseHotbar.enabled &&
+            !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
+
+        if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
+            return InventoryAction.UseItem(inventorySlot, this)
         }
 
         // Should the item be just thrown out of the inventory
         val shouldThrow = isInArmorSlot && !hasInventorySpace()
 
         return if (shouldThrow) {
-            ClickInventoryAction.performThrow(screen = null, slot)
+            InventoryAction.Click.performThrow(screen = null, armorPieceSlot)
         } else {
-            ClickInventoryAction.performQuickMove(screen = null, slot)
+            InventoryAction.Click.performQuickMove(screen = null, armorPieceSlot)
         }
     }
 

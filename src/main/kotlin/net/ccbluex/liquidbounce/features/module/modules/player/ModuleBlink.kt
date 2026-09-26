@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,70 +18,80 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag.findAvoidingArrowPosition
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag.getInflictedHit
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.client.network.OtherClientPlayerEntity
-import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import java.util.*
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.entity.EntityLookup
+import java.util.UUID
 
 /**
  * Blink module
  *
- * Makes it look as if you were teleporting to other players.
+ * Suspends packets before they are sent to/received from the server.
  */
 
-object ModuleBlink : Module("Blink", Category.PLAYER) {
+object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
+
+    private val directions by multiEnumChoice("Directions", TransferOrigin.OUTGOING, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
-    private val evadeArrows by boolean("EvadeArrows", true)
     private val autoDisable by boolean("AutoDisable", true)
 
-    private object AutoResetOption : ToggleableConfigurable(this, "AutoReset", false) {
+    private object AutoResetOption : ToggleableValueGroup(this, "AutoReset", false) {
         val resetAfter by int("ResetAfter", 100, 1..1000)
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
 
-    private var dummyPlayer: OtherClientPlayerEntity? = null
+    private var dummyPlayer: RemotePlayer? = null
+    private var tickCounter = 0
 
     init {
         tree(AutoResetOption)
     }
 
-    override fun enable() {
+    override fun onEnabled() {
+        tickCounter = 0
         if (dummy) {
-            val clone = OtherClientPlayerEntity(world, player.gameProfile)
+            val clone = RemotePlayer(world, player.gameProfile)
 
-            clone.headYaw = player.headYaw
-            clone.copyPositionAndRotation(player)
+            clone.yHeadRot = player.yHeadRot
+            clone.copyPosition(player)
             /**
              * A different UUID has to be set, to avoid [dummyPlayer] from being invisible to [player]
-             * @see net.minecraft.world.entity.EntityIndex.add
+             * @see EntityLookup.add
              */
-            clone.uuid = UUID.randomUUID()
+            clone.setUUID(UUID.randomUUID())
+            clone.id = world.nextLocalEntityId()
             world.addEntity(clone)
 
             dummyPlayer = clone
         }
     }
 
-    override fun disable() {
-        FakeLag.flush()
+    override fun onDisabled() {
+        directions.forEach { BlinkManager.flush(it) }
         removeClone()
     }
 
@@ -95,25 +105,29 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val packet = event.packet
 
-        if (event.isCancelled || event.origin != TransferOrigin.SEND) {
+        if (event.isCancelled || !directions.contains(event.origin)) {
             return@handler
         }
 
-        if (ambush && packet is PlayerInteractEntityC2SPacket) {
+        if (ambush &&
+            (packet is ServerboundInteractPacket
+                || packet is ServerboundAttackPacket
+                || packet is ServerboundSpectatorActionPacket)) {
             enabled = false
             return@handler
         }
     }
 
-    val repeatable = repeatable {
-        if (evadeArrows) {
-            val (playerPosition, _, _) = FakeLag.firstPosition() ?: return@repeatable
+    @Suppress("unused")
+    private val tickTask = tickHandler {
+        if (ModuleAutoDodge.enabled) {
+            val playerPosition = positions.firstOrNull() ?: return@tickHandler
 
-            if (getInflictedHit(playerPosition) == null) {
-                return@repeatable
+            if (ModuleAutoDodge.getInflictedHit(playerPosition) == null) {
+                return@tickHandler
             }
 
-            val evadingPacket = findAvoidingArrowPosition()
+            val evadingPacket = ModuleAutoDodge.findAvoidingArrowPosition()
 
             // We have found no packet that avoids getting hit? Then we default to blinking.
             // AutoDoge might save the situation...
@@ -125,32 +139,48 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
                 enabled = false
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("Blink", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
-                FakeLag.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             } else {
                 notification("Blink", "Arrow evaded.", NotificationEvent.Severity.INFO)
-                FakeLag.flush(evadingPacket.idx + 1)
+                BlinkManager.flush(evadingPacket.idx + 1)
             }
         }
     }
 
-    val playerMoveHandler = handler<PlayerMovementTickEvent> {
-        if (AutoResetOption.enabled && FakeLag.positions.count() > AutoResetOption.resetAfter) {
+    @Suppress("unused")
+    private val playerMoveHandler = handler<PlayerMovementTickEvent> {
+        tickCounter++
+
+        if (AutoResetOption.enabled && tickCounter > AutoResetOption.resetAfter) {
+            tickCounter = 0
             when (AutoResetOption.action) {
-                ResetAction.RESET -> FakeLag.cancel()
+                ResetAction.RESET -> BlinkManager.cancel()
                 ResetAction.BLINK -> {
-                    FakeLag.flush()
-                    dummyPlayer?.copyPositionAndRotation(player)
+                    directions.forEach { BlinkManager.flush(it) }
+                    dummyPlayer?.copyPosition(player)
                 }
             }
 
             notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
-            if (autoDisable)
+            if (autoDisable) {
                 enabled = false
+            }
         }
     }
 
-    enum class ResetAction(override val choiceName: String) : NamedChoice {
+    @Suppress("unused")
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
+        if (directions.contains(event.origin)) {
+            event.action = Action.QUEUE
+        }
+    }
+
+    enum class ResetAction(override val tag: String) : Tagged {
         RESET("Reset"),
         BLINK("Blink");
+    }
+
+    fun isDummyPlayer(entityId: Int): Boolean {
+        return entityId == dummyPlayer?.id
     }
 }

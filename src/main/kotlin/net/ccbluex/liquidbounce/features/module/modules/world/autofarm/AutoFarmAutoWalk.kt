@@ -1,0 +1,145 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
+
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.mapReadOnly
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.filter
+import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.BoneMealItem
+import net.minecraft.world.phys.Vec3
+
+object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
+
+    private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
+
+    // Makes the player move to farmland blocks where there is a need for crop replacement
+    private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
+
+    private object ToItems : ToggleableValueGroup(this, "ToItems", true) {
+        val rangeSquared by float("Range", 20f, 8f..64f).mapReadOnly { it.sq() }
+
+        private val items by items("Items", itemSortedSetOf())
+        private val filter by enumChoice("Filter", Filter.BLACKLIST)
+
+        fun shouldPickUp(itemEntity: ItemEntity): Boolean {
+            return filter(itemEntity.item.item, items)
+        }
+    }
+
+    init {
+        tree(ToItems)
+    }
+
+    private var invHadSpace = true
+
+    var walkTarget: Vec3? = null
+        private set
+
+    private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
+        // we should only walk to farmland/soulsand blocks if we have plantable items
+        if (!toPlant) return setOf(AutoFarmTrackedState.ReadyForHarvest)
+
+        // we should always walk to blocks we want to destroy because we can do so even without any items
+        return buildSet {
+            this.add(AutoFarmTrackedState.ReadyForHarvest)
+
+            for (slot in Slots.OffhandWithHotbar) {
+                val item = slot.itemStack.item
+                AutoFarmTrackedState.Plantable.entries.filterTo(this) { it.items.contains(item) }
+
+                if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                    this.add(AutoFarmTrackedState.Bonemealable)
+                }
+            }
+        }
+    }
+
+    private fun findWalkToBlock(): Vec3? {
+        if (AutoFarmBlockTracker.isEmpty()) return null
+
+        val allowedStates = collectAllowedStates()
+
+        val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
+            if (state in allowedStates) pos.center else null
+        }.minByOrNull(player::distanceToSqr)
+
+        return closestBlockPos
+    }
+
+    private fun findWalkTarget(invHasSpace: Boolean): Vec3? {
+        val blockTarget = findWalkToBlock()
+
+        if (ToItems.enabled && invHasSpace) {
+            val playerPos = player.position()
+            val itemTarget = findWalkToItem() ?: return blockTarget
+            blockTarget ?: return itemTarget
+
+            val blockTargetDistSq = blockTarget.distanceToSqr(playerPos)
+            val itemTargetDistSq = itemTarget.distanceToSqr(playerPos)
+            return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
+        } else {
+            return blockTarget
+        }
+    }
+
+    private fun findWalkToItem(): Vec3? = world.entityGetter
+        .filter(EntityTypes.ITEM, ToItems::shouldPickUp)
+        .weightedMinByOrNullAtMost(ToItems.rangeSquared.toDouble(), player::distanceToSqr)
+        ?.position()
+
+    override fun createNavigationContext(): Vec3? {
+        val invHasSpace = hasInventorySpace()
+        if (!invHasSpace && invHadSpace && ToItems.enabled) {
+            notification(
+                ModuleAutoFarm.message("inventoryFull"),
+                ModuleAutoFarm.message("noLongerCollecting"),
+                NotificationEvent.Severity.ERROR
+            )
+            invHadSpace = false
+            return null
+        }
+        invHadSpace = invHasSpace
+
+        return findWalkTarget(invHasSpace)
+    }
+
+    override fun calculateGoalPosition(context: Vec3?): Vec3? {
+        val target = ModuleAutoFarm.currentTarget?.center ?: context
+        if (target != null && player.distanceToSqr(target) < minimumDistance.sq()) {
+            this.walkTarget = null
+            return null
+        }
+
+        return target.also { this.walkTarget = it }
+    }
+
+}

@@ -1,30 +1,49 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.util.Identifier
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.network.chat.Component
 
-interface MurderMysteryMode {
-    fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
-        locationSkin: Identifier,
-    )
+sealed class MurderMysteryMode(name: String) : Mode(name) {
+    final override val parent
+        get() = ModuleMurderMystery.modes
 
-    fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
-        locationSkin: Identifier,
-    )
+    abstract fun handleHasBow(entity: AbstractClientPlayer)
 
-    fun disallowsArrowDodge(): Boolean = false
+    abstract fun handleHasSword(entity: AbstractClientPlayer)
 
-    fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean
+    open fun disallowsArrowDodge(): Boolean = false
 
-    fun getPlayerType(player: AbstractClientPlayerEntity): PlayerType
+    abstract fun shouldAttack(entity: AbstractClientPlayer): Boolean
 
-    fun reset()
+    abstract fun getPlayerType(player: AbstractClientPlayer): PlayerType
 
-    enum class PlayerType {
-        NEUTRAL,
-        DETECTIVE_LIKE,
-        MURDERER,
+    abstract fun reset()
+
+    enum class PlayerType(val prefix: Component?) {
+        NEUTRAL(null),
+        DETECTIVE_LIKE("[BOW] ".asPlainText(ChatFormatting.AQUA)),
+        MURDERER("[MURD] ".asPlainText(ChatFormatting.RED)),
     }
 }

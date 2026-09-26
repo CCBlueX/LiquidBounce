@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,57 +18,27 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.minecraft.world.phys.Vec3
 
-class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatingPointRange<Double>) :
-    Line(position, direction) {
-    val length: Double
-        get() = direction.multiply(phiRange.endInclusive - phiRange.start).length()
-
-    val endPoints: Pair<Vec3d, Vec3d>
-        get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
+data class LineSegment(
+    val start: Vec3,
+    val end: Vec3,
+) : LinearGeometry3 {
 
     init {
-        require(!MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0)) {
-            "Direction must not be zero"
+        require(!end.subtract(start).isLikelyZero) {
+            "Line segment must not have zero length, actual: $start -> $end"
         }
     }
 
-    override fun getNearestPointTo(point: Vec3d): Vec3d {
-        val plane = NormalizedPlane(point, direction)
+    override val anchor: Vec3
+        get() = start
 
-        // If there is no intersection between the created plane and this line it means that the point is in the line.
-        val intersection = plane.intersectionPhi(this)
+    override val direction: Vec3
+        get() = end.subtract(start)
 
-        val phi = intersection ?: getPhiForPoint(point)
+    val length: Double
+        get() = direction.length()
 
-        return getPosition(phi.coerceIn(phiRange))
-    }
-
-    override fun calculateNearestPhiTo(other: Line): Double? {
-        return super.calculateNearestPhiTo(other)?.coerceIn(phiRange)
-    }
-
-    override fun getPosition(phi: Double): Vec3d {
-        require(phi in phiRange) {
-            "Phi must be in range $phiRange"
-        }
-
-        return super.getPosition(phi)
-    }
-
-    override fun getPositionChcked(phi: Double): Vec3d? {
-        if (phi !in phiRange) {
-            return null
-        }
-
-        return super.getPosition(phi)
-    }
-
-    companion object {
-        fun fromPoints(a: Vec3d, b: Vec3d): LineSegment {
-            return LineSegment(a, b.subtract(a), 0.0..1.0)
-        }
-    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.NullableBypass
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
-internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*>) : Choice("InvalidHand") {
+internal class NoSlowSharedInvalidHand(override val parent: ModeValueGroup<*>) : Mode("InvalidHand") {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         val packet = event.packet
 
-        if (!event.isCancelled && event.origin == TransferOrigin.SEND && packet is PlayerInteractItemC2SPacket) {
+        if (!event.isCancelled && event.origin == TransferOrigin.OUTGOING && packet is ServerboundUseItemPacket) {
             event.cancelEvent()
-            sendPacketSilently(PlayerInteractItemC2SPacket(null, packet.sequence, packet.pitch, packet.yaw))
+            sendPacketSilently(NullableBypass.createWithNullHand(packet))
         }
     }
 

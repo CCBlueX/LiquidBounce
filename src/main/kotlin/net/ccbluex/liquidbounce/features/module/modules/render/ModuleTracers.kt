@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,31 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
-import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
+import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.render.drawLinesWithWidth
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import java.awt.Color
-import kotlin.math.sqrt
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 
 /**
  * Tracers module
@@ -50,84 +45,60 @@ import kotlin.math.sqrt
  * Draws a line to every entity a certain radius.
  */
 
-object ModuleTracers : Module("Tracers", Category.RENDER) {
+object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
-    private val modes = choices<GenericColorMode<LivingEntity>>(
-        "ColorMode",
-        { DistanceColor },
-        {
-            arrayOf(
-                DistanceColor,
-                GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
-                GenericRainbowColorMode(it)
-            )
-        }
-    )
+    private val modes = choices("ColorMode", 0) {
+        arrayOf(
+            GenericDistanceHSBColorMode.entity(it),
+            GenericEntityHealthColorMode(it),
+            GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
+            GenericRainbowColorMode(it)
+        )
+    }
 
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
-    private object DistanceColor : GenericColorMode<LivingEntity>("Distance") {
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+    }
 
-        val useViewDistance by boolean("UseViewDistance", true)
-        val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
-
-        override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
+    override fun onDisabled() {
+        RenderedEntities.unsubscribe(this)
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        val useDistanceColor = DistanceColor.isActive
-
-        val viewDistance =
-            (if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
-                2.0
-            )
-        val filteredEntities = world.entities.filter(this::shouldRenderTrace)
-        val camera = mc.gameRenderer.camera
-
-        if (filteredEntities.isEmpty()) {
+        if (RenderedEntities.isEmpty()) {
             return@handler
         }
 
-        renderEnvironmentForWorld(matrixStack) {
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+        event.renderEnvironment {
+            val eyeVector = Vec3f.eyeVector(camera)
 
-            for (entity in filteredEntities) {
-                if (entity !is LivingEntity) {
+            val maxDistanceSq = maximumDistance.sq()
+            for (entity in RenderedEntities) {
+                val distanceSq = entity.position().cameraDistanceSq().toFloat()
+                if (distanceSq > maxDistanceSq) {
                     continue
                 }
 
-                val dist = player.distanceTo(entity) * 2.0
-
-                val color = if (useDistanceColor) {
-                    Color4b(
-                        Color.getHSBColor(
-                            (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f),
-                            1.0f,
-                            1.0f
-                        )
-                    )
-                } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
-                    Color4b(0, 0, 255)
+                val color = if (FriendManager.isFriend(entity)) {
+                    Color4b.BLUE
                 } else {
-                    ModuleMurderMystery.getColor(entity) ?: modes.activeChoice.getColor(entity) ?: continue
+                    EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
                 }
 
-                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight, 0f)
 
-                withColor(color) {
-                    drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
+                if (lineWidth == 1.0f) {
+                    drawLines(color.argb, eyeVector, pos, pos, topPos)
+                } else {
+                    drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
                 }
             }
         }
 
     }
-
-    @JvmStatic
-    fun shouldRenderTrace(entity: Entity) = entity.shouldBeShown()
 }

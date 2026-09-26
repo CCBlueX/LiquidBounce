@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 
-object QuickPurchaseMode : Choice("Quick") {
-    override val parent: ChoiceConfigurable<*>
+object QuickPurchaseMode : Mode("Quick") {
+    override val parent: ModeValueGroup<*>
         get() = ModuleAutoShop.purchaseMode
 
-    val delay by intRange("Delay", 50..70, 0..150, "ms")
+    val delayMs by intRange("Delay", 50..70, 0..150, "ms")
     val waitForItems by boolean("WaitForItems", true)
 }

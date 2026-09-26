@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.fakelag.DelayData
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.utils.client.handlePacket
-import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
+import net.minecraft.network.protocol.common.ClientboundPingPacket
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * @anticheat Hycraft (Polar)
@@ -42,23 +41,14 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
  *
  * @note Tested in Bedwars, Skywars. Pretty much flagless
  */
-internal object FlyHycraftDamage : Choice("HycraftDamage") {
+internal object FlyHycraftDamage : Mode("HycraftDamage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
-    private val packetQueue = LinkedHashSet<DelayData>()
     private var damageTaken = false
     private var release = false
     private var ticks = 0
-
-    override fun disable() {
-        if (inGame) {
-            packetQueue.forEach { handlePacket(it.packet) }
-        }
-
-        packetQueue.clear()
-    }
 
     override fun enable() {
         ticks = 0
@@ -66,39 +56,55 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
         release = false
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         waitTicks(1)
-        if (ticks > 0) ticks--
+
+        if (ticks > 0) {
+            ticks--
+        }
     }
 
     /**
      * Used to works on different servers as well but now only Hycraft
      */
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is EntityDamageS2CPacket && packet.entityId == player.id && ticks <= 0) {
-            damageTaken = true
-            ticks = 40
+        if (event.origin != TransferOrigin.INCOMING) {
+            return@handler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && damageTaken) {
-            packetQueue.add(DelayData(packet, System.currentTimeMillis()))
-            damageTaken = false
-            release = true
-        }
+        event.action = when (packet) {
+            is ClientboundDamageEventPacket if packet.entityId == player.id && ticks <= 0 -> {
+                damageTaken = true
+                ticks = 40
+                handlePacket(packet)
+                BlinkManager.Action.QUEUE
+            }
 
-        if (packet is CommonPingS2CPacket) {
-            if (ticks > 0) {
-                packetQueue.add(DelayData(packet, System.currentTimeMillis()))
-                event.cancelEvent()
+            is ClientboundSetEntityMotionPacket if packet.id == player.id && damageTaken -> {
+                damageTaken = false
+                release = true
+                handlePacket(packet)
+                BlinkManager.Action.QUEUE
+            }
+
+            is ClientboundPingPacket -> {
+                if (ticks <= 0) {
+                    if (release) {
+                        ModuleFly.enabled = false
+                    }
+                    return@handler
+                }
 
                 ticks--
-            } else {
-                if (release) {
-                    ModuleFly.enabled = false
-                }
+                BlinkManager.Action.QUEUE
             }
+
+            // Prevent [PacketQueueManager] from flushing queued packets
+            else -> BlinkManager.Action.PASS
         }
 
     }

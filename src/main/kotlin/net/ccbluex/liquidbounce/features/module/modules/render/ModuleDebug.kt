@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,68 +18,160 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Listenable
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.fastutil.forEachFloat
+import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.drawTriangle
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.textOf
+import net.ccbluex.liquidbounce.utils.math.vector2f
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import java.awt.Color
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import java.io.File
+import java.time.LocalDateTime
 
 /**
- * Rotations module
+ * Debug module
  *
- * Allows you to see server-sided rotations.
+ * Only of interest to developers.
  */
 
-object ModuleDebug : Module("Debug", Category.RENDER) {
+object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
-    private val parameters by boolean("Parameters", true)
-    private val geometry by boolean("Geometry", true)
+    private val parameters by boolean("Parameters", true).onChanged { _ ->
+        debugParameters.clear()
+    }
+    private val geometry by boolean("Geometry", true).onChanged { _ ->
+        debuggedGeometry.clear()
+    }
 
-    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    private val expireTime by int("Expires", 5, 1..30, "secs")
+    private val titleFilter by regex("TitleFilter", Regex(".*"))
+
+    private val debugLog by boolean("DebugLog", false)
+
+    private val outputDir = ConfigSystem.rootFolder.resolve("debug-log").apply { mkdirs() }
+    // TSV: timestamp,debugOwnerId,name,value
+    private var outputFile: File? = null
+
+    fun accepts(owner: DebuggedOwner) = titleFilter.matches(owner.debugDisplayName.string)
+
+    private fun writeLine(
+        time: Long,
+        debuggedKey: DebuggedKey,
+        value: String,
+    ) {
+        outputFile?.appendText("$time\t${debuggedKey.owner.debugOwnerId}\t${debuggedKey.name}\t$value\n")
+    }
+
+    private val fontRenderer
+        get() = FontManager.FONT_RENDERER
+
+    object RenderSimulatedPlayer : ToggleableValueGroup(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
-        private val simLines = mutableListOf<Vec3d>()
 
         @Suppress("unused")
-        val tickRep = handler<MovementInputEvent> { event ->
-            // We aren't actually where we are because of blink.
-            // So this module shall not cause any disturbance in that case.
-            if (ModuleBlink.enabled) {
-                return@handler
-            }
+        private val movementInputHandler = handler<MovementInputEvent> { _ ->
+            PlayerSimulationCache.getSimulationForLocalPlayer().simulateUntil(this.ticksToPredict)
+        }
 
-            simLines.clear()
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            val cachedPositions = PlayerSimulationCache
+                .getSimulationForLocalPlayer()
+                .getSnapshotsBetween(0 until this.ticksToPredict)
 
-            val input =
-                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-            repeat(ticksToPredict) {
-                simulatedPlayer.tick()
-                simLines.add(simulatedPlayer.pos)
+            event.renderEnvironment {
+                drawLineStrip(
+                    Color4b.BLUE.argb,
+                    positions = MutableVertexList(cachedPositions.size)
+                        .addAllRelativeToCamera(cachedPositions, camera) { it.pos },
+                )
             }
         }
 
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            renderEnvironmentForWorld(event.matrixStack) {
-                withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
+    }
+
+    object Graph : ToggleableValueGroup(this, "Graph", false) {
+
+        private val curve = curve(
+            "Curve", mutableListOf(
+                0f vector2f 120f,
+                50f vector2f 60f,
+                140f vector2f 120f,
+                180f vector2f 90f
+            ),
+            xAxis = "X Axis" axis 0f..180f,
+            yAxis = "Y Axis" axis 40f..120f
+        )
+
+        @Suppress("unused")
+        private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+            val context = event.context
+
+            with(context) {
+                var posX = 300
+                var posY = 500
+
+                fontRenderer.draw("Graph".asPlainText()) {
+                    x = posX.toFloat()
+                    y = posY.toFloat()
+                    shadow = true
+                    scale = 0.3f
+                }
+
+                curve.xAxis.range.step(0.1f).forEachFloat { x ->
+                    var y = curve.transform(x)
+                    this.drawQuad(
+                        posX + x,
+                        posY - y,
+                        posX + x + 1,
+                        posY - y + 1,
+                        Color4b.GREEN
+                    )
+                }
+
+                val points = curve.get()
+                for (point in curve.get()) {
+                    var x = point[0]
+                    var y = point[1]
+
+                    this.drawQuad(
+                        posX + x - 2,
+                        posY - y - 2,
+                        posX + x + 2,
+                        posY - y + 2,
+                        Color4b.WHITE
+                    )
                 }
             }
         }
@@ -88,35 +180,52 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     init {
         tree(RenderSimulatedPlayer)
+        tree(Graph)
     }
 
-    private val debuggedGeometry = hashMapOf<DebuggedGeometryOwner, DebuggedGeometry>()
+    @JvmRecord
+    private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    private val KEY_COMPARATOR = compareBy<DebuggedKey> { it.owner.debugOwnerId }
+        .thenComparing { it.name }
 
+    @JvmRecord
+    private data class ParameterCapture(val time: Long, val value: Any?)
+
+    private val debugParameters = Object2ObjectRBTreeMap<DebuggedKey, ParameterCapture>(KEY_COMPARATOR)
+
+    private val debuggedGeometry = Object2ObjectRBTreeMap<DebuggedKey, DebuggedGeometry>(KEY_COMPARATOR)
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         if (!geometry) {
             return@handler
         }
 
-        renderEnvironmentForWorld(matrixStack) {
-            debuggedGeometry.values.forEach {
-                it.render(this)
+        event.renderEnvironment {
+            debuggedGeometry.values.forEach { geometry ->
+                geometry.render()
             }
         }
     }
 
     @Suppress("unused")
-    val screenRenderHandler = handler<OverlayRenderEvent> { event ->
+    private val expireHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        val earliest = System.currentTimeMillis() - expireTime * 1000
+
+        debugParameters.entries.removeIf { (_, capture) ->
+            capture.time <= earliest
+        }
+    }
+
+    @Suppress("unused")
+    private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
-        if (mc.options.playerListKey.isPressed || !parameters) {
+        if (mc.options.keyPlayerList.isDown || !parameters) {
             return@handler
         }
 
-        val width = mc.window.scaledWidth
-
-        //
         /**
          * Separate the debugged owner from its parameter
          * Structure should be like this:
@@ -125,139 +234,187 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
          *   Parameter Name: Parameter Value
          *   Parameter Name: Parameter Value
          */
-        val textList = mutableListOf<OrderedText>()
+        val textList = mutableListOf<Component>()
 
         val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
-        debuggedOwners.onEachIndexed { index, (owner, parameter) ->
-            val ownerName = if (owner is Module) {
-                owner.name
-            } else if (owner is Listenable) {
-                "${owner.parent()?.javaClass?.simpleName}::${owner.javaClass.simpleName}"
-            } else {
-                owner.javaClass.simpleName
-            }
+        val currentTime = System.currentTimeMillis()
 
-            textList += Text.literal(ownerName).styled {
-                it.withColor(Formatting.GOLD).withBold(true)
-            }.asOrderedText()
+        debuggedOwners.forEach { (owner, parameters) ->
+            textList += owner.debugDisplayName
 
-            parameter.forEach { debuggedParameter ->
+            for (debuggedParameter in parameters) {
                 val parameterName = debuggedParameter.name
-                val parameterValue = debugParameters[debuggedParameter]
-                textList += Text.literal("$parameterName: $parameterValue").styled {
-                    it.withColor(Formatting.GRAY)
-                }.asOrderedText()
+                val parameterCapture = debugParameters[debuggedParameter] ?: continue
+                val duration = (currentTime - parameterCapture.time) / 1000
+                textList += textOf(
+                    "$parameterName: ".asPlainText(ChatFormatting.WHITE),
+                    parameterCapture.value.toString().asPlainText(ChatFormatting.GREEN),
+                    " [${duration}s ago]".asPlainText(ChatFormatting.GRAY),
+                )
             }
         }
 
-        // Draw debug box of the screen with a width of 200
-        val biggestWidth = textList.maxOfOrNull { mc.textRenderer.getWidth(it) + 10 }?.coerceAtLeast(80)
-            ?: 80
-        val directionWidth = biggestWidth / 2
-        context.fill(
-            width / 2 - directionWidth, 20, width / 2 + directionWidth,
-            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA()
-        )
+        with(event.context) {
+            val vanillaScale = fontRenderer.scaleToVanillaFont
 
-        context.drawCenteredTextWithShadow(mc.textRenderer, Text.literal("Debugging").styled {
-            it.withColor(Formatting.LIGHT_PURPLE).withBold(true)
-        }.asOrderedText(), width / 2, 22, Color4b.WHITE.toRGBA())
+            // Draw
+            fontRenderer.draw("Debugging".asPlainText()) {
+                x = 120f
+                y = 22f
+                shadow = true
+                scale = vanillaScale * 2
+            }
 
-        // Draw white line below Debugging text
-        context.fill(width / 2 - directionWidth, 32, width / 2 + directionWidth, 33, Color4b.WHITE.toRGBA())
-
-        // Draw text line one by one
-        textList.forEachIndexed { index, text ->
-            context.drawCenteredTextWithShadow(
-                mc.textRenderer, text, width / 2, 40 +
-                        (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
-            )
+            // Draw text line one by one
+            textList.forEachIndexed { index, text ->
+                fontRenderer.draw(text) {
+                    x = 120f
+                    y = 40 + ((fontRenderer.height * vanillaScale) * index)
+                    shadow = true
+                    scale = vanillaScale
+                }
+            }
         }
     }
 
-    fun debugGeometry(owner: Any, name: String, geometry: DebuggedGeometry) {
+    fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry?) {
         // Do not take any new debugging while the module is off
-        if (!enabled) {
+        if (!running || !accepts(owner)) {
             return
         }
 
-        debuggedGeometry[DebuggedGeometryOwner(owner, name)] = geometry
+        if (geometry != null) {
+            debuggedGeometry[DebuggedKey(owner, name)] = geometry
+        } else {
+            debuggedGeometry.remove(DebuggedKey(owner, name))
+        }
     }
 
-    data class DebuggedGeometryOwner(val owner: Any, val name: String)
-
-    data class DebuggedParameter(val owner: Any, val name: String)
-
-    private var debugParameters = hashMapOf<DebuggedParameter, Any>()
-
-    fun debugParameter(owner: Any, name: String, value: Any) {
-        if (!enabled) {
+    inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry?) {
+        if (!running || !accepts(this@debugGeometry)) {
             return
         }
 
-        debugParameters[DebuggedParameter(owner, name)] = value
+        debugGeometry(owner = this@debugGeometry, name, lazyGeometry())
+    }
+
+    fun debugParameter(owner: DebuggedOwner, name: String, value: Any?) {
+        if (!running || !accepts(owner)) {
+            return
+        }
+
+        val time = System.currentTimeMillis()
+        val debuggedKey = DebuggedKey(owner, name)
+        debugParameters[debuggedKey] = ParameterCapture(time, value)
+        writeLine(time, debuggedKey, value.toString())
+    }
+
+    inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
+        if (!running || !accepts(this@debugParameter)) {
+            return
+        }
+
+        debugParameter(owner = this@debugParameter, name, lazyValue())
     }
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b(Color.getHSBColor(hue, 1f, 1f)).alpha(32)
+        return Color4b.ofHSB(hue, 1f, 1f, alpha = 32f / 255f)
     }
 
-    abstract class DebuggedGeometry(val color: Color4b) {
-        abstract fun render(env: WorldRenderEnvironment)
+    fun interface DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        fun render()
     }
 
-    class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
-        val from: Vec3d
-        val to: Vec3d
+    class DebuggedLine(private val line: Line, val color: Color4b) : DebuggedGeometry {
+        val from: Vec3
+        val to: Vec3
 
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = line.position.subtract(normalizedDirection.multiply(100.0))
-            this.to = line.position.add(normalizedDirection.multiply(100.0))
+            this.from = line.position.subtract(normalizedDirection.scale(100.0))
+            this.to = line.position.add(normalizedDirection.scale(100.0))
         }
 
-        override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
             }
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
+    class DebuggedTriangle(
+        val p1: Vec3,
+        val p2: Vec3,
+        val p3: Vec3,
+        val color: Color4b,
+    ) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            env.withPositionRelativeToCamera {
+                env.drawTriangle(
+                    p1 = p1.toVec3f(),
+                    p2 = p2.toVec3f(),
+                    p3 = p3.toVec3f(),
+                    argb = color.argb,
+                )
             }
         }
     }
 
-    open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawSolidBox(box.offset(env.camera.pos.negate()))
+    class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
             }
         }
     }
 
-    class DebuggedPoint(point: Vec3d, color: Color4b, size: Double = 0.2) : DebuggedBox(
-        Box.of(point, size, size, size),
+    open class DebuggedBox(val box: AABB, val color: Color4b) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            env.drawBox(box.move(env.camera.position().reverse()), color)
+        }
+    }
+
+    class DebuggedPoint(point: Vec3, color: Color4b, size: Double = 0.2) : DebuggedBox(
+        AABB.ofSize(point, size, size, size),
         color
     )
 
-    class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
-        override fun render(env: WorldRenderEnvironment) {
-            this.geometry.forEach { it.render(env) }
+    class DebugCollection(val geometry: Collection<DebuggedGeometry>) : DebuggedGeometry {
+        context(env: WorldRenderEnvironment)
+        override fun render() {
+            this.geometry.forEach { it.render() }
         }
     }
 
-    override fun disable() {
+    override fun onEnabled() {
+        if (debugLog) {
+            outputFile = outputDir.resolve(LocalDateTime.now().toUnderlinedString() + ".tsv")
+        }
+        super.onEnabled()
+    }
+
+    override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
-        super.disable()
+        outputFile = null
+        super.onDisabled()
     }
 
 }

@@ -1,0 +1,128 @@
+[versions]
+# Minecraft 1.21.1 upwards uses Java 21
+# 26.1 upwards uses Java 25
+jdk = "25"
+
+# Fabric Properties
+# Check these on https://fabricmc.net/versions.html
+# https://mods.upcraft.dev/dev/versions
+minecraft = "26.3"
+fabric-loom = "1.17-SNAPSHOT"
+fabric-loader = "0.19.5"
+fabric-loaderMin = "0.18.4"
+fabric-api = "0.160.5+26.3"
+
+# mcef
+mcef = "3.5.0-26.3"
+# MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
+minecraftauth = "5.0.3-SNAPSHOT"
+# TheAltening
+thealtening = "4.1.0"
+# https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
+retrofit = "3.0.0"
+# djl
+djl = "0.38.0"
+# https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+okhttp = "5.5.0"
+
+ktor = "3.6.0"
+semver4j = "3.1.0"
+ahocorasick = "0.6.3"
+fastutil4k = "0.2.9"
+discord-ipc = "-SNAPSHOT"
+
+# Recommended mods
+modmenu = "21.0.0-beta.1"
+exploit_preventer_api = "1.0.0"
+exploit_preventer_mod = "1.2.0+26.3"
+sodium = "mc26.3-0.9.2-fabric"
+lithium = "mc26.3-0.26.1-fabric"
+viafabricplus = "5.1.0"
+# Mods for compatibility test (runtime only)
+immediatelyFast = "1.17.1+26.3-fabric"
+iris = "1.11.6+26.3-fabric"
+
+# Kotlin
+# https://kotlinlang.org/releases.html
+kotlin = "2.4.20"
+# Kotlin test
+# https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
+kotlinx-coroutines = "1.11.0"
+# https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
+fabric-kotlin = "1.14.1+kotlin.2.4.20"
+
+# Netty, should be sync with game version
+# https://mvnrepository.com/artifact/io.netty/netty-all
+netty = "4.2.16.Final"
+
+# LWJGL
+lwjgl = "3.4.3"
+
+# Other plugins
+detekt = "2.0.0-alpha.6"
+gradleGitProperties = "4.0.1"
+dokka = "2.2.0"
+nodeGradle = "7.1.0"
+
+[libraries]
+minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
+fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric-api" }
+fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabric-kotlin" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
+
+netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
+lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
+minecraftauth = { group = "net.ccbluex", name = "MinecraftAuth", version.ref = "minecraftauth" }
+thealtening = { group = "com.thealtening.api", name = "api", version.ref = "thealtening" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
+mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
+semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
+ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
+fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
+fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
+discord-ipc = { group = "com.github.CCBlueX", name = "discord-ipc", version.ref = "discord-ipc" }
+
+djl-api = { group = "ai.djl", name = "api", version.ref = "djl" }
+djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref = "djl" }
+#djl-mxnet = { group = "ai.djl.mxnet", name = "mxnet-engine", version.ref = "djl" }
+#djl-tensorflow = { group = "ai.djl.tensorflow", name = "tensorflow-engine", version.ref = "djl" }
+
+# Ktor
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio", version.ref = "ktor" }
+ktor-server-websockets = { group = "io.ktor", name = "ktor-server-websockets", version.ref = "ktor" }
+ktor-server-sse = { group = "io.ktor", name = "ktor-server-sse", version.ref = "ktor" }
+ktor-server-cors = { group = "io.ktor", name = "ktor-server-cors", version.ref = "ktor" }
+ktor-server-compression = { group = "io.ktor", name = "ktor-server-compression", version.ref = "ktor" }
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
+ktor-serialization-gson = { group = "io.ktor", name = "ktor-serialization-gson", version.ref = "ktor" }
+
+# mods
+modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
+sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
+lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
+vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
+vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
+exploitPreventer-api = { group = "com.nikoverflow", name = "exploit-preventer-api", version.ref = "exploit_preventer_api" }
+exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+
+[plugins]
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
+
+[bundles]
+okhttp = ["okhttp", "okhttp-coroutines"]
+retrofit = ["retrofit", "retrofit-converter-gson", "retrofit-converter-scalars"]

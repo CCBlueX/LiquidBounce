@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 
 /**
  * A full bright module
  *
  * Allows you to see in the dark.
  */
-object ModuleFullBright : Module("FullBright", Category.RENDER) {
+object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
 
     private val modes = choices(
         "Mode", FullBrightGamma, arrayOf(
@@ -40,39 +40,40 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         )
     )
 
-    object FullBrightGamma : Choice("Gamma") {
+    object FullBrightGamma : Mode("Gamma") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val brightness by int("Brightness", 15, 1..15)
 
-        var gamma = 0.0
+        var gamma = 0.0F
+            private set
 
         override fun enable() {
-            gamma = mc.options.gamma.value
+            gamma = mc.options.gamma().get().toFloat()
         }
 
         val tickHandler = handler<PlayerPostTickEvent> {
             if (gamma < brightness) {
-                gamma = (gamma + 0.1).coerceAtMost(brightness.toDouble())
+                gamma = (gamma + 0.1F).coerceAtMost(brightness.toFloat())
             }
         }
 
     }
 
-    private object FullBrightNightVision : Choice("NightVision") {
+    private object FullBrightNightVision : Mode("NightVision") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
         val tickHandler = handler<PlayerPostTickEvent> {
-            player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
+            player.addEffect(MobEffectInstance(MobEffects.NIGHT_VISION, 1337))
         }
 
         override fun disable() {
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            player.removeEffect(MobEffects.NIGHT_VISION)
         }
 
     }

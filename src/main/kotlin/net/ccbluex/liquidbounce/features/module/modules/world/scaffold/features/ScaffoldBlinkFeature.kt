@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,37 +18,70 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import java.util.function.Predicate
 
-object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", false) {
+object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", false) {
 
     private val time by intRange("Time", 50..250, 0..3000, "ms")
-    private val fallCancel by boolean("FallCancel", true)
+    private val flushOn by multiEnumChoice<FlushOn>("FlushOn")
 
     private var pulseTime = 0L
     private val pulseTimer = Chronometer()
-
-    val shouldBlink
-        get() = handleEvents() && (!player.isOnGround || !pulseTimer.hasElapsed(pulseTime))
 
     fun onBlockPlacement() {
         pulseTime = time.random().toLong()
     }
 
-    val repeatable = repeatable {
-        if (fallCancel && player.fallDistance > 0.5f) {
-            FakeLag.cancel()
-            onBlockPlacement()
+    @Suppress("unused")
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
+        if (event.origin != TransferOrigin.OUTGOING) {
+            return@handler
         }
 
-        if (pulseTimer.hasElapsed(pulseTime)) {
+        if (pulseTimer.hasElapsed(pulseTime) || flushOn.matchesAny(event.packet)) {
             pulseTimer.reset()
+            return@handler
+        }
+
+        if (!player.onGround() || !pulseTimer.hasElapsed(pulseTime)) {
+            event.action = BlinkManager.Action.QUEUE
         }
     }
 
+    @Suppress("unused")
+    private enum class FlushOn(
+        override val tag: String,
+        private val cond: Predicate<Packet<*>?>,
+    ) : Tagged, Predicate<Packet<*>?> by cond {
+        PLACE("Place", { packet ->
+            packet is ServerboundUseItemOnPacket
+        }),
+        TOWERING("Towering", {
+            ModuleScaffold.isTowering
+        }),
+        SNEAKING("Sneaking", {
+            player.isShiftKeyDown
+        }),
+        NOT_SNEAKING("NotSneaking", {
+            !player.isShiftKeyDown
+        }),
+        ON_GROUND("OnGround", {
+            player.onGround()
+        }),
+        IN_AIR("InAir", {
+            !player.onGround()
+        })
+    }
 
 }

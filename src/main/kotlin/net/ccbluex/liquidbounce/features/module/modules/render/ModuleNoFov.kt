@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,41 +18,58 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoFOV module
  *
  * Changes FOV value.
  */
+object ModuleNoFov : ClientModule("NoFOV", ModuleCategories.RENDER) {
 
-object ModuleNoFov : Module("NoFOV", Category.RENDER) {
     val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 
-    fun getFov(orig: Float) = (mode.activeChoice as FovMode).getFov(orig)
+    fun getFovMultiplier(original: Float) = mode.activeMode.getFovMultiplier(original)
 
+    fun getFov(original: Int) = mode.activeMode.getFov(original)
 
     object ConstantFov : FovMode("Constant") {
-        private val fov by float("FOV", 1f, 0f..1.5f)
-        override fun getFov(orig: Float) = fov
+
+        private val fov by int("FOV", 90, 1..179)
+
+        override fun getFovMultiplier(original: Float) = 1f
+
+        override fun getFov(original: Int): Int {
+            return fov
+        }
+
     }
 
     object Custom : FovMode("Custom") {
+
         private val baseFov by float("BaseFOV", 1f, 0f..1.5f)
         private val limit by floatRange("Limit", 0f..1.5f, 0f..1.5f)
         private val multiplier by float("Multiplier", 1f, 0.1f..1.5f)
-        override fun getFov(orig: Float): Float {
-            val newFov = (orig - 1) * multiplier + baseFov
+
+        override fun getFovMultiplier(original: Float): Float {
+            val newFov = (original - 1) * multiplier + baseFov
             return newFov.coerceIn(limit)
         }
+
     }
 
-    abstract class FovMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    abstract class FovMode(name: String) : Mode(name) {
+
+        override val parent: ModeValueGroup<*>
             get() = mode
-        open fun getFov(orig: Float) = orig
+
+        abstract fun getFovMultiplier(original: Float): Float
+
+        open fun getFov(original: Int) = original
+
     }
+
 }

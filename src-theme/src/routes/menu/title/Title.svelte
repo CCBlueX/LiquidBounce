@@ -1,6 +1,7 @@
 <script lang="ts">
     import MainButton from "./buttons/MainButton.svelte";
     import ChildButton from "./buttons/ChildButton.svelte";
+    import ConfettiBackground from "./ConfettiBackground.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
@@ -9,23 +10,24 @@
         exitClient,
         getClientUpdate,
         openScreen,
-        toggleBackgroundShaderEnabled
+        toggleBackgroundShaderEnabled,
+        toggleBasicMode
     } from "../../../integration/rest";
-    import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
+    import {isAnniversary} from "../../../util/utils";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
 
     onMount(() => {
         setTimeout(async () => {
-            const update = await getClientUpdate();
+            const clientUpdate = await getClientUpdate();
 
-            if (update.updateAvailable) {
+            if (clientUpdate.update) {
                 notification.set({
-                    title: `LiquidBounce ${update.newestVersion?.clientVersion} has been released!`,
+                    title: `LiquidBounce ${clientUpdate.update.clientVersion} has been released!`,
                     message: `Download it from liquidbounce.net!`,
                     error: false,
                     delay: 99999999
@@ -49,7 +51,11 @@
     }
 </script>
 
-<Menu>
+<div class="title-screen">
+    {#if isAnniversary()}
+        <ConfettiBackground/>
+    {/if}
+
     <div class="content">
         <div class="main-buttons">
             {#if regularButtonsShown}
@@ -66,7 +72,7 @@
             {:else if clientButtonsShown}
                 <MainButton title="Proxy Manager" icon="proxymanager" on:click={() => openScreen("proxymanager")}
                             index={0}/>
-                <MainButton title="ClickGUI" icon="clickgui" on:click={() => openScreen("clickgui")} index={1}/>
+                <MainButton title="Click GUI" icon="clickgui" on:click={() => openScreen("clickgui")} index={1}/>
                 <!-- <MainButton title="Scripts" icon="scripts" index={2}/> -->
                 <MainButton title="Back" icon="back-large" on:click={toggleButtons} index={2}/>
             {/if}
@@ -75,8 +81,8 @@
         <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
-                <IconTextButton icon="icon-change-background.svg" title="Toggle Shader"
-                                on:click={toggleBackgroundShaderEnabled}/>
+                <IconTextButton icon="icon-eye.svg" title="Basic Mode" on:click={toggleBasicMode}/>
+                <IconButton icon="change-background" title="Toggle Shader" on:click={toggleBackgroundShaderEnabled}/>
             </ButtonContainer>
         </div>
 
@@ -84,7 +90,6 @@
             <ButtonContainer>
                 <IconButton title="Forum" icon="nodebb" on:click={() => browse("MAINTAINER_FORUM")}/>
                 <IconButton title="GitHub" icon="github" on:click={() => browse("MAINTAINER_GITHUB")}/>
-                <IconButton title="Guilded" icon="guilded" on:click={() => browse("MAINTAINER_GUILDED")}/>
                 <IconButton title="Discord" icon="discord" on:click={() => browse("MAINTAINER_DISCORD")}/>
                 <IconButton title="Twitter" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
                 <IconButton title="YouTube" icon="youtube" on:click={() => browse("MAINTAINER_YOUTUBE")}/>
@@ -93,9 +98,17 @@
             </ButtonContainer>
         </div>
     </div>
-</Menu>
+</div>
 
 <style>
+    .title-screen {
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
     .content {
         flex: 1;
         display: grid;

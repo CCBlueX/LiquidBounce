@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,31 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.isFallingToVoid
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
-internal object NoFallHypixel : Choice("Hypixel") {
+internal object NoFallHypixel : NoFallMode("Hypixel") {
 
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+    private var doJump = false
 
-    val repeatable = repeatable {
-        if (player.fallDistance >= 2.5 && !player.isFallingToVoid()) {
-            Timer.requestTimerSpeed(0.5f, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleNoFall)
-            network.sendPacket(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
-                onGround = true
-            })
-            player.fallDistance = 0F
-            waitTicks(1)
-            Timer.requestTimerSpeed(1f, Priority.NORMAL, ModuleNoFall)
+    val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is ServerboundMovePlayerPacket) {
+            if (player.fallDistance >= 3.3) {
+                doJump = true
+            }
+
+            if (doJump && player.onGround()) {
+                packet.onGround = false
+                if (!mc.options.keyJump.isDown) {
+                    player.setPos(player.position().x, player.position().y + 0.09, player.position().z)
+                }
+
+                doJump = false
+            }
         }
-
     }
-
 }

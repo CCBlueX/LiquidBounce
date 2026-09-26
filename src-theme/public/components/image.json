@@ -1,0 +1,62 @@
+{
+  "name": "Image",
+  "description": "Displays a custom image from a URL or local file.",
+  "enabled": false,
+  "singleton": false,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  },
+  "values": [
+    {
+      "type": "CHOICE",
+      "name": "Source",
+      "value": "URL",
+      "choices": [
+        {
+          "name": "URL",
+          "values": [
+            {
+              "type": "TEXT",
+              "name": "URL",
+              "value": "https://liquidbounce.net/images/logos/logo.svg"
+            }
+          ]
+        },
+        {
+          "name": "File",
+          "values": [
+            {
+              "type": "FILE",
+              "name": "File",
+              "value": "",
+              "dialogMode": "OPEN_FILE",
+              "supportedExtensions": ["png", "jpg", "jpeg", "webp", "gif", "svg"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "FLOAT",
+      "name": "Scale",
+      "value": 1.0,
+      "range": {
+        "min": 0.0,
+        "max": 10.0
+      }
+    },
+    {
+      "type": "INT",
+      "name": "Opacity",
+      "value": 100,
+      "range": {
+        "min": 0,
+        "max": 100
+      },
+      "suffix": "%"
+    }
+  ]
+}

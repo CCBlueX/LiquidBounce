@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,38 @@
 package net.ccbluex.liquidbounce.features.misc
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.ListValueType
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import java.util.*
+import net.ccbluex.liquidbounce.config.types.Config
+import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import java.util.TreeSet
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
-object FriendManager : Configurable("Friends") {
+object FriendManager : Config("Friends"), EventListener {
 
-    val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
+    val friends by list(name, TreeSet<Friend>(), valueType = ValueType.FRIEND)
+
+    private val cancelAttack by boolean("CancelAttack", false)
+
+    @Suppress("unused")
+    private val tagEntityEvent = handler<TagEntityEvent> {
+        if (isFriend(it.entity)) {
+            it.assumeFriend()
+        }
+    }
+
+    @Suppress("unused")
+    private val onAttack = handler<AttackEntityEvent> {
+        if (cancelAttack && isFriend(it.entity)) {
+            it.cancelEvent()
+        }
+    }
 
     init {
         ConfigSystem.root(this)
@@ -50,9 +73,32 @@ object FriendManager : Configurable("Friends") {
 
         override fun compareTo(other: Friend): Int = this.name.compareTo(other.name)
 
+        fun getDefaultName(id: Int): String = "Friend $id"
+
     }
 
     fun isFriend(name: String): Boolean = friends.contains(Friend(name, null))
-    fun isFriend(entity: Entity): Boolean = entity is PlayerEntity && isFriend(entity.gameProfile.name)
+    fun isFriend(entity: Entity): Boolean = entity is Player && isFriend(entity.gameProfile.name)
+
+    @AddonApi
+    fun add(friend: Friend): Boolean = friends.add(friend).also { added ->
+        if (added) {
+            EventManager.callEvent(FriendChangeEvent(friend.name, true))
+        }
+    }
+
+    @AddonApi
+    fun remove(name: String): Boolean = friends.remove(Friend(name, null)).also { removed ->
+        if (removed) {
+            EventManager.callEvent(FriendChangeEvent(name, false))
+        }
+    }
+
+    @AddonApi
+    fun clear() {
+        val names = friends.map(Friend::name)
+        friends.clear()
+        names.forEach { EventManager.callEvent(FriendChangeEvent(it, false)) }
+    }
 
 }

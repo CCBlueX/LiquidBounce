@@ -1,28 +1,39 @@
 <script lang="ts">
-    import {afterUpdate, onMount} from "svelte";
+    import {onMount} from "svelte";
     import type {Module as TModule} from "../../integration/types";
     import {listen} from "../../integration/ws";
     import Module from "./Module.svelte";
-    import type {ToggleModuleEvent} from "../../integration/events";
-    import {fly} from "svelte/transition";
+    import type {KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
+    import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
+    import {
+        gridSize,
+        highlightModuleName,
+        maxPanelZIndex,
+        scaleFactor,
+        showGrid,
+        snappingEnabled
+    } from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
 
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
-    export let scaleFactor: number;
+    export let icon: string | undefined = undefined;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
-
-    let renderedModules: TModule[] = [];
+    let expandButtonElement: HTMLElement;
 
     let moving = false;
-    let prevX = 0;
-    let prevY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    let scrollPositionSaveTimeout: number | undefined;
+
     const panelConfig = loadPanelConfig();
+
+    let ignoreGrid = false;
 
     interface PanelConfig {
         top: number;
@@ -30,6 +41,10 @@
         expanded: boolean;
         scrollTop: number;
         zIndex: number;
+    }
+
+    function showFallbackIcon(event: Event) {
+        (event.currentTarget as HTMLImageElement).src = "img/clickgui/icon-client.svg";
     }
 
     function clamp(number: number, min: number, max: number) {
@@ -61,10 +76,6 @@
                 $maxPanelZIndex = config.zIndex;
             }
 
-            if (config.expanded) {
-                renderedModules = modules;
-            }
-
             return config;
         }
     }
@@ -77,66 +88,89 @@
     }
 
     function fixPosition() {
-        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth * (2 / scaleFactor) - panelElement.offsetWidth);
-        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight * (2 / scaleFactor) - panelElement.offsetHeight);
+        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth * (2 / $scaleFactor) - panelElement.offsetWidth);
+        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight * (2 / $scaleFactor) - panelElement.offsetHeight);
     }
 
-    function onMouseDown() {
-        moving = true;
+    function onMouseDown(e: MouseEvent) {
+        if (e.button !== 0 && e.button !== 1) return;
 
+        moving = true;
+        offsetX = e.clientX * (2 / $scaleFactor) - panelConfig.left;
+        offsetY = e.clientY * (2 / $scaleFactor) - panelConfig.top;
         panelConfig.zIndex = ++$maxPanelZIndex;
+
+        $showGrid = $snappingEnabled && !expandButtonElement.contains(e.target as HTMLElement);
     }
 
     function onMouseMove(e: MouseEvent) {
         if (moving) {
-            panelConfig.left += (e.screenX - prevX) * (2 / scaleFactor);
-            panelConfig.top += (e.screenY - prevY) * (2 / scaleFactor);
+            const newLeft = (e.clientX * (2 / $scaleFactor) - offsetX);
+            const newTop = (e.clientY * (2 / $scaleFactor) - offsetY);
+
+            panelConfig.left = snapToGrid(newLeft);
+            panelConfig.top = snapToGrid(newTop);
+
+            fixPosition();
         }
-
-        prevX = e.screenX;
-        prevY = e.screenY;
-
-        fixPosition();
-        savePanelConfig();
     }
 
     function onMouseUp() {
+        if (moving) {
+            savePanelConfig();
+        }
         moving = false;
+        $showGrid = false;
     }
 
     function toggleExpanded() {
-        if (panelConfig.expanded) {
-            renderedModules = [];
-        } else {
-            renderedModules = modules;
-        }
-
         panelConfig.expanded = !panelConfig.expanded;
 
-        setTimeout(() => {
-            fixPosition();
+        savePanelConfig();
+    }
+
+    /**
+     * The panel only reaches its new height once the `max-height` transition of the module
+     * list has finished, so the position can only be clamped here. Doing it right after the
+     * toggle would measure the height the panel had *before* it was expanded or collapsed.
+     */
+    function handleModulesTransitionEnd(e: TransitionEvent) {
+        if (e.target !== modulesElement || e.propertyName !== "max-height") {
+            return;
+        }
+
+        const {left, top} = panelConfig;
+
+        fixPosition();
+
+        if (panelConfig.left !== left || panelConfig.top !== top) {
             savePanelConfig();
-        }, 500);
+        }
     }
 
     function handleModulesScroll() {
         panelConfig.scrollTop = modulesElement.scrollTop;
-        savePanelConfig();
+
+        if (scrollPositionSaveTimeout !== undefined) {
+            clearTimeout(scrollPositionSaveTimeout);
+        }
+        scrollPositionSaveTimeout = setTimeout(() => {
+            savePanelConfig();
+        }, 500)
     }
 
-    highlightModuleName.subscribe(() => {
+    highlightModuleName.subscribe((name) => {
         const highlightModule = modules.find(
-            (m) => m.name === $highlightModuleName,
+            (m) => m.name === name,
         );
         if (highlightModule) {
             panelConfig.zIndex = ++$maxPanelZIndex;
             panelConfig.expanded = true;
-            renderedModules = modules;
             savePanelConfig();
         }
     });
 
-    listen("toggleModule", (e: ToggleModuleEvent) => {
+    listen("moduleToggle", (e: ModuleToggleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
@@ -145,23 +179,30 @@
 
         mod.enabled = moduleEnabled;
         modules = modules;
-        if (panelConfig.expanded) {
-            renderedModules = modules;
-        }
     });
 
     onMount(() => {
-        setTimeout(() => {
-            if (!modulesElement) {
-                return;
-            }
+        if (!modulesElement) {
+            return;
+        }
 
-            modulesElement.scrollTo({
-                top: panelConfig.scrollTop,
-                behavior: "smooth"
-            })
-        }, 500);
+        modulesElement.scrollTo({
+            top: panelConfig.scrollTop,
+            behavior: "smooth"
+        });
     });
+
+    listen("keyboardKey", (e: KeyboardKeyEvent) => {
+        if (e.key === "key.keyboard.left.shift") {
+            ignoreGrid = e.action === 1;
+        }
+    });
+
+    function snapToGrid(value: number): number {
+        if (ignoreGrid || !$snappingEnabled) return value;
+
+        return Math.round(value / $gridSize) * $gridSize;
+    }
 </script>
 
 <svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove}/>
@@ -170,8 +211,7 @@
         class="panel"
         style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {panelConfig.zIndex};"
         bind:this={panelElement}
-        in:fly|global={{y: -30, duration: 200, easing: quintOut}}
-        out:fly|global={{y: -30, duration: 200, easing: quintOut}}
+        transition:fade|global={{duration: 200, easing: quintOut}}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
@@ -181,33 +221,42 @@
     >
         <img
                 class="icon"
-                src="img/clickgui/icon-{category.toLowerCase()}.svg"
+                src={icon ?? `img/clickgui/icon-${category.toLowerCase()}.svg`}
                 alt="icon"
+                on:error={showFallbackIcon}
         />
         <span class="category">{category}</span>
 
-        <button class="expand-toggle" on:click={toggleExpanded}>
+        <!-- svelte-ignore a11y_consider_explicit_label -->
+        <button class="expand-toggle" on:click={toggleExpanded} bind:this={expandButtonElement}>
             <div class="icon" class:expanded={panelConfig.expanded}></div>
         </button>
     </div>
 
-    <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
-        {#each renderedModules as {name, enabled, description, aliases} (name)}
+    <div
+            class="modules"
+            class:expanded={panelConfig.expanded}
+            on:scroll={handleModulesScroll}
+            on:transitionend={handleModulesTransitionEnd}
+            bind:this={modulesElement}
+    >
+        {#each modules as {name, enabled, description, aliases} (name)}
             <Module {name} {enabled} {description} {aliases}/>
         {/each}
     </div>
 </div>
 
 <style lang="scss">
-  @import "../../colors.scss";
 
   .panel {
     border-radius: 5px;
     width: 250px;
     position: absolute;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    box-shadow: 0 0 10px var(--clickgui-panel-shadow-color);
     will-change: transform;
+    transition: none;
+    user-select: none;
   }
 
   .title {
@@ -215,27 +264,38 @@
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
     column-gap: 12px;
-    background-color: rgba($clickgui-base-color, 0.9);
-    border-bottom: solid 2px $accent-color;
+    background-color: var(--clickgui-panel-header-background-color);
+    border-bottom: solid 2px var(--clickgui-panel-header-border-color);
     padding: 10px 15px;
     cursor: grab;
 
     .category {
       font-size: 14px;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       font-weight: 500;
     }
   }
 
   .modules {
-    max-height: 545px;
+    transition: max-height 300ms ease;
+    scroll-behavior: smooth;
+    max-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: rgba($clickgui-base-color, 0.8);
-  }
+    background-color: var(--clickgui-panel-body-background-color);
 
-  .modules::-webkit-scrollbar {
-    width: 0;
+    &.expanded {
+      max-height: 545px;
+    }
+
+    &::-webkit-scrollbar {
+      width: 2px;
+      height: 2px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+    }
   }
 
   .expand-toggle {
@@ -251,7 +311,7 @@
       &::before {
         content: "";
         position: absolute;
-        background-color: white;
+        background-color: var(--clickgui-panel-toggle-icon-color);
         transition: transform 0.4s ease-out;
         top: 0;
         left: 50%;
@@ -263,7 +323,7 @@
       &::after {
         content: "";
         position: absolute;
-        background-color: white;
+        background-color: var(--clickgui-panel-toggle-icon-color);
         transition: transform 0.4s ease-out;
         top: 50%;
         left: 0;

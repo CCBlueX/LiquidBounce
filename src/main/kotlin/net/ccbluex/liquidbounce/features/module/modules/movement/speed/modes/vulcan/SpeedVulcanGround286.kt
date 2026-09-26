@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
+import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.effect.MobEffects
 
 /**
  * @anticheat Vulcan
@@ -37,11 +37,12 @@ import net.minecraft.util.shape.VoxelShapes
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("VulcanGround286", parent) {
+class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
-    val repeatable = repeatable {
-        if (player.moving && collidesBottomVertical()) {
-            val speedEffect = player.getStatusEffect(StatusEffects.SPEED)
+    @Suppress("unused")
+    private val afterJumpHandler = tickHandler {
+        if (player.moving && collidesBottomVertical() && !mc.options.keyJump.isDown) {
+            val speedEffect = player.getEffect(MobEffects.SPEED)
             val isAffectedBySpeed = speedEffect != null && speedEffect.amplifier > 0
             val isMovingSideways = player.input.movementSideways != 0f
 
@@ -51,24 +52,27 @@ class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBH
                 else -> 0.42
             }
 
-            player.strafe(speed = strafe)
-            player.velocity.y = 0.005
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = strafe)
+            player.deltaMovement.y = 0.005
         }
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket && collidesBottomVertical()) {
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (event.packet is ServerboundMovePlayerPacket && collidesBottomVertical() && !mc.options.keyJump.isDown) {
             event.packet.y += 0.005
         }
     }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
-        }
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.005, 0.0)).anyNotEmpty()
 
-    val jumpEvent = handler<PlayerJumpEvent> { event ->
-        event.cancelEvent()
+    @Suppress("unused")
+    private val jumpEvent = handler<PlayerJumpEvent> { event ->
+        if (!mc.options.keyJump.isDown) {
+            event.cancelEvent()
+        }
     }
+
 }
 

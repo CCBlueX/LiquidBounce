@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,59 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.movement
 
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.objectHashSetOf
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.block.forEachBlockPosBetween
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.input.Input
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.EntityPose
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import kotlin.math.atan2
+import net.ccbluex.liquidbounce.utils.math.rangeTo
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
-data class DirectionalInput(
-    val forwards: Boolean,
-    val backwards: Boolean,
-    val left: Boolean,
-    val right: Boolean,
-) {
-    constructor(input: Input) : this(input.pressingForward, input.pressingBack, input.pressingLeft, input.pressingRight)
-
-    override fun equals(other: Any?): Boolean {
-        return other is DirectionalInput &&
-                forwards == other.forwards &&
-                backwards == other.backwards &&
-                left == other.left &&
-                right == other.right
-    }
-
-    override fun hashCode(): Int {
-        var result = forwards.hashCode()
-        result = 31 * result + backwards.hashCode()
-        result = 31 * result + left.hashCode()
-        result = 31 * result + right.hashCode()
-        return result
-    }
-
-    fun isMoving(): Boolean {
-        return forwards || backwards || left || right
-    }
-
-    companion object {
-        val NONE = DirectionalInput(forwards = false, backwards = false, left = false, right = false)
-        val FORWARDS = DirectionalInput(forwards = true, backwards = false, left = false, right = false)
-        val BACKWARDS = DirectionalInput(forwards = false, backwards = true, left = false, right = false)
-        val LEFT = DirectionalInput(forwards = false, backwards = false, left = true, right = false)
-        val RIGHT = DirectionalInput(forwards = false, backwards = false, left = false, right = true)
-    }
-}
 
 /**
  * Returns the yaw difference the position is from the player position
@@ -78,14 +44,13 @@ data class DirectionalInput(
  * @param positionRelativeToPlayer relative position to player
  */
 fun getDegreesRelativeToView(
-    positionRelativeToPlayer: Vec3d,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw,
+    positionRelativeToPlayer: Vec3,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yRot,
 ): Float {
-    val optimalYaw =
-        atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()
-    val currentYaw = MathHelper.wrapDegrees(yaw).toRadians()
+    val optimalYaw = positionRelativeToPlayer.yaw
+    val currentYaw = Mth.wrapDegrees(yaw)
 
-    return MathHelper.wrapDegrees((optimalYaw - currentYaw).toDegrees())
+    return Mth.wrapDegrees(optimalYaw - currentYaw)
 }
 
 fun getDirectionalInputForDegrees(
@@ -98,15 +63,15 @@ fun getDirectionalInputForDegrees(
     var left = directionalInput.left
     var right = directionalInput.right
 
-    if (dgs in -90.0F + deadAngle..90.0F - deadAngle) {
+    if (dgs > -90.0F + deadAngle && dgs < 90.0F - deadAngle) {
         forwards = true
-    } else if (dgs < -90.0 - deadAngle || dgs > 90.0 + deadAngle) {
+    } else if (dgs < -90.0F - deadAngle || dgs > 90.0F + deadAngle) {
         backwards = true
     }
 
-    if (dgs in 0.0F + deadAngle..180.0F - deadAngle) {
+    if (dgs > 0.0F + deadAngle && dgs < 180.0F - deadAngle) {
         right = true
-    } else if (dgs in -180.0F + deadAngle..0.0F - deadAngle) {
+    } else if (dgs > -180.0F + deadAngle && dgs < 0.0F - deadAngle) {
         left = true
     }
 
@@ -114,20 +79,25 @@ fun getDirectionalInputForDegrees(
 }
 
 fun findEdgeCollision(
-    from: Vec3d,
-    to: Vec3d,
+    from: Vec3,
+    to: Vec3,
     allowedDropDown: Float = 0.5F,
-): Vec3d? {
+): Vec3? {
+    val lineVec = to - from
+    if (lineVec.lengthSqr() <= 1.0E-12) {
+        return null
+    }
+
     val boundingBoxes = collectCollisionBoundingBoxes(from, to, allowedDropDown)
 
     var currentFrom = from
 
-    val lineVec = to.subtract(from)
-    val extendedFrom = from - lineVec * 1000.0
-    val extendedTo = to + lineVec * 1000.0
+    val extendedFrom = from.fma(-1000.0, lineVec)
+    val extendedTo = to.fma(1000.0, lineVec)
 
+    val cache = objectHashSetOf<AABB>()
     while (true) {
-        val boxesContainingFrom = boundingBoxes.filter { it.contains(currentFrom) }
+        val boxesContainingFrom = boundingBoxes.filterTo(cache) { it.contains(currentFrom) }
 
         // If there is no bounding box containing from, we would fall off
         if (boxesContainingFrom.isEmpty()) {
@@ -140,68 +110,71 @@ fun findEdgeCollision(
         }
 
         currentFrom =
-            boxesContainingFrom.map {
-                val res = it.raycast(extendedTo, extendedFrom)
+            boxesContainingFrom.mapToArray {
+                val res = it.clip(extendedTo, extendedFrom)
 
                 // This ray-cast should never fail.
-                res.orElseThrow { IllegalArgumentException("Raycast failed. This should be impossible.") }
-            }.minBy { it.squaredDistanceTo(to) }
+                requireNotNull(res.orElse(null)) {
+                    "Raycast failed. This should be impossible. AABB=$it from=$from to=$to"
+                }
+            }.minBy { it.distanceToSqr(to) }
 
         boundingBoxes.removeAll(boxesContainingFrom)
+        cache.clear()
     }
 }
 
 private fun collectCollisionBoundingBoxes(
-    from: Vec3d,
-    to: Vec3d,
+    from: Vec3,
+    to: Vec3,
     allowedDropDown: Float,
-): ArrayList<Box> {
-    val playerDims = mc.player!!.getDimensions(EntityPose.STANDING)
+): ArrayList<AABB> {
+    val playerDims = mc.player!!.getDimensions(Pose.STANDING)
 
-    val fromBox: Box = playerDims.getBoxAt(from)
-    val toBox: Box = playerDims.getBoxAt(to)
+    val fromBox: AABB = playerDims.makeBoundingBox(from)
+    val toBox: AABB = playerDims.makeBoundingBox(to)
 
-    val unionBox = fromBox.union(toBox)
+    val unionBox = fromBox.minmax(toBox)
 
     val fromBlockPos =
-        BlockPos.ofFloored(
+        BlockPos.containing(
             unionBox.minX - 0.3 - 1.0E-7,
             unionBox.minY - allowedDropDown - 1.0E-7,
             unionBox.minZ - 0.3 - 1.0E-7,
         )
     val toBlockPos =
-        BlockPos.ofFloored(
+        BlockPos.containing(
             unionBox.maxX + 0.3 + 1.0E-7,
             unionBox.minY + 1.0E-7,
             unionBox.maxZ + 0.3 + 1.0E-7,
         )
 
     val lineVec = to.subtract(from)
-    val extendedFrom = from - lineVec * 1000.0
-    val extendedTo = to + lineVec * 1000.0
+    val extendedFrom = from.fma(-1000.0, lineVec)
+    val extendedTo = to.fma(1000.0, lineVec)
 
-    val foundBoxes = ArrayList<Box>()
+    val foundBoxes = ArrayList<AABB>()
 
-    val world = mc.world!!
+    val world = mc.level!!
 
-    forEachBlockPosBetween(fromBlockPos, toBlockPos) { pos ->
+    for (pos in fromBlockPos..toBlockPos) {
         val state = world.getBlockState(pos)
 
         val collisionShape = state.getCollisionShape(world, pos)
 
-        for (boundingBox in collisionShape.boundingBoxes) {
+        collisionShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
             val adjustedBox =
-                Box(
-                    boundingBox.minX - 0.3,
-                    boundingBox.minY - 1.0,
-                    boundingBox.minZ - 0.3,
-                    boundingBox.maxX + 0.3,
-                    boundingBox.maxY + allowedDropDown + 0.05,
-                    boundingBox.maxZ + 0.3,
-                ).offset(pos)
+                AABB(
+                    minX - 0.3,
+                    minY - 1.0,
+                    minZ - 0.3,
+                    maxX + 0.3,
+                    maxY + allowedDropDown + 0.05,
+                    maxZ + 0.3,
+                ).move(pos)
 
-            if (adjustedBox.raycast(extendedFrom, extendedTo) == null) {
-                continue
+            if (adjustedBox.clip(extendedFrom, extendedTo).isEmpty) {
+                return@forAllBoxes
             }
 
             foundBoxes.add(adjustedBox)
@@ -211,7 +184,11 @@ private fun collectCollisionBoundingBoxes(
     return foundBoxes
 }
 
-fun ClientPlayerEntity.zeroXZ() {
-    this.velocity.x = 0.0
-    this.velocity.z = 0.0
+inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
+    this.deltaMovement = block(this.deltaMovement)
+}
+
+@AddonApi
+fun LocalPlayer.stopXZVelocity() {
+    this.deltaMovement = this.deltaMovement.copy(x = 0.0, z = 0.0)
 }

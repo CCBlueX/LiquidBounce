@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Listenable
+import com.google.common.base.Predicates
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.util.UseAction
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.item.ItemUseAnimation
+import java.util.function.Predicate
 
 /**
  * Cancels block interactions allowing to bypass certain anti-cheats
@@ -33,24 +35,24 @@ import net.minecraft.util.UseAction
  * Confirmed to be working on 25th of May 2024
  */
 internal class NoSlowNoBlockInteract(
-    parent: Listenable? = null,
-    actionFilter: (UseAction) -> Boolean = { true }
-) : ToggleableConfigurable(parent, "NoBlockInteract", true) {
+    parent: EventListener? = null,
+    actionFilter: Predicate<ItemUseAnimation> = Predicates.alwaysTrue(),
+) : ToggleableValueGroup(parent, "NoBlockInteract", true) {
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerInteractBlockC2SPacket) {
+        if (packet is ServerboundUseItemOnPacket) {
             val useAction =
-                player.getStackInHand(packet.hand)?.useAction ?: return@handler
-            val blockPos = packet.blockHitResult?.blockPos
+                player.getItemInHand(packet.hand).useAnimation
+            val blockPos = packet.hitResult.blockPos
 
             // Check if we might click a block that is not air
-            if (blockPos != null && blockPos.getState()?.isAir != true) {
+            if (!blockPos.stateOrEmpty.isAir) {
                 return@handler
             }
 
-            if (actionFilter(useAction)) {
+            if (actionFilter.test(useAction)) {
                 event.cancelEvent()
             }
         }

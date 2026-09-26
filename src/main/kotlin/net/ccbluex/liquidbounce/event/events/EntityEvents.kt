@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,60 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.entity.Entity
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
+import net.ccbluex.liquidbounce.utils.combat.EntityTargetingInfo
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 
-@Nameable("attack")
-class AttackEvent(val enemy: Entity) : Event()
+@AddonApi
+@Tag("attack")
+class AttackEntityEvent(
+    val entity: Entity
+) : CancellableEvent()
 
-@Nameable("entityMargin")
+@Tag("entityMargin")
 class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 
+@Tag("entityHealthUpdate")
+class EntityHealthUpdateEvent(val entity: LivingEntity, val old: Float, val new: Float, val max: Float) : Event()
+
+@AddonApi
+@Tag("tagEntityEvent")
+class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {
+    val color: PriorityField<Color4b?> = PriorityField(null, Priority.NOT_IMPORTANT)
+
+    /**
+     * Don't start combat this target
+     */
+    fun dontTarget() {
+        if (this.targetingInfo.classification == EntityTargetClassification.TARGET) {
+            this.targetingInfo = this.targetingInfo.copy(classification = EntityTargetClassification.INTERESTING)
+        }
+    }
+
+    /**
+     * Fully ignore that target
+     */
+    fun ignore() {
+        this.targetingInfo = targetingInfo.copy(classification = EntityTargetClassification.IGNORED)
+    }
+
+    fun assumeFriend() {
+        this.targetingInfo = targetingInfo.copy(isFriend = true)
+    }
+
+    fun color(col: Color4b, priority: Priority) {
+        this.color.trySet(col, priority)
+    }
+}

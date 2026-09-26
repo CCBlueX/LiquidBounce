@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
-object ScaffoldDownFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Down", false) {
+object ScaffoldDownFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Down", false) {
 
     val handleMoveInput = handler<MovementInputEvent>(priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING) {
         if (shouldFallOffBlock()) {
-            it.sneaking = false
+            it.sneak = false
         }
     }
 
@@ -42,10 +42,10 @@ object ScaffoldDownFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Do
     }
 
     val shouldGoDown: Boolean
-        get() = enabled && mc.options.sneakKey.isPressed
+        get() = enabled && mc.options.keyShift.isDown
 
     /**
      * When we are using the down scaffold, we want to jump down on the next block in some situations
      */
-    internal fun shouldFallOffBlock() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
+    internal fun shouldFallOffBlock() = shouldGoDown && player.blockPosition().offset(0, -2, 0).canStandOn()
 }

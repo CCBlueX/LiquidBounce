@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,126 +18,226 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Vec3d
-import kotlin.math.cos
-import kotlin.math.sin
+import net.ccbluex.liquidbounce.utils.math.dot
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
+import net.minecraft.world.entity.TraceableEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.FishingRodItem
+import net.minecraft.world.phys.Vec3
 
 /**
  * Trajectories module
  *
  * Allows you to see where projectile items will land.
  */
-
-object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
+@Suppress("MagicNumber")
+object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
-    private val alwaysShowBow by boolean("AlwaysShowBow", false)
-    private val otherPlayers by boolean("OtherPlayers", true)
-    private val activeTrajectoryArrow by boolean("ActiveTrajectoryArrow", true)
-    private val activeTrajectoryOther by boolean("ActiveTrajectoryOther", false)
+    private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
+    private val cullBehindPlayer by boolean("CullBehindPlayer", false)
+    private val showMultiShot by boolean("ShowMultiShot", true)
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
+    private val activeLineWidth by float("ActiveLineWidth", 2f, 1f..16f)
+
+    private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
+
+    private val show by multiEnumChoice(
+        "Show",
+        Show.OTHER_PLAYERS,
+        Show.ACTIVE_TRAJECTORY_ARROW
+    )
+
+    private val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
+    private val otherPlayers get() = Show.OTHER_PLAYERS in show
+    private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
+    private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
+
+    init {
+        tree(TrajectoryDetailedInfoRenderer)
+    }
+
+    internal val simulationResults =
+        mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
+
+    override fun onDisabled() {
+        simulationResults.clear()
+    }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+        simulationResults.clear()
+        event.renderEnvironment {
+            val viewPos = camera.position()
+            val viewDirection = camera.forwardVector()
+            val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
 
-        world.entities.forEach {
-            val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
-                it,
-                this.activeTrajectoryArrow,
-                this.activeTrajectoryOther
-            ) ?: return@forEach
+            for (entity in world.entitiesForRendering()) {
+                val delta = entity.position().subtract(viewPos)
+                val deltaLengthSq = delta.lengthSqr()
+                if (deltaLengthSq > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
+                    continue
+                }
 
-            val trajectoryRenderer = TrajectoryInfoRenderer(
-                owner = it,
-                velocity = it.velocity,
-                pos = it.pos,
-                trajectoryInfo = trajectoryInfo,
-                renderOffset = Vec3d.ZERO
-            )
+                val (trajectoryInfo, trajectoryType) = EntityTrajectoryResolver.resolveEntityTrajectory(
+                    entity,
+                    activeTrajectoryArrow,
+                    activeTrajectoryOther
+                ) ?: continue
 
-            val color = TrajectoryData.getColorForEntity(it)
+                if (trajectoryType !in trajectoryTypes) continue
 
-            val hitResult = trajectoryRenderer.drawTrajectoryForProjectile(maxSimulatedTicks, color, matrixStack)
+                val displayOwner = (entity as? TraceableEntity)?.owner
+                val icon = TrajectoryDisplayResolver.resolveEntityIcon(
+                    entity, activeTrajectoryArrow, activeTrajectoryOther
+                )
+                val trajectoryRenderer = TrajectoryInfoRenderer(
+                    simulationOwner = displayOwner ?: entity,
+                    displayOwner = displayOwner,
+                    icon = icon,
+                    velocity = entity.deltaMovement,
+                    pos = entity.position(),
+                    trajectoryInfo = trajectoryInfo,
+                    trajectoryType = trajectoryType,
+                    type = TrajectoryInfoRenderer.Type.REAL,
+                    renderOffset = Vec3.ZERO,
+                )
 
-            if (hitResult != null && !(hitResult is EntityHitResult && hitResult.entity == player)) {
-                drawLandingPos(hitResult, trajectoryInfo, event, color, color)
+                val color = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = trajectoryType,
+                    colorSource = icon,
+                    entity = entity,
+                )
+
+                simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
+                    maxSimulatedTicks,
+                    event.partialTicks,
+                    trajectoryColor = color,
+                    blockHitColor = color,
+                    entityHitColor = color,
+                    lineWidth = activeLineWidth,
+                )
+            }
+
+            if (otherPlayers) {
+                for (otherPlayer in world.players()) {
+                    if (otherPlayer !== player) {
+                        val delta = otherPlayer.eyePosition.subtract(viewPos)
+                        val deltaLengthSq = delta.lengthSqr()
+                        if (deltaLengthSq > maxRenderDistanceSq) {
+                            continue
+                        }
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
+                            continue
+                        }
+                    }
+
+                    // Including the user
+                    drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
+                }
+            } else {
+                drawHypotheticalTrajectory(player, event.partialTicks)
             }
         }
 
-        if (otherPlayers) {
-            for (otherPlayer in world.players) {
-                drawHypotheticalTrajectory(otherPlayer, event)
-            }
-        }
-
-        drawHypotheticalTrajectory(player, event)
+        debugParameter("TrajectoryCount") { simulationResults.size }
     }
 
     /**
      * Draws the trajectory for an item in the player's hand
      */
-    private fun drawHypotheticalTrajectory(otherPlayer: PlayerEntity, event: WorldRenderEvent) {
-        val trajectoryInfo = otherPlayer.handItems.firstNotNullOfOrNull {
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
+    private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
+        otherPlayer: Player,
+        partialTicks: Float,
+    ) {
+        val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
+            activeTrajectoryOther &&
+            TrajectoryType.FishingBobber in trajectoryTypes
+
+        val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {
+                return@firstNotNullOfOrNull null
+            }
+
+            HeldItemTrajectoryResolver.resolveHeldItemShots(
+                otherPlayer,
+                stack,
+                alwaysShowBow,
+                includeMultiShot = showMultiShot
+            )?.let {
+                it to stack
+            }
         } ?: return
 
-        val rotation = RotationManager.storedAimPlan?.rotation ?: otherPlayer.rotation
+        val rotation = if (otherPlayer === player) {
+            if (ModuleFreeCam.running) {
+                RotationManager.serverRotation
+            } else {
+                RotationManager.activeRotationTarget?.rotation
+                    ?: RotationManager.currentRotation ?: otherPlayer.rotation
+            }
+        } else {
+            otherPlayer.rotation
+        }
 
-        val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
-        val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
+        trajectoryShotDescriptors.forEach { shotDescriptor ->
+            if (shotDescriptor.trajectoryType !in trajectoryTypes) {
+                return@forEach
+            }
 
-        val interpolatedOffset = otherPlayer.interpolateCurrentPosition(event.partialTicks) - otherPlayer.pos
+            val shotRotation = Rotation(
+                yaw = rotation.yaw + shotDescriptor.yawOffsetDegrees,
+                pitch = rotation.pitch,
+                isNormalized = rotation.isNormalized
+            )
 
-        // Positions
-        val pos = Vec3d(
-            otherPlayer.x,
-            otherPlayer.eyeY - 0.10000000149011612,
-            otherPlayer.z
-        )
+            val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                simulationOwner = otherPlayer,
+                icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
+                trajectoryInfo = shotDescriptor.trajectoryInfo,
+                trajectoryType = shotDescriptor.trajectoryType,
+                rotation = shotRotation,
+                partialTicks = partialTicks
+            )
 
-        var velocity = Vec3d(
-            -sin(yawRadians) * cos(pitchRadians).toDouble(),
-            -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
-            cos(yawRadians) * cos(pitchRadians).toDouble()
-        ).normalize() * trajectoryInfo.initialVelocity
-
-        velocity += Vec3d(
-            otherPlayer.velocity.x,
-            if (otherPlayer.isOnGround) 0.0 else otherPlayer.velocity.y,
-            otherPlayer.velocity.z
-        )
-
-        val renderer = TrajectoryInfoRenderer(
-            owner = otherPlayer,
-            velocity = velocity,
-            pos = pos,
-            trajectoryInfo = trajectoryInfo,
-            renderOffset = interpolatedOffset + Vec3d(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
-        )
-
-        val hitResult = renderer.drawTrajectoryForProjectile(maxSimulatedTicks, Color4b.WHITE, event.matrixStack)
-
-        drawLandingPos(
-            hitResult,
-            trajectoryInfo,
-            event,
-            Color4b(0, 160, 255, 150),
-            Color4b(255, 0, 0, 100)
-        )
+            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                partialTicks,
+                trajectoryColor = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = shotDescriptor.trajectoryType,
+                    colorSource = shotDescriptor.colorSource,
+                ),
+                blockHitColor = Color4b(0, 160, 255, 150),
+                entityHitColor = Color4b.RED.alpha(100),
+                lineWidth = lineWidth,
+            )
+        }
     }
 
+    private enum class Show(
+        override val tag: String
+    ) : Tagged {
+        ALWAYS_SHOW_BOW("AlwaysShowBow"),
+        OTHER_PLAYERS("OtherPlayers"),
+        ACTIVE_TRAJECTORY_ARROW("ActiveTrajectoryArrow"),
+        ACTIVE_TRAJECTORY_OTHER("ActiveTrajectoryOther"),
+    }
 }

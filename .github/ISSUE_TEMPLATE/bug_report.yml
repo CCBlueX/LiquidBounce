@@ -8,10 +8,22 @@ body:
       value: |
         🧐 **Guidelines:**
         
-        - Search through [existing issues](https://github.com/CCBlueX/LiquidBounce/issues?q=is%3Aopen+is%3Aissue) first to ensure that this bug has not been reported before.
         - Write a descriptive title for your issue. Avoid generic or vague titles such as "Something's not working" or "A couple of problems".
         - Keep your issue focused on one single problem. If you have multiple bug reports, please create separate issues for each of them.
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
+        
+        ⚠️ **Warning:**
+        - Issues without a concrete description will be closed.
+        - Meaningless spam issues will be locked.
+
+  - type: checkboxes
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I have searched through existing issues and confirmed this bug has not been reported yet.
+          required: true
+        - label: I have reproduced this on the latest development build.
+          required: true
 
   - type: dropdown
     attributes:
@@ -23,11 +35,12 @@ body:
         - Both
     validations:
       required: true
+
   - type: input
     attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
-      placeholder: e.g. b61
+      placeholder: e.g. 0.36.0
     validations:
       required: true
 
@@ -50,8 +63,8 @@ body:
   - type: input
     attributes:
       label: Minecraft Version
-      description: Which Minecraft-Version does this bug affect?
-      placeholder: e.g. 1.16.5
+      description: Which Minecraft-Version and protocol version does this bug affect?
+      placeholder: e.g. 26.1 + 1.8 protocol
     validations:
       required: true
 
@@ -86,6 +99,6 @@ body:
   - type: textarea
     attributes:
       label: Screenshots
-      description: If applicable, add screenshots to help explain your problem.
+      description: If applicable, add screenshots to help explain your problem. You can directly paste a picture and GitHub will process it.
     validations:
       required: false

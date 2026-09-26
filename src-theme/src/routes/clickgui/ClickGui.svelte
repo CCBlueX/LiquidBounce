@@ -1,59 +1,54 @@
 <script lang="ts">
-    import {onMount} from "svelte";
-    import {getComponents, getGameWindow, getModules, getModuleSettings} from "../../integration/rest";
-    import {groupByCategory} from "../../integration/util";
     import type {GroupedModules, Module} from "../../integration/types";
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
-    import {listen} from "../../integration/ws";
-    import type {ClickGuiScaleChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
+    import {onMount} from "svelte";
+    import {getCategories, getModules} from "../../integration/rest";
+    import {groupByCategory} from "../../integration/util";
+    import {gridSize, showGrid} from "./clickgui_store";
+    import ScaledClickGuiContent from "./ScaledClickGuiContent.svelte";
 
-    let categories: GroupedModules = {};
-    let modules: Module[] = [];
-    let minecraftScaleFactor = 2;
-    let clickGuiScaleFactor = 1;
-    $: scaleFactor = minecraftScaleFactor * clickGuiScaleFactor;
-    $: zoom = scaleFactor * 50;
+    let categories = $state<GroupedModules>({});
+    let modules = $state<Module[]>([]);
+    let icons = $state<Record<string, string>>({});
 
     onMount(async () => {
-        const gameWindow = await getGameWindow();
-        minecraftScaleFactor = gameWindow.scaleFactor;
-
         modules = await getModules();
         categories = groupByCategory(modules);
-
-        const clickGuiSettings = await getModuleSettings("ClickGUI");
-        clickGuiScaleFactor = clickGuiSettings.value.find(v => v.name === "Scale")?.value as number ?? 1
-    });
-
-    listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
-        minecraftScaleFactor = e.scaleFactor;
-    });
-
-    listen("clickGuiScaleChange", (e: ClickGuiScaleChangeEvent) => {
-        clickGuiScaleFactor = e.value;
+        icons = Object.fromEntries(
+            (await getCategories())
+                .filter(category => category.icon)
+                .map(category => [category.name, category.icon!])
+        );
     });
 </script>
 
-<div class="clickgui" transition:fade|global={{duration: 200}}
-     style="zoom: {zoom}%; width: {2 / scaleFactor * 100}vw; height: {2 / scaleFactor * 100}vh;">
-    <Description/>
-    <Search modules={structuredClone(modules)}/>
+<ScaledClickGuiContent>
+    <div
+            class="clickgui"
+            class:grid={$showGrid}
+            style="background-size: {$gridSize}px {$gridSize}px;"
+            transition:fade|global={{duration: 200}}
+    >
+        <Description/>
+        <Search modules={structuredClone($state.snapshot(modules))}/>
 
-    {#each Object.entries(categories) as [category, modules], panelIndex}
-        <Panel {category} {modules} {panelIndex} {scaleFactor}/>
-    {/each}
-</div>
+        {#each Object.entries(categories) as [category, modules], panelIndex (category)}
+            <Panel {category} {modules} {panelIndex} icon={icons[category]}/>
+        {/each}
+    </div>
+</ScaledClickGuiContent>
 
 <style lang="scss">
-  @import "../../colors.scss";
-
   .clickgui {
-    background-color: rgba($clickgui-base-color, 0.6);
-    overflow: hidden;
-    position: relative;
-    will-change: opacity;
+    position: absolute;
+    inset: 0;
+
+    &.grid {
+      background-image: linear-gradient(to right, var(--clickgui-grid-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--clickgui-grid-color) 1px, transparent 1px);
+    }
   }
 </style>

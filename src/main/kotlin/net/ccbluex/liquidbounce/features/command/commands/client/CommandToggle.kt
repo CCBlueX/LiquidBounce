@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ModuleArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -32,35 +35,34 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to enable or disable a specific module.
  */
-object CommandToggle {
+object CommandToggle : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("toggle", aliases = listOf("t")) {
+            argument("module", ModuleArgumentType("module")) { module ->
+                exec { ctx ->
+                    val toggledModule: ClientModule = ctx.get(module)
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("toggle")
-            .alias("t")
-            .parameter(
-                moduleParameter()
-                    .required()
-                    .build()
-            )
-            .handler { command, args ->
-                val name = args[0] as String
-                val module = ModuleManager.find { it.name.equals(name, true) }
-                    ?: throw CommandException(command.result("moduleNotFound", name))
-
-                val newState = !module.enabled
-                module.enabled = newState
-                chat(
-                    regular(
-                        command.result(
-                            "moduleToggled",
-                            variable(module.name),
-                            variable(if (newState) command.result("enabled") else command.result("disabled"))
-                        )
+                    val isEnabled = !toggledModule.enabled
+                    toggledModule.enabled = isEnabled
+                    chat(
+                        regular(
+                            t("moduleToggled",
+                                variable(toggledModule.name),
+                                variable(
+                                    if (isEnabled) {
+                                        t("enabled")
+                                    } else {
+                                        t("disabled")
+                                    }
+                                )
+                            )
+                        ),
+                        metadata = MessageMetadata(id = "CToggle#success${toggledModule.name}")
                     )
-                )
+                    1
+                }
             }
-            .build()
+        }
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,241 +16,314 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.combat
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.Configurable
+import it.unimi.dsi.fastutil.objects.ObjectDoubleImmutablePair
+import it.unimi.dsi.fastutil.objects.ObjectDoublePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.toDouble
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.mob.Angerable
-import net.minecraft.entity.mob.HostileEntity
-import net.minecraft.entity.mob.Monster
-import net.minecraft.entity.mob.WaterCreatureEntity
-import net.minecraft.entity.passive.PassiveEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.GameMode
+import net.ccbluex.liquidbounce.utils.world.getEntitiesInCube
+import net.minecraft.client.CameraType
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.AgeableMob
+import net.minecraft.world.entity.Attackable
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.ExperienceOrb
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.NeutralMob
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.ambient.Bat
+import net.minecraft.world.entity.animal.allay.Allay
+import net.minecraft.world.entity.animal.fish.WaterAnimal
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.monster.Enemy
+import net.minecraft.world.entity.monster.Monster
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
+import net.minecraft.world.level.GameType
+import net.minecraft.world.phys.Vec3
 
 /**
- * Global enemy configurable
+ * Global target configurable
  *
  * Modules can have their own enemy configurable if required. If not, they should use this as default.
- * Global enemy configurable can be used to configure which entities should be considered as an enemy.
+ * Global enemy configurable can be used to configure which entities should be considered as a target.
  *
- * This can be adjusted by the .enemy command and the panel inside the ClickGUI.
+ * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
-val globalEnemyConfigurable = EnemyConfigurable()
+@AddonApi
+data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
+    companion object {
+        @JvmField
+        val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
+    }
+}
+
+@AddonApi
+enum class EntityTargetClassification {
+    TARGET,
+    INTERESTING,
+    IGNORED
+}
 
 /**
- * Configurable to configure which entities and their state (like being dead) should be considered as an enemy
+ * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
-class EnemyConfigurable : Configurable("Enemies") {
+enum class Targets(override val tag: String) : Tagged {
+    SELF("Self"),
+    PLAYERS("Players"),
+    HOSTILE("Hostile"),
+    ANGERABLE("Angerable"),
+    WATER_CREATURE("WaterCreature"),
+    PASSIVE("Passive"),
+    ARMOR_STAND("ArmorStand"),
+    INVISIBLE("Invisible"),
+    DEAD("Dead"),
+    SLEEPING("Sleeping"),
+    FRIENDS("Friends");
+}
 
-    // Players should be considered as an enemy
-    var players by boolean("Players", true)
-
-    // Hostile mobs (like skeletons and zombies) should be considered as an enemy
-    var hostile by boolean("Hostile", true)
-
-    // Angerable mobs (like wolfs) should be considered as an enemy
-    val angerable by boolean("Angerable", true)
-
-    // Water Creature mobs should be considered as an enemy
-    val waterCreature by boolean("WaterCreature", true)
-
-    // Passive mobs (like cows, pigs and so on) should be considered as an enemy
-    var passive by boolean("Passive", false)
-
-    // Invisible entities should be also considered as an enemy
-    var invisible by boolean("Invisible", true)
-
-    // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
-    var dead by boolean("Dead", false)
-
-    // Sleeping entities should NOT be considered as an enemy
-    var sleeping by boolean("Sleeping", false)
-
-    // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
-    var friends by boolean("Friends", false)
-
-    init {
-        ConfigSystem.root(this)
-    }
-
-    /**
-     * Check if an entity is considered an enemy
-     */
-    fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
-        // Check if the enemy is living and not dead (or ignore being dead)
-        if (suspect is LivingEntity && (dead || suspect.isAlive)) {
-            // Check if enemy is invisible (or ignore being invisible)
-            if (invisible || !suspect.isInvisible) {
-                // Check if enemy is a player and should be considered as an enemy
-                if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
-                        return false
-                    }
-
-                    // Check if enemy is sleeping (or ignore being sleeping)
-                    if (suspect.isSleeping && !sleeping) {
-                        return false
-                    }
-
-                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
-                        return false
-                    }
-
-                    if (suspect is AbstractClientPlayerEntity) {
-                        if (ModuleFocus.enabled && !ModuleFocus.isInFocus(suspect, attackable)) {
-                            return false
-                        }
-
-                        if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
-                            return false
-                        }
-                    }
-
-                    // Check if player might be a bot
-                    if (ModuleAntiBot.isBot(suspect)) {
-                        return false
-                    }
-
-                    return players
-                } else if (suspect is WaterCreatureEntity) {
-                    return waterCreature
-                } else if (suspect is PassiveEntity) {
-                    return passive
-                } else if (suspect is HostileEntity || suspect is Monster) {
-                    return hostile
-                } else if (suspect is Angerable) {
-                    return angerable
-                }
-            }
-        }
-
+private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
+    if (entity === player || entity.hasPassenger(player)) {
         return false
     }
 
+    val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+    return when {
+        info.isFriend && Targets.FRIENDS !in this -> false
+        info.classification === EntityTargetClassification.TARGET -> isInteresting(entity, info)
+        else -> false
+    }
+}
+
+private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
+    if (entity === player || entity.hasPassenger(player)) {
+        return Targets.SELF in this &&
+            (mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
+    }
+
+    val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+    return when {
+        info.isFriend && Targets.FRIENDS !in this -> false
+        info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity, info)
+        else -> false
+    }
+}
+
+/**
+ * Check if an entity is considered a target
+ */
+@Suppress("CyclomaticComplexMethod", "ReturnCount")
+private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInfo): Boolean {
+    // Check if the enemy is living and not dead (or ignore being dead)
+    if (suspect !is LivingEntity || !(Targets.DEAD in this || suspect.isAlive)) {
+        return false
+    }
+
+    // Check if enemy is invisible (or ignore being invisible)
+    if (Targets.INVISIBLE !in this && suspect.isInvisible) {
+        return false
+    }
+
+    // Check if enemy is a player and should be considered as a target
+    return when (suspect) {
+        is Player -> when {
+            suspect === mc.player -> false
+            // Check if enemy is sleeping (or ignore being sleeping)
+            suspect.isSleeping && Targets.SLEEPING !in this -> false
+            // Allow targeting friends even when Players is disabled, as long as Friends is enabled
+            else -> Targets.PLAYERS in this || (info.isFriend && Targets.FRIENDS in this)
+        }
+        is WaterAnimal -> Targets.WATER_CREATURE in this
+        is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
+        is ArmorStand -> Targets.ARMOR_STAND in this
+        is Monster, is Enemy -> Targets.HOSTILE in this
+        is NeutralMob -> Targets.ANGERABLE in this
+
+        else -> false
+    }
 }
 
 // Extensions
-
+@AddonApi
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
+fun Entity?.shouldBeShown(enemyConf: Set<Targets> = GlobalSettingsTarget.visual) =
+    this?.let { enemyConf.shouldShow(it) } ?: false
 
-fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
-    this,
-    true
-)
+@AddonApi
+@JvmOverloads
+fun Entity?.shouldBeAttacked(enemyConf: Set<Targets> = GlobalSettingsTarget.combat) =
+    this is Attackable && enemyConf.shouldAttack(this) && this.isWithinWorldBorder
+
+/**
+ * Mirrors the vanilla server-side invalid attack disconnect checks
+ *
+ * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleAttack
+ */
+private fun Entity.canBeAttackedWithVanillaPacket() =
+    this !is ItemEntity &&
+        this !is ExperienceOrb &&
+        this !== player &&
+        (this !is AbstractArrow || this.isAttackable)
 
 /**
  * Find the best enemy in the current world in a specific range.
  */
-fun ClientWorld.findEnemy(
+@AddonApi
+@JvmOverloads
+fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
-) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.first
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
+) = findEnemy(range.start, range.endInclusive, enemyConf)
 
-fun ClientWorld.findEnemies(
-    range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
-): List<Pair<Entity, Double>> {
-    val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
+/**
+ * Find the best enemy in the current world in a specific range.
+ */
+@AddonApi
+@JvmOverloads
+fun ClientLevel.findEnemy(
+    minRange: Float,
+    maxRange: Float,
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
+) = findEnemies(minRange, maxRange, enemyConf)
+    .minByOrNull { (_, distSqr) -> distSqr }?.key()
 
-    return getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
-        .filter { it.shouldBeAttacked(enemyConf) }
-        .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
-        .filter { (_, distance) -> distance in squaredRange }
+@AddonApi
+@JvmOverloads
+fun ClientLevel.findEnemies(
+    minRange: Float,
+    maxRange: Float,
+    enemyConf: Set<Targets> = GlobalSettingsTarget.combat
+): List<ObjectDoublePair<Entity>> {
+    val minRangeSqr = minRange * minRange
+    val maxRangeSqr = maxRange * maxRange
+    val result = ArrayList<ObjectDoubleImmutablePair<Entity>>()
+
+    getEntitiesInCube(player.eyePosition, maxRange.toDouble()) {
+        it.shouldBeAttacked(enemyConf)
+    }.forEach { entity ->
+        val distSqr = entity.squaredBoxedDistanceTo(player)
+        if (distSqr in minRangeSqr..maxRangeSqr) {
+            result += ObjectDoubleImmutablePair(entity, distSqr)
+        }
+    }
+
+    return result
 }
 
-fun ClientWorld.getEntitiesInCuboid(
-    midPos: Vec3d,
-    range: Double,
-    predicate: (Entity) -> Boolean = { true }
-): MutableList<Entity> {
-    return getOtherEntities(null, Box(midPos.subtract(range, range, range),
-        midPos.add(range, range, range)), predicate)
-}
-
-inline fun ClientWorld.getEntitiesBoxInRange(
-    midPos: Vec3d,
+inline fun ClientLevel.getEntitiesBoxInRange(
+    midPos: Vec3,
     range: Double,
     crossinline predicate: (Entity) -> Boolean = { true }
 ): MutableList<Entity> {
     val rangeSquared = range * range
 
-    return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
+    return getEntitiesInCube(midPos, range) {
+        predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared
+    }
 }
 
-fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
-    EventManager.callEvent(AttackEvent(this))
+/**
+ * @see net.minecraft.client.Minecraft.startAttack
+ * @return attacked or pierced
+ */
+@AddonApi
+@Suppress("CognitiveComplexMethod")
+@JvmOverloads
+fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false): Boolean {
+    val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+    val piercingWeapon = itemStack.get(DataComponents.PIERCING_WEAPON)
 
-    with (player) {
+    // Minecraft introduced piercing weapons that have their own attack method.
+    // You HAVE to look at the entity before attacking it.
+    if (piercingWeapon != null && !interaction.isSpectator) {
+        interaction.piercingAttack(itemStack.attackAnimation, piercingWeapon)
+        swing.swing(InteractionHand.MAIN_HAND)
+        return true
+    }
+
+    if (!entity.canBeAttackedWithVanillaPacket()
+        || EventManager.callEvent(AttackEntityEvent(entity)).isCancelled) {
+        return false
+    }
+
+    with(player) {
         // Swing before attacking (on 1.8)
-        if (swing && isOlderThanOrEqual1_8) {
-            swingHand(Hand.MAIN_HAND)
+        if (isOlderThanOrEqual1_8) {
+            swing.swing(InteractionHand.MAIN_HAND)
         }
 
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
+        interaction.ensureHasSentCarriedItem()
+        network.send(ServerboundAttackPacket(entity.id))
 
         if (keepSprint) {
             var genericAttackDamage =
-                if (this.isUsingRiptide) {
-                    this.riptideAttackDamage
+                if (this.isAutoSpinAttack) {
+                    this.autoSpinAttackDmg
                 } else {
-                    getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+                    getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
                 }
-            val damageSource = this.damageSources.playerAttack(this)
-            var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
+            val damageSource = this.damageSources().playerAttack(this)
+            var enchantAttackDamage = this.getEnchantedDamage(entity, genericAttackDamage,
                 damageSource) - genericAttackDamage
 
-            val attackCooldown = this.getAttackCooldownProgress(0.5f)
+            val attackCooldown = this.getAttackStrengthScale(0.5f)
             genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
             enchantAttackDamage *= attackCooldown
 
             if (genericAttackDamage > 0.0f || enchantAttackDamage > 0.0f) {
                 if (enchantAttackDamage > 0.0f) {
-                    this.addEnchantedHitParticles(this@attack)
+                    this.magicCrit(entity)
                 }
 
-                if (ModuleCriticals.wouldCrit(true)) {
+                if (ModuleCriticals.wouldDoCriticalHit(true)) {
                     world.playSound(
-                        null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                        soundCategory, 1.0f, 1.0f
+                        null, x, y, z, SoundEvents.PLAYER_ATTACK_CRIT,
+                        soundSource, 1.0f, 1.0f
                     )
-                    addCritParticles(this@attack)
+                    crit(entity)
                 }
             }
         } else {
-            if (interaction.currentGameMode != GameMode.SPECTATOR) {
-                attack(this@attack)
+            if (interaction.playerMode != GameType.SPECTATOR) {
+                attack(entity)
             }
         }
 
         // Reset cooldown
-        resetLastAttackedTicks()
+        this.attackStrengthTicker = 0
 
         // Swing after attacking (on 1.9+)
-        if (swing && !isOlderThanOrEqual1_8) {
-            swingHand(Hand.MAIN_HAND)
+        if (!isOlderThanOrEqual1_8) {
+            swing.swing(InteractionHand.MAIN_HAND)
         }
     }
+
+    return true
 }

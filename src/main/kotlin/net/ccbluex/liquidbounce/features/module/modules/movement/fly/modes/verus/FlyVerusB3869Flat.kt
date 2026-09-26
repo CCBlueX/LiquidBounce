@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Verus
@@ -41,48 +43,54 @@ import net.minecraft.util.shape.VoxelShapes
  * @testedOn anticheat-test
  * @note it can rarely flag once | needs 1.9x or above
  */
-internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
+internal object FlyVerusB3869Flat : Mode("VerusB3896Flat") {
 
     private val timer by float("Timer", 5.0f, 1.0f..20.0f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    val requiresLag
-        get() = this.handleEvents()
-
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             packet.onGround = true
         }
     }
 
     @Suppress("unused")
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block !is FluidBlock && event.pos.y < player.y) {
-            event.shape = VoxelShapes.fullCube()
+    private val shapeHandler = handler<BlockShapeEvent> { event ->
+        if (event.state.block !is LiquidBlock && event.pos.y < player.y) {
+            event.shape = Shapes.block()
         }
     }
 
     @Suppress("unused")
-    val jumpEvent = handler<PlayerJumpEvent> { event ->
+    private val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 
-    override fun disable() {
-        player.velocity.x = 0.0
-        player.velocity.z = 0.0
+    @Suppress("unused")
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
+        if (event.origin == TransferOrigin.OUTGOING) {
+            event.action = BlinkManager.Action.QUEUE
+        }
+    }
 
-        network.sendPacket(
-            PlayerMoveC2SPacket.PositionAndOnGround(
+    override fun disable() {
+        val player = mc.player ?: return
+        player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
+
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
                 player.x, player.y - 0.5, player.z,
-                false
+                false, player.horizontalCollision
             )
         )
     }

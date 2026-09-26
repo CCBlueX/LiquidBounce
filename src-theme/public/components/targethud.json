@@ -1,0 +1,12 @@
+{
+  "name": "TargetHud",
+  "description": "Shows combat information about your current target.",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Center",
+    "horizontalOffset": 20,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  }
+}

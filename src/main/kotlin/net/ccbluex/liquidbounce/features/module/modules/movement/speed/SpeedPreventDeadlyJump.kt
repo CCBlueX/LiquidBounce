@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.world.phys.Vec3
 
-object SpeedPreventDeadlyJump : QuickImports {
+object SpeedPreventDeadlyJump : MinecraftShortcuts {
 
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
         val simulatedPlayer = createSimulatedPlayer(player)
 
         simulatedPlayer.jump()
 
-        var groundPos: Vec3d? = null
+        var groundPos: Vec3? = null
 
         for (ignored in 0..40) {
             simulatedPlayer.tick()
@@ -43,8 +43,9 @@ object SpeedPreventDeadlyJump : QuickImports {
             }
         }
 
-        if (groundPos == null)
+        if (groundPos == null) {
             return true
+        }
 
         simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput.NONE, jumping = false,
@@ -54,7 +55,7 @@ object SpeedPreventDeadlyJump : QuickImports {
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
-    private fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
+    private fun createSimulatedPlayer(player: LocalPlayer): SimulatedPlayer {
         val input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput(player.input),
             jumping = false,
@@ -70,7 +71,7 @@ object SpeedPreventDeadlyJump : QuickImports {
         ticksToWaitForFall: Int = 5,
         maxFallDistance: Double = 10.0
     ): Boolean {
-        var groundPos: Vec3d? = null
+        var groundPos: Vec3? = null
 
         for (ignored in 0 until ticksToWaitForFall) {
             simulatedPlayer.tick()

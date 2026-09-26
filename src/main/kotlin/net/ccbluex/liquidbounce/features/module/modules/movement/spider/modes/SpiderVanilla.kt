@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
-internal object SpiderVanilla : Choice("Vanilla") {
+internal object SpiderVanilla : Mode("Vanilla") {
 
     private val motion by float("Motion", 0.3F, 0.05f..0.8F)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (player.horizontalCollision) {
-            player.velocity.y = motion.toDouble()
+            player.deltaMovement.y = motion.toDouble()
         }
     }
 }

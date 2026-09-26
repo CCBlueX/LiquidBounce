@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,33 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-class Chronometer(private var lastUpdate: Long = 0) {
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
+@AddonApi
+class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
+
     val elapsed: Long
         get() = System.currentTimeMillis() - lastUpdate
 
+    fun elapsedUntil(time: Long) = time - lastUpdate
+
+    @JvmOverloads
     fun hasElapsed(ms: Long = 0) = lastUpdate + ms < System.currentTimeMillis()
 
-    fun reset() {
-        this.lastUpdate = System.currentTimeMillis()
+    @JvmOverloads
+    fun hasAtLeastElapsed(ms: Long = 0) = lastUpdate + ms <= System.currentTimeMillis()
+
+    @JvmOverloads
+    fun reset(lastUpdate: Long = System.currentTimeMillis()) {
+        this.lastUpdate = lastUpdate
     }
 
-    fun waitFor(ms: Long) {
-        this.lastUpdate = System.currentTimeMillis() + ms
+    fun waitForAtLeast(ms: Long) {
+        this.lastUpdate = this.lastUpdate.coerceAtLeast(System.currentTimeMillis() + ms)
+    }
+
+    override fun toString(): String {
+        return "Chronometer(lastUpdate=$lastUpdate)"
     }
 
 }

@@ -1,4 +1,6 @@
 .idea/*
+!.idea/copyright/
+!.idea/codeInsightSettings.xml
 *.iml
 *.ipr
 *.iws
@@ -9,3 +11,10 @@
 /run/
 /mcef/
 /logs/
+/.kotlin/
+.DS_Store
+*.log
+/.fabric/
+.env
+/anti-cheats/
+.narrafork

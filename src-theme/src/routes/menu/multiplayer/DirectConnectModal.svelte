@@ -12,13 +12,14 @@
     $: disabled = validateInput(address);
 
     function validateInput(address: string): boolean {
-        return address.length === 0;
+        return address.trim().length === 0;
     }
 
     async function connect() {
         if (disabled) {
             return;
         }
+        address = address.trim();
         visible = false;
         await setItem("multiplayer_direct_connect_address", address)
         await connectToServer(address);

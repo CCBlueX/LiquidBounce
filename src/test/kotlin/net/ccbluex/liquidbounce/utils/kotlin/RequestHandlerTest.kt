@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,32 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.utils.client.RequestHandler
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class RequestHandlerTest {
-    companion object {
-        private val MODULE_1 = Module("module1", Category.MISC, state = true)
-        private val MODULE_2 = Module("module2", Category.MISC, state = true)
-        private val MODULE_3 = Module("module3", Category.MISC, state = true)
-        private val MODULE_4 = Module("module4", Category.MISC, state = true)
+
+    private class TestEventListener(val name: String) : EventListener {
+        override var running: Boolean = true
     }
 
-    @BeforeEach
+    companion object {
+        private val MODULE_1 = TestEventListener("module1")
+        private val MODULE_2 = TestEventListener("module2")
+        private val MODULE_3 = TestEventListener("module3")
+        private val MODULE_4 = TestEventListener("module4")
+    }
+
+    @BeforeTest
     fun resetModules() {
-        MODULE_1.enabled = true
-        MODULE_2.enabled = true
-        MODULE_3.enabled = true
-        MODULE_4.enabled = true
+        MODULE_1.running = true
+        MODULE_2.running = true
+        MODULE_3.running = true
+        MODULE_4.running = true
     }
 
     @Test
@@ -64,10 +69,26 @@ class RequestHandlerTest {
         assertEquals("requestA", requestHandler.getActiveRequestValue())
         requestHandler.tick()
 
-        MODULE_1.enabled = false
+        MODULE_1.running = false
 
         requestHandler.tick()
 
+        assertNull(requestHandler.getActiveRequestValue())
+    }
+
+    @Test
+    fun testClear() {
+        val requestHandler = RequestHandler<String>()
+        requestHandler.request(RequestHandler.Request(1000, 0, MODULE_1, "request"))
+        requestHandler.tick(100)
+
+        requestHandler.clear()
+
+        assertNull(requestHandler.getActiveRequestValue())
+
+        requestHandler.request(RequestHandler.Request(1, 0, MODULE_1, "newRequest"))
+        assertEquals("newRequest", requestHandler.getActiveRequestValue())
+        requestHandler.tick()
         assertNull(requestHandler.getActiveRequestValue())
     }
 }

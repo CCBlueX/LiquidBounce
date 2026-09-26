@@ -19,11 +19,11 @@
         <div transition:fly|global={{duration: 700, y: -100}}>
             <Header/>
         </div>
-
-        <div class="menu-wrapper">
-            <slot/>
-        </div>
     {/if}
+
+    <div class="menu-wrapper">
+        <slot/>
+    </div>
 </div>
 
 <style lang="scss">

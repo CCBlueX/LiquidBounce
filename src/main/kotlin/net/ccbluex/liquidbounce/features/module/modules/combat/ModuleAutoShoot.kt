@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +15,45 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.aiming.PointTracker
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
+import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
+import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.util.Hand
-import kotlin.math.atan
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.sqrt
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.SnowballItem
 
 /**
  * A module that automatically shoots at the nearest enemy.
@@ -62,262 +65,214 @@ import kotlin.math.sqrt
  *
  * @author 1zuna
  */
-object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
+object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
-    private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
-    private val gravityType by enumChoice("GravityType", GravityType.AUTO)
+    private val throwableType = choices(
+        "ThrowableType",
+        EggAndSnowball,
+        arrayOf(EggAndSnowball, Custom),
+    )
+    private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
-    private val clickScheduler = tree(ClickScheduler(this, showCooldown = false))
+    private val clicker = tree(Clicker(this, mc.options.keyUse, itemCooldown = null))
 
     /**
      * The target tracker to find the best enemy to attack.
      */
-    internal val targetTracker = tree(TargetTracker(defaultPriority = PriorityEnum.DISTANCE))
+    internal val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE, floatRange("Range", 3.0f..6f, 1f..256f)))
     private val pointTracker = tree(
         PointTracker(
-            lowestPointDefault = PointTracker.PreferredBoxPart.HEAD,
-            highestPointDefault = PointTracker.PreferredBoxPart.HEAD,
-            // The lag on Hypixel is massive
-            timeEnemyOffsetDefault = 3f,
-            timeEnemyOffsetScale = 0f..7f,
-            gaussianOffsetDefault = false
+            this
         )
     )
 
     /**
-     * So far I have never seen an anti-cheat which detects high turning speed for actions such as
+     * So far, I have never seen an anti-cheat which detects high turning speed for actions such as
      * shooting.
      */
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
+
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     /**
      * The target renderer to render the target, which we are currently aiming at.
      */
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
+    private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
 
+    private val requiresKillAura by boolean("RequiresKillAura", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
     val constantLag by boolean("ConstantLag", false)
+
+    private val HotbarItemSlot.isSelectionNeeded: Boolean
+        get() = hotbarIndex != null && hotbarIndex != SilentHotbar.serversideSlot
+
+    private fun HotbarItemSlot.trySelect(silentHotbarRequester: Any?, select: Boolean, tickUntilReset: Int): Boolean {
+        // Select the slot if we are not holding it.
+        if (isSelectionNeeded) {
+            if (!select) return false
+            // If we are not holding the slot, we can't shoot.
+            SilentHotbar.selectSlotSilently(silentHotbarRequester, this, tickUntilReset)
+            if (isSelectionNeeded) return false
+        }
+        return true
+    }
+
+    private fun shouldPauseForKillAura(): Boolean {
+        if (requiresKillAura && !ModuleKillAura.running) {
+            targetTracker.reset()
+            return true
+        }
+
+        return false
+    }
+
+    private fun getThrowableSlot(): HotbarItemSlot? {
+        val slot = throwableType.activeMode.findSlot() ?: return null
+
+        return slot.takeIf {
+            it.trySelect(ModuleAutoShoot, selectSlotAutomatically, tickUntilReset)
+        }
+    }
+
+    private fun getRotation(target: LivingEntity, slot: HotbarItemSlot): Rotation? {
+        return GravityType.from(slot).rotationFor(target)
+    }
 
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
      * as fast possible. This means we already pre-aim before we peek around the corner.
      */
     @Suppress("unused")
-    val simulatedTickHandler = handler<SimulatedTickEvent> {
-        targetTracker.cleanup()
+    private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        if (shouldPauseForKillAura()) return@handler
 
-        if (notDuringCombat && CombatManager.isInCombat()) {
+        // Find the recommended target
+        // Check if we can see the enemy
+        val target = targetTracker.selectFirst(player::hasLineOfSight) ?: return@handler
+
+        if (notDuringCombat && CombatManager.isInCombat) {
             return@handler
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val (hand, slot) = getThrowable() ?: return@handler
-
-        // Find the recommended target
-        val target = targetTracker.enemies().firstOrNull {
-            // Check if we can see the enemy
-            player.canSee(it)
-        } ?: return@handler
-
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            if (!selectSlotAutomatically) {
-                return@handler
-            }
-            SilentHotbar.selectSlotSilently(this, slot)
-        }
-
-        val rotation = generateRotation(target, GravityType.fromHand(hand))
+        val slot = getThrowableSlot() ?: return@handler
+        val rotation = getRotation(target, slot)
 
         // Set the rotation with the usage priority of 2.
-        RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory = considerInventory),
+        RotationManager.setRotationTarget(
+            rotations.toRotationTarget(rotation ?: return@handler, considerInventory = considerInventory),
             Priority.IMPORTANT_FOR_USAGE_2, this
         )
-        targetTracker.lock(target)
+    }
+
+    override fun onDisabled() {
+        targetTracker.reset()
+        SilentHotbar.resetSlot(ModuleAutoShoot)
     }
 
     /**
      * Handles the auto shoot logic.
      */
     @Suppress("unused")
-    val handleAutoShoot = repeatable {
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+    private val handleAutoShoot = tickHandler {
+        if (shouldPauseForKillAura()) return@tickHandler
 
-        // Cannot happen but we want to smart-cast
-        if (target !is LivingEntity) {
-            return@repeatable
-        }
+        val target = targetTracker.target ?: return@tickHandler
 
-        if (notDuringCombat && CombatManager.isInCombat()) {
-            return@repeatable
+        if (notDuringCombat && CombatManager.isInCombat) {
+            return@tickHandler
         }
 
         // Check if we have a throwable, if not we can't shoot.
-        val (hand, slot) = getThrowable() ?: return@repeatable
+        val slot = getThrowableSlot() ?: return@tickHandler
+        val rotation = getRotation(target, slot)
 
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            SilentHotbar.selectSlotSilently(this, slot)
-
-            // If we are not holding the throwable, we can't shoot.
-            if (SilentHotbar.serversideSlot != slot) {
-                return@repeatable
-            }
-        }
-
-        // Select the throwable if we are not holding it.
-        if (slot != -1) {
-            SilentHotbar.selectSlotSilently(this, slot)
-        }
-
-        val rotation = generateRotation(target, GravityType.fromHand(hand))
-
-        // Check difference between server and client rotation
-        val rotationDifference = RotationManager.rotationDifference(
-            rotation ?: return@repeatable,
-            RotationManager.serverRotation
-        )
+        // Check the difference between server and client rotation
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation ?: return@tickHandler)
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {
-            return@repeatable
+            return@tickHandler
         }
 
         // Check if we are still aiming at the target
-        clickScheduler.clicks {
-            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpenServerSide)) {
-                return@clicks false
+        clicker.click {
+            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
+                return@click false
             }
 
-            interaction.interactItem(player, hand).isAccepted
+            useItem(
+                slot.useHand,
+                swingMode = swingMode,
+            ).consumesAction()
         }
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val target = targetTracker.lockedOnTarget ?: return@handler
+    private sealed class ThrowableTypeMode(
+        name: String,
+        aliases: List<String> = emptyList(),
+    ) : Mode(name, aliases) {
+        final override val parent: ModeValueGroup<*>
+            get() = throwableType
 
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
+        abstract fun findSlot(): HotbarItemSlot?
+    }
+
+    private object EggAndSnowball : ThrowableTypeMode("EggAndSnowball") {
+        override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
+            it.item is EggItem || it.item is SnowballItem
         }
     }
 
-    private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
-        val (fromPoint, toPoint, _, _)
-                = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
+    private object Custom : ThrowableTypeMode("Custom", aliases = listOf("Anything")) {
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+        private val items by items("Items", itemSortedSetOf(Items.EGG, Items.SNOWBALL))
 
-        return when (gravityType) {
+        override fun findSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findClosestSlot {
+            !it.isEmpty && filter(it.item, items)
+        }
+    }
 
-            GravityType.AUTO -> {
-                // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
-                return null
+    private enum class GravityType(override val tag: String) : Tagged {
+        AUTO("Auto") {
+            override fun rotationFor(target: LivingEntity): Rotation? = null
+        },
+        LINEAR("Linear") {
+            override fun rotationFor(target: LivingEntity): Rotation {
+                // On linear we likely don't need to care about gravity,
+                // but instead aim exactly at the hitbox of the target.
+                val eyes = player.eyePosition
+                val point = pointTracker.findPoint(eyes, target, 1)
+                return Rotation.lookingAt(point.pos, eyes)
             }
-
-            GravityType.LINEAR -> {
-                RotationManager.makeRotation(toPoint, fromPoint)
-            }
-
-            // Determines the required yaw and pitch angles to hit a target with a projectile,
-            // considering gravity's effect on the projectile's motion.
-            GravityType.PROJECTILE -> {
-                // The velocity of the projectile at the moment of launch, determined by testing.
-                // todo: use math: eggEntity.setVelocity(user, user.getPitch(), user.getYaw(), 0.0F, 1.5F, 1.0F);
-                val targetPosition = toPoint.subtract(fromPoint)
-
-                val launchVelocity = 0.6f
-
-                // Compute the horizontal distance to the target on the XZ plane (ignoring y-component).
-                val horizontalDistance = sqrt(
-                    targetPosition.x * targetPosition.x +
-                            targetPosition.z * targetPosition.z
+        },
+        PROJECTILE("Projectile") {
+            override fun rotationFor(target: LivingEntity): Rotation? {
+                return SituationalProjectileAngleCalculator.calculateAngleForEntity(
+                    TrajectoryInfo.GENERIC,
+                    target
                 )
-
-                // Calculate yaw angle: the horizontal angle between the player's forward direction
-                // and the direction to the target, in radians converted to degrees and adjusted by -90°.
-                val yaw = (atan2(targetPosition.z, targetPosition.x) * 180.0f / Math.PI).toFloat() - 90.0f
-
-                // Calculate the pitch angle required to hit the target by solving the projectile
-                // motion equation, considering gravity and initial launch velocity.
-                val pitch = (-Math.toDegrees(
-                    atan(
-                        (launchVelocity.pow(2) - sqrt(
-                            launchVelocity.pow(4) -
-                                    0.006f * (0.006f * (horizontalDistance.pow(2)) + 2 * targetPosition.y *
-                                    launchVelocity.pow(2))
-                        )) / (0.006f * horizontalDistance)
-                    )
-                )).toFloat()
-
-                // Check if the calculated yaw and pitch are valid numbers; if not, return null.
-                if (yaw.isNaN() || pitch.isNaN()) {
-                    return null
-                }
-
-                // Return the computed Rotation object containing the yaw and pitch angles.
-                Rotation(yaw, pitch)
             }
-        }
-    }
+        };
 
-    private fun getThrowable(): Pair<Hand, Int>? {
-        return when (throwableType) {
-            ThrowableType.EGG_AND_SNOWBALL -> getThrowable(Items.EGG) ?: getThrowable(Items.SNOWBALL)
-            ThrowableType.ANYTHING -> {
-                if (player.mainHandStack?.isNothing() == false) {
-                    Hand.MAIN_HAND to -1
-                } else if (player.offHandStack?.isNothing() == false) {
-                    Hand.OFF_HAND to -1
-                } else {
-                    null
-                }
-            }
-        }
-    }
+        abstract fun rotationFor(target: LivingEntity): Rotation?
 
-    private fun getThrowable(item: Item): Pair<Hand, Int>? {
-        val mainHand = player.mainHandStack.item == item
-        val offHand = player.offHandStack.item == item
+        companion {
+            fun from(slot: HotbarItemSlot): GravityType =
+                from(slot.itemStack.item)
 
-        // If both is false, we have to find the item in the hotbar
-        return if (!mainHand && !offHand) {
-            val throwableSlot = findHotbarSlot(item) ?: return null
-            Hand.MAIN_HAND to throwableSlot
-        } else if (offHand) {
-            Hand.OFF_HAND to -1
-        } else { // mainHand
-            Hand.MAIN_HAND to -1
-        }
-    }
-
-    private enum class ThrowableType(override val choiceName: String) : NamedChoice {
-        EGG_AND_SNOWBALL("Egg and Snowball"),
-        ANYTHING("Anything"),
-    }
-
-    private enum class GravityType(override val choiceName: String) : NamedChoice {
-
-        AUTO("Auto"),
-        LINEAR("Linear"),
-        PROJECTILE("Projectile");
-
-        companion object {
-            fun fromHand(hand: Hand): GravityType {
-                return when (hand) {
-                    Hand.MAIN_HAND -> fromItem(player.mainHandStack.item)
-                    Hand.OFF_HAND -> fromItem(player.offHandStack.item)
-                }
-            }
-
-            fun fromItem(item: Item): GravityType {
+            fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {
                         when (item) {
-                            Items.EGG, Items.SNOWBALL -> PROJECTILE
+                            is EggItem, is SnowballItem -> PROJECTILE
                             else -> LINEAR
                         }
                     }
@@ -326,7 +281,6 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                 }
             }
         }
-
     }
 
 }

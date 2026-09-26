@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,50 +18,59 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
-import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
-import net.ccbluex.liquidbounce.utils.combat.attack
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
+import net.ccbluex.liquidbounce.utils.entity.lastPos
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.Entity
-import net.minecraft.entity.projectile.FireballEntity
-import net.minecraft.entity.projectile.ShulkerBulletEntity
-import kotlin.math.cos
-import kotlin.math.pow
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.projectile.ShulkerBullet
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
 
 /**
  * ProjectilePuncher module
  *
  * Shoots back incoming projectiles around you.
  */
+object ModuleProjectilePuncher : ClientModule(
+    "ProjectilePuncher",
+    ModuleCategories.WORLD,
+    aliases = listOf("AntiFireball")
+) {
 
-object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 
-    private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
-
-    private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
-    override fun disable() {
+    override fun onDisabled() {
         target = null
     }
 
-    val tickHandler = handler<SimulatedTickEvent> {
+    val tickHandler = handler<RotationUpdateEvent> {
         if (player.isSpectator) {
             return@handler
         }
@@ -69,39 +78,42 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         updateTarget()
     }
 
-    val repeatable = repeatable {
-        val target = target ?: return@repeatable
+    /**
+     * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
+     */
+    val repeatable = handler<GameTickEvent> {
+        val target = target ?: return@handler
 
-        if (target.boxedDistanceTo(player) > range ||
-            !facingEnemy(
+        if (target.squaredBoxedDistanceTo(player) > range * range ||
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = 0.0
-            )) {
-            return@repeatable
+                throughWallsRange = 0.0
+            ) == null) {
+            return@handler
         }
 
-        clickScheduler.clicks {
-            target.attack(swing)
+        clicker.click {
+            attackEntity(target, swingMode)
             true
         }
     }
 
     private fun updateTarget() {
-        val rangeSquared = range.pow(2)
+        val rangeSquared = range * range
 
         target = null
 
-        for (entity in world.entities.sortedBy { it.squaredBoxedDistanceTo(player) }) {
+        for (entity in world.entitiesForRendering().sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
                 continue
             }
 
-            val nextTickFireballPosition = entity.pos.add(entity.pos.subtract(entity.prevPos))
+            val nextTickFireballPosition = entity.position() + entity.position() - entity.lastPos
 
-            val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyes)
+            val entityBox = entity.dimensions.makeBoundingBox(nextTickFireballPosition)
+            val distanceSquared = entityBox.distanceToSqr(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
                 continue
@@ -109,16 +121,16 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
             // find best spot
             val spot = raytraceBox(
-                player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
+                player.eyePosition, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
             target = entity
 
             // aim at target
-            RotationManager.aimAt(
+            RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher
             )
@@ -127,16 +139,37 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
+        if (!entity.isWithinWorldBorder || (entity !is LargeFireball && entity !is ShulkerBullet)) {
+            return false
+        }
+
+        val fireballVelocity = entity.position() - entity.lastPos
+
+        // If the fireball is not moving the player can obviously not be hit. Additionally, the code below only works if
+        // the fireball is moving.
+        if (fireballVelocity.isLikelyZero) {
             return false
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.pos.subtract(entity.pos)
+        val vecToPlayer = player.boundingBox.center - entity.position()
 
-        val dot = vecToPlayer.dotProduct(entity.pos.subtract(entity.prevPos))
+        val dot = vecToPlayer.dot(fireballVelocity)
 
-        return dot > -cos(Math.toRadians(30.0))
+        // if angle less than PI/3 (60 degrees) then
+        val isMovingTowardsPlayer = dot > 0.5 * fireballVelocity.length() * vecToPlayer.length()
+
+        val extendedHitbox = player.box.inflate(entity.box.xsize / 2.0)
+
+        // If the fireball was already inside the player's hitbox, but would be moving away from the player, this
+        // would unnecessarily trigger the player to attack the fireball.
+        val touchesHitbox = extendedHitbox.clip(entity.position(), fireballVelocity * 20.0).isPresent
+        val willHitPlayer = !extendedHitbox.contains(entity.position()) && touchesHitbox
+
+        // We need two checks in order to prevent following situation: The fireball is very close to the player and
+        // moving towards their feet. The moving towards player check would fail since the velocity line is not similar
+        // enough to the vector to the player. This situation is covered by the second check.
+        return isMovingTowardsPlayer || willHitPlayer
     }
 
 }

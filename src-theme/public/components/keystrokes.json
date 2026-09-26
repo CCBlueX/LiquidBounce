@@ -1,0 +1,12 @@
+{
+  "name": "Keystrokes",
+  "description": "Visualizes your movement key inputs.",
+  "enabled": false,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 15,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 15
+  }
+}

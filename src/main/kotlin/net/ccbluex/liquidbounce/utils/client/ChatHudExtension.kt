@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,38 +18,56 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
-import net.minecraft.client.gui.hud.ChatHud
-import net.minecraft.client.gui.hud.ChatHudLine
-import net.minecraft.client.gui.hud.MessageIndicator
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
+import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.client.multiplayer.chat.GuiMessage
+import net.minecraft.client.multiplayer.chat.GuiMessageSource
+import net.minecraft.client.multiplayer.chat.GuiMessageTag
+import net.minecraft.network.chat.Component
+
+private val SYSTEM_TEXT: Component = Component.translatable("chat.tag.system")
+private val SYSTEM_TEXT_SINGLE_PLAYER: Component = Component.translatable("chat.tag.system_single_player")
+
+private val SYSTEM = GuiMessageTag(13684944, null, SYSTEM_TEXT, "System")
+private val SYSTEM_SINGLE_PLAYER = GuiMessageTag(13684944, null, SYSTEM_TEXT_SINGLE_PLAYER, "System")
+
+/**
+ * Note: I don't know why these static methods will return null, but they do,
+ * so we have to use the constants instead.
+ */
+private fun getTag() = if (mc.isSingleplayer) {
+    GuiMessageTag.systemSinglePlayer() ?: SYSTEM_SINGLE_PLAYER
+} else {
+    GuiMessageTag.system() ?: SYSTEM
+}
 
 /**
  * Adds a message and assigns the ID to it.
+ *
+ * @see ChatComponent.addMessage
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.addMessage(message: Text, id: String?, count: Int) {
-    val indicator = if (mc.isConnectedToLocalServer) MessageIndicator.singlePlayer() else MessageIndicator.system()
-    val chatHudLine = ChatHudLine(mc.inGameHud.ticks, message, null, indicator)
-    (chatHudLine as ChatMessageAddition).`liquid_bounce$setId`(id)
-    (chatHudLine as ChatHudLineAddition).`liquid_bounce$setCount`(count)
-    this.logChatMessage(chatHudLine)
-    this.addVisibleMessage(chatHudLine)
-    this.addMessage(chatHudLine)
+fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
+    val guiMessage = GuiMessage(mc.gui.hud.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
+    (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
+    (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
+    this.logChatMessage(guiMessage)
+    this.addMessageToDisplayQueue(guiMessage)
+    this.addMessageToQueue(guiMessage)
 }
 
 /**
  * Removes all messages with the given ID.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.removeMessage(id: String?) {
-    messages.removeIf {
-        val removable = it as ChatMessageAddition
+fun ChatComponent.removeMessage(id: String?) = mc.execute {
+    allMessages.removeIf {
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
-    visibleMessages.removeIf {
-        val removable = it as ChatMessageAddition
+    trimmedMessages.removeIf {
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
 }

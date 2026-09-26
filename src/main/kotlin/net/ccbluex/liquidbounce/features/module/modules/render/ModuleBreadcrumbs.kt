@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,96 +18,84 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import com.mojang.blaze3d.vertex.VertexConsumer
+import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
+import it.unimi.dsi.fastutil.objects.ObjectFloatPair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.addVertex
+import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.render.*
-import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
-import org.apache.commons.lang3.tuple.MutablePair
-import org.apache.commons.lang3.tuple.Pair
-import org.joml.Matrix4f
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector4f
-import java.util.*
+import java.util.ArrayDeque
+import java.util.IdentityHashMap
 
 /**
  * Breadcrumbs module
  *
  * Leaves traces behind players.
  */
-object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
+object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, aliases = listOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(70, 119, 255, 120))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
-    internal object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
+    private object TemporaryValueGroup : ToggleableValueGroup(this, "Temporary", true) {
         val alive by int("Alive", 900, 10..10000, "ms")
         val fade by boolean("Fade", true)
     }
 
     init {
-        tree(TemporaryConfigurable)
+        tree(TemporaryValueGroup)
     }
 
     private val trails = IdentityHashMap<Entity, Trail>()
-    private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
+    private val lastPositions = IdentityHashMap<Entity, Vec3>()
 
-    override fun disable() {
+    override fun onDisabled() {
         clear()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+        if (trails.isEmpty()) {
+            return@handler
+        }
+
         val color = if (colorRainbow) rainbow() else color
 
-        renderEnvironmentForWorld(matrixStack) {
-            draw(matrixStack, color)
-        }
-    }
-
-    private fun draw(matrixStack: MatrixStack, color: Color4b) {
-        if (trails.isEmpty()) {
-            return
-        }
-
-        if (height > 0) {
-            RenderSystem.disableCull()
-        }
-
-        val matrix = matrixStack.peek().positionMatrix
-
-        @Suppress("SpellCheckingInspection")
-        val tessellator = RenderSystem.renderThreadTesselator()
-        val camera = mc.entityRenderDispatcher.camera ?: return
         val time = System.currentTimeMillis()
-        val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+        val colorF = color.toVector4f()
         val lines = height == 0f
-        val buffer = tessellator.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR)
-        val renderData = RenderData(matrix, buffer, colorF, lines)
 
-        RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
-
-        trails.forEach { (entity, trail) ->
-            trail.verifyAndRenderTrail(renderData, camera, entity, time)
-        }
-
-        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
-
-        if (height > 0) {
-            RenderSystem.enableCull()
+        event.renderEnvironment {
+            drawCustomMesh(if (lines) {
+                ClientRenderPipelines.lines(noDepthTest = true)
+            } else {
+                ClientRenderPipelines.quads(noDepthTest = true)
+            }) {
+                val renderData = RenderData(poseStack.last().pose(), this, colorF, lines)
+                trails.forEach { (entity, trail) ->
+                    trail.verifyAndRenderTrail(renderData, event.camera.position(), entity, time)
+                }
+            }
         }
     }
 
@@ -120,11 +108,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         if (onlyOwn) {
             updateEntityTrail(time, player)
-            trails.keys.retainAll { it === player || !it.isAlive }
+            trails.keys.removeIf { it !== player && it.isAlive }
             return@handler
         }
 
-        val actualPresent = world.players
+        val actualPresent = world.players()
         actualPresent.forEach { player -> updateEntityTrail(time, player) }
         trails.keys.removeIf { key ->
             actualPresent.none { it === key } || !key.isAlive
@@ -133,16 +121,16 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
         val last = lastPositions[entity]
-        if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) {
+        if (last != null && entity.position() == last) {
             return
         }
 
-        lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
-        trails.computeIfAbsent(entity) { Trail() }.positions.add(TrailPart(entity.x, entity.y, entity.z, time))
+        lastPositions[entity] = entity.position().copy()
+        trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.position(), time))
     }
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent>(ignoreCondition = true) {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         clear()
     }
 
@@ -152,25 +140,25 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     @JvmRecord
-    private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
+    private data class TrailPart(val pos: Vec3, val creationTime: Long)
 
     private class RenderData(
-        val matrix: Matrix4f,
-        val bufferBuilder: BufferBuilder,
+        val pose: Matrix4fc,
+        val bufferBuilder: VertexConsumer,
         val color: Vector4f,
         val lines: Boolean
     )
 
     private class Trail {
 
-        var positions = ArrayDeque<TrailPart>()
+        val positions = ArrayDeque<TrailPart>()
 
-        fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
-            val aliveDurationF = TemporaryConfigurable.alive.toFloat()
+        fun verifyAndRenderTrail(renderData: RenderData, cameraPos: Vec3, entity: Entity, time: Long) {
+            val aliveDurationF = TemporaryValueGroup.alive.toFloat()
             val initialAlpha = renderData.color.w
 
-            if (TemporaryConfigurable.enabled) {
-                val aliveDuration = TemporaryConfigurable.alive.toLong()
+            if (TemporaryValueGroup.enabled) {
+                val aliveDuration = TemporaryValueGroup.alive.toLong()
                 val expirationTime = time - aliveDuration
 
                 // Remove outdated positions, the positions are ordered by time (ascending)
@@ -183,8 +171,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 return
             }
 
-            val shouldFade = TemporaryConfigurable.fade && TemporaryConfigurable.enabled
-            val pointsWithAlpha = positions.map { position ->
+            val shouldFade = TemporaryValueGroup.fade && TemporaryValueGroup.enabled
+            val pointsWithAlpha = positions.mapToArray { position ->
                 val alpha = if (shouldFade) {
                     val deltaTime = time - position.creationTime
                     val multiplier = (1F - deltaTime.toFloat() / aliveDurationF)
@@ -193,45 +181,41 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                     initialAlpha
                 }
 
-                val point = calculatePoint(camera, position.x, position.y, position.z)
-                MutablePair(point, alpha)
+                val point = calculateRelativePos(cameraPos, position.pos)
+                ObjectFloatMutablePair.of(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
-            val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
-            pointsWithAlpha.last().left = point
+            val interpolatedPos = entity.getPosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
+            val point = calculateRelativePos(cameraPos, interpolatedPos)
+            pointsWithAlpha.last().left(point)
 
             addVerticesToBuffer(renderData, pointsWithAlpha)
         }
 
-        private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
-            val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
-            point.sub(camera.pos.x.toFloat(), camera.pos.y.toFloat(), camera.pos.z.toFloat())
-            return point
+        private fun calculateRelativePos(cameraPos: Vec3, pos: Vec3): Vector3f {
+            return Vector3f().set(
+                pos.x - cameraPos.x,
+                pos.y - cameraPos.y,
+                pos.z - cameraPos.z,
+            )
         }
 
-        private fun addVerticesToBuffer(renderData: RenderData, list: List<Pair<Vector3f, Float>>) {
+        private fun addVerticesToBuffer(renderData: RenderData, list: Array<out ObjectFloatPair<Vector3f>>) {
             val red = renderData.color.x
             val green = renderData.color.y
             val blue = renderData.color.z
 
-            for (i in list.indices) {
-                if (i - 1 < 0) {
-                    continue
-                }
+            with(renderData.bufferBuilder) {
+                for (i in 1..<list.size) {
+                    val (v0, alpha0) = list[i]
+                    val (v2, alpha2) = list[i - 1]
 
-                val v0 = list[i]
-                val v2 = list[i - 1]
-
-                renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
-                    .color(red, green, blue, v0.right)
-                renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
-                    .color(red, green, blue, v2.right)
-                if (!renderData.lines) {
-                    renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
-                        .color(red, green, blue, v2.right)
-                    renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
-                        .color(red, green, blue, v0.right)
+                    addVertex(renderData.pose, v0).setColor(red, green, blue, alpha0)
+                    addVertex(renderData.pose, v2).setColor(red, green, blue, alpha2)
+                    if (!renderData.lines) {
+                        addVertex(renderData.pose, v2.x, v2.y + height, v2.z).setColor(red, green, blue, alpha2)
+                        addVertex(renderData.pose, v0.x, v0.y + height, v0.z).setColor(red, green, blue, alpha0)
+                    }
                 }
             }
         }

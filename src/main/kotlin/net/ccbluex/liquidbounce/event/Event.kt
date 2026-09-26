@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,26 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
  * A callable event
  */
-open class Event
+@AddonApi
+abstract class Event {
+    @ProtocolExclude
+    var isCompleted: Boolean = false
+        internal set
+}
 
 /**
  * A cancellable event
  */
-open class CancellableEvent : Event() {
-
+@AddonApi
+abstract class CancellableEvent : Event() {
     /**
-     * Let you know if the event is cancelled
+     * Let you know if the event is canceled
      *
      * @return state of cancel
      */
@@ -44,22 +48,24 @@ open class CancellableEvent : Event() {
      * Allows you to cancel an event
      */
     fun cancelEvent() {
+        require(!isCompleted) { "Cannot cancel an event that has already been completed." }
+
         isCancelled = true
     }
 
 }
 
 /**
- * State of event. Might be PRE or POST.
+ * MixinEntityRenderState of event. Might be PRE or POST.
  */
+@AddonApi
 enum class EventState(val stateName: String) {
     PRE("PRE"), POST("POST")
 }
 
-fun KClass<out Event>.name(): String = this.findAnnotation<Nameable>()!!.name
-
 /**
- * Retrieves the name that the event is supposed to be associated with in JavaScript.
+ * The event's name on the interop protocol, or the simple class name for an untagged add-on event.
  */
-val KClass<out Event>.eventName: String
-    get() = this.findAnnotation<Nameable>()!!.name
+val Class<out Event>.eventName: String
+    get() = EventManager.eventNameOrNull(this) ?: simpleName
+

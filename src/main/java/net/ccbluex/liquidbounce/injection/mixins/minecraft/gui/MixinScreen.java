@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,60 +18,96 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.llamalad7.mixinextras.sugar.Local;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
-import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
-import net.ccbluex.liquidbounce.web.theme.ThemeManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Style;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.additions.ScreenAddition;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
+import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.ClickEvent;
+import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
-public abstract class MixinScreen {
+public abstract class MixinScreen implements ScreenAddition {
 
+    @Final
     @Shadow
-    protected abstract void remove(Element child);
-
-    @Shadow
-    protected TextRenderer textRenderer;
+    protected Font font;
     @Shadow
     public int height;
     @Shadow
     public int width;
 
     @Shadow
-    protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
+    protected abstract <T extends GuiEventListener & Renderable> T addRenderableWidget(T drawableElement);
 
+    @Final
     @Shadow
     @Nullable
-    protected MinecraftClient client;
+    protected Minecraft minecraft;
 
-    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    @Shadow
+    private boolean initialized;
+
+    @Inject(method = "init(II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initialiseBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
     @Inject(method = "init()V", at = @At("TAIL"))
     protected void init(CallbackInfo ci) {
-        ThemeManager.INSTANCE.initialiseBackground();
+        if (!LiquidBounce.INSTANCE.isInitialized()) {
+            return;
+        }
+
+        ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
-    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
-    private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
+    @Inject(method = "extractTransparentBackground", at = @At("HEAD"), cancellable = true)
+    private void hookRenderInGameBackground(GuiGraphicsExtractor context, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "extractRenderStateWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
+    private void cancelRenderByChestStealer(CallbackInfo ci) {
+        if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "extractBackground", at = @At("HEAD"), cancellable = true)
+    private void renderBackgroundTexture(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (this.minecraft != null && this.minecraft.level == null && !SelfDestruct.INSTANCE.isDestructed()) {
+            if (!LiquidBounce.INSTANCE.isInitialized()) {
+                return;
+            }
+
+            if (ThemeManager.INSTANCE.isBasicMode() && !ScreenManager.isClientScreen((Screen) (Object) this)) {
+                return;
+            }
+
             if (ThemeManager.INSTANCE.drawBackground(context, width, height, mouseX, mouseY, delta)) {
                 ci.cancel();
             }
@@ -80,13 +116,19 @@ public abstract class MixinScreen {
 
     /**
      * Allows the execution of {@link RunnableClickEvent}.
+     * (default branch in switch pattern matching)
      */
-    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 2, shift = At.Shift.BEFORE), cancellable = true)
-    private void hookExecuteClickEvents(Style style, CallbackInfoReturnable<Boolean> cir, @Local ClickEvent clickEvent) {
+    @Inject(method = "defaultHandleClickEvent", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE, remap = false), cancellable = true)
+    private static void hookExecuteClickEvents(ClickEvent clickEvent, Minecraft client, Screen screenAfterRun, CallbackInfo ci) {
         if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
             runnableClickEvent.run();
-            cir.setReturnValue(true);
+            ci.cancel();
         }
     }
 
+    @Unique
+    @Override
+    public boolean liquidbounce$screenInitialized() {
+        return initialized;
+    }
 }

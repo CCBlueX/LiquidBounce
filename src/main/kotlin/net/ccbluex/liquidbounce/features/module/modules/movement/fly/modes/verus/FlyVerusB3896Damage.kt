@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.enabled
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Verus
@@ -40,24 +38,32 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @testedOn eu.loyisa.cn
  * @note it gives you ~2 flags for damage
  */
-internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
+internal object FlyVerusB3896Damage : Mode("VerusB3896Damage") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
-    var flyTicks = 0
-    var shouldStop = false
-    var gotDamage = false
+    private var flyTicks = 0
+    private var shouldStop = false
+    private var gotDamage = false
 
     override fun enable() {
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
+            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y + 3.25, player.z, false,
+            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
+            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true,
+            player.horizontalCollision))
     }
 
     @Suppress("unused")
-    val failRepeatable = repeatable {
+    val failRepeatable = tickHandler {
         if (!gotDamage) {
             waitTicks(20)
             if (!gotDamage) {
@@ -66,27 +72,27 @@ internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
             }
         }
     }
-    val repeatable = repeatable {
+    val repeatable = tickHandler {
         if (player.hurtTime > 0) {
             gotDamage = true
         }
 
         if (!gotDamage) {
-            return@repeatable
+            return@tickHandler
         }
 
         if (++flyTicks > 20 || shouldStop) {
-            enabled = false
-            return@repeatable
+            ModuleFly.enabled = false
+            return@tickHandler
         }
 
-        player.strafe(speed = 9.95)
-        player.velocity.y = 0.0
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 9.95)
+        player.deltaMovement.y = 0.0
         Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
     }
 
     override fun disable() {
         flyTicks = 0
-        player.zeroXZ()
+        player.stopXZVelocity()
     }
 }

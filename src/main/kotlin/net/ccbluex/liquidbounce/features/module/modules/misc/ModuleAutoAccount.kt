@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.DummyEvent
-import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.event.SuspendableHandler
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.events.TitleEvent
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 
 
@@ -32,24 +36,54 @@ import net.ccbluex.liquidbounce.utils.client.chat
  * Auto account module
  *
  * Automatically handles logins or registrations on servers when requested.
+ *
+ * Command: [CommandAutoAccount]
  */
-object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
+object ModuleAutoAccount : ClientModule(
+    "AutoAccount",
+    ModuleCategories.MISC,
+    aliases = listOf("AutoLogin", "AutoRegister")
+) {
 
     private val password by text("Password", "a1b2c3d4")
-        .doNotInclude()
+        .doNotIncludeAlways()
     private val delay by intRange("Delay", 3..5, 0..50, "ticks")
 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
 
-    private val registerRegexString by text("RegisterRegex", "/register")
-    private val loginRegexString by text("LoginRegex", "/login")
+    private val registerRegex by regex("RegisterRegex", Regex("/register"))
 
-    var sequence: Sequence<DummyEvent>? = null
+    private val loginRegex by regex("LoginRegex", Regex("/login"))
+
+    private val repeatPasswordOnRegister by boolean("RepeatPasswordOnRegister", true)
+
+    private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
+
+    private enum class MessageSource(override val tag: String) : Tagged {
+        CHAT("Chat"),
+        TITLE("Title"),
+        SUBTITLE("Subtitle"),
+    }
 
     // We can receive chat messages before the world is initialized,
-    // so we have to handel events even before the that
-    override fun handleEvents() = enabled
+    // so we have to handle events even before that
+    override val running
+        get() = !SelfDestruct.isDestructed && enabled
+
+    private var sending = false
+
+    override fun onDisabled() {
+        sending = false
+    }
+
+    private suspend inline fun action(operation: () -> Unit) {
+        sending = true
+        tickUntil { mc.connection != null }
+        waitTicks(delay.random())
+        operation()
+        sending = false
+    }
 
     fun login() {
         chat("login")
@@ -58,41 +92,37 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     fun register() {
         chat("register")
-
-        network.sendCommand("$registerCommand $password $password")
+        network.sendCommand(
+            if (repeatPasswordOnRegister) "$registerCommand $password $password" else "$registerCommand $password",
+        )
     }
 
-    @Suppress("unused")
-    val onChat = handler<ChatReceiveEvent> { event ->
-        val msg = event.message
+    private inline fun <reified T : Event> createMessageHandler(
+        messageSource: MessageSource,
+        crossinline textProvider: (T) -> String?,
+    ) {
+        sequenceHandler<T> { event ->
+            if (sending || messageSource !in messageSources) {
+                return@sequenceHandler
+            }
 
-        val registerRegex = Regex(registerRegexString)
+            val msg = textProvider(event) ?: return@sequenceHandler
 
-        if (registerRegex.containsMatchIn(msg)) {
-            startDelayedAction { register() }
-
-            return@handler
-        }
-
-        val loginRegex = Regex(loginRegexString)
-
-        if (loginRegex.containsMatchIn(msg)) {
-            startDelayedAction { login() }
+            when {
+                registerRegex.containsMatchIn(msg) -> {
+                    action(::register)
+                }
+                loginRegex.containsMatchIn(msg) -> {
+                    action(::login)
+                }
+            }
         }
     }
 
-    private fun startDelayedAction(action: SuspendableHandler<DummyEvent>) {
-        // cancel the previous sequence
-        sequence?.cancel()
-
-        //start the new sequence
-        sequence = Sequence(this, {
-            waitUntil { mc.networkHandler != null }
-            sync()
-            waitTicks(delay.random())
-
-            action(it)
-        }, DummyEvent())
+    init {
+        createMessageHandler<ChatReceiveEvent>(MessageSource.CHAT) { it.message }
+        createMessageHandler<TitleEvent.Title>(MessageSource.TITLE) { it.text?.tryCollapseToString() }
+        createMessageHandler<TitleEvent.Subtitle>(MessageSource.SUBTITLE) { it.text?.tryCollapseToString() }
     }
 
 }

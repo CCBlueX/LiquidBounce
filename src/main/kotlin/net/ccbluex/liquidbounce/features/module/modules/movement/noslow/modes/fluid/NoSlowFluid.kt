@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.fluid
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.FluidPushEvent
+import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 
-internal object NoSlowFluid : ToggleableConfigurable(ModuleNoSlow, "Fluid", true) {
+internal object NoSlowFluid : ToggleableValueGroup(ModuleNoSlow, "Fluid", true) {
+
+    private var collision by boolean("Collision", true)
 
     @Suppress("unused")
     private val fluidPushHandler = handler<FluidPushEvent> {
         it.cancelEvent()
+    }
+
+    @Suppress("unused")
+    private val fluidCollisionHandler = handler<PlayerFluidCollisionCheckEvent> {
+        if (!collision) {
+            it.cancelEvent()
+        }
     }
 
 }

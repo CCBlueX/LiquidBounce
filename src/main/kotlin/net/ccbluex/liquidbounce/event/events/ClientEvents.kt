@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,181 +15,251 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.features.chat.packet.User
-import net.ccbluex.liquidbounce.features.misc.ProxyManager
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
+import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
-import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
-import net.ccbluex.liquidbounce.web.theme.component.Component
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.world.GameMode
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.world.level.GameType
+import net.minecraft.world.level.block.Block
 
-@Nameable("clickGuiScaleChange")
-@WebSocketEvent
-class ClickGuiScaleChangeEvent(val value: Float): Event()
+@Tag("themeColorChange")
+class ThemeColorChangeEvent(val themeId: String, val name: String, val value: Color4b) : Event(), WebSocketEvent
 
-@Nameable("spaceSeperatedNamesChange")
-@WebSocketEvent
-class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
+@Deprecated(
+    "The `clickGuiScaleChange` event has been deprecated.",
+    ReplaceWith("ClickGuiScaleChangeEvent"),
+    DeprecationLevel.WARNING
+)
+@Tag("clickGuiScaleChange")
+class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 
-@Nameable("clientStart")
-class ClientStartEvent : Event()
+@Tag("clickGuiValueChange")
+class ClickGuiValueChangeEvent(val configurable: ValueGroup) : Event(), WebSocketEvent {
+    override val serializeAsync get() = false
+}
 
-@Nameable("clientShutdown")
-class ClientShutdownEvent : Event()
+@Tag("spaceSeperatedNamesChange")
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
 
-@Nameable("valueChanged")
-class ValueChangedEvent(val value: Value<*>) : Event()
+@Tag("clientStart")
+object ClientStartEvent : Event()
 
-@Nameable("toggleModule")
-@WebSocketEvent
-class ToggleModuleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event()
+@Tag("clientShutdown")
+object ClientShutdownEvent : Event()
 
-@Nameable("refreshArrayList")
-@WebSocketEvent
-class RefreshArrayListEvent : Event()
+@Tag("clientLanguageChanged")
+class ClientLanguageChangedEvent : Event(), WebSocketEvent
 
-@Nameable("notification")
-@WebSocketEvent
-class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
+@Tag("valueChanged")
+class ValueChangedEvent(val value: Value<*>) : Event(), WebSocketEvent
+
+@Tag("moduleActivation")
+class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
+
+@AddonApi
+@Tag("moduleToggle")
+class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
+
+@AddonApi
+@Tag("refreshArrayList")
+object RefreshArrayListEvent : Event(), WebSocketEvent
+
+@AddonApi
+@Tag("friendChange")
+class FriendChangeEvent(val name: String, val added: Boolean) : Event()
+
+@AddonApi
+@Tag("notification")
+class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
+    @AddonApi
     enum class Severity {
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
 
-@Nameable("gameModeChange")
-@WebSocketEvent
-class GameModeChangeEvent(val gameMode: GameMode) : Event()
+@Tag("gameModeChange")
+class GameModeChangeEvent(val gameMode: GameType) : Event(), WebSocketEvent
 
-@Nameable("targetChange")
-@WebSocketEvent
-class TargetChangeEvent(val target: PlayerData?) : Event()
+@Tag("targetChange")
+class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
-@Nameable("clientChatStateChange")
-@WebSocketEvent
-class ClientChatStateChange(val state: State) : Event() {
+@Tag("blockCountChange")
+class BlockCountChangeEvent(val nextBlock: Block?, val count: Int?) : Event(), WebSocketEvent
+
+@Tag("bedStateChange")
+class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent
+
+@Tag("clientChatStateChange")
+class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
     enum class State {
         @SerializedName("connecting")
         CONNECTING,
+
         @SerializedName("connected")
         CONNECTED,
+
         @SerializedName("logon")
         LOGGING_IN,
+
         @SerializedName("loggedIn")
         LOGGED_IN,
+
         @SerializedName("disconnected")
         DISCONNECTED,
+
         @SerializedName("authenticationFailed")
         AUTHENTICATION_FAILED,
     }
 }
 
-@Nameable("clientChatMessage")
-@WebSocketEvent
-class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
-    enum class ChatGroup {
+@Tag("clientChatMessage")
+class ClientChatMessageEvent(
+    val user: AxoUser,
+    val message: String,
+    val chatGroup: ChatGroup,
+) : Event(), WebSocketEvent {
+    enum class ChatGroup(override val tag: String) : Tagged {
         @SerializedName("public")
-        PUBLIC_CHAT,
+        PUBLIC_CHAT("PublicChat"),
+
         @SerializedName("private")
-        PRIVATE_CHAT
+        PRIVATE_CHAT("PrivateChat"),
     }
 }
 
-@Nameable("clientChatError")
-@WebSocketEvent
-class ClientChatErrorEvent(val error: String) : Event()
+@Tag("clientChatError")
+class ClientChatErrorEvent(val error: String) : Event(), WebSocketEvent
 
-@Nameable("clientChatJwtToken")
+@Tag("clientChatJwtToken")
 // Do not define as WebSocket event, because it contains sensitive data
 class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
-@Nameable("accountManagerMessage")
-@WebSocketEvent
-class AccountManagerMessageEvent(val message: String) : Event()
+@Tag("accountManagerMessage")
+class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 
-@Nameable("accountManagerLogin")
-@WebSocketEvent
-class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event()
+@Tag("accountManagerLogin")
+class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
 
-@Nameable("accountManagerAddition")
-@WebSocketEvent
-class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
+@Tag("accountManagerAddition")
+class AccountManagerAdditionResultEvent(
+    val username: String? = null, val error: String? = null
+) : Event(), WebSocketEvent
 
-@Nameable("proxyAdditionResult")
-@WebSocketEvent
-class ProxyAdditionResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+@Tag("accountManagerRemoval")
+class AccountManagerRemovalResultEvent(val username: String?) : Event(), WebSocketEvent
 
-@Nameable("proxyCheckResult")
-@WebSocketEvent
-class ProxyCheckResultEvent(val proxy: ProxyManager.Proxy, val error: String? = null) : Event()
+@Tag("proxyCheckResult")
+class ProxyCheckResultEvent(val proxy: Proxy? = null, val error: String? = null) : Event(), WebSocketEvent
 
-@Nameable("proxyEditResult")
-@WebSocketEvent
-class ProxyEditResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+@Tag("browserReady")
+object BrowserReadyEvent : Event()
 
-@Nameable("browserReady")
-class BrowserReadyEvent(val browser: IBrowser) : Event()
-
-@Nameable("virtualScreen")
-@WebSocketEvent
-class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
+@Tag("virtualScreen")
+class VirtualScreenEvent(
+    val type: CustomScreenType,
+    @Deprecated("Use `type` instead") val screenName: String = type.routeName,
+    val action: Action
+) : Event(), WebSocketEvent {
 
     enum class Action {
         @SerializedName("open")
         OPEN,
+
         @SerializedName("close")
         CLOSE
     }
 
 }
 
-@Nameable("serverPinged")
-@WebSocketEvent
-class ServerPingedEvent(val server: ServerInfo) : Event()
+@Tag("serverPinged")
+class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
-@Nameable("componentsUpdate")
-@WebSocketEvent
-class ComponentsUpdate(val components: List<Component>) : Event()
+@Tag("componentsUpdate")
+class ComponentsUpdateEvent(
+    val source: Source,
+    val components: List<HudComponent>,
+    val themeId: String? = null,
+) : Event(), WebSocketEvent {
+    enum class Source {
+        @SerializedName("native")
+        NATIVE,
 
-/**
- * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.
- * This context includes a simulated player position one tick into the future.
- * Position changes will not apply within the simulated tick. Only use this for prediction purposes as
- * updating the rotation or target.
- */
-@Nameable("simulatedTick")
-class SimulatedTickEvent(val movementEvent: MovementInputEvent, val simulatedPlayer: SimulatedPlayer) : Event()
+        @SerializedName("theme")
+        THEME,
+    }
 
-@Nameable("resourceReload")
-class ResourceReloadEvent : Event()
+    override val serializer get() = accessibleInteropGson
 
-@Nameable("scaleFactorChange")
-@WebSocketEvent
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
-
-@Nameable("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(
-    val schedule: MutableList<InventoryActionChain> = mutableListOf()
-) : Event() {
-
-    fun schedule(constrains: InventoryConstraints, action: InventoryAction) =
-        schedule.add(InventoryActionChain(constrains, arrayOf(action)))
-    fun schedule(constrains: InventoryConstraints, vararg actions: InventoryAction) =
-        this.schedule.add(InventoryActionChain(constrains, actions))
-    fun schedule(constrains: InventoryConstraints, actions: List<InventoryAction>) =
-        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray()))
-
+    override val serializeAsync get() = false
 }
+
+@Tag("rotationUpdate")
+object RotationUpdateEvent : Event()
+
+@Tag("resourceReload")
+object ResourceReloadEvent : Event()
+
+@Tag("scaleFactorChange")
+class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
+
+@Tag("scheduleInventoryAction")
+class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
+
+    fun schedule(
+        constrains: InventoryConstraints,
+        action: InventoryAction,
+        priority: Priority = Priority.NORMAL
+    ) {
+        this.schedule.add(InventoryAction.Chain(constrains, listOf(action), priority))
+    }
+
+    fun schedule(
+        constrains: InventoryConstraints,
+        vararg actions: InventoryAction,
+        priority: Priority = Priority.NORMAL
+    ) {
+        this.schedule.add(InventoryAction.Chain(constrains, actions.unmodifiable(), priority))
+    }
+
+    fun schedule(
+        constrains: InventoryConstraints,
+        actions: List<InventoryAction>,
+        priority: Priority = Priority.NORMAL
+    ) {
+        this.schedule.add(InventoryAction.Chain(constrains, actions, priority))
+    }
+}
+
+@Tag("selectHotbarSlotSilently")
+class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): CancellableEvent()
+
+@Tag("browserUrlChange")
+class BrowserUrlChangeEvent(val index: Int, val url: String) : Event(), WebSocketEvent
+
+@Tag("userLoggedIn")
+object UserLoggedInEvent : Event(), WebSocketEvent
+
+@Tag("userLoggedOut")
+object UserLoggedOutEvent : Event(), WebSocketEvent

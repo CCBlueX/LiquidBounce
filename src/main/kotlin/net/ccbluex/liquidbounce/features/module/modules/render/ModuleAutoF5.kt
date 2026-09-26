@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,35 +15,34 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.option.Perspective
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
+import net.minecraft.client.CameraType
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 /**
  * Automatically goes into F5 mode when opening the inventory
  */
-object ModuleAutoF5 : Module("AutoF5", Category.RENDER) {
+object ModuleAutoF5 : ClientModule("AutoF5", ModuleCategories.RENDER) {
 
-    var previousPerspective: Perspective? = null
+    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeValueGroup(this))
+    private val checkScreenTitle = tree(CheckScreenTitleValueGroup(this))
 
-    val screenHandler = handler<ScreenEvent> {
-        val screen = it.screen
+    @Suppress("unused")
+    private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+        val screen = mc.gui.screen()
 
-        if (screen is GenericContainerScreen || screen is InventoryScreen) {
-            previousPerspective = mc.options.perspective
-            mc.options.perspective = Perspective.THIRD_PERSON_BACK
-        } else if (previousPerspective != null) {
-            mc.options.perspective = previousPerspective
+        if (screen is AbstractContainerScreen<*>
+            && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)
+        ) {
+            event.perspective = CameraType.THIRD_PERSON_BACK
         }
     }
 

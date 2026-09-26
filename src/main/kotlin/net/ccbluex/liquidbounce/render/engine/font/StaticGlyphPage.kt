@@ -1,0 +1,210 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.render.engine.font
+
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.utils.client.logger
+import java.awt.Dimension
+import java.awt.Point
+import java.awt.image.BufferedImage
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sqrt
+
+/**
+ * A statically allocated glyph page.
+ */
+class StaticGlyphPage(
+    override val texture: GlyphAtlasTexture,
+    val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
+): GlyphPage() {
+    companion {
+        fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> =
+            prepareGlyphPages(chars).map(PreparedStaticGlyphPage::materialize)
+
+        internal fun prepareGlyphPages(chars: List<FontGlyph>): List<PreparedStaticGlyphPage> {
+            val glyphPages = mutableListOf<PreparedStaticGlyphPage>()
+
+            var remainingChars = chars
+
+            do {
+                val result = prepareGlyphPageWithFittingCharacters(remainingChars)
+
+                glyphPages.add(result.first)
+
+                remainingChars = result.second
+            } while (remainingChars.isNotEmpty())
+
+            return glyphPages
+        }
+
+        /**
+         * Creates a bitmap which contains all [chars].
+         */
+        fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
+            val (preparedPage, remainingGlyphs) = prepareGlyphPageWithFittingCharacters(chars)
+            return preparedPage.materialize() to remainingGlyphs
+        }
+
+        private fun prepareGlyphPageWithFittingCharacters(
+            chars: List<FontGlyph>
+        ): Pair<PreparedStaticGlyphPage, List<FontGlyph>> {
+            val result = tryCharacterPlacementWithShrinking(chars)
+
+            val (res, remainingGlyphs) = result ?: error("Unable to create static atlas.")
+
+            if (remainingGlyphs.isNotEmpty()) {
+                logger.info("Placed part of the requested character set on the current atlas; " +
+                    "${remainingGlyphs.size} glyph requests will continue on another atlas")
+            }
+
+            return prepareGlyphPage(res) to remainingGlyphs
+        }
+
+        /**
+         * Tries to fit all characters on a page.
+         * If it does not fit, it reduces the list of characters to place by 20% and retries.
+         */
+        private fun tryCharacterPlacementWithShrinking(
+            chars: List<FontGlyph>
+        ): Pair<GlyphPlacementResult, List<FontGlyph>>? {
+            var currentLen = chars.size
+
+            while (currentLen > 1) {
+                val result = tryCharacterPlacement(chars.subList(0, currentLen))
+
+                if (result != null) {
+                    return result to chars.subList(currentLen, chars.size)
+                }
+
+                currentLen = currentLen * 4 / 5
+            }
+
+            return null
+        }
+
+        private fun prepareGlyphPage(placementPlan: GlyphPlacementResult): PreparedStaticGlyphPage {
+            val atlas = createBufferedImageWithDimensions(placementPlan.atlasDimension)
+
+            renderGlyphs(atlas, placementPlan.glyphsToRender)
+
+            val glyphs = placementPlan.glyphsToRender
+                .mapTo(ObjectOpenHashSet(placementPlan.glyphsToRender.size)) {
+                    it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
+                }
+
+            return PreparedStaticGlyphPage(atlas, glyphs)
+        }
+
+        /**
+         * Tries to come up with a placement which includes all [chars].
+         *
+         * @return null if the resulting atlas is bigger than the maximum texture size.
+         */
+        private fun tryCharacterPlacement(chars: List<FontGlyph>): GlyphPlacementResult? {
+            // Get information about the glyphs and sort them by their height
+            val glyphsToRender = chars
+                .mapNotNull { createCharacterCreationInfo(it) }
+                .sortedBy { it.glyphMetrics.bounds2D.height }
+
+            val maxTextureSize = maxTextureSize.value
+
+            // The suggested width of the atlas, determined by a simple heuristic, capped by the maximal texture size
+            val totalArea = glyphsToRender.sumOf { it.glyphMetrics.bounds2D.width * it.glyphMetrics.bounds2D.height }
+
+            val suggestedAtlasWidth = min(
+                (sqrt(totalArea) * 1.232).toInt(),
+                maxTextureSize
+            )
+
+            // Do the placement
+            val atlasDimensions = placeCharacters(glyphsToRender, suggestedAtlasWidth)
+
+            // The placement won't fit on the current atlas size.
+            if (atlasDimensions.width > maxTextureSize || atlasDimensions.height > maxTextureSize) {
+                return null
+            }
+
+            return GlyphPlacementResult(glyphsToRender, atlasDimensions)
+        }
+
+        /**
+         * Used for [createGlyphPageWithFittingCharacters]. Assigns a position to every glyph.
+         *
+         * @param atlasWidth The width of the atlas. No character will be longer that this width
+         *
+         * @return The height of the resulting texture. Is at least (1, 1)
+         */
+        private fun placeCharacters(glyphs: List<CharacterGenerationInfo>, atlasWidth: Int): Dimension {
+            var currentX = 0
+            var currentY = 0
+
+            // The highest pixel that is allocated.
+            var maxWidth = 0
+
+            // The height of the highest character in the currently placed line.
+            var currentLineMaxHeight = 0
+
+            for (glyph in glyphs) {
+                // Whitespaces don't need to be placed
+                if (glyph.glyphMetrics.isWhitespace) {
+                    continue
+                }
+
+                val allocationSize = glyph.atlasDimension
+
+                // Would the character be longer than the atlas?
+                if (currentX + allocationSize.width >= atlasWidth) {
+                    currentX = 0
+                    currentY += currentLineMaxHeight
+                    currentLineMaxHeight = 0
+                }
+
+                maxWidth = max(maxWidth, currentX + allocationSize.width)
+                currentLineMaxHeight = max(currentLineMaxHeight, allocationSize.height)
+
+                // Do the placement
+                glyph.atlasLocation = Point(currentX, currentY)
+
+                currentX += allocationSize.width
+            }
+
+            // Return the dimension and match its requirement of being at least (1, 1)
+            return Dimension(max(1, maxWidth), max(1, currentY + currentLineMaxHeight))
+        }
+    }
+
+    private class GlyphPlacementResult(val glyphsToRender: List<CharacterGenerationInfo>, val atlasDimension: Dimension)
+}
+
+internal class PreparedStaticGlyphPage(
+    private val atlas: BufferedImage,
+    private val glyphs: Set<Pair<FontId, GlyphRenderInfo>>,
+) {
+    fun materialize(): StaticGlyphPage = StaticGlyphPage(
+        GlyphAtlasTexture(
+            label = { "StaticGlyphPage ${atlas.width}x${atlas.height}" },
+            pixels = atlas.toLuminanceNativeImage(),
+            retainPixels = false,
+        ),
+        glyphs,
+    )
+}

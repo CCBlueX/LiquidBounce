@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,33 +15,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.world.effect.MobEffects
 
 /**
  * @anticheat Watchdog (NCP)
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelBHop") {
+class SpeedHypixelBHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)
@@ -50,7 +48,6 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
 
         private const val BASE_HORIZONTAL_MODIFIER = 0.0004
 
-        // todo: check if we can do more with this
         private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
         private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
 
@@ -70,72 +67,65 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
 
     private var wasFlagged = false
 
-    val repeatable = repeatable {
-        if (player.isOnGround) {
+    val repeatable = tickHandler {
+        if (player.onGround()) {
             // Strafe when on ground
-            player.strafe()
-            return@repeatable
+            player.deltaMovement = player.deltaMovement.withStrafe()
+            return@tickHandler
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                    (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
             }
 
             // Vertical acceleration, this makes sense to get a little bit more speed again
-            val yMod = if (verticalAcceleration && player.velocity.y < 0 && player.fallDistance < 1) {
+            val yMod = if (verticalAcceleration && player.deltaMovement.y < 0 && player.fallDistance < 1) {
                 VERTICAL_SPEED_AMPLIFIER
             } else {
                 0.0
             }
 
-            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
+            player.deltaMovement = player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
         }
     }
 
     val jumpEvent = handler<PlayerJumpEvent> {
         val atLeast = if (!wasFlagged) {
-            AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+            AT_LEAST + SPEED_EFFECT_CONST * (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
         } else {
             0.0
         }
 
-        player.strafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast))
     }
 
-    val moveHandler = handler<MovementInputEvent> {
-        if (!player.isOnGround || !player.moving) {
-            return@handler
-        }
+    /**
+     * Damage Boost
+     */
+    @Suppress("unused")
+    val packetHandler = sequenceHandler<PacketEvent>(priority = CRITICAL_MODIFICATION) { event ->
+        val packet = event.packet
 
-        if (ModuleSpeed.shouldDelayJump())
-            return@handler
-
-        it.jumping = true
-    }
-
-    val packetHandler = sequenceHandler<PacketEvent> {
-        val packet = it.packet
-
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
-            val velocityX = packet.velocityX / 8000.0
-            val velocityY = packet.velocityY / 8000.0
-            val velocityZ = packet.velocityZ / 8000.0
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+            val velocityX = packet.movement.x
+            val velocityZ = packet.movement.z
 
             waitTicks(1)
 
             // Fall damage velocity
-            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                player.sqrtSpeed.coerceAtLeast(
+            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
+                player.horizontalSpeed.coerceAtLeast(
                     BASH *
-                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+                        (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
+                )
             } else {
-                player.sqrtSpeed
+                player.horizontalSpeed
             }
-            player.strafe(speed = speed)
-        } else if (packet is PlayerPositionLookS2CPacket) {
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
+        } else if (packet is ClientboundPlayerPositionPacket) {
             wasFlagged = true
         }
     }

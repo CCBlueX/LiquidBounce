@@ -1,17 +1,35 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.utils.validation
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.Util
 import org.apache.commons.codec.digest.DigestUtils
 import java.io.File
-import java.io.FileInputStream
-import java.io.InputStreamReader
-
-private const val HASH_FILE_NAME = ".hash"
+import java.util.concurrent.CompletableFuture
 
 object HashValidator {
+
+    private const val HASH_FILE_NAME = ".hash"
 
     private fun containsHashFile(f: File) = f.resolve(HASH_FILE_NAME).exists()
 
@@ -20,33 +38,27 @@ object HashValidator {
             return
         }
 
-        if (!file.isDirectory) {
-            file.delete()
-            return
+        if (!file.isDirectory || !containsHashFile(file)) {
+            deleteFolder(file)
         }
 
-        expectHashOrDelete(file)
-
-        file.walk()
-            .mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
-            .forEach(HashValidator::validateHashFile)
+        file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
+            .mapTo(mutableListOf()) {
+                CompletableFuture.runAsync({ validateHashFile(it) }, Util.backgroundExecutor())
+            }.forEach {
+                it.join()
+            }
     }
 
+    @JvmStatic
     private fun validateHashFile(hashFile: File) {
-        val hashExtractor: (FileInputStream) -> Map<String, String> = {
-            Gson().fromJson(
-                InputStreamReader(it),
-                object : TypeToken<Map<String, String>>() {}.type
-            )
-        }
-
-        val delete = runCatching {
-            val hashes = FileInputStream(hashFile).use(hashExtractor)
-
+        val delete = try {
+            val hashes = hashFile.readJson<Map<String, String>>()
             shouldDelete(hashFile, hashes)
-        }.onFailure {
-            logger.warn("Invalid hash file ${hashFile.absolutePath}", it)
-        }.getOrDefault(true)
+        } catch (e: Exception) {
+            logger.warn("Invalid hash file ${hashFile.absolutePath}", e)
+            false
+        }
 
         if (delete) {
             val folderToDelete = hashFile.parentFile
@@ -57,56 +69,45 @@ object HashValidator {
     }
 
     private fun deleteFolder(folderToDelete: File) {
-        runCatching {
+        try {
             folderToDelete.deleteRecursively()
-        }.onSuccess { return }
+        } catch (e: Exception) {
+            logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...", e)
 
-        logger.warn("Failed to delete ${folderToDelete.absolutePath}. Retrying on exit...")
-
-        Runtime.getRuntime().addShutdownHook(object : Thread() {
-            override fun run() {
+            Runtime.getRuntime().addShutdownHook(Thread {
                 runCatching {
                     folderToDelete.deleteRecursively()
                 }.onFailure {
                     LiquidBounce.logger.error("Failed to delete ${folderToDelete.absolutePath}.", it)
                 }
-            }
-        })
+            })
+        }
     }
 
     private fun shouldDelete(hashFile: File, hashes: Map<String, String>): Boolean {
         try {
-            for (checkedFile in hashes.entries) {
-                val resolveSibling = hashFile.resolveSibling(checkedFile.key)
-
+            val folder = hashFile.parentFile
+            val hashAndFile = hashes.mapKeys { (k, _) -> File(folder, k) }
+            hashAndFile.keys.find {
+                !it.exists() || !it.isFile
+            }?.let {
                 // A file went missing? A file is not a file anymore? Better delete it.
-                if (!resolveSibling.exists() || !resolveSibling.isFile) {
-                    logger.warn("File ${resolveSibling.absolutePath} went missing.")
+                logger.warn("File ${it.absolutePath} went missing.")
 
-                    return true
-                }
+                return true
+            }
 
+            return hashAndFile.entries.any { (file, expected) ->
                 // Read the file, hash it and compare it to the hash in the hash file
-                val data = resolveSibling.readBytes()
+                // Use the InputStream, don't read the full file
+                val sha256Hex = file.inputStream().use(DigestUtils::sha256Hex)
 
-                val sha256Hex = DigestUtils.sha256Hex(data)
-
-                if (!sha256Hex.equals(checkedFile.value, ignoreCase = true)) {
-                    return true
-                }
+                !sha256Hex.equals(expected, ignoreCase = true)
             }
         } catch (e: Exception) {
             logger.error("Failed to validate ${hashFile.absolutePath}", e)
 
             return true
-        }
-
-        return false
-    }
-
-    private fun expectHashOrDelete(f: File) {
-        if (!f.isDirectory || !containsHashFile(f)) {
-            deleteFolder(f)
         }
     }
 

@@ -2,6 +2,7 @@
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, TextSetting,} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import {setTyping} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
 
@@ -17,13 +18,16 @@
 
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" class="value"
-           placeholder={$spaceSeperatedNames ? convertToSpacedString(setting.name) : setting.name}
-           bind:value={cSetting.value} on:input={handleChange} spellcheck="false">
+    <input type="text" class="value" spellcheck="false"
+           placeholder={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
+           bind:value={cSetting.value}
+           on:input={handleChange}
+           on:focusin={async () => await setTyping(true)}
+           on:focusout={async () => await setTyping(false)}
+    >
 </div>
 
 <style lang="scss">
-  @import "../../../colors.scss";
 
   .setting {
     padding: 7px 0px;
@@ -31,19 +35,19 @@
 
   .name {
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     margin-bottom: 5px;
   }
 
   .value {
     width: 100%;
-    background-color: rgba($clickgui-base-color, .36);
+    background-color: var(--clickgui-input-background-color);
     font-family: monospace;
     font-size: 12px;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     border: none;
-    border-bottom: solid 2px $accent-color;
+    border-bottom: solid 2px var(--clickgui-input-border-color);
     padding: 5px;
     border-radius: 3px;
     transition: ease border-color .2s;

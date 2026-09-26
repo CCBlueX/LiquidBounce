@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,51 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.input.InputTracker.timeSinceLastPress
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ProjectileItem
+import java.util.function.Predicate
 
 /**
  * FastPlace module
  *
  * Allows you to place blocks faster.
  */
-object ModuleFastPlace : Module("FastPlace", Category.WORLD) {
+object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
 
-    val cooldown by int("Cooldown", 0, 0..4, "ticks")
+    private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")
+    private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
+    private val startDelay by int("StartDelay", 0, 0..1000, "ms")
 
     @Suppress("unused")
-    val useCooldownHandler = handler<UseCooldownEvent> { event ->
-        event.cooldown = cooldown
+    private val useCooldownHandler = handler<UseCooldownEvent> { event ->
+        val mainHandItem = player.mainHandItem.item
+        val offHandItem = player.offhandItem.item
+
+        if (applyTo.any {
+                it.condition.test(mainHandItem) || it.condition.test(offHandItem)
+            } && (startDelay <= 0 || mc.options.keyUse.timeSinceLastPress >= startDelay)) {
+            val newCooldown = cooldown.random()
+            // Only override cooldown when there's an actual change to apply;
+            // avoids resetting an already-zero cooldown needlessly
+            if (newCooldown > 0 || event.cooldown > 0) {
+                event.cooldown = newCooldown
+            }
+        }
     }
 
+    @Suppress("unused")
+    private enum class ApplyTo(
+        override val tag: String,
+        val condition: Predicate<Item>
+    ): Tagged {
+        PROJECTILES("Projectiles", { item -> item is ProjectileItem }),
+        BLOCKS("Blocks", { item -> item is BlockItem })
+    }
 }

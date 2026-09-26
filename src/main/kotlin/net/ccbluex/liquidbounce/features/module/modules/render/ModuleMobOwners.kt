@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.io.HttpClient
-import net.minecraft.entity.Entity
-import net.minecraft.entity.passive.HorseEntity
-import net.minecraft.entity.passive.TameableEntity
-import net.minecraft.entity.projectile.ProjectileEntity
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
-import net.minecraft.util.Formatting
-import java.util.*
+import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.withScope
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.TamableAnimal
+import net.minecraft.world.entity.animal.equine.AbstractHorse
+import net.minecraft.world.entity.projectile.Projectile
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 
 /**
  * MobOwners module
@@ -39,61 +40,62 @@ import java.util.concurrent.Executors
  * Shows you from which player a tamable entity or projectile belongs to.
  */
 
-object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
+object ModuleMobOwners : ClientModule("MobOwners", ModuleCategories.RENDER) {
 
-    val projectiles by boolean("Projectiles", false)
+    private val projectiles by boolean("Projectiles", false)
 
-    val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
+    private val uuidNameCache = ConcurrentHashMap<UUID, FormattedCharSequence>()
 
-    var asyncRequestExecutor = Executors.newSingleThreadExecutor()
-
-    fun getOwnerInfoText(entity: Entity): OrderedText? {
-        if (!this.enabled) {
+    fun getOwnerInfoText(entity: Entity?): FormattedCharSequence? {
+        if (entity == null || !this.running) {
             return null
         }
 
-        val ownerId = when {
-            entity is TameableEntity -> entity.ownerUuid
-            entity is HorseEntity -> entity.ownerUuid
-            entity is ProjectileEntity && projectiles -> entity.ownerUuid
+        val ownerId = when (entity) {
+            is TamableAnimal -> entity.ownerReference?.uuid
+            is AbstractHorse -> entity.ownerReference?.uuid
+            is Projectile if projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null
 
-        return world.getPlayerByUuid(ownerId)
-            ?.let { OrderedText.styledForwardsVisitedString(it.nameForScoreboard, Style.EMPTY) }
+        return world.getPlayerByUUID(ownerId)
+            ?.let { FormattedCharSequence.forward(it.scoreboardName, Style.EMPTY) }
             ?: getFromMojangApi(ownerId)
     }
 
-    private fun getFromMojangApi(ownerId: UUID): OrderedText {
-        return uuidNameCache.computeIfAbsent(ownerId) {
-            this.asyncRequestExecutor.submit {
-                try {
-                    class UsernameRecord(var name: String, var changedToAt: Int?)
+    private val LOADING_TEXT = FormattedCharSequence.forward(
+        "Loading...",
+        Style.EMPTY.withItalic(true)
+    )
 
-                    val uuidAsString = it.toString().replace("-", "")
-                    val url = "https://api.mojang.com/user/profiles/$uuidAsString/names"
-                    val response = decode<Array<UsernameRecord>>(HttpClient.get(url))
+    private val FAILED_TEXT = FormattedCharSequence.forward(
+        "Failed to query Mojang API",
+        Style.EMPTY.withItalic(true).withColor(ChatFormatting.RED)
+    )
 
-                    val entityName = response.first { it.changedToAt == null }.name
+    private val CANCELED_TEXT = FormattedCharSequence.forward(
+        "Query is canceled",
+        Style.EMPTY.withItalic(true).withColor(ChatFormatting.YELLOW)
+    )
 
-                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
-                } catch (e: InterruptedException) {
+    @Suppress("SwallowedException")
+    private fun getFromMojangApi(ownerId: UUID): FormattedCharSequence {
+        return uuidNameCache.putIfAbsent(ownerId, LOADING_TEXT) ?: run {
+            // The job will still run even if the module is disabled
+            withScope {
+                uuidNameCache[ownerId] = try {
+                    val profile = HttpClient.mojangApiClient.mcServicesApi
+                        .lookupNameByUuid(ownerId.toUndashedString())
+                    FormattedCharSequence.forward(profile.name, Style.EMPTY)
+                } catch (e: CancellationException) {
+                    CANCELED_TEXT
                 } catch (e: Exception) {
-                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString(
-                        "Failed to query Mojang API",
-                        Style.EMPTY.withItalic(true).withColor(Formatting.RED)
-                    )
+                    FAILED_TEXT
                 }
             }
 
-            OrderedText.styledForwardsVisitedString("Loading", Style.EMPTY.withItalic(true))
+            LOADING_TEXT
         }
-    }
-
-    override fun disable() {
-        this.asyncRequestExecutor.shutdownNow()
-
-        this.asyncRequestExecutor = Executors.newSingleThreadExecutor()
     }
 
 }

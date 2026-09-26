@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,147 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.*
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeFirework
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeStatic
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.set
+import net.ccbluex.liquidbounce.utils.item.isGlider
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
 
 /**
  * ElytraFly module
  *
- * Makes you fly faster on Elytra.
+ * Makes elytra flying easier to control.
  */
+object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
-object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
+    private val instant by multiEnumChoice("Instant", Instant.STOP)
 
-    val instant by boolean("Instant", true)
-    val instantStop by boolean("InstantStop", false)
-    object Speed : ToggleableConfigurable(this, "Speed", true) {
-        val vertical by float("Vertical", 0.5f, 0.1f..2f)
-        val horizontal by float("Horizontal", 1f, 0.1f..2f)
+    object Speed : ToggleableValueGroup(this, "Speed", true) {
+        val vertical by float("Vertical", 0.5f, 0.0f..5f)
+        val horizontal by float("Horizontal", 1f, 0.0f..8f)
     }
+
+
+
+    private val notInFluid by boolean("NotInFluid", false)
+
+    /**
+     * Spams elytra starting so that we switch between falling and gliding all the time and so don't use any elytra
+     * durability.
+     */
+    private val durabilityExploit by boolean("DurabilityExploit", false)
 
     init {
         tree(Speed)
     }
 
-    internal val modes = choices("Mode", ElytraVanilla, arrayOf(
-        ElytraStatic,
-        ElytraVanilla
+    internal val modes = choices("Mode", ElytraFlyModeStatic, arrayOf(
+        ElytraFlyModeStatic,
+        ElytraFlyModeVanilla,
+        ElytraFlyModeBoost,
+        ElytraFlyModeFirework,
+        ElytraFlyModePitch40Infinite
     ))
+
+    private var needsToRestart = false
+
+    override fun onEnabled() {
+        needsToRestart = false
+    }
+
+    override fun onDisabled() {
+        needsToRestart = true
+    }
+
+    // checks and start logic
+    @Suppress("unused", "ComplexCondition")
+    private val tickHandler = tickHandler {
+        if (shouldNotOperate()) {
+            needsToRestart = false
+            return@tickHandler
+        }
+
+        val stop =
+            mc.options.keyShift.isDown
+            && Instant.STOP in instant
+            && player.onGround()
+            || notInFluid && player.isInLiquid
+
+        if (stop && player.isFallFlying) {
+            player.stopFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
+            needsToRestart = false
+            return@tickHandler
+        }
+
+        if (player.isFallFlying) {
+            // we're already flying, yay
+            val activeChoice = modes.activeMode
+            if (Speed.enabled) {
+                activeChoice.onTick()
+            }
+
+            val modeDoesNotPreventStopping = activeChoice !is ElytraFlyModeStatic ||
+                !activeChoice.durabilityExploitNotWhileMove || !player.moving
+            if (durabilityExploit && modeDoesNotPreventStopping) {
+                network.send(
+                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+                )
+                needsToRestart = true
+            }
+        } else if (
+            player.input.keyPresses.jump
+            && player.deltaMovement.y != 0.0
+            && Instant.START in instant
+            || needsToRestart
+        ) {
+            // If the player has an elytra and wants to fly instead
+
+            // Jump must be off due to abnormal speed boosts
+            player.input.set(jump = false)
+            player.startFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
+        }
+    }
+
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.canGlideUsing
+     */
+    fun shouldNotOperate(): Boolean {
+        if (player.vehicle != null) {
+            return true
+        }
+
+        if (player.abilities.instabuild || player.hasEffect(MobEffects.LEVITATION)) {
+            return true
+        }
+
+        // Find the chest slot
+        val chestSlot = player.getItemBySlot(EquipmentSlot.CHEST)
+
+        // If the player doesn't have an elytra in the chest slot or is in fluids
+        return !chestSlot.isGlider || chestSlot.nextDamageWillBreak()
+    }
+
+    private enum class Instant(
+        override val tag: String
+    ) : Tagged {
+        START("Start"),
+        STOP("Stop")
+    }
 }

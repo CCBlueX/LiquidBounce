@@ -1,0 +1,134 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool
+
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
+import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.network.PickFromInventoryPacket
+import net.ccbluex.liquidbounce.utils.network.sendPacket
+
+enum class SwitchMethod(override val tag: String, val shouldSync: Boolean) : Tagged, MinecraftShortcuts {
+
+    NORMAL("Normal", true) {
+
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
+            if (ModuleAutoTool.running) {
+                ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
+                return
+            }
+
+            SilentHotbar.selectSlotSilently(ModulePacketMine, slot.inventorySlot, 1)
+        }
+
+        override fun switchBack() {
+            // nothing, handled by SilentHotbar
+        }
+
+    },
+
+    @Suppress("unused")
+    SWAP("Swap", false) {
+
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
+            val selectedSlot = SilentHotbar.serversideSlot
+            val desiredSlot = slot.inventorySlot
+            if (selectedSlot == desiredSlot) {
+                return
+            }
+
+            exchanged = desiredSlot
+            InventoryAction.Click.performSwap(
+                from = Slots.Hotbar[desiredSlot],
+                to = Slots.Hotbar[selectedSlot]
+            ).performAction()
+        }
+
+        override fun switchBack() {
+            val desiredSlot = exchanged ?: return
+            val selectedSlot = SilentHotbar.serversideSlot
+            exchanged = null
+            InventoryAction.Click.performSwap(
+                from = Slots.Hotbar[desiredSlot],
+                to = Slots.Hotbar[selectedSlot]
+            ).performAction()
+        }
+
+    },
+
+    /**
+     * Only works before 1.21.3.
+     */
+    @Suppress("unused")
+    PICK("Pick", false) {
+
+        override fun switch(slot: HotbarItemSlot, mineTarget: MineTarget) {
+            if (!usesViaFabricPlus) {
+                chat(warning(ModulePacketMine.message("noVfp")))
+                ModulePacketMine.onDisabled()
+                return
+            }
+
+            exchanged = slot.hotbarIndex ?: return
+            network.sendPacket(
+                PickFromInventoryPacket(slot.hotbarIndex),
+                onFailure = {
+                    chat(
+                        markAsError(
+                            "Failed to pick an item from your inventory using ViaFabricPlus, report to developers!"
+                        )
+                    )
+                    exchanged = null
+                }
+            )
+        }
+
+        override fun switchBack() {
+            if (!usesViaFabricPlus) {
+                return
+            }
+
+            // TODO make it not mess up the hotbar
+            exchanged?.let { network.sendPacket(PickFromInventoryPacket(it)) }
+            exchanged = null
+        }
+
+    };
+
+    var exchanged: Int? = null
+
+    abstract fun switch(slot: HotbarItemSlot, mineTarget: MineTarget)
+
+    abstract fun switchBack()
+
+    fun reset() {
+        exchanged = null
+    }
+
+}

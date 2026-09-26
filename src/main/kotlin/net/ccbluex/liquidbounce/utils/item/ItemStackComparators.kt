@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,44 +18,52 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
-import net.minecraft.block.Block
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
+fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
+    Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
+
+fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =
+    Comparator.comparingInt { it.getEnchantment(key) }
+
+@JvmField
+val COMPARING_DESCRIPTION_ID: Comparator<ItemStack> = Comparator.comparing { it.item.descriptionId }
+
+private fun ItemStack.block(): Block = (this.item as BlockItem).block
+
+private fun ItemStack.defaultBlockState(): BlockState = this.block().defaultBlockState()
+
 object PreferFavourableBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
-            return@compareValueByCondition !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
+        return compareValuesBy(o1, o2) {
+            !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
         }
     }
-
 }
 
 object PreferSolidBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultState
-
-            return@compareValueByCondition defaultState.isSolid
+        return compareValuesBy(o1, o2) {
+            it.defaultBlockState().isRedstoneConductor(mc.level!!, BlockPos.ZERO)
         }
     }
-
 }
 
 object PreferFullCubeBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultState
-
-            return@compareValueByCondition defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
+        return compareValuesBy(o1, o2) {
+            it.defaultBlockState().isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
         }
     }
 
@@ -69,13 +77,13 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
  */
 object PreferWalkableBlocks : Comparator<ItemStack> {
     private val chain = ComparatorChain<Block>(
-        compareBy { it.slipperiness.toDouble() },
-        compareBy { abs(it.jumpVelocityMultiplier - 1.0) },
-        compareBy { abs(it.velocityMultiplier - 1.0) },
+        compareBy { it.friction.toDouble() },
+        compareBy { abs(it.jumpFactor - 1.0) },
+        compareBy { abs(it.speedFactor - 1.0) },
     )
 
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        return this.chain.compare((o1.item as BlockItem).block, (o2.item as BlockItem).block)
+        return this.chain.compare(o1.block(), o2.block())
     }
 
 }
@@ -84,8 +92,16 @@ object PreferWalkableBlocks : Comparator<ItemStack> {
 /**
  * We want to place average hard blocks such as stone or wood. We don't want to use obsidian or leaves first
  * (high/low hardness).
+ *
+ * @param neutralRange if enabled, there is a range of hardness values which are accepted as *good*. If disabled we
+ * prefer the closest to the *ideal* hardness value.
  */
-object PreferAverageHardBlocks : Comparator<ItemStack> {
+class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<ItemStack> {
+    companion object {
+        private val GOOD_HARDNESS_RANGE = 0.8..2.0
+        private const val IDEAL_HARDNESS = 1.7
+    }
+
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         val o1HardnessDist = hardnessDist(o1)
         val o2HardnessDist = hardnessDist(o2)
@@ -94,24 +110,22 @@ object PreferAverageHardBlocks : Comparator<ItemStack> {
     }
 
     private fun hardnessDist(stack: ItemStack): Double {
-        val defaultState = (stack.item as BlockItem).block.defaultState
-        val hardness = defaultState.getHardness(mc.world!!, BlockPos.ORIGIN)
+        val hardness = stack.defaultBlockState().getDestroySpeed(mc.level!!, BlockPos.ZERO)
 
-        return (1.5 - hardness).absoluteValue
+        // If neutral range is enabled, items with a specific range of hardness values should be considered ideal.
+        if (this.neutralRange && hardness in GOOD_HARDNESS_RANGE) {
+            return 0.0
+        }
+
+        return (IDEAL_HARDNESS - hardness).absoluteValue
     }
 
 }
 
-class PreferStackSize(val higher: Boolean) : Comparator<ItemStack> {
-    override fun compare(o1: ItemStack, o2: ItemStack): Int {
-        val o1Size = o1.count
-        val o2Size = o2.count
+object PreferStackSize {
+    @JvmField
+    val PREFER_FEWER: Comparator<ItemStack> = Comparator.comparingInt(ItemStack::getCount)
 
-        return if (higher) {
-            o1Size.compareTo(o2Size)
-        } else {
-            o2Size.compareTo(o1Size)
-        }
-    }
-
+    @JvmField
+    val PREFER_MORE: Comparator<ItemStack> = PREFER_FEWER.reversed()
 }

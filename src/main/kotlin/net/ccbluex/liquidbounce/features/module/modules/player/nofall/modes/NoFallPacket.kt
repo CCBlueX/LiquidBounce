@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,60 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 
-internal object NoFallPacket : Choice("Packet") {
-
+internal object NoFallPacket : NoFallMode("Packet") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
-    private val always by boolean("Always", false)
+    private val filter = modes("Filter", FallDistance, arrayOf(FallDistance, Always))
 
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
-    val repeatable = repeatable {
-        if (always || player.fallDistance > 2f) {
-            network.sendPacket(packetType.generatePacket().apply {
+    val repeatable = tickHandler {
+        if (filter.activeMode.isActive) {
+            network.send(packetType.generatePacket().apply {
                 onGround = true
             })
+
+            if (filter.activeMode is FallDistance && FallDistance.resetFallDistance) {
+                player.resetFallDistance()
+            }
         }
     }
 
+    private abstract class Filter(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
+            get() = filter
+
+        abstract val isActive: Boolean
+    }
+
+    private object FallDistance : Filter("FallDistance") {
+        override val isActive: Boolean
+            get() = player.fallDistance - player.deltaMovement.y > distance.activeMode.value && player.tickCount > 20
+
+        private val distance = modes("Distance", Smart, arrayOf(Smart, Constant))
+        val resetFallDistance by boolean("ResetFallDistance", true)
+
+        private abstract class DistanceMode(name: String) : Mode(name) {
+            override val parent: ModeValueGroup<*>
+                get() = distance
+
+            abstract val value: Float
+        }
+
+        private object Smart : DistanceMode("Smart") {
+            override val value: Float
+                get() = playerSafeFallDistance.toFloat()
+        }
+
+        private object Constant : DistanceMode("Constant") {
+            override val value by float("Value", 2f, 0f..5f)
+        }
+    }
+
+    private object Always : Filter("Always") {
+        override val isActive: Boolean
+            get() = true
+    }
 }

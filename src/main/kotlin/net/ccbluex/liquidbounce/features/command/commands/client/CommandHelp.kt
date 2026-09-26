@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,174 +18,80 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.tree.LiteralCommandNode
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.buildText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 
 /**
  * Help Command
  *
  * Provides a help page for displaying other commands.
  */
-object CommandHelp {
-
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("help")
-            .parameter(
-                pageParameter()
-                    .optional()
-                    .build()
-            )
-            .handler { command, args ->
-                val page = if (args.size > 1) {
-                    args[0] as Int
-                } else {
-                    1
-                }.coerceAtLeast(1)
-
-                val commands = CommandManager.sortedBy { it.name }
-
-                // Max page
-                val maxPage = ceil(commands.size / 8.0).roundToInt()
-                if (page > maxPage) {
-                    throw CommandException(command.result("pageNumberTooLarge", maxPage))
+object CommandHelp : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("help") {
+            pagedQuery(
+                header = {
+                    t("help").withColor(ChatFormatting.RED).bold(true)
+                },
+                items = {
+                    CommandManager.mainCommandNodes
+                },
+                eachRow = { _, node ->
+                    buildRow(node)
                 }
+            )
+        }
+    }
 
-                printMessage(command, page, maxPage, commands)
-            }
-            .build()
+    private fun buildRow(node: LiteralCommandNode<ClientCommandSource>): Component {
+        val commandName = node.name
+        val commandStart = CommandManager.GlobalSettings.prefix + commandName
+        return "\u2B25 ".asText()
+            .withStyle(ChatFormatting.BLUE)
+            .onHover(
+                HoverEvent.ShowText(
+                    translation("liquidbounce.command.$commandName.description")
+                )
+            )
+            .append(
+                commandStart.asText()
+                    .withStyle(ChatFormatting.GRAY)
+                    .onClick(ClickEvent.SuggestCommand(commandStart))
+            )
+            .append(buildAliasesText(node))
     }
 
     /**
-     * Prints the help page.
+     * Alias nodes are registered as redirecting literals that share the main node's subtree.
      */
-    private fun printMessage(
-        command: Command,
-        page: Int,
-        maxPage: Int,
-        commands: List<Command>
-    ) {
-        printHeader(command)
-        printPageCount(command, page, maxPage)
+    private fun buildAliasesText(mainNode: LiteralCommandNode<ClientCommandSource>): Component = buildText {
+        val aliases = CommandManager.rootCommandNodes
+            .filter { it.redirect === mainNode }
+            .map { it.name }
 
-        mc.inGameHud.chatHud.removeMessage("CommandHelp#Info")
-
-        val iterPage = 8 * page
-        val commandsToShow = commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))
-        commandsToShow.forEach { cmd ->
-            val aliasesText = buildAliasesText(cmd)
-            printCommandHelp(CommandManager.Options.prefix, cmd, aliasesText)
+        aliases.forEach { alias ->
+            this += ", ".asPlainText(ChatFormatting.DARK_GRAY)
+            this += regular(alias).withStyle(ChatFormatting.GRAY)
+                .onClick(ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + alias))
         }
-
-        printNavigation(command, page, maxPage, commands)
-    }
-
-    private fun printHeader(command: Command) {
-        chat(
-            command.result("help").styled { it.withColor(Formatting.RED).withBold(true) },
-            metadata = MessageMetadata(id = "CommandHelp#Help")
-        )
-    }
-
-    private fun printPageCount(command: Command, page: Int, maxPage: Int) {
-        chat(
-            regular(command.result("pageCount", variable("$page / $maxPage"))),
-            metadata = MessageMetadata(id = "CommandHelp#PageCount")
-        )
-    }
-
-    private fun buildAliasesText(cmd: Command): Text {
-        val aliasesText = Text.literal("")
-
-        if (cmd.aliases.isNotEmpty()) {
-            cmd.aliases.forEach { alias ->
-                aliasesText
-                    .append(variable(", "))
-                    .append(
-                        regular(alias)
-                            .styled { it.withColor(Formatting.GRAY) }
-                            .styled {
-                                it.withClickEvent(RunnableClickEvent {
-                                    mc.run { mc.setScreen(ChatScreen(CommandManager.Options.prefix + alias)) }
-                                })
-                            }
-                    )
-            }
-        }
-
-        return aliasesText
-    }
-
-    private fun printCommandHelp(prefix: String, cmd: Command, aliasesText: Text) {
-        val commandStart = prefix + cmd.name
-        chat(
-            "- ".asText()
-                .styled { it.withColor(Formatting.BLUE) }
-                .styled {
-                    it.withHoverEvent(
-                        HoverEvent(
-                            HoverEvent.Action.SHOW_TEXT,
-                            translation("liquidbounce.command.${cmd.name}.description")
-                        )
-                    )
-                }
-                .append(
-                    commandStart.asText()
-                        .styled { it.withColor(Formatting.GRAY) }
-                        .styled {
-                            it.withClickEvent(RunnableClickEvent {
-                                mc.run { mc.setScreen(ChatScreen(commandStart)) }
-                            })
-                        }
-                )
-                .append(aliasesText),
-            metadata = MessageMetadata(id = "CommandHelp#Info", remove = false)
-        )
-    }
-
-    private fun printNavigation(command: Command, page: Int, maxPage: Int, commands: List<Command>) {
-        val nextPage = (page % maxPage) + 1
-        val previousPage = if (page - 1 < 1) maxPage else page - 1
-        chat(
-            "".asText()
-                .styled { it.withColor(Formatting.GRAY) }
-                .append("<--".asText()
-                    .styled {
-                        it.withClickEvent(RunnableClickEvent {
-                            printMessage(
-                                command,
-                                previousPage,
-                                maxPage,
-                                commands
-                            )
-                        })
-                    }
-                    .styled {
-                        it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("previous")))
-                    }
-                )
-                .append("[$page]")
-                .append("-->".asText()
-                    .styled {
-                        it.withClickEvent(RunnableClickEvent { printMessage(command, nextPage, maxPage, commands) })
-                    }
-                    .styled {
-                        it.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, command.result("next")))
-                    }
-                ),
-            metadata = MessageMetadata(id = "CommandHelp#Next")
-        )
     }
 
 }

@@ -9,7 +9,7 @@
     let active = false;
 
     listen("key", (e: KeyEvent) => {
-        if (e.key.name !== key?.key.translationKey) {
+        if (e.key !== key?.key.translationKey) {
             return;
         }
 
@@ -22,12 +22,11 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
 
   .key {
     height: 50px;
-    background-color: rgba($keystrokes-base-color, .68);
-    color: $keystrokes-text-color;
+    background-color: var(--keystrokes-background-color);
+    color: var(--keystrokes-text-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -36,11 +35,11 @@
     font-weight: 500;
     transition: ease box-shadow .2s;
     position: relative;
-    box-shadow: inset 0 0 0 0 $accent-color;
+    box-shadow: inset 0 0 0 0 var(--keystrokes-active-color);
     text-align: center;
 
     &.active {
-      box-shadow: inset 0 0 0 25px $accent-color;
+      box-shadow: inset 0 0 0 25px var(--keystrokes-active-color);
     }
   }
 </style>

@@ -7,25 +7,25 @@
     const dispatch = createEventDispatcher();
 </script>
 
-<div class="switch-setting">
-    <label class="switch">
+<label class="switch-setting">
+    <span class="switch">
         <input type="checkbox" bind:checked={value} on:change={() => dispatch("change")}/>
         <span class="slider"></span>
-    </label>
+    </span>
 
-    <div class="title">{title}</div>
-</div>
+    <span class="title">{title}</span>
+</label>
+
 <style lang="scss">
-  @use "sass:color";
-  @import "../../../../colors.scss";
 
   .switch-setting {
     display: flex;
     align-items: center;
+    cursor: pointer;
   }
 
   .title {
-    color: $menu-text-color;
+    color: var(--menu-text-color);
     font-size: 20px;
     margin-left: 10px;
     font-weight: 500;
@@ -37,7 +37,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: darken($menu-text-color, 55%);
+    background-color: var(--menu-switch-track-color);
     transition: ease 0.4s;
     height: 14px;
     border-radius: 10px;
@@ -49,7 +49,7 @@
       width: 21px;
       top: -4px;
       left: -10px;
-      background-color: $menu-text-color;
+      background-color: var(--menu-switch-thumb-color);
       transition: ease 0.4s;
       border-radius: 50%;
     }
@@ -61,7 +61,6 @@
     width: 28px;
     height: 18px;
     align-items: center;
-    cursor: pointer;
     margin: 0 10px;
 
     input {
@@ -69,15 +68,12 @@
     }
 
     input:checked + .slider {
-      background-color: color.scale(
-                      desaturate($accent-color, 60%),
-              $lightness: -15%
-      );
+      background-color: var(--menu-switch-track-active-color);
     }
 
     input:checked + .slider:before {
       transform: translateX(27px);
-      background-color: $accent-color;
+      background-color: var(--menu-switch-thumb-active-color);
     }
   }
 </style>

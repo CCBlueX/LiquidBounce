@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
 fun String.isItemWithTiers() : Boolean {
@@ -14,7 +33,10 @@ fun String.autoShopItemTier() : Int {
     }
 
     // example: sword:tier:2 -> 2
-    return this.split(TIER_ID)[1].toIntOrNull() ?: 0
+    val tierPart = this.split(TIER_ID)[1]
+    val tier = tierPart.toIntOrNull()
+        ?: throw IllegalArgumentException("Invalid tier format in item '$this': expected numeric tier after '$TIER_ID'")
+    return tier
 }
 
 /**

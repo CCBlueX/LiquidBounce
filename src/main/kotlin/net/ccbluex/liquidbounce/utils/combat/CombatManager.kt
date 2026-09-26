@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,22 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.AttackEvent
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 /**
  * A rotation manager
  */
-object CombatManager : Listenable {
+object CombatManager : EventListener {
 
     // useful for something like autoSoup
     private var pauseCombat: Int = 0
@@ -37,7 +44,8 @@ object CombatManager : Listenable {
     // useful for autoblock
     private var pauseBlocking: Int = 0
 
-    private var duringCombat: Int = 0
+    const val PAUSE_COMBAT = 40 // 40 ticks = 2 seconds
+    var duringCombat: Int = 0
 
     private fun updatePauseRotation() {
         if (pauseRotation <= 0) return
@@ -79,26 +87,41 @@ object CombatManager : Listenable {
     }
 
     @Suppress("unused")
-    val attackHandler = handler<AttackEvent> {
-        // 40 ticks = 2 seconds
-        duringCombat = 40
+    val attackHandler = handler<AttackEntityEvent> { event ->
+        val entity = event.entity
+
+        if (entity is LivingEntity && entity.shouldBeAttacked()) {
+            duringCombat = PAUSE_COMBAT
+
+            if (entity is Player) {
+                EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
+            }
+        }
     }
 
-    fun shouldPauseCombat(): Boolean = this.pauseCombat > 0
-    fun shouldPauseRotation(): Boolean = this.pauseRotation > 0
-    fun shouldPauseBlocking(): Boolean = this.pauseBlocking > 0
-    fun isInCombat(): Boolean = this.duringCombat > 0
+    val shouldPauseCombat: Boolean
+        get() = pauseCombat > 0
+    val shouldPauseRotation: Boolean
+        get() = pauseRotation > 0
+    val shouldPauseBlocking: Boolean
+        get() = pauseBlocking > 0
+    @AddonApi
+    val isInCombat: Boolean
+        get() = this.duringCombat > 0 ||
+            (ModuleKillAura.running && ModuleKillAura.targetTracker.target != null)
 
+    @AddonApi
     fun pauseCombatForAtLeast(pauseTime: Int) {
-        this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)
+        pauseCombat = pauseCombat.coerceAtLeast(pauseTime)
     }
 
+    @AddonApi
     fun pauseRotationForAtLeast(pauseTime: Int) {
-        this.pauseRotation = this.pauseRotation.coerceAtLeast(pauseTime)
+        pauseRotation = pauseRotation.coerceAtLeast(pauseTime)
     }
 
     fun pauseBlockingForAtLeast(pauseTime: Int) {
-        this.pauseBlocking = this.pauseBlocking.coerceAtLeast(pauseTime)
+        pauseBlocking = pauseBlocking.coerceAtLeast(pauseTime)
     }
 
 }

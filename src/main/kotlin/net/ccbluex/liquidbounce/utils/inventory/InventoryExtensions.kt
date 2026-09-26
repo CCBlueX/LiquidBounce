@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.screen.ScreenHandler
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.inventory.AbstractContainerMenu
 
-val ScreenHandler.isPlayerInventory: Boolean
-    get() = this.syncId == 0
+val AbstractContainerMenu.isPlayerInventory: Boolean
+    get() = this.containerId == 0
 
 val isInInventoryScreen
-    get() = mc.currentScreen is InventoryScreen
+    get() = mc.gui.screen() is InventoryScreen
 
 val isInContainerScreen
-    get() = mc.currentScreen is GenericContainerScreen
+    get() = mc.gui.screen() is ContainerScreen
 
 val canCloseMainInventory
-    get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
-        && InventoryManager.isInventoryOpenServerSide
+    get() = !isInInventoryScreen && mc.player?.containerMenu?.isPlayerInventory == true
+        && InventoryManager.isInventoryOpen
 
-val GenericContainerScreen?.syncId
-    get() = this?.screenHandler?.syncId ?: 0
+val AbstractContainerScreen<*>?.syncId
+    get() = this?.menu?.containerId ?: 0

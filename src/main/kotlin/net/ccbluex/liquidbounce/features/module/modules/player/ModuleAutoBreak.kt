@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,51 +18,39 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.block.state
+import net.minecraft.client.KeyMapping
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 
 /**
  * AutoBreak module
  *
  * Automatically breaks blocks.
  */
-object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
+object ModuleAutoBreak : ClientModule("AutoBreak", ModuleCategories.PLAYER) {
 
-    private var wasBreaking = false
+    @Suppress("unused")
+    private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
+        if (event.keyBinding == mc.options.keyAttack && mc.missTime <= 0) {
+            val crosshairTarget = mc.hitResult
 
-    val repeatable = repeatable {
-        val crosshairTarget = mc.crosshairTarget
+            if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
+                val blockState = crosshairTarget.blockPos.state ?: return@handler
+                if (blockState.isAir) {
+                    return@handler
+                }
 
-        if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
-            val blockState = crosshairTarget.blockPos.getState() ?: return@repeatable
-            if (blockState.isAir) {
-                return@repeatable
+                if (!interaction.isDestroying) {
+                    // First click
+                    KeyMapping.click(mc.options.keyAttack.key)
+                }
+                event.isPressed = true
             }
-
-            // Start breaking
-            mc.options.attackKey.isPressed = true
-            wasBreaking = true
-        } else if (wasBreaking) {
-            // Stop breaking
-            wasBreaking = false
-            mc.options.attackKey.isPressed = false
-        }
-    }
-
-    override fun enable() {
-        // Just in case something goes wrong. o.O
-        wasBreaking = false
-    }
-
-    override fun disable() {
-        // Check if auto break was breaking a block
-        if (wasBreaking) {
-            mc.options.attackKey.isPressed = false
-            wasBreaking = false
         }
     }
 

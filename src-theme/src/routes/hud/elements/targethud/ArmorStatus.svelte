@@ -1,6 +1,6 @@
 <script lang="ts">
-    import {REST_BASE} from "../../../../integration/host";
     import type {ItemStack} from "../../../../integration/types";
+    import {itemTextureUrl} from "../../../../integration/rest";
 
     export let itemStack: ItemStack;
 
@@ -9,7 +9,7 @@
 </script>
 
 <div class="armor-status">
-    <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={itemStack.identifier}" alt={itemStack.identifier} />
+    <img class="icon" src={itemTextureUrl(itemStack.identifier)} alt={itemStack.identifier} />
     <div class="durability">
         {#each Array.from({ length: 10 }, (x, i) => 10 - i) as index}
             <div class="point" class:active={index <= damage}></div>
@@ -18,7 +18,6 @@
 </div>
 
 <style lang="scss">
-    @import "../../../../colors.scss";
 
     .armor-status {
         display: flex;
@@ -38,14 +37,14 @@
         row-gap: 1px;
 
         .point {
-            background-color: rgba($targethud-base-color, 0.3);
+            background-color: var(--targethud-armor-point-background-color);
             height: 3px;
             width: 5px;
             border-radius: 1px;
             transition: ease background-color 0.7s;
 
             &.active {
-                background-color: $accent-color;
+                background-color: var(--targethud-armor-point-active-color);
             }
         }
     }

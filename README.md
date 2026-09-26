@@ -3,11 +3,11 @@
     <img width="200" src="https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/liquidbounceLogo.svg">
 </p>
 
-[liquidbounce.net](https://liquidbounce.net) |
+[Website](https://liquidbounce.net) |
 [Forum](https://forums.ccbluex.net) |
-[Guilded](https://guilded.gg/CCBlueX) |
+[Discord](https://liquidbounce.net/discord) |
 [YouTube](https://youtube.com/CCBlueX) |
-[Twitter](https://twitter.com/CCBlueX)
+[X](https://x.com/CCBlueX)
 </div>
 
 LiquidBounce is a free and open-source mixin-based injection hacked client using the Fabric API for Minecraft.
@@ -42,15 +42,15 @@ nor legally binding.
 
 ## Setting up a Workspace
 
-LiquidBounce uses Gradle, to make sure that it is installed properly you can
-check [Gradle's website](https://gradle.org/install/). It also requires Node.js and Python to be installed for
+LiquidBounce uses Gradle; to make sure that it is installed properly, you can
+check [Gradle's website](https://gradle.org/install/). It also requires [Node.js](https://nodejs.org) to be installed for
 our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
 1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`.
-2. CD into the local repository.
-3. Run `./gradlew genSources`.
+2. CD into the local repository. (`cd LiquidBounce`)
+3. Run `./gradlew genSources` for better development experience (Optional).
 4. Open the folder as a Gradle project in your preferred IDE.
-5. Run the client.
+5. Run the client. (`./gradlew runClient`)
 
 ## Additional libraries
 
@@ -68,3 +68,12 @@ submit a pull request.
 ## Stats
 
 ![Alt](https://repobeats.axiom.co/api/embed/ad3a9161793c4dfe50934cd4442d25dc3ca93128.svg "Repobeats analytics image")
+
+## Imprint
+
+**CCBlueX**  
+Vahrenwalder Str. 269A
+30179 Hanover
+Germany
+
+**Owner and responsible for the content:** Marco Beyer

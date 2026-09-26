@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.SwordItem
+import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -36,27 +41,29 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * Estimates damage for different enchantments. Note that sharpness is already considered by
          * `ItemStack.attackDamage`
          */
-        val DAMAGE_ESTIMATOR =
+        private val DAMAGE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.1f),
                 // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.2f),
             )
-        val SECONDARY_VALUE_ESTIMATOR =
+        internal val SECONDARY_VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                compareBy { estimateDamage(it) },
-                compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
-                compareByCondition { it.itemStack.item is SwordItem },
-                compareBy { it.itemStack.item.enchantability },
+                Comparator.comparingDouble(::estimateDamage),
+                SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
+                compareByCondition { it.itemStack.isSword },
+                PREFER_BETTER_DURABILITY,
+                PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
@@ -83,7 +90,10 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.WEAPON, 0)
+        get() = ItemType.WEAPON.defaultCategory
+
+    override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
+        get() = listOf(ObjectIntPair.of(ItemFunction.WEAPON_LIKE, 1))
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as WeaponItemFacet)

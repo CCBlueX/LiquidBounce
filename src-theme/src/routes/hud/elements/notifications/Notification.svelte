@@ -5,7 +5,7 @@
 </script>
 
 <div class="notification">
-    <div class="icon {severity.toString().toLowerCase()}"/>
+    <div class="icon {severity.toString().toLowerCase()}"></div>
     <div class="title">{title}</div>
     <div class="message">{message}</div>
 </div>
@@ -18,7 +18,7 @@
             "a c";
     grid-template-columns: max-content 1fr;
     column-gap: 10px;
-    background: rgba(0, 0, 0, 0.68);
+    background: var(--notification-background-color);
     border-radius: 5px;
     width: 300px;
     overflow: hidden;
@@ -35,19 +35,20 @@
     grid-area: a;
     transition: background-color 0.2s;
     position: relative;
+    background-image: url("/img/hud/notification/icon-toggle.svg");
 
     &.success {
-      background-color: #4dac68;
+      background-color: var(--notification-success-color);
       background-image: url("/img/hud/notification/icon-success.svg");
     }
 
     &.error {
-      background-color: #fc4130;
+      background-color: var(--notification-error-color);
       background-image: url("/img/hud/notification/icon-error.svg");
     }
 
     &.info {
-      background-color: #4677ff;
+      background-color: var(--notification-info-color);
       background-image: url("/img/hud/notification/icon-info.svg");
     }
 
@@ -61,15 +62,13 @@
         border-radius: 5px;
         top: 50%;
         transform: translate(-50%, -50%);
-        background: white;
+        background: var(--notification-toggle-knob-color);
         transition: all 0.2s ease-out;
       }
-
-      background-image: url("/img/hud/notification/icon-toggle.svg");
     }
 
     &.enabled {
-      background-color: #4dac68;
+      background-color: var(--notification-success-color);
 
       &::after {
         left: 62%;
@@ -77,7 +76,7 @@
     }
 
     &.disabled {
-      background-color: #fc4130;
+      background-color: var(--notification-error-color);
 
       &::after {
         left: 38%;
@@ -88,13 +87,13 @@
   .title {
     grid-area: b;
     font-size: 14px;
-    color: white;
+    color: var(--notification-title-color);
     font-weight: 600;
   }
 
   .message {
     grid-area: c;
     font-size: 12px;
-    color: #cbd1e3;
+    color: var(--notification-message-color);
   }
 </style>

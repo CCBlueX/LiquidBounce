@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,48 +15,46 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.FluidBlock
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.phys.shapes.Shapes
 
-internal object LiquidWalkVanilla : Choice("Vanilla") {
+internal object LiquidWalkVanilla : Mode("Vanilla") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
-        if (event.sneaking || !isBlockAtPosition(player.box) { it is FluidBlock }) {
+        if (event.sneak || !player.box.isBlockAtPosition { it is LiquidBlock }) {
             return@handler
         }
 
         // Swims up
-        event.jumping = true
+        event.jump = true
     }
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.keyShift.isDown || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
         val block = event.state.block
 
-        if (block is FluidBlock && !isBlockAtPosition(player.box) { it is FluidBlock }) {
-            event.shape = VoxelShapes.fullCube()
+        if (block is LiquidBlock && !player.box.isBlockAtPosition { it is LiquidBlock }) {
+            event.shape = Shapes.block()
         }
     }
 

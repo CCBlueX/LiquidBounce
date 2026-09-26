@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -40,31 +41,31 @@ import kotlin.math.ceil
  *
  * Changes the speed of the entire game.
  */
-object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
+object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit = true) {
 
-    val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost))
+    val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost)).apply { tagBy(this) }
 
-    object Classic : Choice("Classic") {
+    object Classic : Mode("Classic") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private val speed by float("Speed", 2f, 0.1f..10f)
+        private val speed by float("Speed", 2f, 0.1f..20f)
 
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
         }
 
     }
 
-    object Pulse : Choice("Pulse") {
+    object Pulse : Mode("Pulse") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
+        private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..20f)
         private val normalSpeedTicks by int("NormalSpeedTicks", 20, 1..500, "ticks")
-        private val boostSpeed by float("BoostSpeed", 2f, 0.1f..10f)
+        private val boostSpeed by float("BoostSpeed", 2f, 0.1f..20f)
         private val boostSpeedTicks by int("BoostSpeedTicks", 20, 1..500, "ticks")
         private val onMove by boolean("OnMove", false)
         private var currentState: TimerState = TimerState.NORMAL_SPEED
@@ -73,9 +74,9 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
             currentState = TimerState.NORMAL_SPEED
         }
 
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             if (onMove && !ModuleTimer.player.moving) {
-                return@repeatable
+                return@tickHandler
             }
 
             val (nextState, currentSpeed, expirationTicks) = when (currentState) {
@@ -94,7 +95,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
             waitTicks(expirationTicks)
 
-            return@repeatable
+            return@tickHandler
         }
 
         enum class TimerState {
@@ -103,13 +104,13 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     }
 
-    object Boost : Choice("Boost") {
+    object Boost : Mode("Boost") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..10f)
-        private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..10f)
+        private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..20f)
+        private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..20f)
 
         private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60, "ticks")
         private var boostCapable = 0
@@ -120,10 +121,10 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         private val normalizeDuringCombat by boolean("NormalizeDuringCombat", true)
         private val allowNegative by boolean("AllowNegative", false)
 
-        val repeatable = repeatable {
-            if (normalizeDuringCombat && CombatManager.isInCombat()) {
+        val repeatable = tickHandler {
+            if (normalizeDuringCombat && CombatManager.isInCombat) {
                 Timer.requestTimerSpeed(1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
-                return@repeatable
+                return@tickHandler
             }
 
             if (boostCapable < 0) {
@@ -144,28 +145,28 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
             }
 
             if (!player.moving) {
-                if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
+                if (mc.gui.screen() is InventoryScreen || mc.gui.screen() is ContainerScreen) {
                     boostCapable = 0
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
 
                 val addition = if (accountTimerValue) (1 / slowSpeed).toInt() else 1
-                boostCapable = (boostCapable + addition).toInt().coerceAtMost(timeBoostTicks)
+                boostCapable = (boostCapable + addition).coerceAtMost(timeBoostTicks)
             } else {
                 val speedUp = boostCapable > 0 ||
-                        (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
+                        (allowNegative && (CombatManager.isInCombat || ModuleScaffold.running))
 
                 if (!speedUp) {
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 val ticks = if (boostCapable > 0) boostCapable else timeBoostTicks
                 val speedUpTicks = if (accountTimerValue) ceil(ticks / boostSpeed).toInt() else ticks
 
                 if (speedUpTicks == 0) {
-                    return@repeatable
+                    return@tickHandler
                 }
 
                 Timer.requestTimerSpeed(
@@ -185,7 +186,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     }
 
-    override fun disable() {
+    override fun onDisabled() {
         Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimer)
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,111 +15,110 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.block.Block
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Hand
+import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 
-internal object FlyEnderpearl : Choice("Enderpearl") {
+internal object FlyEnderpearl : Mode("Enderpearl") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    val speed by float("Speed", 1f, 0.5f..2f)
+    private val speed by float("Speed", 1f, 0.5f..2f)
 
-    var threwPearl = false
-    var canFly = false
+    private var threwPearl = false
+    private var shouldFly = false
 
-    val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun enable() {
         threwPearl = false
-        canFly = false
+        shouldFly = false
     }
 
-    val repeatable = repeatable {
-        val slot = findHotbarSlot(Items.ENDER_PEARL)
+    override fun disable() {
+        SilentHotbar.resetSlot(this)
+        threwPearl = false
+        shouldFly = false
+    }
 
-        if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
-            return@repeatable
+    val repeatable = tickHandler {
+        if (player.isDeadOrDying || player.isSpectator || player.abilities.instabuild) {
+            return@tickHandler
         }
 
-        if (!threwPearl && !canFly) {
-            if (slot != null) {
-                if (slot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-                }
+        if (shouldFly) { // Fly after setback/pearl land
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
 
-                if (player.pitch <= 80) {
-                    RotationManager.aimAt(
-                        Rotation(player.yaw, (80f..90f).random().toFloat()),
-                        configurable = rotations,
-                        provider = ModuleFastUse,
-                        priority = Priority.IMPORTANT_FOR_USAGE_2
-                    )
-                }
-
-                waitTicks(2)
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
-                }
-
-                if (slot != player.inventory.selectedSlot) {
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-                }
-
-                threwPearl = true
-            }
-        } else if (!threwPearl && canFly) {
-            player.strafe(speed = speed.toDouble())
-            player.velocity.y = when {
-                mc.options.jumpKey.isPressed -> speed.toDouble()
-                mc.options.sneakKey.isPressed -> -speed.toDouble()
+            player.deltaMovement.y = when {
+                mc.options.keyJump.isDown -> speed.toDouble()
+                mc.options.keyShift.isDown -> -speed.toDouble()
                 else -> 0.0
             }
-            return@repeatable
+
+            return@tickHandler
         }
+
+        if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
+
+        // If there isn't a pearl, return
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+
+        if (player.xRot <= 80) {
+            RotationManager.setRotationTarget(
+                Rotation(player.yRot, (80f..90f).random()),
+                valueGroup = rotations,
+                provider = ModuleFastUse,
+                priority = Priority.IMPORTANT_FOR_USAGE_2
+            )
+        }
+
+        waitTicks(2)
+        SilentHotbar.selectSlotSilently(this, slot, 1)
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
+        }
+
+        threwPearl = true
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket
-            && isABitAboveGround() && threwPearl) {
-            threwPearl = false
-            canFly = true
+        if (event.origin == TransferOrigin.OUTGOING && event.packet is ServerboundAcceptTeleportationPacket
+            && isABitAboveGround() && threwPearl) { // Pearl landed, accepting teleport -> should fly
+            shouldFly = true
         }
     }
 
     fun isABitAboveGround(): Boolean {
         for (y in 0..5) {
             val boundingBox = player.box
-            val detectionBox = boundingBox.withMinY(boundingBox.minY - y)
+            val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
-            return isBlockAtPosition(detectionBox) { it is Block }
+            if (detectionBox.isBlockAtPosition { it is Block }) return true
         }
         return false
     }

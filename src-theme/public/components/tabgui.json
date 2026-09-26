@@ -1,0 +1,12 @@
+{
+  "name": "TabGui",
+  "description": "Provides keyboard navigation for modules.",
+  "enabled": false,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Left",
+    "horizontalOffset": 15,
+    "verticalAlignment": "Top",
+    "verticalOffset": 90
+  }
+}

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,44 +15,41 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.fastclimb
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.LadderBlock
-import net.minecraft.block.VineBlock
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
+import net.minecraft.world.level.block.LadderBlock
+import net.minecraft.world.level.block.VineBlock
 
 /**
  * Fast Climb allows you to climb up ladder-related blocks faster
  */
-internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClimb", true) {
+internal object FastClimb : ToggleableValueGroup(ModuleTerrainSpeed, "FastClimb", true) {
 
-    private val modes = choices(this, "Mode", Motion, arrayOf(Motion, Clip))
+    private val modes = modes(this, "Mode", Motion, arrayOf(Motion, Clip))
 
     /**
      * Not server or anti-cheat-specific mode.
      * A basic motion fast climb, which should be configurable enough to bypass most anti-cheats.
      */
-    private object Motion : Choice("Motion") {
+    private object Motion : Mode("Motion") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val climbMotion by float("Motion", 0.2872F, 0.1f..0.5f)
 
         val moveHandler = handler<PlayerMoveEvent> {
-            if (player.horizontalCollision && player.isClimbing) {
+            if (player.horizontalCollision && player.onClimbable()) {
                 it.movement.y = climbMotion.toDouble()
             }
         }
@@ -62,25 +59,27 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
     /**
      * A very vanilla-like fast climb. Not working on anti-cheats.
      */
-    private object Clip : Choice("Clip") {
+    private object Clip : Mode("Clip") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         val moveHandler = handler<PlayerMoveEvent> {
 
-            if (player.isClimbing && mc.options.forwardKey.isPressed) {
-                val startPos = player.pos
+            if (player.onClimbable() && mc.options.keyUp.isDown) {
+                val startPos = player.position()
 
+                val pos = player.blockPosition().mutable()
                 for (y in 1..8) {
-                    val block = BlockPos(player.blockPos.add(0, y, 0)).getBlock()
+                    pos.y++
+                    val block = pos.getBlock()
 
                     if (block is LadderBlock || block is VineBlock) {
-                        player.updatePosition(startPos.x, startPos.y.toInt() + y.toDouble(), startPos.z)
+                        player.absSnapTo(startPos.x, startPos.y + y, startPos.z)
                     } else {
                         var x = 0.0
                         var z = 0.0
-                        when (player.horizontalFacing) {
+                        when (player.direction) {
                             Direction.NORTH -> z = -1.0
                             Direction.SOUTH -> z = 1.0
                             Direction.WEST -> x = -1.0
@@ -88,8 +87,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
                             else -> break
                         }
 
-                        player.updatePosition(startPos.x + x, startPos.y.toInt() + y.toDouble() + 1,
-                            startPos.z + z)
+                        player.absSnapTo(startPos.x + x, startPos.y + y + 1, startPos.z + z)
                         break
                     }
                 }

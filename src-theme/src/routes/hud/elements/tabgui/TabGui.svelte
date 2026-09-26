@@ -8,7 +8,7 @@
     import {listen} from "../../../../integration/ws";
     import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
-    import type {KeyEvent, ToggleModuleEvent} from "../../../../integration/events";
+    import type {KeyEvent, ModuleToggleEvent} from "../../../../integration/events";
 
     let modules: TModule[] = [];
     let groupedModules: GroupedModules = {};
@@ -32,7 +32,7 @@
             return;
         }
 
-        switch (e.key.name) {
+        switch (e.key) {
             case "key.keyboard.down":
                 if (renderedModules.length === 0) {
                     selectedCategoryIndex =
@@ -78,7 +78,7 @@
 
     listen("key", handleKeyDown);
 
-    listen("toggleModule", (e: ToggleModuleEvent) => {
+    listen("moduleToggle", (e: ModuleToggleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
@@ -110,12 +110,8 @@
 </div>
 
 <style lang="scss">
-    @import "../../../../colors.scss";
 
     .tabgui {
-        //position: fixed;
-        //top: 90px;
-        //left: 15px;
         display: flex;
     }
 
@@ -129,7 +125,7 @@
 
     .modules {
       background-clip: content-box;
-      background-color: rgba($tabgui-base-color, 0.5);
+      background-color: var(--tabgui-modules-background-color);
       margin-left: 6px;
       border-radius: 5px;
       min-width: 100px;

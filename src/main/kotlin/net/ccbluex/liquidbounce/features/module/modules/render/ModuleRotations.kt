@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
-import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations.smooth
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.Pair
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.lastRotation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.world.phys.AABB
 
 /**
  * Rotations module
@@ -39,55 +43,92 @@ import net.minecraft.util.Pair
  * Allows you to see server-sided rotations.
  */
 
-object ModuleRotations : Module("Rotations", Category.RENDER) {
+object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
 
-    val showRotationVector by boolean("ShowRotationVector", false)
-    val pov by boolean("POV", false)
+    /**
+     * Body part to modify the rotation of.
+     */
+    private val bodyPart by multiEnumChoice("BodyPart", BodyPart.entries)
 
-    var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
+    @Suppress("unused")
+    enum class BodyPart(
+        override val tag: String,
+    ) : Tagged {
+        HEAD("Head"),
+        BODY("Body");
+    }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    fun isPartAllowed(part: BodyPart) = part in bodyPart
 
-        if (!showRotationVector)
+    /**
+     * Smoothes the rotation visually only.
+     */
+    private val smooth by float("Smooth", 0.0f, 0.0f..0.3f)
+
+    private val vectorLine by color("VectorLine", Color4b.WHITE.with(a = 0)) // alpha 0 means OFF
+    private val vectorDot by color("VectorDot", Color4b(0x00, 0x80, 0xFF, 0x00))
+
+    /**
+     * The current model rotation, we could be using
+     * [RotationManager.currentRotation] and [RotationManager.previousRotation]
+     * directly but this is required for [smooth] to work.
+     */
+    var modelRotation: Rotation? = null
+        get() = if (this.running) field else null
+    var prevModelRotation: Rotation? = null
+
+    @Suppress("unused")
+    private val modelUpdater = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
+        val prev = prevModelRotation ?: player.lastRotation
+        val current = RotationManager.currentRotation
+
+        if (current == null) {
+            prevModelRotation = modelRotation
+            modelRotation = null
             return@handler
+        }
 
-        val rotation = RotationManager.currentRotation ?: return@handler
-        val camera = mc.gameRenderer.camera
+        val next = if (smooth > 0f) {
+            prev.interpolateTo(current, 1f - smooth)
+        } else {
+            current
+        }
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0)
-            .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+        prevModelRotation = modelRotation
+        modelRotation = next
+    }
 
-        renderEnvironmentForWorld(matrixStack) {
-            withColor(Color4b.WHITE) {
-                drawLineStrip(eyeVector, eyeVector + Vec3(rotation.rotationVec * 100.0))
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        val drawVectorLine = vectorLine.a > 0
+        val drawVectorDot = vectorDot.a > 0
+
+        if (drawVectorLine || drawVectorDot) {
+            val currentRotation = RotationManager.currentRotation ?: return@handler
+            val previousRotation = RotationManager.previousRotation ?: currentRotation
+
+            val interpolatedRotationVec = previousRotation.directionVector
+                .lerp(currentRotation.directionVector, event.partialTicks.toDouble())
+                .toVec3f()
+
+            val eyeVector = Vec3f.eyeVector(event.camera)
+
+            event.renderEnvironment {
+                val vector = eyeVector.fma(100f, interpolatedRotationVec)
+                if (drawVectorLine) {
+                    drawLine(eyeVector, vector, vectorLine.argb)
+                }
+
+                if (drawVectorDot) {
+                    drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
+                }
             }
         }
     }
 
-    /**
-     * Should server-side rotations be shown?
-     */
-    fun shouldDisplayRotations() = shouldSendCustomRotation() || ModuleFreeCam.shouldDisableRotations()
-
-    /**
-     * Should we even send a rotation if we use freeCam?
-     */
-    fun shouldSendCustomRotation(): Boolean {
-        val special = arrayOf(ModuleDerp).any { it.enabled }
-
-        return enabled && (RotationManager.currentRotation != null || special)
+    override fun onDisabled() {
+        this.modelRotation = null
+        this.prevModelRotation = null
+        super.onDisabled()
     }
-
-    /**
-     * Display case-represented rotations
-     */
-    fun displayRotations(): Rotation {
-        val server = RotationManager.serverRotation
-        val current = RotationManager.currentRotation
-
-        return current ?: server
-    }
-
 }

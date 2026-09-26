@@ -14,17 +14,6 @@ body:
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
         - If you want to ask a question instead of requesting a feature, please use the [forum](https://forums.ccbluex.net/) instead.
 
-  - type: dropdown
-    attributes:
-      label: LiquidBounce Branch
-      description: Which edition of LiquidBounce does this feature request apply to?
-      options:
-        - Nextgen
-        - Legacy
-        - Both
-    validations:
-      required: true
-
   - type: textarea
     attributes:
       label: Describe your feature request.

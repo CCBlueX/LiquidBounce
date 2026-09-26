@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,44 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.blaze3d.platform.InputConstants
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
-import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.ModuleArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.MultiSelectArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.TaggedArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.features.command.preset.pagedList
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
-import org.lwjgl.glfw.GLFW
-import kotlin.math.ceil
-import kotlin.math.roundToInt
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.onClickRun
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.input.availableInputKeys
+import net.ccbluex.liquidbounce.utils.input.bind
+import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.input.renderText
+import net.ccbluex.liquidbounce.utils.input.unbind
+import net.ccbluex.liquidbounce.utils.text.asText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.HoverEvent
 
 /**
  * Binds Command
@@ -37,125 +63,149 @@ import kotlin.math.roundToInt
  * Allows you to manage the bindings of modules to keys.
  * It provides subcommands to add, remove, list and clear bindings.
  */
-object CommandBinds {
-
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("binds")
-            .hub()
-            .subcommand(
-                CommandBuilder
-                    .begin("add")
-                    .parameter(
-                        moduleParameter()
-                            .required()
-                            .build()
-                    ).parameter(
-                        ParameterBuilder
-                            .begin<String>("key")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .required()
-                            .build()
+object CommandBinds : CommandRegistrar {
+    @Suppress("detekt:LongMethod")
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("binds") binds@{
+            literal("clear") {
+                exec {
+                    ModuleManager.forEach { it.bindValue.unbind() }
+                    chat(
+                        t("clear.bindsCleared"),
+                        metadata = MessageMetadata(id = "Binds#global")
                     )
-                    .handler { command, args ->
-                        val name = args[0] as String
-                        val keyName = args[1] as String
-                        val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException(command.result("moduleNotFound", name))
-
-                        val bindKey = key(keyName)
-                        if (bindKey == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException(command.result("unknownKey"))
-                        }
-
-                        module.bind = bindKey
-                        chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("remove")
-                    .parameter(
-                        moduleParameter { mod -> mod.bind != -1 }
-                            .required()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val name = args[0] as String
-                        val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException(command.result("moduleNotFound", name))
-
-                        if (module.bind == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException(command.result("moduleNotBound"))
-                        }
-
-                        module.bind = GLFW.GLFW_KEY_UNKNOWN
-                        chat(regular(command.result("bindRemoved", variable(module.name))))
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("list")
-                    .parameter(
-                        pageParameter()
-                            .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                            .optional()
-                            .build()
-                    )
-                    .handler { command, args ->
-                        val page = if (args.size > 1) {
-                            args[0] as Int
-                        } else {
-                            1
-                        }.coerceAtLeast(1)
-
-                        val bindings = ModuleManager.sortedBy { it.name }
-                            .filter { it.bind != GLFW.GLFW_KEY_UNKNOWN }
-
-                        if (bindings.isEmpty()) {
-                            throw CommandException(command.result("noBindings"))
-                        }
-
-                        // Max page
-                        val maxPage = ceil(bindings.size / 8.0).roundToInt()
-                        if (page > maxPage) {
-                            throw CommandException(command.result("pageNumberTooLarge", maxPage))
-                        }
-
-                        // Print out bindings
-                        chat(command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) })
-                        chat(regular(command.result("page", variable("$page / $maxPage"))))
-
-                        val iterPage = 8 * page
-                        for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
-                            chat(
-                                "> ".asText()
-                                    .styled { it.withColor(Formatting.GOLD) }
-                                    .append(module.name + " (")
-                                    .styled { it.withColor(Formatting.GRAY) }
-                                    .append(
-                                        keyName(module.bind).asText()
-                                            .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
+                    1
+                }
+            }
+            pagedList(
+                header = {
+                    t("list.bindings")
+                        .withColor(ChatFormatting.RED)
+                        .bold(true)
+                },
+                items = {
+                    ModuleManager.filter { !it.bind.isUnbound }
+                },
+                eachRow = { _, module ->
+                    val bind = module.bind
+                    "\u2B25 ".asText()
+                        .withStyle(ChatFormatting.BLUE)
+                        .append(
+                            markAsError("[\u2715] ")
+                                .onHover(
+                                    HoverEvent.ShowText(
+                                        "Unbind ".asText().append(variable(module.name))
                                     )
-                                    .append(")")
-                                    .styled { it.withColor(Formatting.GRAY) }
-                            )
+                                )
+                                .onClickRun {
+                                    runCatching {
+                                        this@binds.handleRemoveBind(setOf(module))
+                                    }.onFailure(CommandExecutor::handleExceptions)
+                                }
+                        )
+                        .append(highlight(module.name).copyable())
+                        .append(regular(": "))
+                        .append(bind.renderText())
+                }
+            )
+            literal("remove") {
+                argument(
+                    "modules",
+                    MultiSelectArgumentType(
+                        "Module",
+                        ModuleManager,
+                        predicate = { !it.bind.isUnbound },
+                        nameOf = ClientModule::name,
+                    ),
+                ) { modules ->
+                    exec { ctx ->
+                        handleRemoveBind(ctx.get(modules))
+                        1
+                    }
+                }
+            }
+            literal("add") {
+                argument("module", ModuleArgumentType("module")) { module ->
+                    argument("key", ClientStringArgumentType.word(), suggestions(availableInputKeys)) { key ->
+                        optional(
+                            "action",
+                            TaggedArgumentType<InputBind.BindAction>("action"),
+                            default = null,
+                        ) { action ->
+                            optional(
+                                "modifiers",
+                                MultiSelectArgumentType(
+                                    "Modifier",
+                                    InputBind.Modifier.entries,
+                                    predicate = { true },
+                                    nameOf = InputBind.Modifier::tag,
+                                ),
+                                default = null,
+                            ) { modifiers ->
+                                exec { ctx ->
+                                    addBind(
+                                        ctx.get(module),
+                                        ctx.get(key),
+                                        ctx.get(action),
+                                        ctx.get(modifiers),
+                                    )
+                                }
+                            }
                         }
                     }
-                    .build()
+                }
+            }
+        }
+    }
+
+    private fun CmdI18n.addBind(
+        module: ClientModule,
+        keyName: String,
+        action: InputBind.BindAction?,
+        modifiers: Set<InputBind.Modifier>?,
+    ): Int {
+        val resolvedAction = action ?: module.bind.action
+        val resolvedModifiers = modifiers ?: module.bind.modifiers
+
+        val bindKey = inputByName(keyName)
+        if (bindKey == InputConstants.UNKNOWN) {
+            throw CommandException(t("add.unknownKey"))
+        }
+
+        module.bindValue.bind(bindKey, resolvedAction, resolvedModifiers)
+        ModuleClickGui.sync()
+        chat(
+            regular(
+                t("add.moduleBound",
+                    variable(module.name),
+                    module.bind.renderText()
+                )
+            ),
+            metadata = MessageMetadata(id = "Binds#${module.name}")
+        )
+
+        return 1
+    }
+
+    private fun CmdI18n.handleRemoveBind(modules: Set<ClientModule>) {
+        modules.forEach { module ->
+            if (module.bind.isUnbound) {
+                throw CommandException(t("remove.moduleNotBound"))
+            }
+
+            module.bindValue.unbind()
+
+            chat(
+                regular(
+                    t("remove.bindRemoved",
+                        variable(module.name)
+                    )
+                ),
+                metadata = MessageMetadata(id = "Binds#${module.name}")
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("clear")
-                    .handler { command, _ ->
-                        ModuleManager.forEach { it.bind = GLFW.GLFW_KEY_UNKNOWN }
-                        chat(command.result("bindsCleared"))
-                    }
-                    .build()
-            )
-            .build()
+        }
+
+        ModuleClickGui.sync()
     }
 
 }

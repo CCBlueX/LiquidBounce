@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015-2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,40 +15,35 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.highjump
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * HighJump module
  *
  * Allows you to jump higher.
  */
-object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
-
-    init {
-        enableLock()
-    }
+object ModuleHighJump : ClientModule("HighJump", ModuleCategories.MOVEMENT) {
 
     private val modes = choices(
         "Mode", Vanilla, arrayOf(
             Vanilla, Vulcan
         )
-    )
+    ).apply { tagBy(this) }
     private val motion by float("Motion", 0.8f, 0.2f..10f)
 
-    private object Vanilla : Choice("Vanilla") {
+    private object Vanilla : Mode("Vanilla") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -63,9 +58,9 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
      * @testedOn eu.loyisa.cn; eu.anticheat-test.com
      * @note this still flags a bit
      */
-    private object Vulcan : Choice("Vulcan") {
+    private object Vulcan : Mode("Vulcan") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         var glide by boolean("Glide", false)
@@ -73,17 +68,19 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         var shouldGlide = false
 
         @Suppress("unused")
-        val repeatable = repeatable {
+        val repeatable = tickHandler {
             if (glide && shouldGlide) { // if the variable is true, then glide
-                if (player.isOnGround) {
+                if (player.onGround()) {
                     shouldGlide = false
-                    return@repeatable
+                    return@tickHandler
                 }
                 if (player.fallDistance > 0) {
-                    if (player.age % 2 == 0) {
-                        player.velocity.y = -0.155
+                    if (player.tickCount % 2 == 0) {
+                        player.deltaMovement.y = -0.155
                     }
-                } else player.velocity.y = -0.1
+                } else {
+                    player.deltaMovement.y = -0.1
+                }
             }
         }
 
@@ -91,7 +88,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             waitTicks(100)
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
             shouldGlide = true
         }
     }

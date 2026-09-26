@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,103 +18,105 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.fastutil.Pool
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
-import net.ccbluex.liquidbounce.render.Fonts
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.entity.Entity
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.render.entity
+import net.ccbluex.liquidbounce.utils.render.isCustom
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.renderer.entity.state.EntityRenderState
+import org.joml.Vector2f
 
 /**
  * Nametags module
  *
  * Makes player name tags more visible and adds useful information.
  */
-
-object ModuleNametags : Module("Nametags", Category.RENDER) {
-    val items by boolean("Items", true)
-
-    object Health : ToggleableConfigurable(this, "Health", true) {
-        val fromScoreboard by boolean("FromScoreboard", false)
-    }
+object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
 
     init {
-        tree(Health)
+        tree(NametagTextFormatter)
+        tree(NametagEquipment)
     }
 
-    val ping by boolean("Ping", true)
-    val distance by boolean("Distance", false)
+    internal val borderWidth by float("BorderWidth", 1f, 0f..8f)
+    internal val backgroundRadius by float("BackgroundRadius", 2f, 0f..16f)
+    internal val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
 
-    val border by boolean("Border", true)
-    val scale by float("Scale", 2F, 0.25F..4F)
+    val fontRenderer
+        get() = FontManager.FONT_RENDERER
 
-    val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+    private val nametagPool = Pool(::NametagRenderState, NametagRenderState::reset)
 
-    val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    private val nametagsToRender = mutableListOf<NametagRenderState>()
+
+    override fun onDisabled() {
+        RenderedEntities.unsubscribe(this)
+        nametagPool.recycleAll(nametagsToRender)
+        nametagsToRender.clear()
+    }
+
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(::collectAndSortNametagsToRender)
+    }
 
     @Suppress("unused")
-    val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
-        renderEnvironmentForGUI {
-            val nametagRenderer = NametagRenderer()
-
-            try {
-                drawNametags(nametagRenderer, event.tickDelta)
-            } finally {
-                nametagRenderer.commit(this)
-            }
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(priority = FIRST_PRIORITY) { event ->
+        if (nametagsToRender.isEmpty()) {
+            return@handler
         }
+
+        event.context.drawNametags(event.tickDelta)
     }
 
-    private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
-        val nametagsToRender = collectAndSortNametagsToRender(tickDelta)
+    private fun GuiGraphicsExtractor.drawNametags(tickDelta: Float) {
+        for (nametagInfo in nametagsToRender) {
+            val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
 
-        nametagsToRender.forEachIndexed { index, (pos, nametagInfo) ->
-            // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = index / nametagsToRender.size.toFloat()
-
-            nametagRenderer.drawNametag(this, nametagInfo, Vec3(pos.x, pos.y, renderZ))
+            drawNametag(nametagInfo, x, y)
         }
     }
 
     /**
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
-     * add what should be rendered ([NametagInfo]). The nametags are sorted in order of rendering.
+     * add what should be rendered ([NametagRenderState]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(tickDelta: Float): List<Pair<Vec3, NametagInfo>> {
-        val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
-
-        for (entity in ModuleESP.findRenderedEntities()) {
-            val nametagPos = entity.interpolateCurrentPosition(tickDelta)
-                .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
-
-            if (entity.distanceTo(mc.cameraEntity) > maximumDistance) continue
-
-            val screenPos = WorldToScreen.calculateScreenPos(nametagPos) ?: continue
-
-            val nametagInfo = NametagInfo.createForEntity(entity)
-
-            nametagsToRender.add(Pair(screenPos, nametagInfo))
+    private fun collectAndSortNametagsToRender() {
+        nametagPool.recycleAll(nametagsToRender)
+        nametagsToRender.clear()
+        for (entity in RenderedEntities) {
+            val distance = entity.position().cameraDistance().toFloat()
+            val scale = scale.transform(distance)
+            if (scale > 0.01f) {
+                val nametag = nametagPool.borrow()
+                nametag.update(entity, scale)
+                nametagsToRender += nametag
+            }
         }
-
-        nametagsToRender.sortByDescending { it.first.z }
-
-        return nametagsToRender
+        nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
-    /**
-     * Should [ModuleNametags] render nametags above this [entity]?
-     */
-    @JvmStatic
-    fun shouldRenderNametag(entity: Entity) = entity.shouldBeShown()
+    private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> = Comparator.comparingDouble { nametag ->
+        nametag.entity?.position()?.cameraDistanceSq() ?: Double.POSITIVE_INFINITY
+    }
+
+    fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
+        return !running || !(state.entity ?: return true).shouldBeShown() || state.isCustom
+    }
+
 }

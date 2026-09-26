@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,29 +18,33 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.thirdparty.OPENAI_BASE_URL
+import net.ccbluex.liquidbounce.api.thirdparty.OpenAiApi
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.openai.OPENAI_BASE_URL
-import net.ccbluex.liquidbounce.utils.openai.OpenAi
-import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Automatically solves chat game riddles.
  */
-object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
+object ModuleAutoChatGame : ClientModule("AutoChatGame", ModuleCategories.MISC) {
+
+    init {
+        doNotIncludeAlways()
+    }
 
     private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)
-        .doNotInclude() // Keeps API key private
     private val openAiKey by text("OpenAiKey", "")
-        .doNotInclude() // Keeps API key private
-    private val model by text("Model", "gpt-4")
+    private val model by text("Model", "gpt-4o-mini") // GPT 4O Mini should be enough for this
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
         "ms")
     private val cooldownMinutes by int("Cooldown", 2, 0..60, "minutes")
@@ -48,6 +52,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
     private val triggerSentence by text("TriggerSentence", "Chat Game")
     private val includeTrigger by boolean("IncludeTrigger", true)
     private val serverName by text("ServerName", "Minecraft")
+    private val answerTemplate by text("AnswerTemplate", "%s")
 
     /**
      * Default prompt for the AI.
@@ -74,10 +79,10 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
         Amethyst geodes spawn at Y level and below in 1.18 -> 30,
         Minecraft's moon has the same amount of lunar phases as the moon in real life -> true
         ]
-        """.trimIndent().replace("\n", " ")
+        """.trimIndent().replace('\n', ' ')
     private val prompt by text("Prompt", defaultPrompt)
 
-    override fun enable() {
+    override fun onEnabled() {
         if (openAiKey.isBlank()) {
             chat("§cPlease enter your OpenAI key in the module settings.")
             enabled = false
@@ -100,9 +105,8 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
 
         // Auto GG
         if (message.contains("Show some love by typing")) {
-            delay(delayResponse.random().toLong())
-
-            network.sendChatMessage("gg")
+            delay(delayResponse.random().milliseconds)
+            network.sendChat("gg")
             return@sequenceHandler
         }
 
@@ -129,57 +133,57 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
         }
     }
 
-    val repeatable = repeatable {
-        // Has the trigger word been said and has the buffer time elapsed?
-        if (triggerWordChronometer.hasElapsed(bufferTime.toLong())) {
-            // Is the buffer empty? - If it is we already answered the question.
-            if (chatBuffer.isEmpty()) {
-                return@repeatable
-            }
+    @Suppress("unused")
+    val tickHandler = tickHandler {
+        tickUntil {
+            // Has the trigger word been said and has the buffer time elapsed?
+            triggerWordChronometer.hasElapsed(bufferTime.toLong())
+                // Is the buffer empty? - If it is we already answered the question.
+                && chatBuffer.isNotEmpty()
+        }
 
-            // Handle questions
-            var question = chatBuffer.joinToString(" ")
-            chatBuffer.clear()
-            cooldownChronometer.reset()
-
-            // Remove double spaces
-            while (question.contains("  ")) {
-                question = question.replace("  ", " ")
-            }
-
+        // Handle questions
+        val question = chatBuffer
+            .joinToString(" ")
+            // Remove duplicated spaces
+            .replace(Regex("\\s+"), " ")
             // Remove leading and trailing whitespace
-            question = question.trim()
+            .trim()
 
-            chat("§aUnderstood question: $question")
+        chatBuffer.clear()
+        cooldownChronometer.reset()
 
-            // Create new AI instance with OpenAI key
-            val ai = OpenAi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+        chat("§aUnderstood question: $question")
 
-            thread {
-                runCatching {
-                    val startAsk = System.currentTimeMillis()
-                    var answer = ai.requestNewAnswer(question)
+        val startAsk = System.currentTimeMillis()
 
+        val answer = withContext(Dispatchers.IO) {
+            runCatching {
+                // Create new AI instance with OpenAI key
+                val ai = OpenAiApi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+
+                ai.requestNewAnswer(question).trimEnd {
                     // Remove dot on the end of answer
-                    if (answer.last() == '.') {
-                        answer = answer.substring(0, answer.length - 1)
-                    }
-
-                    chat("§aAnswer: $answer, took ${System.currentTimeMillis() - startAsk}ms.")
-
-                    val delay = delayResponse.random()
-                    chat("§aAnswering question: $answer, waiting for ${delay}ms.")
-
-                    Thread.sleep(delay.toLong())
-
-                    // Send answer
-                    network.sendChatMessage(answer)
-                }.onFailure {
-                    logger.error("GPT AutoChatGame failed", it)
-                    chat("§cFailed to answer question: ${it.message}")
+                    it == '.'
                 }
-            }
+            }.onFailure {
+                logger.error("GPT AutoChatGame failed", it)
+                chat("§cFailed to answer question: ${it.message}")
+            }.getOrNull()
+        } ?: return@tickHandler
+
+        chat("§aAnswer: $answer, took ${System.currentTimeMillis() - startAsk}ms.")
+
+        val delay = delayResponse.random()
+        chat("§aAnswering question: $answer, waiting for ${delay}ms.")
+        delay(delay.milliseconds)
+
+        // Send answer
+        val formattedAnswer = answerTemplate.format(answer)
+        if (formattedAnswer.startsWith('/')) {
+            network.sendCommand(formattedAnswer.substring(1))
+        } else {
+            network.sendChat(formattedAnswer)
         }
     }
-
 }

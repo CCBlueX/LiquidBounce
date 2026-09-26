@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,64 +18,83 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bow.NoSlowBow
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bundle.NoSlowBundle
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.consume.NoSlowConsume
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.fluid.NoSlowFluid
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.honey.NoSlowHoney
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slowness.NoSlowSlowness
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking.NoSlowSneaking
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand.NoSlowSoulsand
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.minecraft.util.UseAction
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
+import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.phys.Vec2
 
 /**
  * NoSlow module
  *
  * Cancels slowness effects caused by blocks and using items.
  */
-object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
+object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
 
     init {
         tree(NoSlowBlock)
         tree(NoSlowConsume)
         tree(NoSlowBow)
+        tree(NoSlowBundle)
+        tree(NoSlowSneaking)
         tree(NoSlowSoulsand)
         tree(NoSlowSlime)
         tree(NoSlowHoney)
         tree(NoSlowPowderSnow)
         tree(NoSlowFluid)
+        tree(NoSlowSlowness)
     }
 
     @Suppress("unused")
-    val multiplierHandler = handler<PlayerUseMultiplier> { event ->
-        val action = player.activeItem.useAction ?: return@handler
-        val (forward, strafe) = multiplier(action)
+    private val multiplierHandler = handler<PlayerUseMultiplier> { event ->
+        val mul = multiplier(event.forward, event.sideways)
 
-        event.forward = forward
-        event.sideways = strafe
+        event.forward = mul.x
+        event.sideways = mul.y
     }
 
-    private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> Pair(0.2f, 0.2f)
-        UseAction.EAT, UseAction.DRINK -> if (NoSlowConsume.enabled) Pair(
-            NoSlowConsume.forwardMultiplier, NoSlowConsume.sidewaysMultiplier
-        ) else Pair(0.2f, 0.2f)
-
-        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH ->
-            if (NoSlowBlock.enabled && (!NoSlowBlock.onlySlowOnServerSide || !InteractionTracker.isBlocking)) Pair(
-                NoSlowBlock.forwardMultiplier,
-                NoSlowBlock.sidewaysMultiplier
+    private fun multiplier(forward: Float, sideways: Float): Vec2 {
+        val itemStack = player.useItem
+        if (player.isBlockingServerside) {
+            return NoSlowBlock.getMultiplier(
+                forward,
+                sideways
             )
-        else Pair(0.2f, 0.2f)
+        }
 
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> if (NoSlowBow.enabled) Pair(
-            NoSlowBow.forwardMultiplier, NoSlowBow.sidewaysMultiplier
-        ) else Pair(0.2f, 0.2f)
+        return when (itemStack.useAnimation) {
+            ItemUseAnimation.NONE -> Vec2(forward, sideways)
+            ItemUseAnimation.EAT, ItemUseAnimation.DRINK -> NoSlowConsume.getMultiplier(forward, sideways)
+            ItemUseAnimation.BLOCK, ItemUseAnimation.SPYGLASS,
+            ItemUseAnimation.TOOT_HORN, ItemUseAnimation.BRUSH -> NoSlowBlock.getMultiplier(
+                forward,
+                sideways
+            )
 
+            ItemUseAnimation.BOW, ItemUseAnimation.TRIDENT,
+            ItemUseAnimation.CROSSBOW -> NoSlowBow.getMultiplier(
+                forward,
+                sideways
+            )
+
+            ItemUseAnimation.BUNDLE -> NoSlowBundle.getMultiplier(forward, sideways)
+
+            // Vanilla spear doesn't make player slow down
+            ItemUseAnimation.SPEAR -> Vec2.ONE
+        }
     }
+
 }

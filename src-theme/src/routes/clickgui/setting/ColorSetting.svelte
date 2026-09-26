@@ -5,6 +5,7 @@
     import type {ColorSetting, ModuleSetting,} from "../../../integration/types.js";
     import Pickr from "@simonwep/pickr";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import {intToRgba, rgbaToHex, rgbaToInt} from "../../../integration/util";
 
     export let setting: ModuleSetting;
 
@@ -17,32 +18,6 @@
     let hidden = true;
 
     let hex = rgbaToHex(intToRgba(cSetting.value));
-
-    function rgbaToInt(rgba: number[]): number {
-        const [r, g, b, a] = rgba;
-        return (
-            ((a & 0xff) << 24) |
-            ((r & 0xff) << 16) |
-            ((g & 0xff) << 8) |
-            ((b & 0xff) << 0)
-        );
-    }
-
-    function rgbaToHex(rgba: number[]): string {
-        const [r, g, b, a] = rgba;
-        const alpha = a === 255 ? "" : a.toString(16).padStart(2, "0");
-        return `#${r.toString(16).padStart(2, "0")}${g
-            .toString(16)
-            .padStart(2, "0")}${b.toString(16).padStart(2, "0")}${alpha}`;
-    }
-
-    function intToRgba(value: number): number[] {
-        const red = (value >> 16) & 0xff;
-        const green = (value >> 8) & 0xff;
-        const blue = (value >> 0) & 0xff;
-        const alpha = (value >> 24) & 0xff;
-        return [red, green, blue, alpha];
-    }
 
     onMount(() => {
         pickr = Pickr.create({
@@ -95,19 +70,21 @@
             bind:value={hex}
             on:input={handleValueInput}
         />
+        <!-- svelte-ignore a11y_consider_explicit_label -->
         <button
             class="color-pickr-button"
             on:click={() => (hidden = !hidden)}
             style="background-color: {hex};"
         ></button>
     </div>
+    <!-- svelte-ignore a11y_consider_explicit_label -->
     <div class="color-picker" class:hidden>
+        <!-- svelte-ignore element_invalid_self_closing_tag -->
         <button bind:this={colorPicker} />
     </div>
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
 
     .setting {
         display: grid;
@@ -120,7 +97,7 @@
     .name {
         grid-area: a;
         font-weight: 500;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         font-size: 12px;
     }
 
@@ -131,7 +108,7 @@
 
     .value {
         font-weight: 500;
-        color: $clickgui-text-color;
+        color: var(--clickgui-text-color);
         text-align: right;
         font-size: 12px;
         cursor: text;

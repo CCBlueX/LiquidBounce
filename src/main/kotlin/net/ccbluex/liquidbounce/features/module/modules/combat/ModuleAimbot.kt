@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,162 +18,208 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.*
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
+import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.InterpolationAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.LinearAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
+import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
+import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.MathHelper
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.Entity
 
 /**
  * Aimbot module
  *
  * Automatically faces selected entities around you.
  */
-object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAssist", "AutoAim")) {
+object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
-    private val range by float("Range", 4.2f, 1f..8f)
+    private val range = float("Range", 4.2f, 1f..8f)
 
-    private object OnClick : ToggleableConfigurable(this, "OnClick", false) {
-        val delayUntilStop by int("DelayUntilStop", 3, 0..10, "ticks")
-    }
+    val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
 
     init {
-        tree(OnClick)
+        tree(TargetRenderer(this, targetTracker))
+    }
+    private val pointTracker = tree(PointTracker(this))
+    private val lazyRotation by boolean("LazyRotation", false)
+
+    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+
+    private val requirementsMet
+        get() = mc.gui.screen() == null && requires.all { it.asBoolean }
+
+    private var angleSmooth = modes(this, "AngleSmooth") {
+        arrayOf(
+            InterpolationAngleSmooth(it),
+            SigmoidAngleSmooth(it),
+            LinearAngleSmooth(it)
+        )
     }
 
-    private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
-    private val targetRenderer = tree(WorldTargetRenderer(this))
-    private val pointTracker = tree(PointTracker())
-    private val clickTimer = Chronometer()
+    private val axis by multiEnumChoice<Axis>("Axis", Axis.HORIZONTAL, Axis.VERTICAL)
 
-    private var angleSmooth = choices<AngleSmoothMode>(this, "AngleSmooth", { it.choices[0] }, {
-        arrayOf(
-            LinearAngleSmoothMode(it),
-            BezierAngleSmoothMode(it),
-            SigmoidAngleSmoothMode(it),
-            ConditionalLinearAngleSmoothMode(it)
-        )
-    })
-
-    private var attention = tree(Attention(this))
+    private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
     private var targetRotation: Rotation? = null
     private var playerRotation: Rotation? = null
 
-    val tickHandler = handler<SimulatedTickEvent> { _ ->
-        this.targetTracker.validateLock { target -> target.boxedDistanceTo(player) <= range }
-        this.playerRotation = player.rotation
+    @Suppress("unused", "ComplexCondition")
+    private val tickHandler = handler<RotationUpdateEvent> { _ ->
+        playerRotation = player.rotation
 
-        if (mc.options.attackKey.isPressed) {
-            clickTimer.reset()
-        }
-
-        if (OnClick.enabled && (clickTimer.hasElapsed(OnClick.delayUntilStop * 50L)
-                || !mc.options.attackKey.isPressed && ModuleAutoClicker.enabled)) {
-            this.targetRotation = null
+        if (!requirementsMet) {
+            targetTracker.reset()
+            targetRotation = null
             return@handler
         }
 
-        this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
-            angleSmooth.activeChoice.limitAngleChange(
-                attention.rotationFactor,
+        targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
+            angleSmooth.activeMode.process(
+                RotationTarget(
+                    rotation = rotation.rotation,
+                    entity = target,
+                    processors = listOf(angleSmooth.activeMode),
+                    ticksUntilReset = 1,
+                    resetThreshold = 1f,
+                    considerInventory = true,
+                    movementCorrection = MovementCorrection.CHANGE_LOOK
+                ),
                 player.rotation,
-                rotation.rotation,
-                rotation.vec,
-                target
+                rotation.rotation
             )
         }
+
+        // Update Auto Weapon
+        ModuleAutoWeapon.onTarget(targetTracker.target)
     }
 
-    override fun disable() {
-        targetTracker.cleanup()
-        super.disable()
+    override fun onDisabled() {
+        targetTracker.reset()
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val partialTicks = event.partialTicks
-        val target = targetTracker.lockedOnTarget ?: return@handler
+        val target = targetTracker.target ?: return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
+        if (IgnoreOpened.SCREEN !in ignores && mc.gui.screen() != null) {
+            return@handler
         }
 
-        val currentRotation = playerRotation ?: return@handler
-
-        val timerSpeed = Timer.timerSpeed
-        targetRotation?.let { rotation ->
-            val interpolatedRotation = Rotation(
-                currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
-                currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
-            )
-
-            player.applyRotation(interpolatedRotation)
+        if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
+                mc.gui.screen() is AbstractContainerScreen<*>)) {
+            return@handler
         }
+
+        lookAt(partialTicks)
     }
 
-    val mouseMovement = handler<MouseRotationEvent> { event ->
-        val f = event.cursorDeltaY.toFloat() * 0.15f
-        val g = event.cursorDeltaX.toFloat() * 0.15f
+    @Suppress("unused")
+    private val mouseMovement = handler<MouseRotationEvent> { event ->
+        fun updateRotation(rotation: Rotation): Rotation =
+            RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
         playerRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            playerRotation = updateRotation(rotation)
         }
 
         targetRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            targetRotation = updateRotation(rotation)
         }
     }
 
-    private fun findNextTargetRotation(): Pair<Entity, VecRotation>? {
-        for (target in targetTracker.enemies()) {
-            if (target.boxedDistanceTo(player) > range) {
-                continue
+    /**
+     * Looks at the target rotation, with interpolation based on the timer speed and partial ticks to make it smooth.
+     */
+    private fun lookAt(partialTicks: Float) {
+        val playerRotation = playerRotation ?: return
+        val targetRotation = targetRotation ?: return
+        val timerSpeed = Timer.timerSpeed
+        val interpolatedRotation = playerRotation.interpolateTo(targetRotation, timerSpeed * partialTicks)
+
+        player.setRotation(
+            Rotation(
+                yaw = if (Axis.HORIZONTAL in axis) interpolatedRotation.yaw else playerRotation.yaw,
+                pitch = if (Axis.VERTICAL in axis) interpolatedRotation.pitch else playerRotation.pitch,
+            )
+        )
+    }
+
+    private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
+        for (entity in targetTracker.targets()) {
+            if (lazyRotation) {
+                val currentRotation = player.rotation
+                val currentHit = isLookingAtEntity(
+                    fromEntity = player,
+                    toEntity = entity,
+                    rotation = currentRotation,
+                    range = targetTracker.maxRange.toDouble(),
+                    throughWallsRange = 0.0,
+                )
+
+                if (currentHit != null) {
+                    targetTracker.target = entity
+                    return entity to RotationWithVector(currentRotation, currentHit.location)
+                }
             }
 
-            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                PointTracker.AimSituation.FOR_NOW)
+            val eyes = player.eyePosition
+            val point = pointTracker.findPoint(eyes, entity)
 
-            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
+            debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
+            debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
 
-            val spot = raytraceBox(
-                fromPoint,
-                cutOffBox,
-                range = range.toDouble(),
-                wallsRange = 0.0,
-                rotationPreference = rotationPreference
-            ) ?: raytraceBox(
-                fromPoint, box, range = range.toDouble(),
+            val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
+            val rotation = raytraceBox(
+                eyes = eyes,
+                box = point.box,
+                range = targetTracker.maxRange.toDouble(),
                 wallsRange = 0.0,
                 rotationPreference = rotationPreference
             ) ?: continue
 
-            if (targetTracker.lockedOnTarget != target) {
-                attention.onNewTarget()
-            }
-            targetTracker.lock(target)
-            return target to spot
+            targetTracker.target = entity
+            return entity to rotation
         }
 
+        targetTracker.reset()
         return null
     }
 
+    private enum class IgnoreOpened(
+        override val tag: String
+    ) : Tagged {
+        SCREEN("Screen"),
+        CONTAINER("Container")
+    }
+
+    private enum class Axis(override val tag: String) : Tagged {
+        HORIZONTAL("Horizontal"),
+        VERTICAL("Vertical")
+    }
 }

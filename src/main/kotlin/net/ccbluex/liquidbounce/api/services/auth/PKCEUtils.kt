@@ -1,0 +1,36 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.api.services.auth
+
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
+import java.security.MessageDigest
+import java.util.Base64
+import java.util.UUID
+
+object PKCEUtils {
+    data class PKCEPair(val codeVerifier: String, val codeChallenge: String)
+
+    fun generatePKCE(): PKCEPair {
+        val codeVerifier = UUID.randomUUID().toUndashedString()
+        val codeChallenge = Base64.getEncoder().encodeToString(
+            MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
+        ).replace("=", "").replace('+', '-').replace('/', '_')
+        return PKCEPair(codeVerifier, codeChallenge)
+    }
+}

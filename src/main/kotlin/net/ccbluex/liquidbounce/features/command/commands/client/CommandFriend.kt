@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,179 +18,178 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.FriendArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.onlinePlayers
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.italic
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
 
-private const val MSG_NO_FRIENDS = "noFriends"
-private const val MSG_SUCCESS = "success"
+private const val MESSAGE_ID = "CFriend#info"
 
 /**
  * Friend Command
  *
  * Provides subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
  */
-object CommandFriend {
+object CommandFriend : CommandRegistrar {
+    @Suppress("detekt:LongMethod", "detekt:ThrowsCount")
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("friend") {
+            literal("clear") {
+                exec {
+                    if (FriendManager.friends.isEmpty()) {
+                        throw CommandException(t("clear.noFriends"))
+                    } else {
+                        FriendManager.clear()
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("friend")
-            .hub()
-            .subcommand(createAddSubcommand())
-            .subcommand(createRemoveSubcommand())
-            .subcommand(createAliasSubcommand())
-            .subcommand(createListSubcommand())
-            .subcommand(createClearSubcommand())
-            .build()
-    }
-
-    private fun createClearSubcommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { command, _ ->
-                if (FriendManager.friends.isEmpty()) {
-                    throw CommandException(command.result(MSG_NO_FRIENDS))
-                } else {
-                    FriendManager.friends.clear()
-
-                    chat(regular(command.result(MSG_SUCCESS)))
+                        chat(
+                            regular(t("clear.success")),
+                            metadata = MessageMetadata(id = MESSAGE_ID)
+                        )
+                    }
+                    1
                 }
             }
-            .build()
-    }
+            literal("list") {
+                exec {
+                    if (FriendManager.friends.isEmpty()) {
+                        chat(
+                            t("list.noFriends"),
+                            metadata = MessageMetadata(id = MESSAGE_ID)
+                        )
+                    } else {
+                        mc.gui.hud.chat.removeMessage(MESSAGE_ID)
+                        val data = MessageMetadata(id = MESSAGE_ID, remove = false)
 
-    private fun createListSubcommand(): Command {
-        return CommandBuilder
-            .begin("list")
-            .handler { command, _ ->
-                if (FriendManager.friends.isEmpty()) {
-                    chat(command.result(MSG_NO_FRIENDS))
-                } else {
-                    FriendManager.friends.forEach {
-                        if (it.alias != null) {
+                        FriendManager.friends.forEachIndexed { index, friend ->
+                            val alias = friend.alias ?: friend.getDefaultName(index)
+
+                            val friendTextWithEvent = variable(friend.name)
+                                .bypassNameProtection()
+                                .copyable(copyContent = friend.name)
+                                .italic(true)
+
+                            val removeCommand = CommandManager.GlobalSettings.prefix + "friend remove ${friend.name}"
+                            val removeText = regular("Remove ${friend.name}")
+
+                            val removeButton = regular("[X]")
+                                .withStyle(ChatFormatting.RED)
+                                .bold(true)
+                                .onHover(HoverEvent.ShowText(removeText))
+                                .onClick(ClickEvent.SuggestCommand(removeCommand))
+
                             chat(
                                 regular("- "),
-                                variable(it.name),
+                                friendTextWithEvent,
                                 regular(" ("),
-                                variable(it.alias!!),
-                                regular(")")
+                                variable(alias),
+                                regular(") "),
+                                removeButton,
+                                metadata = data
                             )
-                        } else {
-                            chat(regular("- "), variable(it.name))
+                        }
+                    }
+                    1
+                }
+            }
+            literal("alias") {
+                argument("name", FriendArgumentType) { name ->
+                    argument("alias", ClientStringArgumentType.word()) { alias ->
+                        exec { ctx ->
+                            val friend = ctx.get(name)
+
+                            friend.alias = ctx.get(alias)
+
+                            chat(
+                                regular(
+                                    t("alias.success",
+                                        variable(friend.name),
+                                        variable(ctx.get(alias))
+                                    )
+                                ),
+                                metadata = MessageMetadata(id = MESSAGE_ID)
+                            )
+                            1
                         }
                     }
                 }
             }
-            .build()
-    }
+            literal("remove") {
+                argument("name", FriendArgumentType) { name ->
+                    exec { ctx ->
+                        val friend = ctx.get(name)
 
-    private fun createAliasSubcommand(): Command {
-        return CommandBuilder
-            .begin("alias")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .autocompletedWith { begin ->
-                        FriendManager.friends.filter {
-                            it.name.startsWith(
-                                begin,
-                                true
-                            )
-                        }.map { it.name }
-                    }
-                    .required()
-                    .build()
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("alias")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            )
-            .handler { command, args ->
-                val name = args[0] as String
-                val friend = FriendManager.friends.firstOrNull { it.name == name }
-
-                if (friend != null) {
-                    friend.alias = args[1] as String
-
-                    chat(regular(command.result(MSG_SUCCESS, variable(name), variable(args[1] as String))))
-                } else {
-                    throw CommandException(command.result("notFriends", variable(name)))
-                }
-            }
-            .build()
-    }
-
-    private fun createRemoveSubcommand(): Command {
-        return CommandBuilder
-            .begin("remove")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            )
-            .handler { command, args ->
-                val friend = FriendManager.Friend(args[0] as String, null)
-
-                if (FriendManager.friends.remove(friend)) {
-                    chat(regular(command.result(MSG_SUCCESS, variable(friend.name))))
-                } else {
-                    throw CommandException(command.result("notFriends", variable(friend.name)))
-                }
-            }
-            .build()
-    }
-
-    private fun createAddSubcommand(): Command {
-        return CommandBuilder
-            .begin("add")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .useMinecraftAutoCompletion()
-                    .required()
-                    .build()
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("alias")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .optional()
-                    .build()
-            )
-            .handler { command, args ->
-                val friend = FriendManager.Friend(args[0] as String, args.getOrNull(1) as String?)
-
-                if (FriendManager.friends.add(friend)) {
-                    if (friend.alias == null) {
-                        chat(regular(command.result(MSG_SUCCESS, variable(friend.name))))
-                    } else {
+                        FriendManager.remove(friend.name)
                         chat(
                             regular(
-                                command.result(
-                                    "successAlias",
-                                    variable(friend.name),
-                                    variable(friend.alias!!)
+                                t("remove.success",
+                                    variable(friend.name)
                                 )
-                            )
+                            ),
+                            metadata = MessageMetadata(id = MESSAGE_ID)
                         )
+                        1
                     }
-                } else {
-                    throw CommandException(command.result("alreadyFriends", variable(friend.name)))
                 }
-
             }
-            .build()
+            literal("add") {
+                argument("name", ClientStringArgumentType.word(), onlinePlayers()) { name ->
+                    optional("alias", ClientStringArgumentType.word(), default = null) { alias ->
+                        exec { ctx ->
+                            addFriend(ctx.get(name), ctx.get(alias))
+                            1
+                        }
+                    }
+                }
+            }
+        }
     }
+
+    private fun CmdI18n.addFriend(name: String, alias: String?) {
+        val friend = FriendManager.Friend(name, alias)
+
+        if (FriendManager.add(friend)) {
+            if (friend.alias == null) {
+                chat(
+                    regular(t("add.success", variable(friend.name))),
+                    metadata = MessageMetadata(id = MESSAGE_ID)
+                )
+            } else {
+                chat(
+                    regular(
+                        t("add.successAlias",
+                            variable(friend.name),
+                            variable(friend.alias!!)
+                        )
+                    ),
+                    metadata = MessageMetadata(id = MESSAGE_ID)
+                )
+            }
+        } else {
+            throw CommandException(t("add.alreadyFriends", variable(friend.name)))
+        }
+    }
+
 }

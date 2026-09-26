@@ -1,0 +1,21 @@
+{
+  "name": "Notifications",
+  "description": "Displays client notifications.",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 15,
+    "verticalAlignment": "Bottom",
+    "verticalOffset": 5
+  },
+  "values": [
+    {
+      "type": "MULTI_CHOOSE",
+      "name": "Severities",
+      "value": ["INFO", "SUCCESS", "ERROR", "ENABLED", "DISABLED"],
+      "choices": ["INFO", "SUCCESS", "ERROR", "ENABLED", "DISABLED"],
+      "canBeNone": false
+    }
+  ]
+}

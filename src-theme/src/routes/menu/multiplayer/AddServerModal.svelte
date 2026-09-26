@@ -15,6 +15,7 @@
     let resourcePackPolicy = "Prompt";
 
     $: disabled = validateInput(address, name);
+    $: address = address.trim();
 
     function validateInput(address: string, name: string): boolean {
         return address.length === 0 || name.length === 0;

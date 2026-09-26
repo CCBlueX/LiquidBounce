@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,37 +18,37 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.util.math.Vec3d
 
-object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
+object ScaffoldStabilizeMovementFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "StabilizeMovement",
     true) {
     private const val MAX_CENTER_DEVIATION: Double = 0.2
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
     @Suppress("unused")
     val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        // Prevents the stabilization from giving the player a boost before jumping that cannot be corrected mid-air.
-        if (event.jumping && player.isOnGround) {
+        // Prevents the stabilization from giving the player a boost before jumping that cannot be corrected midair.
+        if (event.jump && player.onGround()) {
             return@handler
         }
 
         val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
         val currentInput = event.directionalInput
 
-        val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
+        val nearestPointOnLine = optimalLine.getNearestPointTo(player.position())
 
-        val vecToLine = nearestPointOnLine.subtract(player.pos)
-        val horizontalVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
-        val isRunningTowardsLine = vecToLine.dotProduct(horizontalVelocity) > 0.0
+        val vecToLine = nearestPointOnLine.subtract(player.position())
+        val horizontalVelocity = player.deltaMovement.copy(y = 0.0)
+        val isRunningTowardsLine = vecToLine.dot(horizontalVelocity) > 0.0
 
         val maxDeviation =
             if (isRunningTowardsLine) {
@@ -57,23 +57,23 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
                 MAX_CENTER_DEVIATION
             }
 
-        if (nearestPointOnLine.squaredDistanceTo(player.pos) < maxDeviation * maxDeviation) {
+        if (nearestPointOnLine.distanceToSqr(player.position()) < maxDeviation * maxDeviation) {
             return@handler
         }
 
-        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.pos), player.yaw)
+        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.position()), player.yRot)
 
         val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
 
         val frontalAxisBlocked = currentInput.forwards || currentInput.backwards
-        val sagitalAxisBlocked = currentInput.right || currentInput.left
+        val sagittalAxisBlocked = currentInput.right || currentInput.left
 
         event.directionalInput =
             DirectionalInput(
                 if (frontalAxisBlocked) currentInput.forwards else newDirectionalInput.forwards,
                 if (frontalAxisBlocked) currentInput.backwards else newDirectionalInput.backwards,
-                if (sagitalAxisBlocked) currentInput.left else newDirectionalInput.left,
-                if (sagitalAxisBlocked) currentInput.right else newDirectionalInput.right,
+                if (sagittalAxisBlocked) currentInput.left else newDirectionalInput.left,
+                if (sagittalAxisBlocked) currentInput.right else newDirectionalInput.right,
             )
     }
 }

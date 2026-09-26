@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
-import java.util.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.entity.player.Player
+import java.util.UUID
 
 /**
  * Intave anti-cheat, Heavy bot type, their best bot type.
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object IntaveHeavyAntiBotMode : AntiBotMode("IntaveHeavy") {
 
-    private val suspectList = hashMapOf<UUID, Pair<Int, Long>>()
-    private val botList = ArrayList<UUID>()
+    private val suspectList = hashMapOf<UUID, SuspectInfo>()
+    private val botList = objectHashSetOf<UUID>()
 
     /**
      * ## Ping logic:
@@ -46,20 +43,20 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      * come back from a duel, you will keep your ping.
      *
      * As for Matrix and Intave, they defy this logic. Intave though decides instead to fix it by sending
-     * [PlayerListS2CPacket.Action.UPDATE_LATENCY] to make up for the ping issue. Unfortunately, that leads to
-     * even more problems.
+     * [ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY] to make up for the ping issue.
+     * Unfortunately, that leads to even more problems.
      */
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
-            is PlayerListS2CPacket -> handleListPacket(packet)
-            is PlayerRemoveS2CPacket -> handlePlayerRemove(packet)
+            is ClientboundPlayerInfoUpdatePacket -> handleListPacket(packet)
+            is ClientboundPlayerInfoRemovePacket -> handlePlayerRemove(packet)
         }
     }
 
-    private fun handleListPacket(packet: PlayerListS2CPacket) {
-        when (packet.actions.first()) {
-            PlayerListS2CPacket.Action.ADD_PLAYER -> handlePlayerListAddPlayers(packet.entries)
-            PlayerListS2CPacket.Action.UPDATE_LATENCY -> handlePlayerListUpdateLatency(packet.entries)
+    private fun handleListPacket(packet: ClientboundPlayerInfoUpdatePacket) {
+        when (packet.actions().first()) {
+            ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER -> handlePlayerListAddPlayers(packet.entries())
+            ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY -> handlePlayerListUpdateLatency(packet.entries())
             else -> {}
         }
     }
@@ -67,15 +64,10 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
     /**
      * When a player is removed from the game, this function forgets about them.
      */
-    private fun handlePlayerRemove(packet: PlayerRemoveS2CPacket) {
+    private fun handlePlayerRemove(packet: ClientboundPlayerInfoRemovePacket) {
         for (id in packet.profileIds) {
-            if (suspectList.containsKey(id)) {
-                suspectList.remove(id)
-            }
-
-            if (botList.contains(id)) {
-                botList.remove(id)
-            }
+            suspectList.remove(id)
+            botList.remove(id)
         }
     }
 
@@ -86,7 +78,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      */
     private const val INTAVE_BUG_FIX: Boolean = false
 
-    private fun handlePlayerListUpdateLatency(entries: MutableList<PlayerListS2CPacket.Entry>) {
+    private fun handlePlayerListUpdateLatency(entries: MutableList<ClientboundPlayerInfoUpdatePacket.Entry>) {
         if (INTAVE_BUG_FIX && entries.size > 1) {
             return
         }
@@ -96,10 +88,10 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
                 continue
             }
 
-            val pingSinceJoin = suspectList.getValue(entry.profileId).first
+            val pingSinceJoin = suspectList.getValue(entry.profileId).latency
 
             val deltaPing = pingSinceJoin - entry.latency
-            val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profileId).second
+            val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profileId).timestamp
 
             // Intave instantly sends this packet, but some servers might lag, so it might be delayed,
             // that's why the difference limit is 15 MS. The less the value, the lower the chances of producing
@@ -112,7 +104,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
         }
     }
 
-    private fun handlePlayerListAddPlayers(entries: MutableList<PlayerListS2CPacket.Entry>) {
+    private fun handlePlayerListAddPlayers(entries: MutableList<ClientboundPlayerInfoUpdatePacket.Entry>) {
         for (entry in entries) {
             val profile = entry.profile ?: continue
 
@@ -120,11 +112,11 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
                 continue
             }
 
-            suspectList[entry.profileId] = entry.latency to System.currentTimeMillis()
+            suspectList[entry.profileId] = SuspectInfo(entry.latency, System.currentTimeMillis())
         }
     }
 
-    override fun isBot(entity: PlayerEntity): Boolean {
+    override fun isBot(entity: Player): Boolean {
         return botList.contains(entity.uuid)
     }
 
@@ -132,5 +124,8 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
         suspectList.clear()
         botList.clear()
     }
+
+    @JvmRecord
+    private data class SuspectInfo(val latency: Int, val timestamp: Long)
 
 }

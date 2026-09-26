@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,54 +20,114 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
-import net.minecraft.item.ShieldItem
-import net.minecraft.item.SwordItem
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
+import net.ccbluex.liquidbounce.utils.entity.isInHand
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ShieldItem
 
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
-object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
+object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
+    val fakeOnPressing by boolean("FakeOnPressing", false).doNotIncludeAlways()
+    val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
+    val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
+    private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
-    val onPacket = sequenceHandler<PacketEvent> {
+    private val LivingEntity.shouldApplySwordBlockAnimation: Boolean
+        get() {
+            if (this === player &&
+                (KillAuraAutoBlock.blockVisual || fakeOnPressing && mc.options.keyUse.isPressedOnAny)) {
+                return true
+            }
+
+            val usingItem = this.usingItemOrNull ?: return false
+            return isInHand(usingItem, InteractionHand.OFF_HAND) && usingItem.item is ShieldItem ||
+                isInHand(usingItem, InteractionHand.MAIN_HAND) && !isBlocksAttacksExisting
+        }
+
+    /**
+     * Determines if the sword block animation should be applied no matter if we
+     * are actually blocking.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun shouldAnimateSwordBlock(entity: LivingEntity, mainHandItem: ItemStack = entity.mainHandItem): Boolean {
+        return running
+            && entity.shouldApplySwordBlockAnimation
+            && mainHandItem.isSword
+    }
+
+    @JvmOverloads
+    fun shouldHideOffhand(
+        offHandStack: ItemStack = player.offhandItem,
+        mainHandStack: ItemStack = player.mainHandItem
+    ): Boolean {
+        if (!running && !KillAuraAutoBlock.blockVisual) {
+            return false
+        }
+
+        if (offHandStack.item !is ShieldItem) {
+            return false
+        }
+
+        return mainHandStack.isSword || alwaysHideShield
+    }
+
+    @Suppress("UNUSED")
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
         if (onlyVisual) {
             return@sequenceHandler
         }
 
-        // If we are already on the old combat protocol, we don't need to do anything
-        if (isOlderThanOrEqual1_8) {
+        // If we are already on the old combat protocol or anything blockable protocol,
+        // we don't need to do anything
+        if (isBlocksAttacksExisting) {
             return@sequenceHandler
         }
 
-        val packet = it.packet
+        val packet = event.packet
 
-        if (packet is PlayerInteractItemC2SPacket) {
+        if (packet is ServerboundUseItemPacket) {
             val hand = packet.hand
-            val itemInHand = player.getStackInHand(hand) // or activeItem
+            val itemInHand = player.getItemInHand(hand) // or activeItem
 
-            if (hand == Hand.MAIN_HAND && itemInHand.item is SwordItem) {
-                val offHandItem = player.getStackInHand(Hand.OFF_HAND)
-                if (offHandItem?.item !is ShieldItem) {
+            if (hand == InteractionHand.MAIN_HAND && itemInHand.isSword) {
+                val offHandItem = player.offhandItem
+                if (offHandItem.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
                     waitTicks(1)
-                    interaction.sendSequencedPacket(world) { sequence ->
+                    interaction.startPrediction(world) { sequence ->
                         // This time we use a new sequence
-                        PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence,
-                            player.yaw, player.pitch)
+                        ServerboundUseItemPacket(
+                            InteractionHand.OFF_HAND, sequence,
+                            player.yRot, player.xRot
+                        )
                     }
                 } else {
-                    it.cancelEvent()
+                    event.cancelEvent()
                     // We use the old sequence
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence,
-                        player.yaw, player.pitch))
+                    network.send(
+                        ServerboundUseItemPacket(
+                            InteractionHand.OFF_HAND, packet.sequence,
+                            player.yRot, player.xRot
+                        )
+                    )
                 }
             }
         }
     }
+
 }

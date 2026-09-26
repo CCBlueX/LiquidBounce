@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,60 +18,94 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
-import net.minecraft.entity.EntityPose
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlocksMC
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallCancel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallForceJump
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallGrim2371
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixelPacket
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallMLG
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallPacket
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallPacketJump
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallRettungsplatform
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpartan524Flag
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofGround
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofLanding
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallMount
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVerus
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcan
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcanTP
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.Items
+import java.util.function.BooleanSupplier
 
 /**
  * NoFall module
  *
  * Protects you from taking fall damage.
  */
-
-object ModuleNoFall : Module("NoFall", Category.PLAYER) {
-
+object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
     internal val modes = choices(
         "Mode", NoFallSpoofGround, arrayOf(
             NoFallSpoofGround,
+            NoFallSpoofLanding,
             NoFallNoGround,
             NoFallPacket,
+            NoFallPacketJump,
             NoFallMLG,
+            NoFallMount,
             NoFallRettungsplatform,
             NoFallSpartan524Flag,
             NoFallVulcan,
             NoFallVulcanTP,
             NoFallVerus,
             NoFallForceJump,
+            NoFallCancel,
             NoFallBlink,
-            NoFallHoplite,
+            NoFallHypixelPacket,
             NoFallHypixel,
+            NoFallBlocksMC,
+            NoFallGrim2371
         )
-    )
+    ).apply(::tagBy)
 
-    private var duringFallFlying by boolean("DuringFallFlying", false)
+    private val notConditions by multiEnumChoice<NotCondition>("Not")
 
-    override fun handleEvents(): Boolean {
-        if (!super.handleEvents()) {
-            return false
+    override val running: Boolean
+        get() = when {
+            !super.running -> false
+
+            // In creative mode, we don't need to reduce fall damage
+            player.isCreative || player.isSpectator -> false
+
+            // Check if we are invulnerable or flying
+            player.abilities.invulnerable || player.abilities.flying -> false
+
+            // Test other conditions
+            else -> notConditions.none { it.asBoolean }
         }
 
-        // In creative mode, we don't need to reduce fall damage
-        if (player.isCreative || player.isSpectator) {
-            return false
-        }
+    @Suppress("unused")
+    private enum class NotCondition(
+        override val tag: String,
+    ) : Tagged, BooleanSupplier {
+        /**
+         * With Elytra - we don't want to reduce fall damage.
+         */
+        WHILE_GLIDING("WhileGliding") {
+            override fun getAsBoolean() = player.isFallFlying && player.hasPose(Pose.FALL_FLYING)
+        },
 
-        // Check if we are invulnerable or flying
-        if (player.abilities.invulnerable || player.abilities.flying) {
-            return false
-        }
-
-        // With Elytra - we don't want to reduce fall damage.
-        if (!duringFallFlying && player.isFallFlying && player.isInPose(EntityPose.FALL_FLYING)) {
-            return false
-        }
-
-        return true
+        /**
+         * Check if we are holding a mace
+         */
+        WITH_MACE("WithMace") {
+            override fun getAsBoolean() = player.mainHandItem.item == Items.MACE
+        };
     }
-
 }

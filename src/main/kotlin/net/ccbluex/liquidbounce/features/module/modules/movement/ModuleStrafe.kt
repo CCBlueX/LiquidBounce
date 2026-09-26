@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,38 +20,39 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.entity.MovementType
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.world.entity.MoverType
 
 /**
  * Strafe module
  *
  * Strafe into different directions while you're midair.
  */
-object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
+object ModuleStrafe : ClientModule("Strafe", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
+    private var strengthInAir by float("StrengthInAir", 1f, 0.0f..1f)
+    private var strengthOnGround by float("StrengthOnGround", 1f, 0.0f..1f)
 
-    private var strength by float("Strength", 1f, 0.1f..1f)
     private var strictMovement by boolean("StrictMovement", false)
-    private var notDuringAir by boolean("NotDuringAir", false)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && (player.isOnGround || !notDuringAir)) {
-            val movement = event.movement
+        if (event.type == MoverType.SELF) {
+            val strength = if (player.onGround()) strengthOnGround else strengthInAir
+
+            // Don't strafe if strength is 0
+            if (strength == 0f) {
+                return@handler
+            }
 
             if (player.moving) {
-                movement.strafe(player.directionYaw, strength = strength.toDouble())
+                event.movement = event.movement.withStrafe(strength = strength.toDouble())
             } else if (strictMovement) {
-                movement.x = 0.0
-                movement.z = 0.0
+                event.movement = event.movement.copy(x = 0.0, z = 0.0)
             }
         }
     }

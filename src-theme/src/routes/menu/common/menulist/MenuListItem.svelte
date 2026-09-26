@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import Loader from "../Loader.svelte";
+    import RippleLoader from "../RippleLoader.svelte";
 
     export let image: string;
     export let imageText: string | null = null;
@@ -19,7 +19,7 @@
     <div class="image">
         {#if !previewImageLoaded}
             <div class="loader">
-                <Loader />
+                <RippleLoader />
             </div>
         {/if}
         <img class="preview" on:load={() => previewImageLoaded = true} src={image} alt="preview">
@@ -46,7 +46,6 @@
 </div>
 
 <style lang="scss">
-  @import "../../../../colors.scss";
 
   .menu-list-item {
     display: grid;
@@ -54,7 +53,7 @@
         "a b c"
         "a d c";
     grid-template-columns: max-content 1fr max-content;
-    background-color: rgba($menu-base-color, .36);
+    background-color: var(--menu-list-item-background-color);
     padding: 15px 25px;
     column-gap: 15px;
     border-radius: 5px;
@@ -63,10 +62,10 @@
     cursor: grab;
 
     &:hover {
-      background-color: $accent-color;
+      background-color: var(--menu-list-item-hover-background-color);
 
       .subtitle {
-        color: $menu-text-color;
+        color: var(--menu-list-item-hover-subtitle-color);
       }
 
       .buttons .active {
@@ -104,7 +103,7 @@
       bottom: 0;
       right: 0;
       display: none;
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       font-size: 12px;
       padding: 3px 10px;
       border-radius: 20px;
@@ -123,7 +122,7 @@
 
     .text {
       font-size: 20px;
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       font-weight: 600;
     }
   }
@@ -131,7 +130,7 @@
   .subtitle {
     grid-area: d;
     font-size: 18px;
-    color: $menu-text-dimmed-color;
+    color: var(--menu-text-dimmed-color);
     transition: ease color .2s;
     align-self: flex-start;
   }

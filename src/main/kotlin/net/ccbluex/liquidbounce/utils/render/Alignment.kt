@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,84 +18,88 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
+@AddonApi
 class Alignment(
     horizontalAlignment: ScreenAxisX,
     horizontalOffset: Int,
     verticalAlignment: ScreenAxisY,
     verticalOffset: Int,
-) : Configurable("Alignment") {
+) : ValueGroup("Alignment") {
 
-    val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
-    val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
-    val verticalAlignment by enumChoice("Vertical", verticalAlignment)
-    val verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
+    companion {
+        fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
+    }
 
+    var horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
+        private set
+
+    var horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000, suffix = "px")
+        private set
+
+    val guiScaledHorizontalOffset get() = horizontalOffset.toFloat() / mc.window.guiScale
+
+    var verticalAlignment by enumChoice("Vertical", verticalAlignment)
+        private set
+
+    var verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000, suffix = "px")
+        private set
+
+    val guiScaledVerticalOffset get() = verticalOffset.toFloat() / mc.window.guiScale
+
+    fun setFrom(other: Alignment) {
+        this.horizontalAlignment = other.horizontalAlignment
+        this.horizontalOffset = other.horizontalOffset
+        this.verticalAlignment = other.verticalAlignment
+        this.verticalOffset = other.verticalOffset
+    }
+
+    /**
+     * @return Scaled bounds follows [com.mojang.blaze3d.platform.Window.guiScale]
+     */
     fun getBounds(
         width: Float,
         height: Float,
     ): BoundingBox2f {
-        val screenWidth = mc.window.scaledWidth.toFloat()
-        val screenHeight = mc.window.scaledHeight.toFloat()
+        val screenWidth = mc.window.guiScaledWidth.toFloat()
+        val screenHeight = mc.window.guiScaledHeight.toFloat()
 
-        val x =
-            when (horizontalAlignment) {
-                ScreenAxisX.LEFT -> horizontalOffset.toFloat()
-                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
-                ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
-                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
-            }
+        val guiScaledHorizontalOffset = this.guiScaledHorizontalOffset
+        val x = when (horizontalAlignment) {
+            ScreenAxisX.LEFT -> guiScaledHorizontalOffset
+            ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + guiScaledHorizontalOffset
+            ScreenAxisX.RIGHT -> screenWidth - width - guiScaledHorizontalOffset
+            ScreenAxisX.CENTER -> screenWidth / 2f + guiScaledHorizontalOffset
+        }
 
-        val y =
-            when (verticalAlignment) {
-                ScreenAxisY.TOP -> verticalOffset.toFloat()
-                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
-                ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-                ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
-            }
+        val guiScaledVerticalOffset = this.guiScaledVerticalOffset
+        val y = when (verticalAlignment) {
+            ScreenAxisY.TOP -> guiScaledVerticalOffset
+            ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + guiScaledVerticalOffset
+            ScreenAxisY.BOTTOM -> screenHeight - height - guiScaledVerticalOffset
+            ScreenAxisY.CENTER -> screenHeight / 2f + guiScaledVerticalOffset
+        }
 
         return BoundingBox2f(x, y, x + width, y + height)
     }
 
-    enum class ScreenAxisX(override val choiceName: String) : NamedChoice {
+    enum class ScreenAxisX(override val tag: String) : Tagged {
         LEFT("Left"),
         CENTER("Center"),
         CENTER_TRANSLATED("CenterTranslated"),
         RIGHT("Right"),
     }
 
-    enum class ScreenAxisY(override val choiceName: String) : NamedChoice {
+    enum class ScreenAxisY(override val tag: String) : Tagged {
         TOP("Top"),
         CENTER("Center"),
         CENTER_TRANSLATED("CenterTranslated"),
         BOTTOM("Bottom"),
     }
-
-    /**
-     * Converts the alignement configurable to style (CSS)
-     */
-    fun toStyle() = """
-        position: fixed;
-        ${when (horizontalAlignment) {
-            ScreenAxisX.LEFT -> "left: ${horizontalOffset}px"
-            ScreenAxisX.RIGHT -> "right: ${horizontalOffset}px"
-            ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalOffset}px)"
-            ScreenAxisX.CENTER_TRANSLATED -> "left: calc(50% + ${horizontalOffset}px)"
-    }};
-        ${when (verticalAlignment) {
-            ScreenAxisY.TOP -> "top: ${verticalOffset}px"
-            ScreenAxisY.BOTTOM -> "bottom: ${verticalOffset}px"
-            ScreenAxisY.CENTER -> "top: calc(50% + ${verticalOffset}px)"
-            ScreenAxisY.CENTER_TRANSLATED -> "top: calc(50% + ${verticalOffset}px)"
-    }};
-        transform: translate(
-            ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "-50%" else "0"},
-            ${if (verticalAlignment == ScreenAxisY.CENTER_TRANSLATED) "-50%" else "0"}
-        );
-    """.trimIndent().replace("\n", "")
 
 }

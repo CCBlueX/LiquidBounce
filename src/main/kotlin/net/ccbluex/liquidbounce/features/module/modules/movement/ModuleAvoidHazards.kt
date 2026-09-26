@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,45 +18,247 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.AvoidHazardInputPlanner
+import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.*
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
+import net.ccbluex.liquidbounce.utils.math.intersects
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.world.anyMatched
+import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.BasePressurePlateBlock
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.CactusBlock
+import net.minecraft.world.level.block.FireBlock
+import net.minecraft.world.level.block.MagmaBlock
+import net.minecraft.world.level.block.PowderSnowBlock
+import net.minecraft.world.level.block.SweetBerryBushBlock
+import net.minecraft.world.level.block.WebBlock
+import net.minecraft.world.level.block.WitherRoseBlock
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * Anti hazards module
  *
  * Prevents you walking into blocks that might be malicious for you.
  */
-object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
+object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
+    private var mode by enumChoice("Mode", AvoidMode.SHAPE)
+    private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
-    private val cacti by boolean("Cacti", true)
-    private val berryBush by boolean("BerryBush", true)
-    private val pressurePlates by boolean("PressurePlates", true)
-    private val fire by boolean("Fire", true)
-    private val magmaBlocks by boolean("MagmaBlocks", true)
+    // Solid webs keep NoWeb from ever handling one; steering around them does not
+    val cobWebs get() = mode == AvoidMode.SHAPE && Avoid.COBWEB in avoid
 
-    // Conflicts with AvoidHazards
-    val cobWebs by boolean("Cobwebs", true)
+    private const val MOVEMENT_PREDICTION_TICKS = 2
+    private const val CACTUS_BLOCK_MARGIN = 0.001
+
+    @Suppress("MagicNumber")
+    private val UNSAFE_BLOCK_CAP = Block.box(
+        0.0,
+        0.0,
+        0.0,
+        16.0,
+        4.0,
+        16.0
+    )
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (cacti && event.state.block is CactusBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (berryBush && event.state.block is SweetBerryBushBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (fire && event.state.block is FireBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (cobWebs && event.state.block is CobwebBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
-            event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock) {
-            event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
+        if (mode != AvoidMode.SHAPE) {
+            return@handler
+        }
+
+        avoid.find { it.test(event.state.block, event.state.fluidState, event.pos) }?.let {
+            event.shape = if (it.fullCube) Shapes.block() else UNSAFE_BLOCK_CAP
         }
     }
 
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
+        if (mode != AvoidMode.INPUT || !event.directionalInput.isMoving) {
+            return@handler
+        }
+
+        val activeAvoidModes = avoid
+        if (activeAvoidModes.isEmpty()) {
+            return@handler
+        }
+
+        event.directionalInput = AvoidHazardInputPlanner.chooseSafeInput(event.directionalInput) { candidate ->
+            isSafeInput(
+                directionalInput = candidate,
+                jump = event.jump,
+                sneak = event.sneak,
+                avoidModes = activeAvoidModes
+            )
+        }
+    }
+
+    private fun isSafeInput(
+        directionalInput: DirectionalInput,
+        jump: Boolean,
+        sneak: Boolean,
+        avoidModes: Collection<Avoid>
+    ): Boolean {
+        val level = mc.level ?: return true
+
+        val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
+            directionalInput = directionalInput,
+            jump = jump,
+            sprinting = player.isSprinting,
+            sneaking = sneak
+        )
+
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
+        simulatedPlayer.pos = player.position()
+        var previousBoundingBox = simulatedPlayer.boundingBox
+        // Do not reject every candidate while already on a ladder. We only block
+        // transitions that newly enter climb-state.
+        val startedOnLadder = Avoid.LADDERS in avoidModes && wouldEnterLadderClimbState(simulatedPlayer)
+
+        repeat(MOVEMENT_PREDICTION_TICKS) {
+            simulatedPlayer.tick()
+            val currentBoundingBox = simulatedPlayer.boundingBox
+            val sweptBoundingBox = previousBoundingBox.minmax(currentBoundingBox)
+            val enteredLadder =
+                Avoid.LADDERS in avoidModes &&
+                    !startedOnLadder &&
+                    wouldEnterLadderClimbState(simulatedPlayer)
+
+            if (enteredLadder ||
+                isHazardCollision(currentBoundingBox, level, avoidModes) ||
+                isHazardCollision(sweptBoundingBox, level, avoidModes)
+            ) {
+                return false
+            }
+
+            previousBoundingBox = currentBoundingBox
+        }
+
+        return true
+    }
+
+    /**
+     * Predict whether the simulated player would be in a vanilla climb-state
+     * after this movement step.
+     *
+     * @see net.minecraft.world.entity.LivingEntity.onClimbable
+     * @see isLadderClimbState
+     */
+    private fun wouldEnterLadderClimbState(simulatedPlayer: SimulatedPlayer): Boolean {
+        return isLadderClimbStateAt(simulatedPlayer.pos.toBlockPos())
+    }
+
+    private fun isLadderClimbStateAt(pos: BlockPos): Boolean {
+        val currentState = pos.state ?: return false
+        return isLadderClimbState(currentState, pos.below().state)
+    }
+
+    @Suppress("CognitiveComplexMethod")
+    private fun isHazardCollision(
+        boundingBox: AABB,
+        level: ClientLevel,
+        avoidModes: Collection<Avoid>
+    ): Boolean {
+        if (Avoid.MAGMA in avoidModes && boundingBox.isOnMagmaBlock()) {
+            return true
+        }
+
+        return world.findBlocksIntersects(boundingBox).anyMatched { pos, blockState ->
+            val fluidState = blockState.fluidState
+            val block = blockState.block
+
+            avoidModes.any { avoidMode ->
+                when (avoidMode) {
+                    Avoid.MAGMA -> false
+                    Avoid.LAVA -> {
+                        if (!avoidMode.test(block, fluidState, pos)) {
+                            false
+                        } else {
+                            val fluidShape = fluidState.getShape(level, pos)
+                            !fluidShape.isEmpty && fluidShape.move(pos) intersects boundingBox
+                        }
+                    }
+                    Avoid.CACTI -> {
+                        if (!avoidMode.test(block, fluidState, pos)) {
+                            false
+                        } else {
+                            // Cactus damage is handled by entity-inside logic, which can trigger on block-cell
+                            // contact. Use the whole block cell for conservative prediction.
+                            val expandedBox = boundingBox.inflate(CACTUS_BLOCK_MARGIN, 0.0, CACTUS_BLOCK_MARGIN)
+                            expandedBox.intersects(pos)
+                        }
+                    }
+                    else -> {
+                        if (!avoidMode.test(block, fluidState, pos)) {
+                            false
+                        } else {
+                            val shape = blockState.getShape(level, pos)
+                            !shape.isEmpty && shape.move(pos) intersects boundingBox
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private enum class AvoidMode(
+        override val tag: String,
+        override val tagAliases: List<String> = emptyList(),
+    ) : Tagged {
+        SHAPE("Shape"),
+        INPUT("Input", listOf("Movement")),
+    }
+
+    private enum class Avoid(
+        override val tag: String,
+        val fullCube: Boolean = true,
+        val test: (block: Block, fluidState: FluidState, pos: BlockPos) -> Boolean
+    ) : Tagged {
+        CACTI("Cacti", test = { block, _, _ ->
+            block is CactusBlock
+        }),
+        BERRY_BUSH("BerryBush", test = { block, _, _ ->
+            block is SweetBerryBushBlock
+        }),
+        FIRE("Fire", test = { block, _, _ ->
+            block is FireBlock
+        }),
+        COBWEB("Cobwebs", test = { block, _, _ ->
+            block is WebBlock
+        }),
+        LADDERS("Ladders", test = { _, _, pos ->
+            isLadderClimbStateAt(pos)
+        }),
+        PRESSURE_PLATES("PressurePlates", fullCube = false, test = { block, _, _ ->
+            block is BasePressurePlateBlock
+        }),
+        MAGMA("MagmaBlocks", fullCube = false, test = { _, _, pos ->
+            pos.below().getBlock() is MagmaBlock
+        }),
+        LAVA("Lava", test = { _, fluidState, _ ->
+            fluidState.`is`(Fluids.LAVA) || fluidState.`is`(Fluids.FLOWING_LAVA)
+        }),
+        WITHER_ROSE("WitherRose", test = { block, _, _ ->
+            block is WitherRoseBlock
+        }),
+        POWDER_SNOW("PowderSnow", test = { block, _, _ ->
+            block is PowderSnowBlock
+        })
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -34,12 +39,55 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  *
  * @see ModuleScaffold
  */
-object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
+object ScaffoldTellyFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Telly", false) {
 
-    private val movementInputHandler = handler<MovementInputEvent> {
-        if (player.moving && ModuleScaffold.blockCount > 0) {
-            it.jumping = true
+    val doNotAim: Boolean
+        get() = player.airTicks <= straightTicks &&
+                ticksUntilJump >= jumpTicks &&
+                !(ModuleScaffold.isTowering && aimOnTower)
+
+    /** New val to determine if the player is telly bridging */
+    val isTellyBridging: Boolean
+        get() = ticksUntilJump >= jumpTicks && player.moving && enabled
+
+    private var ticksUntilJump = 0
+
+    val resetMode by enumChoice("ResetMode", Mode.RESET)
+    private val straightTicks by int("Straight", 0, 0..5, "ticks")
+    private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
+    private val aimOnTower by boolean("AimOnTower", true)
+    private var jumpTicks = jumpTicksOpt.random()
+
+    @Suppress("unused")
+    private val gameHandler = handler<GameTickEvent> {
+        if (player.onGround()) {
+            ticksUntilJump++
         }
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
+        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.onGround()) {
+            return@handler
+        }
+
+        val isStraight = RotationManager.currentRotation == null || straightTicks == 0
+
+        when (resetMode) {
+            Mode.REVERSE -> event.jump = true
+            Mode.RESET -> if (isStraight && ticksUntilJump >= jumpTicks) event.jump = true
+        }
+    }
+
+    @Suppress("unused")
+    private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
+        ticksUntilJump = 0
+        jumpTicks = jumpTicksOpt.random()
+    }
+
+    enum class Mode(override val tag: String) : Tagged {
+        REVERSE("Reverse"),
+        RESET("Reset")
     }
 
 }
