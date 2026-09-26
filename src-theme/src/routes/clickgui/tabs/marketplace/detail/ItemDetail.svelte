@@ -1,12 +1,10 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import DetailHead from "./DetailHead.svelte";
-    import ItemAction from "../list/ItemAction.svelte";
+    import DetailPage from "./DetailPage.svelte";
+    import ItemAction from "../ItemAction.svelte";
     import PillButton from "../ui/PillButton.svelte";
     import Badge from "../ui/Badge.svelte";
     import SectionLabel from "../ui/SectionLabel.svelte";
-    import Notice from "../ui/Notice.svelte";
-    import Stat from "./Stat.svelte";
     import {
         applyMarketplaceTheme,
         getMarketplaceItemDetail,
@@ -15,7 +13,18 @@
         updateMarketplaceItem
     } from "../../../../../integration/rest";
     import type {MarketplaceItemDetail} from "../../../../../integration/types";
-    import {attempt, count, date, message, notifyInstalled, typeName, UNKNOWN_PACK, version} from "../marketplace";
+    import {
+        attempt,
+        count,
+        date,
+        itemBadges,
+        message,
+        notifyInstalled,
+        reviews,
+        typeName,
+        UNKNOWN_PACK,
+        version
+    } from "../marketplace";
 
     let {id, onback}: {
         id: number;
@@ -28,6 +37,13 @@
 
     const item = $derived(detail?.item);
     const newest = $derived(detail?.versions[0]?.revision);
+    const installed = $derived(item?.subscribed ? item.installed : undefined);
+    const stats = $derived(item ? [
+        {label: "Installed", value: installed && version(installed)},
+        {label: "Newest release", value: newest && `${version(newest)}${newest.createdAt ? ` · ${date(newest.createdAt)}` : ""}`},
+        {label: "Downloads", value: count(item.downloads)},
+        {label: reviews(item.reviews), value: item.rating?.toFixed(1)}
+    ] : []);
 
     onMount(refresh);
 
@@ -52,141 +68,46 @@
     }
 </script>
 
-<div class="detail">
-    {#if detail && item}
-        <DetailHead image={item.image ?? UNKNOWN_PACK} {onback}>
-            {#snippet title()}
-                {item.name}{#if item.author}<span class="author">by {item.author}</span>{/if}
-            {/snippet}
+<DetailPage noun="item" loaded={!!item} {error} onretry={refresh} {onback} {stats}
+            image={item?.image ?? UNKNOWN_PACK} title={item?.name} by={item?.author}
+            badges={item ? itemBadges(item, item.subscribed && "Installed") : []}
+            subtitle="{installed ? `${version(installed)} · ` : ''}{item ? typeName(item.type) : ''}"
+            description={detail?.description || item?.summary}>
+    {#snippet actions()}
+        {#if item?.subscribed}
+            <PillButton title="Remove" disabled={busy} onclick={() => run(() => removeMarketplaceItem(id))}/>
+        {/if}
+        {#if item}
+            <ItemAction {item} {busy}
+                        oninstall={() => run(async () => notifyInstalled(await installMarketplaceItem(id)))}
+                        onupdate={() => run(() => updateMarketplaceItem(id))}
+                        onapply={() => run(() => applyMarketplaceTheme(id))}/>
+        {/if}
+    {/snippet}
 
-            {#snippet tags()}
-                {#if item.subscribed}
-                    <Badge text="Installed"/>
-                {/if}
-                {#if item.restartRequired}
-                    <Badge text="Restart needed"/>
-                {/if}
-                {#if item.inUse}
-                    <Badge text="In use"/>
-                {/if}
-                {#if item.featured}
-                    <Badge text="Featured"/>
-                {/if}
-            {/snippet}
-
-            {#snippet subtitle()}
-                {item.subscribed && item.installed ? `${version(item.installed)} · ` : ""}{typeName(item.type)}
-            {/snippet}
-
-            {#snippet actions()}
-                {#if item.subscribed}
-                    <PillButton title="Remove" disabled={busy} onclick={() => run(() => removeMarketplaceItem(id))}/>
-                {/if}
-                <ItemAction {item} {busy}
-                            oninstall={() => run(async () => notifyInstalled(await installMarketplaceItem(id)))}
-                            onupdate={() => run(() => updateMarketplaceItem(id))}
-                            onapply={() => run(() => applyMarketplaceTheme(id))}/>
-            {/snippet}
-        </DetailHead>
-
-        <div class="body">
-            <div class="stats">
-                {#if item.subscribed && item.installed}
-                    <Stat value={version(item.installed)} label="Installed"/>
-                {/if}
-                {#if newest}
-                    <Stat value="{version(newest)}{newest.createdAt ? ` · ${date(newest.createdAt)}` : ''}"
-                          label="Newest release"/>
-                {/if}
-                <Stat value={count(item.downloads)} label="Downloads"/>
-                {#if item.rating !== undefined}
-                    <Stat value={item.rating.toFixed(1)} label="{item.reviews} {item.reviews === 1 ? 'review' : 'reviews'}"/>
-                {/if}
-            </div>
-
-            {#if detail.description || item.summary}
-                <p class="description">{detail.description || item.summary}</p>
-            {/if}
-
-            <SectionLabel text="Versions"/>
-            <div class="versions">
-                {#each detail.versions as entry (entry.revision.id)}
-                    <div class="version" class:installed={entry.installed} class:unfit={!entry.fits && !entry.installed}>
-                        <span class="number">{version(entry.revision)}</span>
-                        <span>{date(entry.revision.createdAt)}</span>
-                        <span class="changelog">{entry.revision.changelog ?? ""}</span>
-                        <span>{entry.revision.liquidbounce ?? ""}</span>
-                        <span class="tag">
-                            {#if entry.installed}
-                                <Badge text="Installed"/>
-                            {:else if !entry.fits}
-                                Not for {detail.liquidbounce}
-                            {/if}
-                        </span>
-                    </div>
-                {/each}
-            </div>
+    {#if detail}
+        <SectionLabel text="Versions"/>
+        <div class="versions">
+            {#each detail.versions as entry (entry.revision.id)}
+                <div class="version" class:installed={entry.installed} class:unfit={!entry.fits && !entry.installed}>
+                    <span class="number">{version(entry.revision)}</span>
+                    <span>{date(entry.revision.createdAt)}</span>
+                    <span class="changelog">{entry.revision.changelog ?? ""}</span>
+                    <span>{entry.revision.liquidbounce ?? ""}</span>
+                    <span class="tag">
+                        {#if entry.installed}
+                            <Badge text="Installed"/>
+                        {:else if !entry.fits}
+                            Not for {detail.liquidbounce}
+                        {/if}
+                    </span>
+                </div>
+            {/each}
         </div>
-    {:else if error}
-        <DetailHead {onback}>
-            {#snippet title()}Item{/snippet}
-        </DetailHead>
-        <Notice title="Couldn't open this item">
-            {error}
-            {#snippet actions()}
-                <PillButton title="Retry" primary onclick={refresh}/>
-            {/snippet}
-        </Notice>
     {/if}
-</div>
+</DetailPage>
 
 <style lang="scss">
-  .detail {
-    flex: 0 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--clickgui-window-background-color);
-    border-radius: 5px;
-    box-shadow: 0 0 10px var(--clickgui-window-shadow-color);
-    overflow: hidden;
-  }
-
-  .author {
-    margin-left: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--clickgui-text-dimmed-color);
-  }
-
-  .body {
-    flex: 0 1 auto;
-    min-height: 0;
-    overflow: auto;
-    padding: 14px 20px 20px;
-
-    &::-webkit-scrollbar {
-      width: 2px;
-    }
-  }
-
-  .stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 32px;
-    padding: 12px 0 4px;
-  }
-
-  .description {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.5;
-    color: var(--clickgui-text-dimmed-color);
-    white-space: pre-wrap;
-    margin: 12px 0 0;
-    max-width: 820px;
-  }
-
   .versions {
     display: flex;
     flex-direction: column;

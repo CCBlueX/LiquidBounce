@@ -2,13 +2,12 @@
     import Switch from "../../../setting/common/Switch.svelte";
     import Dialog from "../ui/Dialog.svelte";
     import ToggleChip from "../ui/ToggleChip.svelte";
-    import Badge from "../ui/Badge.svelte";
     import SectionLabel from "../ui/SectionLabel.svelte";
     import ListRow from "../ui/ListRow.svelte";
     import TextField from "../ui/TextField.svelte";
     import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../../integration/rest";
     import type {MarketplaceLinkedConfig, MarketplaceLoadPlan} from "../../../../../integration/types";
-    import {attempt, dialog, type DialogRequest, notify, typeName, UNKNOWN_PACK, version} from "../marketplace";
+    import {attempt, dialog, type DialogRequest, notify, present, typeName, UNKNOWN_PACK, version} from "../marketplace";
 
     // The last config stays while the dialog fades out
     let config = $state.raw<MarketplaceLinkedConfig | null>(null);
@@ -68,15 +67,9 @@
             <SectionLabel text="Installs"/>
             <div class="list">
                 {#each plan.installs as install (install.id)}
-                    <ListRow image={install.image ?? UNKNOWN_PACK}>
-                        {#snippet title()}{install.name}{/snippet}
-                        {#snippet tags()}
-                            {#if install.restart}
-                                <Badge text="Restart needed"/>
-                            {/if}
-                        {/snippet}
-                        {#snippet subtitle()}{typeName(install.type)} · {version(install.revision)}{/snippet}
-                    </ListRow>
+                    <ListRow image={install.image ?? UNKNOWN_PACK} title={install.name}
+                             badges={present(install.restart && "Restart needed")}
+                             subtitle="{typeName(install.type)} · {version(install.revision)}"/>
                 {/each}
             </div>
         {/if}
@@ -85,10 +78,7 @@
             <SectionLabel text="Left out"/>
             <div class="list">
                 {#each plan.leftOut as leftOut (leftOut.id)}
-                    <ListRow image={leftOut.image ?? UNKNOWN_PACK}>
-                        {#snippet title()}{leftOut.name}{/snippet}
-                        {#snippet subtitle()}{typeName(leftOut.type)}{/snippet}
-                    </ListRow>
+                    <ListRow image={leftOut.image ?? UNKNOWN_PACK} title={leftOut.name} subtitle={typeName(leftOut.type)}/>
                 {/each}
             </div>
         {/if}

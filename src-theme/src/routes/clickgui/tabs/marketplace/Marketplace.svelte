@@ -8,11 +8,8 @@
     import SectionLabel from "./ui/SectionLabel.svelte";
     import Notice from "./ui/Notice.svelte";
     import ListRow from "./ui/ListRow.svelte";
-    import Badge from "./ui/Badge.svelte";
-    import Address from "./Address.svelte";
+    import ItemAction from "./ItemAction.svelte";
     import Toast from "./ui/Toast.svelte";
-    import ConfigRow from "./list/ConfigRow.svelte";
-    import ItemRow from "./list/ItemRow.svelte";
     import TrackerMenu from "./list/TrackerMenu.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
@@ -46,7 +43,26 @@
     } from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
     import {setItem} from "../../../../integration/persistent_storage";
-    import {attempt, dialog, message, notify, notifyInstalled, typeName, typing, UNKNOWN_PACK, UNKNOWN_SERVER, visible} from "./marketplace";
+    import {
+        attempt,
+        configBadges,
+        configLine,
+        count,
+        dialog,
+        itemBadges,
+        message,
+        notify,
+        notifyInstalled,
+        reports,
+        reviews,
+        trackingName,
+        typeName,
+        typing,
+        UNKNOWN_PACK,
+        UNKNOWN_SERVER,
+        version,
+        visible
+    } from "./marketplace";
 
     const TYPES = {
         "Configs": "Config",
@@ -366,7 +382,7 @@
                 <div class="filters">
                     {#if context?.server}
                         <ToggleChip text="On {context.server}" active={onServer}
-                              onclick={() => { onServer = !onServer; persistFilters(); }}/>
+                                    onclick={() => { onServer = !onServer; persistFilters(); }}/>
                     {/if}
                     <div class="switch">
                         <Switch name="Featured only" bind:value={featuredOnly} on:change={persistFilters}/>
@@ -390,17 +406,11 @@
                     {#if (tracker && tracker.state !== "None") || installed.length > 0}
                         <div class="section"><SectionLabel text="On this client"/></div>
                         {#if tracker && tracker.state !== "None"}
-                            <ListRow image={tracker.image ?? UNKNOWN_SERVER} active>
-                                {#snippet title()}<Address address={tracker!!.address}/>{/snippet}
-                                {#snippet tags()}<Badge text={tracker!!.state === "Editing" ? "Edited" : "Tracked"}/>{/snippet}
-                                {#snippet subtitle()}Config{/snippet}
-                            </ListRow>
+                            <ListRow image={tracker.image ?? UNKNOWN_SERVER} active address={tracker.address}
+                                     badges={[trackingName(tracker.state)]} subtitle="Config"/>
                         {/if}
                         {#each installed as item (item.id)}
-                            <ListRow image={UNKNOWN_PACK}>
-                                {#snippet title()}{item.name}{/snippet}
-                                {#snippet subtitle()}{typeName(item.type)}{/snippet}
-                            </ListRow>
+                            <ListRow image={UNKNOWN_PACK} title={item.name} subtitle={typeName(item.type)}/>
                         {/each}
                     {/if}
                 {:else if error}
@@ -415,10 +425,25 @@
                         <div class="section"><SectionLabel text="Share code"/></div>
                     {/if}
                     {#each configs as config (config.id)}
-                        <ConfigRow {config} {loggedIn}
-                                   onload={() => openLoad(config)}
-                                   onopen={() => open("config", config.id)}
-                                   onreport={works => report(config, works)}/>
+                        {#snippet reportButtons()}
+                            <PillButton title="Works" onclick={() => report(config, true)}/>
+                            <PillButton title="Broken" onclick={() => report(config, false)}/>
+                        {/snippet}
+                        <ListRow image={config.image ?? UNKNOWN_SERVER} address={config.address} subtitle={configLine(config)}
+                                 badges={[
+                                     ...configBadges(config, config.tracking, config.overlayOn && `Overlay on ${config.overlayOn.address}`),
+                                     ...config.tags
+                                 ]}
+                                 active={config.tracking !== "None"} onclick={() => open("config", config.id)}
+                                 hover={loggedIn ? reportButtons : undefined}>
+                            {#snippet meta()}
+                                <span class="reports">{reports(config.works, config.fails)}</span>
+                                <span class="downloads">{count(config.downloads)} downloads</span>
+                            {/snippet}
+                            {#snippet actions()}
+                                <PillButton title="Load" primary onclick={() => openLoad(config)}/>
+                            {/snippet}
+                        </ListRow>
                     {/each}
                     {#if !loading && configs.length === 0}
                         {#if codeResult}
@@ -434,7 +459,7 @@
                                     ? "AutoConfig loads nothing here while its OnlyFeatured setting is on." : ""}
                                 {#snippet actions()}
                                     <PillButton title="Show {unfeatured === 1 ? 'it' : `${unfeatured} configs`}" primary
-                                            onclick={showUnfeatured}/>
+                                                onclick={showUnfeatured}/>
                                     <PillButton title="Clear filters" onclick={clearFilters}/>
                                 {/snippet}
                             </Notice>
@@ -450,12 +475,27 @@
                     {/if}
                 {:else}
                     {#each items as item (item.id)}
-                        <ItemRow {item} busy={busy === item.id}
-                                 oninstall={() => install(item)}
-                                 onupdate={() => update(item)}
-                                 onremove={() => remove(item)}
-                                 onapply={() => apply(item)}
-                                 onopen={() => open("item", item.id)}/>
+                        {#snippet removeButton()}
+                            <PillButton title="Remove" disabled={busy === item.id} onclick={() => remove(item)}/>
+                        {/snippet}
+                        <ListRow image={item.image ?? UNKNOWN_PACK} title={item.name} by={item.author} subtitle={item.summary}
+                                 badges={itemBadges(item, item.subscribed && !!item.installed && version(item.installed))}
+                                 dim={!!item.notFor} onclick={() => open("item", item.id)}
+                                 hover={item.subscribed ? removeButton : undefined}>
+                            {#snippet meta()}
+                                {#if item.notFor}
+                                    <span>Not for {item.notFor}</span>
+                                {/if}
+                                {#if item.rating !== undefined}
+                                    <span>{item.rating.toFixed(1)} from {reviews(item.reviews)}</span>
+                                {/if}
+                                <span class="downloads">{count(item.downloads)} downloads</span>
+                            {/snippet}
+                            {#snippet actions()}
+                                <ItemAction {item} busy={busy === item.id} oninstall={() => install(item)}
+                                            onupdate={() => update(item)} onapply={() => apply(item)}/>
+                            {/snippet}
+                        </ListRow>
                     {/each}
                     {#if !loading && items.length === 0}
                         <Notice title="Nothing found"/>
@@ -556,5 +596,15 @@
 
   .end {
     min-height: 1px;
+  }
+
+  .reports {
+    min-width: 110px;
+    text-align: right;
+  }
+
+  .downloads {
+    min-width: 90px;
+    text-align: right;
   }
 </style>

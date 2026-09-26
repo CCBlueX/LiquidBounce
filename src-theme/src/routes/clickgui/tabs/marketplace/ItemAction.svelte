@@ -1,6 +1,6 @@
 <script lang="ts">
-    import PillButton from "../ui/PillButton.svelte";
-    import type {MarketplaceItem} from "../../../../../integration/types";
+    import PillButton from "./ui/PillButton.svelte";
+    import type {MarketplaceItem} from "../../../../integration/types";
 
     let {item, busy = false, oninstall, onupdate, onapply}: {
         item: MarketplaceItem;

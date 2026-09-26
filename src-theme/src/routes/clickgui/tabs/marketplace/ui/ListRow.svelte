@@ -1,47 +1,61 @@
 <script lang="ts">
     import type {Snippet} from "svelte";
+    import Badge from "./Badge.svelte";
+    import Address from "../Address.svelte";
 
+    /**
+     * The title is [address] with its author dimmed, or [title], followed by [by]. [hover] replaces [meta] while
+     * the row is hovered. A [large] row heads a page.
+     */
     let {
+        large = false,
         image,
         onclick,
         active = false,
         dim = false,
         title,
-        tags,
+        address,
+        by,
+        badges = [],
         subtitle,
         meta,
         hover,
-        primary
+        actions
     }: {
+        large?: boolean;
         image?: string;
         onclick?: () => void;
         active?: boolean;
         dim?: boolean;
-        title: Snippet;
-        tags?: Snippet;
-        subtitle?: Snippet;
+        title?: string;
+        address?: string;
+        by?: string;
+        badges?: string[];
+        subtitle?: string;
         meta?: Snippet;
         hover?: Snippet;
-        primary?: Snippet;
+        actions?: Snippet;
     } = $props();
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="row" class:active class:dim class:clickable={!!onclick} onclick={() => onclick?.()}>
+<div class="row" class:large class:active class:dim class:clickable={!!onclick} onclick={() => onclick?.()}>
     {#if image}
         <img class="image" src={image} alt=""/>
     {/if}
 
     <div class="main">
         <div class="head">
-            <span class="title">{@render title()}</span>
-            {#if tags}
-                {@render tags()}
-            {/if}
+            <span class="title">
+                {#if address}<Address {address}/>{:else}{title}{/if}{#if by}<span class="by">by {by}</span>{/if}
+            </span>
+            {#each badges as badge}
+                <Badge text={badge}/>
+            {/each}
         </div>
-        {#if subtitle}
-            <div class="subtitle">{@render subtitle()}</div>
+        {#if subtitle !== undefined}
+            <div class="subtitle">{subtitle}</div>
         {/if}
     </div>
 
@@ -54,8 +68,8 @@
         {/if}
     </div>
 
-    {#if primary}
-        <div class="primary">{@render primary()}</div>
+    {#if actions}
+        <div class="actions">{@render actions()}</div>
     {/if}
 
     {#if onclick}
@@ -97,6 +111,32 @@
 
     &:hover .meta:has(+ .hover) {
       opacity: 0;
+    }
+
+    &.large {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      border: none;
+
+      .image {
+        width: 40px;
+        height: 40px;
+      }
+
+      .title {
+        font-size: 16px;
+        margin-right: 4px;
+      }
+
+      .by {
+        margin-left: 6px;
+        font-size: 13px;
+      }
+
+      .subtitle {
+        white-space: normal;
+      }
     }
   }
 
@@ -167,9 +207,17 @@
     transition: ease opacity .2s;
   }
 
-  .primary {
+  .actions {
     display: flex;
+    align-items: center;
     gap: 6px;
+  }
+
+  .by {
+    margin-left: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--clickgui-text-dimmed-color);
   }
 
   .arrow {

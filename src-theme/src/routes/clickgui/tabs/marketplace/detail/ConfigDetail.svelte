@@ -1,24 +1,23 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import DetailHead from "./DetailHead.svelte";
+    import DetailPage from "./DetailPage.svelte";
     import PillButton from "../ui/PillButton.svelte";
     import ActionMenu from "../ui/ActionMenu.svelte";
     import Badge from "../ui/Badge.svelte";
     import SectionLabel from "../ui/SectionLabel.svelte";
-    import Notice from "../ui/Notice.svelte";
     import ListRow from "../ui/ListRow.svelte";
-    import Stat from "./Stat.svelte";
-    import Address from "../Address.svelte";
     import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
         ago,
         attempt,
+        configBadges,
         count,
         date,
         dialog,
         message,
         notify,
+        present,
         reports,
         typeName,
         UNKNOWN_PACK,
@@ -44,6 +43,15 @@
     const installs = $derived(detail?.dependencies.filter(d => !!d.status) ?? []);
     const owner = $derived(!!config?.own && loggedIn);
     const composed = $derived(configs.length > 0 || installs.length > 0 || !!detail?.changes?.length);
+    const stats = $derived(config && detail ? [
+        {label: "Last revision", value: ago(config.updatedAt)},
+        {label: "Made on", value: config.protocol},
+        {label: "Reports", value: reports(config.works, config.fails)},
+        {label: "Downloads", value: count(config.downloads)},
+        {label: "Visibility", value: config.visibility === "unlisted" ? "Unlisted" : "Public"},
+        {label: "Servers", value: config.servers.join(", ") || "Any server"},
+        {label: "Fork of", value: detail.forkOf?.address, onclick: () => detail?.forkOf && onopen("config", detail.forkOf.id)}
+    ] : []);
 
     onMount(refresh);
 
@@ -81,216 +89,91 @@
     }
 </script>
 
-<div class="detail">
-    {#if detail && config}
-        <DetailHead image={config.image ?? UNKNOWN_SERVER} {onback}>
-            {#snippet title()}<Address address={config.address}/>{/snippet}
+<DetailPage noun="config" loaded={!!config} {error} onretry={refresh} {onback} {stats}
+            image={config?.image ?? UNKNOWN_SERVER} address={config?.address}
+            badges={config ? configBadges(config, tracking, config.overlayOn ? "Overlay" : detail?.forkOf && "Fork") : []}
+            subtitle="Updated {ago(config?.updatedAt)}{detail?.createdAt ? ` · published ${date(detail.createdAt)}` : ''}"
+            description={detail?.description || detail?.summary}>
+    {#snippet actions()}
+        {#if detail?.shareCode && loggedIn}
+            <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
+        {/if}
+        {#if config && loggedIn}
+            <PillButton title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>
+            <PillButton title="Broken · {config.fails}" active={detail?.report === false} onclick={() => report(false)}/>
+        {/if}
+        {#if canUpdate}
+            <PillButton title="Update..." onclick={() => dialog.set({kind: "update"})}/>
+        {/if}
+        <PillButton title="Load" primary onclick={load}/>
+        {#if config && detail && owner}
+            <ActionMenu entries={[
+                {title: "Edit details", onclick: () => dialog.set({kind: "edit", detail: detail!!, ondone: refresh})},
+                {title: "Delete config", danger: true, onclick: () => dialog.set({kind: "delete", config, ondone: onback})}
+            ]}>
+                {#snippet trigger()}More{/snippet}
+            </ActionMenu>
+        {/if}
+    {/snippet}
 
-            {#snippet tags()}
-                {#if tracking !== "None"}
-                    <Badge text={tracking === "Editing" ? "Edited" : "Tracked"}/>
+    {#if detail}
+        <div class="columns" class:single={!composed}>
+            <div class="column">
+                {#if configs.length > 0}
+                    <SectionLabel text="Depends on"/>
+                    <div class="list">
+                        {#each configs as dependency (dependency.id)}
+                            <ListRow image={dependency.image ?? UNKNOWN_SERVER} address={dependency.address}
+                                     badges={present(dependency.featured && "Featured")}
+                                     onclick={() => onopen("config", dependency.id)}/>
+                        {/each}
+                    </div>
                 {/if}
-                {#if config.featured}
-                    <Badge text="Featured"/>
-                {/if}
-                {#if config.own}
-                    <Badge text="Yours"/>
-                {/if}
-                {#if config.visibility === "unlisted"}
-                    <Badge text="Unlisted"/>
-                {/if}
-                {#if config.overlayOn}
-                    <Badge text="Overlay"/>
-                {:else if detail?.forkOf}
-                    <Badge text="Fork"/>
-                {/if}
-                {#if config.binds}
-                    <Badge text="Binds"/>
-                {/if}
-            {/snippet}
 
-            {#snippet subtitle()}
-                Updated {ago(config.updatedAt)}{detail?.createdAt ? ` · published ${date(detail.createdAt)}` : ""}
-            {/snippet}
+                {#if installs.length > 0}
+                    <SectionLabel text="Installs"/>
+                    <div class="list">
+                        {#each installs as dependency (dependency.id)}
+                            {@const status = dependency.status!!}
+                            <ListRow image={dependency.image ?? UNKNOWN_PACK} title={dependency.address} dim={!!status.notFor}
+                                     badges={present(
+                                         typeName(dependency.type),
+                                         status.subscribed && !!status.installed && version(status.installed),
+                                         status.restartRequired && "Restart needed"
+                                     )}
+                                     subtitle={status.notFor ? `Not for ${status.notFor}` : status.summary}
+                                     onclick={() => onopen("item", dependency.id)}/>
+                        {/each}
+                    </div>
+                {/if}
 
-            {#snippet actions()}
-                {#if detail?.shareCode && loggedIn}
-                    <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
-                {/if}
-                {#if loggedIn}
-                    <PillButton title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>
-                    <PillButton title="Broken · {config.fails}" active={detail?.report === false}
-                            onclick={() => report(false)}/>
-                {/if}
-                {#if canUpdate}
-                    <PillButton title="Update..." onclick={() => dialog.set({kind: "update"})}/>
-                {/if}
-                <PillButton title="Load" primary onclick={load}/>
-                {#if owner}
-                    <ActionMenu entries={[
-                        {title: "Edit details", onclick: () => dialog.set({kind: "edit", detail: detail!!, ondone: refresh})},
-                        {title: "Delete config", danger: true, onclick: () => dialog.set({kind: "delete", config, ondone: onback})}
-                    ]}>
-                        {#snippet trigger()}More{/snippet}
-                    </ActionMenu>
-                {/if}
-            {/snippet}
-        </DetailHead>
-
-        <div class="body">
-            <div class="stats">
-                <Stat value={ago(config.updatedAt)} label="Last revision"/>
-                {#if config.protocol}
-                    <Stat value={config.protocol} label="Made on"/>
-                {/if}
-                <Stat value={reports(config.works, config.fails)} label="Reports"/>
-                <Stat value={count(config.downloads)} label="Downloads"/>
-                <Stat value={config.visibility === "unlisted" ? "Unlisted" : "Public"} label="Visibility"/>
-                <Stat value={config.servers.join(", ") || "Any server"} label="Servers"/>
-                {#if detail.forkOf}
-                    <Stat label="Fork of">
-                        <button type="button" class="link" onclick={() => onopen("config", detail!!.forkOf!!.id)}>
-                            {detail.forkOf.address}
-                        </button>
-                    </Stat>
+                {#if detail.changes && detail.changes.length > 0}
+                    <SectionLabel text="What it changes"/>
+                    <div class="chips">
+                        {#each detail.changes as module (module)}
+                            <Badge text={module}/>
+                        {/each}
+                    </div>
                 {/if}
             </div>
 
-            {#if detail.description || detail.summary}
-                <p class="description">{detail.description || detail.summary}</p>
-            {/if}
-
-            <div class="columns" class:single={!composed}>
-                <div class="column">
-                    {#if configs.length > 0}
-                        <SectionLabel text="Depends on"/>
-                        <div class="list">
-                            {#each configs as dependency (dependency.id)}
-                                <ListRow image={dependency.image ?? UNKNOWN_SERVER}
-                                     onclick={() => onopen("config", dependency.id)}>
-                                    {#snippet title()}<Address address={dependency.address}/>{/snippet}
-                                    {#snippet tags()}
-                                        {#if dependency.featured}
-                                            <Badge text="Featured"/>
-                                        {/if}
-                                    {/snippet}
-                                </ListRow>
-                            {/each}
-                        </div>
-                    {/if}
-
-                    {#if installs.length > 0}
-                        <SectionLabel text="Installs"/>
-                        <div class="list">
-                            {#each installs as dependency (dependency.id)}
-                                {@const status = dependency.status!!}
-                                <ListRow image={dependency.image ?? UNKNOWN_PACK} dim={!!status.notFor}
-                                     onclick={() => onopen("item", dependency.id)}>
-                                    {#snippet title()}{dependency.address}{/snippet}
-                                    {#snippet tags()}
-                                        <Badge text={typeName(dependency.type)}/>
-                                        {#if status.subscribed && status.installed}
-                                            <Badge text={version(status.installed)}/>
-                                        {/if}
-                                        {#if status.restartRequired}
-                                            <Badge text="Restart needed"/>
-                                        {/if}
-                                    {/snippet}
-                                    {#snippet subtitle()}
-                                        {status.notFor ? `Not for ${status.notFor}` : status.summary}
-                                    {/snippet}
-                                </ListRow>
-                            {/each}
-                        </div>
-                    {/if}
-
-                    {#if detail.changes && detail.changes.length > 0}
-                        <SectionLabel text="What it changes"/>
-                        <div class="chips">
-                            {#each detail.changes as module (module)}
-                                <Badge text={module}/>
-                            {/each}
-                        </div>
-                    {/if}
-                </div>
-
-                <div class="column">
-                    <SectionLabel text="History"/>
-                    <div class="list">
-                        {#each detail.revisions as revision (revision.id)}
-                            <ListRow active={revision.latest}>
-                                {#snippet title()}{date(revision.createdAt)}{/snippet}
-                                {#snippet tags()}
-                                    {#if revision.latest}
-                                        <Badge text="Latest"/>
-                                    {/if}
-                                    {#if revision.loaded}
-                                        <Badge text="Loaded"/>
-                                    {/if}
-                                {/snippet}
-                                {#snippet subtitle()}
-                                    {revision.changelog ?? (revision.first ? "First version" : "")}
-                                {/snippet}
-                                {#snippet meta()}{reports(revision.works, revision.fails)}{/snippet}
-                            </ListRow>
-                        {/each}
-                    </div>
+            <div class="column">
+                <SectionLabel text="History"/>
+                <div class="list">
+                    {#each detail.revisions as revision (revision.id)}
+                        <ListRow active={revision.latest} title={date(revision.createdAt)}
+                                 badges={present(revision.latest && "Latest", revision.loaded && "Loaded")}
+                                 subtitle={revision.changelog ?? (revision.first ? "First version" : "")}>
+                            {#snippet meta()}{reports(revision.works, revision.fails)}{/snippet}
+                        </ListRow>
+                    {/each}
                 </div>
             </div>
         </div>
-    {:else if error}
-        <DetailHead {onback}>
-            {#snippet title()}Config{/snippet}
-        </DetailHead>
-        <Notice title="Couldn't open this config">
-            {error}
-            {#snippet actions()}
-                <PillButton title="Retry" primary onclick={refresh}/>
-            {/snippet}
-        </Notice>
     {/if}
-</div>
+</DetailPage>
 
 <style lang="scss">
-  .detail {
-    flex: 0 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--clickgui-window-background-color);
-    border-radius: 5px;
-    box-shadow: 0 0 10px var(--clickgui-window-shadow-color);
-    overflow: hidden;
-  }
-
-  .body {
-    flex: 0 1 auto;
-    min-height: 0;
-    overflow: auto;
-    padding: 14px 20px 20px;
-
-    &::-webkit-scrollbar {
-      width: 2px;
-    }
-  }
-
-  .stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 32px;
-    padding: 12px 0 4px;
-  }
-
-  .description {
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.5;
-    color: var(--clickgui-text-dimmed-color);
-    white-space: pre-wrap;
-    margin: 12px 0 0;
-    max-width: 820px;
-  }
-
   .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -315,15 +198,5 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-  }
-
-  .link {
-    all: unset;
-    cursor: pointer;
-    color: var(--accent-color);
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 </style>

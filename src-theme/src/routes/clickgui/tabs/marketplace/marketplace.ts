@@ -3,9 +3,11 @@ import {writable} from "svelte/store";
 import {REST_BASE} from "../../../../integration/host";
 import {setTyping} from "../../../../integration/rest";
 import type {
+    ConfigTrackerState,
     MarketplaceConfig,
     MarketplaceConfigDetail,
     MarketplaceInstallResult,
+    MarketplaceItem,
     MarketplaceItemType,
     MarketplaceLinkedConfig,
     MarketplacePublished,
@@ -53,14 +55,56 @@ export function message(e: unknown): string {
     return e instanceof Error ? e.message : String(e);
 }
 
-export function ordinal(value: number): string {
-    const tens = value % 100;
-    const suffix = tens >= 11 && tens <= 13 ? "th" : ["th", "st", "nd", "rd"][value % 10] ?? "th";
-    return `${value}${suffix}`;
-}
-
 export function version(revision: MarketplaceRevision): string {
     return /^v\d/i.test(revision.version) ? revision.version : `v${revision.version}`;
+}
+
+/**
+ * The values that are set, for badges built from conditions.
+ */
+export function present(...values: (string | false | null | undefined)[]): string[] {
+    return values.filter((value): value is string => !!value);
+}
+
+export function trackingName(state: ConfigTrackerState): string {
+    return state === "Editing" ? "Edited" : state === "Tracked" ? "Tracked" : "";
+}
+
+/**
+ * The badges of a config in its [tracking] state, with [overlay] telling what it loads on.
+ */
+export function configBadges(config: MarketplaceConfig, tracking: ConfigTrackerState, overlay?: string | false): string[] {
+    return present(
+        trackingName(tracking),
+        config.featured && "Featured",
+        config.own && "Yours",
+        config.visibility === "unlisted" && "Unlisted",
+        overlay,
+        config.binds && "Binds"
+    );
+}
+
+/**
+ * When a config was updated, which servers it is for, and the Minecraft version it was made on.
+ */
+export function configLine(config: MarketplaceConfig): string {
+    const [server, ...more] = config.servers;
+    return present(
+        `Updated ${ago(config.updatedAt)}`,
+        more.length > 0 ? `${server} +${more.length}` : server ?? "any server",
+        config.protocol && !config.protocolMatches ? `made on ${config.protocol}` : config.protocol
+    ).join(" · ");
+}
+
+/**
+ * The badges of an add-on, script or theme after [first].
+ */
+export function itemBadges(item: MarketplaceItem, first: string | false): string[] {
+    return present(first, item.restartRequired && "Restart needed", item.inUse && "In use", item.featured && "Featured");
+}
+
+export function reviews(amount: number): string {
+    return `${amount} ${amount === 1 ? "review" : "reviews"}`;
 }
 
 export interface MenuEntry {

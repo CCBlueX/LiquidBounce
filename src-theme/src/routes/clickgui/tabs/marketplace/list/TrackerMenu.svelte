@@ -2,7 +2,7 @@
     import ActionMenu from "../ui/ActionMenu.svelte";
     import Address from "../Address.svelte";
     import type {ConfigTracker} from "../../../../../integration/types";
-    import {dialog, type MenuEntry} from "../marketplace";
+    import {dialog, type MenuEntry, trackingName} from "../marketplace";
 
     let {tracker, loggedIn, online = true, onchange, onopen}: {
         tracker: ConfigTracker;
@@ -43,7 +43,7 @@
         {#if tracker.state === "None"}
             <span>Settings backup</span>
         {:else}
-            <span class="state">{tracker.state === "Editing" ? "Edited" : "Tracked"}</span>
+            <span class="state">{trackingName(tracker.state)}</span>
             <span><Address address={tracker.address}/>{tracker.state === "Editing" ? "*" : ""}</span>
         {/if}
     {/snippet}
