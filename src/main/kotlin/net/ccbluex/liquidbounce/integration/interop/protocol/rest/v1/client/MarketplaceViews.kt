@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.itemStatus
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -54,7 +55,8 @@ internal data class PageView<T>(
 )
 
 /**
- * A config as the tab lists it. [overlayOn] is the config it loads on top of.
+ * A config as the tab lists it. [tracking] is the tracker's state when it runs this config, [overlayOn] the
+ * config it loads on top of.
  */
 internal data class ConfigView(
     val id: Int,
@@ -72,6 +74,8 @@ internal data class ConfigView(
     val downloads: Int,
     val updatedAt: Long?,
     val overlayOn: String?,
+    val tracking: ConfigTracker.State,
+    val own: Boolean,
     val visibility: MarketplaceItemVisibility?,
 )
 
@@ -85,6 +89,7 @@ internal data class ConfigDetailView(
     val config: ConfigView,
     val description: String,
     val createdAt: Long?,
+    val shareCode: String?,
     val forkOf: LinkedConfig?,
     val configs: List<LinkedConfig>,
     val installs: List<ItemView>,
@@ -100,6 +105,7 @@ internal data class ConfigRevisionView(
     val works: Int,
     val fails: Int,
     val latest: Boolean,
+    val loaded: Boolean,
     val first: Boolean,
 )
 
@@ -151,6 +157,17 @@ internal data class ItemDetailView(
 
 internal data class InstallResult(val installed: List<String>)
 
+internal data class TrackerView(
+    val state: ConfigTracker.State,
+    val id: Int,
+    val address: String,
+    val image: String?,
+    val own: Boolean,
+    val backup: Boolean,
+)
+
+internal data class PublishedView(val id: Int, val address: String, val shareCode: String?)
+
 internal data class InstalledItem(val id: Int, val type: MarketplaceItemType, val name: String)
 
 internal val MarketplaceItem.displayAddress get() = author?.let { "$it/$name" } ?: name
@@ -162,7 +179,14 @@ private val MarketplaceItem.thumbnail get() = thumbnailPid?.let(MarketplaceApi::
 
 private suspend fun serverIcon(servers: List<String>?) = servers.orEmpty().firstNotNullOfOrNull { ServerIcons.of(it) }
 
-internal suspend fun configView(item: MarketplaceItem): ConfigView {
+internal fun tracking(id: Int) =
+    if (ConfigTracker.state != ConfigTracker.State.NONE && ConfigTracker.itemId == id) {
+        ConfigTracker.state
+    } else {
+        ConfigTracker.State.NONE
+    }
+
+internal suspend fun configView(item: MarketplaceItem, userId: String?): ConfigView {
     val base = MarketplaceApi.getItemDependencies(item.id).firstOrNull { it.item.type == MarketplaceItemType.CONFIG }
     return ConfigView(
         id = item.id,
@@ -180,12 +204,14 @@ internal suspend fun configView(item: MarketplaceItem): ConfigView {
         downloads = item.downloads,
         updatedAt = epochMillis(item.updatedAt ?: item.createdAt),
         overlayOn = base?.displayAddress,
+        tracking = tracking(item.id),
+        own = userId != null && item.uid == userId,
         visibility = item.visibility,
     )
 }
 
-internal suspend fun configViews(items: List<MarketplaceItem>) = coroutineScope {
-    items.map { async { configView(it) } }.awaitAll()
+internal suspend fun configViews(items: List<MarketplaceItem>, userId: String?) = coroutineScope {
+    items.map { async { configView(it, userId) } }.awaitAll()
 }
 
 internal suspend fun linkedConfig(item: MarketplaceItem) =
@@ -252,4 +278,24 @@ private suspend fun rating(id: Int): Pair<Double?, Int> {
         return null to 0
     }
     return ratings.average().takeIf { ratings.isNotEmpty() } to ratings.size
+}
+
+/**
+ * Works offline, without the image and ownership then.
+ */
+internal suspend fun trackerView(): TrackerView {
+    val tracked = ConfigTracker.state != ConfigTracker.State.NONE
+    val image = if (tracked) {
+        runCatching { serverIcon(MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId).targetServers) }.getOrNull()
+    } else {
+        null
+    }
+    return TrackerView(
+        state = ConfigTracker.state,
+        id = ConfigTracker.itemId,
+        address = ConfigTracker.address,
+        image = image,
+        own = tracked && ownUserId() == ConfigTracker.itemUid,
+        backup = ConfigTracker.hasBackup,
+    )
 }

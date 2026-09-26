@@ -80,7 +80,12 @@ object ConfigPublishCommand {
                 }
 
                 val item = request {
-                    ConfigTracker.fork(session(), name, description, parseVisibility(visibility))
+                    ConfigTracker.fork(
+                        session(),
+                        name,
+                        description,
+                        MarketplaceApi.ItemDetails(visibility = parseVisibility(visibility))
+                    )
                 }
                 published(item)
             }
@@ -97,7 +102,12 @@ object ConfigPublishCommand {
 
                 val base = ConfigTracker.itemName
                 val item = request {
-                    ConfigTracker.overlay(session(), name, description, parseVisibility(visibility))
+                    ConfigTracker.overlay(
+                        session(),
+                        name,
+                        description,
+                        MarketplaceApi.ItemDetails(visibility = parseVisibility(visibility))
+                    )
                 }
                 published(item)
                 chat(regular(t("overlay.basedOn", variable(base))))

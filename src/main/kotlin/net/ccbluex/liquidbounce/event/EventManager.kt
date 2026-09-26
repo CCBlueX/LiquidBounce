@@ -59,6 +59,7 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ClosedCaptionsEvent
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
+import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -281,6 +282,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClosedCaptionsEvent::class.java,
     UserLoggedInEvent::class.java,
     UserLoggedOutEvent::class.java,
+    ConfigTrackerChangeEvent::class.java,
 )
 
 inline fun <reified E : Event> eventFlow(): SharedFlow<E> =

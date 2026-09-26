@@ -2,11 +2,12 @@
     import {onMount} from "svelte";
     import DetailPage from "./DetailPage.svelte";
     import PillButton from "../../../common/PillButton.svelte";
+    import ActionMenu from "../../../common/ActionMenu.svelte";
     import Chip from "../../../common/Chip.svelte";
     import SectionLabel from "../../../common/SectionLabel.svelte";
     import ListRow from "../../../common/ListRow.svelte";
-    import {getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
-    import type {MarketplaceConfigDetail} from "../../../../../integration/types";
+    import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
+    import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
         attempt,
         configBadges,
@@ -17,11 +18,13 @@
         UNKNOWN_SERVER,
         version
     } from "../marketplace";
+    import {notify} from "../../../clickgui_store";
     import {ago, compactNumber, date, errorMessage, present} from "../../../../../util/utils";
 
-    let {id, loggedIn, onback, onopen}: {
+    let {id, loggedIn, tracker, onback, onopen}: {
         id: number;
         loggedIn: boolean;
+        tracker: ConfigTracker | null;
         onback: () => void;
         onopen: (kind: "config" | "item", id: number) => void;
     } = $props();
@@ -30,8 +33,11 @@
     let error = $state<string | null>(null);
 
     const config = $derived(detail?.config);
+    const tracking = $derived(config && tracker?.id === config.id ? tracker.state : "None");
+    const canUpdate = $derived(loggedIn && tracking === "Editing" && !!tracker?.own);
     const configs = $derived(detail?.configs ?? []);
     const installs = $derived(detail?.installs ?? []);
+    const owner = $derived(!!config?.own && loggedIn);
     const composed = $derived(configs.length > 0 || installs.length > 0 || !!detail?.changes?.length);
     const stats = $derived(config && detail ? [
         {label: "Last revision", value: ago(config.updatedAt)},
@@ -65,6 +71,13 @@
         }
     }
 
+    async function copyShareCode() {
+        const code = await attempt(() => copyMarketplaceShareCode(id));
+        if (code) {
+            notify(`Copied ${code}`);
+        }
+    }
+
     function load() {
         if (config) {
             dialog.set({kind: "load", config: {id: config.id, address: config.address}});
@@ -74,15 +87,29 @@
 
 <DetailPage noun="config" loaded={!!config} {error} onretry={refresh} {onback} {stats}
             image={config?.image ?? UNKNOWN_SERVER} address={config?.address}
-            badges={config ? configBadges(config, config.overlayOn ? "Overlay" : detail?.forkOf && "Fork") : []}
+            badges={config ? configBadges(config, tracking, config.overlayOn ? "Overlay" : detail?.forkOf && "Fork") : []}
             subtitle="Updated {ago(config?.updatedAt)}{detail?.createdAt ? ` · published ${date(detail.createdAt)}` : ''}"
             description={detail?.description}>
     {#snippet actions()}
+        {#if detail?.shareCode && loggedIn}
+            <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
+        {/if}
         {#if config && loggedIn}
             <PillButton title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>
             <PillButton title="Broken · {config.fails}" active={detail?.report === false} onclick={() => report(false)}/>
         {/if}
+        {#if canUpdate}
+            <PillButton title="Update..." onclick={() => dialog.set({kind: "update"})}/>
+        {/if}
         <PillButton title="Load" primary onclick={load}/>
+        {#if config && detail && owner}
+            <ActionMenu entries={[
+                {title: "Edit details", onclick: () => dialog.set({kind: "edit", detail: detail!!, ondone: refresh})},
+                {title: "Delete config", danger: true, onclick: () => dialog.set({kind: "delete", config, ondone: onback})}
+            ]}>
+                {#snippet trigger()}More{/snippet}
+            </ActionMenu>
+        {/if}
     {/snippet}
 
     {#if detail}
@@ -130,7 +157,7 @@
                 <div class="list">
                     {#each detail.revisions as revision (revision.id)}
                         <ListRow active={revision.latest} title={date(revision.createdAt)}
-                                 badges={present(revision.latest && "Latest")}
+                                 badges={present(revision.latest && "Latest", revision.loaded && "Loaded")}
                                  subtitle={revision.changelog ?? (revision.first ? "First version" : "")}>
                             {#snippet meta()}{reports(revision.works, revision.fails)}{/snippet}
                         </ListRow>

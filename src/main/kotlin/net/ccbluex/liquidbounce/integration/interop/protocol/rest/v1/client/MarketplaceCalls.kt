@@ -108,6 +108,17 @@ internal suspend fun optionalSession(): OAuthSession? {
         .getOrNull()
 }
 
+/**
+ * The marketplace user id of the account, `null` while logged out or unknown.
+ */
+internal suspend fun ownUserId(): String? {
+    val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
+    if (account.userInformation == null) {
+        runCatching { account.updateInfo() }.onFailure { logger.debug("Failed to load the account", it) }
+    }
+    return account.userInformation?.userId
+}
+
 internal fun currentServer() = mc.currentServer?.ip?.dropPort()?.rootDomain()
 
 /**

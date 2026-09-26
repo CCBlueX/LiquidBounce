@@ -49,6 +49,7 @@ export interface EventMap {
     browserUrlChange: BrowserUrlChangeEvent;
     userLoggedIn: void;
     userLoggedOut: void;
+    configTrackerChange: void;
 
     //WindowEvents.kt
     mouseButton: MouseButtonEvent;
