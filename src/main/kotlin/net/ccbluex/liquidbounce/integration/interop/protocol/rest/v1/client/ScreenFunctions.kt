@@ -20,17 +20,25 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
+import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.client.gui.screens.LoadingOverlay
 import net.minecraft.client.gui.screens.TitleScreen
 
 // GET /api/v1/client/virtualScreen
-private fun Routing.getVirtualScreenInfo() = get("/virtualScreen") {
+private fun Route.getVirtualScreenInfo() = get("/virtualScreen") {
     call.respond(JsonObject().apply {
         addProperty("name", ScreenManager.screen?.type?.routeName)
         addProperty("showingSplash", mc.gui.overlay() is LoadingOverlay)
@@ -38,7 +46,7 @@ private fun Routing.getVirtualScreenInfo() = get("/virtualScreen") {
 }
 
 // POST /api/v1/client/virtualScreen
-private fun Routing.postVirtualScreen() = post("/virtualScreen") {
+private fun Route.postVirtualScreen() = post("/virtualScreen") {
     val payload = call.receive<JsonObject>()
     val name = payload["name"]?.asString ?: call.forbidden("No name")
 
@@ -48,11 +56,11 @@ private fun Routing.postVirtualScreen() = post("/virtualScreen") {
     }
 
     ScreenManager.screenAcknowledgement.confirm()
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/screen
-private fun Routing.getScreenInfo() = get {
+private fun Route.getScreenInfo() = get {
     val mcScreen = mc.gui.screen() ?: call.forbidden("No screen")
     val name = CustomScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
@@ -62,7 +70,7 @@ private fun Routing.getScreenInfo() = get {
 }
 
 // GET /api/v1/client/screen/size
-private fun Routing.getScreenSize() = get("/size") {
+private fun Route.getScreenSize() = get("/size") {
     call.respond(JsonObject().apply {
         addProperty("width", mc.window.guiScaledWidth)
         addProperty("height", mc.window.guiScaledHeight)
@@ -70,24 +78,24 @@ private fun Routing.getScreenSize() = get("/size") {
 }
 
 // PUT /api/v1/client/screen
-private fun Routing.putScreen() = put {
+private fun Route.putScreen() = put {
     val payload = call.receive<JsonObject>()
     val screenName = payload["name"]?.asString ?: call.forbidden("No screen name")
 
     CustomScreenType.byName(screenName)?.open()
         ?: call.forbidden("No screen with name $screenName")
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/screen
-private fun Routing.deleteScreen() = delete {
+private fun Route.deleteScreen() = delete {
     val screen = mc.gui.screen() ?: call.forbidden("No screen")
 
     if (screen is CustomSharedMinecraftScreen && screen.parentScreen != null) {
         mc.execute {
             mc.gui.setScreen(screen.parentScreen)
         }
-        call.respondNoContent()
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
         return@delete
     }
 
@@ -100,10 +108,10 @@ private fun Routing.deleteScreen() = delete {
             }
         )
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.screenRoutes() {
+internal fun Route.screenRoutes() {
     getVirtualScreenInfo()
     postVirtualScreen()
     route("/screen") {

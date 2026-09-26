@@ -43,7 +43,7 @@ fun Entity.findEntityInCrosshair(
         cameraVec,
         vec3d3,
         box,
-        if (predicate != null) EntitySelector.CAN_BE_PICKED.or(predicate) else EntitySelector.CAN_BE_PICKED,
+        if (predicate != null) EntitySelector.CAN_BE_PICKED.and(predicate) else EntitySelector.CAN_BE_PICKED,
         range.sq()
     )
 
@@ -89,7 +89,7 @@ fun isLookingAtEntity(
 ): EntityHitResult? {
     val cameraVec = fromEntity.eyePosition
     val entityHitResult = fromEntity.findEntityInCrosshair(range, rotation) { entity ->
-        entity == toEntity
+        entity === toEntity
     } ?: return null
 
     val distance = cameraVec.distanceToSqr(entityHitResult.location)

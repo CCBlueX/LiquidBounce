@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(BannerRenderer.class)
 public abstract class MixinBannerRenderer {
 
-    @ModifyArg(method = "submitPatternLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"), index = 6)
+    @ModifyArg(method = "submitPatternLayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"), index = 6)
     private static int hookFirstPersonShieldPatternTint(int tintedColor) {
         return FirstPersonShieldTint.isRendering()
             ? ModuleItemChams.Shield.INSTANCE.applyTint(tintedColor)

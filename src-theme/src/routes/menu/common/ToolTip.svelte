@@ -2,6 +2,8 @@
     import {fly} from "svelte/transition";
     import {onMount, tick} from "svelte";
     import {portal} from "../../../integration/util";
+    import {location} from "svelte-spa-router";
+    import {routeChangeStart} from "../../../integration/router";
 
     export let text: string;
     export let color = "var(--tooltip-background-color)";
@@ -33,13 +35,22 @@
     }
 
     onMount(() => {
+        const unsubscribeRouteChangeStart = routeChangeStart.subscribe(hide);
+        const unsubscribeLocation = location.subscribe(hide);
         const parent = element.parentElement;
-        if (!parent) return;
+        if (!parent) {
+            return () => {
+                unsubscribeRouteChangeStart();
+                unsubscribeLocation();
+            };
+        }
 
         parent.addEventListener("mouseenter", show);
         parent.addEventListener("mouseleave", hide);
 
         return () => {
+            unsubscribeRouteChangeStart();
+            unsubscribeLocation();
             parent.removeEventListener("mouseenter", show);
             parent.removeEventListener("mouseleave", hide);
         };

@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
@@ -65,16 +65,16 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
             }
         }
 
-    val repeatable = tickHandler {
-        val target = currentTarget ?: return@tickHandler
+    val repeatable = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
         if (!chronometer.hasElapsed(delay.toLong())) {
-            return@tickHandler
+            return@handler
         }
 
         if (wouldKill(target)) {
             currentTarget = null
-            return@tickHandler
+            return@handler
         }
 
         // find the best spot (and skip if no spot was found)
@@ -84,7 +84,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
                 target.boundingBox,
                 range = range.toDouble(),
                 wallsRange = wallRange.toDouble(),
-            ) ?: return@tickHandler
+            ) ?: return@handler
 
         rotationMode.activeMode.rotate(rotation, isFinished = {
             isLookingAtEntity(

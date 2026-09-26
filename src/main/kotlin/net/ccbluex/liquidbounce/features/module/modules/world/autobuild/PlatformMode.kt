@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
@@ -59,7 +59,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
             for (z in center.z - platformSize..center.z + platformSize) {
                 pos.x = x
                 pos.z = z
-                if (pos.getState()!!.canBeReplaced()) {
+                if (pos.state!!.canBeReplaced()) {
                     blocks1.add(pos.immutable())
                 }
             }

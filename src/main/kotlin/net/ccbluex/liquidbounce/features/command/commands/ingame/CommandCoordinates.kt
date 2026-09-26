@@ -18,16 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.playerName
-import net.ccbluex.liquidbounce.utils.text.asPlainText
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.onlinePlayers
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import org.apache.commons.lang3.StringUtils
 
@@ -36,43 +40,39 @@ import org.apache.commons.lang3.StringUtils
  *
  * Copies your coordinates to your clipboard.
  */
-object CommandCoordinates : Command.Factory {
+object CommandCoordinates : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("coordinates", aliases = listOf("position", "coords")) {
+            requires { it.isIngame }
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("coordinates")
-            .alias("position", "coords")
-            .hub()
-            .requiresIngame()
-            .subcommand(
-                CommandBuilder.begin("whisper")
-                    .parameter(
-                        ParameterBuilder.playerName()
-                            .required()
-                            .build()
+            literal("whisper") {
+                argument("name", ClientStringArgumentType.word(), onlinePlayers()) { name ->
+                    exec { ctx ->
+                        network.sendCommand("msg ${ctx.get(name)} ${getCoordinates(fancy = true)}")
+                        1
+                    }
+                }
+            }
+            literal("copy") {
+                exec {
+                    mc.keyboardHandler.clipboard = getCoordinates()
+                    chat(
+                        t("copy.success"),
+                        metadata = MessageMetadata(id = "Ccopy#info")
                     )
-                    .handler {
-                        val name = args[0] as String
-                        network.sendCommand("msg $name ${getCoordinates(fancy = true)}")
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder.begin("copy")
-                    .handler {
-                        mc.keyboardHandler.clipboard = getCoordinates()
-                        chat(command.result("success"), command)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder.begin("info")
-                    .handler {
-                        chat(getCoordinates().asPlainText(ChatFormatting.GRAY), command)
-                    }
-                    .build()
-            )
-            .build()
+                    1
+                }
+            }
+            literal("info") {
+                exec {
+                    chat(
+                        getCoordinates().asPlainText(ChatFormatting.GRAY),
+                        metadata = MessageMetadata(id = "Cinfo#info"),
+                    )
+                    1
+                }
+            }
+        }
     }
 
     private fun getCoordinates(fancy: Boolean = false): String {

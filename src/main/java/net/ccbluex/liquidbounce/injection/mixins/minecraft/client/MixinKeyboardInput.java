@@ -19,59 +19,24 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
 import net.ccbluex.liquidbounce.event.events.SprintEvent;
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
-import net.ccbluex.liquidbounce.utils.input.InputTracker;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
 import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Input;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.minecraft.util.Mth.DEG_TO_RAD;
 
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends MixinClientInput {
-
-    @Shadow
-    @Final
-    private Options options;
-
-    /**
-     * Hook inventory move module
-     */
-    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
-    private boolean hookInventoryMove(KeyMapping instance, Operation<Boolean> original) {
-        return original.call(instance) ||
-                ModuleInventoryMove.INSTANCE.shouldHandleInputs(instance)
-                        && InputTracker.INSTANCE.isPressedOnAny(instance);
-    }
-
-    /**
-     * Later in the code, the sprint key is checked for being pressed. We need to update the state of the key
-     * as well.
-     */
-    @Inject(method = "tick", at = @At("HEAD"))
-    private void hookInventoryMoveSprint(CallbackInfo ci) {
-        if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.options.keySprint)) {
-            this.options.keySprint.setDown(InputTracker.INSTANCE.isPressedOnAny(this.options.keySprint));
-        }
-    }
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "NEW", target = "(ZZZZZZZ)Lnet/minecraft/world/entity/player/Input;"))
     private Input modifyInput(Input original) {

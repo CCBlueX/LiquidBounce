@@ -32,6 +32,11 @@ object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique,
     private val jumpDelay by intRange("JumpDelay", 0..0, 0..20, "ticks")
     private var jumpCooldown = 0
 
+    override fun onEnabled() {
+        jumpCooldown = 0
+        super.onEnabled()
+    }
+
     val repeatable = handler<GameTickEvent> {
         if (jumpCooldown > 0) {
             jumpCooldown--

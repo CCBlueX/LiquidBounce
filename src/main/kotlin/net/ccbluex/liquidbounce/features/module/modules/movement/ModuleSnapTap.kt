@@ -24,10 +24,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.KeyEvent
-import org.lwjgl.glfw.GLFW
 
 /**
  * Snaptap module
@@ -71,8 +69,8 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
         val keyboardBack = mc.options.keyDown
 
         val keyEvent = KeyEvent(event.keyCode, event.scanCode, event.mods)
-        val pressed = event.action == GLFW.GLFW_PRESS
-        val released = event.action == GLFW.GLFW_RELEASE
+        val pressed = event.isPressed
+        val released = event.isReleased
 
         when {
             keyboardLeft.matches(keyEvent) -> {
@@ -96,8 +94,6 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
 
     @Suppress("unused")
     val onMovementInput = handler<MovementInputEvent> { event ->
-        if (mc.gui.screen() != null && !ModuleInventoryMove.allowsMovementOverride()) return@handler
-
         var isKeyLeftHeld = event.directionalInput.left
         var isKeyRightHeld = event.directionalInput.right
         var isKeyForwardHeld = event.directionalInput.forwards

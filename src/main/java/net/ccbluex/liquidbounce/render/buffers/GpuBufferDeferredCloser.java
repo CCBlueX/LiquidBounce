@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.render.buffers;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuFence;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.commands.GpuFence;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,9 +37,9 @@ import java.util.function.Consumer;
  *
  * <p>Both methods must be called on the render thread.
  */
-public final class GpuBufferDeferredCloser implements AutoCloseable {
+final class GpuBufferDeferredCloser implements AutoCloseable {
 
-    private final Consumer<GpuBuffer> closeAction;
+    private final Consumer<? super GpuBuffer> closeAction;
     private final ArrayList<PendingClose> pendingClose = new ArrayList<>();
 
     /**
@@ -55,7 +55,7 @@ public final class GpuBufferDeferredCloser implements AutoCloseable {
      * @param closeAction action to run once a buffer's fence has completed;
      *                    typically closes or recycles the buffer
      */
-    public GpuBufferDeferredCloser(Consumer<GpuBuffer> closeAction) {
+    public GpuBufferDeferredCloser(Consumer<? super GpuBuffer> closeAction) {
         this.closeAction = closeAction;
     }
 
@@ -78,7 +78,7 @@ public final class GpuBufferDeferredCloser implements AutoCloseable {
      *
      * @param buffers buffers that must remain valid until the fence is signaled
      */
-    public void add(Collection<GpuBuffer> buffers) {
+    public void add(Collection<? extends GpuBuffer> buffers) {
         if (buffers.isEmpty()) {
             return;
         }

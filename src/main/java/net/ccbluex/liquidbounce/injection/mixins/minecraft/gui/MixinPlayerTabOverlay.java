@@ -190,12 +190,12 @@ public abstract class MixinPlayerTabOverlay {
         if (ModuleBetterTab.INSTANCE.getRunning() && ModuleBetterTab.INSTANCE.getShowGameMode()) {
             var playerGameMode = entry.getGameMode();
             var gameModeText = PlainText.of(" [" + shortName(playerGameMode) + "]");
-            components.append(gameModeText);
+            components.add(gameModeText);
         }
 
         if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
             var staffText = PlainText.of(" - (Staff)", TextColor.fromRgb(CommonColors.SOFT_RED));
-            components.append(staffText);
+            components.add(staffText);
         }
 
         return components.build();

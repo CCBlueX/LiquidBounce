@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.render.engine
 
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.renderpearl.api.textures.FilterMode
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
+import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -98,7 +99,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         intermediate.createRenderPass({ "GUI blur H pass" })
             .use { pass ->
                 pass.setPipeline(ClientRenderPipelines.GuiBlurH)
-                pass.bindTexture("texture0", mainTexture, overlaySampler)
+                pass.setUniform("texture0", mainTexture, overlaySampler)
                 pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
                 pass.draw(3, 1, 0, 0)
             }
@@ -107,8 +108,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         mainTarget.createRenderPass({ "GUI blur V pass" })
             .use { pass ->
                 pass.setPipeline(ClientRenderPipelines.GuiBlurV)
-                pass.bindTexture("texture0", intermediate.colorTextureView, overlaySampler)
-                pass.bindTexture("overlay", overlayTexture, overlaySampler)
+                pass.setUniform("texture0", intermediate.colorTextureView, overlaySampler)
+                pass.setUniform("overlay", overlayTexture, overlaySampler)
                 pass.setUniform(ClientUniformDefine.GUI_BLUR.uboName, blendUniform)
                 pass.setUniform(ClientUniformDefine.GUI_BLUR_KERNEL.uboName, kernelUniform)
                 pass.draw(3, 1, 0, 0)
@@ -119,7 +120,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             .createRenderPass({ "GUI blur overlay blit pass" })
             .use { pass ->
                 pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
-                pass.bindTexture("InSampler", overlayTexture, overlaySampler)
+                pass.setUniform("InSampler", overlayTexture, overlaySampler)
                 pass.draw(3, 1, 0, 0)
             }
     }

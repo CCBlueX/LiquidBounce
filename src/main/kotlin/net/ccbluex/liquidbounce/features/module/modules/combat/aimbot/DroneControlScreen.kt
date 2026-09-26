@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -43,10 +44,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2d
-import org.lwjgl.glfw.GLFW
 import kotlin.math.pow
 
-private const val DRAG_BUTTON = 0
+private const val DRAG_BUTTON = InputConstants.MOUSE_BUTTON_LEFT
 
 /**
  * Zoom by another 25% every mouse tick.
@@ -103,7 +103,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     }
 
     override fun keyPressed(input: KeyEvent): Boolean {
-        if (input.key == GLFW.GLFW_KEY_SPACE) {
+        if (input.key == InputConstants.KEY_SPACE) {
             ModuleDroneControl.mayShoot = true
         }
 
@@ -151,7 +151,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
             this.dragStartPos = null
         }
 
-        if (button != 1) {
+        if (button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return true
         }
 

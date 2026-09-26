@@ -51,6 +51,7 @@ enum class CustomScreenType(
     val routeName: String,
     private val recognizer: Predicate<Screen> = Predicates.alwaysFalse(),
     val isInGame: Boolean = false,
+    val hasBasicMenu: Boolean = false,
     private val open: Runnable = Runnable {
         mc.gui.setScreen(CustomSharedMinecraftScreen(byName(routeName)!!))
     }
@@ -60,16 +61,19 @@ enum class CustomScreenType(
     CLICK_GUI("clickgui"),
     ALT_MANAGER("altmanager"),
     PROXY_MANAGER("proxymanager"),
+    BASIC_MENU("basicmenu"),
 
     TITLE(
         "title",
         recognizer = { it is TitleScreen || it.isLunar },
+        hasBasicMenu = true,
         open = { mc.gui.setScreen(TitleScreen()) }
     ),
 
     MULTIPLAYER(
         "multiplayer",
         recognizer = { it is JoinMultiplayerScreen || it is SafetyScreen },
+        hasBasicMenu = true,
         open = { mc.gui.setScreen(JoinMultiplayerScreen(ScreenManager.parent)) }
     ),
 
@@ -106,7 +110,7 @@ enum class CustomScreenType(
         "options",
         recognizer = { it is OptionsScreen },
         open = {
-            mc.gui.setScreen(OptionsScreen(ScreenManager.parent, mc.options, mc.level != null))
+            mc.gui.setScreen(OptionsScreen(ScreenManager.parent, mc.options))
         }
     ),
 
@@ -140,10 +144,9 @@ enum class CustomScreenType(
 
     fun open() = mc.execute(open)
 
-    companion object {
-        @JvmStatic
+    companion {
         fun byName(name: String) = entries.find { it.routeName == name }
-        @JvmStatic
+
         fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 

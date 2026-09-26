@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PositionFactoryConfiguration
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -98,16 +98,14 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
-        val placementLocation = PlayerLocationOnPlacement(position = player.position())
+        val placementLocation = PlayerLocationOnPlacement()
 
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 offsetsForTargets,
                 targetOverlapComparator(blockPos, offsetsForTargets, placementLocation.eyePos),
             ),
-            FaceHandlingOptions(
-                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(placementLocation.eyePos, 0.5))
-            ),
+            FaceHandlingOptions(NearestRotationTargetPositionFactory),
             stackToPlaceWith = slot.itemStack,
             placementLocation,
         )
@@ -120,7 +118,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             return false
         }
 
-        val actualPos = raycast.blockPos.offset(raycast.direction.unitVec3i)
+        val actualPos = raycast.targetBlockPos
 
         if (!AABB(actualPos).intersects(plan.planningInfo.targetBB)) {
             return false

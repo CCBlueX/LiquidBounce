@@ -30,7 +30,7 @@ sealed class TextureMode(name: String) : Mode(name) {
     abstract val texture: DynamicTexture?
 
     class Custom(override val parent: ModeValueGroup<*>) : TextureMode("Custom") {
-        override val texture by file("File").toTextureProperty(this)
+        override val texture by file("File", supportedExtensions = setOf("png")).toTextureProperty(this)
     }
 
     class Builtin<T : Builtin.Preset>(

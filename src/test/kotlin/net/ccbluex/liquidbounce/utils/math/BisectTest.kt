@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.Test
 
 class BisectTest {
 
@@ -58,14 +58,14 @@ class BisectTest {
 
     @Test
     fun `rejects descending intervals`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             findFunctionMinimumByBisect(2.0, 1.0) { it }
         }
     }
 
     @Test
     fun `rejects non positive min delta`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             findFunctionMinimumByBisect(0.0, 1.0, minDelta = 0.0) { it }
         }
     }

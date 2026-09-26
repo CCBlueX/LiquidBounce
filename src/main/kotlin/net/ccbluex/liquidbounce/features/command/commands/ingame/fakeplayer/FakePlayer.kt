@@ -29,6 +29,7 @@ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EntityEvent
 import java.util.function.Consumer
 
 /**
@@ -53,9 +54,9 @@ open class FakePlayer @JvmOverloads constructor(
         this.xOld = snapshot.lastX
         this.yOld = snapshot.lastY
         this.zOld = snapshot.lastZ
-        this.swinging = snapshot.handSwinging
-        this.swingTime = snapshot.handSwingTicks
-        this.attackAnim = snapshot.handSwingProgress
+        snapshot.currentSwing?.let {
+            this.swing(it.hand, it.animation, false)
+        }
         this.yRot = snapshot.yaw
         this.yRotO = snapshot.lastYaw
         this.xRot = snapshot.pitch
@@ -65,7 +66,6 @@ open class FakePlayer @JvmOverloads constructor(
         this.yHeadRot = snapshot.headYaw
         this.yHeadRotO = snapshot.lastHeadYaw
         this.pose = snapshot.pose
-        this.swingingArm = snapshot.preferredHand
         this.inventory.replaceWith(snapshot.inventory)
         this.walkAnimation.position = snapshot.limbPos
     }
@@ -83,7 +83,7 @@ open class FakePlayer @JvmOverloads constructor(
             addEffect(MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0))
             setHealth(1.0f)
 
-            val packet = ClientboundEntityEventPacket(this, 35.toByte())
+            val packet = ClientboundEntityEventPacket(this, EntityEvent.PROTECTED_FROM_DEATH)
             val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {

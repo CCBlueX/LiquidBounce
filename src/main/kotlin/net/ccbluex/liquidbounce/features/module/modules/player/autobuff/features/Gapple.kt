@@ -19,9 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.world.item.ItemStack
@@ -31,28 +28,12 @@ internal object Gapple : HealthBasedBuff("Gapple") {
 
     private val enchanted by boolean("Enchanted", true)
 
-    private var forceUseKey = false
-
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
         return stack.`is`(Items.GOLDEN_APPLE) || (enchanted && stack.`is`(Items.ENCHANTED_GOLDEN_APPLE))
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
-        forceUseKey = true
-        tickUntil { !passesRequirements }
-        forceUseKey = false
-    }
-
-    override fun onDisabled() {
-        forceUseKey = false
-        super.onDisabled()
-    }
-
-    @Suppress("unused")
-    private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.keyUse && forceUseKey) {
-            event.isPressed = true
-        }
+        holdUse(slot)
     }
 
 }

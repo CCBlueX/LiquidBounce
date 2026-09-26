@@ -28,6 +28,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.util.TreeSet
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 object FriendManager : Config("Friends"), EventListener {
 
@@ -76,5 +79,26 @@ object FriendManager : Config("Friends"), EventListener {
 
     fun isFriend(name: String): Boolean = friends.contains(Friend(name, null))
     fun isFriend(entity: Entity): Boolean = entity is Player && isFriend(entity.gameProfile.name)
+
+    @AddonApi
+    fun add(friend: Friend): Boolean = friends.add(friend).also { added ->
+        if (added) {
+            EventManager.callEvent(FriendChangeEvent(friend.name, true))
+        }
+    }
+
+    @AddonApi
+    fun remove(name: String): Boolean = friends.remove(Friend(name, null)).also { removed ->
+        if (removed) {
+            EventManager.callEvent(FriendChangeEvent(name, false))
+        }
+    }
+
+    @AddonApi
+    fun clear() {
+        val names = friends.map(Friend::name)
+        friends.clear()
+        names.forEach { EventManager.callEvent(FriendChangeEvent(it, false)) }
+    }
 
 }

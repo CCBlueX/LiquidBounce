@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.buffers
 
-import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.write
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity

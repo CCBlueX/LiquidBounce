@@ -19,25 +19,24 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
 object CommandClientPrefixSubcommand {
-    fun prefixCommand() = CommandBuilder.begin("prefix")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("prefix")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .required()
-                .build()
-        )
-        .handler {
-            val prefix = args[0] as String
-            CommandManager.GlobalSettings.prefix = prefix
-            chat(regular(command.result("prefixChanged", variable(prefix))))
+    fun CmdLiteralScope.prefix() {
+        literal("prefix") {
+            argument("prefix", ClientStringArgumentType.word()) { prefix ->
+                exec { ctx ->
+                    val newPrefix = ctx.get(prefix)
+                    CommandManager.GlobalSettings.prefix = newPrefix
+                    chat(regular(t("prefix.prefixChanged", variable(newPrefix))))
+                    1
+                }
+            }
         }
-        .build()
+    }
 }

@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.accountRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.clientRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.componentRoutes
@@ -41,9 +43,8 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.regist
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.serverListRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.textureRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.worldListRoutes
-import net.ccbluex.netty.http.routing.Routing
 
-internal fun Routing.registerInteropFunctions() = route("/api/v1/client") {
+internal fun Route.registerInteropFunctions() = route("/api/v1/client") {
     clientRoutes()
     userRoutes()
     localStorageRoutes()

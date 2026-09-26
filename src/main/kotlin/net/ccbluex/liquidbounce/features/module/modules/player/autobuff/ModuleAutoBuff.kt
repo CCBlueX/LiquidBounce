@@ -129,7 +129,7 @@ object ModuleAutoBuff : ClientModule(
 
     @Suppress("unused")
     private val refiller = handler<ScheduleInventoryActionEvent> {
-        // If no feature was run, we should run refill
+        // Move valid buff items from the inventory into empty hotbar slots whenever inventory actions are scheduled
         if (Refill.enabled) {
             Refill.execute(it)
         }

@@ -20,27 +20,20 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoInterpolation;
-import net.minecraft.world.entity.InterpolationHandler;
+import net.minecraft.world.entity.AbstractInterpolationHandler;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(InterpolationHandler.class)
+@Mixin(AbstractInterpolationHandler.class)
 public abstract class MixinInterpolationHandler {
 
     @ModifyExpressionValue(
-        method = "interpolateTo",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/world/entity/InterpolationHandler;interpolationSteps:I",
-            opcode = Opcodes.GETFIELD
-        )
+        method = "interpolateTo(Lnet/minecraft/world/entity/PositionPath;FF)V",
+        at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/AbstractInterpolationHandler;interpolationSteps:I", opcode = Opcodes.GETFIELD)
     )
     private int hookInterpolationSteps(int original) {
-        if (ModuleNoInterpolation.INSTANCE.getRunning()) {
-            return Math.max(original - ModuleNoInterpolation.INSTANCE.getValue(), 0);
-        }
-        return original;
+        return ModuleNoInterpolation.reduceInterpolationSteps(original);
     }
 
 }

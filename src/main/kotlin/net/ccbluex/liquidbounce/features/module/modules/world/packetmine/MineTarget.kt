@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -39,7 +38,7 @@ class MineTarget(val targetPos: BlockPos) {
     var started = false
     var finishReadyTick: Long? = null
     var direction: Direction? = null
-    var blockState = targetPos.getState()!!
+    var blockState = targetPos.stateOrEmpty
         private set
 
     fun init() {
@@ -58,11 +57,11 @@ class MineTarget(val targetPos: BlockPos) {
     }
 
     fun updateBlockState() {
-        blockState = targetPos.getState()!!
+        blockState = targetPos.stateOrEmpty
     }
 
     fun isInvalidOrOutOfRange(): Boolean {
-        val state = targetPos.getState()!!
+        val state = targetPos.stateOrEmpty
         val invalid = ModulePacketMine.mode.activeMode.isInvalid(this, state)
         return invalid || isOutOfRange(targetPos, state)
     }

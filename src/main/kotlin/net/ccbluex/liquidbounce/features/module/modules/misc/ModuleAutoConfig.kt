@@ -20,12 +20,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.text.dropPort
@@ -51,9 +52,18 @@ object ModuleAutoConfig : ClientModule(
     @Volatile
     private var isScheduled = false
 
+    private val onlyFeatured by boolean("OnlyFeatured", true)
+
     init {
         doNotIncludeAlways()
     }
+
+    override val tag: String?
+        get() = when (ConfigTracker.state) {
+            ConfigTracker.State.NONE -> ConfigTracker.localName.ifEmpty { null }
+            ConfigTracker.State.TRACKED -> ConfigTracker.address
+            ConfigTracker.State.EDITING -> "${ConfigTracker.address}*"
+        }
 
     override suspend fun enabledEffect() {
         val currentServerEntry = mc.currentServer
@@ -72,6 +82,15 @@ object ModuleAutoConfig : ClientModule(
     @Suppress("unused")
     private val handleServerConnect = handler<ServerConnectEvent> { event ->
         if (isScheduled) {
+            return@handler
+        }
+
+        // A local config the user loaded stays until they load another one or turn AutoConfig on again
+        if (ConfigTracker.localName.isNotEmpty()) {
+            notification(
+                "Auto Config", "Keeping local config ${ConfigTracker.localName}.",
+                NotificationEvent.Severity.INFO
+            )
             return@handler
         }
 
@@ -107,26 +126,29 @@ object ModuleAutoConfig : ClientModule(
             return
         }
 
-        // Get config with the shortest name, as it is most likely the correct one.
-        // There can be multiple configs for the same server, but with different names
-        // and the global config is likely named e.g "hypixel", while the more specific ones are named
-        // "hypixel-csgo", "hypixel-legit", etc.
-        val autoConfig = (AutoConfig.configs ?: return).filter { config ->
-            config.serverAddress?.rootDomain().equals(address, true) ||
-                config.serverAddress.equals(address, true)
-        }.minByOrNull { config -> config.name.length }
+        val autoConfig = runCatching { MarketplaceConfigs.findForServer(address, onlyFeatured) }
+            .onFailure { logger.error("Failed to look up a config for $address.", it) }
+            .getOrNull()
+        val revisionId = autoConfig?.liveRevisionId
 
-        if (autoConfig == null) {
+        if (autoConfig == null || revisionId == null) {
             notification(
-                "Auto Config", "There is no known config for $address.",
+                "Auto Config", "There is no ${if (onlyFeatured) "featured " else ""}config for $address.",
                 NotificationEvent.Severity.ERROR
             )
             return
         }
 
+        // Loading again would throw away the user's edits or re-apply what already runs
+        if (ConfigTracker.state != ConfigTracker.State.NONE && ConfigTracker.itemId == autoConfig.id &&
+            (ConfigTracker.state == ConfigTracker.State.EDITING || ConfigTracker.revisionId == revisionId)
+        ) {
+            return
+        }
+
         connectScreen?.updateStatus(regular(message("loading", address)))
         runCatching {
-            AutoConfig.loadAutoConfig(autoConfig)
+            ConfigTracker.load(autoConfig, revisionId)
         }.onFailure { error ->
             logger.error("Failed to load config ${autoConfig.name} for $address.", error)
             connectScreen?.updateStatus(markAsError(message("failed", address)))
@@ -134,12 +156,22 @@ object ModuleAutoConfig : ClientModule(
                 "Auto Config", "Failed to load config ${autoConfig.name}.",
                 NotificationEvent.Severity.ERROR
             )
-        }.onSuccess {
+        }.onSuccess { result ->
             connectScreen?.updateStatus(regular(message("loaded", address)))
             notification(
                 "Auto Config", "Successfully loaded config ${autoConfig.name}.",
                 NotificationEvent.Severity.SUCCESS
             )
+            if (result.restartRequired) {
+                notification(
+                    "Auto Config",
+                    "Restart the game to finish installing ${result.installed.joinToString { it.name }}.",
+                    NotificationEvent.Severity.INFO
+                )
+            }
+            for (unavailable in result.unavailable) {
+                notification("Auto Config", unavailable.describe(), NotificationEvent.Severity.ERROR)
+            }
         }
     }
 
@@ -147,6 +179,6 @@ object ModuleAutoConfig : ClientModule(
      * Overwrites the condition requirement for being in-game
      */
     override val running
-        get() = !HideAppearance.isDestructed && enabled
+        get() = !SelfDestruct.isDestructed && enabled
 
 }

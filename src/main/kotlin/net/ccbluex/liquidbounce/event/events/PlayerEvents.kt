@@ -23,12 +23,14 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.tags.TagKey
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.phys.Vec3
 
@@ -39,15 +41,18 @@ class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float,
 @Tag("death")
 object DeathEvent : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("playerTick")
 class PlayerTickEvent : CancellableEvent()
 
+@AddonApi
 @Tag("playerPostTick")
 object PlayerPostTickEvent : Event()
 
 @Tag("playerMovementTick")
-object PlayerMovementTickEvent : Event()
+class PlayerMovementTickEvent : CancellableEvent()
 
+@AddonApi
 @Tag("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(
     val state: EventState,
@@ -60,9 +65,11 @@ class PlayerNetworkMovementTickEvent(
 @Tag("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
+@AddonApi
 @Tag("playerMove")
 class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
 
+@AddonApi
 @Tag("playerJump")
 class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 
@@ -105,3 +112,11 @@ class PlayerStepSuccessEvent(val movementVec: Vec3, var adjustedVec: Vec3) : Eve
 
 @Tag("playerFluidCollisionCheck")
 class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()
+
+@Tag("playerContainerInput")
+class PlayerContainerInputEvent(
+    val containerId: Int,
+    val slot: Int,
+    val button: Int,
+    val input: ContainerInput,
+) : CancellableEvent()

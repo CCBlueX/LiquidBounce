@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.Item
@@ -50,6 +51,7 @@ inline fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(predicate: (ItemStac
     return candidate
 }
 
+@AddonApi
 class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
     val stacks: Array<ItemStack>
         get() = slots.mapToArray { it.itemStack }
@@ -59,6 +61,8 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
 
     fun findSlot(item: Item): T? = findSlot { it.item === item }
 
+    // Java takes the Predicate overload; both would match a lambda otherwise.
+    @JvmSynthetic
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {
         return if (mc.player == null) null else find { predicate(it.itemStack) }
     }

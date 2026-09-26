@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.event.events
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -41,6 +43,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import java.util.function.UnaryOperator
 
+@AddonApi
 @Tag("gameTick")
 object GameTickEvent : Event()
 
@@ -65,6 +68,7 @@ class KeyEvent(
 @Tag("inputHandle")
 object InputHandleEvent : Event()
 
+@AddonApi
 @Tag("movementInput")
 class MovementInputEvent(
     var directionalInput: DirectionalInput,
@@ -122,23 +126,28 @@ class SessionEvent(
     val session: User,
 ) : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("screen")
 class ScreenEvent(
     val screen: Screen?,
 ) : CancellableEvent()
 
+@AddonApi
 @Tag("chatSend")
 class ChatSendEvent(
     val message: String,
 ) : CancellableEvent(), WebSocketEvent
 
+@AddonApi
 @Tag("chatReceive")
 class ChatReceiveEvent(
     val message: String,
     val textData: Component,
     val type: ChatType,
+    @ProtocolExclude
     val applyChatDecoration: UnaryOperator<Component>,
 ) : CancellableEvent(), WebSocketEvent {
+    @AddonApi
     enum class ChatType(override val tag: String) : Tagged {
         CHAT_MESSAGE("ChatMessage"),
         DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
@@ -154,6 +163,7 @@ class ServerConnectEvent(
     val cookieStorage: TransferState?,
 ) : CancellableEvent()
 
+@AddonApi
 @Tag("disconnect")
 object DisconnectEvent : Event(), WebSocketEvent
 

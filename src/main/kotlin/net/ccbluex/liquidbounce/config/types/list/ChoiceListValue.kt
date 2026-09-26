@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.SortedMap
 
 class ChoiceListValue<T : Tagged>(
@@ -60,7 +60,7 @@ class ChoiceListValue<T : Tagged>(
         set(newValue)
     }
 
-    @ScriptApiRequired
+    @AddonApi
     fun getChoicesStrings(): Array<String> {
         return choices.mapToArray { it.tag }
     }

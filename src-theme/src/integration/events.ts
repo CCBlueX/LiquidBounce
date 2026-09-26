@@ -64,6 +64,7 @@ export interface EventMap {
     subtitle: TitleEventSubtitle;
     titleFade: TitleEventFade;
     clearTitle: TitleEventClear;
+    closedCaptions: ClosedCaptionsEvent;
 
     //GameEvents.kt
     key: KeyEvent;
@@ -143,10 +144,12 @@ export interface OverlayMessageEvent {
     tinted: boolean;
 }
 
+export type NotificationSeverity = "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+
 export interface NotificationEvent {
     title: string;
     message: string;
-    severity: "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+    severity: NotificationSeverity;
 }
 
 export interface KeyEvent {
@@ -282,6 +285,17 @@ export interface TitleEventFade {
 
 export interface TitleEventClear {
     reset: boolean;
+}
+
+export interface ClosedCaptionsEvent {
+    entries: ClosedCaptionEntry[];
+}
+
+export interface ClosedCaptionEntry {
+    text: TextComponent | string;
+    direction: "NONE" | "LEFT" | "RIGHT";
+    textColor: number;
+    backgroundColor: number;
 }
 
 export interface VirtualScreenEvent {

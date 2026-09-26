@@ -39,6 +39,7 @@ import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
 import java.util.Optional
 import java.util.function.Function
+import java.util.function.UnaryOperator
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -98,7 +99,7 @@ fun <T> Collection<T>.joinToText(
     separator: Component,
     prefix: Component? = null,
     postfix: Component? = null,
-    transform: Function<T, Component>,
+    transform: Function<in T, out Component>,
 ): Component {
     if (isEmpty()) {
         return PlainText.EMPTY
@@ -121,6 +122,13 @@ fun <T> Collection<T>.joinToText(
 }
 
 /**
+ * Joins a list of [String] into a single [Component] with the given [separator].
+ */
+@JvmName("stringsJoinToText")
+fun Collection<String>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function(PlainText::of))
+
+/**
  * Joins a list of [Component] into a single [Component] with the given [separator].
  */
 fun Collection<Component>.joinToText(separator: Component): Component =
@@ -129,7 +137,7 @@ fun Collection<Component>.joinToText(separator: Component): Component =
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
 
-    val parts = mutableListOf<Component>()
+    val parts = TextBuilder()
 
     var currentStyle = Style.EMPTY
     val currentText = Pools.StringBuilder.borrow()
@@ -156,23 +164,31 @@ fun FormattedCharSequence.toText(): Component {
 
     Pools.StringBuilder.recycle(currentText)
 
-    return parts.asText()
+    return parts.build()
 }
 
-fun Component.translated(): Component {
-    val content = this.contents
-    val processedContent = content.translated()
+/**
+ * Returns a new component with [contentMapper] applied to the contents and [styleMapper] applied to the style of every
+ * part, or the receiver itself if nothing changed.
+ */
+fun Component.mapComponent(
+    contentMapper: UnaryOperator<ComponentContents> = UnaryOperator.identity(),
+    styleMapper: UnaryOperator<Style> = UnaryOperator.identity(),
+): Component {
+    val newContent = contentMapper.apply(contents)
+    val newStyle = styleMapper.apply(style)
+    val newSiblings = siblings.map { it.mapComponent(contentMapper, styleMapper) }
 
-    val processedSiblings = siblings.map(Component::translated)
-
-    return if (processedContent === content && processedSiblings == siblings) {
+    return if (newContent === contents && newStyle == style && newSiblings == siblings) {
         this
     } else {
-        MutableComponent.create(processedContent).setStyle(style).apply {
-            siblings.addAll(processedSiblings)
+        MutableComponent.create(newContent).setStyle(newStyle).apply {
+            siblings.addAll(newSiblings)
         }
     }
 }
+
+fun Component.translated(): Component = mapComponent(contentMapper = ComponentContents::translated)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this

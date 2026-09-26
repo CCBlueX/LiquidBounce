@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.minecraft.client.gui.Gui
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Items
 
@@ -34,7 +33,7 @@ import net.minecraft.world.item.Items
 object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, aliases = listOf("NoRender")) {
     /**
      * @see Items.CARVED_PUMPKIN
-     * @see Gui.renderCameraOverlays
+     * @see net.minecraft.client.gui.Hud.extractCameraOverlays
      */
     @JvmField
     val TEXTURE_PUMPKIN_BLUR: Identifier = Identifier.withDefaultNamespace("textures/misc/pumpkinblur.png")
@@ -59,6 +58,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
         DoRender.BOSS_BARS,
         DoRender.EXPLOSION_PARTICLES,
         DoRender.WORLD_BORDER,
+        DoRender.FALLING_LEAVES,
     )
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
@@ -103,4 +103,5 @@ enum class DoRender(override val tag: String) : Tagged {
     BOSS_BARS("BossBars"),
     EXPLOSION_PARTICLES("ExplosionParticles"),
     WORLD_BORDER("WorldBorder"),
+    FALLING_LEAVES("FallingLeaves"),
 }

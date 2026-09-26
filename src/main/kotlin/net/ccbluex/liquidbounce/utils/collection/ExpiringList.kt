@@ -33,6 +33,7 @@ class ExpiringList<E> private constructor(
 
     companion object {
         @JvmStatic
+        @JvmName("create")
         fun <E> EventListener.ExpiringList(): ExpiringList<E> {
             return ExpiringList(this, ArrayDeque())
         }

@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -40,7 +41,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import java.util.SortedSet
 import java.util.function.BiPredicate
-import java.util.function.ToDoubleFunction
 
 fun hasInventorySpace() = player.inventory.nonEquipmentItems.any { it.isEmpty }
 
@@ -56,11 +56,17 @@ fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return Slots.All.filter { !it.itemStack.isEmpty }
 }
 
+/**
+ * Exact total capacity of this iterable to store [itemStack] (empty slots count as [ItemStack.maxStackSize], mergeable
+ * slots as their remaining space). Contract: the slot currently holding [itemStack] must NOT be part of this iterable,
+ * otherwise its own remaining capacity would be double-counted and the result overestimated.
+ */
+@JvmOverloads
 fun Iterable<ItemSlot>.mergeableCapacityFor(itemStack: ItemStack, blacklist: Collection<ItemSlot>? = null): Int =
     sumOf {
         val targetStack = it.itemStack
         when {
-            blacklist != null && it in blacklist -> 0
+            !blacklist.isNullOrEmpty() && it in blacklist -> 0
             targetStack.isEmpty -> itemStack.maxStackSize
             targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
             else -> 0
@@ -77,6 +83,7 @@ fun AbstractContainerScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
         .filter { !it.item.isEmpty && it.container !== player.inventory }
         .map { ContainerItemSlot(it.index) }
 
+@AddonApi
 @JvmOverloads
 context(requester: EventListener)
 fun useHotbarSlotOrOffhand(
@@ -119,9 +126,9 @@ fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
 
     if (candidates.size > 1) {
         return candidates.maxWith(
-            Comparator.comparingDouble<T>(ToDoubleFunction {
+            Comparator.comparingDouble<T> {
                 it.itemStack.getDestroySpeedWithEnchantment(blockState).toDouble()
-            }).thenDescending(ItemSlot.PREFER_NEARBY)
+            }.thenDescending(ItemSlot.PREFER_NEARBY)
         )
     }
 

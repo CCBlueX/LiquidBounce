@@ -18,87 +18,86 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import com.google.common.collect.Sets
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.StringArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-object CommandTranslate : Command.Factory {
+object CommandTranslate : CommandRegistrar {
+    @Suppress("detekt:LongMethod", "detekt:CognitiveComplexMethod")
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("translate", aliases = listOf("tr")) {
+            argument(
+                "sourceLanguage",
+                ClientStringArgumentType.word(),
+                suggestions(Sets.union(setOf("auto"), languageCodes.keys)),
+            ) { sourceLanguage ->
+                argument(
+                    "targetLanguage",
+                    ClientStringArgumentType.word(),
+                    suggestions(languageCodes.keys),
+                ) { targetLanguage ->
+                    argument("text", StringArgumentType.greedyString()) { text ->
+                        execSuspend { ctx ->
+                            val source = ctx.get(sourceLanguage)
+                            val target = ctx.get(targetLanguage)
+                            val input = ctx.get(text)
 
-    @Suppress("LongMethod")
-    override fun createCommand() = CommandBuilder.begin("translate")
-        .alias("tr")
-        .parameter(
-            ParameterBuilder.begin<String>("sourceLanguage")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom { listOf("auto") + languageCodes.keys }
-                .required()
-                .build()
-        )
-        .parameter(
-            ParameterBuilder.begin<String>("targetLanguage")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom {
-                    languageCodes.keys
+                            if (source.equals(target, ignoreCase = true)) {
+                                throw CommandException(
+                                    t("sameLanguage")
+                                )
+                            }
+
+                            val result = GlobalSettingsAutoTranslate.translate(
+                                TranslateLanguage.of(source),
+                                TranslateLanguage.of(target),
+                                input,
+                            )
+
+                            if (result is TranslationResult.Success) {
+                                if (result.translation == result.origin) {
+                                    throw CommandException(
+                                        t("sameText")
+                                    )
+                                } else {
+                                    chat(
+                                        regular("("),
+                                        variable(result.fromLanguage.literal),
+                                        regular(") "),
+                                        regular(result.origin)
+                                            .copyable(copyContent = result.origin),
+                                    )
+                                    chat(
+                                        regular("("),
+                                        variable(result.toLanguage.literal),
+                                        regular(") "),
+                                        regular(result.translation)
+                                            .copyable(copyContent = result.translation),
+                                    )
+                                }
+                            } else {
+                                chat(result.toResultText())
+                            }
+                        }
+                    }
                 }
-                .required()
-                .build()
-        )
-        .parameter(
-            ParameterBuilder.begin<String>("text")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .required()
-                .vararg()
-                .build()
-        )
-        .suspendHandler {
-            val (sourceLanguage, targetLanguage, texts) = args
-            sourceLanguage as String
-            targetLanguage as String
-            texts as Array<*>
-
-            if (sourceLanguage.equals(targetLanguage, ignoreCase = true)) {
-                throw CommandException(command.result("sameLanguage"))
-            }
-
-            val text = texts.joinToString(" ")
-            val result = GlobalSettingsAutoTranslate.translate(
-                TranslateLanguage.of(sourceLanguage),
-                TranslateLanguage.of(targetLanguage),
-                text,
-            )
-
-            if (result is TranslationResult.Success) {
-                if (result.translation == result.origin) {
-                    throw CommandException(command.result("sameText"))
-                } else {
-                    chat(
-                        regular("("),
-                        variable(result.fromLanguage.literal),
-                        regular(") "),
-                        regular(result.origin)
-                            .copyable(copyContent = result.origin),
-                    )
-                    chat(
-                        regular("("),
-                        variable(result.toLanguage.literal),
-                        regular(") "),
-                        regular(result.translation)
-                            .copyable(copyContent = result.translation),
-                    )
-                }
-            } else {
-                chat(result.toResultText())
             }
         }
-        .build()
+    }
 
 }

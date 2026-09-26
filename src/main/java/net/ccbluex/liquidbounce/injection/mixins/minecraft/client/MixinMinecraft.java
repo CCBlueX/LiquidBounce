@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -28,7 +30,7 @@ import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor;
 import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
@@ -37,6 +39,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAc
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
@@ -59,8 +63,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.AttackRange;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -128,7 +134,7 @@ public abstract class MixinMinecraft {
     /**
      * Entry point
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
+    @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
@@ -142,7 +148,7 @@ public abstract class MixinMinecraft {
         EventManager.INSTANCE.callEvent(ClientShutdownEvent.INSTANCE);
     }
 
-    @Inject(method = "<init>", at = @At(value = "FIELD",
+    @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "FIELD",
         target = "Lnet/minecraft/client/Minecraft;profileKeyPairManager:Lnet/minecraft/client/multiplayer/ProfileKeyPairManager;",
         ordinal = 0, shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void onSessionInit(CallbackInfo callback) {
@@ -163,7 +169,7 @@ public abstract class MixinMinecraft {
             ordinal = 1),
             cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 
@@ -431,7 +437,7 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
     private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
         MeshDraw.DefaultUploader.endFrame();
     }
@@ -443,4 +449,46 @@ public abstract class MixinMinecraft {
         StaticGpuBufferPool.cleanup();
     }
 
+    @WrapOperation(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;raycastHitResult(FLnet/minecraft/world/entity/Entity;)Lnet/minecraft/world/phys/HitResult;"))
+    private HitResult updateTargetedEntityInvoke(LocalPlayer instance, float a, Entity cameraEntity, Operation<HitResult> original) {
+        HitResult result;
+        if (cameraEntity == instance && ModuleFreeCam.shouldCameraInteractActive()) {
+            final Vec3 position = cameraEntity.position();
+            final AABB boundingBox = cameraEntity.getBoundingBox();
+            final Vec3 lastPosition = new Vec3(cameraEntity.xo, cameraEntity.yo, cameraEntity.zo);
+            final float yRot = cameraEntity.getYRot();
+            final float xRot = cameraEntity.getXRot();
+            final float yRot0 = cameraEntity.yRotO;
+            final float xRot0 = cameraEntity.xRotO;
+
+            final Vec3 cameraPosition = ModuleFreeCam.PositionState.pos.subtract(0.0, cameraEntity.getEyeHeight(), 0.0);
+            ((MixinEntityAccessor) cameraEntity).position(cameraPosition);
+            cameraEntity.setBoundingBox(boundingBox.move(cameraPosition.subtract(position)));
+            cameraEntity.xo = ModuleFreeCam.PositionState.lastPos.x;
+            cameraEntity.yo = ModuleFreeCam.PositionState.lastPos.y - cameraEntity.getEyeHeight();
+            cameraEntity.zo = ModuleFreeCam.PositionState.lastPos.z;
+            ((MixinEntityAccessor) cameraEntity).yRot(ModuleFreeCam.PositionState.rot.yRot());
+            ((MixinEntityAccessor) cameraEntity).xRot(ModuleFreeCam.PositionState.rot.xRot());
+            cameraEntity.yRotO = ModuleFreeCam.PositionState.lastRot.yRot();
+            cameraEntity.xRotO = ModuleFreeCam.PositionState.lastRot.xRot();
+
+            try {
+                result = original.call(instance, a, cameraEntity);
+            } finally {
+                ((MixinEntityAccessor) cameraEntity).position(position);
+                cameraEntity.setBoundingBox(boundingBox);
+                cameraEntity.xo = lastPosition.x;
+                cameraEntity.yo = lastPosition.y;
+                cameraEntity.zo = lastPosition.z;
+                ((MixinEntityAccessor) cameraEntity).yRot(yRot);
+                ((MixinEntityAccessor) cameraEntity).xRot(xRot);
+                cameraEntity.yRotO = yRot0;
+                cameraEntity.xRotO = xRot0;
+            }
+        } else {
+            result = original.call(instance, a, cameraEntity);
+        }
+
+        return result;
+    }
 }

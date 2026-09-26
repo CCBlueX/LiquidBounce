@@ -11,23 +11,23 @@
         {
             title: "Cracked",
             icon: "icon-cracked.png",
-            component: CrackedAccountDirectLoginTab
+            content: CrackedAccountDirectLoginTab
         },
         {
             title: "Session",
             icon: "icon-session.svg",
-            component: SessionAccountDirectLoginTab
+            content: SessionAccountDirectLoginTab
         }
     ];
 
     let activeTab = parseInt(localStorage.getItem("altmanager_direct_login_active_tab") ?? "0");
 
-    async function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
-        activeTab = e.detail.activeTab;
-        await setItem("altmanager_direct_login_active_tab", e.detail.activeTab.toString());
+    async function handleChangeTab(nextActiveTab: number) {
+        activeTab = nextActiveTab;
+        await setItem("altmanager_direct_login_active_tab", nextActiveTab.toString());
     }
 </script>
 
 <Modal title="Direct Login" bind:visible={visible}>
-    <Tabs {tabs} {activeTab} on:changeTab={handleChangeTab}/>
+    <Tabs {tabs} {activeTab} onChangeTab={handleChangeTab}/>
 </Modal>

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EntityEquipment
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.player.Inventory
 
@@ -32,9 +33,7 @@ data class PosPoseSnapshot(
     val lastX: Double,
     val lastY: Double,
     val lastZ: Double,
-    val handSwinging: Boolean,
-    val handSwingTicks: Int,
-    val handSwingProgress: Float,
+    val currentSwing: LivingEntity.SwingDescription?,
     val yaw: Float,
     val lastYaw: Float,
     val pitch: Float,
@@ -44,10 +43,13 @@ data class PosPoseSnapshot(
     val headYaw: Float,
     val lastHeadYaw: Float,
     val pose: Pose,
-    val preferredHand: InteractionHand,
     val inventory: Inventory,
     val limbPos: Float
-)
+) {
+    val handSwinging: Boolean get() = currentSwing != null
+
+    val preferredHand: InteractionHand get() = currentSwing?.hand ?: InteractionHand.MAIN_HAND
+}
 
 fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
     return PosPoseSnapshot(
@@ -57,9 +59,7 @@ fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.xo,
         entity.yo,
         entity.zo,
-        entity.swinging,
-        entity.swingTime,
-        entity.attackAnim,
+        entity.currentSwing,
         entity.yRot,
         entity.yRotO,
         entity.xRot,
@@ -69,7 +69,6 @@ fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.yHeadRot,
         entity.yHeadRotO,
         entity.pose,
-        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         entity.inventory,
         entity.walkAnimation.position
     )
@@ -85,9 +84,7 @@ fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.xo,
         entity.yo,
         entity.zo,
-        entity.swinging,
-        entity.swingTime,
-        entity.attackAnim,
+        entity.currentSwing,
         entity.yRot,
         entity.yRotO,
         entity.xRot,
@@ -97,7 +94,6 @@ fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.yHeadRot,
         entity.yHeadRotO,
         entity.pose,
-        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         playerInventory,
         entity.walkAnimation.position
     )

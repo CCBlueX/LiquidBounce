@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidFlagMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
+import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidUseItemMode
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -45,7 +46,8 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
         "Mode", AntiVoidGhostBlockMode, arrayOf(
             AntiVoidGhostBlockMode,
             AntiVoidFlagMode,
-            AntiVoidBlinkMode
+            AntiVoidBlinkMode,
+            AntiVoidUseItemMode,
         )
     )
 

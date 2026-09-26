@@ -166,7 +166,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         var remainingItems = availableItems
 
         world.entitiesForRendering().forEach { entity ->
-            if (entity.distanceToSqr(player) > range || entity == player || !entity.shouldBeAttacked()) {
+            if (entity.distanceToSqr(player) > range || entity === player || !entity.shouldBeAttacked()) {
                 return@forEach
             }
 

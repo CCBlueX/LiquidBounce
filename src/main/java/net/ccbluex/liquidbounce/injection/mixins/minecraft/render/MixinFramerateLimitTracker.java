@@ -36,7 +36,7 @@ public abstract class MixinFramerateLimitTracker {
      */
     @ModifyConstant(method = "getFramerateLimit", constant = @Constant(intValue = 60), require = 0)
     private int getFramerateLimit(int original) {
-        return RefreshRateKt.getRefreshRate();
+        return (int) RefreshRateKt.getRefreshRate();
     }
 
     @ModifyReturnValue(method = "getFramerateLimit", at = @At("RETURN"))

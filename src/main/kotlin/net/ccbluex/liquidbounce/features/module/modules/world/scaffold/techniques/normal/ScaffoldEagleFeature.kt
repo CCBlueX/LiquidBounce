@@ -36,6 +36,11 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eag
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
 
+    override fun onEnabled() {
+        placedBlocks = 0
+        super.onEnabled()
+    }
+
     @Suppress("unused")
     private val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.buffers
 
-import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
 
@@ -57,7 +57,7 @@ internal class FrameGpuBufferPool(
 
     fun retireCurrentFrame(buffer: GpuBuffer) {
         check(!closed) { "$label pool is closed" }
-        check(!buffer.isClosed()) { "Cannot retire a closed GPU buffer" }
+        check(!buffer.isClosed) { "Cannot retire a closed GPU buffer" }
         usedThisFrame += buffer
     }
 

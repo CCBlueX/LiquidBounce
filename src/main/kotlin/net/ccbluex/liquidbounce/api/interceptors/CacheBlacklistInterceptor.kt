@@ -37,7 +37,7 @@ class CacheBlacklistInterceptor(
         return chain.proceed(request)
     }
 
-    companion object {
+    companion {
         private val cacheControl = CacheControl.Builder().noCache().noStore().build()
     }
 }

@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.io.createFont
@@ -35,6 +36,7 @@ import java.awt.Font
 import java.io.File
 import java.io.InputStream
 
+@AddonApi
 object FontManager {
 
     private val logger = clientLogger("FontManager")
@@ -96,8 +98,12 @@ object FontManager {
      *
      * TODO: Replaces this with Module-based Font Selection
      */
+    @JvmStatic
     val FONT_RENDERER
-        get() = (fontFace("Inter Regular") ?: COMMON_FONT).renderer
+        get() = defaultFontFace.renderer
+
+    private val defaultFontFace
+        get() = fontFace("Inter Regular") ?: COMMON_FONT
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -120,7 +126,8 @@ object FontManager {
     internal fun createGlyphManager() {
         _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            baseFonts = ObjectImmutableList(fontFaces.values),
+            registeredFaces = ObjectImmutableList(fontFaces.values),
+            primaryFace = defaultFontFace,
             fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
     }

@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferClient;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.minecraft.ChatFormatting;
@@ -45,7 +45,7 @@ public abstract class MixinClientHandshakePacketListenerImplMixin {
     @ModifyExpressionValue(method = "authenticateServer", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/network/chat/Component;translatable(Ljava/lang/String;[Ljava/lang/Object;)Lnet/minecraft/network/chat/MutableComponent;", ordinal = 1))
     private MutableComponent modifySessionReason(MutableComponent original) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return original;
         }
 

@@ -28,7 +28,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
+import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
@@ -52,6 +53,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 import org.objectweb.asm.Opcodes;
@@ -85,7 +87,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract void tick();
 
     @Shadow
-    public abstract void swing(InteractionHand hand, boolean sendToSwingingEntity);
+    public abstract boolean swing(final InteractionHand hand, final SwingAnimation animation, final boolean sendToSwingingEntity);
 
     @Shadow
     public abstract void setHealth(float health);
@@ -256,7 +258,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Unique
     private boolean previousElytra = false;
 
-    @Inject(method = "updateFallFlying", at = @At("TAIL"))
+    @Inject(method = "aiStep", at = @At("TAIL"))
     public void recastIfLanded(CallbackInfo callbackInfo) {
         if (!liquid_bounce$isClientPlayer()) {
             return;
@@ -359,10 +361,17 @@ public abstract class MixinLivingEntity extends MixinEntity {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
-    @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
         return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
+    }
+
+    @Inject(method = "swing", at = @At(value = "HEAD"), cancellable = true)
+    private void noSwing(InteractionHand hand, SwingAnimation animation, boolean sendToSwingingEntity, CallbackInfoReturnable<Boolean> cir) {
+        if (ModuleNoSwing.INSTANCE.shouldHideForClient() && liquid_bounce$isClientPlayer()) {
+            cir.cancel();
+        }
     }
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))

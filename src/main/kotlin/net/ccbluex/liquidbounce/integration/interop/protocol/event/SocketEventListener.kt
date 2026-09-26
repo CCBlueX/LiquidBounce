@@ -20,23 +20,23 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.ALL_EVENT_CLASSES
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventName
 import net.ccbluex.liquidbounce.event.newEventHook
-import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 
 internal object SocketEventListener : EventListener {
 
-    private val events = ALL_EVENT_CLASSES
-        .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
-        .associateBy { it.eventName }
+    // Not cached: add-ons can register events later.
+    private val events
+        get() = EventManager.knownEventClasses
+            .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
+            .associateBy { it.eventName }
 
     /**
      * Contains all events that are registered in the current context
@@ -69,7 +69,7 @@ internal object SocketEventListener : EventListener {
     fun unregister(name: String) {
         val eventClass = events[name] ?:
             throw IllegalArgumentException("Unknown event: $name")
-        val eventHook = registeredEvents[eventClass] ?:
+        val eventHook = registeredEvents.remove(eventClass) ?:
             throw IllegalArgumentException("No EventHook for event: $eventClass")
 
         EventManager.unregisterEventHook(eventClass, eventHook)
@@ -84,11 +84,12 @@ internal object SocketEventListener : EventListener {
     }
 
     private fun serializeAndBroadcast(event: Event) {
+        val eventName = event.javaClass.eventName
         val json = try {
             val writer = writeBuffer.get()
             JsonWriter(writer).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(event.javaClass.eventName)
+                writer.name("name").value(eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
@@ -99,8 +100,8 @@ internal object SocketEventListener : EventListener {
             return
         }
 
-        httpServer.webSocketController!!.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed, event: ${event.javaClass.eventName}", t)
+        WebSocketSessionManager.broadcast(json) { _, t ->
+            logger.error("WebSocket event broadcast failed, event: $eventName", t)
         }
     }
 

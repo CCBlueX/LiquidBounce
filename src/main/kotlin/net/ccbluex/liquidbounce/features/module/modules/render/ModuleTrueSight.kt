@@ -36,6 +36,7 @@ object ModuleTrueSight : ClientModule("TrueSight", ModuleCategories.RENDER) {
     private val sight by multiEnumChoice("Sight", Sight.entries)
 
     val barriers get() = Sight.BARRIERS in sight
+    val lights get() = Sight.LIGHTS in sight
     val entities get() = Sight.ENTITIES in sight
 
     val entityColor by color("EntityColor", Color4b(255, 255, 255, 100))
@@ -56,6 +57,7 @@ object ModuleTrueSight : ClientModule("TrueSight", ModuleCategories.RENDER) {
         override val tag: String
     ) : Tagged {
         BARRIERS("Barriers"),
+        LIGHTS("Lights"),
         ENTITIES("Entities")
     }
 }

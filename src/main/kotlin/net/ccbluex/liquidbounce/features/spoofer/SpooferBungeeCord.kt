@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.spoofer
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
 
 object SpooferBungeeCord : ToggleableValueGroup(name = "BungeecordSpoofer", enabled = false) {
 
@@ -33,8 +34,8 @@ object SpooferBungeeCord : ToggleableValueGroup(name = "BungeecordSpoofer", enab
     }
 
     fun modifyHandshakeAddress(original: String): String {
-        val uuidStr = CustomUuid.uuid.takeIf { enabled }
-            ?: mc.user.profileId.toString().replace("-", "")
+        val uuidStr = CustomUuid.uuid.takeIf { CustomUuid.enabled }
+            ?: mc.user.profileId.toUndashedString()
 
         // Format: "<originalAddress>\u0000<host>\u0000<uuid>"
         return "$original\u0000${host}\u0000$uuidStr"

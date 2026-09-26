@@ -23,7 +23,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -51,7 +51,7 @@ public abstract class MixinPlayerInfo {
     @ModifyReturnValue(method = "getSkin", at = @At("RETURN"))
     @SuppressWarnings({"ConstantConditions", "EqualsBetweenInconvertibleTypes", "RedundantCast"})
     private PlayerSkin liquid_bounce$skin(PlayerSkin original) {
-        if (HideAppearance.INSTANCE.isDestructed()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return original;
         }
 

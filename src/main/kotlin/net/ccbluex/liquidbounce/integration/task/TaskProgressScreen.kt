@@ -132,7 +132,7 @@ class TaskProgressScreen(
                 append(task.name)
                 append(": ")
                 append(percentFormat.format(task.progress * 100))
-                append("%")
+                append('%')
                 append(formatTotalSpeed(listOf(task)))
             }.asPlainText(ChatFormatting.GRAY))
         }

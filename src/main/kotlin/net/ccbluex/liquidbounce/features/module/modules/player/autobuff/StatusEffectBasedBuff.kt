@@ -48,11 +48,8 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
     ) : Potion(parent, name, statusEffect) {
         private val healthPercent by int("Health", 40, 1..100, "%HP")
 
-        private val health
-            get() = player.maxHealth * healthPercent / 100
-
         override fun isValid(effect: MobEffectInstance, health: Float): Boolean {
-            return super.isValid(effect, health) && health <= this.health
+            return super.isValid(effect, health) && player.isHealthRequirementMet(health, healthPercent, false)
         }
     }
 

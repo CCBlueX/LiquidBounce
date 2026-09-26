@@ -32,8 +32,7 @@ data class Ray(
     override val anchor: Vec3
         get() = origin
 
-    companion object {
-        @JvmStatic
+    companion {
         fun fromPoints(begin: Vec3, end: Vec3): Ray {
             return Ray(begin, end.subtract(begin))
         }

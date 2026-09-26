@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
-import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import java.util.UUID
 
 /**

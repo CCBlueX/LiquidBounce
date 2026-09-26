@@ -80,7 +80,11 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
         blocksForInstrument: List<NoteBlockTracker>,
         notesOfInstrument: List<InstrumentNote>
     ) {
-        val availableBlocksSortedByPitch = blocksForInstrument.sortedBy { it.currentNote!! }
+        val availableBlocksSortedByPitch = blocksForInstrument.sortedBy { tracker ->
+            requireNotNull(tracker.currentNote) {
+                "Cannot assign note block at ${tracker.pos} because its current note is still unknown."
+            }
+        }
         val notesToAssignSortedByPitch = notesOfInstrument.sortedBy { it.noteValue }
 
         val availableBlocksQueue = ArrayDeque(availableBlocksSortedByPitch)

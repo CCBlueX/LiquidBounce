@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -100,6 +99,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val sampleDelayTicks by int("SampleDelayTicks", 2, 0..10)
     private val minEyeHorizontalSpeed by float("MinEyeHorizontalSpeed", 0.02f, 0.001f..0.2f)
     private val maxSampleAgeTicks by int("MaxSampleAgeTicks", 20, 5..100)
+    private val maxEyeSpawnDistance by float("MaxEyeSpawnDistance", 8f, 1f..32f)
 
     private val showTopCandidates by int("ShowTopCandidates", 3, 1..10).onChanged {
         onEstimatorSettingsChanged()
@@ -116,7 +116,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val measurements = mutableListOf<EyeMeasurement>()
     private var posterior: PosteriorSnapshot? = null
     private var lastAnnouncedCandidate: ChunkPos? = null
-    private val detectedPortalBlocks = linkedMapOf<BlockPos, PortalBlockType>()
+    private val detectedPortalBlocks = hashMapOf<BlockPos, PortalBlockType>()
 
     private var hypothesisCache: List<StrongholdHypothesis> = emptyList()
     private var cachedHypothesisCount = -1
@@ -252,16 +252,17 @@ object ModuleStrongholdFinder : ClientModule(
 
             if (renderRays) {
                 val color = Color4b.WHITE.alpha(170).argb
-                for (measurement in measurements) {
-                    val start = measurement.throwPos
-                    val direction = Vec3.directionFromRotation(0f, measurement.angleDeg)
-                    val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
+                withPositionRelativeToCamera {
+                    for ((start, angleDeg) in measurements) {
+                        val direction = Vec3.directionFromRotation(0f, angleDeg)
+                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
 
-                    drawLine(
-                        relativeToCamera(start).toVec3f(),
-                        relativeToCamera(end).toVec3f(),
-                        color,
-                    )
+                        drawLine(
+                            start,
+                            end,
+                            color,
+                        )
+                    }
                 }
             }
 
@@ -375,13 +376,16 @@ object ModuleStrongholdFinder : ClientModule(
         val nowTick = player.tickCount
         trimPendingThrows(nowTick)
 
+        val maxSpawnDistanceSqr = maxEyeSpawnDistance * maxEyeSpawnDistance
         val pending = pendingThrows
-            .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
+            .filter {
+                it.dimension == world.dimension()
+                    && nowTick - it.tick in 0..maxSampleAgeTicks
+                    && it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) <= maxSpawnDistanceSqr
+            }
             .minWithOrNull(
-                compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenComparingDouble {
-                        it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z)
-                    }
+                compareBy<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
+                    .thenComparingInt { nowTick - it.tick }
             ) ?: return
 
         pendingThrows.remove(pending)
@@ -435,20 +439,20 @@ object ModuleStrongholdFinder : ClientModule(
         val target = closestPortalPos.center
 
         val lineColor = Color4b(255, 80, 80, 220).argb
-        val startRelative = relativeToCamera(start).toVec3f()
+        withPositionRelativeToCamera {
+            drawLine(start, target, lineColor)
 
-        drawLine(startRelative, relativeToCamera(target).toVec3f(), lineColor)
-
-        val deltaX = target.x - start.x
-        val deltaZ = target.z - start.z
-        val horizontalLength = hypot(deltaX, deltaZ)
-        if (horizontalLength > 1e-6) {
-            val markerEnd = Vec3(
-                start.x + deltaX / horizontalLength * 2.0,
-                start.y,
-                start.z + deltaZ / horizontalLength * 2.0
-            )
-            drawLine(startRelative, relativeToCamera(markerEnd).toVec3f(), lineColor)
+            val deltaX = target.x - start.x
+            val deltaZ = target.z - start.z
+            val horizontalLength = hypot(deltaX, deltaZ)
+            if (horizontalLength > 1e-6) {
+                val markerEnd = Vec3(
+                    start.x + deltaX / horizontalLength * 2.0,
+                    start.y,
+                    start.z + deltaZ / horizontalLength * 2.0
+                )
+                drawLine(start, markerEnd, lineColor)
+            }
         }
     }
 

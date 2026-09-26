@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.PlayerRideable
 import net.minecraft.world.entity.animal.happyghast.HappyGhast
+import net.minecraft.world.entity.decoration.Cushion
 import net.minecraft.world.entity.vehicle.VehicleEntity
 import kotlin.math.min
 
@@ -106,7 +107,7 @@ internal object NoFallMount : NoFallMode("Mount") {
     }
 
     private fun isRideableTarget(entity: Entity): Boolean {
-        return (entity is PlayerRideable || entity is VehicleEntity || entity is HappyGhast)
+        return (entity is PlayerRideable || entity is VehicleEntity || entity is HappyGhast || entity is Cushion)
             && entity.canAddPassenger(player)
     }
 

@@ -46,9 +46,8 @@ sealed interface InventoryAction {
         val actionType: ContainerInput,
     ) : InventoryAction {
 
-        companion object {
+        companion {
 
-            @JvmStatic
             fun performThrow(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -59,7 +58,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.THROW
             )
 
-            @JvmStatic
             fun performQuickMove(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -70,7 +68,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.QUICK_MOVE
             )
 
-            @JvmStatic
             fun performSwap(
                 screen: AbstractContainerScreen<*>? = null,
                 from: ItemSlot,
@@ -82,7 +79,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.SWAP
             )
 
-            @JvmStatic
             fun performPickupAll(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -93,7 +89,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.PICKUP_ALL
             )
 
-            @JvmStatic
             fun performPickup(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -107,7 +102,6 @@ sealed interface InventoryAction {
             /**
              * pickup -> pickup all -> pickup to handle remaining items
              */
-            @JvmStatic
             fun performMergeStack(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot,
@@ -216,11 +210,9 @@ sealed interface InventoryAction {
         val slot: ItemSlot? = null,
     ) : InventoryAction {
 
-        companion object {
-            @JvmStatic
+        companion {
             fun performThrow(itemStack: ItemStack) = Creative(itemStack)
 
-            @JvmStatic
             fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = Creative(itemStack, slot)
         }
 

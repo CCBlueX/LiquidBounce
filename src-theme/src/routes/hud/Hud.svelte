@@ -24,6 +24,7 @@
     import Text from "./elements/Text.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
+    import ClosedCaptions from "./elements/ClosedCaptions.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
@@ -95,7 +96,7 @@
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
-                    <Notifications/>
+                    <Notifications settings={c.settings}/>
                 {:else if c.name === "TargetHud"}
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
@@ -128,9 +129,11 @@
                 {:else if c.name === "Text"}
                     <Text settings={c.settings}/>
                 {:else if c.name === "Image"}
-                    <Image settings={c.settings}/>
+                    <Image componentId={c.id} settings={c.settings}/>
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
+                {:else if c.name === "ClosedCaptions"}
+                    <ClosedCaptions/>
                 {:else if c.width !== undefined && c.height !== undefined}
                     <div></div>
                 {/if}

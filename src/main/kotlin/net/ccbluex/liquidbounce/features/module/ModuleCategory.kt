@@ -18,9 +18,24 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.minecraft.resources.Identifier
 
-class ModuleCategory(override val tag: String) : Tagged {
+/**
+ * @param icon an SVG or PNG shown by the ClickGUI, `namespace:path` for `resources/<namespace>/<path>` in the
+ * add-on's jar. Not Minecraft's `assets/`: those are visible to anything inspecting the loaded resource packs.
+ * The built-in categories have their icons in the theme instead.
+ */
+@AddonApi
+class ModuleCategory @JvmOverloads constructor(
+    override val tag: String,
+    val inclusionGroup: OptionalInclusion? = null,
+    val icon: Identifier? = null,
+) : Tagged {
+
+    constructor(tag: String, icon: Identifier) : this(tag, null, icon)
 
     @Deprecated(
         message = "For script compatibility only. Use choiceName instead",

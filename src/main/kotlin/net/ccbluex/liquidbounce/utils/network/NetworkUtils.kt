@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -186,6 +187,10 @@ fun MultiPlayerGameMode.releaseUsingItemInTickLoop() = TickLoopTaskExecutor.exec
 
 /**
  * [MultiPlayerGameMode.useItem] but with custom rotations.
+ *
+ * Vanilla [net.minecraft.world.item.BucketItem.use] ray traces through
+ * [net.minecraft.world.item.Item.getPlayerPOVHitResult], which reads the player's current rotation.
+ * Keep that local prediction aligned with the rotation carried by [ServerboundUseItemPacket].
  */
 fun MultiPlayerGameMode.useItem(
     player: Player,
@@ -200,14 +205,23 @@ fun MultiPlayerGameMode.useItem(
     this.ensureHasSentCarriedItem()
     var interactionResult: InteractionResult = InteractionResult.PASS
     this.startPrediction(world) { sequence ->
-        val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yRot, xRot)
+        val packet = UseItemPacketRotation.createExplicit(hand, sequence, yRot, xRot)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
             interactionResult = InteractionResult.PASS
-            return@startPrediction playerInteractItemC2SPacket
+            return@startPrediction packet
         }
 
-        val useResult = itemStack.use(world, player, hand)
+        val previousYRot = player.yRot
+        val previousXRot = player.xRot
+        val useResult = try {
+            player.yRot = yRot
+            player.xRot = xRot
+            itemStack.use(world, player, hand)
+        } finally {
+            player.yRot = previousYRot
+            player.xRot = previousXRot
+        }
         val result = if (useResult is InteractionResult.Success) {
             useResult.heldItemTransformedTo() ?: player.getItemInHand(hand)
         } else {
@@ -219,7 +233,7 @@ fun MultiPlayerGameMode.useItem(
         }
 
         interactionResult = useResult
-        return@startPrediction playerInteractItemC2SPacket
+        return@startPrediction packet
     }
 
     return interactionResult
@@ -228,6 +242,7 @@ fun MultiPlayerGameMode.useItem(
 fun handlePacket(packet: Packet<*>) =
     runCatching { (packet as Packet<ClientGamePacketListener>).handle(mc.connection!!) }
 
+@AddonApi
 fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking
     val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)

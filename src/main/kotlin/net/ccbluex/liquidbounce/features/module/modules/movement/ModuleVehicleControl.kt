@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSpearKill
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -57,7 +58,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
     private val glide by float("Glide", -0.15f, -0.3f..0.3f)
 
     private val mouseControl by boolean("MouseControl", false)
-    private val noGlideOnSprint by boolean("NoGlideOnSpring", false)
+    private val noGlideOnSprint by boolean("NoGlideOnSprint", false, aliases = listOf("NoGlideOnSpring"))
 
     init {
         tree(BaseSpeed)
@@ -106,16 +107,30 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
             // drown in water and cannot be controlled anymore
             !vehicle.isInWater &&
                 !(useSprintSpeed && noGlideOnSprint) // No glide option
-                     -> glide.toDouble()
+                -> glide.toDouble()
+
             else -> 0.0
         }
+
+        val spearDashVelocity =
+            if (ModuleSpearKill.enabled) {
+                val dashSpeed = ModuleSpearKill.currentAttackVelocity
+                if (dashSpeed != 0.0) {
+                    ModuleSpearKill.currentAttackDirection.scale(dashSpeed)
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
 
         // Vehicle control velocity
         val input = DirectionalInput(player.input)
         val movementYaw = getMovementDirectionOfInput(vehicle.yRot, input)
-        vehicle.deltaMovement = vehicle.deltaMovement
-            .copy(y = verticalSpeed)
-            .withStrafe(yaw = movementYaw, speed = horizontalSpeed)
+        vehicle.deltaMovement = spearDashVelocity
+            ?: vehicle.deltaMovement
+                .copy(y = verticalSpeed)
+                .withStrafe(yaw = movementYaw, speed = horizontalSpeed)
     }
 
     @Suppress("unused")

@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -30,32 +29,19 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Unsubscribe from a marketplace item
  */
-object MarketplaceUnsubscribeCommand : Command.Factory {
+object MarketplaceUnsubscribeCommand {
 
-    override fun createCommand() = CommandBuilder.begin("unsubscribe")
-        .parameter(
-            ParameterBuilder
-                .begin<Int>("id")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .autocompletedFrom {
-                    MarketplaceManager.subscribedItems.map { item ->
-                        item.id.toString()
-                    }
+    fun CmdLiteralScope.unsubscribe() {
+        literal("unsubscribe") {
+            argument("item", ClientStringArgumentType.string(), suggests = subscribedSuggestions) { input ->
+                execSuspend { ctx ->
+                    val itemId = subscribedItem(ctx.get(input)).id
+
+                    MarketplaceManager.unsubscribe(itemId)
+                    chat(regular(t("unsubscribe.success", variable(itemId.toString()))))
                 }
-                .required()
-                .build()
-        )
-        .suspendHandler {
-            val id = args[0] as Int
-
-            if (!MarketplaceManager.isSubscribed(id)) {
-                chat(regular(command.result("notSubscribed", variable(id.toString()))))
-                return@suspendHandler
             }
-
-            MarketplaceManager.unsubscribe(id)
-            chat(regular(command.result("success", variable(id.toString()))))
         }
-        .build()
+    }
 
 }

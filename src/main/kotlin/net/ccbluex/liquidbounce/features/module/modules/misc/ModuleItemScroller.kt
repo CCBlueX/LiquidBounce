@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.mojang.blaze3d.platform.InputConstants
-import com.mojang.blaze3d.platform.Window
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -28,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.inventory.Slot
-import org.lwjgl.glfw.GLFW
 
 fun interface MouseClick {
     operator fun invoke(callbackSlot: Slot?, slotId: Int, mouseButton: Int, actionType: ContainerInput)
@@ -55,11 +53,11 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
         chronometer.reset()
     }
 
-    fun canPerformScroll(window: Window): Boolean {
-        return (InputConstants.isKeyDown(window, GLFW.GLFW_KEY_LEFT_SHIFT)
-                        || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT))
+    fun canPerformScroll(): Boolean {
+        return (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT)
+                        || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT))
                 && this.running
-                && GLFW.glfwGetMouseButton(window.handle(), GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
+                && mc.mouseHandler.isLeftPressed
                 && chronometer.hasAtLeastElapsed(delay.random() * 50L)
     }
 }
@@ -70,6 +68,6 @@ enum class ClickMode(
     val action: ClickAction
 ) : Tagged {
     QUICK_MOVE("QuickMove", { _, slot, callback ->
-        callback(slot, slot.index, GLFW.GLFW_MOUSE_BUTTON_LEFT, ContainerInput.QUICK_MOVE)
+        callback(slot, slot.index, InputConstants.MOUSE_BUTTON_LEFT, ContainerInput.QUICK_MOVE)
     })
 }

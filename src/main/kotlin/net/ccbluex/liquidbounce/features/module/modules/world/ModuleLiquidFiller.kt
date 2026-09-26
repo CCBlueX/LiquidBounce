@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.state
@@ -111,7 +111,7 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
         placeOrder.sort(positions, eyePos)
 
         return positions.mapNotNull { target ->
-            if (useSponge && isWaterTarget(target)) {
+            if (useSponge && world.isWaterAt(target)) {
                 findSpongePlacement(target, scanRange)
             } else {
                 target
@@ -147,19 +147,17 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
         }
 
         return when {
-            useSponge && isWaterTarget(pos) -> spongeSlot
+            useSponge && world.isWaterAt(pos) -> spongeSlot
             else -> normalFillSlot
         }
     }
-
-    private fun isWaterTarget(pos: BlockPos) = world.getBlockState(pos).fluidState.`is`(FluidTags.WATER)
 
     private fun findSpongePlacement(waterPos: BlockPos, scanRange: Double): BlockPos? {
         return waterPos.center.searchBlocksInCuboid(SpongeBlock.MAX_DEPTH.toFloat()) { pos, state ->
             pos.distToCenterSqr(player.eyePosition) <= scanRange.sq() &&
                 state.canBeReplaced() &&
                 pos.hasAnySolidPlacementNeighbor() &&
-                !pos.isBlockedByEntities() &&
+                pos.isUnobstructed() &&
                 canAbsorbWaterFrom(pos, waterPos)
         }.minByOrNull { (pos, _) -> pos.distToCenterSqr(player.eyePosition) }?.first
     }

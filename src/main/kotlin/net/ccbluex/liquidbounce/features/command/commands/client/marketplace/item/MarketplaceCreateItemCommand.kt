@@ -18,15 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item
 
+import com.mojang.brigadier.arguments.StringArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enumChoice
-import net.ccbluex.liquidbounce.features.command.dsl.addParam
-import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
-import net.ccbluex.liquidbounce.features.command.dsl.cast
-import net.ccbluex.liquidbounce.features.command.dsl.castVararg
+import net.ccbluex.liquidbounce.features.command.arguments.TaggedArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -36,47 +34,35 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Create marketplace item
  */
-fun marketplaceCreateItemCommand() = buildCommand("create") {
+object MarketplaceCreateItemCommand {
+    fun CmdLiteralScope.create() {
+        literal("create") {
+            argument("name", ClientStringArgumentType.word()) { name ->
+                argument("type", TaggedArgumentType<MarketplaceItemType>("type")) { type ->
+                    argument("description", StringArgumentType.greedyString()) { description ->
+                        execSuspend { ctx ->
+                            val clientAccount = ClientAccountManager.accountOrException()
 
-    val name = addParam("name") {
-        verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-            .required()
-    }
+                            val response = MarketplaceApi.createMarketplaceItem(
+                                clientAccount.takeSession(),
+                                ctx.get(name),
+                                ctx.get(type),
+                                ctx.get(description)
+                            )
 
-    val type = addParam {
-        enumChoice<MarketplaceItemType>("type")
-            .required()
-    }
-
-    val description = addParam("description") {
-        verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-            .vararg()
-            .required()
-    }
-
-    suspendHandler {
-        val clientAccount = ClientAccountManager.accountOrException()
-
-        val name = name.cast()
-        val type = type.cast()
-        val description = description.castVararg().joinToString(" ")
-
-        val response = MarketplaceApi.createMarketplaceItem(
-            clientAccount.takeSession(),
-            name,
-            type,
-            description
-        )
-
-        chat(
-            regular(
-                command.result(
-                    "success",
-                    variable(response.id.toString()),
-                    variable(response.name)
-                )
-            )
-        )
+                            chat(
+                                regular(
+                                    t("item.create.success",
+                                        variable(response.id.toString()),
+                                        variable(response.name)
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

@@ -19,21 +19,29 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
+import net.minecraft.world.entity.player.Player
+
+/**
+ * Shared health-threshold check used by [HealthBasedBuff] and the health potions in [StatusEffectBasedBuff].
+ */
+internal fun Player.isHealthRequirementMet(
+    currentHealth: Float,
+    percent: Int,
+    considerAbsorption: Boolean,
+): Boolean {
+    val fullHealth = currentHealth + if (considerAbsorption) absorptionAmount else 0f
+    return fullHealth <= maxHealth * percent / 100
+}
+
 abstract class HealthBasedBuff(name: String) : Buff(name) {
 
     private val healthPercent by int("Health", 40, 1..100, "%HP")
     private val considerAbsorption by boolean("ConsiderAbsorption", true)
 
-    val health
-        get() = player.maxHealth * healthPercent / 100
-
     override val passesRequirements: Boolean
         get() = super.passesRequirements && passesHealthRequirements
 
     internal val passesHealthRequirements: Boolean
-        get() {
-            val fullHealth = player.health + if (considerAbsorption) player.absorptionAmount else 0f
-            return fullHealth <= health
-        }
+        get() = player.isHealthRequirementMet(player.health, healthPercent, considerAbsorption)
 
 }

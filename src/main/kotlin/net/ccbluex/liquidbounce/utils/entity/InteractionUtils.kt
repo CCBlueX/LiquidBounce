@@ -34,7 +34,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
 fun InteractionResult.shouldSwingHand() =
-    this is InteractionResult.Success && this.swingSource === SwingSource.CLIENT
+    this is InteractionResult.Success && this.swingSource === SwingSource.PREDICTED
 
 private inline val gameMode: MultiPlayerGameMode
     get() = mc.gameMode!!
@@ -85,11 +85,11 @@ fun useItem(
     val useItemResult = gameMode.useItem(player, hand, yRot, xRot)
 
     if (useItemResult is InteractionResult.Success) {
-        if (useItemResult.swingSource === SwingSource.CLIENT) {
+        if (useItemResult.swingSource === SwingSource.PREDICTED) {
             swingMode.accept(hand)
         }
 
-        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+        player.itemUsed(hand)
     }
 
     return useItemResult
@@ -202,10 +202,10 @@ fun interactBlock(
     val oldCount = itemStack.count
     val useResult = gameMode.useItemOn(player, hand, hitResult)
     if (useResult is InteractionResult.Success) {
-        if (useResult.swingSource === SwingSource.CLIENT) {
+        if (useResult.swingSource === SwingSource.PREDICTED) {
             swingMode.swing(hand)
             if (!itemStack.isEmpty && (itemStack.count != oldCount || player.hasInfiniteMaterials())) {
-                mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+                player.itemUsed(hand)
             }
         }
     }

@@ -18,15 +18,17 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.post
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
-import net.ccbluex.netty.http.routing.Routing
 
 // POST /api/v1/client/reconnect
-private fun Routing.postReconnect() = post("/reconnect") {
+private fun Route.postReconnect() = post("/reconnect") {
     ServerObserver.reconnect()
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.reconnectRoutes() {
+internal fun Route.reconnectRoutes() {
     postReconnect()
 }

@@ -104,7 +104,7 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
 
             if (targetEntityId != target.id) {
                 // Check if we are moving towards the target
-                if (next.angleTo(targetRotation) >= current.angleTo(targetRotation)) {
+                if (next.directionAngleTo(targetRotation) >= current.directionAngleTo(targetRotation)) {
                     fightMap.remove(target.id)
                     trainingCollection.remove(target.id)
                     continue

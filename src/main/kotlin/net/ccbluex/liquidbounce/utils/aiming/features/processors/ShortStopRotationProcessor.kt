@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.features.processors
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -30,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 class ShortStopRotationProcessor(owner: EventListener? = null)
     : ToggleableValueGroup(owner, "ShortStop", false), RotationProcessor {
 
-    private val rate by int("Rate", 3, 1..25, "%")
+    private val rate = percentageChance("Rate", 3, 1..25)
     private var stopDuration by intRange("Duration", 1..2, 1..5,
         "ticks")
 
@@ -47,7 +48,7 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
         }
 
         // If the rate is met, we will stop the rotation for a random duration
-        if (rate > (0..100).random()) {
+        if (rate.asBoolean) {
             currentTransitionInDuration = stopDuration.random()
             ticksElapsed = 0
         }
