@@ -9,19 +9,14 @@
     import ListRow from "../ui/ListRow.svelte";
     import Stat from "./Stat.svelte";
     import Address from "../Address.svelte";
-    import EditDetailsModal from "../publishing/EditDetailsModal.svelte";
-    import DeleteModal from "../publishing/DeleteModal.svelte";
     import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
-    import type {
-        ConfigTracker,
-        MarketplaceConfigDetail,
-        MarketplaceLinkedConfig
-    } from "../../../../../integration/types";
+    import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
         ago,
         attempt,
         count,
         date,
+        dialog,
         message,
         notify,
         reports,
@@ -31,21 +26,16 @@
         version
     } from "../marketplace";
 
-    let {id, loggedIn, tracker, tags, onback, onload, onupdate, onopen}: {
+    let {id, loggedIn, tracker, onback, onopen}: {
         id: number;
         loggedIn: boolean;
         tracker: ConfigTracker | null;
-        tags: string[];
         onback: () => void;
-        onload: (config: MarketplaceLinkedConfig) => void;
-        onupdate: () => void;
         onopen: (kind: "config" | "item", id: number) => void;
     } = $props();
 
     let detail = $state<MarketplaceConfigDetail | null>(null);
     let error = $state<string | null>(null);
-    let editOpen = $state(false);
-    let deleteOpen = $state(false);
 
     const config = $derived(detail?.config);
     const tracking = $derived(config && tracker?.id === config.id ? tracker.state : "None");
@@ -86,15 +76,10 @@
 
     function load() {
         if (config) {
-            onload({id: config.id, address: config.address});
+            dialog.set({kind: "load", config: {id: config.id, address: config.address}});
         }
     }
 </script>
-
-{#if detail && config}
-    <EditDetailsModal bind:open={editOpen} {detail} {tags} onsaved={refresh}/>
-    <DeleteModal bind:open={deleteOpen} {config} ondeleted={onback}/>
-{/if}
 
 <div class="detail">
     {#if detail && config}
@@ -138,13 +123,13 @@
                             onclick={() => report(false)}/>
                 {/if}
                 {#if canUpdate}
-                    <PillButton title="Update..." onclick={onupdate}/>
+                    <PillButton title="Update..." onclick={() => dialog.set({kind: "update"})}/>
                 {/if}
                 <PillButton title="Load" primary onclick={load}/>
                 {#if owner}
                     <ActionMenu entries={[
-                        {title: "Edit details", onclick: () => editOpen = true},
-                        {title: "Delete config", danger: true, onclick: () => deleteOpen = true}
+                        {title: "Edit details", onclick: () => dialog.set({kind: "edit", detail: detail!!, ondone: refresh})},
+                        {title: "Delete config", danger: true, onclick: () => dialog.set({kind: "delete", config, ondone: onback})}
                     ]}>
                         {#snippet trigger()}More{/snippet}
                     </ActionMenu>

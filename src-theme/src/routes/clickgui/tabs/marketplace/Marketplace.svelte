@@ -16,10 +16,8 @@
     import TrackerMenu from "./list/TrackerMenu.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
-    import LoadPlanModal from "./loading/LoadPlanModal.svelte";
-    import PublishModal from "./publishing/PublishModal.svelte";
-    import PublishedModal from "./publishing/PublishedModal.svelte";
-    import UpdateModal from "./publishing/UpdateModal.svelte";
+    import LoadDialog from "./loading/LoadDialog.svelte";
+    import ConfigDialog from "./publishing/ConfigDialog.svelte";
     import {
         applyMarketplaceTheme,
         changeConfigTracker,
@@ -44,12 +42,11 @@
         MarketplaceInstalledItem,
         MarketplaceItem,
         MarketplaceLinkedConfig,
-        MarketplacePagination,
-        MarketplacePublished
+        MarketplacePagination
     } from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
     import {setItem} from "../../../../integration/persistent_storage";
-    import {attempt, message, notify, notifyInstalled, typeName, typing, UNKNOWN_PACK, UNKNOWN_SERVER, visible} from "./marketplace";
+    import {attempt, dialog, message, notify, notifyInstalled, typeName, typing, UNKNOWN_PACK, UNKNOWN_SERVER, visible} from "./marketplace";
 
     const TYPES = {
         "Configs": "Config",
@@ -92,13 +89,6 @@
     let searchTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let view = $state<{ kind: "browse" } | { kind: "config" | "item"; id: number }>({kind: "browse"});
-
-    let loadTarget = $state<MarketplaceLinkedConfig | null>(null);
-    let loadOpen = $state(false);
-    let publishOpen = $state(false);
-    let published = $state<MarketplacePublished | null>(null);
-    let publishedOpen = $state(false);
-    let updateOpen = $state(false);
 
     const configTab = $derived(type === "Configs");
     const server = $derived(onServer ? context?.server : undefined);
@@ -263,8 +253,7 @@
     }
 
     function openLoad(config: MarketplaceLinkedConfig) {
-        loadTarget = config;
-        loadOpen = true;
+        dialog.set({kind: "load", config});
     }
 
     async function report(config: MarketplaceConfig, works: boolean) {
@@ -348,11 +337,7 @@
     <div class="marketplace" use:typing>
         {#if view.kind === "config"}
             {#key view.id}
-                <ConfigDetail id={view.id} {loggedIn} {tracker} tags={tagOptions}
-                              onback={back}
-                              onload={openLoad}
-                              onupdate={() => updateOpen = true}
-                              onopen={open}/>
+                <ConfigDetail id={view.id} {loggedIn} {tracker} onback={back} onopen={open}/>
             {/key}
         {:else if view.kind === "item"}
             {#key view.id}
@@ -368,14 +353,12 @@
                 {#if configTab && tracker && (tracker.state !== "None" || tracker.backup)}
                     <TrackerMenu {tracker} {loggedIn} online={!offline}
                                  onchange={changeTracker}
-                                 onpublish={() => publishOpen = true}
-                                 onupdate={() => updateOpen = true}
                                  onopen={() => tracker && open("config", tracker.id)}/>
                 {/if}
                 {#if !loggedIn}
                     <PillButton title="Log in" primary onclick={login}/>
                 {:else if configTab && !offline}
-                    <PillButton title="Publish..." onclick={() => publishOpen = true}/>
+                    <PillButton title="Publish..." onclick={() => dialog.set({kind: "publish"})}/>
                 {/if}
             </div>
 
@@ -483,11 +466,8 @@
         {/if}
     </div>
 
-    <LoadPlanModal bind:open={loadOpen} config={loadTarget}/>
-    <PublishModal bind:open={publishOpen} {tracker} {context} tags={tagOptions}
-                  onpublished={p => { published = p; publishedOpen = true; }}/>
-    <PublishedModal bind:open={publishedOpen} {published} onopen={id => open("config", id)}/>
-    <UpdateModal bind:open={updateOpen} {tracker}/>
+    <LoadDialog/>
+    <ConfigDialog {tracker} {context} tags={tagOptions} onopen={id => open("config", id)}/>
     <Toast/>
 </ScaledClickGuiContent>
 

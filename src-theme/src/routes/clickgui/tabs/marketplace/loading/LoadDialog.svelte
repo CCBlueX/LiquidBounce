@@ -1,7 +1,6 @@
 <script lang="ts">
     import Switch from "../../../setting/common/Switch.svelte";
     import Dialog from "../ui/Dialog.svelte";
-    import PillButton from "../ui/PillButton.svelte";
     import ToggleChip from "../ui/ToggleChip.svelte";
     import Badge from "../ui/Badge.svelte";
     import SectionLabel from "../ui/SectionLabel.svelte";
@@ -9,24 +8,27 @@
     import TextField from "../ui/TextField.svelte";
     import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../../integration/rest";
     import type {MarketplaceLinkedConfig, MarketplaceLoadPlan} from "../../../../../integration/types";
-    import {attempt, notify, typeName, UNKNOWN_PACK, version} from "../marketplace";
+    import {attempt, dialog, type DialogRequest, notify, typeName, UNKNOWN_PACK, version} from "../marketplace";
 
-    let {open = $bindable(), config}: {
-        open: boolean;
-        config: MarketplaceLinkedConfig | null;
-    } = $props();
-
+    // The last config stays while the dialog fades out
+    let config = $state.raw<MarketplaceLinkedConfig | null>(null);
+    let seen: DialogRequest | null = null;
     let plan = $state<MarketplaceLoadPlan | null>(null);
     let pick = $state(false);
     let modules = $state<string[]>([]);
     let filter = $state("");
-    let loading = $state(false);
 
+    const open = $derived($dialog?.kind === "load");
     const shown = $derived(plan?.modules.filter(module => module.toLowerCase().includes(filter.trim().toLowerCase())) ?? []);
 
-    $effect(() => {
-        if (open && config) {
-            fetchPlan(config.id);
+    $effect.pre(() => {
+        const next = $dialog;
+        if (next !== seen) {
+            seen = next;
+            if (next?.kind === "load") {
+                config = next.config;
+                fetchPlan(next.config.id);
+            }
         }
     });
 
@@ -38,7 +40,7 @@
         if (plan) {
             modules = [...plan.modules];
         } else {
-            open = false;
+            dialog.set(null);
         }
     }
 
@@ -46,27 +48,21 @@
         modules = modules.includes(module) ? modules.filter(m => m !== module) : [...modules, module];
     }
 
-    async function load() {
-        if (!config || !plan || loading) {
-            return;
+    async function load(): Promise<boolean> {
+        const target = config!!;
+        const result = await attempt(() => loadMarketplaceConfig(target.id, pick ? modules : null));
+        if (result) {
+            notify([
+                pick ? `Loaded ${modules.length} modules from ${target.address}.` : `Loaded ${target.address}.`,
+                result.installed.length > 0 ? `Installed ${result.installed.join(", ")}.` : ""
+            ].filter(Boolean).join(" "));
         }
-
-        loading = true;
-        const result = await attempt(() => loadMarketplaceConfig(config.id, pick ? modules : null));
-        loading = false;
-        if (!result) {
-            return;
-        }
-
-        open = false;
-        notify([
-            pick ? `Loaded ${modules.length} modules from ${config.address}.` : `Loaded ${config.address}.`,
-            result.installed.length > 0 ? `Installed ${result.installed.join(", ")}.` : ""
-        ].filter(Boolean).join(" "));
+        return !!result;
     }
 </script>
 
-<Dialog bind:open title="Load {config?.address ?? ''}" width={560}>
+<Dialog {open} onclose={() => dialog.set(null)} title="Load {config?.address ?? ''}" width={560}
+        confirm="Load" disabled={!plan || (pick && modules.length === 0)} onconfirm={load}>
     {#if plan}
         {#if plan.installs.length > 0}
             <SectionLabel text="Installs"/>
@@ -114,11 +110,6 @@
             {/if}
         {/if}
     {/if}
-
-    {#snippet footer()}
-        <PillButton title="Cancel" onclick={() => open = false}/>
-        <PillButton title="Load" primary disabled={!plan || loading || (pick && modules.length === 0)} onclick={load}/>
-    {/snippet}
 </Dialog>
 
 <style lang="scss">

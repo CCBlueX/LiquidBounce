@@ -2,15 +2,53 @@
     import type {Snippet} from "svelte";
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
+    import PillButton from "./PillButton.svelte";
     import {typing} from "../marketplace";
 
-    let {open = $bindable(), title, width = 560, children, footer}: {
+    /**
+     * [onconfirm] runs for the confirm button, and the dialog closes when it resolves to true. [footer]
+     * replaces both buttons.
+     */
+    let {
+        open,
+        title,
+        width = 560,
+        confirm,
+        cancel = "Cancel",
+        danger = false,
+        disabled = false,
+        onconfirm,
+        onclose,
+        children,
+        footer
+    }: {
         open: boolean;
         title: string;
         width?: number;
+        confirm?: string;
+        cancel?: string;
+        danger?: boolean;
+        disabled?: boolean;
+        onconfirm?: () => Promise<boolean>;
+        onclose: () => void;
         children: Snippet;
         footer?: Snippet;
     } = $props();
+
+    let busy = $state(false);
+
+    async function run() {
+        if (busy || !onconfirm) {
+            return;
+        }
+
+        busy = true;
+        const done = await onconfirm();
+        busy = false;
+        if (done) {
+            onclose();
+        }
+    }
 </script>
 
 {#if open}
@@ -18,14 +56,20 @@
         <div class="window" style="width: {width}px;" use:typing>
             <div class="title">
                 <span>{title}</span>
-                <button type="button" class="close" aria-label="Close" onclick={() => open = false}></button>
+                <button type="button" class="close" aria-label="Close" onclick={onclose}></button>
             </div>
             <div class="content">
                 {@render children()}
             </div>
-            {#if footer}
+            {#if footer || confirm}
                 <div class="footer">
-                    {@render footer()}
+                    {#if footer}
+                        {@render footer()}
+                    {:else}
+                        <PillButton title={cancel} onclick={onclose}/>
+                        <PillButton title={confirm ?? ""} primary={!danger} {danger} disabled={disabled || busy}
+                                    onclick={run}/>
+                    {/if}
                 </div>
             {/if}
         </div>

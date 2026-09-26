@@ -2,15 +2,13 @@
     import ActionMenu from "../ui/ActionMenu.svelte";
     import Address from "../Address.svelte";
     import type {ConfigTracker} from "../../../../../integration/types";
-    import type {MenuEntry} from "../marketplace";
+    import {dialog, type MenuEntry} from "../marketplace";
 
-    let {tracker, loggedIn, online = true, onchange, onpublish, onupdate, onopen}: {
+    let {tracker, loggedIn, online = true, onchange, onopen}: {
         tracker: ConfigTracker;
         loggedIn: boolean;
         online?: boolean;
         onchange: (action: "revert" | "restore" | "detach") => void;
-        onpublish: () => void;
-        onupdate: () => void;
         onopen: () => void;
     } = $props();
 
@@ -19,10 +17,10 @@
         const editing = tracker.state === "Editing";
 
         if (editing && online && loggedIn && tracker.own) {
-            list.push({title: "Update...", onclick: onupdate});
+            list.push({title: "Update...", onclick: () => dialog.set({kind: "update"})});
         }
         if (editing && online && loggedIn) {
-            list.push({title: "Publish...", onclick: onpublish});
+            list.push({title: "Publish...", onclick: () => dialog.set({kind: "publish"})});
         }
         if (editing) {
             list.push({title: "Revert", onclick: () => onchange("revert")});

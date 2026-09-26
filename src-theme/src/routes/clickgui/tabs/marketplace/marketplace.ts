@@ -2,7 +2,15 @@ import dateFormat from "dateformat";
 import {writable} from "svelte/store";
 import {REST_BASE} from "../../../../integration/host";
 import {setTyping} from "../../../../integration/rest";
-import type {MarketplaceInstallResult, MarketplaceItemType, MarketplaceRevision} from "../../../../integration/types";
+import type {
+    MarketplaceConfig,
+    MarketplaceConfigDetail,
+    MarketplaceInstallResult,
+    MarketplaceItemType,
+    MarketplaceLinkedConfig,
+    MarketplacePublished,
+    MarketplaceRevision
+} from "../../../../integration/types";
 
 export const UNKNOWN_SERVER = `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`;
 export const UNKNOWN_PACK = `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_pack.png`;
@@ -65,6 +73,19 @@ export interface MenuEntry {
 export function typeName(type: MarketplaceItemType): string {
     return type === "Addon" ? "Add-on" : type;
 }
+
+/**
+ * The dialog on screen. [ondone] runs after an edit or delete went through.
+ */
+export type DialogRequest =
+    | { kind: "load"; config: MarketplaceLinkedConfig }
+    | { kind: "publish" }
+    | { kind: "published"; published: MarketplacePublished }
+    | { kind: "update" }
+    | { kind: "edit"; detail: MarketplaceConfigDetail; ondone: () => void }
+    | { kind: "delete"; config: MarketplaceConfig; ondone: () => void };
+
+export const dialog = writable<DialogRequest | null>(null);
 
 export const toast = writable<{ message: string; error: boolean; id: number } | null>(null);
 
