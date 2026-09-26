@@ -19,10 +19,16 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.gson.interopGson
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
+import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.LocalStorageData.Item
-import net.ccbluex.netty.http.routing.Routing
 
 /**
  * LocalStorage RestAPI
@@ -40,7 +46,7 @@ private data class LocalStorageData(val items: List<Item>) {
 }
 
 // GET /api/v1/client/localStorage
-private fun Routing.getLocalStorage() = get {
+private fun Route.getLocalStorage() = get {
     val key = call.queryParameters["key"] ?: call.forbidden("No key")
     val value = PersistentLocalStorage.map[key] ?: call.forbidden("No value for key $key")
 
@@ -50,29 +56,29 @@ private fun Routing.getLocalStorage() = get {
 }
 
 // PUT /api/v1/client/localStorage
-private fun Routing.putLocalStorage() = put {
+private fun Route.putLocalStorage() = put {
     val payload = call.receive<JsonObject>()
     val key = payload["key"]?.asString ?: call.forbidden("No key")
     val value = payload["value"]?.asString ?: call.forbidden("No value")
 
     PersistentLocalStorage.map[key] = value
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/localStorage
-private fun Routing.deleteLocalStorage() = delete {
+private fun Route.deleteLocalStorage() = delete {
     val key = call.queryParameters["key"] ?: call.forbidden("No key")
     PersistentLocalStorage.map.remove(key)
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/localStorage/all
-private fun Routing.getAllLocalStorage() = get {
-    call.respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }), interopGson)
+private fun Route.getAllLocalStorage() = get {
+    call.respond(LocalStorageData(PersistentLocalStorage.map.map { (k, v) -> Item(k, v) }))
 }
 
 // PUT /api/v1/client/localStorage/all
-private fun Routing.putAllLocalStorage() = put {
+private fun Route.putAllLocalStorage() = put {
     val payload = call.receive<LocalStorageData>()
 
     PersistentLocalStorage.map.clear()
@@ -80,10 +86,10 @@ private fun Routing.putAllLocalStorage() = put {
         PersistentLocalStorage.map[item.key] = item.value
     }
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.localStorageRoutes() = route("/localStorage") {
+internal fun Route.localStorageRoutes() = route("/localStorage") {
     getLocalStorage()
     putLocalStorage()
     deleteLocalStorage()

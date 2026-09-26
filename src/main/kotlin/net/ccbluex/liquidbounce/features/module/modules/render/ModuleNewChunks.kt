@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
@@ -112,7 +112,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
 
         val drawY = if (autoY) player.y - 100.0 else renderY.toDouble()
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             for ((chunk, isNew) in chunks) {
                 val chunkX = chunk.minBlockX
                 val chunkZ = chunk.minBlockZ

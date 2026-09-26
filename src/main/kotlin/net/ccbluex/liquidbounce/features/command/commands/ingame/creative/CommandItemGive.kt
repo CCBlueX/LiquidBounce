@@ -18,19 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.item
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.itemArgument
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.item.createItem
 import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.commands.arguments.item.ItemArgument
 import net.minecraft.world.item.ItemStack
 import kotlin.math.min
 
@@ -39,43 +42,40 @@ import kotlin.math.min
  *
  * Allows you to give items to the player.
  */
-object CommandItemGive : Command.Factory {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("give")
-            .requiresIngame()
-            .parameter(ParameterBuilder.item().required().build())
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("amount")
-                    .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
-                    .optional()
-                    .build()
-            )
-            .handler {
-                if (!player.hasInfiniteMaterials()) {
-                    throw CommandException(command.result("mustBeCreative"))
-                }
-
-                val item = args[0] as String
-                val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
-
-                val itemStack = world.createItem(item)
-                val giveAmount = player.giveItem(itemStack, amount)
-                if (giveAmount == 0) throw CommandException(command.result("noEmptySlot"))
-
-                chat(
-                    regular(
-                        command.result(
-                            "itemGiven",
-                            itemStack.displayName,
-                            variable(giveAmount.toString())
+object CommandItemGive : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("give") {
+            requires { it.isIngame }
+            argument("item", itemArgument()) { item ->
+                optional("amount", IntegerArgumentType.integer(1), default = null) { amount ->
+                    exec { ctx ->
+                        giveItem(
+                            ItemArgument.getItem(ctx, item.name)
+                                .createItemStack(ctx.get(amount) ?: 1),
                         )
-                    )
-                )
+                    }
+                }
             }
-            .build()
+        }
+    }
+
+    private fun CmdI18n.giveItem(itemStack: ItemStack): Int {
+        if (!player.hasInfiniteMaterials()) {
+            throw CommandException(t("mustBeCreative"))
+        }
+
+        val giveAmount = player.giveItem(itemStack, itemStack.count)
+        if (giveAmount == 0) throw CommandException(t("noEmptySlot"))
+
+        chat(
+            regular(
+                t("itemGiven",
+                    itemStack.displayName,
+                    variable(giveAmount.toString())
+                )
+            )
+        )
+        return 1
     }
 
     fun LocalPlayer.giveItem(item: ItemStack, amount: Int): Int {

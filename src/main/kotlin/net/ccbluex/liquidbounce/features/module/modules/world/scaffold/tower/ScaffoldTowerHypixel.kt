@@ -20,68 +20,54 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.entity.airTicks
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.core.BlockPos
-import java.util.concurrent.ThreadLocalRandom
-import kotlin.math.round
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.isEqual1_8
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
+    private var notifiedWrongProtocol = false
+    private var notifiedStationary = false
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
+        if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0) {
             return@tickHandler
         }
 
-        if (player.x % 1.0 != 0.0 && !player.moving) {
-            player.deltaMovement.x = (round(player.x) - player.x).coerceAtMost(0.281)
+        if (!isEqual1_8) {
+            if (!notifiedWrongProtocol) {
+                notifiedWrongProtocol = true
+                chat(
+                    markAsError(
+                        translation("liquidbounce.module.scaffold.messages.hypixelTower.wrongProtocolVersion")
+                    )
+                )
+            }
+        } else {
+            notifiedWrongProtocol = false
         }
 
-        if (player.airTicks > 14) {
-            player.deltaMovement.y -= 0.09
-            player.deltaMovement = player.deltaMovement.multiply(
-                0.6,
-                1.0,
-                0.6
-            )
+        if (player.horizontalSpeed > 0.01) {
+            if (!notifiedStationary) {
+                notifiedStationary = true
+                chat(
+                    warning(
+                        translation("liquidbounce.module.scaffold.messages.hypixelTower.stationaryWarning")
+                    )
+                )
+            }
             return@tickHandler
         }
-        when (player.airTicks % 3) {
-            0 -> {
-                player.deltaMovement.y = 0.42
-                player.deltaMovement =
-                    player.deltaMovement.withStrafe(speed = 0.247 - (ThreadLocalRandom.current().nextFloat() / 100f))
-            }
-            2 -> player.deltaMovement.y = 1 - (player.y % 1.0)
+
+        if (player.onGround()) {
+            player.deltaMovement.y = 0.42
         }
-    }
-
-    override fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        if (!player.moving) {
-            // Find the block closest to the player
-            val blocks = arrayOf(
-                blockPos.offset(0, 0, 1),
-                blockPos.offset(0, 0, -1),
-                blockPos.offset(1, 0, 0),
-                blockPos.offset(-1, 0, 0)
-            )
-
-            val blockOffset = blocks.minByOrNull { blockPos ->
-                blockPos.getCenterDistanceSquared()
-            }?.below() ?: blockPos
-
-            // Check if block next to the player is solid
-            if (!blockOffset.getState()!!.isRedstoneConductor(world, blockOffset)) {
-                return blockOffset
-            }
+        if (player.deltaMovement.y <= 0.0 && player.deltaMovement.y >= -0.09) {
+            player.deltaMovement.y = -0.38
         }
-
-        return super.getTargetedPosition(blockPos)
     }
 
 

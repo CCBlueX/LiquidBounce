@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.ccbluex.liquidbounce.utils.math.high32
@@ -64,13 +64,11 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     private val blockPosCacheList = LongArrayList()
 
     fun render(event: WorldRenderEvent, time: Long) {
-        val matrixStack = event.matrixStack
-
         with(placementRenderer) {
             val color = getColor(id)
             val outlineColor = getOutlineColor(id)
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 fun drawEntryBox(blockPos: Long, cullData: Long, box: AABB, colorFactor: Float) {
                     withPositionRelativeToCamera(blockPosCache.set(blockPos)) {
                         drawBox(

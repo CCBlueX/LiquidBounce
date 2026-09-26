@@ -32,11 +32,11 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -79,8 +79,8 @@ internal object FlyVanilla : Mode("Vanilla") {
 
         player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
-            mc.options.keyJump.isDown -> vSpeed.toDouble()
-            mc.options.keyShift.isDown -> (-vSpeed).toDouble()
+            mc.options.keyJump.isDown && !mc.options.keyShift.isDown -> vSpeed.toDouble()
+            mc.options.keyShift.isDown && !mc.options.keyJump.isDown -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
@@ -116,10 +116,6 @@ internal object FlyCreative : Mode("Creative") {
 
     private val forceFlight by boolean("ForceFlight", true)
 
-    override fun enable() {
-        player.abilities.mayfly = true
-    }
-
     private fun shouldFlyDown(): Boolean {
         if (!bypassVanillaCheck) return false
         if (player.tickCount % 40 != 0) return false
@@ -154,7 +150,6 @@ internal object FlyCreative : Mode("Creative") {
     }
 
     override fun disable() {
-        player.abilities.mayfly = false
         player.abilities.flying = false
     }
 

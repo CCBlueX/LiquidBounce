@@ -1,5 +1,6 @@
 {
   "name": "Keystrokes",
+  "description": "Visualizes your movement key inputs.",
   "enabled": false,
   "singleton": true,
   "alignment": {

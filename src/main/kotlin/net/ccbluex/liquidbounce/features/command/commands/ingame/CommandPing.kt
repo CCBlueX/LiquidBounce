@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
@@ -30,17 +32,19 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Verifies the latency of the current player.
  */
-object CommandPing : Command.Factory {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("ping")
-            .requiresIngame()
-            .handler {
-                val ping = requireNotNull(player.playerInfo?.latency) { "Player Info Is Null" }
-                chat(regular(command.result("pingCheck", variable(ping.toString()))), command)
+object CommandPing : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("ping") {
+            requires { it.isIngame }
+            exec {
+                val ping = requireNotNull(it.source.playerOrNull?.playerInfo?.latency) { "Player Info Is Null" }
+                chat(
+                    regular(t("pingCheck", variable(ping.toString()))),
+                    metadata = MessageMetadata(id = "Cping#info")
+                )
+                1
             }
-            .build()
+        }
     }
 
 }

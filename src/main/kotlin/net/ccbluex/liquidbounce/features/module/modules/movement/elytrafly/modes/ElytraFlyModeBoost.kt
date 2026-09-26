@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
@@ -240,7 +239,7 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     }
 
     private fun calculateVerticalMovement(currentY: Double, divePullUpBoost: Double, event: PlayerMoveEvent): Double {
-        val horizontalSpeed = hypot(event.movement.x, event.movement.z)
+        val horizontalSpeed = event.movement.horizontalDistance()
         val naturalLift = horizontalSpeed * NATURAL_LIFT_FACTOR
         val verticalSpeed = ModuleElytraFly.Speed.vertical.toDouble() * verticalControl
 

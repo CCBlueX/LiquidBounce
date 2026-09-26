@@ -47,15 +47,16 @@ object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
 
         val brightness by int("Brightness", 15, 1..15)
 
-        var gamma = 0.0
+        var gamma = 0.0F
+            private set
 
         override fun enable() {
-            gamma = mc.options.gamma().get()
+            gamma = mc.options.gamma().get().toFloat()
         }
 
         val tickHandler = handler<PlayerPostTickEvent> {
             if (gamma < brightness) {
-                gamma = (gamma + 0.1).coerceAtMost(brightness.toDouble())
+                gamma = (gamma + 0.1F).coerceAtMost(brightness.toFloat())
             }
         }
 

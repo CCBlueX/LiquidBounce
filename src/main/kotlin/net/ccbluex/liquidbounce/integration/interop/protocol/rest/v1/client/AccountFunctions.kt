@@ -23,6 +23,15 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.EventManager
@@ -31,165 +40,180 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.randomUsername
-import net.ccbluex.netty.http.routing.Routing
-import org.lwjgl.glfw.GLFW
 
 // GET /api/v1/client/accounts
-private fun Routing.getAccounts() = get {
+private fun Route.getAccounts() = get {
     val accounts = JsonArray()
     for ((i, account) in AccountManager.accounts.withIndex()) {
         val profile = account.profile ?: continue
 
         accounts.add(JsonObject().apply {
             addProperty("id", i)
-            addProperty("username", profile.username)
-            addProperty("uuid", profile.uuid.toString())
-            addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+            addProperty("username", profile.name)
+            addProperty("uuid", profile.id.toString())
+            addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
             add("bans", interopGson.toJsonTree(account.bans))
-            addProperty("type", account.type.commonName)
+            addProperty("type", account.service.tag)
             addProperty("favorite", account.favorite)
         })
     }
     call.respond(accounts)
 }
 
-// POST /api/v1/client/accounts/new/microsoft
-private fun Routing.postNewMicrosoftAccount() = post {
-    AccountManager.newMicrosoftAccount {
+// POST /api/v1/client/accounts/new/microsoft/device-code
+private fun Route.postNewMicrosoftAccount() = post("/device-code") {
+    AccountManager.newMicrosoftAccountViaDeviceCode {
         browseUrl(it)
         EventManager.callEvent(AccountManagerMessageEvent("Opened login url in browser"))
     }
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/clipboard
-private fun Routing.postClipboardMicrosoftAccount() = post("/clipboard") {
-    AccountManager.newMicrosoftAccount {
+// POST /api/v1/client/accounts/new/microsoft/device-code/clipboard
+private fun Route.postClipboardMicrosoftAccount() = post("/device-code/clipboard") {
+    AccountManager.newMicrosoftAccountViaDeviceCode {
         mc.execute {
-            GLFW.glfwSetClipboardString(mc.window.handle(), it)
+            mc.keyboardHandler.clipboard = it
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
+}
+
+// POST /api/v1/client/accounts/new/microsoft/webview
+private fun Route.postWebViewMicrosoftAccount() = post("/webview") {
+    AccountManager.newMicrosoftAccountViaWebView()
+    EventManager.callEvent(AccountManagerMessageEvent("Opened Microsoft sign-in window"))
+    call.respond(HttpStatusCode.NoContent)
+}
+
+// POST /api/v1/client/accounts/new/microsoft/credentials
+private fun Route.postCredentialsMicrosoftAccount() = post("/credentials") {
+    data class AccountForm(val email: String, val password: String)
+
+    val accountForm = call.receive<AccountForm>()
+
+    AccountManager.newMicrosoftAccountViaCredentials(accountForm.email, accountForm.password)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/cracked
-private fun Routing.postNewCrackedAccount() = post("/cracked") {
+private fun Route.postNewCrackedAccount() = post("/cracked") {
     data class AccountForm(val username: String, val online: Boolean?)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/session
-private fun Routing.postNewSessionAccount() = post("/session") {
+private fun Route.postNewSessionAccount() = post("/session") {
     data class AccountForm(val token: String)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.newSessionAccount(accountForm.token)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/new/altening
-private fun Routing.postNewAlteningAccount() = post {
+private fun Route.postNewAlteningAccount() = post {
     data class AlteningForm(val token: String)
 
     val accountForm = call.receive<AlteningForm>()
     AccountManager.newAlteningAccount(accountForm.token)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/generate
-private fun Routing.postGenerateAlteningAccount() = post("/generate") {
+// POST /api/v1/client/accounts/new/altening/generate
+private fun Route.postGenerateAlteningAccount() = post("/generate") {
     data class AlteningGenForm(val apiToken: String)
 
     val accountForm = call.receive<AlteningGenForm>()
 
     AccountManager.generateAlteningAccount(accountForm.apiToken)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/swap
-private fun Routing.postSwapAccounts() = post("/swap") {
+private fun Route.postSwapAccounts() = post("/swap") {
     data class AccountForm(val from: Int, val to: Int)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.swapAccounts(accountForm.from, accountForm.to)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/accounts/order
-private fun Routing.postOrderAccounts() = post("/order") {
+private fun Route.postOrderAccounts() = post("/order") {
     data class AccountOrderRequest(val order: List<Int>)
 
     val accountOrderRequest = call.receive<AccountOrderRequest>()
 
     AccountManager.orderAccounts(accountOrderRequest.order)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/login
-private fun Routing.postLoginAccount() = post {
+// POST /api/v1/client/account/login
+private fun Route.postLoginAccount() = post {
     data class AccountForm(val id: Int)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginAccount(accountForm.id)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/cracked
-private fun Routing.postLoginCrackedAccount() = post("/cracked") {
+// POST /api/v1/client/account/login/cracked
+private fun Route.postLoginCrackedAccount() = post("/cracked") {
     data class AccountForm(val username: String, val online: Boolean?)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/session
-private fun Routing.postLoginSessionAccount() = post("/session") {
+// POST /api/v1/client/account/login/session
+private fun Route.postLoginSessionAccount() = post("/session") {
     data class AccountForm(val token: String)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.loginSessionAccount(accountForm.token)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/accounts/restore
-private fun Routing.postRestoreInitial() = post("/restore") {
+// POST /api/v1/client/account/restore
+private fun Route.postRestoreInitial() = post("/restore") {
     AccountManager.restoreInitial()
-    call.respond(mc.user, interopGson)
+    call.respond(mc.user)
 }
 
-// PUT /api/v1/client/accounts/favorite
-private fun Routing.putFavoriteAccount() = put {
+// PUT /api/v1/client/account/favorite
+private fun Route.putFavoriteAccount() = put {
     data class AccountForm(val id: Int)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.favoriteAccount(accountForm.id)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/client/accounts/favorite
-private fun Routing.deleteFavoriteAccount() = delete {
+// DELETE /api/v1/client/account/favorite
+private fun Route.deleteFavoriteAccount() = delete {
     data class AccountForm(val id: Int)
 
     val accountForm = call.receive<AccountForm>()
 
     AccountManager.unfavoriteAccount(accountForm.id)
-    call.respondNoContent()
+    call.respond(HttpStatusCode.NoContent)
 }
 
-// DELETE /api/v1/client/accounts
-private fun Routing.deleteAccount() = delete {
+// DELETE /api/v1/client/account
+private fun Route.deleteAccount() = delete {
     data class AccountForm(val id: Int)
 
     val accountForm = call.receive<AccountForm>()
@@ -199,28 +223,30 @@ private fun Routing.deleteAccount() = delete {
         addProperty("id", accountForm.id)
 
         val profile = account.profile ?: return@apply
-        addProperty("username", profile.username)
-        addProperty("uuid", profile.uuid.toString())
-        addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
+        addProperty("username", profile.name)
+        addProperty("uuid", profile.id.toString())
+        addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
 
-        addProperty("type", account.type.commonName)
+        addProperty("type", account.service.tag)
     })
 }
 
 // POST /api/v1/client/account/random-name
-private fun Routing.generateName() = post("/random-name") {
+private fun Route.generateName() = post("/random-name") {
     call.respond(JsonObject().apply {
         addProperty("name", randomUsername())
     })
 }
 
-internal fun Routing.accountRoutes() {
+internal fun Route.accountRoutes() {
     route("/accounts") {
         getAccounts()
         route("/new") {
             route("/microsoft") {
                 postNewMicrosoftAccount()
                 postClipboardMicrosoftAccount()
+                postWebViewMicrosoftAccount()
+                postCredentialsMicrosoftAccount()
             }
             postNewCrackedAccount()
             postNewSessionAccount()

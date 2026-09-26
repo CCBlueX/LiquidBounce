@@ -3,10 +3,11 @@
  * Created: 2024
  * License: GPL-3.0
  */
-#version 330 core
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 
-in vec2 texCoord;
-out vec4 fragColor;
+layout(location = 0) in vec2 texCoord;
+layout(location = 0) out vec4 fragColor;
 
 uniform sampler2D InSampler;
 
