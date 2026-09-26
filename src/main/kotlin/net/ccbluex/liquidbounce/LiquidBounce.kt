@@ -65,6 +65,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -396,6 +397,9 @@ object LiquidBounce : EventListener {
         BlurEffectRenderer
         ScreenManager
 
+        // Holds the chosen browser backend
+        ConfigSystem.load(GlobalManager)
+
         taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
             // and then starts the browser through render thread.
@@ -508,6 +512,15 @@ object LiquidBounce : EventListener {
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent>(priority = FIRST_PRIORITY) { event ->
         val taskManager = taskManager ?: return@handler
+
+        val selection = BrowserBackendManager.pendingSelection
+        if (selection != null && !selection.isCompleted) {
+            if (event.screen !is BrowserSelectionScreen) {
+                event.cancelEvent()
+                mc.gui.setScreen(BrowserSelectionScreen(BrowserBackendManager.selectableBackends, selection))
+            }
+            return@handler
+        }
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
