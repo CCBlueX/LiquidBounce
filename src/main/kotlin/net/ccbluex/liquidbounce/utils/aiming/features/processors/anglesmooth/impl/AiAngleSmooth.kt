@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
+import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.Ang
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.NoneAngleSmooth
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
@@ -49,24 +51,32 @@ import kotlin.time.measureTimedValue
  * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth].
  */
 class AiAngleSmooth(
-    parent: ChoiceConfigurable<*>,
+    parent: ModeValueGroup<*>,
     val fallback: AngleSmooth
-) : AngleSmooth("AI", parent, arrayListOf("Minarai")) {
+) : AngleSmooth("AI", parent, listOf("Minarai")) {
 
-    private val choices = choices("Model", 0) { local ->
-        models.onChanged { _ ->
-            local.choices = models.choices
+    private val choices = modes<TwoDimensionalRegressionModel>("Model", 0) { local ->
+        models.onChanged {
+            runCatching {
+                val activeModelName = local.activeMode.tag
+                local.modes = models.modes
+                val nextModelName = local.modes.firstOrNull { model -> model.tag == activeModelName }
+                    ?.tag ?: models.activeMode.tag
+                local.setByString(nextModelName)
+            }.onFailure { error ->
+                logger.error("Failed to sync AI model selection after model reload.", error)
+            }
         }
 
-        models.choices.toTypedArray()
+        models.modes.toTypedArray()
     }
 
-    private class OutputMultiplier : Configurable("OutputMultiplier") {
-        var yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
-        var pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
+    private class OutputMultiplier : ValueGroup("OutputMultiplier") {
+        val yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
+        val pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
     }
 
-    private var correctionMode = choices(this, "Correction") {
+    private val correctionMode = modes(this, "Correction") {
         arrayOf(
             /**
              * Works best with the model, as it allows for the most natural movement.
@@ -131,8 +141,15 @@ class AiAngleSmooth(
             age = 0
         )
 
-        val (output, time) = measureTimedValue {
-            choices.activeChoice.predict(input.asInput)
+        val (output, time) = runCatching {
+            measureTimedValue {
+                choices.activeMode.predict(input.asInput)
+            }
+        }.getOrElse {
+            return fallback.process(rotationTarget, currentRotation, targetRotation)
+        }
+        if (output.size < 2 || !output[0].isFinite() || !output[1].isFinite()) {
+            return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
         ModuleDebug.debugParameter(this, "Output [0]", output[0])
         ModuleDebug.debugParameter(this, "Output [1]", output[1])
@@ -143,7 +160,7 @@ class AiAngleSmooth(
             currentRotation.pitch + output[1] * outputMultiplier.pitchMultiplier
         )
 
-        return correctionMode.activeChoice.process(
+        return correctionMode.activeMode.process(
             rotationTarget,
             modelOutput,
             targetRotation
@@ -155,7 +172,7 @@ class AiAngleSmooth(
         targetRotation: Rotation
     ): Int {
         // TODO: Implement correctly
-        return 0
+        return correctionMode.activeMode.calculateTicks(currentRotation, targetRotation)
     }
 
 }

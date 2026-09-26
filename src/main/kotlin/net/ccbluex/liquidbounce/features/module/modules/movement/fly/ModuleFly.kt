@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -50,6 +50,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
@@ -59,10 +60,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  */
 
 object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = listOf("Glide", "Jetpack")) {
-
-    init {
-        enableLock()
-    }
 
     internal val modes = choices(
         "Mode", FlyVanilla, arrayOf(
@@ -101,7 +98,7 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
         )
     ).apply { tagBy(this) }
 
-    private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
+    private object Visuals : ToggleableValueGroup(this, "Visuals", true) {
 
         private val stride by boolean("Stride", true)
 
@@ -121,12 +118,27 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
 
     private val disableOnSetback by boolean("DisableOnSetback", false)
 
+    private var wasFlyingAllowed = false
+
+    override fun onEnabled() {
+        wasFlyingAllowed = player.abilities.mayfly
+        player.abilities.mayfly = false
+    }
+
+    override fun onDisabled() {
+        player.abilities.mayfly = wasFlyingAllowed
+    }
+
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
-        if (event.packet is ClientboundPlayerPositionPacket && disableOnSetback) {
+        if (disableOnSetback && event.packet is ClientboundPlayerPositionPacket) {
             chat(markAsError(message("setbackDetected")))
             enabled = false
+        }
+
+        if (event.packet is ClientboundPlayerAbilitiesPacket) {
+            wasFlyingAllowed = event.packet.canFly()
         }
     }
 

@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.crosshair
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
 
-class CrosshairColorSettings : Configurable("Color") {
+class CrosshairColorSettings : ValueGroup("Color") {
     val syncColors by boolean("Sync", true)
     val firstColor by color("FirstColor", Color4b(0, 0, 255, 255))
     val secondColor by color("SecondColor", Color4b(0, 0, 255, 255))

@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.consume
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +31,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  * tested on mineblaze.net
  */
 
-internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
+internal class NoSlowConsumeIntave14(override val parent: ModeValueGroup<*>) : Mode("Intave14") {
     private val mode by enumChoice("Mode", Mode.RELEASE)
 
     private fun releasePacket() {
@@ -68,7 +68,7 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
         }
     }
 
-    private enum class Mode(override val choiceName: String) : NamedChoice {
+    private enum class Mode(override val tag: String) : Tagged {
         RELEASE("Release"),
         NEW("New")
     }

@@ -23,20 +23,22 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachInt
-import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
@@ -54,7 +56,7 @@ import kotlin.math.abs
 @Suppress("MagicNumber")
 object CustomAntiBotMode : AntiBotMode("Custom") {
 
-    private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
+    private object InvalidGround : ToggleableValueGroup(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
     }
 
@@ -65,26 +67,26 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         CustomConditions.FAKE_ENTITY_ID,
     )
 
-    private object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
+    private object AlwaysInRadius : ToggleableValueGroup(ModuleAntiBot, "AlwaysInRadius", false) {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false), AntiBotPredicate {
+    private object Age : ToggleableValueGroup(ModuleAntiBot, "Age", false), AntiBotPredicate {
         private val minimum by int("Minimum", 20, 0..120, "ticks")
 
         override fun isBot(entity: Player): Boolean = entity.tickCount < minimum
     }
 
-    private object Armor : ToggleableConfigurable(ModuleAntiBot, "Armor", false) {
+    private object Armor : ToggleableValueGroup(ModuleAntiBot, "Armor", false) {
 
         /**
          * @see ArmorMaterials
          */
         @Suppress("UNUSED")
         private enum class ArmorPredicate(
-            override val choiceName: String,
+            override val tag: String,
             val predicate: Predicate<ItemStack>,
-        ) : NamedChoice {
+        ) : Tagged {
             // General
             NOTHING("Nothing", Predicate(ItemStack::isEmpty)),
             LEATHER(
@@ -113,7 +115,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ),
 
             // Chestplate only
-            ELYTRA("Elytra", Items.ELYTRA),
+            ELYTRA("Elytra", { it.isGlider }),
 
             // Helmet only
             TURTLE_SCUTE("TurtleScute", Items.TURTLE_HELMET),
@@ -158,7 +160,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>>(
+        private val values = enumMapOf<EquipmentSlot, MultiChoiceListValue<ArmorPredicate>>(
             EquipmentSlot.HEAD, multiEnumChoice("Helmet", enumSetOf(ArmorPredicate.NOTHING), HELMET),
             EquipmentSlot.CHEST, multiEnumChoice("Chestplate", enumSetOf(ArmorPredicate.NOTHING), CHESTPLATE),
             EquipmentSlot.LEGS, multiEnumChoice("Leggings", enumSetOf(ArmorPredicate.NOTHING), BASE),
@@ -177,14 +179,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }
     }
 
-    private object Name : ToggleableConfigurable(ModuleAntiBot, "Name", true), AntiBotPredicate {
+    private object Name : ToggleableValueGroup(ModuleAntiBot, "Name", true), AntiBotPredicate {
         private val lengthRange by intRange("Length", 3..16, 1..32)
         private val validateChars by multiEnumChoice("ValidateChars", enumSetOf(CharacterValidator.VANILLA))
 
         /**
          * https://en.wikipedia.org/wiki/Unicode_block
          */
-        private enum class CharacterValidator(override val choiceName: String) : NamedChoice, IntPredicate {
+        private enum class CharacterValidator(override val tag: String) : Tagged, IntPredicate {
             VANILLA("Vanilla") {
                 override fun test(value: Int): Boolean {
                     return value in '0'.code..'9'.code
@@ -208,7 +210,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             };
 
             fun test(string: String): Boolean {
-                return string.chars().allMatch(this)
+                return string.codePoints().allMatch(this)
             }
         }
 
@@ -267,12 +269,8 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is ClientboundMoveEntityPacket -> {
-                if (!packet.hasPosition() || !InvalidGround.enabled) {
-                    return@handler
-                }
-
-                val entity = packet.getEntity(world) ?: return@handler
+            is ClientboundMoveEntityPacket if packet.hasPosition() && InvalidGround.enabled -> mc.execute {
+                val entity = packet.getEntity(world) ?: return@execute
                 val id = entity.id
                 val currentValue = flyingSet.getOrDefault(id, 0)
                 if (entity.onGround() && entity.yo != entity.y) {
@@ -288,26 +286,29 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                 }
             }
 
-            is ClientboundUpdateAttributesPacket -> {
+            is ClientboundUpdateAttributesPacket -> mc.execute {
                 attributesSet.add(packet.entityId)
             }
 
             is ClientboundAnimatePacket -> {
                 when (packet.action) {
-                    ClientboundAnimatePacket.SWING_MAIN_HAND, ClientboundAnimatePacket.SWING_OFF_HAND -> {
-                        swungSet.add(packet.id)
-                    }
-                    ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> {
+                    ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> mc.execute {
                         crittedSet.add(packet.id)
                     }
                 }
             }
 
-            is ClientboundRemoveEntitiesPacket -> {
+            is ClientboundSwingAnimationPacket -> mc.execute {
+                swungSet.add(packet.entityId)
+            }
+
+            is ClientboundRemoveEntitiesPacket -> mc.execute {
                 packet.entityIds.forEachInt { entityId ->
                     attributesSet.remove(entityId)
                     flyingSet.remove(entityId)
                     hitSet.remove(entityId)
+                    swungSet.remove(entityId)
+                    crittedSet.remove(entityId)
                     notAlwaysInRadiusSet.remove(entityId)
                     armorSet.remove(entityId)
                 }
@@ -343,9 +344,9 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
     @Suppress("unused")
     private enum class CustomConditions(
-        override val choiceName: String,
+        override val tag: String,
         private val isBot: AntiBotPredicate
-    ) : NamedChoice, AntiBotPredicate by isBot {
+    ) : Tagged, AntiBotPredicate by isBot {
         DUPLICATE("Duplicate", { suspected ->
             isADuplicate(suspected.gameProfile)
         }),

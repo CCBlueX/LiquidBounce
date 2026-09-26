@@ -19,21 +19,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.util.Prediction
 
 internal object Soup : HealthBasedBuff("Soup") {
 
-    private object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
+    private object DropAfterUse : ToggleableValueGroup(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
         val wait by intRange("Wait", 1..2, 1..20, "ticks")
     }
@@ -53,9 +54,9 @@ internal object Soup : HealthBasedBuff("Soup") {
         if (DropAfterUse.enabled) {
             waitTicks(wait.random())
 
-            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot !is OffHandSlot) {
-                if (player.drop(true)) {
-                    player.swing(InteractionHand.MAIN_HAND)
+            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != HotbarItemSlot.OFFHAND) {
+                if (player.drop(slot.itemStack, true, Prediction.PREDICTED) != null) {
+                    SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
                 }
             }
         }

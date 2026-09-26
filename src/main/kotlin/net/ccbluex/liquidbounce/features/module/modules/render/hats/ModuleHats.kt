@@ -27,11 +27,25 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHa
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsImage
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOrbs
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
+import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
+import org.joml.Vector2f
 
 /**
  * @author minecrrrr
  */
 object ModuleHats : ClientModule("Hats", ModuleCategories.RENDER) {
+
+    object HeightOffset : AnimatedValueGroup("HeightOffset") {
+        override val curve = curve("Height") {
+            "Progress" x 0f..1f
+            "Offset" y 0f..2f
+            points(Vector2f(0f, 0.2f), Vector2f(1f, 0.2f))
+        }
+    }
+
+    init {
+        tree(HeightOffset)
+    }
 
     val modes = choices("Mode", 0) {
         arrayOf(

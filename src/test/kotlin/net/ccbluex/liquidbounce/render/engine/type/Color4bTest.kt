@@ -19,9 +19,11 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import net.minecraft.util.ARGB
+import net.minecraft.world.item.DyeColor
+import kotlin.test.assertEquals
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class Color4bTest {
 
@@ -63,8 +65,47 @@ class Color4bTest {
 
     @Test
     fun `fromHex with invalid format`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             Color4b.fromHex("FF00")
         }
     }
+
+    @Test
+    fun `toClosestDyeColor should return exact texture diffuse color match`() {
+        val color = Color4b(DyeColor.BLUE.textureDiffuseColor)
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.BLUE, closest)
+    }
+
+    @Test
+    fun `toClosestDyeColor should pick nearest texture diffuse color`() {
+        val blue = DyeColor.BLUE.textureDiffuseColor
+        val color = Color4b(
+            ARGB.red(blue) + 1,
+            ARGB.green(blue) + 1,
+            ARGB.blue(blue) + 1
+        )
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.BLUE, closest)
+    }
+
+    @Test
+    fun `toClosestDyeColor should ignore alpha channel of source color`() {
+        val textureDiffuse = DyeColor.LIME.textureDiffuseColor
+        val color = Color4b(
+            ARGB.red(textureDiffuse),
+            ARGB.green(textureDiffuse),
+            ARGB.blue(textureDiffuse),
+            0
+        )
+
+        val closest = color.toClosestDyeColor(DyeColor::getTextureDiffuseColor)
+
+        assertEquals(DyeColor.LIME, closest)
+    }
+
 }

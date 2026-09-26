@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCircleOutline
@@ -27,20 +27,21 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
  * Renders a circle around the player indicating the KillAura attack range.
  * Synced with KillAura settings for Range, WallRange, and IgnoreOpenInventory.
  */
-object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeIndicator", false) {
+object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndicator", false) {
 
     private val colorMode by enumChoice("ColorMode", ColorMode.STATIC)
     private val idleColor by color("IdleColor", Color4b(255, 50, 50, 80))
@@ -65,9 +66,11 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     private val hideInVehicle by boolean("HideInVehicle", false)
     private val respectInventorySetting by boolean("RespectInventorySetting", true)
 
+    private val canBeCovered by boolean("CanBeCovered", false)
+
     private var colorFactor = 0f
 
-    private enum class ColorMode(override val choiceName: String) : NamedChoice {
+    private enum class ColorMode(override val tag: String) : Tagged {
         STATIC("Static"),
         RAINBOW("Rainbow"),
         DISTANCE("Distance")
@@ -82,48 +85,54 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     }
 
     private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: LivingEntity?) {
-        val range = ModuleKillAura.range
-        val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
-        val pulseOffset = calculatePulse(range)
-        val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
+        val range = ModuleKillAura.range.getAttackRange()
+        val maxRange = range.effectiveMaxRange(player)
+        val minRange = range.effectiveMinRange(player)
+        val pos = player.interpolateCurrentPosition(partialTicks)
+            .add(0.0, 0.001, 0.0) // Prevent z-fighting with the ground
+        val pulseOffset = calculatePulse(maxRange)
+        val distance = target?.let { player.boxedDistanceTo(it).toFloat() }
 
         with(env) {
-            startBatch()
             withPositionRelativeToCamera(pos) {
-                renderCircles(range, pulseOffset, distance, target != null)
+                renderCircles(minRange, maxRange, pulseOffset, distance, target != null)
             }
-            commitBatch()
         }
     }
 
     private fun calculatePulse(range: Float): Float {
         return if (pulseAnimation) {
-            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
-            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
+            val time = clientStartDurationMs / 1000.0F * pulseSpeed
+            sin(time * Mth.TWO_PI) * pulseIntensity * range
         } else {
             0f
         }
     }
 
     private fun WorldRenderEnvironment.renderCircles(
-        range: Float,
+        minRange: Float,
+        maxRange: Float,
         pulseOffset: Float,
         distance: Float?,
         hasTarget: Boolean
     ) {
-        drawRangeCircle(range + pulseOffset, getColor(distance, range))
+        drawRangeCircle(
+            radius = maxRange + pulseOffset,
+            color = getColor(distance, maxRange),
+            innerRadius = minRange
+        )
 
-        if (wallRangeColor.a > 0 && ModuleKillAura.wallRange < range) {
+        if (wallRangeColor.a > 0 && ModuleKillAura.range.interactionThroughWallsRange < maxRange) {
             val color = if (hasTarget) {
                 wallRangeColor.fade(1.5f)
             } else {
                 wallRangeColor
             }
-            drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, 80)
+            drawRangeCircle(ModuleKillAura.range.interactionThroughWallsRange + pulseOffset * 0.5f, color, 80)
         }
 
         if (scanRangeColor.a > 0) {
-            drawRangeCircle(range + 2.5f, scanRangeColor, 60)
+            drawRangeCircle(ModuleKillAura.range.scanRange, scanRangeColor, 60)
         }
 
         if (opponentRangeColor.a > 0 && hasTarget) {
@@ -136,13 +145,38 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
             (hideWhenSpectator && player.isSpectator) ||
             (hideInVehicle && player.vehicle != null) ||
             (respectInventorySetting && !ModuleKillAura.ignoreOpenInventory &&
-                (isInventoryOpen || mc.screen is ContainerScreen)))
+                (isInventoryOpen || mc.gui.screen() is ContainerScreen)))
     }
 
-    private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
-        drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT)
+    private fun WorldRenderEnvironment.drawRangeCircle(
+        radius: Float,
+        color: Color4b,
+        outlineAlpha: Int = 255,
+        innerRadius: Float = 0f
+    ) {
+        val outerRadius = radius.coerceAtLeast(0f)
+        if (outerRadius <= 0f) {
+            return
+        }
+
+        val clampedInnerRadius = innerRadius.coerceIn(0f, outerRadius)
+
+        drawGradientCircle(
+            outerRadius,
+            clampedInnerRadius,
+            color,
+            Color4b.TRANSPARENT,
+            noDepthTest = !canBeCovered
+        )
         if (outline) {
-            drawCircleOutline(radius, outlineColor.with(a = outlineAlpha))
+            poseStack.withPush {
+                translate(0.0, 0.001, 0.0) // Slightly above the filled circle to prevent z-fighting
+                val outlineColor = outlineColor.alpha(outlineAlpha)
+                drawCircleOutline(outerRadius, outlineColor, noDepthTest = !canBeCovered)
+                if (clampedInnerRadius > 0f) {
+                    drawCircleOutline(clampedInnerRadius, outlineColor, noDepthTest = !canBeCovered)
+                }
+            }
         }
     }
 
@@ -163,5 +197,4 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         ColorMode.STATIC -> idleColor.interpolateTo(activeColor, colorFactor.toDouble())
     }
 
-    private fun Color4b.fade(factor: Float) = with(a = (a * factor).toInt().coerceAtMost(255))
 }

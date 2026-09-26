@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
@@ -52,18 +52,18 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
      */
     private val combatOnly by boolean("Combat", false)
 
-    private sealed class LockChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class LockMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = mode
         abstract fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean
     }
 
-    private object Filter : LockChoice("Filter") {
+    private object Filter : LockMode("Filter") {
 
         private val usernames by textList("Usernames", mutableListOf("Notch"))
         private val filterType by enumChoice("FilterType", FilterType.WHITELIST)
 
-        enum class FilterType(override val choiceName: String) : NamedChoice {
+        enum class FilterType(override val tag: String) : Tagged {
             WHITELIST("Whitelist"),
             BLACKLIST("Blacklist")
         }
@@ -81,7 +81,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
         }
     }
 
-    private object Temporary : LockChoice("Temporary") {
+    private object Temporary : LockMode("Temporary") {
 
         private val timeUntilReset by int("MaximumTime", 30, 0..120, "s")
         private val outOfRange by float("MaximumRange", 20f, 8f..40f)
@@ -91,7 +91,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
         // Combination of [entityId] and [time]
         private val lockList = Int2LongLinkedOpenHashMap()
 
-        enum class NoLockMode(override val choiceName: String) : NamedChoice {
+        enum class NoLockMode(override val tag: String) : Tagged {
             ALLOW_ALL("AllowAll"),
             ALLOW_NONE("AllowNone")
         }
@@ -183,7 +183,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
             return false
         }
 
-        return mode.activeChoice.isLockedOn(entity)
+        return mode.activeMode.isLockedOn(entity)
     }
 
 }

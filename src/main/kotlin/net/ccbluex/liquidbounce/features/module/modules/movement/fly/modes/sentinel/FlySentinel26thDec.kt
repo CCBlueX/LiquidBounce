@@ -19,18 +19,18 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -50,7 +50,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * Thanks to the_bi11iona1re for making me aware that Sentinal folds to Verus Damage exploit.
  * Unpatched by @hax0r31337
  */
-internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
+internal object FlySentinel26thDec : Mode("Sentinel26thDec") {
 
     private val horizontalSpeed by float("HorizontalSpeed", 3.5f, 0.1f..10f)
     private val verticalSpeed by float("VerticalSpeed", 0.7f, 0.1f..5f)
@@ -58,7 +58,7 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
     private val timer by float("Timer", 0.5f, 0.1f..1f)
     private val nostalgia by boolean("Nostalgia", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private var hasBeenHurt = false
@@ -81,7 +81,7 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
 
         Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
 
-        PacketQueueManager.flush {
+        BlinkManager.flush {
             true
         }
     }
@@ -156,12 +156,12 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
         if (!hasBeenHurt || player.isDeadOrDying) {
             return@handler
         }
 
-        event.action = PacketQueueManager.Action.QUEUE
+        event.action = BlinkManager.Action.QUEUE
     }
 }

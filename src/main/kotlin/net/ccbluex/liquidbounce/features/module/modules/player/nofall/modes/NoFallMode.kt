@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.world.entity.ai.attributes.Attributes
 
-sealed class NoFallMode(name: String) : Choice(name) {
-    final override val parent: ChoiceConfigurable<*>
+sealed class NoFallMode(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<*>
         get() = ModuleNoFall.modes
 
     protected val playerSafeFallDistance get() = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)

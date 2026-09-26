@@ -18,22 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
+import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
-import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.item.Items
 
 /**
  * AutoArmor module
@@ -48,7 +49,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
      * Should the module use the hotbar to equip armor pieces?
      * If disabled, it will only use inventory moves.
      */
-    object UseHotbar : ToggleableConfigurable(this, "Hotbar", true) {
+    object UseHotbar : ToggleableValueGroup(this, "Hotbar", true) {
         /**
          * Defines whether the [UseHotbar] option supports the armor swap from MC 1.19.4+.
          */
@@ -92,7 +93,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
-        if (stackInArmor.item == Items.ELYTRA) {
+        if (stackInArmor.isGlider) {
             return null
         }
 
@@ -114,13 +115,13 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         isInArmorSlot: Boolean
     ): InventoryAction {
         val inventorySlot = armorPiece.itemSlot
-        val armorPieceSlot = if (isInArmorSlot) Slots.Armor[armorPiece.entitySlotId] else inventorySlot
+        val armorPieceSlot = if (isInArmorSlot) ArmorItemSlot(armorPiece.slotType) else inventorySlot
 
         val canTryHotbarMove = UseHotbar.enabled &&
             !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
 
         if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
-            return InventoryAction.UseItem(inventorySlot)
+            return InventoryAction.UseItem(inventorySlot, this)
         }
 
         // Should the item be just thrown out of the inventory

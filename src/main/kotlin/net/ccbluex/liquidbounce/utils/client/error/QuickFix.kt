@@ -119,6 +119,27 @@ enum class QuickFix (
                 "Restart LiquidBounce and try again."
             )
         }
+    ),
+    BROWSER_IS_NOT_RESPONDING(
+        description = "The browser is not responding",
+        whatToDo = Instructions(true) {
+            arrayOf(
+                "Disable System-wide proxy",
+                "Disable Web Security/AV software",
+                "Disable Smart App Control",
+                "Restart LiquidBounce and try again."
+            )
+        }
+    ),
+    BROWSER_FAILED_TO_LOAD_UI(
+        description = "The browser failed to load the UI.",
+        whatToDo = Instructions(true) {
+            arrayOf(
+                "Disable System-wide proxy",
+                "Disable Web Security/AV software",
+                "Restart LiquidBounce and try again."
+            )
+        }
     );
 
     val messages = mapOf(

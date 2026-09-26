@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -34,10 +34,11 @@ import java.util.function.BooleanSupplier
 
 @Suppress("unused")
 enum class KillAuraRequirements(
-    override val choiceName: String,
-) : NamedChoice, BooleanSupplier {
+    override val tag: String,
+) : Tagged, BooleanSupplier {
     CLICK("Click"),
     WEAPON("Weapon"),
+    EMPTY_HAND("EmptyHand"),
     VANILLA_NAME("VanillaName"),
     NOT_BREAKING("NotBreaking");
 
@@ -45,6 +46,7 @@ enum class KillAuraRequirements(
         when (this) {
             CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(250)
             WEAPON -> player.mainHandItem.isWeapon()
+            EMPTY_HAND -> player.mainHandItem.isEmpty
             VANILLA_NAME -> player.mainHandItem.customName == null
             NOT_BREAKING -> mc.gameMode?.isDestroying == false
         }

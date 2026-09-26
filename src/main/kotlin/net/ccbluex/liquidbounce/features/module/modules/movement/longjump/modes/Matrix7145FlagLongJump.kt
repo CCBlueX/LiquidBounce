@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -37,9 +37,9 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  * @anticheatVersion 7.14.5
  * @testedOn mc.loyisa.cn
  */
-internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
+internal object Matrix7145FlagLongJump : Mode("Matrix-7.14.5-Flag") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
     private val boostSpeed by float("BoostSpeed", 1.97f, 0.1f..5f)
@@ -61,11 +61,9 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
         val yaw = player.yRot
         // Repeat the jump until we get at least 2 flags and have not floated for too long
         while (flagTicks < 2 && player.airTicks < ACCEPTED_AIR_TIME) {
-            player.setDeltaMovement(
-                player.deltaMovement
-                    .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
-                    .copy(y = motionY.toDouble())
-            )
+            player.deltaMovement = player.deltaMovement
+                .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
+                .copy(y = motionY.toDouble())
 
             // On the first flag, we wait for the player to be on ground
             if (flagTicks == 1) {

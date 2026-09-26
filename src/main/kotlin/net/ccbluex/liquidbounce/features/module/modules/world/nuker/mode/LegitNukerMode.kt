@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,23 +33,25 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.doBreak
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
-object LegitNukerMode : Choice("Legit") {
+object LegitNukerMode : Mode("Legit") {
 
     private var currentTarget: BlockPos? = null
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = mode
 
     private val range by float("Range", 5F, 1F..6F)
@@ -57,13 +59,26 @@ object LegitNukerMode : Choice("Legit") {
         minOf(it, range)
     }
 
-    private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-    private val rotations = tree(RotationsConfigurable(this))
+    internal val forceImmediateBreak by boolean("ForceImmediateBreak", false)
+    private val rotations = tree(RotationsValueGroup(this))
     private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
+
+    internal fun breakingProgress(): BreakingProgress? {
+        if (ModulePacketMine.running) {
+            return null
+        }
+
+        val target = currentTarget ?: return null
+        if (forceImmediateBreak) {
+            return wasTarget?.takeIf { it == target }?.let { BreakingProgress(it, 1f) }
+        }
+
+        return BreakingProgress.Provider.Default.breakingProgress(target)
+    }
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             this.currentTarget = null
             return@handler
         }
@@ -89,7 +104,7 @@ object LegitNukerMode : Choice("Legit") {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         val currentTarget = currentTarget ?: return@tickHandler
-        val state = currentTarget.getState() ?: return@tickHandler
+        val state = currentTarget.state ?: return@tickHandler
 
         if (ModulePacketMine.running) {
             return@tickHandler
@@ -130,7 +145,7 @@ object LegitNukerMode : Choice("Legit") {
 
         // Check if the current target is still valid
         currentTarget?.let { pos ->
-            val blockState = pos.getState() ?: return@let
+            val blockState = pos.state ?: return@let
 
             if (blockState.isNotBreakable(pos) || !ModuleNuker.isValid(blockState)) {
                 return@let
@@ -148,7 +163,7 @@ object LegitNukerMode : Choice("Legit") {
                 RotationManager.setRotationTarget(
                     raytraceResult.rotation,
                     considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
+                    valueGroup = rotations,
                     priority = Priority.IMPORTANT_FOR_USAGE_1,
                     ModuleNuker
                 )
@@ -158,29 +173,16 @@ object LegitNukerMode : Choice("Legit") {
             return pos
         }
 
-        for ((pos, blockState) in areaMode.activeChoice.lookupTargets(range)) {
-            val raytraceResult = raytraceBlockRotation(
-                eyes = eyes,
-                pos = pos,
-                state = blockState,
-                range = range.toDouble(),
-                wallsRange = wallRange.toDouble(),
-            ) ?: continue
-
-            if (!packetMine) {
-                RotationManager.setRotationTarget(
-                    raytraceResult.rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleNuker
-                )
-            }
-
-            return pos
-        }
-
-        return null
+        return selectBlockTarget(
+            eyes,
+            range,
+            wallRange,
+            areaMode.activeMode.lookupTargets(range),
+            rotations,
+            ModuleNuker,
+            considerInventory = !ignoreOpenInventory,
+            rotate = !packetMine
+        )
     }
 
 }

@@ -20,19 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.state.BlockState
@@ -43,7 +45,7 @@ import kotlin.math.max
 /**
  * Tries to build improved placement spots.
  */
-object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace", true) {
+object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace", true) {
 
     /**
      * How long to wait before starting a new calculation.
@@ -78,7 +80,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
      * Makes sure we don't run into the placement. This does not mean the damage will be predicted at the simulated
      * position.
      */
-    private object SimulateMovement : ToggleableConfigurable(this, "SimulateMovement", true) {
+    private object SimulateMovement : ToggleableValueGroup(this, "SimulateMovement", true) {
 
         /**
          * How many ticks the player movement is simulated.
@@ -143,7 +145,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
     private val trying = Chronometer()
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (currentTarget != null && trying.hasElapsed(timeOut.toLong())) {
             placer.clear()
             currentTarget = null
@@ -203,9 +205,9 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         return running &&
             (!onlyAboveSelf || pos.y >= player.blockPosition().y) &&
             pos.y in layers &&
-            pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange) &&
+            pos.getCenterDistanceSquared() + 1.0 < max(placer.range, placer.wallRange).sq() &&
             state.canBeReplaced() &&
-            !pos.isBlockedByEntities() &&
+            pos.isUnobstructed() &&
             playerWillNotRunIn(pos) &&
             willNotTrap(pos)
     }
@@ -214,7 +216,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
      * Simulates player movement, so that we won't run into the position.
      */
     private fun playerWillNotRunIn(pos: BlockPos): Boolean {
-        if (SimulateMovement.enabled) {
+        if (!SimulateMovement.enabled) {
             return true
         }
 
@@ -231,13 +233,14 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         // check if the pos will intersect at any expected position
         return snapShots.none {
             val simulatedPos = it.pos
+            val error = errorOffset
             val result = posBB.intersects(
-                simulatedPos.x - errorStep,
-                simulatedPos.y - if (errorDown) errorOffset else 0.0,
-                simulatedPos.z - errorStep,
-                simulatedPos.x + 1.0 + errorStep,
-                simulatedPos.y + 1.8 + errorStep,
-                simulatedPos.z + 1.0 + errorStep
+                simulatedPos.x - error,
+                simulatedPos.y - if (errorDown) error else 0.0,
+                simulatedPos.z - error,
+                simulatedPos.x + 1.0 + error,
+                simulatedPos.y + 1.8 + error,
+                simulatedPos.z + 1.0 + error
             )
             errorOffset += errorStep
             val isPlatform = SimulateMovement.antiPlatform && floor(simulatedPos.y) == y
@@ -252,7 +255,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
     private fun willNotTrap(pos: BlockPos): Boolean {
         val bb = player.boundingBox
         val yA = ceil(bb.minY)
-        val yB = floor(bb.maxX)
+        val yB = floor(bb.maxY)
 
         val positions = arrayOf(
             DoubleDoubleImmutablePair(bb.minX, bb.minZ),
@@ -310,14 +313,13 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         return true
     }
 
-    @Suppress("GrazieInspection")
     private fun canEscapeThroughFloorOrCeiling(
         ceiling: Array<BlockPos>,
         floor: Array<BlockPos>
     ): Boolean {
         // Can we escape through the ceiling?
         ceiling.forEach { pos1 ->
-            if (!pos1.getState()!!.isSolid && !pos1.above().getState()!!.isSolid) {
+            if (!pos1.stateOrEmpty.isSolid && !pos1.above().stateOrEmpty.isSolid) {
                 return true
             }
         }
@@ -329,7 +331,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         // x x
         // we could escape
         floor.forEach { pos1 ->
-            if (!pos1.getState()!!.isSolid && !pos1.below().getState()!!.isSolid) {
+            if (!pos1.stateOrEmpty.isSolid && !pos1.below().stateOrEmpty.isSolid) {
                 return true
             }
         }
@@ -340,7 +342,7 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
     private fun canEscapeThroughSides(layerA: Array<BlockPos>, layerB: Array<BlockPos>): Boolean {
         // Do we find and escape side?
         layerA.forEachIndexed { index, pos1 ->
-            if (!pos1.getState()!!.isSolid && !layerB.elementAt(index).getState()!!.isSolid) {
+            if (!pos1.stateOrEmpty.isSolid && !layerB[index].stateOrEmpty.isSolid) {
                 return true
             }
         }

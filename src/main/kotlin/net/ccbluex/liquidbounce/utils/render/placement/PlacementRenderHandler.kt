@@ -18,16 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
+import net.ccbluex.liquidbounce.utils.math.high32
 import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.low32
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -41,9 +44,9 @@ import net.minecraft.world.phys.AABB
 @Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
-    private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
-    private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
-    private val outList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
+    private val inList = Long2ObjectOpenHashMap<InOutBlockData>()
+    private val currentList = Long2ObjectOpenHashMap<CurrentBlockData>()
+    private val outList = Long2ObjectOpenHashMap<InOutBlockData>()
 
     private val culler = BlockCuller(this)
 
@@ -58,24 +61,22 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     }
 
     private val blockPosCache = BlockPos.MutableBlockPos()
+    private val blockPosCacheList = LongArrayList()
 
     fun render(event: WorldRenderEvent, time: Long) {
-        val matrixStack = event.matrixStack
-
         with(placementRenderer) {
             val color = getColor(id)
             val outlineColor = getOutlineColor(id)
 
-            renderEnvironmentForWorld(matrixStack) {
-                startBatch()
-                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: AABB, colorFactor: Float) {
-                    withPositionRelativeToCamera(blockPos) {
+            event.renderEnvironment {
+                fun drawEntryBox(blockPos: Long, cullData: Long, box: AABB, colorFactor: Float) {
+                    withPositionRelativeToCamera(blockPosCache.set(blockPos)) {
                         drawBox(
                             box,
                             color.fade(colorFactor),
                             outlineColor.fade(colorFactor),
-                            (cullData shr 32).toInt(),
-                            (cullData and 0xFFFFFFFF).toInt()
+                            cullData.high32(),
+                            cullData.low32(),
                         )
                     }
                 }
@@ -90,9 +91,9 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
                     val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(pos, value.cullData, box, colorFactor)
 
-                    if (time - value.startTime >= outTime) {
+                    if (time - value.startTime >= inTime) {
                         if (keep) {
                             currentList.put(pos, value.toCurrent())
                         } else {
@@ -108,9 +109,10 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
                     val value = entry.value
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
+                    drawEntryBox(pos, value.cullData, value.box, 1f)
                 }
 
+                blockPosCacheList.clear()
                 outList.long2ObjectEntrySet().removeIf { entry ->
                     // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
@@ -121,17 +123,20 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val box = getBox(expand, value.box)
                     val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
-                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(pos, value.cullData, box, colorFactor)
 
                     if (time - value.startTime >= outTime) {
-                        updateNeighbors(blockPosCache.set(pos))
+                        blockPosCacheList.add(pos)
                         true
                     } else {
                         false
                     }
                 }
 
-                commitBatch()
+                for (i in blockPosCacheList.indices) {
+                    updateNeighbors(blockPosCache.set(blockPosCacheList.getLong(i)))
+                }
+
             }
         }
     }
@@ -157,8 +162,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             return
         }
 
-        // TODO in theory a one block radius should be enough
-        for (mutable in pos.searchBlocksInCuboid(2)) {
+        for (mutable in pos.expandToBoundingBox(1, 1, 1)) {
             val longValue = mutable.asLong()
 
             val inValue = inList[longValue]
@@ -191,7 +195,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = FULL_BOX) {
         val longValue = pos.asLong()
         if (!currentList.containsKey(longValue) && !inList.containsKey(longValue)) {
-            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), 0L, box))
+            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), -1L, box))
             if (update) {
                 updateNeighbors(pos)
             }
@@ -203,7 +207,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
     fun removeBlock(pos: BlockPos) {
         val longValue = pos.asLong()
@@ -250,20 +254,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      */
     fun updateBox(pos: BlockPos, box: AABB) {
         val longValue = pos.asLong()
-        var needUpdate = false
 
         inList[longValue]?.let {
-            needUpdate = true
             inList.put(longValue, it.copy(box = box))
         }
 
         currentList[longValue]?.let {
-            needUpdate = true
             currentList.put(longValue, it.copy(box = box))
-        }
-
-        if (needUpdate) {
-            updateNeighbors(pos)
         }
     }
 

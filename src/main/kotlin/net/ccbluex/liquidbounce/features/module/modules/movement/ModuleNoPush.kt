@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -48,13 +48,13 @@ object ModuleNoPush : ClientModule("NoPush", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        if ((player.isInWater || player.isInLava) && player.deltaMovement.y < 0) {
+        if (player.isInLiquid && player.deltaMovement.y < 0) {
             player.deltaMovement.y = 0.0
         }
     }
 }
 
-enum class NoPushBy(override val choiceName: String): NamedChoice {
+enum class NoPushBy(override val tag: String): Tagged {
     ENTITIES("Entities"),
     BLOCKS("Blocks"),
     FISHING_ROD("FishingRod"),

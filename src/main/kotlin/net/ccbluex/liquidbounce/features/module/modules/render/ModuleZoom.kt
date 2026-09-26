@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -35,20 +36,20 @@ import kotlin.math.round
  *
  * Allows you to zoom.
  *
- * The mouse is slowed down with the help of mixins in [MixinMouse].
+ * The mouse is slowed down with the help of mixins in [MixinMouseHandler].
  */
 object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = InputBind.BindAction.HOLD) {
 
     val zoom by int("Zoom", 30, 10..150)
 
-    object Scroll : ToggleableConfigurable(this, "Scroll", true) {
+    object Scroll : ToggleableValueGroup(this, "Scroll", true) {
 
         val speed by float("Speed", 2f, 0.5f..8f)
 
         @Suppress("unused")
         val onScroll = handler<MouseScrollInHotbarEvent> {
             previousFov = getFov(true)
-            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1..179)
+            targetFov = (targetFov - round(it.speed * this.speed).toInt()).coerceIn(1, 179)
             reset()
             it.cancelEvent()
         }
@@ -87,7 +88,11 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
             return original
         }
 
-        val factor = (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F..1F)
+        val factor = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
+            1f
+        } else {
+            (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
+        }
         if (!enabled && factor == 1f) {
             disableAnimationFinished = true
         }

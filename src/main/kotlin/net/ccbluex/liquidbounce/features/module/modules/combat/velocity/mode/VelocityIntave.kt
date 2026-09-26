@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -28,10 +28,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import kotlin.random.Random
 
 object VelocityIntave : VelocityMode("Intave") {
 
-    private class ReduceOnAttack(parent: EventListener?) : ToggleableConfigurable(
+    private class ReduceOnAttack(parent: EventListener?) : ToggleableValueGroup(
         parent, "ReduceOnAttack",
         true
     ) {
@@ -56,14 +57,14 @@ object VelocityIntave : VelocityMode("Intave") {
         tree(ReduceOnAttack(this))
     }
 
-    private class JumpReset(parent: EventListener?) : ToggleableConfigurable(
+    private class JumpReset(parent: EventListener?) : ToggleableValueGroup(
         parent, "JumpReset",
         true
     ) {
 
         private val chance by float("Chance", 50f, 0f..100f, "%")
 
-        private inner class Randomize : ToggleableConfigurable(this, "Randomize", false) {
+        private inner class Randomize : ToggleableValueGroup(this, "Randomize", false) {
             val delayTicks by intRange("DelayTicks", 0..5, 0..10)
         }
 
@@ -74,8 +75,8 @@ object VelocityIntave : VelocityMode("Intave") {
 
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {
-            val shouldJump = Math.random() * 100 < chance && player.hurtTime > 5 && !isFallDamage
-            val canJump = player.onGround() && mc.screen !is InventoryScreen
+            val shouldJump = Random.nextInt(100) < chance && player.hurtTime > 5 && !isFallDamage
+            val canJump = player.onGround() && mc.gui.screen() !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 
             if (randomize.enabled) {

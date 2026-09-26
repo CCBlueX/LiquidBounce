@@ -25,8 +25,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -35,20 +35,23 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.item.COMPARING_DESCRIPTION_ID
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.core.component.DataComponentPatch
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.filter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -68,8 +71,8 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
     private val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
@@ -77,14 +80,14 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     private val preventOverlap by boolean("PreventOverlap", true)
     private val clusterEntities = curve(
         "ClusterEntities",
-        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f), Vector2f(200f, 24f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Size" axis 0.1F..32F,
     )
 
     private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
 
-    private object Shulker : ToggleableConfigurable(this, "Shulker", false) {
+    private object Shulker : ToggleableValueGroup(this, "Shulker", false) {
         val mergeStacks by boolean("MergeStacks", true)
         val showTitle by boolean("ShowTitle", true)
     }
@@ -94,13 +97,13 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.PREFER_MORE.thenComparing { it.item.descriptionId }
+        PreferStackSize.PREFER_MORE.thenComparing(COMPARING_DESCRIPTION_ID)
 
     @Suppress("unused")
     private enum class MergeMode(
-        override val choiceName: String,
+        override val tag: String,
         val merge: (stacks: Array<ItemStack>) -> Array<ItemStack>,
-    ) : NamedChoice {
+    ) : Tagged {
         /**
          * Nothing will be merged.
          */
@@ -130,7 +133,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         }),
 
         /**
-         * [ItemStack]s with same [Item] and same [DataComponentPatch] will be merged.
+         * [ItemStack]s with same [Item] and same [net.minecraft.core.component.DataComponentPatch] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
             val map = Object2IntOpenHashMap<ItemAndComponents>()
@@ -153,9 +156,9 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         initialValue = ObjectArrayList()
     ) { _, groups ->
         @Suppress("UNCHECKED_CAST")
-        val entities = world.entitiesForRendering().filter {
-            it is ItemEntity && filter(it.item.item, items)
-        } as List<ItemEntity>
+        val entities = world.entityGetter.filter(EntityTypes.ITEM) {
+            filter(it.item.item, items)
+        }
 
         groups.clear()
         val visited = ReferenceOpenHashSet<ItemEntity>()
@@ -210,7 +213,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
                     val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
+                    val stacks = containerComponent.nonEmptyItemCopyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }

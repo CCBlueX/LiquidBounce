@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type {NotificationSeverity} from "../../integration/events";
+
 interface HudToggleableConfigurable {
     enabled: boolean;
 }
@@ -27,12 +29,24 @@ interface HudArrayListSettings {
     order: "Ascending" | "Descending";
 }
 
+interface HudInventoryStatisticsSettings {
+    items: string[];
+    showEmpty: boolean;
+    rowLength: number;
+}
+
 interface HudBlockCounterSettings {
     iconPosition: "None" | "Left" | "Right" | "Top" | "Bottom";
 }
 
 interface HudScoreboardSettings {
     show: ("Header" | "Name" | "Score")[];
+    replaceRegex: string;
+    replaceWith: string;
+}
+
+interface HudNotificationsSettings {
+    severities: NotificationSeverity[];
 }
 
 interface HudTextSettings {

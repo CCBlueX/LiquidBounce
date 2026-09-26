@@ -1,22 +1,26 @@
 import type {
     BedState,
-    HudComponent,
     ConfigurableSetting,
-    ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
+    HudComponent,
+    ItemStack,
+    MinecraftKey,
+    MinecraftKeyboardKey,
+    MinecraftMouseKey,
     PlayerData,
     Proxy,
     Screen,
     Server,
-    Session, Setting,
-    TextComponent,
+    Session,
+    Setting,
     StatusEffect,
+    TextComponent,
 } from "./types";
-
 
 
 export interface EventMap {
     socketReady: void;
 
+    themeColorChange: ThemeColorChangeEvent;
     clickGuiScaleChange: ClickGuiScaleChangeEvent;
     clickGuiValueChange: ClickGuiValueChangeEvent;
     spaceSeperatedNamesChange: SpaceSeperatedNamesChangeEvent;
@@ -60,6 +64,7 @@ export interface EventMap {
     subtitle: TitleEventSubtitle;
     titleFade: TitleEventFade;
     clearTitle: TitleEventClear;
+    closedCaptions: ClosedCaptionsEvent;
 
     //GameEvents.kt
     key: KeyEvent;
@@ -72,6 +77,12 @@ export interface EventMap {
 
     //PlayerEvents.kt
     death: void;
+}
+
+export interface ThemeColorChangeEvent {
+    themeId: string;
+    name: "Accent" | "Tint";
+    value: number;
 }
 
 export interface ClickGuiValueChangeEvent {
@@ -103,17 +114,22 @@ export interface MouseButtonEvent {
 
 export interface KeyboardCharEvent {
     codePoint: number;
-    modifiers: number;
 }
 
 export interface ScaleFactorChangeEvent {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent {
-    id: string | null;
-    components: HudComponent[];
-}
+export type ComponentsUpdateEvent =
+    | {
+        source: "native";
+        components: HudComponent[];
+    }
+    | {
+        source: "theme";
+        themeId: string;
+        components: HudComponent[];
+    };
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;
@@ -128,10 +144,12 @@ export interface OverlayMessageEvent {
     tinted: boolean;
 }
 
+export type NotificationSeverity = "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+
 export interface NotificationEvent {
     title: string;
     message: string;
-    severity: "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
+    severity: NotificationSeverity;
 }
 
 export interface KeyEvent {
@@ -267,6 +285,17 @@ export interface TitleEventFade {
 
 export interface TitleEventClear {
     reset: boolean;
+}
+
+export interface ClosedCaptionsEvent {
+    entries: ClosedCaptionEntry[];
+}
+
+export interface ClosedCaptionEntry {
+    text: TextComponent | string;
+    direction: "NONE" | "LEFT" | "RIGHT";
+    textColor: number;
+    backgroundColor: number;
 }
 
 export interface VirtualScreenEvent {

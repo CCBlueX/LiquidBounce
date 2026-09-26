@@ -18,30 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.LevelLoadingScreen
+import net.minecraft.client.gui.screens.Screen
 
 /**
  * Module HUD
@@ -53,19 +53,53 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     override val running
         get() = this.enabled && !isDestructed
-
-    private val visible: Boolean
-        get() = !isHidingNow && inGame
-
     override val baseKey: String
-        get() = "liquidbounce.module.hud"
-    private var browserBrowser: Browser? = null
+        get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
+
+    private val isVisible: Boolean
+        get() = inGame
+
+    var hudEditorSelected = false
+        set(value) {
+            if (value != field) {
+                field = value
+                updateOverlayVisibility(mc.gui.screen())
+            }
+        }
+
+    private fun shouldShowOverlay(screen: Screen?): Boolean =
+        screen !is DisconnectedScreen &&
+            screen !is LevelLoadingScreen &&
+            !(hudEditorSelected && isClickGuiScreen(screen))
+
+    private fun isClickGuiScreen(screen: Screen?): Boolean =
+        screen is CustomSharedMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI ||
+            screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
+
+    private fun updateOverlayVisibility(screen: Screen?) {
+        if (!enabled || !isVisible) {
+            overlay.close()
+            return
+        }
+
+        overlay.visible = shouldShowOverlay(screen)
+    }
+
+    private var overlay = CustomOverlay(
+        screenType = CustomScreenType.HUD,
+        browserSettings = BrowserSettings(60, ::reopen)
+    )
 
     init {
         tree(Blur)
     }
 
-    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+    object Blur : ToggleableValueGroup(ModuleHud, "Blur", enabled = true) {
+        /**
+         * Gaussian sigma controlling blur strength. Higher values produce stronger blur.
+         */
+        val sigma by float("Sigma", 5.0F, 1.0F..15.0F)
+
         /**
          * The range in which the blending from not-blurred to blurred occurs.
          */
@@ -79,13 +113,11 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     val isBlurEffectActive
-        get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
+        get() = Blur.enabled && !(mc.gui.hud.isHidden && mc.gui.screen() == null)
 
-    private var browserSettings: BrowserSettings? = null
+    val themes = tree(ValueGroup("Themes"))
 
-    val themes = tree(Configurable("Themes"))
-
-    val components = tree(Configurable("AdditionalComponents")).apply {
+    val components = tree(ValueGroup("AdditionalComponents")).apply {
         tree(MinimapHudComponent)
     }
 
@@ -93,83 +125,43 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.filterIsInstance<Configurable>().forEach {
+        // filterIsInstance then forEach to prevent ConcurrentModificationException
+        themes.inner.filterIsInstance<ValueGroup>().forEach {
             themes.drop(it)
         }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
-        themes.initConfigurable()
+        themes.walkInit()
         themes.walkKeyPath()
     }
 
     override fun onEnabled() {
-        if (isHidingNow) {
-            chat(markAsError(message("hidingAppearance")))
-        }
-
-        if (visible) {
-            open()
-        }
+        updateOverlayVisibility(mc.gui.screen())
     }
 
     override fun onDisabled() {
-        // Closes tab entirely
-        close()
+        overlay.close()
     }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        tree(GlobalBrowserSettings)
-        browserSettings = tree(BrowserSettings(60, ::reopen))
+        tree(overlay.browserSettings)
     }
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
-        // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
-        if (!enabled || !visible) {
-            close()
-            return@handler
-        }
-
-        // Otherwise, open the tab and set its visibility
-        val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
+        updateOverlayVisibility(event.screen)
     }
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        close()
-    }
-
-    private fun open(): Browser {
-        browserBrowser?.let { return it }
-
-        return ThemeManager.openImmediate(
-            VirtualScreenType.HUD,
-            true,
-            browserSettings!!
-        ).also { browser ->
-            browserBrowser = browser
-        }
-    }
-
-    private fun close() {
-        browserBrowser?.let {
-            it.close()
-            browserBrowser = null
-        }
+        overlay.close()
     }
 
     fun reopen() {
-        close()
-        if (enabled && visible) {
-            open()
-        }
-    }
-
-    fun disableBlur() {
-        Blur.enabled = false
+        overlay.close()
+        updateOverlayVisibility(mc.gui.screen())
     }
 
 }

@@ -23,7 +23,6 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.WeightedSortedList
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,18 +34,19 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
-import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
+import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraMode
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.math.bottomCenter
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -55,7 +55,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 
-object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
+object AStarMode : TpAuraMode("AStar"), AStarPathBuilder {
 
     private val maximumDistance by int("MaximumDistance", 95, 50..250)
     private val maximumCost by int("MaximumCost", 250, 50..500)
@@ -125,15 +125,13 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         val (_, path) = pathCache ?: return@handler
 
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             drawLineStrip(
-                argb = Color4b.WHITE.toARGB(),
-                positions = path.mapToArray {
-                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3f()
-                }
+                argb = Color4b.WHITE.argb,
+                positions = MutableVertexList(path.size)
+                    .addAllRelativeToCamera(path, camera) { it.center }
             )
         }
     }
@@ -167,8 +165,8 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         for (chunk in pathChunks) {
             // Check if the path is clear, this can be done by raycasting the start and end position of the chunk.
-            val start = chunk.first().toVec3d(0.5, 0.5, 0.5)
-            val end = chunk.last().toVec3d(0.5, 0.5, 0.5)
+            val start = chunk.first().center
+            val end = chunk.last().center
 
             if (world.getBlockCollisions(player, AABB(start, end)).any()) {
                 // If the path is not clear, we need to go one by one.
@@ -178,7 +176,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                             position.x + 0.5, position.y.toDouble(), position.z + 0.5, false, false
                         )
                     )
-                    desyncPlayerPosition = position.toVec3d(xOffset = 0.5, zOffset = 0.5)
+                    desyncPlayerPosition = position.bottomCenter
                 }
                 continue
             } else {

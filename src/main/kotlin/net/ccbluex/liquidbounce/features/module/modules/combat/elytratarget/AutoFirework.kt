@@ -19,27 +19,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.item.Items
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura as KillAura
 
-private const val MILLISECONDS_PER_TICK = 50
-
-/**
- * Initial firework cooldown
- */
-@Suppress("MagicNumber")
-private var fireworkCooldown = 750
-
-private val fireworkChronometer = Chronometer()
-
-@Suppress("MagicNumber")
-internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoFirework", true) {
+internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFirework", true) {
     private val useMode by enumChoice("UseMode", FireworkUseMode.NORMAL)
     private val extraDistance by float("ExtraDistance", 50f, 5f..100f, suffix = "m")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
@@ -49,7 +44,16 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
     override val running: Boolean
         get() = super.running && ModuleElytraTarget.target != null
 
-    private inline val cooldownReached: Boolean
+    private const val MILLISECONDS_PER_TICK = 50
+
+    /**
+     * Initial firework cooldown
+     */
+    private var fireworkCooldown = 750
+
+    private val fireworkChronometer = Chronometer()
+
+    private val cooldownReached: Boolean
         get() = fireworkChronometer.hasElapsed((fireworkCooldown * MILLISECONDS_PER_TICK).toLong())
 
     @Suppress("ComplexCondition")
@@ -57,10 +61,10 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
         if (!KillAura.running
             || !syncCooldownWithKillAura
             || (
-                KillAura.clickScheduler.isClickTick
+                KillAura.clicker.isClickTick
                 && KillAura.targetTracker.target
                     ?.squaredBoxedDistanceTo(player)
-                    ?.takeIf { it >= KillAura.range * KillAura.range } != null
+                    ?.takeIf { it >= KillAura.range.interactionRange.sq() } != null
                 )
         ) {
             return true
@@ -71,7 +75,7 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
          * We can use the firework on the next tick.
          * After killaura performed the click
          */
-        return if (KillAura.clickScheduler.isClickTick) {
+        return if (KillAura.clicker.isClickTick) {
             waitTicks(1)
             true
         } else {
@@ -90,10 +94,43 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
             }
         }
 
-        fireworkCooldown = if (target.squaredBoxedDistanceTo(player) > extraDistance * extraDistance) {
-            cooldown.max()
+        fireworkCooldown = if (target.squaredBoxedDistanceTo(player) > extraDistance.sq()) {
+            cooldown.last
         } else {
-            cooldown.min()
+            cooldown.first
         }
+    }
+
+
+    @Suppress("unused")
+    private enum class FireworkUseMode(override val tag: String) : Tagged {
+        NORMAL("Normal") {
+            override fun useFireworkSlot(slot: HotbarItemSlot, resetDelay: Int) {
+                useHotbarSlotOrOffhand(slot, resetDelay)
+            }
+        },
+        PACKET("Packet") {
+            override fun useFireworkSlot(slot: HotbarItemSlot, resetDelay: Int) {
+                val curSlot = player.inventory.selectedSlot
+                val hotbarIndex = slot.hotbarIndex
+                val slotUpdateFlag = hotbarIndex != null && hotbarIndex != curSlot
+
+                if (slotUpdateFlag) {
+                    player.inventory.selectedSlot = hotbarIndex!!
+                    network.sendHeldItemChange(hotbarIndex)
+                }
+
+                interaction.startPrediction(world) { sequence ->
+                    ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
+                }
+
+                if (slotUpdateFlag) {
+                    player.inventory.selectedSlot = curSlot
+                    network.sendHeldItemChange(curSlot)
+                }
+            }
+        };
+
+        abstract fun useFireworkSlot(slot: HotbarItemSlot, resetDelay: Int)
     }
 }

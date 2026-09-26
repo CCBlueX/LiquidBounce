@@ -19,12 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.client.CameraType
 import net.minecraft.client.CameraType.THIRD_PERSON_BACK
@@ -56,11 +57,13 @@ object ModuleFreeLook : ClientModule(
 
     @Suppress("unused")
     private val mouseRotationInputHandler = handler<MouseRotationEvent> { event ->
-        cameraYaw += event.cursorDeltaX.toFloat() * 0.15f * senseBoost
-        cameraPitch += event.cursorDeltaY.toFloat() * 0.15f * senseBoost
+        val delta = RotationUtil.mouseTurnDelta(event.cursorDeltaX, event.cursorDeltaY)
+
+        cameraYaw += delta.deltaYaw * senseBoost
+        cameraPitch += delta.deltaPitch * senseBoost
 
         if (!noPitchLimit) {
-            cameraPitch = cameraPitch.coerceIn(-90f..90f)
+            cameraPitch = cameraPitch.coerceIn(-90f, 90f)
         }
 
         event.cancelEvent()
@@ -68,9 +71,9 @@ object ModuleFreeLook : ClientModule(
 
     @Suppress("unused")
     private enum class PerspectiveChoice(
-        override val choiceName: String,
+        override val tag: String,
         val perspective: CameraType
-    ) : NamedChoice {
+    ) : Tagged {
         FRONT("Front", THIRD_PERSON_FRONT),
         BACK("Back", THIRD_PERSON_BACK)
     }

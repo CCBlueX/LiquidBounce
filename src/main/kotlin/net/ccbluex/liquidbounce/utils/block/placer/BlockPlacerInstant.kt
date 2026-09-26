@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickableCenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
@@ -51,14 +51,14 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
 
-    val rotationMode = rotationMode.activeChoice
-    if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
+    val rotationMode = rotationMode.activeMode
+    if (irrelevantPacket || rotationMode !is NoRotationMode || !pos.isUnobstructed()) {
         return
     }
 
     val searchOptions = BlockPlacementTargetFindingOptions(
         BlockOffsetOptions.Default,
-        FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
+        FaceHandlingOptions(ClickableCenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
         stackToPlaceWith = Items.SANDSTONE.defaultInstance,
         PlayerLocationOnPlacement(position = player.position(), pose = player.pose),
     )
@@ -70,7 +70,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         return
     }
 
-    if (placementTarget.interactedBlockPos.getState().isInteractable) {
+    if (placementTarget.interactedBlockPos.state.isInteractable) {
         return
     }
 

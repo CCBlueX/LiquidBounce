@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,18 +31,18 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Mth
 
-object FlyFireballLegitTechnique : Choice("Legit") {
+object FlyFireballLegitTechnique : Mode("Legit") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = FlyFireball.technique
 
-    private object Jump : ToggleableConfigurable(this, "Jump", true) {
+    private object Jump : ToggleableValueGroup(this, "Jump", true) {
         val delay by int("Delay", 3, 0..20, "ticks")
     }
 
@@ -53,7 +53,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
 
     private var canMove = true
 
-    private object Rotations : RotationsConfigurable(this) {
+    private object Rotations : RotationsValueGroup(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
         val backwards by boolean("Backwards", true)
     }
@@ -67,7 +67,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         RotationManager.setRotationTarget(
             Rotation(if (Rotations.backwards) this.invertYaw(player.yRot) else player.yRot, Rotations.pitch),
-            configurable = Rotations,
+            valueGroup = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )

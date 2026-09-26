@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -56,7 +56,7 @@ object ModuleAirJump : ClientModule("AirJump", ModuleCategories.MOVEMENT) {
         }
     }
 
-    enum class Mode(override val choiceName: String) : NamedChoice {
+    enum class Mode(override val tag: String) : Tagged {
         JUMP_FREELY("JumpFreely"),
         DOUBLE_JUMP("DoubleJump"),
         GHOST_BLOCK("GhostBlock"),

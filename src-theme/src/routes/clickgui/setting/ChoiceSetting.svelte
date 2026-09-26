@@ -59,7 +59,7 @@
 
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
-            {#each nestedSettings as setting (setting.name)}
+            {#each nestedSettings as setting (`${cSetting.active}.${setting.name}`)}
                 <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}
         </div>
@@ -67,7 +67,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../colors.scss" as *;
 
     .setting {
         padding: 7px 0px;
@@ -86,7 +85,7 @@
         }
     }
     .nested-settings {
-        border-left: solid 2px $accent-color;
+        border-left: solid 2px var(--clickgui-setting-group-border-color);
         padding-left: 7px;
     }
 </style>

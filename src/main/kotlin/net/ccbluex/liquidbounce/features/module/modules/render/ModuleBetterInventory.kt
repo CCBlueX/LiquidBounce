@@ -20,19 +20,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.additions.drawBorder
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.inventory.Slot
@@ -40,34 +40,39 @@ import net.minecraft.world.item.ItemStack
 
 object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.RENDER) {
 
-    private object HighlightClicked : ToggleableConfigurable(this, "HighlightClicked", enabled = true) {
-        val mode = choices(this, "Mode", 0) {
+    private object HighlightClicked : ToggleableValueGroup(this, "HighlightClicked", enabled = true) {
+        val mode = modes(this, "Mode", 0) {
             arrayOf(Mode.Border, Mode.Texture)
         }
 
-        sealed class Mode(choiceName: String) : Choice(choiceName) {
-            final override val parent: ChoiceConfigurable<*>
+        sealed class Mode(choiceName: String) : net.ccbluex.liquidbounce.config.types.group.Mode(choiceName) {
+            final override val parent: ModeValueGroup<*>
                 get() = mode
 
-            abstract fun drawHighlightSlot(context: GuiGraphics, slot: Slot)
+            abstract fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot)
 
             object Border : Mode("Border") {
-                private const val STACK_SIZE = 16
                 val color by color("Color", Color4b.GREEN)
 
-                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
-                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
+                    context.drawBorder(
+                        slot.x,
+                        slot.y,
+                        GuiRenderer.DEFAULT_ITEM_SIZE,
+                        GuiRenderer.DEFAULT_ITEM_SIZE,
+                        color.argb,
+                    )
                 }
             }
 
             object Texture : Mode("Texture") {
                 /**
-                 * @see net.minecraft.client.gui.hud.InGameHud.renderHotbar
+                 * @see net.minecraft.client.gui.Hud.extractItemHotbar
                  */
-                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
+                override fun drawHighlightSlot(context: GuiGraphicsExtractor, slot: Slot) {
                     context.blitSprite(
                         RenderPipelines.GUI_TEXTURED,
-                        MixinGuiAccessor.getHotbarSelectionTexture(),
+                        MixinHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
                         22,
@@ -82,7 +87,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(HighlightClicked)
     }
 
-    private object TextCooldownProgress : ToggleableConfigurable(this, "TextCooldownProgress", enabled = true) {
+    private object TextCooldownProgress : ToggleableValueGroup(this, "TextCooldownProgress", enabled = true) {
         val mode by enumChoice("Mode", CooldownProgressMode.PERCENTAGE)
 
         val scale by float("Scale", 1F, 0.25F..4F)
@@ -93,13 +98,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(TextCooldownProgress)
     }
 
-    private enum class CooldownProgressMode(override val choiceName: String): NamedChoice {
+    private enum class CooldownProgressMode(override val tag: String): Tagged {
         PERCENTAGE("Percentage"),
         DURATION_TICKS("DurationTicks"),
         DURATION_SECONDS("DurationSeconds"),
     }
 
-    private object ContainerItemView : ToggleableConfigurable(this, "ContainerItemView", enabled = true) {
+    private object ContainerItemView : ToggleableValueGroup(this, "ContainerItemView", enabled = true) {
         val skipEmptyStack by boolean("SkipEmptyStack", false)
 
         val scale by float("Scale", 1F, 0.25F..4F)
@@ -112,7 +117,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         tree(ContainerItemView)
     }
 
-    fun GuiGraphics.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
+    fun GuiGraphicsExtractor.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
 
         val player = mc.player ?: return
@@ -135,18 +140,24 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
+            this.centeredText(
+                mc.font,
+                text,
+                x + GuiRenderer.DEFAULT_ITEM_SIZE / 2,
+                y,
+                TextCooldownProgress.color.argb,
+            )
             this.pose().popMatrix()
         }
     }
 
-    fun GuiGraphics.drawHighlightSlot(slot: Slot) {
+    fun GuiGraphicsExtractor.drawHighlightSlot(slot: Slot) {
         if (!running || !HighlightClicked.enabled || slot.index != InventoryManager.lastClickedSlot) return
 
-        HighlightClicked.mode.activeChoice.drawHighlightSlot(this, slot)
+        HighlightClicked.mode.activeMode.drawHighlightSlot(this, slot)
     }
 
-    fun GuiGraphics.drawContainerItemView(
+    fun GuiGraphicsExtractor.drawContainerItemView(
         stack: ItemStack,
         x: Int,
         y: Int,
@@ -158,9 +169,9 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         val containerComponent = stack[DataComponents.CONTAINER] ?: return false
 
         val stacks = if (ContainerItemView.skipEmptyStack) {
-            containerComponent.nonEmptyStream()
+            containerComponent.nonEmptyItemCopyStream()
         } else {
-            containerComponent.stream()
+            containerComponent.itemCopies()
         }.toList()
 
         if (stacks.isEmpty()) return false

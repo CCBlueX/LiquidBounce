@@ -19,21 +19,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
-internal object NoSlowBlockingSwitch : Choice("Switch") {
+internal object NoSlowBlockingSwitch : Mode("Switch") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = modes
 
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -53,7 +54,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                                 ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                            network.sendHeldItemChange(player.inventory.selectedSlot)
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -67,7 +68,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                                 ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                            network.sendHeldItemChange(player.inventory.selectedSlot)
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -92,7 +93,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
 
                         EventState.POST -> {
                             untracked {
-                                network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                                network.sendHeldItemChange(player.inventory.selectedSlot)
                                 interaction.startPrediction(world) { sequence ->
                                     ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                                 }
@@ -104,7 +105,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
         }
     }
 
-    private enum class TimingMode(override val choiceName: String) : NamedChoice {
+    private enum class TimingMode(override val tag: String) : Tagged {
         PRE_POST("PreAndPost"),
         PRE_TICK("Pre"),
         POST_TICK("Post")

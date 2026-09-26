@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 
 /**
  * @anticheat Grim
  * @anticheatVersion 2.3.64
  */
-internal class NoSlowSharedGrim2364MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2364-1.8") {
+internal class NoSlowSharedGrim2364MC18(override val parent: ModeValueGroup<*>) : Mode("Grim2364-1.8") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
@@ -39,9 +39,9 @@ internal class NoSlowSharedGrim2364MC18(override val parent: ChoiceConfigurable<
             // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
             untracked {
                 val slot = player.inventory.selectedSlot
-                network.send(ServerboundSetCarriedItemPacket(slot % 8 + 1))
-                network.send(ServerboundSetCarriedItemPacket(slot % 7 + 2))
-                network.send(ServerboundSetCarriedItemPacket(slot))
+                network.sendHeldItemChange(slot % 8 + 1)
+                network.sendHeldItemChange(slot % 7 + 2)
+                network.sendHeldItemChange(slot)
             }
         }
     }

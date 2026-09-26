@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -54,7 +53,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
     private var notification by boolean("Notification", false)
     private var invalidAttributes by boolean("InvalidAttributes", false)
 
-    private object ResetFlags : ToggleableConfigurable(this, "ResetFlags", true) {
+    private object ResetFlags : ToggleableValueGroup(this, "ResetFlags", true) {
 
         private val afterSeconds by int("After", 30, 1..300, "s")
 
@@ -66,7 +65,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
 
     }
 
-    private object Render : ToggleableConfigurable(this, "Render", true) {
+    private object Render : ToggleableValueGroup(this, "Render", true) {
 
         private val notInFirstPerson by boolean("NotInFirstPerson", true)
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
@@ -75,7 +74,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
-        val wireframePlayer = WireframePlayer(Vec3.ZERO, 0f, 0f)
+        val wireframePlayer = WireframePlayer()
         var creationTime = 0L
         var finished = true
 

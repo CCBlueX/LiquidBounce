@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.SelfMoveTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.TickTrigger
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinClientPacketListener
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPlayerGameMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -42,9 +44,9 @@ import java.util.function.BooleanSupplier
  *
  * This is basically the managing class of the crystal aura.
  *
- * Mixins: [MixinClientPlayNetworkHandler], [MixinClientPlayerInteractionManager]
+ * Mixins: [MixinClientPacketListener], [MixinMultiPlayerGameMode]
  */
-object CrystalAuraTriggerer : Configurable("Triggers"), EventListener, MinecraftShortcuts {
+object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftShortcuts {
 
     // avoids grim multi action flags
     private val notWhileUsingItem by boolean("NotWhileUsingItem", false)
@@ -54,7 +56,9 @@ object CrystalAuraTriggerer : Configurable("Triggers"), EventListener, Minecraft
      */
     val offThread by boolean("Off-Thread", true)
 
-    private val service = Executors.newSingleThreadExecutor()
+    private val service = Executors.newSingleThreadExecutor {
+        Thread(it, "CrystalAuraTriggerer").apply { isDaemon = true }
+    }
 
     /**
      * The currently executed placement task.
@@ -66,7 +70,7 @@ object CrystalAuraTriggerer : Configurable("Triggers"), EventListener, Minecraft
      */
     private var currentDestroyTask: Future<*>? = null
 
-    private var canCache: BooleanSupplier
+    private val canCache: BooleanSupplier
 
     init {
         // register all triggers
@@ -82,7 +86,7 @@ object CrystalAuraTriggerer : Configurable("Triggers"), EventListener, Minecraft
         )
 
         canCache = BooleanSupplier {
-            triggers.filter { it.enabled }.all { it.allowsCaching }
+            triggers.all { !it.enabled || it.allowsCaching }
         }
 
         triggers.forEach {

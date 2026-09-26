@@ -24,9 +24,8 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
@@ -37,29 +36,26 @@ class PlaneSection(
 ) {
 
     inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3) -> Unit) {
-        val (dz, dy) = getFairStepSide(maxPoints)
+        val (stepDir2, stepDir1) = getFairStepSide(maxPoints)
 
-        (0.0..1.0 step dy).forEachDouble { y ->
-            (0.0..1.0 step dz).forEachDouble { z ->
-                val point = this.originPoint + this.dirVec1 * y + this.dirVec2 * z
-
-                consumer(point)
+        (0.0..1.0 step stepDir1).forEachDouble { y ->
+            (0.0..1.0 step stepDir2).forEachDouble { z ->
+                consumer(originPoint.fma(y, dirVec1).fma(z, dirVec2))
             }
         }
     }
 
     fun getFairStepSide(nPoints: Int): DoubleDoublePair {
-        val aspectRatio = this.dirVec2.length() / this.dirVec1.length()
-
-        val vec1zero = this.dirVec1.isLikelyZero
-        val vec2zero = this.dirVec2.isLikelyZero
+        val vec1zero = dirVec1.isLikelyZero
+        val vec2zero = dirVec2.isLikelyZero
 
         return when {
             !vec1zero && !vec2zero -> {
-                val dz = sqrt(1 / (aspectRatio * nPoints))
-                val dy = sqrt(aspectRatio / nPoints)
+                val aspectRatio = dirVec2.length() / dirVec1.length()
+                val stepDir2 = sqrt(1.0 / (aspectRatio * nPoints))
+                val stepDir1 = sqrt(aspectRatio / nPoints)
 
-                DoubleDoublePair.of(dz, dy)
+                DoubleDoublePair.of(stepDir2, stepDir1)
             }
             vec1zero && vec2zero -> DoubleDoublePair.of(1.0, 1.0)
             vec1zero -> DoubleDoublePair.of(1.0, 2.0 / nPoints)

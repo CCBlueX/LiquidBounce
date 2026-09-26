@@ -33,34 +33,36 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
-import net.ccbluex.liquidbounce.integration.BrowserScreen;
-import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
+import net.ccbluex.liquidbounce.utils.raytracing.EntityRaytracingKt;
+import net.ccbluex.liquidbounce.utils.raytracing.RaytracingKt;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -96,6 +98,13 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     private int onGroundTicks = 0;
     @Unique
     private int airTicks = 0;
+
+    @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)
+    private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.FLOATING_ITEMS)) {
+            ci.cancel();
+        }
+    }
 
     /**
      * Hook entity tick event
@@ -139,9 +148,14 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     /**
      * Hook entity movement tick event
      */
-    @Inject(method = "aiStep", at = @At("HEAD"))
+    @Inject(method = "aiStep", at = @At("HEAD"), cancellable = true)
     private void hookMovementTickEvent(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(PlayerMovementTickEvent.INSTANCE);
+        var movementTickEvent = new PlayerMovementTickEvent();
+        EventManager.INSTANCE.callEvent(movementTickEvent);
+
+        if (movementTickEvent.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
@@ -188,7 +202,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook moveTowardsClosestSpace at HEAD and call PlayerPushoutEvent
      */
     @Inject(method = "moveTowardsClosestSpace", at = @At("HEAD"), cancellable = true)
     private void hookPushOut(double x, double z, CallbackInfo ci) {
@@ -207,7 +221,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     /**
      * Hook move function to modify movement
      */
-    @ModifyVariable(method = "move", at = @At("HEAD"), name = "arg2", ordinal = 0, index = 2, argsOnly = true)
+    @ModifyVariable(method = "move", at = @At("HEAD"), name = "delta", argsOnly = true)
     private Vec3 hookMove(Vec3 movement, MoverType type) {
         return EventManager.INSTANCE.callEvent(new PlayerMoveEvent(type, movement)).getMovement();
     }
@@ -260,17 +274,36 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         var cameraRotation = new Rotation(camera.getViewYRot(tickDelta), camera.getViewXRot(tickDelta), true);
 
         Rotation rotation;
-        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
-            rotation = RotationManager.INSTANCE.getCurrentRotation();
-        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
+        if (ModuleFreeCam.INSTANCE.getRunning()) {
             var serverRotation = RotationManager.INSTANCE.getServerRotation();
             rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
+        } else if (RotationManager.INSTANCE.getCurrentRotation() != null) {
+            rotation = RotationManager.INSTANCE.getCurrentRotation();
         } else {
             rotation = cameraRotation;
         }
 
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange), ClipContext.Block.OUTLINE,
-            ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
+        // Through Walls Reach
+        if (ModuleReach.INSTANCE.getRunning()) {
+            var throughWallsRange = ModuleReach.INSTANCE.getEntity().getInteractionThroughWallsRange();
+
+            if (throughWallsRange > 0.0) {
+                var hitEntityResult = EntityRaytracingKt.findEntityInCrosshair(throughWallsRange, rotation, null);
+
+                if (hitEntityResult != null && hitEntityResult.getType() == HitResult.Type.ENTITY) {
+                    return hitEntityResult;
+                }
+            }
+        }
+
+
+        return RaytracingKt.traceFromPlayer(
+            rotation,
+            Math.max(blockInteractionRange, entityInteractionRange),
+            ClipContext.Block.OUTLINE,
+            ModuleLiquidPlace.INSTANCE.getRunning() ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE,
+            tickDelta
+        );
     }
 
     @ModifyExpressionValue(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewVector(F)Lnet/minecraft/world/phys/Vec3;"))
@@ -358,20 +391,6 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return EventManager.INSTANCE.callEvent(new AllowAutoJumpEvent(original)).isAllowed();
     }
 
-    @Inject(method = "swing", at = @At("HEAD"), cancellable = true)
-    private void swingHand(InteractionHand hand, CallbackInfo ci) {
-        if (ModuleNoSwing.INSTANCE.getRunning()) {
-            if (!ModuleNoSwing.INSTANCE.shouldHideForServer()) {
-                connection.send(new ServerboundSwingPacket(hand));
-            }
-            if (!ModuleNoSwing.INSTANCE.shouldHideForClient()) {
-                swing(hand, false);
-            }
-
-            ci.cancel();
-        }
-    }
-
     @ModifyReturnValue(method = "getJumpRidingScale", at = @At("RETURN"))
     private float hookMountJumpStrength(float original) {
         if (ModuleEntityControl.getEnforceJumpStrength()) {
@@ -381,12 +400,12 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return original;
     }
 
-    @ModifyExpressionValue(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z"))
+    @ModifyExpressionValue(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Abilities;mayfly:Z", opcode = Opcodes.GETFIELD))
     private boolean hookFreeCamPreventCreativeFly(boolean original) {
         return !ModuleFreeCam.INSTANCE.getRunning() && original;
     }
 
-    @ModifyVariable(method = "sendPosition", at = @At("STORE"), ordinal = 1)
+    @ModifyVariable(method = "sendPosition", at = @At("STORE"), name = "rot")
     private boolean hookFreeCamPreventRotations(boolean bl4) {
         // Prevent rotation changes when free cam is active, unless a rotation is being set via the rotation manager
         return (!ModuleFreeCam.INSTANCE.getRunning() ||
@@ -407,15 +426,40 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    // canStartSprinting calls canSprint(boolean) which then checks for blindness
-    @ModifyExpressionValue(method = "isSprintingPossible(Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isMobilityRestricted()Z"))
-    private boolean hookSprintIgnoreBlindness(boolean original) {
-        return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
-    }
-
-    @ModifyExpressionValue(method = "shouldStopRunSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;horizontalCollision:Z"))
+    @ModifyExpressionValue(method = "shouldStopRunSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;horizontalCollision:Z", opcode = Opcodes.GETFIELD))
     private boolean hookSprintIgnoreCollision(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
+    }
+
+    @ModifyReturnValue(method = "shouldStopRunSprinting", at = @At("RETURN"))
+    private boolean hookForceStopSprinting(boolean shouldStop) {
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+    }
+
+    /**
+     * ViaFabricPlus injects at HEAD of shouldStopRunSprinting with cancellable=true,
+     * bypassing the RETURN instruction so @ModifyReturnValue never fires.
+     * Intercepting the call site within aiStep works around this.
+     * @see <a href="https://github.com/ViaVersion/ViaFabricPlus/blob/618332d/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinLocalPlayer.java#L262-L270">ViaFabricPlus changeStopSprintingConditions</a>
+     */
+    @ModifyExpressionValue(
+        method = "aiStep",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;shouldStopRunSprinting()Z")
+    )
+    private boolean hookVfpSprintStop(boolean shouldStop) {
+        return shouldStop || liquid_bounce$shouldForceStopSprinting();
+    }
+
+    @Unique
+    private boolean liquid_bounce$shouldForceStopSprinting() {
+        var event = new SprintEvent(
+            new DirectionalInput(input),
+            true,
+            SprintEvent.Source.MOVEMENT_TICK
+        );
+
+        EventManager.INSTANCE.callEvent(event);
+        return !event.getSprint();
     }
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
@@ -443,11 +487,10 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
         return event.getSprint();
     }
 
-    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
-    private boolean preventCloseScreen(Minecraft instance, Screen screen) {
+    @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
+    private boolean preventCloseScreen(Gui instance, Screen screen) {
         // Prevent closing screen if the current screen is a client screen
-        return !(instance.screen instanceof BrowserScreen || instance.screen instanceof VirtualDisplayScreen ||
-                instance.screen instanceof ModuleClickGui.ClickScreen);
+        return !ScreenManager.isClientScreen(screen);
     }
 
 }

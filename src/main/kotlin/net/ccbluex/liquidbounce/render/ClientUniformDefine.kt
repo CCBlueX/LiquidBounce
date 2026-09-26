@@ -1,0 +1,79 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.render
+
+import com.mojang.renderpearl.api.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout
+import com.mojang.renderpearl.api.pipeline.UniformType
+import com.mojang.renderpearl.api.commands.RenderPass
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.render.std140Size
+import net.minecraft.client.renderer.MappableRingBuffer
+import java.util.function.Supplier
+
+enum class ClientUniformDefine(val uboName: String, val size: Int) {
+    DISTANCE_FADE("u_DistanceFade", std140Size { vec4 }),
+    MESH_BASE_BLOCK_POS("u_MeshBaseBlockPos", std140Size { ivec3 }),
+    ROUNDED_RECT("u_RoundedRect", std140Size { vec2 + float }),
+    HAND_ITEM_LIGHTMAP("ItemChamsData", std140Size { int + float + vec4 + float + vec4 + float + int }),
+    CHAMS("ChamsData", std140Size { vec2 + vec2 }),
+    GUI_BLUR("BlurData", std140Size { float + float }),
+    GUI_BLUR_KERNEL("BlurKernelData", std140Size { repeat(23) { vec4 } + int }),
+    BLEND("BlendData", std140Size { vec4 }),
+    THEME_BACKGROUND("ThemeBackgroundData", std140Size { float + vec2 + vec2 }),
+    ;
+
+    val bindGroupLayout: BindGroupLayout = BindGroupLayout.builder()
+        .apply(this::appendTo)
+        .build()
+
+    fun appendTo(builder: BindGroupLayout.Builder) = builder.withUniform(this.uboName, UniformType.UNIFORM_BUFFER)
+
+    fun label(): String = "${LiquidBounce.CLIENT_NAME} Uniform ${this.uboName} (${this.size}b)"
+
+    @JvmOverloads
+    fun createSingleBuffer(
+        labelGetter: Supplier<String> = Supplier(this::label),
+    ): GpuBufferSlice {
+        return gpuDevice.createBuffer(
+            labelGetter,
+            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+            this.size.toLong(),
+        ).slice()
+    }
+
+    @JvmOverloads
+    fun createRingBuffer(
+        labelGetter: Supplier<String> = Supplier(this::label),
+    ): MappableRingBuffer {
+        return MappableRingBuffer(
+            labelGetter,
+            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+            this.size,
+        )
+    }
+
+    fun setTo(renderPass: RenderPass, slice: GpuBufferSlice) {
+        renderPass.setUniform(this.uboName, slice)
+    }
+
+}

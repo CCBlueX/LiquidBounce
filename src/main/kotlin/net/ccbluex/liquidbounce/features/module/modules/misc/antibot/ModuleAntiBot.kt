@@ -41,6 +41,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
     ))
 
     private val literalNPC by boolean("LiteralNPC", false)
+    private val notInTabList by boolean("NotInTabList", false)
 
     @Suppress("unused")
     private val tagHandler = handler<TagEntityEvent> {
@@ -53,7 +54,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
         }
     }
 
-    private fun reset() = this.modes.choices.forEach {
+    private fun reset() = this.modes.modes.forEach {
         it.reset()
     }
 
@@ -95,7 +96,19 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
             return true
         }
 
-        return this.modes.activeChoice.isBot(player)
+        if (notInTabList && isMissingFromTabList(player)) {
+            return true
+        }
+
+        return this.modes.activeMode.isBot(player)
+    }
+
+    /**
+     * @see net.minecraft.client.multiplayer.ClientPacketListener.getListedOnlinePlayers
+     * @see net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED
+     */
+    private fun isMissingFromTabList(player: Player): Boolean {
+        return network.listedOnlinePlayers.none { it.profile.id == player.uuid }
     }
 
 }

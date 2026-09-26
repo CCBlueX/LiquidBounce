@@ -27,9 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAvoidHaza
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebAir
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebGrimBreak
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebIntave14
+import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebPlaceWater
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebStrafe
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.WebBlock
 
 /**
  * NoWeb module
@@ -38,15 +40,12 @@ import net.minecraft.core.BlockPos
  */
 object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     val modes = choices(
         "Mode", NoWebAir, arrayOf(
             NoWebAir,
             NoWebGrimBreak,
             NoWebIntave14,
+            NoWebPlaceWater,
             NoWebStrafe
         )
     ).apply { tagBy(this) }
@@ -67,7 +66,7 @@ object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
     /**
      * Handle cobweb collision
      *
-     * @see net.minecraft.block.CobwebBlock.onEntityCollision
+     * @see WebBlock.entityInside
      * @return if we should cancel the slowdown effect
      */
     fun handleEntityCollision(pos: BlockPos): Boolean {
@@ -75,6 +74,6 @@ object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
             return false
         }
 
-        return modes.activeChoice.handleEntityCollision(pos)
+        return modes.activeMode.handleEntityCollision(pos)
     }
 }

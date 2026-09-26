@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -30,19 +30,21 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoW
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.world.any
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
@@ -73,11 +75,11 @@ object ModuleFastExp : ClientModule(
      */
     private const val EXPERIENCE_PER_BOTTLE = 7
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
-    private object NoWaste : ToggleableConfigurable(this, "NoWaste", true) {
+    private object NoWaste : ToggleableValueGroup(this, "NoWaste", true) {
         /**
          * If at least one of the items to repair has durability lower than or equal to [minDurabilityToStartRepair],
          * the module will start throwing experience bottles.
@@ -103,14 +105,14 @@ object ModuleFastExp : ClientModule(
         tree(NoWaste)
     }
 
-    private val throwMode = choices(this,
+    private val throwMode = modes(this,
         "ThrowMode",
         Normal ,
         arrayOf(Normal, Fast)
     )
 
-    private sealed class ThrowMode(name: String) : Choice(name) {
-        final override val parent: ChoiceConfigurable<ThrowMode>
+    private sealed class ThrowMode(name: String) : Mode(name) {
+        final override val parent: ModeValueGroup<ThrowMode>
             get() = throwMode
 
         abstract fun nextTickItems(): Float
@@ -191,8 +193,8 @@ object ModuleFastExp : ClientModule(
     }
 
     private fun anyExpOrbMovingToPlayer(): Boolean =
-        world.entitiesForRendering().any {
-            (it is MixinExperienceOrbAccessor) && it.followingPlayer === player
+        world.entityGetter.any(EntityTypes.EXPERIENCE_ORB) {
+            (it as MixinExperienceOrbAccessor).followingPlayer === player
                 && it.deltaMovement.lengthSqr() > player.deltaMovement.lengthSqr()
         }
 
@@ -222,7 +224,7 @@ object ModuleFastExp : ClientModule(
             }
         }
 
-        itemsToThrow += throwMode.activeChoice.nextTickItems()
+        itemsToThrow += throwMode.activeMode.nextTickItems()
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 
@@ -231,7 +233,7 @@ object ModuleFastExp : ClientModule(
             useHotbarSlotOrOffhand(
                 slot,
                 slotResetDelay.random(),
-                pitch = pitch
+                xRot = pitch
             )
         }
 
@@ -256,7 +258,7 @@ object ModuleFastExp : ClientModule(
             player.getItemBySlot(EquipmentSlot.LEGS),
             player.getItemBySlot(EquipmentSlot.FEET),
             // an item in the other hand, not holding the exp bottle could also get repaired
-            if (slot == OffHandSlot) {
+            if (slot.isOffHand) {
                 player.getItemBySlot(EquipmentSlot.MAINHAND)
             } else {
                 player.getItemBySlot(EquipmentSlot.OFFHAND)

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -41,11 +41,12 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EntitySpawnReason
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
@@ -68,14 +69,14 @@ object ModuleAutoPearl : ClientModule(
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 
-    private object Limits : ToggleableConfigurable(this, "Limits", true) {
+    private object Limits : ToggleableValueGroup(this, "Limits", true) {
         val angle by int("Angle", 180, 0..180, suffix = "°")
         val activationDistance by float("MinDistance", 8.0f, 0.0f..10.0f, suffix = "m")
         val destDistance by float("DestinationDistance", 8.0f, 0.0f..30.0f, suffix = "m")
     }
 
-    private object Rotate : ToggleableConfigurable(this, "Rotate", true) {
-        val rotations = tree(RotationsConfigurable(this))
+    private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
+        val rotations = tree(RotationsValueGroup(this))
     }
 
     init {
@@ -89,7 +90,7 @@ object ModuleAutoPearl : ClientModule(
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
-        if (event.packet !is ClientboundAddEntityPacket || event.packet.type != EntityType.ENDER_PEARL) {
+        if (event.packet !is ClientboundAddEntityPacket || event.packet.type != EntityTypes.ENDER_PEARL) {
             return@handler
         }
 
@@ -128,7 +129,7 @@ object ModuleAutoPearl : ClientModule(
 
         if (Rotate.enabled) {
             fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.angleTo(rotation) <= 1.0f
+                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
             }
 
             tickConditional(20) {
@@ -208,8 +209,9 @@ object ModuleAutoPearl : ClientModule(
         destination: Vec3
     ): Boolean {
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            owner = player,
+            simulationOwner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
+            trajectoryType = TrajectoryType.EnderPearl,
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
@@ -224,11 +226,13 @@ object ModuleAutoPearl : ClientModule(
         renderOffset: Vec3 = Vec3.ZERO
     ): HitResult? =
         TrajectoryInfoRenderer(
-            owner = owner,
+            simulationOwner = owner,
+            displayOwner = owner,
             icon = Items.ENDER_PEARL.defaultInstance,
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
+            trajectoryType = TrajectoryType.EnderPearl,
             type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult
@@ -237,7 +241,7 @@ object ModuleAutoPearl : ClientModule(
         queue.clear()
     }
 
-    private enum class Modes(override val choiceName: String) : NamedChoice {
+    private enum class Modes(override val tag: String) : Tagged {
         TRIGGER("Trigger"),
         TARGET("Target")
     }

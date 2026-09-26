@@ -33,7 +33,7 @@ public class TweakedMethods {
 
     public static BlockHitResult tweakedRaycast(BlockGetter blockView, ClipContext context) {
         if (ModuleGhostHand.INSTANCE.getRunning()) {
-            var returned = (BlockHitResult) BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
+            var returned = BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
                 BlockState blockState = blockView.getBlockState(pos);
 
                 if (!ModuleGhostHand.INSTANCE.getTargetedBlocks().contains(blockState.getBlock()))
@@ -63,7 +63,7 @@ public class TweakedMethods {
             return d <= e ? blockHitResult : blockHitResult2;
         }, contextx -> {
             Vec3 vec3d = contextx.getFrom().subtract(contextx.getTo());
-            return BlockHitResult.miss(contextx.getTo(), Direction.getApproximateNearest(vec3d.x, vec3d.y, vec3d.z), BlockPos.containing(contextx.getTo()));
+            return BlockHitResult.miss(contextx.getTo(), Direction.getApproximateNearest(vec3d), BlockPos.containing(contextx.getTo()));
         });
     }
 

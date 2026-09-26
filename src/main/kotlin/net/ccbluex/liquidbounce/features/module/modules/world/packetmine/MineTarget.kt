@@ -18,52 +18,62 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.packetmine
 
+import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.level.block.state.BlockState
 
 class MineTarget(val targetPos: BlockPos) {
 
     var finished = false
     var progress = 0f
     var started = false
+    var finishReadyTick: Long? = null
     var direction: Direction? = null
-    var blockState = targetPos.getState()!!
+    var blockState = targetPos.stateOrEmpty
+        private set
 
     fun init() {
         with(ModulePacketMine) {
-            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(0.01e-5, 0.0, 0.0))
-            targetRenderer.updateAll()
+            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(1e-5))
         }
     }
 
     fun cleanUp() {
         with(ModulePacketMine) {
             targetRenderer.removeBlock(targetPos)
-            if (!finished && mode.activeChoice.canAbort) {
+            if (!finished && mode.activeMode.canAbort) {
                 abort(true)
             }
         }
     }
 
     fun updateBlockState() {
-        blockState = targetPos.getState()!!
+        blockState = targetPos.stateOrEmpty
     }
 
     fun isInvalidOrOutOfRange(): Boolean {
-        val state = targetPos.getState()!!
-        val invalid = ModulePacketMine.mode.activeChoice.isInvalid(this, state)
-        return invalid || targetPos.getCenterDistanceSquaredEyes() > ModulePacketMine.keepRange.sq()
+        val state = targetPos.stateOrEmpty
+        val invalid = ModulePacketMine.mode.activeMode.isInvalid(this, state)
+        return invalid || isOutOfRange(targetPos, state)
+    }
+
+    private fun isOutOfRange(pos: BlockPos, state: BlockState): Boolean {
+        val outlineShape = state.getShape(world, pos).move(pos)
+        return outlineShape.distanceToSqr(player.eyePosition) > ModulePacketMine.keepRange.sq()
     }
 
     fun abort(force: Boolean = false) {
-        val notPossible = !started || finished || !ModulePacketMine.mode.activeChoice.canAbort
-        if (notPossible || !force && targetPos.getCenterDistanceSquaredEyes() <= ModulePacketMine.keepRange.sq()) {
+        val notPossible = !started || finished || !ModulePacketMine.mode.activeMode.canAbort
+        if (notPossible || !force && !isOutOfRange(targetPos, targetPos.stateOrEmpty)) {
             return
         }
 
@@ -73,13 +83,15 @@ class MineTarget(val targetPos: BlockPos) {
             direction ?: Direction.DOWN
         }
 
-        network.send(
-            ServerboundPlayerActionPacket(
-                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
-                targetPos,
-                dir,
+        TickLoopTaskExecutor.executeInTickLoop {
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                    targetPos,
+                    dir,
+                )
             )
-        )
+        }
     }
 
     override fun equals(other: Any?): Boolean {

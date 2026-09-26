@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -40,11 +40,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Thanks to icewormy3
  */
-internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
+internal object FlySentinel27thJan : Mode("Sentinel27thJan") {
 
     private val horizontalSpeed by floatRange("HorizontalSpeed", 0.33f..0.34f, 0.1f..1f)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
@@ -57,7 +57,7 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
             player.input.keyPresses.jump -> 0.42
             else -> 0.2
         }
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble())
 
         waitTicks(6)
     }

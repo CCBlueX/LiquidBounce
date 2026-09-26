@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
@@ -60,7 +60,7 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
 
     // TODO switch to empty slot?
     private fun interact() {
-        val blockState = this.pos.getState()!!
+        val blockState = pos.state!!
         val raytrace = raytraceBlockRotation(
             player.eyePosition,
             this.pos,
@@ -107,7 +107,7 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
             )
         }
 
-        network.send(ServerboundSwingPacket(InteractionHand.MAIN_HAND))
+        network.send(ServerboundPunchPacket.INSTANCE)
 
 //        interaction.sendSequencedPacket(world) { sequence ->
 //            PlayerActionC2SPacket(

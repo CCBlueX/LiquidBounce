@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * NoFallForceJump mode for the NoFall module.
@@ -58,19 +58,14 @@ internal object NoFallForceJump : NoFallMode("ForceJump") {
     }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.move(0.0, (-blockDistance).toDouble(), 0.0))
-            .any { shape ->
-                shape != Shapes.empty()
-            }
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, (-blockDistance).toDouble(), 0.0)).anyNotEmpty()
 
     /**
      * Forces the player to jump by setting their velocity.
      */
     private fun forceJump() {
         player.jumpFromGround()
-
-        val velocity = player.deltaMovement
-        player.setDeltaMovement(Vec3(velocity.x, jumpHeight.toDouble(), velocity.z))
+        player.deltaMovement = player.deltaMovement.copy(y = jumpHeight.toDouble())
         jumpTriggered = true
     }
 }

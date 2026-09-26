@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -33,16 +34,18 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.utils.client.sendStartSprinting
-import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
+import net.ccbluex.liquidbounce.utils.network.sendStartSprinting
+import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
+import java.util.function.Predicate
 
 /**
  * SuperKnockback module
@@ -54,14 +57,14 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)
-    val chance by int("Chance", 100, 0..100, "%")
+    val chance = percentageChance("Chance", 100f)
     private val conditions by multiEnumChoice("Conditions", Conditions.NOT_IN_WATER)
 
     @Suppress("unused")
     private enum class Conditions(
-        override val choiceName: String,
-        val testCondition: (target: Entity) -> Boolean
-    ) : NamedChoice {
+        override val tag: String,
+        private val testCondition: Predicate<Entity>,
+    ) : Tagged, Predicate<Entity> by testCondition {
         ONLY_FACING("OnlyFacing", { target ->
             target.lookAngle.dot(player.position() - target.position()) < 0
         }),
@@ -73,7 +76,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         }),
     }
 
-    private object OnlyOnMove : ToggleableConfigurable(this, "OnlyOnMove", true) {
+    private object OnlyOnMove : ToggleableValueGroup(this, "OnlyOnMove", true) {
         val onlyForward by boolean("OnlyForward", true)
     }
 
@@ -81,8 +84,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         tree(OnlyOnMove)
     }
 
-    object Packet : Choice("Packet") {
-        override val parent: ChoiceConfigurable<Choice>
+    object Packet : Mode("Packet") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused", "ComplexCondition")
@@ -94,16 +97,16 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             }
 
             if (enemy is LivingEntity
-                && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+                && enemy.hurtTime <= hurtTime && chance.asBoolean
                 && !ModuleCriticals.wouldDoCriticalHit()
             ) {
                 if (player.isSprinting) {
-                    sendStopSprinting()
+                    network.sendStopSprinting()
                 }
 
-                sendStartSprinting()
-                sendStopSprinting()
-                sendStartSprinting()
+                network.sendStartSprinting()
+                network.sendStopSprinting()
+                network.sendStartSprinting()
 
                 player.isSprinting = true
                 player.wasSprinting = true
@@ -111,8 +114,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         }
     }
 
-    object SprintTap : Choice("SprintTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object SprintTap : Mode("SprintTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
@@ -132,7 +135,10 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
-            tickUntil { !player.isSprinting && !player.wasSprinting }
+            tickUntil {
+                val player = mc.player ?: return@tickUntil true
+                !player.isSprinting && !player.wasSprinting
+            }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
             this@SprintTap.debugParameter("State") { "Allowing Sprint" }
@@ -156,8 +162,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
     }
 
-    object WTap : Choice("WTap") {
-        override val parent: ChoiceConfigurable<Choice>
+    object WTap : Mode("WTap") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,
@@ -215,7 +221,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             return false
         }
 
-        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
+        return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance.asBoolean
             && !ModuleCriticals.wouldDoCriticalHit()
     }
 
@@ -230,7 +236,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             }
         }
 
-        return conditions.all { it.testCondition(target) }
+        return conditions.matchesAll(target)
     }
 
 }

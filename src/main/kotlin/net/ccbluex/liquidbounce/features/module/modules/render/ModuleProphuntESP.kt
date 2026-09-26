@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.forEach
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
-import net.minecraft.world.entity.item.FallingBlockEntity
+import net.minecraft.world.entity.EntityTypes
 
 object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     aliases = listOf("BlockUpdateDetector", "FallingBlockESP")
@@ -40,7 +42,7 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
 
     private val tracking by multiEnumChoice("Tracking", Tracking.entries, canBeNone = false)
 
-    private enum class Tracking(override val choiceName: String): NamedChoice {
+    private enum class Tracking(override val tag: String): Tagged {
         FALLING_BLOCKS("FallingBlocks"),
         BLOCK_UPDATES("BlockUpdates"),
         CHUNK_DELTA_UPDATES("ChunkDeltaUpdates"),
@@ -57,10 +59,8 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (Tracking.FALLING_BLOCKS in tracking) {
-            for (entity in world.entitiesForRendering()) {
-                if (entity is FallingBlockEntity) {
-                    renderer.addBlock(entity.blockPosition(), update = false)
-                }
+            world.entityGetter.forEach(EntityTypes.FALLING_BLOCK) {
+                renderer.addBlock(it.blockPosition(), update = false)
             }
         }
         renderer.updateAll()
@@ -68,12 +68,12 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
 
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-        when {
-            packet is ClientboundBlockUpdatePacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
+        when (val packet = event.packet) {
+            is ClientboundBlockUpdatePacket if Tracking.BLOCK_UPDATES in tracking -> mc.execute {
                 renderer.addBlock(packet.pos, update = false)
             }
-            packet is ClientboundSectionBlocksUpdatePacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
+
+            is ClientboundSectionBlocksUpdatePacket if Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
                 packet.runUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }

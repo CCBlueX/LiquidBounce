@@ -57,12 +57,10 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
             player.setPos(player.x, truncate(player.y), player.z)
 
             player.deltaMovement.y = motion.toDouble()
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    slow.toDouble(),
-                    1.0,
-                    slow.toDouble()
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                slow.toDouble(),
+                1.0,
+                slow.toDouble()
             )
             player.awardStat(Stats.JUMP)
 

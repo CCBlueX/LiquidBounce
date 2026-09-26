@@ -19,18 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.text.TextBuilder
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Component
 import net.minecraft.util.StringDecomposer
 
-object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
+object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
 
     private val stack by boolean("StackMessages", false)
     private val regexFilters by regexList("Filters", linkedSetOf())
@@ -63,22 +64,22 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             // imitate client messages
             val id = "$string-external"
 
-            val literalText = Component.literal("")
-            val text = event.applyChatDecoration.invoke(event.textData)
-            literalText.append(text)
+            val chatText = TextBuilder()
+            val text = event.applyChatDecoration.apply(event.textData)
+            chatText.add(text)
 
-            val other = mc.gui.chat.allMessages.find {
+            val other = mc.gui.hud.chat.allMessages.find {
                 (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
             }
 
             var count = 1
             other?.let {
                 count += (other as GuiMessageAddition).`liquid_bounce$getCount`()
-                literalText.append(" ${ChatFormatting.GRAY}[$count]")
+                chatText.add(" [$count]".asPlainText(ChatFormatting.GRAY))
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)
-            chat(literalText, data)
+            chat(chatText.build(), data)
         }
     }
 

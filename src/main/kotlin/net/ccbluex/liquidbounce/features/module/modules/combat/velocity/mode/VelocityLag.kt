@@ -19,19 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Lag mode. It delays some ticks of knockback.
@@ -41,6 +41,7 @@ internal object VelocityLag : VelocityMode("Lag") {
 
     private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
     private val jumpReset by boolean("JumpReset", false)
+    private val considerExplosion by boolean("ConsiderExplosion", true)
 
     private var shouldLag = false
     private var lagTicks = 0
@@ -50,14 +51,14 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+        if (packet.isLocalPlayerVelocity(considerExplosion)) {
             shouldLag = true
             lagTicks = lagTime.random()
         }
     }
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    private val queuePacketHandler = handler<BlinkPacketEvent> { event ->
         if (!shouldLag || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket) {
             return@handler
         }
@@ -77,7 +78,7 @@ internal object VelocityLag : VelocityMode("Lag") {
         if (shouldLag && lagTicks == 0) {
             shouldLag = false
             lagTicks = 0
-            PacketQueueManager.flush(TransferOrigin.INCOMING)
+            BlinkManager.flush(TransferOrigin.INCOMING)
             shouldJump = true
             waitTicks(2)
             shouldJump = false

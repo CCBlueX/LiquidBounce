@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
-object InventoryMoveTimerFeature : ToggleableConfigurable(ModuleInventoryMove, "Timer", false) {
+object InventoryMoveTimerFeature : ToggleableValueGroup(ModuleInventoryMove, "Timer", false) {
 
     private val speed by float("Speed", 1.0f, 0.1f..2.0f)
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (mc.screen is AbstractContainerScreen<*>) {
+        if (mc.gui.screen() is AbstractContainerScreen<*>) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_2, ModuleInventoryMove)
         }
     }

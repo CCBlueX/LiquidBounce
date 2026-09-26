@@ -19,10 +19,11 @@
 
 package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
+import net.ccbluex.liquidbounce.config.utils.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
@@ -41,6 +42,7 @@ enum class ValueType(
     // Registry Types
     BLOCK(registryItemDeserializer(BuiltInRegistries.BLOCK)),
     ITEM(registryItemDeserializer(BuiltInRegistries.ITEM)),
+    ENCHANTMENT(registryItemDeserializer(Registries.ENCHANTMENT)),
     SOUND_EVENT(registryItemDeserializer(BuiltInRegistries.SOUND_EVENT)),
     MOB_EFFECT(registryItemDeserializer(BuiltInRegistries.MOB_EFFECT)),
     MENU(registryItemDeserializer(BuiltInRegistries.MENU)),
@@ -56,18 +58,25 @@ enum class ValueType(
     VECTOR3_D,
     VECTOR2_F,
 
-    // Configuration Types
-    CHOICE(completer = AutoCompletionProvider.choiceCompleter),
-    CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
+    // Lists
     LIST,
+    // todo: rename to CHOICE_LIST
+    CHOOSE(completer = AutoCompletionProvider.choiceListCompleter),
+    // todo: rename to MULTI_CHOICE_LIST
+    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChoiceCompleter),
     MUTABLE_LIST,
     NAMED_ITEM_LIST,
     REGISTRY_LIST,
+    REGISTRY_MUTABLE_LIST,
     CURVE,
 
+    // Groups
+    // todo: rename to VALUE_GROUP
     CONFIGURABLE,
+    // todo: rename to TOGGLEABLE_GROUP
     TOGGLEABLE,
+    // todo: rename to MODE_GROUP
+    CHOICE(completer = AutoCompletionProvider.modeGroupCompleter),
 
     // Client Types
     FRIEND,
@@ -76,5 +85,5 @@ enum class ValueType(
     SUBSCRIBED_ITEM,
 
     // Invalid type
-    INVALID;
+    INVALID
 }

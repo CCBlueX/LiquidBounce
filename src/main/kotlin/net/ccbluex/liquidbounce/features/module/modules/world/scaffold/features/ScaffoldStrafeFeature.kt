@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.world.effect.MobEffects
 
-object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", false) {
+object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", false) {
 
     private val speed by float("Speed", 0.247f, 0.0f..5.0f)
     private val hypixel by boolean("Hypixel", false)
@@ -42,12 +42,10 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
         if (!hypixel) {
             return
         }
-        player.setDeltaMovement(
-            player.deltaMovement.multiply(
-                0.5,
-                1.0,
-                0.5
-            )
+        player.deltaMovement = player.deltaMovement.multiply(
+            0.5,
+            1.0,
+            0.5
         )
         super.onDisabled()
     }
@@ -78,9 +76,9 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
                 speed = 0.09800000190734863
             }
 
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
         } else {
-            player.deltaMovement.withStrafe(speed = speed.toDouble())
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
         }
     }
 }

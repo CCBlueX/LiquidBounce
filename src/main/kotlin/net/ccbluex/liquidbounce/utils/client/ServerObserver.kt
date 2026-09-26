@@ -20,15 +20,17 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -144,8 +146,8 @@ object ServerObserver : EventListener {
      * Plugins will add themselves to the command suggestions list with a prefix like `/pluginname:command`.
      * This can be used to get a list of plugins on the server.
      *
-     * @see [net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket]
-     * @see [net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins]
+     * @see [ServerboundCommandSuggestionPacket]
+     * @see [ModulePlugins]
      */
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
@@ -162,7 +164,7 @@ object ServerObserver : EventListener {
         packet as ClientboundCommandSuggestionsPacket
 
         this.plugins = packet.toSuggestions().list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
-            val command = cmd.text.split(":")
+            val command = cmd.text.split(':')
 
             if (command.size > 1) {
                 command[0].replace("/", "")
@@ -215,7 +217,7 @@ object ServerObserver : EventListener {
                 val averageInterval = intervals.average()
                 mc.execute {
                     tps = if (averageInterval > 0 && !averageInterval.isNaN()) {
-                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0..20.0)
+                        (20.0 / (averageInterval / 1000.0)).coerceIn(0.0, 20.0)
                     } else {
                         Double.NaN
                     }
@@ -336,7 +338,7 @@ object ServerObserver : EventListener {
                 && diffs.drop(2).all { it == -1 }
                 -> "Polar"
 
-            transactions.first() < -3000 && transactions.any { it == 0 }
+            transactions.first() < -3000 && transactions.contains(0)
                 -> "Intave"
 
             transactions.take(3) == listOf(-30767, -30766, -25767)
@@ -347,7 +349,7 @@ object ServerObserver : EventListener {
         }
     }
 
-    enum class ServerType(override val choiceName: String) : NamedChoice {
+    enum class ServerType(override val tag: String) : Tagged {
 
         /**
          * Allows only premium players to join.

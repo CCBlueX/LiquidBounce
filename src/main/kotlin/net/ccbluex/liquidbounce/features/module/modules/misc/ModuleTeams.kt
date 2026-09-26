@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
+import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
+import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
@@ -40,26 +42,51 @@ import java.util.function.Predicate
  */
 object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
 
-    private val matches by multiEnumChoice("Matches",
-        Matches.SCOREBOARD_TEAM,
-        Matches.NAME_COLOR
+    private val matches by multiEnumChoice(
+        "Matches",
+        enumSetOf(Matches.SCOREBOARD_TEAM, Matches.NAME_COLOR),
     )
 
-    private val armorColor by multiEnumChoice("ArmorColor",
-        ArmorColor.HELMET
+    private val armorColorSlots by multiEnumChoice(
+        "ArmorColor",
+        enumSetOf(EquipmentSlotChoice.HEAD),
+        EquipmentSlotChoice.allHumanoidArmor(),
     )
+
+    private val colorSources by multiEnumChoice(
+        "ColorSources",
+        ObjectLinkedOpenHashSet(ColorSource.entries),
+        canBeNone = true,
+    )
+
+    private enum class ColorSource(
+        override val tag: String,
+        val entityToColor: (Entity) -> Int?,
+    ) : Tagged {
+        TEAM("Team", { entity ->
+            entity.team?.color?.orElse(null)?.rgb()
+        }),
+        ARMOR("Armor", { entity ->
+            val armorColorSlots = armorColorSlots
+            if (entity is LivingEntity && armorColorSlots.isNotEmpty()) {
+                armorColorSlots.firstNotNullOfOrNull { it.getArmorColor(entity) }
+            } else {
+                null
+            }
+        }),
+    }
 
     @Suppress("unused")
-    val entityTagEvent = handler<TagEntityEvent> {
-        val entity = it.entity
+    private val entityTagEvent = handler<TagEntityEvent> { event ->
+        val entity = event.entity
 
         if (entity is LivingEntity && isInClientPlayersTeam(entity)) {
-            it.dontTarget()
+            event.dontTarget()
         }
 
-        getTeamColor(entity)?.let { color ->
-            it.color(color, Priority.IMPORTANT_FOR_USAGE_1)
-        }
+        // Resolve tag color from sources (first found)
+        val color = colorSources.firstNotNullOfOrNull { it.entityToColor(entity) }
+        event.color(Color4b.fullAlpha(color ?: return@handler), Priority.IMPORTANT_FOR_USAGE_1)
     }
 
     /**
@@ -67,25 +94,19 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
      * name color, armor color or team prefix.
      */
     private fun isInClientPlayersTeam(entity: LivingEntity) =
-        matches.any { it.testMatches.test(entity) } || checkArmor(entity)
+        matches.matchesAny(entity) || checkArmor(entity)
 
     /**
      * Checks if the color of any armor piece matches.
      */
     private fun checkArmor(entity: LivingEntity) =
-        entity is Player && armorColor.any { it.matchesArmorColor(entity) }
-
-    /**
-     * Returns the team color of the [entity] or null if the entity is not in a team.
-     */
-    private fun getTeamColor(entity: Entity) =
-        entity.displayName?.style?.color?.value?.let { Color4b(it) }
+        entity is Player && armorColorSlots.any { it.matchesArmorColor(entity) }
 
     @Suppress("unused")
     private enum class Matches(
-        override val choiceName: String,
-        val testMatches: Predicate<LivingEntity>,
-    ) : NamedChoice {
+        override val tag: String,
+        private val testMatches: Predicate<LivingEntity>,
+    ) : Tagged, Predicate<LivingEntity> by testMatches {
         /**
          * Check if [LivingEntity] is in your own team using scoreboard,
          */
@@ -112,12 +133,12 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
             val targetSplit = suspected.displayName
                 ?.string
                 ?.stripMinecraftColorCodes()
-                ?.split(" ")
+                ?.split(' ', limit = 2)
 
             val clientSplit = player.displayName
                 ?.string
                 ?.stripMinecraftColorCodes()
-                ?.split(" ")
+                ?.split(' ', limit = 2)
 
             targetSplit != null
                 && clientSplit != null
@@ -127,31 +148,16 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
         })
     }
 
-    @Suppress("unused", "MagicNumber")
-    private enum class ArmorColor(
-        override val choiceName: String,
-        val slot: EquipmentSlot,
-    ) : NamedChoice {
-        HELMET("Helmet", EquipmentSlot.HEAD),
-        CHESTPLATE("Chestplate", EquipmentSlot.CHEST),
-        PANTS("Pants", EquipmentSlot.LEGS),
-        BOOTS("Boots", EquipmentSlot.FEET);
+    /**
+     * Checks if the color of the item in the [EquipmentSlotChoice.slot] of
+     * the [player] matches the user's armor color in the same slot.
+     */
+    private fun EquipmentSlotChoice.matchesArmorColor(suspected: Player): Boolean {
+        // returns false if the armor is not dyeable (e.g., iron armor)
+        // to avoid a false positive from `null == null`
+        val ownColor = getArmorColor(player) ?: return false
+        val otherColor = getArmorColor(suspected) ?: return false
 
-        /**
-         * Checks if the color of the item in the [slot] of
-         * the [player] matches the user's armor color in the same slot.
-         */
-        @Suppress("ReturnCount")
-        fun matchesArmorColor(suspected: Player): Boolean {
-            val ownStack = player.getItemBySlot(slot)
-            val otherStack = suspected.getItemBySlot(slot)
-
-            // returns false if the armor is not dyeable (e.g., iron armor)
-            // to avoid a false positive from `null == null`
-            val ownColor = ownStack.getArmorColor() ?: return false
-            val otherColor = otherStack.getArmorColor() ?: return false
-
-            return ownColor == otherColor
-        }
+        return ownColor == otherColor
     }
 }

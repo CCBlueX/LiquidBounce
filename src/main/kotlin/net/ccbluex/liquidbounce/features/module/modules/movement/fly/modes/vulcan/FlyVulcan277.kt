@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 
@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
  * @testedOn anticheat-test.com
  * @note NA
  */
-internal object FlyVulcan277 : Choice("Vulcan277") {
+internal object FlyVulcan277 : Mode("Vulcan277") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     val repeatable = tickHandler {

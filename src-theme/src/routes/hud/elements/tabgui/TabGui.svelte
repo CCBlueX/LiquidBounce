@@ -110,7 +110,6 @@
 </div>
 
 <style lang="scss">
-    @use "../../../../colors.scss" as *;
 
     .tabgui {
         display: flex;
@@ -126,7 +125,7 @@
 
     .modules {
       background-clip: content-box;
-      background-color: rgba($tabgui-base-color, 0.5);
+      background-color: var(--tabgui-modules-background-color);
       margin-left: 6px;
       border-radius: 5px;
       min-width: 100px;

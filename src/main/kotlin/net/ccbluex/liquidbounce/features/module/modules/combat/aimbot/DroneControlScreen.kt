@@ -19,20 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.client.input.MouseButtonEvent
@@ -43,11 +44,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2d
-import org.lwjgl.glfw.GLFW
-import kotlin.math.hypot
 import kotlin.math.pow
 
-private const val DRAG_BUTTON = 0
+private const val DRAG_BUTTON = InputConstants.MOUSE_BUTTON_LEFT
 
 /**
  * Zoom by another 25% every mouse tick.
@@ -58,12 +57,12 @@ private const val ZOOM_STEP_BASE = 1.25
 class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
 
     var cameraPos = player.eyePosition.add(0.0, 10.0, 0.0)
-    var cameraRotation = Vec2(Mth.wrapDegrees(player.yRot), player.xRot.coerceIn(-90.0F, 90.0F))
+    var cameraRotation = Rotation(Mth.wrapDegrees(player.yRot), player.xRot.coerceIn(-90.0F, 90.0F))
 
     private var focusedEntity: EntityFocusData? = null
 
     private var dragStartPos: Vector2d? = null
-    private var dragStartRottion: Vec2 = Vec2.ZERO
+    private var dragStartRotation = Rotation.ZERO
 
     private var zoomSteps = 0.0
 
@@ -91,20 +90,20 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         ).toFloat().toDegrees()
 
         val pitchDelta =
-            Vector2d(newWorldRay.direction.y, hypot(newWorldRay.direction.x, newWorldRay.direction.z)).angle(
+            Vector2d(newWorldRay.direction.y, newWorldRay.direction.horizontalDistance()).angle(
                 Vector2d(
                     prevWorldRay.direction.y,
-                    hypot(prevWorldRay.direction.x, prevWorldRay.direction.z)
+                    prevWorldRay.direction.horizontalDistance(),
                 )
             ).toFloat().toDegrees()
 
-        this.cameraRotation = this.dragStartRottion.add(Vec2(-yawDelta, -pitchDelta))
+        this.cameraRotation = this.dragStartRotation.add(y = -yawDelta, x = -pitchDelta)
 
         return true
     }
 
     override fun keyPressed(input: KeyEvent): Boolean {
-        if (input.key == GLFW.GLFW_KEY_SPACE) {
+        if (input.key == InputConstants.KEY_SPACE) {
             ModuleDroneControl.mayShoot = true
         }
 
@@ -118,7 +117,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     override fun mouseClicked(click: MouseButtonEvent, doubled: Boolean): Boolean {
         if (click.button() == DRAG_BUTTON) {
             this.dragStartPos = Vector2d(click.x, click.y)
-            this.dragStartRottion = this.cameraRotation
+            this.dragStartRotation = this.cameraRotation
         }
 
         return true
@@ -139,9 +138,9 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         val focusedEntity = this.focusedEntity
 
         if (mc.options.keyShift.isPressedOnAny && focusedEntity != null) {
-            val rot = Rotation.lookingAt(point = focusedEntity.entity.box.center, from = this.cameraPos)
+            val rot = Rotation.lookingAt(point = focusedEntity.entity.boundingBox.center, from = this.cameraPos)
 
-            this.cameraRotation = Vec2(rot.yaw, rot.pitch)
+            this.cameraRotation = rot
         }
     }
 
@@ -152,7 +151,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
             this.dragStartPos = null
         }
 
-        if (button != 1) {
+        if (button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return true
         }
 
@@ -180,7 +179,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         return super.mouseReleased(click)
     }
 
-    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun extractRenderState(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
         ModuleDroneControl.currentTarget = null
 
         this.focusedEntity?.let {
@@ -190,7 +189,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
                 ModuleDebug.DebuggedBox(it.entity.box, Color4b.RED.with(a = 127))
             )
 
-            val plane = NormalizedPlane(Vec3(0.0, it.baseY, 0.0), Vec3(0.0, 1.0, 0.0))
+            val plane = NormalizedPlane(Vec3(0.0, it.baseY, 0.0), Vec3.Y_AXIS)
             val intersect = plane.intersection(
                 WorldToScreen.calculateMouseRay(
                     Vec2(mouseX.toFloat(), mouseY.toFloat()),
@@ -214,7 +213,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     }
 
     @Suppress("detekt:EmptyFunctionBlock")
-    override fun renderBackground(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun extractBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
 
     }
 

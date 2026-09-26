@@ -18,32 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.longLines
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
-import net.minecraft.util.Mth
-import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.player.Player
-import kotlin.math.sqrt
 
 /**
  * Tracers module
@@ -55,22 +49,14 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
     private val modes = choices("ColorMode", 0) {
         arrayOf(
-            DistanceColor,
+            GenericDistanceHSBColorMode.entity(it),
             GenericEntityHealthColorMode(it),
             GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
             GenericRainbowColorMode(it)
         )
     }
 
-    private object DistanceColor : GenericColorMode<LivingEntity>("Distance") {
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
-
-        val useViewDistance by boolean("UseViewDistance", true)
-        val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
-
-        override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
-    }
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
 
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
@@ -87,54 +73,30 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
             return@handler
         }
 
-        val matrixStack = event.matrixStack
+        event.renderEnvironment {
+            val eyeVector = Vec3f.eyeVector(camera)
 
-        val useDistanceColor = DistanceColor.isSelected
-
-        val viewDistance = 16.0F * Mth.SQRT_OF_TWO *
-            (if (DistanceColor.useViewDistance) {
-                mc.options.renderDistance().get().toFloat()
-            } else {
-                DistanceColor.customViewDistance
-            })
-        val camera = mc.gameRenderer.mainCamera
-
-        renderEnvironmentForWorld(matrixStack) {
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
-
-            longLines {
-                startBatch()
-                val maxDistanceSq = maximumDistance.sq()
-                for (entity in RenderedEntities) {
-                    val distanceSq = entity.position().cameraDistanceSq().toFloat()
-                    if (distanceSq > maxDistanceSq) {
-                        continue
-                    }
-
-                    val color = if (useDistanceColor) {
-                        val dist = sqrt(distanceSq) * 2.0F
-                        Color4b.ofHSB(
-                            (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
-                            1.0f,
-                            1.0f,
-                        )
-                    } else if (entity is Player && FriendManager.isFriend(entity.gameProfile.name)) {
-                        Color4b.BLUE
-                    } else {
-                        EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
-                    }
-
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
-
-                    drawLines(
-                        argb = color.toARGB(),
-                        eyeVector, pos,
-                        pos, pos.add(0f, entity.bbHeight, 0f)
-                    )
+            val maxDistanceSq = maximumDistance.sq()
+            for (entity in RenderedEntities) {
+                val distanceSq = entity.position().cameraDistanceSq().toFloat()
+                if (distanceSq > maxDistanceSq) {
+                    continue
                 }
-                commitBatch()
+
+                val color = if (FriendManager.isFriend(entity)) {
+                    Color4b.BLUE
+                } else {
+                    EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
+                }
+
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight, 0f)
+
+                if (lineWidth == 1.0f) {
+                    drawLines(color.argb, eyeVector, pos, pos, topPos)
+                } else {
+                    drawLinesWithWidth(color.argb, lineWidth, eyeVector, pos, pos, topPos)
+                }
             }
         }
 

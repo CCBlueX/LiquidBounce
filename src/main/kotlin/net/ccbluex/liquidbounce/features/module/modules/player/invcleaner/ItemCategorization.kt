@@ -19,20 +19,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.RodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SharpAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ShieldItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SwordItemFacet
@@ -41,10 +42,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorKitParameters
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isFood
@@ -73,6 +76,7 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
@@ -96,7 +100,7 @@ enum class ItemType(
      */
     val allocationPriority: Priority = Priority.NORMAL,
     /**
-     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * The user maybe wants to filter the items by a specific type, but they don't always want all versions of the item.
      * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
      * If that function is already served, we can just ignore it.
      */
@@ -131,7 +135,7 @@ enum class ItemFunction {
 }
 
 enum class ItemSortChoice(
-    override val choiceName: String,
+    override val tag: String,
     val category: ItemCategory,
     /**
      * This is the function that is used for the greedy check.
@@ -139,7 +143,7 @@ enum class ItemSortChoice(
      * IF IT WAS IMPLEMENTED
      */
     val satisfactionCheck: Predicate<ItemStack>? = null,
-) : NamedChoice {
+) : Tagged {
     SWORD("Sword", ItemType.SWORD.defaultCategory, { it.isSword }),
     WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
     SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
@@ -191,6 +195,9 @@ class ItemCategorization(
             EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
             EquipmentSlot.FEET, constructArmorPiece(Items.DIAMOND_BOOTS, 3),
         )
+
+        @JvmField
+        val Default = ItemCategorization(emptyList())
     }
 
     /**
@@ -257,6 +264,7 @@ class ItemCategorization(
                     }
                     add(PrimitiveItemFacet(slot, category))
                 }
+
                 is PotionItem -> {
                     val areAllEffectsGood =
                         itemStack.getPotionEffects()
@@ -284,6 +292,17 @@ class ItemCategorization(
                 is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
 
                 else -> when {
+                    itemStack.isAxe -> {
+                        val sharpnessLevel = itemStack.getEnchantment(Enchantments.SHARPNESS)
+                        if (sharpnessLevel >= 100) {
+                            add(GodAxeFacet(slot))
+                        } else if (sharpnessLevel >= 5) {
+                            add(SharpAxeFacet(slot))
+                        } else {
+                            add(MiningToolItemFacet(slot))
+                        }
+                    }
+
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))

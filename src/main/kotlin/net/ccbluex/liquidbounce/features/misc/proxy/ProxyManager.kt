@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.handler.proxy.Socks5ProxyHandler
-import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.network.Connection
 
@@ -37,7 +37,9 @@ import net.minecraft.network.Connection
  *
  * Only supports SOCKS5 proxies.
  */
-object ProxyManager : Configurable("proxy"), EventListener {
+object ProxyManager : Config("proxy"), EventListener {
+
+    private val logger = clientLogger("ProxyManager")
 
     var proxy by value("selectedProxy", Proxy.NONE, valueType = ValueType.PROXY).onChanged {
         ConfigSystem.store(this)

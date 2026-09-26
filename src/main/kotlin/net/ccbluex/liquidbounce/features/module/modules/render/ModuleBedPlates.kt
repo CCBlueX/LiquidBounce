@@ -23,8 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
@@ -42,8 +42,10 @@ import net.ccbluex.liquidbounce.utils.block.bed.SurroundingBlock
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
@@ -66,8 +68,8 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     private val maxCount by int("MaxCount", 8, 1..64)
@@ -80,8 +82,8 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
     private val ignoreAdjacent by boolean("IgnoreAdjacent", false)
 
-    private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
-        final override val parent: ChoiceConfigurable<*>
+    private sealed class FilterMode(name: String) : Mode(name), Predicate<Block> {
+        final override val parent: ModeValueGroup<*>
             get() = filterMode
 
         object Predefined : FilterMode("Predefined") {
@@ -91,23 +93,9 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 Blocks.WATER,
 
                 Blocks.GLASS,
-                Blocks.WHITE_STAINED_GLASS,
-                Blocks.ORANGE_STAINED_GLASS,
-                Blocks.MAGENTA_STAINED_GLASS,
-                Blocks.LIGHT_BLUE_STAINED_GLASS,
-                Blocks.YELLOW_STAINED_GLASS,
-                Blocks.LIME_STAINED_GLASS,
-                Blocks.PINK_STAINED_GLASS,
-                Blocks.GRAY_STAINED_GLASS,
-                Blocks.LIGHT_GRAY_STAINED_GLASS,
-                Blocks.CYAN_STAINED_GLASS,
-                Blocks.PURPLE_STAINED_GLASS,
-                Blocks.BLUE_STAINED_GLASS,
-                Blocks.BROWN_STAINED_GLASS,
-                Blocks.GREEN_STAINED_GLASS,
-                Blocks.RED_STAINED_GLASS,
-                Blocks.BLACK_STAINED_GLASS,
-            )
+            ).apply {
+                addAll(Blocks.STAINED_GLASS)
+            }
 
             override fun test(block: Block): Boolean {
                 val state = block.defaultBlockState()
@@ -142,13 +130,12 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).position()
         beds.forEach { renderState ->
             val bedState = renderState.bedState
-            renderState.distance = bedState.pos.distanceTo(cameraPos)
+            renderState.distance = bedState.pos.cameraDistance()
 
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
-                .filter { filterMode.activeChoice.test(it.block) }
+                .filter { filterMode.activeMode.test(it.block) }
             renderState.surrounding = surrounding
 
             renderState.itemStacksForRender = if (showBed) {
@@ -191,7 +178,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
 
         var i = 0
         for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
-            if (i > maxCount) {
+            if (i >= maxCount) {
                 break
             }
 
@@ -199,7 +186,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
             val scale = scale.transform(distance.toFloat())
 
             if (scale < 0.01f ||
-                ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+                ignoreSelfBed.activeMode.isSelfBed(bedState.block, currPos) ||
                 ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
             ) {
                 continue
@@ -222,7 +209,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[if (showBed) index - 1 else index]
@@ -236,12 +223,12 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 Color4b.WHITE
                             }.argb
 
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         val countString = stack.count.toString()
                         pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawString(
+                                text(
                                     textRenderer,
                                     ROMAN_NUMERALS[surroundingBlock.layer],
                                     x,
@@ -251,7 +238,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
-                            drawString(
+                            text(
                                 textRenderer,
                                 countString,
                                 x + 19 - 2 - textRenderer.width(countString),

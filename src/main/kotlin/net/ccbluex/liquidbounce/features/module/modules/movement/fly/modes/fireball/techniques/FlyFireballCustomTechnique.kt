@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -31,25 +31,25 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.entity.MoverType
 
-object FlyFireballCustomTechnique : Choice("Custom") {
+object FlyFireballCustomTechnique : Mode("Custom") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = FlyFireball.technique
 
     private val disableDelay by int("DisableDelay", 10, 0..20)
     private val throwDelay by int("ThrowDelay", 2, 0..20)
 
-    object Jump : ToggleableConfigurable(this, "Jump", true) {
+    object Jump : ToggleableValueGroup(this, "Jump", true) {
         val delay by int("JumpDelay", 1, 0..20, "ticks")
     }
 
-    object YVelocity : ToggleableConfigurable(this, "YVelocity", true) {
+    object YVelocity : ToggleableValueGroup(this, "YVelocity", true) {
         val velocity by float("Velocity", 0f, -5f..5f)
         val delay by int("Delay", 0, 0..20, "ticks")
     }
@@ -58,7 +58,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     //  Stop moving when module is active to avoid falling off, for example a bridge
     val stopMove by boolean("StopMove", true)
 
-    object Rotations : RotationsConfigurable(this) {
+    object Rotations : RotationsValueGroup(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 
@@ -74,7 +74,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         RotationManager.setRotationTarget(
             Rotation(player.yRot, Rotations.pitch),
-            configurable = Rotations,
+            valueGroup = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )

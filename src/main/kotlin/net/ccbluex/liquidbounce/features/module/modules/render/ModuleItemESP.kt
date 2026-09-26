@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,16 +34,18 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.longLines
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.utils.render.drawLegacy2DMarker
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.KeyedAabb
+import net.ccbluex.liquidbounce.utils.math.mergeIntersectingAabbsSweep
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.ccbluex.liquidbounce.utils.math.worldToLocal
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
@@ -59,7 +63,7 @@ import net.minecraft.world.phys.AABB
 object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.itemEsp"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.itemEsp"
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
@@ -67,7 +71,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     val showTracers by boolean("Tracers", false)
 
-    private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
+    private object ShowArrows : ToggleableValueGroup(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
         val spectralArrows by boolean("SpectralArrows", true)
         val arrowsWithEffects by boolean("ArrowsWithEffects", true)
@@ -84,6 +88,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             GlowMode,
 //            OutlineMode,
             BoxMode,
+            Legacy2DMode,
         )
     }
     private val colorMode = choices("ColorMode", 0) {
@@ -99,42 +104,34 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         // Check if the tracer option is enabled
         if (!showTracers) return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
-            // We calculate the gaze vector (where the camera is looking)
-            val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.xRot().toRadians())
-                .rotateYaw(-camera.yRot().toRadians())
+        event.renderEnvironment {
+            val eyeVector = Vec3f.eyeVector(camera)
 
-            longLines {
-                startBatch()
-                // Using entitiesForRendering() to get a list of entities around
-                val entities = world.entitiesForRendering()
-                for (entity in entities) {
-                    // Using the existing filtering logic (distance, type, etc.)
-                    if (!shouldRender(entity)) continue
+            val entities = world.entitiesForRendering()
+            for (entity in entities) {
+                if (!shouldRender(entity)) continue
 
-                    val color = getColor()
+                val color = getColor()
 
-                    // Interpolating the position (motion smoothing)
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+                // Interpolating the position (motion smoothing)
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
 
-                    drawLine(
-                        argb = color.toARGB(),
-                        p1 = eyeVector,
-                        p2 = pos,
-                    )
-                }
-                commitBatch()
+                drawLine(
+                    argb = color.argb,
+                    p1 = eyeVector,
+                    p2 = pos,
+                )
             }
         }
     }
 
-    private object BoxMode : Choice("Box") {
+    private object BoxMode : Mode("Box") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
+        private val mergeIntersecting by boolean("MergeIntersecting", false)
 
         private val entities = mutableListOf<Entity>()
 
@@ -153,33 +150,90 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (entities.isEmpty()) return@handler
 
-            val matrixStack = event.matrixStack
+            val color = getColor()
+            val faceColor = color.with(a = 50)
+            val outlineColor = color.with(a = 100)
 
-            val base = getColor()
-            val baseColor = base.with(a = 50)
-            val outlineColor = base.with(a = 100)
+            event.renderEnvironment {
+                if (!mergeIntersecting) {
+                    for (entity in entities) {
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
-            renderEnvironmentForWorld(matrixStack) {
-                startBatch()
-                for (entity in entities) {
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        withPositionRelativeToCamera(pos) {
+                            drawBox(box, faceColor, outlineColor)
+                        }
+                    }
+                    return@renderEnvironment
+                }
 
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(box, baseColor, outlineColor)
+                val mergedBoxes = mergeIntersectingAabbsSweep(
+                    entities.mapToArray { entity ->
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        KeyedAabb(box.move(pos), color)
+                    }.asList()
+                )
+
+                for ((mergedBox, _) in mergedBoxes) {
+                    val (origin, localBox) = mergedBox.worldToLocal()
+                    withPositionRelativeToCamera(origin) {
+                        drawBox(localBox, faceColor, outlineColor)
                     }
                 }
-                commitBatch()
             }
         }
     }
 
-    object GlowMode : Choice("Glow") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Legacy2DMode : Mode("Legacy2D") {
+        override val parent: ModeValueGroup<Mode>
+            get() = modes
+
+        private val scale by float("Scale", 0.1f, 0.02f..0.3f)
+        private val yOffset by float("YOffset", 0f, -1f..1f)
+        private val backgroundAlpha by int("BackgroundAlpha", 150, 0..255)
+
+        private val entities = mutableListOf<Entity>()
+
+        override fun disable() {
+            entities.clear()
+            super.disable()
+        }
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            entities.clear()
+            world.entitiesForRendering().filterTo(entities, ::shouldRender)
+        }
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (entities.isEmpty()) return@handler
+
+            val color = getColor().argb
+            val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
+
+            event.renderEnvironment {
+                for (entity in entities) {
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
+
+                    drawLegacy2DMarker(
+                        pos = pos,
+                        entityHeight = entity.boundingBox.ysize,
+                        scale = scale,
+                        foregroundArgb = color,
+                        backgroundArgb = backgroundColor
+                    )
+                }
+            }
+        }
+    }
+
+    object GlowMode : Mode("Glow") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
     }
 
-    object OutlineMode : Choice("Outline") {
-        override val parent: ChoiceConfigurable<Choice>
+    object OutlineMode : Mode("Outline") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
     }
 
@@ -212,5 +266,5 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         }
     }
 
-    fun getColor() = this.colorMode.activeChoice.getColor(null)
+    fun getColor() = this.colorMode.activeMode.getColor(null)
 }

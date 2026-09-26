@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -45,27 +47,27 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
     private val notDuringSprint by boolean("NotDuringSprint", true)
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
-    val repeatable = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (notDuringSprint && (mc.options.keySprint.isDown || player.isSprinting)) {
-            return@tickHandler
+            return@handler
         }
 
-        val yaw = yawMode.activeChoice.yaw
-        val pitch = pitchMode.activeChoice.pitch.let {
+        val yaw = yawMode.activeMode.yaw
+        val pitch = pitchMode.activeMode.pitch.let {
             if (safePitch) {
-                it.coerceIn(-90f..90f)
+                it.coerceIn(-90f, 90f)
             } else {
                 it
             }
         }
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(Rotation(yaw, pitch)),
+        RotationManager.setRotationTarget(rotations.toRotationTarget(Rotation(yaw, pitch)),
             Priority.NOT_IMPORTANT, this@ModuleDerp)
     }
 
-    private object YawStatic : YawChoice("Static") {
+    private object YawStatic : YawMode("Static") {
 
         val yawValue by float("Yaw", 0f, -180f..180f, "°")
 
@@ -74,7 +76,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object YawOffset : YawChoice("Offset") {
+    private object YawOffset : YawMode("Offset") {
 
         val yawOffsetValue by float("Offset", 0f, -180f..180f, "°")
 
@@ -83,13 +85,13 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object YawRandom : YawChoice("Random") {
+    private object YawRandom : YawMode("Random") {
         override val yaw: Float
             get() = (-180f..180f).random()
 
     }
 
-    private object YawJitter : YawChoice("Jitter") {
+    private object YawJitter : YawMode("Jitter") {
 
         override var yaw = 0.0f
 
@@ -111,7 +113,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object YawSpin : YawChoice("Spin") {
+    private object YawSpin : YawMode("Spin") {
 
         override var yaw = 0.0f
 
@@ -125,7 +127,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object PitchStatic : PitchChoice("Static") {
+    private object PitchStatic : PitchMode("Static") {
 
         override val pitch: Float
             get() = pitchValue
@@ -134,7 +136,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object PitchOffset : PitchChoice("Offset") {
+    private object PitchOffset : PitchMode("Offset") {
 
         override val pitch: Float
             get() = player.xRot + pitchOffsetValue
@@ -143,9 +145,9 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    private object PitchRandom : PitchChoice("Random") {
+    private object PitchRandom : PitchMode("Random") {
 
-        override val parent: ChoiceConfigurable<*>
+        override val parent: ModeValueGroup<*>
             get() = pitchMode
 
         override val pitch: Float
@@ -153,14 +155,14 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     }
 
-    abstract class YawChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class YawMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = yawMode
         abstract val yaw: Float
     }
 
-    abstract class PitchChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
+    private sealed class PitchMode(name: String) : Mode(name) {
+        override val parent: ModeValueGroup<*>
             get() = pitchMode
         abstract val pitch: Float
     }

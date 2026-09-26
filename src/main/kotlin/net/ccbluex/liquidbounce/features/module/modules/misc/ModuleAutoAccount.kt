@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.TitleEvent
@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -56,9 +56,11 @@ object ModuleAutoAccount : ClientModule(
 
     private val loginRegex by regex("LoginRegex", Regex("/login"))
 
+    private val repeatPasswordOnRegister by boolean("RepeatPasswordOnRegister", true)
+
     private val messageSources by multiEnumChoice("MessageSource", MessageSource.entries, canBeNone = false)
 
-    private enum class MessageSource(override val choiceName: String) : NamedChoice {
+    private enum class MessageSource(override val tag: String) : Tagged {
         CHAT("Chat"),
         TITLE("Title"),
         SUBTITLE("Subtitle"),
@@ -67,7 +69,7 @@ object ModuleAutoAccount : ClientModule(
     // We can receive chat messages before the world is initialized,
     // so we have to handle events even before that
     override val running
-        get() = !HideAppearance.isDestructed && enabled
+        get() = !SelfDestruct.isDestructed && enabled
 
     private var sending = false
 
@@ -90,7 +92,9 @@ object ModuleAutoAccount : ClientModule(
 
     fun register() {
         chat("register")
-        network.sendCommand("$registerCommand $password $password")
+        network.sendCommand(
+            if (repeatPasswordOnRegister) "$registerCommand $password $password" else "$registerCommand $password",
+        )
     }
 
     private inline fun <reified T : Event> createMessageHandler(

@@ -19,23 +19,38 @@
 
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
+import com.google.gson.JsonParseException
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import java.lang.reflect.Type
 
-object ColorAdapter : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
-
-    override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.argb)
+object ColorAdapter : TypeAdapter<Color4b>() {
+    override fun write(
+        writer: JsonWriter,
+        value: Color4b?,
+    ) {
+        if (value == null) {
+            writer.nullValue()
+        } else {
+            writer.value(value.argb)
+        }
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(json.asInt)
+    override fun read(reader: JsonReader): Color4b? {
+        return when (val token = reader.peek()) {
+            JsonToken.NULL -> {
+                reader.nextNull()
+                null
+            }
+            // Use nextLong().toInt() to safely handle unsigned 32-bit integers in JSON
+            JsonToken.NUMBER -> Color4b(reader.nextLong().toInt())
+            JsonToken.STRING -> Color4b.fromHex(reader.nextString())
+            else -> {
+                reader.skipValue()
+                throw JsonParseException("Only number or hex format string can be parsed as color, found $token")
+            }
+        }
     }
-
 }

@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -87,7 +88,7 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
         tagBy(this)
     }
 
-    private object Sign : ToggleableConfigurable(ModuleBookBot, "Sign", true) {
+    private object Sign : ToggleableValueGroup(ModuleBookBot, "Sign", true) {
         val bookName by text("Name", "Generated book #%count%")
     }
 
@@ -162,7 +163,7 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
         }
 
         val bookBuilder = BookBuilder()
-        val generator = generationMode.activeChoice.generate()
+        val generator = generationMode.activeMode.generate()
             .filter { it.toChar() != '\r' }
             .iterator()
 
@@ -183,7 +184,7 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
 
     private class BookBuilder {
         private val title: String = Sign.bookName.replace("%count%", bookCount.toString())
-        private val pageAmount: Int = generationMode.activeChoice.pages
+        private val pageAmount: Int = generationMode.activeMode.pages
 
         private val pages = ArrayList<String>(pageAmount)
         private val filteredPages = ArrayList<Filterable<Component>>(pageAmount)
@@ -247,7 +248,7 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
         }
 
         fun addPage(page: String) {
-            filteredPages.add(Filterable.passThrough(Component.literal(page)))
+            filteredPages.add(Filterable.passThrough(page.asPlainText()))
             pages.add(page)
         }
 
@@ -276,8 +277,8 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
 
 internal sealed class GenerationMode(
     name: String,
-) : Choice(name) {
-    override val parent: ChoiceConfigurable<*> get() = ModuleBookBot.generationMode
+) : Mode(name) {
+    override val parent: ModeValueGroup<*> get() = ModuleBookBot.generationMode
 
     internal val random = Random()
 
@@ -308,7 +309,7 @@ internal sealed class GenerationMode(
     object File : GenerationMode("File") {
         private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
         private val cyclic by boolean("Cyclic", true)
-        private val source = file("Source")
+        private val source = file("Source", supportedExtensions = setOf("txt"))
 
         /**
          * @author sqlerrorthing, MukjepScarlet

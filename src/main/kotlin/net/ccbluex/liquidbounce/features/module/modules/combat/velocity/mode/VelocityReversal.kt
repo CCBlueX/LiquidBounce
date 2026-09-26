@@ -23,9 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.math.multiply
-import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 
 /**
  * A velocity mode that reverses your velocity after a set amount of ticks.
@@ -41,16 +39,9 @@ internal object VelocityReversal : VelocityMode("Reversal") {
     private var handlingVelocity = false
     private var velocityTicks = 0
 
-    private fun checkPacket(packet: Packet<*>): Boolean {
-        val isExplosion = packet is ClientboundExplodePacket
-        val isSelfVelocity = packet is ClientboundSetEntityMotionPacket && packet.id == player.id
-
-        return (isSelfVelocity || isExplosion)
-    }
-
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->
-        if (!checkPacket(event.packet)) {
+        if (!event.packet.isLocalPlayerVelocity()) {
             return@handler
         }
 

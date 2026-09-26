@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
@@ -30,7 +30,7 @@ import kotlin.math.floor
 
 object AntiVoidGhostBlockMode : AntiVoidMode("GhostBlock") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
 
     @Suppress("unused")
@@ -41,7 +41,7 @@ object AntiVoidGhostBlockMode : AntiVoidMode("GhostBlock") {
 
         // We only want to place a fake-block collision below the player if the collision shape is empty.
         var safePosition = rescuePosition
-        if (event.shape != Shapes.empty() || safePosition == null || event.pos.y >= floor(safePosition.y)) {
+        if (!event.shape.isEmpty || safePosition == null || event.pos.y >= floor(safePosition.y)) {
             return@handler
         }
 

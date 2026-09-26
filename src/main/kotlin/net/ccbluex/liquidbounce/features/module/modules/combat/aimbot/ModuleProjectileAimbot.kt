@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 
 object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategories.COMBAT) {
 
     private val targetSelector = TargetSelector()
-    private val rotations = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     init {
         tree(targetSelector)
@@ -46,13 +46,16 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategorie
         val target = targetSelector.targets().firstOrNull() ?: return@handler
 
         val rotation = player.handItems.firstNotNullOfOrNull {
-            val trajectory = TrajectoryData.getRenderedTrajectoryInfo(
+            val trajectoryDescriptor = HeldItemTrajectoryResolver.resolveHeldItemPrimaryShot(
                 player,
                 it,
                 true
             ) ?: return@firstNotNullOfOrNull null
 
-            SituationalProjectileAngleCalculator.calculateAngleForEntity(trajectory, target)
+            SituationalProjectileAngleCalculator.calculateAngleForEntity(
+                trajectoryDescriptor.trajectoryInfo,
+                target
+            )
         } ?: return@handler
 
         RotationManager.setRotationTarget(

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -48,15 +48,20 @@ object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
         if (applyTo.any {
                 it.condition.test(mainHandItem) || it.condition.test(offHandItem)
             } && (startDelay <= 0 || mc.options.keyUse.timeSinceLastPress >= startDelay)) {
-            event.cooldown = cooldown.random()
+            val newCooldown = cooldown.random()
+            // Only override cooldown when there's an actual change to apply;
+            // avoids resetting an already-zero cooldown needlessly
+            if (newCooldown > 0 || event.cooldown > 0) {
+                event.cooldown = newCooldown
+            }
         }
     }
 
     @Suppress("unused")
     private enum class ApplyTo(
-        override val choiceName: String,
+        override val tag: String,
         val condition: Predicate<Item>
-    ): NamedChoice {
+    ): Tagged {
         PROJECTILES("Projectiles", { item -> item is ProjectileItem }),
         BLOCKS("Blocks", { item -> item is BlockItem })
     }

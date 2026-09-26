@@ -18,9 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import it.unimi.dsi.fastutil.floats.FloatFloatPair
-import net.ccbluex.fastutil.pair
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
@@ -28,15 +26,16 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sh
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.world.item.ItemUseAnimation
+import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
+import net.minecraft.world.phys.Vec2
 
 internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
 
     private val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-    val modes = choices(this, "Choice") {
+    val modes = modes(this, "Choice") {
         arrayOf(
-            NoneChoice(it),
+            NoneMode(it),
             NoSlowBlockingReuse,
             NoSlowBlockingSwitch,
             NoSlowBlockingBlink,
@@ -49,9 +48,9 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
         )
     }
 
-    override fun getMultiplier(forward: Float, sideways: Float): FloatFloatPair {
+    override fun getMultiplier(forward: Float, sideways: Float): Vec2 {
         if (onlySlowOnServerSide && isBlocking) {
-            return forward pair sideways
+            return Vec2(forward, sideways)
         }
 
         return super.getMultiplier(forward, sideways)
@@ -64,7 +63,7 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
             }
 
             // Check if we are using a block item
-            return (player.isUsingItem && player.useItem.useAnimation == ItemUseAnimation.BLOCK) || isBlocking
+            return player.isBlockingServerside || isBlocking
         }
 
 }

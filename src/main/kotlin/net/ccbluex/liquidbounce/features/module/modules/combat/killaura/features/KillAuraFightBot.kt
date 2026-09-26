@@ -18,26 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clickScheduler
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.times
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
+import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.pow
 
 /**
  * Data class holding combat-related context
@@ -60,13 +60,13 @@ data class CombatTarget(
 /**
  * A fight bot that handles combat and movement automatically
  */
-object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAura, "FightBot", false) {
+object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura, "FightBot", false) {
 
     private val opponentRange by float("OpponentRange", 3f, 0.1f..10f)
     private val dangerousYawDiff by float("DangerousYaw", 55f, 0f..90f, suffix = "°")
     private val runawayOnCooldown by boolean("RunawayOnCooldown", true)
 
-    internal object TargetFilter : Configurable("TargetFilter") {
+    internal object TargetFilter : ValueGroup("TargetFilter") {
         internal var range by float("Range", 50f, 10f..100f)
         internal var visibleOnly by boolean("VisibleOnly", true)
         internal var notWhenVoid by boolean("NotWhenVoid", true)
@@ -75,7 +75,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
     /**
      * Configuration for leader following functionality
      */
-    internal object LeaderFollower : ToggleableConfigurable(this, "Leader", false) {
+    internal object LeaderFollower : ToggleableValueGroup(this, "Leader", false) {
         internal val username by text("Username", "")
         internal val radius by float("Radius", 5f, 2f..10f)
     }
@@ -87,7 +87,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
     fun updateTarget() {
         targetTracker.select { entity ->
-            if (player.squaredBoxedDistanceTo(entity) > TargetFilter.range.pow(2)) {
+            if (player.squaredBoxedDistanceTo(entity) > TargetFilter.range.sq()) {
                 return@select null
             }
 
@@ -111,12 +111,12 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         val combatTarget = targetTracker.target?.let { entity ->
             val distance = playerPosition.distanceTo(entity.position())
-            val range = min(ModuleKillAura.range, distance.toFloat())
+            val range = min(ModuleKillAura.range.interactionRange, distance.toFloat())
             val outOfDistance = distance > opponentRange
 
             val targetRotation = entity.rotation.copy(pitch = 0.0f)
             val requiredTargetRotation = Rotation.lookingAt(playerPosition, entity.eyePosition).copy(pitch = 0.0f)
-            val outOfDanger = targetRotation.angleTo(requiredTargetRotation) > dangerousYawDiff
+            val outOfDanger = abs(targetRotation.rotationDeltaTo(requiredTargetRotation).deltaYaw) > dangerousYawDiff
 
             CombatTarget(entity, distance, range, outOfDistance, targetRotation, requiredTargetRotation, outOfDanger)
         }
@@ -143,7 +143,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         // Otherwise handle combat movement
         val combatTarget = context.combatTarget ?: return null
-        return if (runawayOnCooldown && !clickScheduler.willClickAt()) {
+        return if (runawayOnCooldown && !clicker.willClickAt()) {
             calculateRunawayPosition(context, combatTarget)
         } else {
             calculateAttackPosition(context, combatTarget)
@@ -176,7 +176,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
     override fun getMovementRotation(): Rotation {
         val movementRotation = super.getMovementRotation()
         val movementPitch = targetTracker.target?.let { entity ->
-            Rotation.lookingAt(point = entity.box.center, from = player.eyePosition).pitch
+            Rotation.lookingAt(point = entity.boundingBox.center, from = player.eyePosition).pitch
         } ?: return movementRotation
 
         return movementRotation.copy(pitch = movementPitch)
@@ -186,7 +186,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
         return (-180..180 step 45)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = leaderPosition.add(rotation.directionVector * LeaderFollower.radius.toDouble())
+                val position = leaderPosition.fma(LeaderFollower.radius.toDouble(), rotation.directionVector)
                 ModuleDebug.debugGeometry(
                     this,
                     "Possible Position $yaw",
@@ -198,28 +198,28 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
     }
 
     private fun calculateRunawayPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
-        return context.playerPosition.add(
-            combatTarget.requiredTargetRotation.directionVector * combatTarget.range.toDouble()
+        return context.playerPosition.fma(
+            combatTarget.range.toDouble(), combatTarget.requiredTargetRotation.directionVector
         )
     }
 
     private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
         val target = combatTarget.entity
-        val targetLookPosition = target.position().add(
-            combatTarget.targetRotation.directionVector * combatTarget.range.toDouble()
+        val targetLookPosition = target.position().fma(
+            combatTarget.range.toDouble(), combatTarget.targetRotation.directionVector
         )
 
         return (-180..180 step 10)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = target.position().add(rotation.directionVector * combatTarget.range.toDouble())
+                val position = target.position().fma(combatTarget.range.toDouble(), rotation.directionVector)
 
                 // Check if this point collides with a block
                 if (player.doesCollideAt(position)) {
                     return@mapNotNull null
                 }
 
-                val isInAngle = rotation.angleTo(combatTarget.targetRotation) <= dangerousYawDiff
+                val isInAngle = abs(rotation.rotationDeltaTo(combatTarget.targetRotation).deltaYaw) <= dangerousYawDiff
                 ModuleDebug.debugGeometry(
                     this,
                     "Possible Position $yaw",

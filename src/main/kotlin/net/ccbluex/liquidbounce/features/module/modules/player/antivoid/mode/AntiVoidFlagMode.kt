@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.until
@@ -30,7 +30,7 @@ object AntiVoidFlagMode : AntiVoidMode("Flag") {
     private val height by float("Height", 0.42f, 0.01f..10.0f)
     private val silent by boolean("Silent", false)
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleAntiVoid.mode
 
     override fun rescue(): Boolean {

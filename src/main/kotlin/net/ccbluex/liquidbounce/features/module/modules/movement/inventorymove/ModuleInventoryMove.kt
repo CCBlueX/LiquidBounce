@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.fastIterable
 import net.ccbluex.fastutil.referenceBooleanArrayMapOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -32,29 +34,23 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
-import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.closeInventorySilently
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.minecraft.client.KeyMapping
-import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.client.gui.components.EditBox
+import net.minecraft.client.gui.components.MultiLineEditBox
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
-import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
-import net.minecraft.world.item.CreativeModeTabs
-import org.lwjgl.glfw.GLFW
+import net.minecraft.world.entity.player.Input
 
 /**
  * InventoryMove module
@@ -67,11 +63,19 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
     @Suppress("unused")
-    enum class Behaviour(override val choiceName: String) : NamedChoice {
-        NORMAL("Normal"),
-        SAFE("Safe"), // disable clicks while moving
-        UNDETECTABLE("Undetectable"), // stop in inventory
-        STOP_ON_ACTION("StopOnAction"), // stop input on inventory action
+    enum class Behaviour(override val tag: String, val handleScreens: (Screen) -> Boolean) : Tagged {
+        NORMAL("Normal", { !it.isInEditBox() && !ModuleClickGui.isInSearchBar }),
+        // disable clicks while moving
+        SAFE("Safe", { NORMAL.handleScreens(it) && (it !is AbstractContainerScreen<*> || it is InventoryScreen) }),
+        // stop in inventory
+        UNDETECTABLE("Undetectable", { NORMAL.handleScreens(it) && it !is AbstractContainerScreen<*> }),
+        // stop input on inventory action
+        STOP_ON_ACTION("StopOnAction", { NORMAL.handleScreens(it) })
+    }
+
+    private fun Screen.isInEditBox() = when (this.focused) {
+        is EditBox, is MultiLineEditBox -> true
+        else -> false
     }
 
     private val passthroughSneak by boolean("PassthroughSneak", false)
@@ -87,14 +91,6 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
             mc.options.keyShift, false,
         )
 
-    /**
-     * Restricts user from clicking while moving in inventory.
-     */
-    val doNotAllowClicking
-        get() = behavior == Behaviour.SAFE && movementKeys.fastIterable().any {
-            it.booleanValue && shouldHandleInputs(it.key)
-        }
-
     init {
         tree(InventoryMoveSprintControlFeature)
         tree(InventoryMoveSneakControlFeature)
@@ -102,21 +98,39 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         tree(InventoryMoveBlinkFeature)
     }
 
-    fun shouldHandleInputs(keyBinding: KeyMapping): Boolean {
-        val screen = mc.screen ?: return true
+    @JvmStatic
+    fun shouldHandleInputs(key: KeyMapping, screen: Screen? = mc.gui.screen()): Boolean {
+        if (!running) return false
+        val screen = screen ?: return true
 
-        if (!running || screen is ChatScreen || screen.isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
-            return false
-        }
-
-        if (keyBinding == mc.options.keyShift && !passthroughSneak) {
-            return false
-        }
+        when (key) {
+            mc.options.keyShift -> passthroughSneak
+            mc.options.keyJump, mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight,
+            mc.options.keySprint -> true
+            else -> false
+        }.also { if (!it) return false }
 
         // If we are in a handled screen, we should handle the inputs only if the undetectable option is not enabled
-        return behavior == Behaviour.NORMAL || screen !is AbstractContainerScreen<*>
-            || behavior == Behaviour.SAFE && screen is InventoryScreen
-            || behavior == Behaviour.STOP_ON_ACTION
+        return behavior.handleScreens(screen)
+    }
+
+    @JvmStatic
+    fun shouldHandleInputs(event: KeyEvent) = KeyMapping.MAP[InputConstants.getKey(event)]
+        ?.any(::shouldHandleInputs)
+        ?: false
+
+    @Suppress("unused")
+    private val keyHandler = handler<KeyboardKeyEvent> { event ->
+        if (behavior !== Behaviour.SAFE) return@handler
+
+        val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
+            ?: return@handler
+        val pressed = shouldHandleInputs(key) && !event.isReleased
+        movementKeys.put(key, pressed)
+
+        if (isInInventoryScreen && InventoryManager.isInventoryOpenServerSide && pressed) {
+            network.sendCloseInventory()
+        }
     }
 
     private val delayedContainerPackets = mutableListOf<Packet<*>>()
@@ -127,61 +141,37 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     }
 
     @Suppress("unused")
-    private val movementInputHandler = handler<MovementInputEvent>(READ_FINAL_STATE) {
-        if (delayedContainerPackets.isEmpty() ||
-            behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
-            return@handler
-        }
+    private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) { event ->
+        if (delayedContainerPackets.isEmpty()) return@handler
 
         val packetsSnapshot = delayedContainerPackets.toTypedArray()
         delayedContainerPackets.clear()
-        it.sneak = false
-        it.jump = false
-        it.directionalInput = DirectionalInput.NONE
+        event.sneak = false
+        event.jump = false
+        event.directionalInput = DirectionalInput.NONE
         // `schedule` will force the Runnable to be run in next loop
         mc.schedule { packetsSnapshot.forEach(::sendPacketSilently) }
     }
 
     @Suppress("unused")
+    private val playerContainerInputHandler = handler<PlayerContainerInputEvent> { event ->
+        if (behavior !== Behaviour.SAFE) return@handler
+
+        if (event.containerId != 0) return@handler
+        if (movementKeys.fastIterable().any { it.booleanValue && shouldHandleInputs(it.key) }) event.cancelEvent()
+    }
+
+    @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
-        if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
-            return@handler
-        }
+        if (behavior !== Behaviour.STOP_ON_ACTION) return@handler
 
         val packet = event.packet
-
-        if (isContainerPacket(packet) && player.input.keyPresses.any) {
+        if (packet.isC2SContainerPacket() && player.input.keyPresses != Input.EMPTY) {
             event.cancelEvent()
             // Here only be called from render thread because [packet] is c2s
             delayedContainerPackets += packet
         }
     }
 
-    @Suppress("unused")
-    private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
-            ?: return@handler
-        val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
-        movementKeys.put(key, pressed)
-
-        if (behavior == Behaviour.SAFE && isInInventoryScreen && InventoryManager.isInventoryOpenServerSide
-            && pressed) {
-            closeInventorySilently()
-        }
-    }
-
-    /**
-     * Checks if the player is in the creative search field
-     */
-    private fun Screen.isInCreativeSearchField() =
-        this is CreativeModeInventoryScreen &&
-            CreativeModeInventoryScreen.selectedTab == CreativeModeTabs.searchTab()
-
-    internal fun isContainerPacket(packet: Packet<*>?) =
-        packet is ServerboundContainerClickPacket ||
-        packet is ServerboundContainerButtonClickPacket ||
-        packet is ServerboundSetCreativeModeSlotPacket ||
-        packet is ServerboundContainerSlotStateChangedPacket ||
-        packet is ServerboundContainerClosePacket
 
 }

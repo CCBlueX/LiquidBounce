@@ -28,23 +28,19 @@ import net.ccbluex.liquidbounce.utils.client.player
 /**
  * https://github.com/ViaVersion/ViaFabricPlus/blob/56c4959000e68d77fd415b89af7a95478d825079/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinClientPlayerEntity.java#L251-L264
  */
-class PlayerSneakPacket private constructor(val sneaking: Boolean) : LegacyPacket {
+enum class PlayerSneakPacket(@JvmField val sneaking: Boolean) : LegacyPacket {
 
-    override val protocol = Protocol1_21_5To1_21_6::class.java
+    START(true),
+    STOP(false);
 
-    override val packetType = ServerboundPackets1_21_5.PLAYER_COMMAND
+    override val protocol get() = Protocol1_21_5To1_21_6::class.java
+
+    override val packetType get() = ServerboundPackets1_21_5.PLAYER_COMMAND
 
     override fun write(packetWrapper: PacketWrapper) {
         packetWrapper.write(Types.VAR_INT, player.id)
         packetWrapper.write(Types.VAR_INT, if (sneaking) 0 else 1)
         packetWrapper.write(Types.VAR_INT, 0) // No data
-    }
-
-    companion object {
-        @JvmField
-        val START = PlayerSneakPacket(true)
-        @JvmField
-        val STOP = PlayerSneakPacket(false)
     }
 
 }

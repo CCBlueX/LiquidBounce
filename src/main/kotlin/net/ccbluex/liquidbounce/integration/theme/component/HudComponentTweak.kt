@@ -19,12 +19,14 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
  * A set of tweaks that can be applied to the Original HUD by the component
  */
-enum class HudComponentTweak(override val choiceName: String) : NamedChoice {
+@AddonApi
+enum class HudComponentTweak(override val tag: String) : Tagged {
 
     /**
      * Disables the Item Hotbar and draws only the items instead
@@ -42,7 +44,8 @@ enum class HudComponentTweak(override val choiceName: String) : NamedChoice {
     DISABLE_HELD_ITEM_TOOL_TIP("disableHeldItemToolTip"),
     DISABLE_OVERLAY_MESSAGE("disableOverlayMessage"),
     DISABLE_STATUS_EFFECT_OVERLAY("disableStatusEffectOverlay"),
-    DISABLE_LOCATOR_BAR("disableLocatorBar");
+    DISABLE_LOCATOR_BAR("disableLocatorBar"),
+    DISABLE_SUBTITLE_OVERLAY("disableSubtitleOverlay");
 
 
 }

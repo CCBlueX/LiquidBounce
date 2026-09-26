@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.TreeMap
 
+@AddonApi
 object ModuleCategories {
 
     private val registry = TreeMap<String, ModuleCategory>(String.CASE_INSENSITIVE_ORDER)
@@ -34,7 +37,7 @@ object ModuleCategories {
     val MOVEMENT = register(ModuleCategory("Movement"))
 
     @JvmField
-    val RENDER = register(ModuleCategory("Render"))
+    val RENDER = register(ModuleCategory("Render", inclusionGroup = OptionalInclusion.RENDER))
 
     @JvmField
     val WORLD = register(ModuleCategory("World"))
@@ -46,25 +49,25 @@ object ModuleCategories {
     val EXPLOIT = register(ModuleCategory("Exploit"))
 
     @JvmField
-    val FUN = register(ModuleCategory("Fun"))
-
-    /**
-     * A temporary category for client-related modules, since we don't have a client settings UI yet.
-     */
-    @JvmField
-    val CLIENT = register(ModuleCategory("Client"))
+    val FUN = register(ModuleCategory("Fun", inclusionGroup = OptionalInclusion.FUN))
 
     @JvmStatic
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
 
     @JvmStatic
-    private fun register(category: ModuleCategory): ModuleCategory {
-        if (registry.put(category.choiceName, category) != null) {
-            error("A module category with the name '${category.choiceName}' is already registered!")
+    fun register(category: ModuleCategory): ModuleCategory {
+        if (registry.putIfAbsent(category.tag, category) != null) {
+            error("A module category with the name '${category.tag}' is already registered!")
         }
 
         return category
     }
+
+    /**
+     * Modules filed under [category] must be removed first.
+     */
+    @JvmStatic
+    fun unregister(category: ModuleCategory): Boolean = registry.remove(category.tag, category)
 
     @JvmStatic
     fun byName(name: String): ModuleCategory? {

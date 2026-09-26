@@ -19,25 +19,25 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.canStep
@@ -53,7 +53,7 @@ import net.minecraft.stats.Stats
 
 object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
-    var modes = choices("Mode", Instant, arrayOf(
+    private val modes = choices("Mode", Instant, arrayOf(
         Instant,
         Legit,
         Vulcan286,
@@ -61,8 +61,8 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         Hypixel
     )).apply { tagBy(this) }
 
-    object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable<Choice>
+    private object Legit : Mode("Legit") {
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         @Suppress("unused")
@@ -72,9 +72,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
     }
 
-    object Instant : Choice("Instant") {
+    private object Instant : Mode("Instant") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         /**
@@ -90,7 +90,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
          * PlayerMoveC2SPacket 206.86667393775122 63.024424088213685 149.86882962108763 0.0 0.0 false
          * PlayerMoveC2SPacket 206.73323484244284 63.0 149.86938899209406 0.0 0.0 true
          */
-        private val jumpOrder = arrayOf(
+        private val jumpOrder = doubleArrayOf(
             0.0, // This is for the sake of configuration simplicity. A normal human considers 0 to be NOTHING.
             0.41999998688698,
             0.7531999805212,
@@ -119,7 +119,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private var ticksWait = 0
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (ticksWait > 0) {
                 ticksWait--
             }
@@ -180,9 +180,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    object Vulcan286 : Choice("Vulcan286") {
+    private object Vulcan286 : Mode("Vulcan286") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var stepCounter = 0
@@ -198,7 +198,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                 waitTicks(2)
                 if (stepCounter % 2 == 0) {
                     player.deltaMovement.y = 0.24680001947880004
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.2))
+                    player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.2)
                 }
                 waitTicks(1)
                 if (stepCounter % 2 == 0) {
@@ -225,9 +225,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
-    object BlocksMC : Choice("BlocksMC") {
+    private object BlocksMC : Mode("BlocksMC") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
         private var baseTimer by float("BaseTimer", 3.0f, 0.1f..5.0f)
@@ -248,7 +248,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                 waitTicks(1)
                 player.deltaMovement.y = 0.25
                 waitTicks(2)
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.281))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.281)
                 player.deltaMovement.y -= player.y % 1.0
                 Timer.requestTimerSpeed(recoveryTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 2)
                 stepping = false
@@ -256,9 +256,9 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         }
 
         @Suppress("unused")
-        private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+        private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
             if (event.origin == TransferOrigin.OUTGOING && stepping) {
-                event.action = PacketQueueManager.Action.QUEUE
+                event.action = BlinkManager.Action.QUEUE
             }
         }
 
@@ -275,13 +275,13 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    object Hypixel : Choice("Hypixel") {
+    private object Hypixel : Mode("Hypixel") {
 
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        val alternateBypass by boolean("AlternateBypass", false)
-        val spoof by boolean("Spoof", false)
+        private val alternateBypass by boolean("AlternateBypass", false)
+        private val spoof by boolean("Spoof", false)
 
         private var stepping = false
 
@@ -318,13 +318,13 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                     }
                 }
                 stepping = false
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.1838601407459074))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.1838601407459074)
             }
         }
 
         @Suppress("unused")
         private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-            if(spoof && player.airTicks == 8) {
+            if (spoof && player.airTicks == 8) {
                 event.ground = true
             }
         }

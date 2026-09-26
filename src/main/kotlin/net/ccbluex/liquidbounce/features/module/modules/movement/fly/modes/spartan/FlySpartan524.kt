@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
@@ -34,9 +34,9 @@ import kotlin.math.sin
  * @testedOn minecraft.vagdedes.com
  * @note spartan flags less if your motion is stable, that's why we use PlayerMoveEvent
  */
-internal object FlySpartan524 : Choice("Spartan524") {
+internal object FlySpartan524 : Mode("Spartan524") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     val moveHandler = handler<PlayerMoveEvent> { event ->

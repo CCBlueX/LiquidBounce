@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.message
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -43,9 +43,9 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn localhost
  * @note ONLY WORKS ON 1.13+ SERVERS
  */
-internal object FlyVulcan286 : Choice("Vulcan286-113") {
+internal object FlyVulcan286 : Mode("Vulcan286-113") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = modes
 
     var packet: ClientboundPlayerPositionPacket? = null

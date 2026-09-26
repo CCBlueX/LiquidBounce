@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.CrosshairMode
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.render.drawCircle
 import net.minecraft.util.Mth
 
 object CrosshairCircle : CrosshairMode("Circle") {
-    private object Radius : Configurable("Radius") {
+    private object Radius : ValueGroup("Radius") {
         val radius by floatRange("Range", 3f..5f, 0f..25f)
         val dynamicRadiusMultiplier by float("DynamicRadiusMultiplier", 1f, 0f..5f)
     }

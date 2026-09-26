@@ -18,26 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
-import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
-object CriticalsBlink : Choice("Blink") {
+object CriticalsBlink : Mode("Blink") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleCriticals.modes
 
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
@@ -49,13 +51,13 @@ object CriticalsBlink : Choice("Blink") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        enemyInRange = world.findEnemy(0.0f..range) != null
+        enemyInRange = world.findEnemy(0.0f, range) != null
     }
 
     @Suppress("unused")
-    private val fakeLagHandler = handler<QueuePacketEvent> { event ->
+    private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && !wouldDoCriticalHit(ignoreSprint = true) && enemyInRange) {
-            if (PacketQueueManager.isAboveTime(nextDelay.toLong())) {
+            if (BlinkManager.isAboveTime(nextDelay.toLong())) {
                 nextDelay = delay.random()
                 return@handler
             }
@@ -65,9 +67,11 @@ object CriticalsBlink : Choice("Blink") {
                 is ServerboundPlayerActionPacket,
                 is ServerboundSignUpdatePacket,
                 is ServerboundInteractPacket,
-                is ServerboundSwingPacket,
-                is ServerboundResourcePackPacket -> PacketQueueManager.Action.PASS
-                else -> PacketQueueManager.Action.QUEUE
+                is ServerboundAttackPacket,
+                is ServerboundSpectatorActionPacket,
+                is ServerboundPunchPacket,
+                is ServerboundResourcePackPacket -> BlinkManager.Action.PASS
+                else -> BlinkManager.Action.QUEUE
             }
             isInState = true
         } else {

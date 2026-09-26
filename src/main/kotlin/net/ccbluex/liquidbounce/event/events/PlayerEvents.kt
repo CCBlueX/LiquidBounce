@@ -19,36 +19,41 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.tags.TagKey
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.phys.Vec3
 
 // Entity events bound to client-user entity
-@Nameable("healthUpdate")
+@Tag("healthUpdate")
 class HealthUpdateEvent(val health: Float, val food: Int, val saturation: Float, val previousHealth: Float) : Event()
 
-@Nameable("death")
+@Tag("death")
 object DeathEvent : Event(), WebSocketEvent
 
-@Nameable("playerTick")
+@AddonApi
+@Tag("playerTick")
 class PlayerTickEvent : CancellableEvent()
 
-@Nameable("playerPostTick")
+@AddonApi
+@Tag("playerPostTick")
 object PlayerPostTickEvent : Event()
 
-@Nameable("playerMovementTick")
-object PlayerMovementTickEvent : Event()
+@Tag("playerMovementTick")
+class PlayerMovementTickEvent : CancellableEvent()
 
-@Nameable("playerNetworkMovementTick")
+@AddonApi
+@Tag("playerNetworkMovementTick")
 class PlayerNetworkMovementTickEvent(
     val state: EventState,
     var x: Double,
@@ -57,51 +62,61 @@ class PlayerNetworkMovementTickEvent(
     var ground: Boolean
 ) : CancellableEvent()
 
-@Nameable("playerPushOut")
+@Tag("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
 
-@Nameable("playerMove")
+@AddonApi
+@Tag("playerMove")
 class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
 
-@Nameable("playerJump")
+@AddonApi
+@Tag("playerJump")
 class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
 
-@Nameable("playerAfterJump")
+@Tag("playerAfterJump")
 object PlayerAfterJumpEvent : Event()
 
-@Nameable("playerUseMultiplier")
+@Tag("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
 
-@Nameable("playerSneakMultiplier")
+@Tag("playerSneakMultiplier")
 class PlayerSneakMultiplier(var multiplier: Double) : Event()
 
 /**
  * Warning: UseHotbarSlotOrOffHand won't stimulate this event
  */
-@Nameable("playerInteractItem")
-class PlayerInteractItemEvent : CancellableEvent()
+@Tag("playerInteractItem")
+class PlayerInteractItemEvent(val player: Player, val hand: InteractionHand) : CancellableEvent()
 
-@Nameable("playerInteractedItem")
+@Tag("playerInteractedItem")
 class PlayerInteractedItemEvent(
     val player: Player,
     val hand: InteractionHand,
     val actionResult: InteractionResult,
 ) : Event()
 
-@Nameable("playerStrafe")
+@Tag("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3, val speed: Float, val yaw: Float, var velocity: Vec3) : Event()
 
-@Nameable("playerStride")
+@Tag("playerStride")
 class PlayerStrideEvent(var strideForce: Float) : Event()
 
-@Nameable("playerSafeWalk")
+@Tag("playerSafeWalk")
 class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 
-@Nameable("playerStep")
+@Tag("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
-@Nameable("playerStepSuccess")
+@Tag("playerStepSuccess")
 class PlayerStepSuccessEvent(val movementVec: Vec3, var adjustedVec: Vec3) : Event()
 
-@Nameable("playerFluidCollisionCheck")
+@Tag("playerFluidCollisionCheck")
 class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()
+
+@Tag("playerContainerInput")
+class PlayerContainerInputEvent(
+    val containerId: Int,
+    val slot: Int,
+    val button: Int,
+    val input: ContainerInput,
+) : CancellableEvent()

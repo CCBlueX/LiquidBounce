@@ -43,7 +43,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .notifications {
     display: grid;
@@ -53,7 +52,7 @@
   .notification {
     grid-row-start: 1;
     grid-column-start: 1;
-    background-color: rgba($menu-base-color, 0.68);
+    background-color: var(--menu-header-notification-background-color);
     border-radius: 5px;
     display: grid;
     grid-template-areas:
@@ -65,7 +64,7 @@
     min-width: 350px;
 
     .title {
-      color: $menu-text-color;
+      color: var(--menu-text-color);
       font-weight: 600;
       font-size: 18px;
       grid-area: b;
@@ -73,7 +72,7 @@
     }
 
     .message {
-      color: $menu-text-dimmed-color;
+      color: var(--menu-text-dimmed-color);
       font-weight: 500;
       grid-area: c;
     }
@@ -82,14 +81,14 @@
       grid-area: a;
       height: 65px;
       width: 65px;
-      background-color: $accent-color;
+      background-color: var(--menu-header-notification-icon-background-color);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 10px;
 
       &.error {
-        background-color: $menu-error-color;
+        background-color: var(--menu-header-notification-icon-error-background-color);
       }
     }
   }

@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 
-object ScaffoldCeilingFeature : ToggleableConfigurable(ModuleScaffold, "Ceiling", false) {
-    fun canConstructCeiling() = !player.blockPosition().below().getState()!!.isAir
+object ScaffoldCeilingFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Ceiling", false) {
+    fun canConstructCeiling() = !player.blockPosition().below().stateOrEmpty.isAir
 }

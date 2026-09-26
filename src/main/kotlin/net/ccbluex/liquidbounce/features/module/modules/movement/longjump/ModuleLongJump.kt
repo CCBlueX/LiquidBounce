@@ -31,10 +31,6 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     val mode = choices(
         "Mode", NoCheatPlusBoost, arrayOf(
             // NoCheatPlus
@@ -64,7 +60,7 @@ object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
 
         // AutoJump
         if (autoJump && player.onGround() && player.moving
-            && mode.activeChoice != NoCheatPlusBow) {
+            && mode.activeMode != NoCheatPlusBow) {
             player.jumpFromGround()
             jumped = true
         }

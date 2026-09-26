@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -30,10 +30,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.item.Items
 
 /**
  * ElytraFly module
@@ -44,7 +44,7 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
     private val instant by multiEnumChoice("Instant", Instant.STOP)
 
-    object Speed : ToggleableConfigurable(this, "Speed", true) {
+    object Speed : ToggleableValueGroup(this, "Speed", true) {
         val vertical by float("Vertical", 0.5f, 0.0f..5f)
         val horizontal by float("Horizontal", 1f, 0.0f..8f)
     }
@@ -106,7 +106,7 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
         if (player.isFallFlying) {
             // we're already flying, yay
-            val activeChoice = modes.activeChoice
+            val activeChoice = modes.activeMode
             if (Speed.enabled) {
                 activeChoice.onTick()
             }
@@ -136,6 +136,9 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
         }
     }
 
+    /**
+     * @see net.minecraft.world.entity.LivingEntity.canGlideUsing
+     */
     fun shouldNotOperate(): Boolean {
         if (player.vehicle != null) {
             return true
@@ -149,12 +152,12 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
         val chestSlot = player.getItemBySlot(EquipmentSlot.CHEST)
 
         // If the player doesn't have an elytra in the chest slot or is in fluids
-        return chestSlot.item != Items.ELYTRA || chestSlot.nextDamageWillBreak()
+        return !chestSlot.isGlider || chestSlot.nextDamageWillBreak()
     }
 
     private enum class Instant(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         START("Start"),
         STOP("Stop")
     }

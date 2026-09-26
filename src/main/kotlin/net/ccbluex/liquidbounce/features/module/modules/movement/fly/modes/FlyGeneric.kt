@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -32,11 +32,11 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -45,18 +45,18 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import kotlin.jvm.optionals.getOrNull
 
-internal object FlyVanilla : Choice("Vanilla") {
+internal object FlyVanilla : Mode("Vanilla") {
 
     private val glide by float("Glide", 0.0f, -1f..1f)
 
     private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
 
-    object BaseSpeed : Configurable("BaseSpeed") {
+    object BaseSpeed : ValueGroup("BaseSpeed") {
         val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 0.44f, 0.1f..10f)
     }
 
-    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+    object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
         val horizontalSpeed by float("Horizontal", 1f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 1f, 0.1f..10f)
     }
@@ -66,7 +66,7 @@ internal object FlyVanilla : Choice("Vanilla") {
         tree(SprintSpeed)
     }
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     @Suppress("unused")
@@ -77,10 +77,10 @@ internal object FlyVanilla : Choice("Vanilla") {
         val vSpeed =
             if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = hSpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
-            mc.options.keyJump.isDown -> vSpeed.toDouble()
-            mc.options.keyShift.isDown -> (-vSpeed).toDouble()
+            mc.options.keyJump.isDown && !mc.options.keyShift.isDown -> vSpeed.toDouble()
+            mc.options.keyShift.isDown && !mc.options.keyJump.isDown -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
@@ -95,14 +95,14 @@ internal object FlyVanilla : Choice("Vanilla") {
 
 }
 
-internal object FlyCreative : Choice("Creative") {
+internal object FlyCreative : Mode("Creative") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private val speed by float("Speed", 0.1f, 0.1f..5f)
 
-    private object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+    private object SprintSpeed : ToggleableValueGroup(this, "SprintSpeed", true) {
         val speed by float("Speed", 0.1f, 0.1f..5f)
     }
 
@@ -116,15 +116,11 @@ internal object FlyCreative : Choice("Creative") {
 
     private val forceFlight by boolean("ForceFlight", true)
 
-    override fun enable() {
-        player.abilities.mayfly = true
-    }
-
     private fun shouldFlyDown(): Boolean {
         if (!bypassVanillaCheck) return false
         if (player.tickCount % 40 != 0) return false
 
-        // check if the player is above a block or in mid-air
+        // check if the player is above a block or in midair
         // if the player is right above a block, we don't need to fly down
         if (world.getBlockStates(player.boundingBox.move(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
 
@@ -154,15 +150,14 @@ internal object FlyCreative : Choice("Creative") {
     }
 
     override fun disable() {
-        player.abilities.mayfly = false
         player.abilities.flying = false
     }
 
 }
 
-internal object FlyAirWalk : Choice("AirWalk") {
+internal object FlyAirWalk : Mode("AirWalk") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val onGround by boolean("OnGround", true)
@@ -191,9 +186,9 @@ internal object FlyAirWalk : Choice("AirWalk") {
  * Takes any kind of damage, preferably explosion damage.
  * Might bypass some anti-cheats.
  */
-internal object FlyExplosion : Choice("Explosion") {
+internal object FlyExplosion : Mode("Explosion") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val vertical by float("Vertical", 4f, 0f..10f)
@@ -210,7 +205,7 @@ internal object FlyExplosion : Choice("Explosion") {
     val repeatable = tickHandler {
         if (strafeSince > 0) {
             if (!player.onGround()) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafeSince.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = strafeSince.toDouble())
                 strafeSince -= strafeDecrease
             } else {
                 strafeSince = 0f
@@ -244,9 +239,9 @@ internal object FlyExplosion : Choice("Explosion") {
 
 }
 
-internal object FlyJetpack : Choice("Jetpack") {
+internal object FlyJetpack : Mode("Jetpack") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     val repeatable = handler<GameTickEvent> {

@@ -19,34 +19,29 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.resources.Identifier
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
 
-object MurderMysteryInfectionMode : SkinBasedMurderMysteryMode("Infection") {
+object MurderMysteryInfectionMode : UuidBasedMurderMysteryMode("Infection") {
 
-    val rep =
-        tickHandler {
-            world.players()
-                .filterIsInstance<AbstractClientPlayer>()
-                .filter {
-                    it.isUsingItem && player.handItems.any { stack -> stack.item is BowItem } ||
-                        player.handItems.any { stack -> stack.item == Items.ARROW }
-                }
-                .forEach { playerEntity ->
-                    handleHasBow(playerEntity, playerEntity.skin.body.texturePath())
-                }
-        }
+    val tickHandler = handler<GameTickEvent> {
+        world.players()
+            .filter {
+                it.isUsingItem && player.handItems.any { stack -> stack.item is BowItem } ||
+                    player.handItems.any { stack -> stack.item == Items.ARROW }
+            }
+            .forEach { playerEntity ->
+                handleHasBow(playerEntity)
+            }
+    }
 
-    override fun handleHasSword(
-        entity: AbstractClientPlayer,
-        locationSkin: Identifier,
-    ) {
-        if (murdererSkins.add(locationSkin.path) && murdererSkins.size == 1) {
+    override fun handleHasSword(entity: AbstractClientPlayer) {
+        if (murdererPlayers.add(entity.gameProfile.id) && murdererPlayers.size == 1) {
             chat(entity.gameProfile.name + " is the first infected.")
 
             ModuleMurderMystery.playHurt = true

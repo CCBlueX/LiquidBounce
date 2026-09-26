@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -27,19 +27,18 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
  * Sprint module
@@ -49,7 +48,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
 
-    private enum class SprintMode(override val choiceName: String) : NamedChoice {
+    private enum class SprintMode(override val tag: String) : Tagged {
         LEGIT("Legit"),
         OMNIDIRECTIONAL("Omnidirectional"),
         OMNIROTATIONAL("Omnirotational"),
@@ -102,12 +101,12 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
     private val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
             // Allows us to sprint boost in every direction
-            event.yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
+            event.yaw = player.getMovementDirectionOfInput()
         }
     }
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotations = RotationsValueGroup(this)
 
     @Suppress("unused")
     private val omniRotationalHandler = handler<GameTickEvent> {
@@ -116,17 +115,18 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
             return@handler
         }
 
-        val yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
+        val yaw = player.getMovementDirectionOfInput()
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
         val rotation = Rotation(yaw, player.xRot)
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
+        RotationManager.setRotationTarget(rotations.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
     private fun shouldPreventSprint(): Boolean {
-        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem) {
+        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem ||
+            StopOn.SNEAKING in stopOn && player.isShiftKeyDown) {
             return true
         }
 
@@ -142,15 +142,16 @@ object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
             && !hasForwardMovement
     }
 
-    private enum class Ignore(override val choiceName: String) : NamedChoice {
+    private enum class Ignore(override val tag: String) : Tagged {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
         COLLISION("Collision"),
     }
 
-    private enum class StopOn(override val choiceName: String) : NamedChoice {
+    private enum class StopOn(override val tag: String) : Tagged {
         GROUND("Ground"),
         AIR("Air"),
+        SNEAKING("Sneaking"),
         USING_ITEM("UsingItem"),
     }
 }

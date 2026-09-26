@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,9 +33,9 @@ import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
-internal object NoSlowBlockingReuse : Choice("Reuse") {
+internal object NoSlowBlockingReuse : Mode("Reuse") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = modes
 
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -113,7 +113,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
         }
     }
 
-    private enum class TimingMode(override val choiceName: String) : NamedChoice {
+    private enum class TimingMode(override val tag: String) : Tagged {
         PRE_POST("PreAndPost"),
         PRE_TICK("Pre"),
         POST_TICK("Post")

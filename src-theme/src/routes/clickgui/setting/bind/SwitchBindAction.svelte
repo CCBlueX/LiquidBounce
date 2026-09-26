@@ -48,7 +48,6 @@
 </button>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
   @use "../../icon-settings-expand" as *;
 
   @keyframes jiggle {
@@ -69,7 +68,7 @@
 
     &.arrow-right::after {
       @include icon-settings-expand($size: 10px, $right: auto);
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-text-dimmed-color);
     }
   }
 
@@ -78,7 +77,7 @@
 
     .chosen {
       font-weight: 500;
-      color: $clickgui-text-color;
+      color: var(--clickgui-text-color);
       font-size: 12px;
       text-overflow: ellipsis;
       white-space: nowrap;

@@ -25,26 +25,28 @@ import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
+import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.script.asArray
-import net.ccbluex.liquidbounce.script.asDoubleArray
-import net.ccbluex.liquidbounce.script.asIntArray
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import java.util.function.BooleanSupplier
 import java.util.function.Consumer
-import java.util.function.Function
 import java.util.function.Supplier
+import java.util.function.UnaryOperator
 import kotlin.reflect.KProperty
-import org.graalvm.polyglot.Value as PolyglotValue
 
-typealias ValueListener<T> = Function<T, T>
+typealias ValueListener<T> = UnaryOperator<T>
 typealias ValueChangedListener<T> = Consumer<T>
 
 /**
@@ -57,6 +59,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
  * Value based on generics and support for readable names and descriptions.
  */
 @Suppress("TooManyFunctions")
+@AddonApi
 open class Value<T : Any>(
     @SerializedName("name") val name: String,
     @Exclude @ProtocolExclude val aliases: List<String> = emptyList(),
@@ -64,7 +67,7 @@ open class Value<T : Any>(
     @Exclude val valueType: ValueType,
 
     /**
-     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.nesting.Configurable].
+     * If true, the description won't be bound to any [net.ccbluex.liquidbounce.config.types.group.ValueGroup].
      */
     @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
@@ -90,17 +93,25 @@ open class Value<T : Any>(
     fun asStateFlow(): StateFlow<T> = stateFlow
 
     /**
-     * If true, value will not be included in generated public config
-     *
-     * @see
+     * If true, value will not be included in generated public config.
+     * Can be set using [doNotIncludeWhen] or [doNotIncludeAlways].
      */
     @Exclude
     @ProtocolExclude
-    var doNotInclude = { false }
+    var doNotInclude: BooleanSupplier = { false }
         private set
 
     /**
-     * If true, value will not be included in generated RestAPI config
+     * Group for optional inclusion during configuration saving.
+     * Managed by [AutoConfig].
+     */
+    @Exclude
+    @ProtocolExclude
+    var inclusionGroup: OptionalInclusion? = null
+        private set
+
+    /**
+     * If true, value will not be included in generated RestAPI config.
      */
     @Exclude
     @ProtocolExclude
@@ -108,12 +119,49 @@ open class Value<T : Any>(
         private set
 
     /**
-     * If true, value will always keep [inner] equals [defaultValue]
+     * If true, value will always keep [inner] equals [defaultValue].
      */
     @Exclude
     @ProtocolExclude
     var isImmutable = false
         private set
+
+    /**
+     * If false, the value is neither written to nor read from config files, but still reaches the GUI.
+     * For values whose state lives elsewhere, such as another client's modules.
+     */
+    @Exclude
+    @ProtocolExclude
+    var isPersistent = true
+        private set
+
+    /**
+     * Hides the value from the GUI while false. Configs keep it either way.
+     */
+    @Exclude
+    @ProtocolExclude
+    var visibleCondition = BooleanSupplier { true }
+        private set
+
+    @Exclude
+    @ProtocolExclude
+    var hasLiteralDescription = false
+        private set
+
+    /**
+     * Checks if this value should be included in the public configuration based on
+     * its [doNotInclude] condition and [inclusionGroup].
+     */
+    fun checkIfInclude(): Boolean {
+        if (doNotInclude.asBoolean) {
+            return false
+        }
+
+        val group = inclusionGroup ?: return true
+        val includeConfiguration = AutoConfig.includeConfiguration
+
+        return group in includeConfiguration.optionalInclusions
+    }
 
     @Exclude
     var key: String? = null
@@ -122,7 +170,7 @@ open class Value<T : Any>(
 
             this.descriptionKey = value?.let {
                 if (independentDescription) {
-                    "liquidbounce.common.value.${name.toLowerCamelCase()}.description"
+                    "liquidbounce.common.${name.toLowerCamelCase()}.description"
                 } else {
                     this.key?.let { s -> "$s.description" }
                 }
@@ -158,61 +206,22 @@ open class Value<T : Any>(
 
     @JvmName("getTagValue")
     fun getTagValue(): Any = when (this) {
-        is MultiChooseListValue<*> -> "${get().size}/${choices.size}"
+        is MultiChoiceListValue<*> -> "${get().size}/${choices.size}"
         else -> getValue()
     }
 
-    @ScriptApiRequired
+    @AddonApi
     @JvmName("getValue")
     fun getValue(): Any = when (this) {
-        is ChoiceConfigurable<*> -> activeChoice.name
+        is ModeValueGroup<*> -> activeMode.name
         else -> when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> intArrayOf(v.first, v.last)
-            is NamedChoice -> v.choiceName
+            is Tagged -> v.tag
             else -> v
         }
     }
 
-    @ScriptApiRequired
-    @JvmName("setValue")
-    @Suppress("UNCHECKED_CAST")
-    fun setValue(t: PolyglotValue) = runCatching {
-        if (this is ChooseListValue<*>) {
-            setByString(t.asString())
-            return@runCatching
-        }
-
-        set(
-            when (inner) {
-                is ClosedFloatingPointRange<*> -> {
-                    val a = t.asDoubleArray()
-                    require(a.size == 2)
-                    (a.first().toFloat()..a.last().toFloat()) as T
-                }
-
-                is InputConstants.Key -> {
-                    inputByName(t.asString()) as T
-                }
-
-                is IntRange -> {
-                    val a = t.asIntArray()
-                    require(a.size == 2)
-                    (a.first()..a.last()) as T
-                }
-
-                is Float -> t.asDouble().toFloat() as T
-                is Int -> t.asInt() as T
-                is String -> t.asString() as T
-                is MutableList<*> -> t.asArray<String>().toMutableList() as T
-                is LinkedHashSet<*> -> t.asArray<String>().toMutableSet() as T
-                is Boolean -> t.asBoolean() as T
-                else -> error("Unsupported value type $inner")
-            }
-        )
-    }.onFailure {
-        logger.error("Could not set value, old value: ${this.inner}, throwable: $it")
-    }
 
     fun get() = inner
 
@@ -225,7 +234,7 @@ open class Value<T : Any>(
         set(t) { inner = it }
     }
 
-    fun set(t: T, apply: Consumer<in T>) {
+    fun set(t: T, apply: ValueChangedListener<T>) {
         var currT = t
         runCatching {
             listeners.forEach {
@@ -270,12 +279,35 @@ open class Value<T : Any>(
         doNotInclude = { true }
     }
 
-    fun doNotIncludeWhen(condition: () -> Boolean) = apply {
+    fun doNotIncludeWhen(condition: BooleanSupplier) = apply {
         doNotInclude = condition
+    }
+
+    open fun inclusionGroup(group: OptionalInclusion) = apply {
+        this.inclusionGroup = group
     }
 
     fun notAnOption() = apply {
         notAnOption = true
+    }
+
+    @AddonApi
+    fun notPersistent() = apply {
+        isPersistent = false
+    }
+
+    @AddonApi
+    fun visibleWhen(condition: BooleanSupplier) = apply {
+        visibleCondition = condition
+    }
+
+    /**
+     * Uses [text] instead of a translation key, for descriptions that come from outside LiquidBounce.
+     */
+    @AddonApi
+    fun literalDescription(text: Supplier<String?>) = apply {
+        description = text
+        hasLiteralDescription = true
     }
 
     fun independentDescription() = apply {
@@ -296,7 +328,7 @@ open class Value<T : Any>(
             try {
                 r = gson.fromJson(element, clazz) as T?
                 break
-            } catch (@Suppress("SwallowedException") e: ClassCastException) {
+            } catch (@Suppress("SwallowedException") _: ClassCastException) {
                 clazz = clazz.superclass
             }
         }

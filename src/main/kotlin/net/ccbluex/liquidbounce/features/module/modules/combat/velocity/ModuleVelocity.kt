@@ -38,11 +38,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityJumpReset
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityModify
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReversal
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
-import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Velocity module
@@ -52,10 +54,6 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
 
-    init {
-        enableLock()
-    }
-
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
             // Generic modes
@@ -64,6 +62,7 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
             VelocityStrafe,
             VelocityJumpReset,
             VelocityLag,
+            VelocityReduce,
 
             // Server modes
             VelocityHypixel,
@@ -99,9 +98,7 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
             return@sequenceHandler
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id
-            || packet is ClientboundExplodePacket
-        ) {
+        if (packet.isLocalPlayerVelocity()) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 event.cancelEvent()
@@ -118,7 +115,8 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {
-                    packet.handle(network)
+                    @Suppress("UNCHECKED_CAST")
+                    (packet as Packet<ClientGamePacketListener>).handle(network)
                 }
             }
         } else if (packet is ClientboundPlayerPositionPacket) {

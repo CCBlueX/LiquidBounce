@@ -5,7 +5,7 @@
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
-    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/keybind_utils";
+    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/utils";
 
     export let setting: ModuleSetting;
 
@@ -101,7 +101,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
@@ -109,12 +108,12 @@
 
   .change-bind {
     background-color: transparent;
-    border: solid 2px $accent-color;
+    border: solid 2px var(--accent-color);
     border-radius: 3px;
     cursor: pointer;
     padding: 4px;
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;
@@ -127,7 +126,7 @@
     }
 
     .none {
-      color: $clickgui-text-dimmed-color;
+      color: var(--clickgui-text-dimmed-color);
     }
   }
 </style>

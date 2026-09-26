@@ -19,27 +19,36 @@
 package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.script.ScriptManager
 
+@AddonApi
 enum class MarketplaceItemType(
-    override val choiceName: String,
+    override val tag: String,
     val isListable: Boolean,
     val isSubscribable: Boolean
-) : NamedChoice {
+) : Tagged {
     @SerializedName("Config")
     CONFIG("Config", false, false),
-    @SerializedName("Script")
-    SCRIPT("Script", true, true),
     @SerializedName("Theme")
     THEME("Theme", true, true),
+    @SerializedName("Addon")
+    ADDON("Addon", true, true),
+
+    /**
+     * Installed like any item; the ScriptAPI add-on runs them through [MarketplaceManager.registerHandler].
+     */
+    @SerializedName("Script")
+    SCRIPT("Script", true, true),
     @SerializedName("Other")
     OTHER("Other", false, false);
 
     suspend fun reload() = when (this) {
         THEME -> ThemeManager.load()
-        SCRIPT -> ScriptManager.reload()
-        else -> { }
+        ADDON -> AddonInstaller.stageSubscribedAddons()
+        else -> MarketplaceManager.reloadHandled(this)
     }
 }

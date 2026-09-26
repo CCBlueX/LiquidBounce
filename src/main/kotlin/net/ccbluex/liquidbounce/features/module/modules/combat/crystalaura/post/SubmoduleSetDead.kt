@@ -20,8 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import net.ccbluex.fastutil.synchronized
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
@@ -29,7 +30,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
  * Removes hit crystals instantly from the world instead of waiting for the actual remove packet
  * what might allow faster placement.
  */
-object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", true) {
+object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", true) {
 
     /**
      * If the crystal was removed but no entity remove packet was sent after the confirmation time, the
@@ -39,7 +40,13 @@ object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", t
 
     object CrystalTracker : CrystalPostAttackTracker() {
 
-        private val entities = Int2ObjectOpenHashMap<EndCrystal>().synchronized()
+        @JvmRecord
+        private data class RemovedCrystal(
+            val entity: EndCrystal,
+            val level: ClientLevel
+        )
+
+        private val entities = Int2ObjectOpenHashMap<RemovedCrystal>().synchronized()
 
         override fun attacked(id: Int) {
             if (!running) {
@@ -51,7 +58,7 @@ object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", t
                 if (entity is EndCrystal) {
                     super.attacked(id)
                     world.removeEntity(id, Entity.RemovalReason.DISCARDED)
-                    entities.put(id, entity)
+                    entities.put(id, RemovedCrystal(entity, world))
                 }
             }
         }
@@ -62,14 +69,31 @@ object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", t
 
         override fun timedOut(id: Int) {
             mc.execute {
-                val entity = entities.remove(id) ?: return@execute
-                entity.unsetRemoved()
-                world.addEntity(entity)
+                val tracked = entities.remove(id) ?: return@execute
+                val currentWorld = mc.level ?: return@execute
+                if (tracked.level !== currentWorld || currentWorld.getEntity(id) != null) {
+                    return@execute
+                }
+
+                tracked.entity.unsetRemoved()
+                currentWorld.addEntity(tracked.entity)
             }
         }
 
         override fun cleared() {
-            entities.clear()
+            mc.execute {
+                val currentWorld = mc.level ?: run {
+                    entities.clear()
+                    return@execute
+                }
+                entities.values.toTypedArray().forEach { tracked ->
+                    if (tracked.level === currentWorld && currentWorld.getEntity(tracked.entity.id) == null) {
+                        tracked.entity.unsetRemoved()
+                        currentWorld.addEntity(tracked.entity)
+                    }
+                }
+                entities.clear()
+            }
         }
 
         override fun timeOutAfter() = confirmTime.toLong()

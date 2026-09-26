@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.Reference2FloatOpenHashMap
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -29,10 +29,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -49,7 +48,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
-    private val displacement by vec3d("Displacement", Vec3(0.0, 1.0, 0.0))
+    private val displacement by vec3d("Displacement", Vec3.Y_AXIS.scale(1.5))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_TICK)
 
@@ -57,14 +56,14 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
         tree(Colors)
     }
 
-    private object Colors : Configurable("Colors") {
+    private object Colors : ValueGroup("Colors") {
         val damage by color("Damage", Color4b.RED)
         val death by color("Death", Color4b.RED)
         val heal by color("Heal", Color4b.GREEN)
         val maxHealth by color("MaxHealth", Color4b.GREEN)
     }
 
-    private enum class TrackMode(override val choiceName: String) : NamedChoice {
+    private enum class TrackMode(override val tag: String) : Tagged {
         ON_TICK("OnTick"),
         ON_UPDATE("OnUpdate"),
     }
@@ -93,7 +92,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                 System.currentTimeMillis(),
                 FORMATTER.format(delta),
                 color,
-                entity.box.center.add(entity.knownMovement),
+                entity.boundingBox.center.add(entity.knownMovement),
             )
         }
     }
@@ -159,7 +158,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
         particles.forEachIndexed { i, particle ->
             val progress = (now - particle.startTime).toFloat() / (ttl * 1000.0F)
 
-            val currentPos = particle.pos.add(displacement * displacementTransition.transform(progress).toDouble())
+            val currentPos = particle.pos.fma(displacementTransition.transform(progress).toDouble(), displacement)
             val screenPos = WorldToScreen.calculateScreenPos(currentPos) ?: return@forEachIndexed
 
             val currentScale = scale * scaleTransition.transform(progress)
@@ -169,12 +168,12 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                 pose().translate(screenPos.x, screenPos.y)
                 pose().scale(currentScale, currentScale)
 
-                drawCenteredString(
+                centeredText(
                     mc.font,
                     particle.text,
                     0,
                     0,
-                    particle.color.toARGB(),
+                    particle.color.argb,
                 )
                 pose().popMatrix()
             }

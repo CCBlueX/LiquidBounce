@@ -33,9 +33,13 @@ import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.isAnyChest
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
@@ -44,64 +48,44 @@ import net.minecraft.world.level.block.BedBlock
 object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategories.WORLD) {
 
     private val maxLayers by int("MaxLayers", 1, 1..5)
+    private val allowChests by boolean("AllowChests", false)
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
-    private val placer = tree(BlockPlacer("Place", this, Priority.NOT_IMPORTANT, {
-        val selected = player.inventory.selectedSlot
-        var maxHardness = Float.MIN_VALUE
-        var maxCount = 0
-        var best: HotbarItemSlot? = null
+    private fun blockHardness(slot: HotbarItemSlot): Float =
+        (slot.itemStack.item as BlockItem).block.defaultDestroyTime()
 
-        Slots.OffhandWithHotbar.forEach {
-            if (!it.itemStack.isFullBlock()) {
-                return@forEach
-            }
+    private val blockSlotComparator =
+        compareByDescending<HotbarItemSlot> { blockHardness(it) == -1f }
+            .thenByDescending { blockHardness(it) }
+            .then(ItemSlot.PREFER_MORE_ITEM)
+            .then(HotbarItemSlot.PREFER_NEARBY)
 
-            val hardness = (it.itemStack.item as BlockItem).block.defaultDestroyTime()
-            // -1 is unbreakable
-            if (hardness < maxHardness && hardness != -1f || maxHardness == -1f && hardness != -1f) {
-                return@forEach
-            }
-
-            // prioritize blocks with a higher hardness
-            if (hardness > maxHardness || hardness == -1f && maxHardness != -1f) {
-                best = it
-                maxHardness = hardness
-                return@forEach
-            }
-
-            // prioritize stacks with a higher count
-            val count = it.itemStack.count
-            if (count > maxCount) {
-                best = it
-                maxCount = count
-            }
-
-            best!!
-
-            // prioritize stacks closer to the selected slot
-            val distance1a = (it.hotbarSlot - selected + 9) % 9
-            val distance1b = (selected - it.hotbarSlot + 9) % 9
-            val distance1 = minOf(distance1a, distance1b)
-
-            val distance2a = (best.hotbarSlot - selected + 9) % 9
-            val distance2b = (selected - best.hotbarSlot + 9) % 9
-            val distance2 = minOf(distance2a, distance2b)
-
-            if (distance1 < distance2) {
-                best = it
-            }
+    // Layer(ASC) Center Distance(DESC)
+    private val placementTargetComparator = Comparator
+        .comparingInt(IntLongPair::leftInt)
+        .thenComparingDouble {
+            player.eyePosition.distanceToCenterSqr(it.rightLong())
         }
 
-        best
+    private fun findBestBlockSlot(): HotbarItemSlot? {
+        return Slots.OffhandWithHotbar
+            .filter {
+                val itemStack = it.itemStack
+                itemStack.isFullBlock() || allowChests && itemStack.isAnyChest
+            }
+            .minWithOrNull(blockSlotComparator)
+    }
+
+    private val placer = tree(BlockPlacer("Place", this, Priority.NOT_IMPORTANT, {
+        findBestBlockSlot()
     }, false))
 
     private val requiresSneak by boolean("RequiresSneak", false)
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!placer.ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -113,7 +97,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             return@handler
         }
 
-        placer.slotFinder(null) ?: return@handler
+        placer.slotFinder.apply(null) ?: return@handler
 
         val eyesPos = player.eyePosition
         val rangeSq = placer.range * placer.range
@@ -123,7 +107,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             val block = state.block
             when {
                 block !is BedBlock -> false
-                else -> isSelfBedMode.activeChoice.shouldDefend(block, pos)
+                else -> isSelfBedMode.activeMode.shouldDefend(block, pos)
             }
         }
 
@@ -132,39 +116,27 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             (blockPos, _) -> blockPos.distToCenterSqr(eyesPos)
         } ?: return@handler
 
-        val mutable = BlockPos.MutableBlockPos()
-        val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
-            mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
-        }.toCollection(mutableListOf())
+        val placementPositions = blockPos.searchBedLayer(state, maxLayers)
+            .filterTo(mutableListOf()) { (_, pos) ->
+                eyesPos.distanceToCenterSqr(pos) <= rangeSq
+            }
 
         if (placementPositions.isEmpty()) {
             return@handler
         }
 
-        val updatePositions = placementPositions.apply {
-            // Layer(ASC) Center Distance(DESC)
-            sortWith(
-                Comparator.comparingInt<IntLongPair> { it.leftInt() }
-                    .thenComparingDouble {
-                        -mutable.set(it.rightLong()).distToCenterSqr(eyesPos)
-                    }
-            )
-        }
+        placementPositions.sortWith(placementTargetComparator)
 
-        debugGeometry("PlacementPosition") {
+        debugGeometry("PlacementPositions") {
             ModuleDebug.DebugCollection(
-                updatePositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(mutable.set(pos).center, Color4b.RED.with(a = 100))
+                placementPositions.map { (_, pos) ->
+                    ModuleDebug.DebuggedPoint(BlockPos.of(pos).center, Color4b.RED.with(a = 100))
                 }
             )
         }
 
         // Need ordered set (like TreeSet/LinkedHashSet)
-        placer.update(
-            updatePositions.mapTo(linkedSetOf()) {
-                BlockPos.of(it.rightLong())
-            }
-        )
+        placer.update(placementPositions.mapTo(linkedSetOf()) { BlockPos.of(it.rightLong()) })
     }
 
     override fun onDisabled() {

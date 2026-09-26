@@ -18,18 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.ShulkerBullet
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
@@ -54,15 +56,15 @@ object ModuleProjectilePuncher : ClientModule(
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 
-    private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
         target = null
@@ -76,21 +78,24 @@ object ModuleProjectilePuncher : ClientModule(
         updateTarget()
     }
 
-    val repeatable = tickHandler {
-        val target = target ?: return@tickHandler
+    /**
+     * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
+     */
+    val repeatable = handler<GameTickEvent> {
+        val target = target ?: return@handler
 
         if (target.squaredBoxedDistanceTo(player) > range * range ||
-            !facingEnemy(
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = 0.0
-            )) {
-            return@tickHandler
+                throughWallsRange = 0.0
+            ) == null) {
+            return@handler
         }
 
         clicker.click {
-            target.attack(swing)
+            attackEntity(target, swingMode)
             true
         }
     }
@@ -108,7 +113,7 @@ object ModuleProjectilePuncher : ClientModule(
             val nextTickFireballPosition = entity.position() + entity.position() - entity.lastPos
 
             val entityBox = entity.dimensions.makeBoundingBox(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePosition)
+            val distanceSquared = entityBox.distanceToSqr(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
                 continue
@@ -125,7 +130,7 @@ object ModuleProjectilePuncher : ClientModule(
             RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                valueGroup = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher
             )
@@ -134,20 +139,20 @@ object ModuleProjectilePuncher : ClientModule(
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is LargeFireball && entity !is ShulkerBullet) {
+        if (!entity.isWithinWorldBorder || (entity !is LargeFireball && entity !is ShulkerBullet)) {
             return false
         }
 
         val fireballVelocity = entity.position() - entity.lastPos
 
-        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // If the fireball is not moving the player can obviously not be hit. Additionally, the code below only works if
         // the fireball is moving.
         if (fireballVelocity.isLikelyZero) {
             return false
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.box.center - entity.position()
+        val vecToPlayer = player.boundingBox.center - entity.position()
 
         val dot = vecToPlayer.dot(fireballVelocity)
 

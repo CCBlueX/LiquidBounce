@@ -1,17 +1,20 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    ModuleCategory,
+    Alignment,
     Browser,
     ClientInfo,
     ClientUpdate,
     ClientUser,
-    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
+    HudComponent,
+    HudComponentCatalogEntry,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -29,6 +32,7 @@ import type {
 } from "./types";
 import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
+import {replace} from "svelte-spa-router";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -42,6 +46,13 @@ export async function getMetadata(): Promise<Metadata> {
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getCategories(): Promise<ModuleCategory[]> {
+    const response = await fetch(`${API_BASE}/client/modules/categories`);
+    const data: [ModuleCategory] = await response.json();
 
     return data;
 }
@@ -83,6 +94,23 @@ export async function getSpooferSettings(): Promise<ConfigurableSetting> {
 
 export async function setSpooferSettings(settings: ConfigurableSetting) {
     await fetch(`${API_BASE}/client/spoofer`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+}
+
+export async function getGlobalSettings(): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/global`);
+    const data = await response.json();
+
+    return data;
+}
+
+export async function setGlobalSettings(settings: ConfigurableSetting) {
+    await fetch(`${API_BASE}/client/global`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
@@ -250,6 +278,18 @@ export async function getServers(): Promise<Server[]> {
     return data;
 }
 
+export async function getLanServers(): Promise<Server[]> {
+    const response = await fetch(`${API_BASE}/client/servers/lan`);
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data: Server[] = await response.json();
+
+    return data;
+}
+
 export async function connectToServer(address: string) {
     await fetch(`${API_BASE}/client/servers/connect`, {
         method: "POST",
@@ -270,13 +310,13 @@ export async function removeServer(id: number) {
     });
 }
 
-export async function addServer(name: string, address: string, serverResourcePacks: string) {
+export async function addServer(name: string, address: string, resourcePackPolicy: string) {
     await fetch(`${API_BASE}/client/servers/add`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({name, address, serverResourcePacks})
+        body: JSON.stringify({name, address, resourcePackPolicy})
     });
 }
 
@@ -372,15 +412,31 @@ export async function addAlteningAccount(token: string) {
     });
 }
 
-export async function addMicrosoftAccount() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
+export async function addMicrosoftAccountWebView() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/webview`, {
         method: "POST",
     });
 }
 
-export async function addMicrosoftAccountCopyUrl() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft/clipboard`, {
+export async function addMicrosoftAccountDeviceCode() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code`, {
         method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountDeviceCodeCopyUrl() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code/clipboard`, {
+        method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountCredentials(email: string, password: string) {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/credentials`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({email, password})
     });
 }
 
@@ -508,8 +564,13 @@ export async function checkProxy(id: number) {
     });
 }
 
-export async function getCurrentProxy(): Promise<Proxy> {
+export async function getCurrentProxy(): Promise<Proxy | null> {
     const response = await fetch(`${API_BASE}/client/proxy`);
+
+    if (response.status !== 200) {
+        return null;
+    }
+
     const data: Proxy = await response.json();
 
     return data;
@@ -594,6 +655,16 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
+export async function setHudEditorSelected(selected: boolean): Promise<void> {
+    await fetch(`${API_BASE}/client/hud-editor`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({selected})
+    });
+}
+
 /**
  * @param id Use the ID from [getMetadata].
  */
@@ -608,6 +679,65 @@ export async function getTheme(id: string): Promise<Theme> {
 export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
+}
+
+export async function getNativeComponents(): Promise<HudComponent[]> {
+    const response = await fetch(`${API_BASE}/client/components/native`);
+    return await response.json();
+}
+
+export async function getComponentCatalog(id: string): Promise<HudComponentCatalogEntry[]> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/catalog`);
+    return await response.json();
+}
+
+export async function addComponent(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/client/components/${id}`, {
+        method: "POST"
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add HUD component");
+    }
+}
+
+export async function setComponentAlignment(id: string, alignment: Alignment): Promise<void> {
+    await fetch(`${API_BASE}/client/components/${id}/alignment`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(alignment)
+    });
+}
+
+export async function bringComponentToFront(id: string): Promise<number> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/z-index`, {
+        method: "POST"
+    });
+
+    const data: { zIndex: number } = await response.json();
+    return data.zIndex;
+}
+
+export async function getComponentSettings(id: string): Promise<ConfigurableSetting> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/settings`);
+    return await response.json();
+}
+
+export function getComponentFileUrl(id: string, cacheKey?: string): string {
+    const url = `${API_BASE}/client/components/${id}/file`;
+    return cacheKey === undefined ? url : `${url}?v=${encodeURIComponent(cacheKey)}`;
+}
+
+export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
+    await fetch(`${API_BASE}/client/components/${id}/settings`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
 }
 
 export async function getClientInfo(): Promise<ClientInfo> {
@@ -632,6 +762,12 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/shader`, {
+        method: "POST",
+    });
+}
+
+export async function toggleBasicMode() {
+    await fetch(`${API_BASE}/client/basic-mode`, {
         method: "POST",
     });
 }
@@ -692,7 +828,11 @@ export async function randomUsername(): Promise<string> {
     return data.name;
 }
 
+let lastTypingState: boolean | null = null;
+
 export async function setTyping(typing: boolean) {
+    if (typing === lastTypingState) return;
+    lastTypingState = typing;
     await fetch(`${API_BASE}/client/typing`, {
         method: "POST",
         headers: {
@@ -704,14 +844,14 @@ export async function setTyping(typing: boolean) {
 
 export async function getClientUser(): Promise<ClientUser | null> {
     const response = await fetch(`${API_BASE}/client/user`);
-    
+
     if (!response.ok) {
         if (response.status === 401) {
             return null;
         }
         throw new Error(`Failed to get client user: ${response.status} ${response.statusText}`);
     }
-    
+
     const data: ClientUser = await response.json();
     return data;
 }

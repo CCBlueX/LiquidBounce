@@ -18,26 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.objects.ReferenceSet
+import net.ccbluex.fastutil.referenceArraySetOf
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PositionFactoryConfiguration
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
@@ -53,8 +52,8 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     true
 ) {
 
-    override val trapItems: Set<Item> = ReferenceSet.of(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
-    override val trapWorthyBlocks: Set<Block> = ReferenceSet.of(Blocks.LAVA, Blocks.FIRE)
+    override val trapItems: Set<Item> = referenceArraySetOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
+    override val trapWorthyBlocks: Set<Block> = referenceArraySetOf(Blocks.LAVA, Blocks.FIRE)
 
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<IgnitionIntentData>? {
         val slot = findSlotForTrap() ?: return null
@@ -71,10 +70,10 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
 
             targetTracker.target = target
             return BlockChangeIntent(
-                BlockChangeInfo.PlaceBlock(placementTarget ),
+                BlockChangeInfo.PlaceBlock(placementTarget),
                 slot,
                 IntentTiming.NEXT_PROPITIOUS_MOMENT,
-                IgnitionIntentData(target, target.getDimensions(Pose.STANDING).makeBoundingBox(targetPos)),
+                IgnitionIntentData(target, target.getDimensions(target.pose).makeBoundingBox(targetPos)),
                 this
             )
         }
@@ -89,27 +88,26 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     ): BlockPlacementTarget? {
         val blockPos = targetPos.toBlockPos()
 
-        if (blockPos.getState()?.block in trapWorthyBlocks) {
+        if (blockPos.state?.block in trapWorthyBlocks) {
             return null
         }
 
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
-            target.getDimensions(Pose.STANDING),
+            target.getDimensions(target.pose),
             target.position().subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
+        val placementLocation = PlayerLocationOnPlacement()
 
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 offsetsForTargets,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                targetOverlapComparator(blockPos, offsetsForTargets, placementLocation.eyePos),
             ),
-            FaceHandlingOptions(
-                NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePosition, 0.5))
-            ),
+            FaceHandlingOptions(NearestRotationTargetPositionFactory),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
+            placementLocation,
         )
 
         return findBestBlockPlacementTarget(blockPos, options)
@@ -120,7 +118,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
             return false
         }
 
-        val actualPos = raycast.blockPos.offset(raycast.direction.unitVec3i)
+        val actualPos = raycast.targetBlockPos
 
         if (!AABB(actualPos).intersects(plan.planningInfo.targetBB)) {
             return false
@@ -129,7 +127,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         return plan.slot.itemStack.item in trapItems
     }
 
-    override fun onIntentFullfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
+    override fun onIntentFulfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
         targetTracker.target = intent.planningInfo.target
     }
 

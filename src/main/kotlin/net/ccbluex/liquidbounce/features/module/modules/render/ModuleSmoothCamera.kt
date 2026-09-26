@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -32,36 +31,52 @@ import net.minecraft.world.phys.Vec3
  */
 object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER) {
 
-    private val factor by float("Factor", 0.2f, 0.0f..1.0f)
+    private val enableFirstPOV by boolean("EnableFirstPOV", default = false)
+    private val resetOnPerspectiveChange by boolean("ResetOnPerspectiveChange", default = true)
+
+    private val factorH by float("HorizontalFactor", 0.9f, 0f..1f)
+    private val factorV by float("VerticalFactor", 0.93f, 0f..1f)
 
     var smoothPos: Vec3 = Vec3.ZERO
         private set
-    var smoothYaw = 0f
-        private set
-    var smoothPitch = 0f
-        private set
+
+    private val perspective
+        get () = mc.options.cameraType
+
+    private var lastPerspective = perspective
 
     override fun onDisabled() {
         smoothPos = Vec3.ZERO
-        smoothYaw = 0f
-        smoothPitch = 0f
     }
 
     @JvmStatic
-    fun cameraUpdate(yaw: Float, pitch: Float, pos: Vec3) {
-        if (!running) return
+    fun cameraUpdate(pos: Vec3) {
+        if (!running) {
+            lastPerspective = perspective
+            return
+        }
+        // This provides better responsiveness when switching perspectives
+        if (resetOnPerspectiveChange && lastPerspective != perspective) {
+            smoothPos = pos
+            lastPerspective = perspective
+            return
+        }
+        lastPerspective = perspective
+        // Don't smooth for first person since it looks weird
+        if (!enableFirstPOV && perspective.isFirstPerson) {
+            smoothPos = pos
+            return
+        }
 
         if (smoothPos.isLikelyZero) {
             smoothPos = pos
-            smoothYaw = yaw
-            smoothPitch = pitch
         }
 
-        val eased = factor
-
-        smoothPos = smoothPos.lerp(pos, eased.toDouble())
-        smoothYaw += Mth.wrapDegrees(yaw - smoothYaw) * eased
-        smoothPitch += (pitch - smoothPitch) * eased
+        smoothPos = Vec3(
+            smoothPos.x * factorH + pos.x * (1 - factorH),
+            smoothPos.y * factorV + pos.y * (1 - factorV),
+            smoothPos.z * factorH + pos.z * (1 - factorH)
+        )
     }
 
     @JvmStatic

@@ -20,9 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.DeathEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -36,7 +37,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import java.util.EnumSet
 
 /**
  * AutoDisable module
@@ -50,7 +50,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
     private val moduleNames by registryList("Modules", objectRBTreeSetOf<String>(), ValueType.CLIENT_MODULE)
-    private val disableOn by multiEnumChoice<DisableOn>("On", EnumSet.allOf(DisableOn::class.java), canBeNone = false)
+    private val disableOn by multiEnumChoice<DisableOn>("On", DisableOn.entries, canBeNone = false)
 
     fun clear() {
         modules.clear()
@@ -99,13 +99,17 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         if (DisableOn.WORLD_CHANGE in disableOn) disableAndNotify("world change")
     }
 
+    @Suppress("unused")
+    private val disconnectHandler = handler<DisconnectEvent> {
+        if (DisableOn.DISCONNECT in disableOn) disableAndNotify("disconnection")
+    }
+
     private fun disableAndNotify(reason: String) {
-        val anyDisabled = modules.any { module ->
+        var anyDisabled = false
+        for (module in modules) {
             if (module.enabled) {
                 module.enabled = false
-                true
-            } else {
-                false
+                anyDisabled = true
             }
         }
 
@@ -114,9 +118,10 @@ object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
         }
     }
 
-    private enum class DisableOn(override val choiceName: String) : NamedChoice {
+    private enum class DisableOn(override val tag: String) : Tagged {
         FLAG("Flag"),
         DEATH("Death"),
         WORLD_CHANGE("WorldChange"),
+        DISCONNECT("Disconnect"),
     }
 }

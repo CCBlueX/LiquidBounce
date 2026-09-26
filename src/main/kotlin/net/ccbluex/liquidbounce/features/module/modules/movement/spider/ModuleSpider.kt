@@ -26,10 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.Sp
 
 object ModuleSpider : ClientModule("Spider", ModuleCategories.MOVEMENT, aliases = listOf("WallClimb")) {
 
-    init {
-        enableLock()
-    }
-
     internal val modes = choices("Mode", SpiderVanilla, arrayOf(
         SpiderVanilla,
         SpiderPolar29thMarch2025,

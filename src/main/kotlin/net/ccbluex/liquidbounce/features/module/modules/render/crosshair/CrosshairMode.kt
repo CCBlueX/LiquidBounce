@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.crosshair
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair.modes
@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 
-abstract class CrosshairMode(name: String) : Choice(name) {
-    final override val parent: ChoiceConfigurable<*>
+abstract class CrosshairMode(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<*>
         get() = modes
 
     protected val showInThirdPerson by boolean("ShowInThirdPerson", true)

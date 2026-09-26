@@ -1,5 +1,6 @@
 {
   "name": "CraftingInventory",
+  "description": "Displays the contents of your crafting grid.",
   "enabled": false,
   "singleton": true,
   "alignment": {

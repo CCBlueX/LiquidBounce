@@ -19,15 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.util.Mth
+import net.ccbluex.liquidbounce.render.segmentAngle
+import net.ccbluex.liquidbounce.render.setColor
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -38,8 +38,8 @@ internal object HatsCone : HatsMode("Cone") {
 
     private val colors = HatsColorSettings()
 
-    private object HatConeSettings : Configurable("HatSettings") {
-        object RadiusSettings : Configurable("RadiusSettings") {
+    private object HatConeSettings : ValueGroup("HatSettings") {
+        object RadiusSettings : ValueGroup("RadiusSettings") {
             val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
         }
 
@@ -53,12 +53,15 @@ internal object HatsCone : HatsMode("Cone") {
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
-        drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
-            val segments = 600
-            for (i in 0..segments) {
-                val angle = (i.toFloat() / segments) * Mth.TWO_PI
+        drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->
+            val segments = 128
+            for (i in 0 until segments) {
+                val angle = segmentAngle(i, segments)
+                val nextAngle = segmentAngle(i + 1, segments)
                 val cosine = cos(angle)
                 val sine = sin(angle)
+                val nextCosine = cos(nextAngle)
+                val nextSine = sin(nextAngle)
 
                 val color = if (!isHurt) colors.getCurrentStepColor(angle) else Color4b(255, 0, 0, colors.firstColor.a)
 
@@ -67,8 +70,14 @@ internal object HatsCone : HatsMode("Cone") {
                     cosine * HatConeSettings.RadiusSettings.outerRadius,
                     0f,
                     sine * HatConeSettings.RadiusSettings.outerRadius
-                ).color(color)
-                addVertex(matrix, 0f, HatConeSettings.peak, 0f).color(color)
+                ).setColor(color)
+                addVertex(
+                    matrix,
+                    nextCosine * HatConeSettings.RadiusSettings.outerRadius,
+                    0f,
+                    nextSine * HatConeSettings.RadiusSettings.outerRadius
+                ).setColor(color)
+                addVertex(matrix, 0f, HatConeSettings.peak, 0f).setColor(color)
             }
         }
     }

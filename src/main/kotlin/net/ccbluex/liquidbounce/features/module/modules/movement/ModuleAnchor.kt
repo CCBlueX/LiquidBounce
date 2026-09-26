@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.boundingBox
-import net.ccbluex.liquidbounce.utils.math.centerPointOf
+import net.ccbluex.liquidbounce.utils.math.centerOnSide
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.Direction
@@ -72,7 +72,7 @@ object ModuleAnchor : ClientModule(
         // if we're already in a hole, we should just center us in that
         val playerBB = player.boundingBox
         HoleTracker.holes.firstOrNull { hole -> playerBB.intersects(hole.positions.boundingBox) }?.let { hole ->
-            goal = hole.positions.centerPointOf(Direction.DOWN)
+            goal = hole.positions.centerOnSide(Direction.DOWN)
             return@tickHandler
         }
 
@@ -89,9 +89,8 @@ object ModuleAnchor : ClientModule(
         // not in a hole and no valid goal means we need to search one
         goal = HoleTracker.holes
             .filter { hole -> hole.positions.maxY() + 1 <= playerPos.y }
-            .mapToArray { hole -> hole.positions.centerPointOf(Direction.DOWN) }
-            .filter { vec3d -> vec3d.distanceToSqr(playerPos) <= maxDistanceSq }
-            .minByOrNull { vec3d -> vec3d.distanceToSqr(playerPos) }
+            .map { hole -> hole.positions.centerOnSide(Direction.DOWN) }
+            .weightedMinByOrNullAtMost(maxDistanceSq.toDouble(), playerPos::distanceToSqr)
     }
 
     @Suppress("unused")

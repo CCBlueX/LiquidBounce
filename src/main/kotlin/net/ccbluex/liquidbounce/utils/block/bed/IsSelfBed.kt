@@ -18,19 +18,22 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.anotherBedPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
+import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
@@ -38,39 +41,54 @@ import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.sdl.SDLKeycode
 
-fun isSelfBedChoices(choice: ChoiceConfigurable<IsSelfBedChoice>): Array<IsSelfBedChoice> {
+fun isSelfBedChoices(choice: ModeValueGroup<IsSelfBedMode>): Array<IsSelfBedMode> {
     return arrayOf(
-        IsSelfBedChoice.None(choice),
-        IsSelfBedChoice.Color(choice),
-        IsSelfBedChoice.SpawnLocation(choice),
-        IsSelfBedChoice.Manual(choice),
+        IsSelfBedMode.None(choice),
+        IsSelfBedMode.Color(choice),
+        IsSelfBedMode.SpawnLocation(choice),
+        IsSelfBedMode.Manual(choice),
     )
 }
 
-sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConfigurable<*>) : Choice(name) {
+sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGroup<*>) : Mode(name) {
     abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
     open fun shouldDefend(block: BedBlock, pos: BlockPos): Boolean = isSelfBed(block, pos)
 
-    class None(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("None", parent) {
+    class None(parent: ModeValueGroup<*>) : IsSelfBedMode("None", parent) {
         override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
         override fun shouldDefend(block: BedBlock, pos: BlockPos) = true
     }
 
-    class Color(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Color", parent) {
-        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
-            val color = block.color
-            val colorRgb = color.textureDiffuseColor
-            val (_, armorColor) = getArmorColor() ?: return false
+    class Color(parent: ModeValueGroup<*>) : IsSelfBedMode("Color", parent) {
 
-            return armorColor == colorRgb
+        private val slots by multiEnumChoice(
+            "Slots",
+            enumSetOf(EquipmentSlotChoice.HEAD),
+            EquipmentSlotChoice.allHumanoidArmor(),
+            canBeNone = false,
+        )
+
+        private val loose by boolean("Loose", false)
+
+        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
+            val blockColor = block.color
+            return slots.any {
+                val armorColor = it.getArmorColor(player) ?: return@any false
+                if (loose) {
+                    Color4b(armorColor).toClosestDyeColor(DyeColor::getTextureDiffuseColor) == blockColor
+                } else {
+                    armorColor == blockColor.textureDiffuseColor
+                }
+            }
         }
     }
 
-    class SpawnLocation(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("SpawnLocation", parent) {
+    class SpawnLocation(parent: ModeValueGroup<*>) : IsSelfBedMode("SpawnLocation", parent) {
 
         private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
         private val trackedSpawnLocation = Vector3d(Double.MAX_VALUE)
@@ -103,10 +121,10 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
 
     }
 
-    class Manual(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Manual", parent) {
+    class Manual(parent: ModeValueGroup<*>) : IsSelfBedMode("Manual", parent) {
 
-        private val trackKey by key("Track", GLFW.GLFW_KEY_KP_ADD)
-        private val untrackKey by key("Untrack", GLFW.GLFW_KEY_KP_SUBTRACT)
+        private val trackKey by key("Track", InputConstants.KEY_ADD)
+        private val untrackKey by key("Untrack", SDLKeycode.SDLK_KP_MINUS)
 
         private val trackedPos = BlockPos.MutableBlockPos()
 
@@ -118,11 +136,11 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
         override fun isSelfBed(
             block: BedBlock,
             pos: BlockPos,
-        ): Boolean = pos == trackedPos || pos.relative(pos.getState().anotherBedPartDirection()!!) == trackedPos
+        ): Boolean = pos == trackedPos || pos.relative(pos.state.anotherBedPartDirection()!!) == trackedPos
 
         @Suppress("unused")
         private val keyHandler = handler<KeyboardKeyEvent> { event ->
-            if (event.action != GLFW.GLFW_PRESS) return@handler
+            if (!event.isPressed) return@handler
 
             when (event.key) {
                 trackKey -> {

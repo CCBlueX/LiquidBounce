@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
@@ -36,9 +36,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSp
  * TODO: Detection for how many blocks you've gone up. Anything over 40ish seems to flag for Invalid (C)
  *   Proper implementation if there's something above you needs to be added.
  */
-internal object SpiderVulcan288 : Choice("Vulcan288") {
+internal object SpiderVulcan288 : Mode("Vulcan288") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
     private var requiresStop = false

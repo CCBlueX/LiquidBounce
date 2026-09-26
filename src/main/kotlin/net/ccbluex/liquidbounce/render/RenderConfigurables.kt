@@ -19,16 +19,24 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.core.BlockPos
+import net.minecraft.util.ToFloatFunction
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.state.BlockState
+import org.joml.Vector2f
 
-abstract class GenericColorMode<in T>(name: String): Choice(name) {
+abstract class GenericColorMode<in T>(name: String): Mode(name) {
     /**
      * @return Whether the color mode is sensitive to the parameter of [getColor].
      * If false, it can be used as ColorModulator (shader color)
@@ -39,7 +47,7 @@ abstract class GenericColorMode<in T>(name: String): Choice(name) {
 }
 
 class GenericStaticColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     defaultColor: Color4b
 ) : GenericColorMode<Any?>("Static") {
     private val staticColor = color("Color", defaultColor)
@@ -48,7 +56,7 @@ class GenericStaticColorMode(
 }
 
 class GenericRainbowColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     private val alpha: Int = 50
 ) : GenericColorMode<Any?>("Rainbow") {
     override val isParamSensitive: Boolean = false
@@ -56,7 +64,7 @@ class GenericRainbowColorMode(
 }
 
 class MapColorMode(
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     private val alpha: Int = 100
 ) : GenericColorMode<Pair<BlockPos, BlockState>>("MapColor") {
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
@@ -67,9 +75,8 @@ class MapColorMode(
     }
 }
 
-
 class GenericEntityHealthColorMode(
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
 ) : GenericColorMode<LivingEntity>("Health") {
     private val alpha by int("Alpha", 255, 0..255)
 
@@ -79,9 +86,78 @@ class GenericEntityHealthColorMode(
 
         val healthPercentage = health / maxHealth
 
-        val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
-        val green = (255 * healthPercentage).toInt().coerceIn(0..255)
+        val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0, 255)
+        val green = (255 * healthPercentage).toInt().coerceIn(0, 255)
 
         return Color4b(red, green, 0, alpha)
+    }
+}
+
+class GenericDistanceHSBColorMode<T : Any>(
+    override val parent: ModeValueGroup<*>,
+    private val fixedAlpha: Float?,
+    private val distanceGetter: ToFloatFunction<T>,
+) : GenericColorMode<T>("Distance") {
+    private val saturation by float("Saturation", 1F, 0F..1F)
+    private val brightness by float("Brightness", 1F, 0F..1F)
+    private val hue = curve("Hue") {
+        "Distance" x 0f..200f
+        "Hue" y 0f..360f
+        points(Vector2f(0f, 0f), Vector2f(100f, 120f), Vector2f(200f, 120f))
+    }
+    private val alphaValue = if (fixedAlpha == null) float("Alpha", 1F, 0F..1F) else null
+
+    override fun getColor(param: T): Color4b {
+        val distance = distanceGetter.applyAsFloat(param)
+        return Color4b.ofHSB(
+            hue = hue.transform(distance) / 360f,
+            saturation = saturation,
+            brightness = brightness,
+            alpha = fixedAlpha ?: alphaValue!!.get(),
+        )
+    }
+
+    companion {
+        @JvmOverloads
+        fun entity(parent: ModeValueGroup<*>, fixedAlpha: Float? = null) =
+            GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
+                it.position().cameraDistance().toFloat()
+            }
+    }
+}
+
+@Suppress("UNUSED")
+enum class BuiltinParticle(
+    override val tag: String,
+    fileName: String,
+) : Tagged {
+    /**
+     * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
+     */
+    ORBIZ("Orbiz", "glow"),
+
+    /**
+     * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
+     * Modified: @sqlerrorthing
+     */
+    STAR("Star", "star"),
+
+    /**
+     * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
+     * Modified: @sqlerrorthing
+     */
+    DOLLAR("Dollar", "dollar"),
+
+    CROWN("Crown", "crown"),
+    HEART("Heart", "heart"),
+    LIGHTNING("Lightning", "lightning"),
+    LINE("Line", "line"),
+    POINT("Point", "point"),
+    RHOMBUS("Rhombus", "rhombus"),
+    SNOWFLAKE("Snowflake", "snowflake"),
+    SPARK("Spark", "spark");
+
+    val texture by lazy {
+        LiquidBounce.resource("particles/$fileName.png").readNativeImage().asTexture { "Builtin Particle $tag" }
     }
 }

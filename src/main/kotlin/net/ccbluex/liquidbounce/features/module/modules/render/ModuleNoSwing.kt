@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
@@ -34,8 +34,8 @@ object ModuleNoSwing : ClientModule("NoSwing", ModuleCategories.RENDER) {
     fun shouldHideForClient() = this.running && HideFor.CLIENT in hideFor
 
     private enum class HideFor(
-        override val choiceName: String
-    ) : NamedChoice {
+        override val tag: String
+    ) : Tagged {
         CLIENT("Client"),
         SERVER("Server")
     }

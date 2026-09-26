@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
@@ -28,10 +28,10 @@ import net.ccbluex.liquidbounce.features.command.commands.module.teleport.Comman
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -61,7 +61,7 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
 
     private val decimalFormat = DecimalFormat("##0.000")
 
-    enum class GroundMode(override val choiceName: String) : NamedChoice {
+    enum class GroundMode(override val tag: String) : Tagged {
         TRUE("True"),
         FALSE("False"),
         CORRECT("Correct")
@@ -175,7 +175,7 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
         entity.absSnapTo(x, y, z)
 
         if (resetMotion) {
-            entity.setDeltaMovement(entity.deltaMovement.multiply(0.0, 0.0, 0.0))
+            entity.deltaMovement = entity.deltaMovement.multiply(0.0, 0.0, 0.0)
         }
 
         chat(regular(

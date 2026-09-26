@@ -64,24 +64,35 @@ inline fun <reified T> Reader.readJson(gson: Gson = publicGson): T = use {
 
 inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)
 
-// Never add elements to it!
-private val EMPTY_JSON_ARRAY = JsonArray(0)
-private val EMPTY_JSON_OBJECT = JsonObject()
-
-internal fun emptyJsonArray(): JsonArray = EMPTY_JSON_ARRAY
-internal fun emptyJsonObject(): JsonObject = EMPTY_JSON_OBJECT
-
 inline fun <reified T> JsonDeserializationContext.deserialize(json: JsonElement): T =
     deserialize(json, object : TypeToken<T>() {}.type)
 
-fun jsonArrayOf(vararg elements: JsonElement) = JsonArray(elements.size).apply {
-    elements.forEach { add(it) }
-}
+@DslMarker
+annotation class JsonDsl
 
-class JsonArrayBuilder(initialCapacity: Int) {
-    private val backend = JsonArray(initialCapacity)
+@JsonDsl
+@JvmInline
+value class JsonArrayBuilder(private val backend: JsonArray) {
 
-    operator fun JsonElement.unaryPlus() {
+    constructor(initialCapacity: Int) : this(JsonArray(initialCapacity))
+
+    operator fun JsonElement?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Boolean?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun String?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Number?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Char?.unaryPlus() {
         backend.add(this)
     }
 
@@ -89,51 +100,89 @@ class JsonArrayBuilder(initialCapacity: Int) {
 }
 
 inline fun jsonArray(
-    initialCapacity: Int = 10,
     builderAction: JsonArrayBuilder.() -> Unit
-) = JsonArrayBuilder(initialCapacity).apply(builderAction).build()
+) = JsonArrayBuilder(JsonArray()).apply(builderAction).build()
 
-class JsonObjectBuilder {
-    private val backend = JsonObject()
+@JsonDsl
+@JvmInline
+value class JsonObjectBuilder(private val backend: JsonObject) {
 
-    infix fun String.to(value: JsonElement) {
+    operator fun String.invoke(value: JsonElement?) {
         backend.add(this, value)
     }
 
-    infix fun String.to(value: Char) {
+    operator fun String.invoke(value: Char?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: Number) {
+    operator fun String.invoke(value: Number?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: String) {
+    operator fun String.invoke(value: String?) {
         backend.addProperty(this, value)
     }
 
-    infix fun String.to(value: Boolean) {
+    operator fun String.invoke(value: Boolean?) {
         backend.addProperty(this, value)
     }
 
-    /**
-     * Fallback
-     */
-    infix fun String.to(value: Any?) {
-        when (value) {
-            null -> backend.add(this, JsonNull.INSTANCE)
-            is String -> backend.addProperty(this, value)
-            is Number -> backend.addProperty(this, value)
-            is Boolean -> backend.addProperty(this, value)
-            is JsonElement -> backend.add(this, value)
-            is JsonObjectBuilder -> backend.add(this, value.build())
-            else -> throw IllegalArgumentException("Unsupported type: ${value::class.java}")
-        }
+    inline infix fun String.obj(builderAction: JsonObjectBuilder.() -> Unit) {
+        invoke(jsonObject(builderAction))
+    }
+
+    inline infix fun String.array(builderAction: JsonArrayBuilder.() -> Unit) {
+        invoke(jsonArray(builderAction))
+    }
+
+    operator fun String.get(vararg elements: JsonElement?) {
+        invoke(JsonArray(elements.size).apply { elements.forEach(::add) })
     }
 
     fun build() = backend
 }
 
-inline fun json(
+inline fun jsonObject(
     builderAction: JsonObjectBuilder.() -> Unit
-) = JsonObjectBuilder().apply(builderAction).build()
+) = JsonObjectBuilder(JsonObject()).apply(builderAction).build()
+
+inline fun JsonArray.getOrNull(index: Int): JsonElement? =
+    if (index in 0 until this.size()) this[index] else null
+
+inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonArray {
+    val a = if (this is Collection) JsonArray(this.size) else JsonArray()
+    forEach { a.add(transform(it)) }
+    return a
+}
+
+/**
+ * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key
+ * instead of throwing.
+ */
+fun JsonObject.string(key: String): String? = if (has(key)) get(key).asString else null
+
+fun JsonObject.int(key: String): Int? = if (has(key)) get(key).asInt else null
+
+fun JsonObject.long(key: String): Long? = if (has(key)) get(key).asLong else null
+
+fun JsonObject.double(key: String): Double? = if (has(key)) get(key).asDouble else null
+
+fun JsonObject.boolean(key: String): Boolean? = if (has(key)) get(key).asBoolean else null
+
+fun JsonObject.obj(key: String): JsonObject? = if (has(key)) get(key).asJsonObject else null
+
+fun JsonObject.array(key: String): JsonArray? = if (has(key)) get(key).asJsonArray else null
+
+fun JsonArray.string(index: Int): String? = getOrNull(index)?.asString
+
+fun JsonArray.int(index: Int): Int? = getOrNull(index)?.asInt
+
+fun JsonArray.long(index: Int): Long? = getOrNull(index)?.asLong
+
+fun JsonArray.double(index: Int): Double? = getOrNull(index)?.asDouble
+
+fun JsonArray.boolean(index: Int): Boolean? = getOrNull(index)?.asBoolean
+
+fun JsonArray.obj(index: Int): JsonObject? = getOrNull(index)?.asJsonObject
+
+fun JsonArray.array(index: Int): JsonArray? = getOrNull(index)?.asJsonArray

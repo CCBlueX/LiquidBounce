@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import kotlin.math.pow
 
 /**
  * Functions from https://easings.net.
  */
 @Suppress("unused")
-enum class Easing(override val choiceName: String) : NamedChoice {
+enum class Easing(override val tag: String) : Tagged {
 
     LINEAR("Linear") {
         override fun transform(x: Float) = x
@@ -55,7 +55,7 @@ enum class Easing(override val choiceName: String) : NamedChoice {
 
     open fun getFactor(startTime: Long, currentTime: Long, time: Float): Float {
         val delta = currentTime - startTime
-        val factor = (delta / time.toDouble()).toFloat().coerceIn(0F..1F)
+        val factor = (delta / time.toDouble()).toFloat().coerceIn(0F, 1F)
         return transform(factor)
     }
 

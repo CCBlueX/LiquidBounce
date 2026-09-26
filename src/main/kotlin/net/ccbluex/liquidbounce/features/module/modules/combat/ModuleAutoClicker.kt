@@ -19,8 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.item.isAxe
-import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.item.WeaponType
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -57,33 +58,26 @@ import net.minecraft.world.phys.EntityHitResult
 
 object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, aliases = listOf("TriggerBot")) {
 
-    object AttackButton : ToggleableConfigurable(this, "Attack", true) {
+    object AttackButton : ToggleableValueGroup(this, "Attack", true) {
 
-        val clicker = tree(Clicker(this, mc.options.keyAttack))
+        val clicker = tree(Clicker(this, mc.options.keyAttack, simulateAttackKeyDown = true))
 
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         internal val delayOnBroken by boolean("DelayOnBroken", true)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
-        private val weapon by enumChoice("Weapon", Weapon.ANY)
+        private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
-        private enum class ObjectiveType(override val choiceName: String) : NamedChoice {
+        private enum class ObjectiveType(override val tag: String) : Tagged {
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
             ANY("Any")
         }
 
-        private enum class Weapon(override val choiceName: String) : NamedChoice {
-            SWORD("Sword"),
-            AXE("Axe"),
-            BOTH("Both"),
-            ANY("Any")
-        }
-
-        private enum class Use(override val choiceName: String) : NamedChoice {
+        private enum class Use(override val tag: String) : Tagged {
             WAIT("Wait"),
             STOP("Stop"),
             IGNORE("Ignore")
@@ -100,16 +94,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             }
         }
 
-        fun isWeaponSelected(): Boolean {
-            val stack = player.mainHandItem
-
-            return when (weapon) {
-                Weapon.SWORD -> stack.isSword
-                Weapon.AXE -> stack.isAxe
-                Weapon.BOTH -> stack.isSword || stack.isAxe
-                Weapon.ANY -> true
-            }
-        }
+        fun isWeaponSelected(): Boolean = weapon.matchesAny(player.mainHandItem)
 
         fun isCriticalHit(entity: Entity): Boolean {
             return criticalsSelectionMode.isCriticalHit(entity)
@@ -149,7 +134,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
 
     }
 
-    object UseButton : ToggleableConfigurable(this, "Use", false) {
+    object UseButton : ToggleableValueGroup(this, "Use", false) {
         val clicker = tree(Clicker(this, mc.options.keyUse, null))
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",
@@ -175,14 +160,14 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
     }
 
     private val SPECIAL_ITEMS_FOR_IGNORE = ReferenceOpenHashSet.of(
-        Items.RED_BED,
+        Items.BED.red,
         Items.PLAYER_HEAD,
         Items.COMPASS,
         Items.EMERALD,
         Items.LAPIS_LAZULI,
-        Items.GREEN_DYE,
-        Items.GRAY_DYE,
-        Items.PINK_DYE,
+        Items.DYE.green,
+        Items.DYE.gray,
+        Items.DYE.pink,
         Items.SLIME_BALL,
     )
 
@@ -235,7 +220,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
                 }
             }
 
-            if (player.startedUsingItem) {
+            if (player.isUsingItem) {
                 val encounterItemUse = encounterItemUse()
 
                 if (encounterItemUse) {

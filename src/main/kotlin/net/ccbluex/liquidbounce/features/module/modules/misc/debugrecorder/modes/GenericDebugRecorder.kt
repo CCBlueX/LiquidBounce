@@ -21,38 +21,39 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.mode
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.utils.io.toJson
+import net.ccbluex.liquidbounce.utils.io.toJsonArray
 import net.minecraft.world.entity.Entity
 import java.util.concurrent.CopyOnWriteArraySet
 
 object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Generic") {
 
-    data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
+    private data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
 
-    private val waitingEntites = CopyOnWriteArraySet<ScheduledEntityDebug>()
+    private val waitingEntities = CopyOnWriteArraySet<ScheduledEntityDebug>()
 
     fun debugEntityIn(entity: Entity, ticks: Int) {
-        waitingEntites.add(ScheduledEntityDebug(ticks, entity.id))
+        waitingEntities.add(ScheduledEntityDebug(ticks, entity.id))
     }
 
     val repeatable = tickHandler {
-        val due = waitingEntites.filter {
+        val due = waitingEntities.filterTo(objectHashSetOf()) {
             it.ticksLeft--
             it.ticksLeft <= 0
         }
 
-        for (scheduledEntityDebug in due) {
-            val entity = world.getEntity(scheduledEntityDebug.entityId)
+        for ((_, entityId) in due) {
+            val entity = world.getEntity(entityId)
 
             if (entity != null) {
                 recordDebugInfo(ModuleDebugRecorder, "entity", debugObject(entity))
             }
         }
 
-        waitingEntites.removeAll(due)
+        waitingEntities.removeAll(due)
     }
 
     fun recordDebugInfo(module: ClientModule, packetName: String, packet: JsonElement) {
@@ -67,8 +68,8 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     fun debugObject(entity: Entity): JsonElement {
         return JsonObject().apply {
             addProperty("id", entity.id)
-            add("pos", entity.position().toJson())
-            add("velocity", entity.deltaMovement.toJson())
+            add("pos", entity.position().toJsonArray())
+            add("velocity", entity.deltaMovement.toJsonArray())
         }
     }
 }

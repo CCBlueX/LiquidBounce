@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -46,16 +46,16 @@ object ModuleBetterTab : ClientModule("BetterTab", ModuleCategories.RENDER) {
     @JvmStatic
     fun isVisible(visibility: Visibility) = visibility in this.visibility
 
-    object Limits : Configurable("Limits") {
+    object Limits : ValueGroup("Limits") {
         val tabSize by int("TabSize", 80, 1..1000)
         val height by int("ColumnHeight", 20, 1..100)
     }
 
-    object Highlight : ToggleableConfigurable(ModuleBetterTab, "Highlight", true) {
+    object Highlight : ToggleableValueGroup(ModuleBetterTab, "Highlight", true) {
         open class HighlightColored(
             name: String,
             color: Color4b
-        ) : ToggleableConfigurable(this, name, true) {
+        ) : ToggleableValueGroup(this, name, true) {
             val color by color("Color", color)
         }
 
@@ -68,26 +68,28 @@ object ModuleBetterTab : ClientModule("BetterTab", ModuleCategories.RENDER) {
         val others = tree(Others(Color4b(35, 35, 35, 80)))
     }
 
-    object AccurateLatency : ToggleableConfigurable(ModuleBetterTab, "AccurateLatency", true) {
+    object AccurateLatency : ToggleableValueGroup(ModuleBetterTab, "AccurateLatency", true) {
         val suffix by boolean("AppendMSSuffix", true)
     }
 
-    object PlayerHider : ToggleableConfigurable(ModuleBetterTab, "PlayerHider", false) {
+    object PlayerHider : ToggleableValueGroup(ModuleBetterTab, "PlayerHider", false) {
         val filter = tree(PlayerFilter())
     }
+
+    val showGameMode by boolean("ShowGameMode", true)
 
     init {
         treeAll(
             Limits,
             Highlight,
             AccurateLatency,
-            PlayerHider
+            PlayerHider,
         )
     }
 
 }
 
-class PlayerFilter: Configurable("Filter") {
+class PlayerFilter: ValueGroup("Filter") {
     private val filterBy by multiEnumChoice("FilterBy", Filter.entries)
 
     private val names by regexList("Names", linkedSetOf())
@@ -98,9 +100,9 @@ class PlayerFilter: Configurable("Filter") {
 
     @Suppress("unused")
     private enum class Filter(
-        override val choiceName: String,
+        override val tag: String,
         val matches: PlayerInfo.(Regex) -> Boolean
-    ) : NamedChoice {
+    ) : Tagged {
         DISPLAY_NAME("DisplayName", { regex ->
             this.tabListDisplayName?.string?.let { regex.matches(it) } ?: false
         }),
@@ -113,9 +115,9 @@ class PlayerFilter: Configurable("Filter") {
 
 @Suppress("unused")
 enum class Sorting(
-    override val choiceName: String,
+    override val tag: String,
     val comparator: Comparator<PlayerInfo>?
-) : NamedChoice {
+) : Tagged {
     VANILLA("Vanilla", null),
     PING("Ping", Comparator.comparingInt { it.latency }),
     LENGTH("NameLength", Comparator.comparingInt { it.profile.name.length }),
@@ -129,8 +131,8 @@ enum class Sorting(
 
 @Suppress("unused")
 enum class Visibility(
-    override val choiceName: String
-) : NamedChoice {
+    override val tag: String
+) : Tagged {
     HEADER("Header"),
     FOOTER("Footer"),
     NAME_ONLY("NameOnly")

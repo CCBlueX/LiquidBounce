@@ -83,7 +83,7 @@
                     <Status
                             max={20}
                             value={playerData.armor}
-                            color="#49EAD6"
+                            color="var(--hotbar-armor-color)"
                             alignRight={false}
                             icon="shield"
                     />
@@ -95,7 +95,7 @@
                     <Status
                             max={playerData.maxAir}
                             value={playerData.air}
-                            color="#AAC1E3"
+                            color="var(--hotbar-air-color)"
                             alignRight={true}
                     />
                 {:else}
@@ -109,7 +109,7 @@
                         <Status
                                 max={maxAbsorption}
                                 value={playerData.absorption}
-                                color="#D4AF37"
+                                color="var(--hotbar-absorption-color)"
                                 alignRight={false}
                         />
 
@@ -120,14 +120,14 @@
                     <Status
                             max={playerData.maxHealth}
                             value={playerData.health}
-                            color="#FC4130"
+                            color="var(--hotbar-health-color)"
                             alignRight={false}
                             icon="heart"
                     />
                     <Status
                             max={20}
                             value={playerData.food}
-                            color="#B88458"
+                            color="var(--hotbar-hunger-color)"
                             alignRight={true}
                             icon="food"
                     />
@@ -136,7 +136,7 @@
             {#if playerData.experienceLevel > 0}
                 <Status
                         max={100} value={playerData.experienceProgress * 100}
-                        color="#88C657"
+                        color="var(--hotbar-experience-color)"
                         alignRight={false}
                         label={playerData.experienceLevel.toString()}
                 />
@@ -166,7 +166,6 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .pair {
     display: grid;
@@ -183,13 +182,13 @@
   }
 
   .hotbar-elements {
-    background-color: rgba($hotbar-base-color, 0.68);
+    background-color: var(--hotbar-slot-background-color);
     position: relative;
     border-radius: 5px;
     overflow: hidden;
 
     .slider {
-      border: solid 2px $accent-color;
+      border: solid 2px var(--hotbar-slot-border-color);
       height: 45px;
       width: 45px;
       position: absolute;
@@ -211,18 +210,18 @@
     height: 45px;
     width: 45px;
     border-radius: 5px;
-    background-color: rgba($hotbar-base-color, 0.68);
+    background-color: var(--hotbar-slot-background-color);
     position: absolute;
     bottom: 0;
     left: -65px;
   }
 
   .item-name {
-    color: $hotbar-text-color;
+    color: var(--hotbar-text-color);
     font-size: 14px;
     margin: 0 auto 15px;
     font-weight: 500;
-    background-color: rgba($hotbar-base-color, .68);
+    background-color: var(--hotbar-item-name-background-color);
     padding: 5px 8px;
     border-radius: 5px;
     width: max-content;
@@ -230,7 +229,7 @@
 
   .overlay-message {
     text-align: center;
-    color: $hotbar-text-color;
+    color: var(--hotbar-text-color);
     margin-bottom: 15px;
     overflow: hidden;
   }

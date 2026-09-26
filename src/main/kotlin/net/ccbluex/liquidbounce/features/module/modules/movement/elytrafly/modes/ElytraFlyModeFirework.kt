@@ -19,22 +19,23 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
 import net.ccbluex.liquidbounce.additions.shooter
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.world.entity.projectile.FireworkRocketEntity
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.none
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Items
 
 internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
-    private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+    private object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", enabled = false) {
         val constraints = tree(PlayerInventoryConstraints())
     }
 
@@ -44,16 +45,14 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
 
     private val cooldown by intRange("Cooldown", 20..20, 0..300, "ticks")
 
-    private val ALL_WITHOUT_ARMOR = Slots.OffHand + Slots.Hotbar + Slots.Inventory
+    private val ALL_WITHOUT_ARMOR = Slots.OffhandWithHotbar + Slots.Inventory
     private val slotsToSearch get() = if (ConsiderInventory.enabled) ALL_WITHOUT_ARMOR else Slots.OffhandWithHotbar
 
     private fun shouldUseFirework(): Boolean {
-        return if (!player.isFallFlying or player.isUsingItem) {
+        return if (!player.isFallFlying || player.isUsingItem) {
             false
         } else {
-            world.entitiesForRendering().none {
-                it is FireworkRocketEntity && it.shooter === player
-            }
+            world.entityGetter.none(EntityTypes.FIREWORK_ROCKET) { it.shooter === player }
         }
     }
 
@@ -72,10 +71,16 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         if (fireworkSlot is HotbarItemSlot) {
             useHotbarSlotOrOffhand(fireworkSlot)
         } else {
+            val targetSlot = if (HotbarItemSlot.OFFHAND.canBeSwapTarget) {
+                HotbarItemSlot.OFFHAND
+            } else {
+                HotbarItemSlot(player.inventory.selectedSlot)
+            }
+
             val actions = listOf<InventoryAction>(
-                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
-                InventoryAction.UseItem(OffHandSlot),
-                InventoryAction.Click.performSwap(from = fireworkSlot, to = OffHandSlot),
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = targetSlot),
+                InventoryAction.UseItem(targetSlot, this),
+                InventoryAction.Click.performSwap(from = fireworkSlot, to = targetSlot),
             )
             event.schedule(ConsiderInventory.constraints, actions)
         }

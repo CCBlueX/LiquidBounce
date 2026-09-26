@@ -24,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.FormattedCharSink;
@@ -63,6 +64,10 @@ public record PlainText(
                 : new PlainText(content, style);
     }
 
+    public static PlainText of(String content) {
+        return of(content, Style.EMPTY);
+    }
+
     public static PlainText of(String content, Style style) {
         return content.isEmpty() && style.isEmpty()
                 ? EMPTY
@@ -71,6 +76,10 @@ public record PlainText(
 
     public static PlainText of(String content, ChatFormatting formatting) {
         return of(content, Style.EMPTY.applyFormat(formatting));
+    }
+
+    public static PlainText of(String content, TextColor textColor) {
+        return of(content, Style.EMPTY.withColor(textColor));
     }
 
     public String string() {

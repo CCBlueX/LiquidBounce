@@ -24,12 +24,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import java.io.IOException
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import java.io.IOException
+import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.Test
 import kotlin.time.Duration.Companion.milliseconds
 
 private typealias TestException = IOException

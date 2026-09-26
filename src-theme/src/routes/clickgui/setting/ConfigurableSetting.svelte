@@ -8,6 +8,7 @@
 
     export let setting: ModuleSetting;
     export let path: string;
+    export let hideExpandControl: boolean = false;
 
     const cSetting = setting as ConfigurableSetting;
     const thisPath = `${path}.${cSetting.name}`;
@@ -19,11 +20,14 @@
         dispatch("change");
     }
 
-    let expanded = localStorage.getItem(thisPath) === "true";
+    let expanded = hideExpandControl ? true : localStorage.getItem(thisPath) === "true";
 
     $: setItem(thisPath, expanded.toString());
 
     function toggleExpanded() {
+        if (hideExpandControl) {
+            return;
+        }
         expanded = !expanded;
     }
 </script>
@@ -31,8 +35,10 @@
 <div class="setting">
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="head" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
-        <div class="title">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <ExpandArrow bind:expanded />
+        <div class="title">{$spaceSeperatedNames ? convertToSpacedString(setting.name) : setting.name}</div>
+        {#if !hideExpandControl}
+            <ExpandArrow bind:expanded />
+        {/if}
     </div>
 
     {#if expanded}
@@ -45,14 +51,13 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
   }
 
   .title {
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     font-weight: 600;
   }
@@ -68,7 +73,7 @@
   }
 
   .nested-settings {
-    border-left: solid 2px $accent-color;
+    border-left: solid 2px var(--clickgui-setting-group-border-color);
     padding-left: 7px;
   }
 </style>

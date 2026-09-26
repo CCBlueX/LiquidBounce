@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.enchantment.Enchantments
 
@@ -40,7 +40,7 @@ class BowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<BowItemFacet>(
-                VALUE_ESTIMATOR.asItemFacetComparator(),
+                VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

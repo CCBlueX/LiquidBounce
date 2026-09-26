@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import kotlin.random.Random
 
 /**
  * @anticheat Watchdog (NCP)
@@ -39,9 +40,9 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket
  * @testedOn hypixel.net
  * @author @liquidsquid1
  */
-object FlyHypixelFlat : Choice("HypixelFlat") {
+object FlyHypixelFlat : Mode("HypixelFlat") {
 
-    override val parent: ChoiceConfigurable<*>
+    override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
     private val timer by float("Timer", 1.0f, 0.1f..1.0f)
@@ -60,9 +61,9 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
     private val speedHandler = tickHandler {
         tickUntil { isFlying }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.8))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.8)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = flySpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = flySpeed.toDouble())
 
         tickUntil { player.onGround() }
         ModuleFly.enabled = false
@@ -80,8 +81,8 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
         }
 
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
-        player.deltaMovement.y = 0.0314 + (Math.random() / 1000f)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed))
+        player.deltaMovement.y = 0.0314 + (Random.nextDouble() / 1000f)
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed)
     }
 
     @Suppress("unused")

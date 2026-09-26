@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
+import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import java.util.function.Predicate
 
@@ -86,7 +87,7 @@ object ModuleEagle : ClientModule(
         }
     }
 
-    private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
+    private object Conditional : ToggleableValueGroup(this, "Conditional", true) {
         private val conditions by multiEnumChoice(
             "Conditions",
             Condition.ON_GROUND
@@ -98,10 +99,10 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.xRot in pitch && conditions.all { it.test(event) }
+            !enabled || player.xRot.coerceIn(-90f, 90f) in pitch && conditions.matchesAll(event)
 
         @Suppress("unused")
-        private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
+        private enum class Condition(override val tag: String) : Tagged, Predicate<MovementInputEvent> {
             LEFT("Left"),
             RIGHT("Right"),
             FORWARDS("Forwards"),

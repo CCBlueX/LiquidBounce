@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
 
@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcess
  */
 abstract class AngleSmooth(
     name: String,
-    override val parent: ChoiceConfigurable<*>,
+    override val parent: ModeValueGroup<*>,
     aliases: List<String> = emptyList()
-) : Choice(name, aliases), RotationProcessor {
+) : Mode(name, aliases), RotationProcessor {
     abstract fun calculateTicks(
         currentRotation: Rotation,
         targetRotation: Rotation

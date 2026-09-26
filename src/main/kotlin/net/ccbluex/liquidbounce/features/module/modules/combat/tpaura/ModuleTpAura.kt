@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -29,11 +29,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes.ASta
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes.ImmediateMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
@@ -50,32 +51,34 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     val stuckChronometer = Chronometer()
     var desyncPlayerPosition: Vec3? = null
 
+    private val wireframePlayer = WireframePlayer()
+
     @Suppress("unused")
     private val attackRepeatable = tickHandler {
         val position = desyncPlayerPosition ?: player.position()
 
         clicker.click {
-            val enemy = targetSelector.targets().firstOrNull {
+            val target = targetSelector.targets().firstOrNull {
                 it.squaredBoxedDistanceTo(position) <= attackRange * attackRange
             } ?: return@click false
 
-            enemy.attack(true, keepSprint = true)
+            attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint = true)
             true
         }
     }
 
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val (yaw, pitch) = RotationManager.currentRotation ?: player.rotation
-        val wireframePlayer = WireframePlayer(desyncPlayerPosition ?: return@handler, yaw, pitch)
+        wireframePlayer.pos = desyncPlayerPosition ?: return@handler
+        wireframePlayer.setRotation(RotationManager.currentRotation ?: player.rotation)
         wireframePlayer.render(event, Color4b(36, 32, 147, 87), Color4b(36, 32, 147, 255))
     }
 
 }
 
-abstract class TpAuraChoice(name: String) : Choice(name) {
+abstract class TpAuraMode(name: String) : Mode(name) {
 
-    final override val parent: ChoiceConfigurable<TpAuraChoice>
+    final override val parent: ModeValueGroup<TpAuraMode>
         get() = ModuleTpAura.mode
 
 }

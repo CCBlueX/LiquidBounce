@@ -19,7 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.network.chat.Component
-import java.util.function.BiPredicate
 
 /**
  * Closes HandledScreen with its title contains specified words
@@ -42,16 +42,16 @@ object ModuleGUICloser : ClientModule(
 ) {
 
     override val baseKey: String
-        get() = "liquidbounce.module.guiCloser"
+        get() = "${ConfigSystem.KEY_PREFIX}.module.guiCloser"
 
     private val mode by enumChoice("Mode", Mode.MATCHES)
-    private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
+    private val filters by regexList("Filter", mutableListOf(Regex("^Vote$")))
 
-    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Component> {
+    private enum class Mode(override val tag: String) : Tagged {
         MATCHES("Matches"),
         CONTAINS("Contains");
 
-        override fun test(regex: Regex, text: Component): Boolean = when (this) {
+        fun test(regex: Regex, text: Component): Boolean = when (this) {
             MATCHES -> regex.matches(text.string)
             CONTAINS -> regex.containsMatchIn(text.string)
         }

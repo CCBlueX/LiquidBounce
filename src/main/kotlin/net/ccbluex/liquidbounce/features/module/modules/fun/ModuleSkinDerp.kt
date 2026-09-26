@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -67,9 +67,9 @@ object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     }
 
     private enum class DerpParts(
-        override val choiceName: String,
+        override val tag: String,
         val part: PlayerModelPart
-    ) : NamedChoice {
+    ) : Tagged {
         HAT("Hat", PlayerModelPart.HAT),
         JACKET("Jacket", PlayerModelPart.JACKET),
         LEFT_PANTS("LeftPants", PlayerModelPart.LEFT_PANTS_LEG),

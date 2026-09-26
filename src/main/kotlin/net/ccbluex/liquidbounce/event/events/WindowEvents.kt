@@ -20,37 +20,51 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screens.Screen
 
-@Nameable("windowResize")
+@Tag("windowResize")
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("frameBufferResize")
+@Tag("frameBufferResize")
 class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("mouseButton")
+@AddonApi
+@Tag("mouseButton")
 class MouseButtonEvent(
     val key: InputConstants.Key,
     val button: Int,
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event(), WebSocketEvent
+) : Event(), WebSocketEvent {
+    val isPressed: Boolean get() = action == InputConstants.PRESS
+    val isReleased: Boolean get() = action == InputConstants.RELEASE
 
-@Nameable("mouseScroll")
+    val isLeftButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_LEFT
+    val isMiddleButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_MIDDLE
+    val isRightButton: Boolean get() = button == InputConstants.MOUSE_BUTTON_RIGHT
+
+    val isLeftClick: Boolean get() = isPressed && isLeftButton
+    val isMiddleClick: Boolean get() = isPressed && isMiddleButton
+    val isRightClick: Boolean get() = isPressed && isRightButton
+}
+
+@Tag("mouseScroll")
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
 
-@Nameable("mouseScrollInHotbar")
+@Tag("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 
-@Nameable("mouseCursor")
+@Tag("mouseCursor")
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
-@Nameable("keyboardKey")
+@AddonApi
+@Tag("keyboardKey")
 class KeyboardKeyEvent(
     val key: InputConstants.Key,
     val keyCode: Int,
@@ -58,7 +72,11 @@ class KeyboardKeyEvent(
     val action: Int,
     val mods: Int,
     val screen: Screen? = null
-) : Event(), WebSocketEvent
+) : Event(), WebSocketEvent {
+    val isPressed: Boolean get() = action == InputConstants.PRESS
+    val isReleased: Boolean get() = action == InputConstants.RELEASE
+    val isRepeat: Boolean get() = action == InputConstants.REPEAT
+}
 
-@Nameable("keyboardChar")
-class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent
+@Tag("keyboardChar")
+class KeyboardCharEvent(val codePoint: Int) : Event(), WebSocketEvent

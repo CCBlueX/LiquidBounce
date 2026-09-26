@@ -18,22 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.core.Vec3i
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 
-sealed class ScaffoldTechnique(name: String) : Choice(name) {
-    final override val parent: ChoiceConfigurable<ScaffoldTechnique>
+sealed class ScaffoldTechnique(name: String) : Mode(name) {
+    final override val parent: ModeValueGroup<ScaffoldTechnique>
         get() = ModuleScaffold.technique
 
     abstract fun findPlacementTarget(
@@ -45,26 +45,24 @@ sealed class ScaffoldTechnique(name: String) : Choice(name) {
 
     open fun getRotations(target: BlockPlacementTarget?) = target?.rotation
 
+    /**
+     * Traces from the player's current eye, which is the eye the server uses when it processes the interaction.
+     * [target]'s aim may have been derived from a predicted position, so this is the check that decides whether the
+     * click actually happens.
+     */
     open fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        raycast(rotation)
+        target?.verifyClick(rotation)
 
-    companion object {
-        @JvmField
-        internal val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2)
-
-        @JvmField
-        internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1)
-
-        @JvmField
-        internal val FULL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2, -3, 3, -4, 4)
-
-        private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
-            for (x in xzOffsets) {
-                for (z in xzOffsets) {
-                    add(Vec3i(x, 0, z))
-                    add(Vec3i(x, -1, z))
-                }
-            }
-        }
+    /**
+     * Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block.
+     */
+    protected fun priorityComparator(
+        predictedPos: Vec3,
+        optimalLine: Line?,
+    ): Comparator<BlockPos> = if (optimalLine != null) {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
+    } else {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
     }
+
 }

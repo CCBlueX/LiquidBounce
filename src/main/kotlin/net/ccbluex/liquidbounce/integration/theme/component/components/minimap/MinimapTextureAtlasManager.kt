@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
@@ -75,7 +75,7 @@ class MinimapTextureAtlasManager {
     init {
         for (x in 0..15) {
             for (y in 0..15) {
-                val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
+                val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.argb else Color4b.WHITE.argb
 
                 this.texture.pixels!!.setPixel(x, y, color)
             }

@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.utils.block.CachedBlockPosSpheres.RADIUS
 import net.minecraft.core.BlockPos
-import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class CachedBlockPosSpheresTest {
 

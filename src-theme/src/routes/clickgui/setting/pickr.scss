@@ -1,4 +1,3 @@
-@use "../../../colors.scss" as *;
 
 .pcr-button {
     display: none;
@@ -19,7 +18,7 @@
 }
 
 .color-pickr-button {
-    border: 1px solid $accent-color !important;
+    border: 1px solid var(--clickgui-color-picker-border-color) !important;
 }
 
 .color-pickr-button:focus {

@@ -23,11 +23,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.env
+import java.io.File
 import java.util.Locale
 
 object DeepLearningEngine {
 
+    private val logger = clientLogger("AI")
+
+    @Volatile
     var isInitialized = false
         private set
 
@@ -39,7 +44,11 @@ object DeepLearningEngine {
         mkdirs()
     }
 
-    val enginesCacheFolder = deepLearningFolder.resolve("engines").apply {
+    // The game tests keep it outside the game directory, which they wipe before every run
+    val enginesCacheFolder = (
+        env("LB_DEEPLEARNING_ENGINES", "net.ccbluex.liquidbounce.deeplearning.engines")?.let(::File)
+            ?: deepLearningFolder.resolve("engines")
+    ).apply {
         mkdirs()
     }
 
@@ -63,6 +72,7 @@ object DeepLearningEngine {
     }
 
     @JvmStatic
+    @Volatile
     var task: Task? = null
 
     /**
@@ -75,17 +85,25 @@ object DeepLearningEngine {
      */
     suspend fun init(task: Task) {
         this.task = task
+        isInitialized = false
 
-        logger.info("[AI] Initializing engine...")
+        logger.info("Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
             Engine.getInstance()
         }
         val name = engine.engineName
         val version = engine.version
         val deviceType = engine.defaultDevice().deviceType.uppercase(Locale.ENGLISH)
-        logger.info("[AI] Using deep learning engine $name $version on $deviceType.")
+        logger.info("Using deep learning engine $name $version on $deviceType.")
+    }
 
+    internal fun markInitialized() {
         isInitialized = true
+        this.task = null
+    }
+
+    internal fun markUnavailable() {
+        isInitialized = false
         this.task = null
     }
 

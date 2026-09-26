@@ -20,19 +20,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
-import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -44,13 +45,13 @@ import net.minecraft.world.phys.HitResult
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraft
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinAbstractContainerScreen
  */
-object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
+object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScreen", false) {
 
     val unlockCursor by boolean("UnlockCursor", false)
 
-    private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
+    private val drawInventoryTag = object : ToggleableValueGroup(this, "DrawInventoryTag", enabled = true) {
 
-        private val background = choices(this, "Background", 0, ::backgroundChoices)
+        private val background = modes(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
         private val showTitle by boolean("ShowTitle", false)
@@ -62,7 +63,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
         private fun getRenderPos(): Vec3f? {
             val pos = lastInteractedBlock ?: return null
-            val state = pos.getState() ?: return null
+            val state = pos.state ?: return null
             val anotherPartDirection = state.anotherChestPartDirection()
 
             // Double chest
@@ -83,14 +84,14 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.screen as AbstractContainerScreen<*>
+            val containerScreen = mc.gui.screen() as AbstractContainerScreen<*>
 
             event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })
                 .centerX(pos.x)
                 .centerY(pos.y)
                 .scale(scale)
-                .background(background.activeChoice)
+                .background(background.activeMode)
                 .draw()
         }
     }

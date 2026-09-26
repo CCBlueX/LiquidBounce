@@ -18,27 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.prepareForAttack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.validateAttack
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import kotlin.math.pow
 
-internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", false) {
+internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSwing", false) {
 
     /**
      * Additional range for fail swing to work
@@ -46,8 +48,8 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
     private val additionalRange by floatRange("AdditionalRange", 2.5f..3f, 0f..10f).onChanged { range ->
         currentAdditionalRange = range.random()
     }
-    val mode = choices(this, "NotifyWhenFail", activeIndex = 1) {
-        arrayOf(NoneChoice(it), Box, Sound)
+    val mode = modes(this, "NotifyWhenFail", activeIndex = 1) {
+        arrayOf(NoneMode(it), Box, Sound)
     }.apply {
         doNotIncludeAlways()
     }
@@ -63,30 +65,34 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
         currentAdditionalRange = this.additionalRange.random()
     }
 
-    suspend fun dealWithFakeSwing(target: Entity?) {
-        if (!enabled || !validateAttack()) {
+    fun dealWithFakeSwing(target: Entity?) {
+        if (!enabled || !canAttackNow()) {
             return
         }
 
-        val range = ModuleKillAura.range + currentAdditionalRange
-        val entity = target ?: world.findEnemy(0f..range.toFloat()) ?: return
-        val raycastType = mc.hitResult?.type
+        val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
+        val entity = target ?: world.findEnemy(0f, range) ?: return
+        val hitResult = mc.hitResult
+        val block = (hitResult as? BlockHitResult)?.takeIf { !world.getBlockState(it.blockPos).isAir }
 
         if (entity.isRemoved || entity.squaredBoxedDistanceTo(player) > range.pow(2)
-            || raycastType != HitResult.Type.MISS) {
+            || hitResult?.type == HitResult.Type.ENTITY || block == null && hitResult?.type != HitResult.Type.MISS) {
             return
         }
 
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
-        attack {
-            // [this.crosshairTarget == null] results in a limited attack speed
-            if (interaction.hasMissTime()) {
+        prepareForAttack {
+            // A click on a block starts digging it; only one into the air has the miss cooldown, which limits the
+            // attack speed. See [net.minecraft.client.Minecraft.startAttack].
+            if (block != null) {
+                interaction.startDestroyBlock(block.blockPos, block.direction)
+            } else if (interaction.hasMissTime()) {
                 mc.missTime = 10
             }
 
-            player.swing(InteractionHand.MAIN_HAND)
+            SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
 
             // Notify the user about the failed hit
             KillAuraNotifyWhenFail.notifyForFailedHit(entity, RotationManager.currentRotation
