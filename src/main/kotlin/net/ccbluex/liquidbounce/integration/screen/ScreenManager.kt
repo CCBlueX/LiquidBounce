@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.FpsLimitEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -251,6 +252,21 @@ object ScreenManager : EventListener {
     @Suppress("unused")
     private val screenUpdater = handler<GameTickEvent> {
         handleCurrentScreen(mc.gui.screen())
+    }
+
+    /**
+     * SDL only turns key presses into typed characters while text input is on, and Minecraft turns it on
+     * for its own text fields alone. A browser cannot tell us when one of its inputs is focused, so our
+     * screens keep it on while they are open.
+     */
+    @Suppress("unused")
+    private val textInputHandler = handler<GameRenderTaskQueueEvent> {
+        if (isClientScreen(mc.gui.screen())) {
+            mc.textInputManager().startTextInput(this)
+        } else {
+            // Only stops it if we started it.
+            mc.textInputManager().stopTextInput(this)
+        }
     }
 
     @Suppress("unused")
