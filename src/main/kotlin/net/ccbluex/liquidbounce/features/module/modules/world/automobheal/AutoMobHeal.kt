@@ -265,7 +265,8 @@ object AutoMobHeal : ClientModule(
                 }
 
                 if (needsArmorRepair(entity)) {
-                    Slots.OffhandWithHotbar.findClosestSlot(Items.ARMADILLO_SCUTE)?.let { return it }
+                    val armorItem = entity.bodyArmorItem
+                    Slots.OffhandWithHotbar.findClosestSlot(armorItem::isValidRepairItem)?.let { return it }
                 }
 
                 return null
