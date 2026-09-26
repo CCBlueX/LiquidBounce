@@ -22,11 +22,16 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.netty.http.routing.Routing
 
 // GET /api/v1/client/input
-private fun Routing.getInputInfo() = get("/input") {
+private fun Route.getInputInfo() = get("/input") {
     val key = call.queryParameters["key"] ?: call.badRequest("Missing key parameter")
     val input = InputConstants.getKey(key)
 
@@ -37,7 +42,7 @@ private fun Routing.getInputInfo() = get("/input") {
 }
 
 // GET /api/v1/client/keybinds
-private fun Routing.getKeybinds() = get("/keybinds") {
+private fun Route.getKeybinds() = get("/keybinds") {
     call.respond(
         JsonArray().apply {
             for (key in mc.options.keyMappings) {
@@ -62,19 +67,19 @@ var isTyping = false
 private data class TypingState(val typing: Boolean)
 
 // POST /api/v1/client/typing
-private fun Routing.isTyping() = post("/typing") {
+private fun Route.isTyping() = post("/typing") {
     val typingRequest = call.receive<TypingState>()
     isTyping = typingRequest.typing
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/typing
-private fun Routing.getIsTyping() = get("/typing") {
+private fun Route.getIsTyping() = get("/typing") {
     call.respond(TypingState(isTyping))
 }
 
-internal fun Routing.inputRoutes() {
+internal fun Route.inputRoutes() {
     getInputInfo()
     getKeybinds()
     isTyping()

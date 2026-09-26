@@ -1,5 +1,6 @@
 {
   "name": "Taco",
+  "description": "Displays a friendly taco.",
   "enabled": false,
   "singleton": true,
   "alignment": {

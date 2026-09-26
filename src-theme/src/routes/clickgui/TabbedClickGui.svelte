@@ -2,16 +2,24 @@
     import ClickGui from "./ClickGui.svelte";
     import GlobalSettings from "./tabs/GlobalSettings.svelte";
     import Tabs from "./tabs/Tabs.svelte";
-    import {gridSize, os, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
+    import {gridSize, os, scaleFactor, snappingEnabled, darken} from "./clickgui_store";
     import type {ConfigurableSetting, TogglableSetting} from "../../integration/types";
     import {onMount} from "svelte";
-    import {getClientInfo, getGameWindow, getModuleSettings, setTyping} from "../../integration/rest";
+    import {
+        getClientInfo,
+        getGameWindow,
+        getModuleSettings,
+        setHudEditorSelected,
+        setTyping
+    } from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
+    import HudEditor from "./tabs/hud_editor/HudEditor.svelte";
 
     const tabs = [
         {title: "ClickGUI", content: ClickGui},
-        {title: "Settings", content: GlobalSettings}
+        {title: "HUD Editor", content: HudEditor},
+        {title: "Settings", content: GlobalSettings},
     ];
 
     let activeTab = $state(0);
@@ -37,6 +45,8 @@
     }
 
     onMount(async () => {
+        await setHudEditorSelected(false);
+
         $os = (await getClientInfo()).os;
 
         const gameWindow = await getGameWindow();
@@ -59,33 +69,20 @@
 
 <div
         class="tabbed-clickgui"
-        class:grid={$showGrid}
-        style="
-    transform: scale({$scaleFactor * 50}%);
-    width: {2 / $scaleFactor * 100}vw;
-    height: {2 / $scaleFactor * 100}vh;
-    background-size: {$gridSize}px {$gridSize}px;
-  "
+        class:darken={$darken}
 >
     <Tabs {tabs} bind:activeTab/>
 </div>
 
 <style lang="scss">
-
-  $GRID_SIZE: 10px;
-
   .tabbed-clickgui {
-    background-color: var(--clickgui-overlay-background-color);
     overflow: hidden;
     position: absolute;
-    will-change: opacity;
-    transform-origin: top left;
-    left: 0;
-    top: 0;
+    inset: 0;
+    transition: ease background-color .2s;
 
-    &.grid {
-      background-image: linear-gradient(to right, var(--clickgui-grid-color) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--clickgui-grid-color) 1px, transparent 1px);
+    &.darken {
+      background-color: var(--clickgui-overlay-background-color);
     }
   }
 </style>

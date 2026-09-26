@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
@@ -84,7 +84,7 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
@@ -125,7 +125,7 @@ object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleMan
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.world.automobheal.MobFoodOption.Companion.foodNutritionHeal
+import net.ccbluex.liquidbounce.features.module.modules.world.automobheal.MobFoodOption.foodNutritionHeal
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
@@ -49,7 +49,6 @@ import net.minecraft.world.entity.animal.wolf.Wolf
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
-import java.util.function.ToIntFunction
 import kotlin.math.abs
 
 /**
@@ -177,7 +176,7 @@ object AutoMobHeal : ClientModule(
             }
 
             private fun foodCandidateComparator(missingHealth: Float): Comparator<FoodCandidate> {
-                return Comparator.comparingInt(ToIntFunction(::bucketPenalty))
+                return Comparator.comparingInt(::bucketPenalty)
                     .thenComparing { wouldWasteHealing(it, missingHealth) }
                     .thenComparingDouble { healingDelta(it, missingHealth).toDouble() }
                     .thenComparing({ it.slot }, HotbarItemSlot.PREFER_NEARBY)
@@ -351,7 +350,7 @@ object AutoMobHeal : ClientModule(
             }
         }
 
-        companion object {
+        companion {
             private val healAmount1xNutrition = ToFloatFunction<ItemStack> { stack -> foodNutritionHeal(stack, 1f) }
             private val healAmount2xNutrition = ToFloatFunction<ItemStack> { stack -> foodNutritionHeal(stack, 2f) }
 
@@ -414,7 +413,7 @@ object AutoMobHeal : ClientModule(
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (player.isUsingItem || mc.screen != null) {
+        if (player.isUsingItem || mc.gui.screen() != null) {
             return@tickHandler
         }
 

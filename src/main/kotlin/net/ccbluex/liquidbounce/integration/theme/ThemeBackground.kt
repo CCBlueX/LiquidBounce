@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.CompiledRenderPipeline
+import com.mojang.renderpearl.api.pipeline.ShaderSource
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withUniformBuffer
@@ -33,9 +35,11 @@ import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBlitOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawTexQuad
+import net.ccbluex.liquidbounce.render.utils.LiteralShaderSource
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asTextureSetup
@@ -44,11 +48,11 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.resources.Identifier
-import java.io.Closeable
 import java.util.Locale
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 
-sealed interface ThemeBackground : Closeable {
+sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
 
     /**
      * Returns false to let Minecraft render its default wallpaper.
@@ -108,9 +112,12 @@ sealed interface ThemeBackground : Closeable {
     class Shader private constructor(
         private val metadata: ThemeMetadata,
         private val pipeline: RenderPipeline,
-        private val fshId: Identifier,
-        private val fragmentShader: String,
+        private val shaderSource: ShaderSource,
     ) : ThemeBackground {
+
+        private var compileGeneration = 0
+        @Volatile
+        private var compiledPipeline: CompiledRenderPipeline? = null
 
         private val ubo = ClientUniformDefine.THEME_BACKGROUND.createRingBuffer {
             "ThemeShaderBackground UBO - ${metadata.name}"
@@ -128,6 +135,8 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
+            val prepared = compiledPipeline ?: return false
+
             val framebufferWidth = mc.window.width
             val framebufferHeight = mc.window.height
 
@@ -144,9 +153,9 @@ sealed interface ThemeBackground : Closeable {
             backgroundView!!.createRenderPass(
                 { "ThemeShaderBackground Pass - ${metadata.name}" }
             ).use { pass ->
-                pass.setPipeline(pipeline)
+                pass.setPipeline(prepared)
                 pass.setUniform(ClientUniformDefine.THEME_BACKGROUND.uboName, uboSlice)
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
 
             context.drawBlitOnCurrentLayer(
@@ -166,14 +175,16 @@ sealed interface ThemeBackground : Closeable {
             background?.close()
         }
 
-        override fun onResourceReload() {
-            gpuDevice.precompilePipeline(pipeline) { id, _ ->
-                if (id == fshId) {
-                    fragmentShader
-                } else {
-                    error("Unknown shader id: $id")
-                }
-            }
+        override fun reload(taskExecutor: Executor, reloadExecutor: Executor): CompletableFuture<Void> {
+            val generation = ++compileGeneration
+            compiledPipeline = null
+            return gpuDevice.compilePipeline(pipeline, shaderSource, taskExecutor)
+                .thenAcceptAsync({ pending ->
+                    if (generation != compileGeneration) {
+                        return@thenAcceptAsync
+                    }
+                    compiledPipeline = pending.finishCompile() ?: return@thenAcceptAsync
+                }, reloadExecutor)
         }
 
         private fun resizeIfNeeded(
@@ -187,22 +198,20 @@ sealed interface ThemeBackground : Closeable {
                 background?.close()
                 background = gpuDevice.createTexture(
                     "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
-                    GpuTexture.USAGE_RENDER_ATTACHMENT,
-                    TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING,
+                    GpuFormat.RGBA8_UNORM, framebufferWidth, framebufferHeight,
                     1, 1,
                 )
                 backgroundView?.close()
                 backgroundView = background!!.asView()
-                textureSetup = backgroundView!!.asTextureSetup(SAMPLER)
+                textureSetup = backgroundView!!.asTextureSetup(sampler)
             }
         }
 
-        companion object {
+        companion {
 
-            @JvmStatic
-            private val SAMPLER = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
+            private val sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
 
-            @JvmStatic
             fun build(
                 metadata: ThemeMetadata,
                 background: Background,
@@ -222,7 +231,7 @@ sealed interface ThemeBackground : Closeable {
                     .withDepthStencilState(optional())
                     .build()
 
-                return Shader(metadata, pipeline, fshId, fragmentShader)
+                return Shader(metadata, pipeline, LiteralShaderSource(mapOf(fshId to fragmentShader)))
             }
         }
     }
@@ -250,5 +259,6 @@ sealed interface ThemeBackground : Closeable {
     /**
      * Called when resources are reloaded.
      */
-    fun onResourceReload() {}
+    override fun reload(taskExecutor: Executor, reloadExecutor: Executor): CompletableFuture<Void> =
+        CompletableFuture.completedFuture(null)
 }

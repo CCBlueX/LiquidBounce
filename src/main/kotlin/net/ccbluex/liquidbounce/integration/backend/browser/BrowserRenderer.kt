@@ -67,7 +67,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
             this.shouldReload = false
         }
 
-        if (!browser.visible || rendered || browser.priority > 0 && mc.screen != null) {
+        if (!browser.visible || rendered || browser.priority > 0 && mc.gui.screen() != null) {
             return@handler
         }
 

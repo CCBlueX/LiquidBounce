@@ -25,9 +25,6 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.math.fastCos
-import net.ccbluex.liquidbounce.utils.math.fastSin
-import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
@@ -44,7 +41,6 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TridentItem
-import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot", true) {
 
@@ -136,7 +132,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
 
             val targetRotation = RotationManager.activeRotationTarget ?: return@handler
 
-            val aimDifference = RotationManager.serverRotation.angleTo(targetRotation.rotation)
+            val aimDifference = RotationManager.serverRotation.directionAngleTo(targetRotation.rotation)
 
             if (aimDifference > aimThreshold) {
                 return@handler
@@ -169,24 +165,15 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private fun getHypotheticalHit(): Entity? {
         player.usingItemHand ?: return null
         val rotation = RotationManager.serverRotation
-        val yaw = rotation.yaw
-        val pitch = rotation.pitch
-
         val trajectoryInfo = HeldItemTrajectoryResolver
             .resolveHeldItemPrimaryShot(player, player.activeItem, false)
             ?.trajectoryInfo
             ?: return null
 
-        val velocity = trajectoryInfo.initialVelocity
-
-        val vX = -yaw.toRadians().fastSin() * pitch.toRadians().fastCos() * velocity
-        val vY = -pitch.toRadians().fastSin() * velocity
-        val vZ = yaw.toRadians().fastCos() * pitch.toRadians().fastCos() * velocity
-
         val arrow = SimulatedArrow(
             world,
             player.eyePosition,
-            Vec3(vX, vY, vZ),
+            rotation.directionVector.scale(trajectoryInfo.initialVelocity),
             collideEntities = false
         )
 
@@ -205,7 +192,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 }
 
                 val entityBox = entity.boundingBox
-                    .inflate(0.3)
+                    .inflate(projectileEntityHitMargin(i).toDouble())
                     .move(predictedPos.subtract(entity.position()))
 
                 if (entityBox.clip(lastPos, arrow.pos).isPresent) {
@@ -217,10 +204,15 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         return null
     }
 
+    /**
+     * @see net.minecraft.world.entity.projectile.ProjectileUtil.computeMargin
+     */
+    private fun projectileEntityHitMargin(tickCount: Int) =
+        ((tickCount - 2) / 20.0F).coerceIn(0.0F, 0.3F)
+
     private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
-            entity != player &&
-                entity.shouldBeAttacked() &&
+            entity.shouldBeAttacked() &&
                 Line(player.eyePosition, player.rotation.directionVector)
                     .distanceToSqr(entity.position()) < 10.0 * 10.0
         }.map { entity ->

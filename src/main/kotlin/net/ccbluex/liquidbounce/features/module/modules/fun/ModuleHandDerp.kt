@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.server.level.ClientInformation
 
 
@@ -111,7 +111,7 @@ object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
         @Suppress("unused")
         val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
             val packet = it.packet
-            if (packet is ServerboundSwingPacket) {
+            if (packet is ServerboundPunchPacket) {
                 switchHand()
             }
         }

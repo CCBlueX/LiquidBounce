@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.integration.theme.component
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.components.WebHudComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import java.util.UUID
 
 abstract class HudComponentFactory {
 
@@ -34,6 +37,7 @@ abstract class HudComponentFactory {
      * Factory for creating components from JSON deserialization.
      *
      * @param name Component name
+     * @param description Short description of the component
      * @param enabled Whether the component is enabled
      * @param alignment JSON alignment data
      * @param tweaks Optional tweaks array
@@ -41,6 +45,7 @@ abstract class HudComponentFactory {
      */
     class JsonHudComponentFactory(
         override val name: String,
+        private val description: String?,
         override val enabled: Boolean,
         override val singleton: Boolean,
         private val alignment: JsonObject,
@@ -53,7 +58,8 @@ abstract class HudComponentFactory {
             enabled,
             accessibleInteropGson.fromJson(alignment, Alignment::class.java),
             tweaks ?: emptyArray(),
-            values ?: emptyArray()
+            values ?: emptyArray(),
+            description ?: "",
         )
 
     }
@@ -65,12 +71,16 @@ abstract class HudComponentFactory {
      * @param enabled Whether the component is enabled
      * @param function Function producing the component
      */
-    class NativeHudComponentFactory(
+    @AddonApi
+    class NativeHudComponentFactory @JvmOverloads constructor(
         override val name: String,
         override val enabled: Boolean = false,
         override val singleton: Boolean = false,
-        private val function: () -> HudComponent
+        val description: String = "",
+        private val function: () -> NativeHudComponent
     ) : HudComponentFactory() {
+        val id: UUID = UUID.randomUUID()
+
         override fun createComponent() = function()
     }
 

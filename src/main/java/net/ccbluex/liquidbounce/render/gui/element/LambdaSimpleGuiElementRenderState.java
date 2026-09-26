@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.render.gui.element;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
+import org.jspecify.annotations.Nullable;
 
 public record LambdaSimpleGuiElementRenderState(
     RenderPipeline pipeline,

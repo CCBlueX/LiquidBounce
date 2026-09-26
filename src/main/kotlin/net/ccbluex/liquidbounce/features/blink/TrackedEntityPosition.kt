@@ -57,16 +57,16 @@ class TrackedEntityPosition(initialPos: Vec3 = Vec3.ZERO) {
     fun handlePacket(packet: Packet<*>, level: ClientLevel, target: Entity): Vec3? {
         val trackedPos = when (packet) {
             is ClientboundMoveEntityPacket if packet.getEntity(level) == target ->
-                codec.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
+                packet.positionDelta.decode(codec).endPosition()
 
             is ClientboundTeleportEntityPacket if packet.id == target.id ->
                 packet.change.position
 
             is ClientboundEntityPositionSyncPacket if packet.id == target.id ->
-                packet.values.position
+                packet.position().endPosition()
 
             else -> return null
-        } ?: return null
+        }
 
         base = trackedPos
         return trackedPos
