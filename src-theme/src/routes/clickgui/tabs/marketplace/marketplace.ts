@@ -1,6 +1,7 @@
 import {writable} from "svelte/store";
 import {REST_BASE} from "../../../../integration/host";
 import {ago, errorMessage, present} from "../../../../util/utils";
+import {notify} from "../../clickgui_store";
 import type {
     ConfigTrackerState,
     MarketplaceConfig,
@@ -64,13 +65,6 @@ export function reviews(amount: number): string {
     return `${amount} ${amount === 1 ? "review" : "reviews"}`;
 }
 
-export interface MenuEntry {
-    title: string;
-    hint?: string;
-    danger?: boolean;
-    onclick: () => void;
-}
-
 export function typeName(type: MarketplaceItemType): string {
     return type === "Addon" ? "Add-on" : type;
 }
@@ -87,14 +81,6 @@ export type DialogRequest =
     | { kind: "delete"; config: MarketplaceConfig; ondone: () => void };
 
 export const dialog = writable<DialogRequest | null>(null);
-
-export const toast = writable<{ message: string; error: boolean; id: number } | null>(null);
-
-let toasts = 0;
-
-export function notify(message: string, error = false) {
-    toast.set({message, error, id: ++toasts});
-}
 
 export function notifyInstalled(result: MarketplaceInstallResult) {
     if (result.installed.length > 0) {

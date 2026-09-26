@@ -3,7 +3,7 @@
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import PillButton from "./PillButton.svelte";
-    import {typing} from "../../../../../integration/util";
+    import {typing} from "../../../integration/util";
 
     /**
      * [onconfirm] runs for the confirm button, and the dialog closes when it resolves to true. [footer]

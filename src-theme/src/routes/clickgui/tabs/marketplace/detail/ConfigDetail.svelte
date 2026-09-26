@@ -1,24 +1,24 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import DetailPage from "./DetailPage.svelte";
-    import PillButton from "../ui/PillButton.svelte";
-    import ActionMenu from "../ui/ActionMenu.svelte";
-    import Badge from "../ui/Badge.svelte";
-    import SectionLabel from "../ui/SectionLabel.svelte";
-    import ListRow from "../ui/ListRow.svelte";
+    import PillButton from "../../../common/PillButton.svelte";
+    import ActionMenu from "../../../common/ActionMenu.svelte";
+    import Chip from "../../../common/Chip.svelte";
+    import SectionLabel from "../../../common/SectionLabel.svelte";
+    import ListRow from "../../../common/ListRow.svelte";
     import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
         attempt,
         configBadges,
         dialog,
-        notify,
         reports,
         typeName,
         UNKNOWN_PACK,
         UNKNOWN_SERVER,
         version
     } from "../marketplace";
+    import {notify} from "../../../clickgui_store";
     import {ago, compactNumber, date, errorMessage, present} from "../../../../../util/utils";
 
     let {id, loggedIn, tracker, onback, onopen}: {
@@ -146,7 +146,7 @@
                     <SectionLabel text="What it changes"/>
                     <div class="chips">
                         {#each detail.changes as module (module)}
-                            <Badge text={module}/>
+                            <Chip text={module}/>
                         {/each}
                     </div>
                 {/if}

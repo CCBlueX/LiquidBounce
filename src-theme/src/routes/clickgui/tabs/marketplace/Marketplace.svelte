@@ -2,14 +2,14 @@
     import {onMount} from "svelte";
     import ScaledClickGuiContent from "../../ScaledClickGuiContent.svelte";
     import Switch from "../../setting/common/Switch.svelte";
-    import SegmentedControl from "./ui/SegmentedControl.svelte";
-    import PillButton from "./ui/PillButton.svelte";
-    import ToggleChip from "./ui/ToggleChip.svelte";
-    import SectionLabel from "./ui/SectionLabel.svelte";
-    import Notice from "./ui/Notice.svelte";
-    import ListRow from "./ui/ListRow.svelte";
+    import SegmentedControl from "../../common/SegmentedControl.svelte";
+    import PillButton from "../../common/PillButton.svelte";
+    import Chip from "../../common/Chip.svelte";
+    import SectionLabel from "../../common/SectionLabel.svelte";
+    import Notice from "../../common/Notice.svelte";
+    import ListRow from "../../common/ListRow.svelte";
     import ItemAction from "./ItemAction.svelte";
-    import Toast from "./ui/Toast.svelte";
+    import Toast from "../../common/Toast.svelte";
     import TrackerMenu from "./list/TrackerMenu.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
@@ -50,7 +50,6 @@
         configLine,
         dialog,
         itemBadges,
-        notify,
         notifyInstalled,
         reports,
         reviews,
@@ -60,6 +59,7 @@
         UNKNOWN_SERVER,
         version
     } from "./marketplace";
+    import {notify} from "../../clickgui_store";
     import {compactNumber, errorMessage} from "../../../../util/utils";
     import {typing, visible} from "../../../../integration/util";
 
@@ -388,7 +388,7 @@
             {#if configTab && !offline}
                 <div class="filters">
                     {#if currentServer}
-                        <ToggleChip text="On {currentServer}" active={onServer}
+                        <Chip text="On {currentServer}" active={onServer}
                                     onclick={() => { onServer = !onServer; persistFilters(); }}/>
                     {/if}
                     <div class="switch">
@@ -397,7 +397,7 @@
                     {#if tagOptions.length > 0}
                         <span class="divider"></span>
                         {#each tagOptions as tag (tag)}
-                            <ToggleChip text={tag} active={tags.includes(tag)} onclick={() => toggleTag(tag)}/>
+                            <Chip text={tag} active={tags.includes(tag)} onclick={() => toggleTag(tag)}/>
                         {/each}
                     {/if}
                 </div>

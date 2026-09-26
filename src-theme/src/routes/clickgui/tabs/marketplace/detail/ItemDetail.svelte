@@ -2,9 +2,9 @@
     import {onMount} from "svelte";
     import DetailPage from "./DetailPage.svelte";
     import ItemAction from "../ItemAction.svelte";
-    import PillButton from "../ui/PillButton.svelte";
-    import Badge from "../ui/Badge.svelte";
-    import SectionLabel from "../ui/SectionLabel.svelte";
+    import PillButton from "../../../common/PillButton.svelte";
+    import Chip from "../../../common/Chip.svelte";
+    import SectionLabel from "../../../common/SectionLabel.svelte";
     import {
         applyMarketplaceTheme,
         getMarketplaceItemDetail,
@@ -94,7 +94,7 @@
                     <span>{entry.revision.liquidbounce ?? ""}</span>
                     <span class="tag">
                         {#if entry.installed}
-                            <Badge text="Installed"/>
+                            <Chip text="Installed"/>
                         {:else if !entry.fits}
                             Not for {detail.liquidbounce}
                         {/if}

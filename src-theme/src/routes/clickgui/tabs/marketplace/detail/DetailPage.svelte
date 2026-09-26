@@ -1,8 +1,8 @@
 <script lang="ts">
     import type {Snippet} from "svelte";
-    import ListRow from "../ui/ListRow.svelte";
-    import Notice from "../ui/Notice.svelte";
-    import PillButton from "../ui/PillButton.svelte";
+    import ListRow from "../../../common/ListRow.svelte";
+    import Notice from "../../../common/Notice.svelte";
+    import PillButton from "../../../common/PillButton.svelte";
 
     interface Stat {
         label: string;

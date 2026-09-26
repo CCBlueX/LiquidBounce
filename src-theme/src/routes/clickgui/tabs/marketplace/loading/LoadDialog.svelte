@@ -1,10 +1,11 @@
 <script lang="ts">
     import Switch from "../../../setting/common/Switch.svelte";
-    import Dialog from "../ui/Dialog.svelte";
-    import ToggleChip from "../ui/ToggleChip.svelte";
-    import TextField from "../ui/TextField.svelte";
+    import Dialog from "../../../common/Dialog.svelte";
+    import Chip from "../../../common/Chip.svelte";
+    import TextField from "../../../common/TextField.svelte";
     import {getMarketplaceConfigModules, loadMarketplaceConfig} from "../../../../../integration/rest";
-    import {attempt, dialog, type DialogRequest, notify} from "../marketplace";
+    import {attempt, dialog, type DialogRequest} from "../marketplace";
+    import {notify} from "../../../clickgui_store";
 
     // The last config stays while the dialog fades out
     let config = $state.raw<{ id: number; address: string } | null>(null);
@@ -71,7 +72,7 @@
             <TextField bind:value={filter} placeholder="Filter"/>
             <div class="chips">
                 {#each shown as module (module)}
-                    <ToggleChip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
+                    <Chip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
                 {/each}
             </div>
         {/if}

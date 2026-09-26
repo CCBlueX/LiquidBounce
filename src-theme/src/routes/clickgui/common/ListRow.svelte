@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {Snippet} from "svelte";
-    import Badge from "./Badge.svelte";
-    import Address from "../Address.svelte";
+    import Chip from "./Chip.svelte";
+    import Address from "./Address.svelte";
 
     /**
      * The title is [address] with its author dimmed, or [title], followed by [by]. [hover] replaces [meta] while
@@ -51,7 +51,7 @@
                 {#if address}<Address {address}/>{:else}{title}{/if}{#if by}<span class="by">by {by}</span>{/if}
             </span>
             {#each badges as badge}
-                <Badge text={badge}/>
+                <Chip text={badge}/>
             {/each}
         </div>
         {#if subtitle !== undefined}

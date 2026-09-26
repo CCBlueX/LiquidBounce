@@ -1,12 +1,11 @@
 <script lang="ts">
-    import Dialog from "../ui/Dialog.svelte";
-    import PillButton from "../ui/PillButton.svelte";
-    import ToggleChip from "../ui/ToggleChip.svelte";
-    import Badge from "../ui/Badge.svelte";
-    import SectionLabel from "../ui/SectionLabel.svelte";
-    import TextField from "../ui/TextField.svelte";
-    import SegmentedControl from "../ui/SegmentedControl.svelte";
-    import Address from "../Address.svelte";
+    import Dialog from "../../../common/Dialog.svelte";
+    import PillButton from "../../../common/PillButton.svelte";
+    import Chip from "../../../common/Chip.svelte";
+    import SectionLabel from "../../../common/SectionLabel.svelte";
+    import TextField from "../../../common/TextField.svelte";
+    import SegmentedControl from "../../../common/SegmentedControl.svelte";
+    import Address from "../../../common/Address.svelte";
     import {
         copyMarketplaceShareCode,
         deleteMarketplaceConfig,
@@ -16,7 +15,8 @@
         updateTrackedConfig
     } from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetails} from "../../../../../integration/types";
-    import {attempt, dialog, type DialogRequest, notify} from "../marketplace";
+    import {attempt, dialog, type DialogRequest} from "../marketplace";
+    import {notify} from "../../../clickgui_store";
 
     type Kind = "New" | "Overlay" | "Fork";
     type Request = Exclude<DialogRequest, { kind: "load" }>;
@@ -206,7 +206,7 @@
             <SectionLabel text="Tags"/>
             <div class="chips">
                 {#each tags as tag (tag)}
-                    <ToggleChip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
+                    <Chip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
                 {/each}
             </div>
         {/if}
@@ -219,7 +219,7 @@
         <div class="head">
             <span class="address"><Address address={request.published.address}/></span>
             {#if request.published.shareCode}
-                <Badge text="Unlisted"/>
+                <Chip text="Unlisted"/>
             {/if}
         </div>
         {#if request.published.shareCode}

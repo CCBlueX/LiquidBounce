@@ -6,7 +6,8 @@
         danger = false,
         active = false,
         disabled = false,
-        mono = false
+        mono = false,
+        segment = false
     }: {
         title: string;
         onclick: () => void;
@@ -15,6 +16,7 @@
         active?: boolean;
         disabled?: boolean;
         mono?: boolean;
+        segment?: boolean;
     } = $props();
 
     function click(e: MouseEvent) {
@@ -23,7 +25,8 @@
     }
 </script>
 
-<button type="button" class="button" class:primary class:danger class:active class:mono {disabled} onclick={click}>
+<button type="button" class="button" class:primary class:danger class:active class:mono class:segment {disabled}
+        onclick={click}>
     {title}
 </button>
 
@@ -69,6 +72,22 @@
     &.mono {
       font-family: monospace;
       letter-spacing: 1px;
+    }
+
+    // An option of a SegmentedControl
+    &.segment {
+      font-size: 13px;
+      color: var(--clickgui-text-dimmed-color);
+      border-color: transparent;
+      padding: 5px 13px;
+
+      &:hover, &.active {
+        color: var(--clickgui-text-color);
+      }
+
+      &.active {
+        border-color: var(--clickgui-tab-active-border-color);
+      }
     }
 
     &:disabled {

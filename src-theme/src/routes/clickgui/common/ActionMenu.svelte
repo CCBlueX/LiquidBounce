@@ -1,7 +1,15 @@
+<script lang="ts" module>
+    export interface MenuEntry {
+        title: string;
+        hint?: string;
+        danger?: boolean;
+        onclick: () => void;
+    }
+</script>
+
 <script lang="ts">
     import type {Snippet} from "svelte";
     import {fly} from "svelte/transition";
-    import type {MenuEntry} from "../marketplace";
 
     let {entries, trigger, active = false}: {
         entries: MenuEntry[];

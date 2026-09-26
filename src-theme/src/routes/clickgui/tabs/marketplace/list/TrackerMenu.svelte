@@ -1,8 +1,9 @@
 <script lang="ts">
-    import ActionMenu from "../ui/ActionMenu.svelte";
-    import Address from "../Address.svelte";
+    import ActionMenu from "../../../common/ActionMenu.svelte";
+    import Address from "../../../common/Address.svelte";
     import type {ConfigTracker} from "../../../../../integration/types";
-    import {dialog, type MenuEntry, trackingName} from "../marketplace";
+    import {dialog, trackingName} from "../marketplace";
+    import type {MenuEntry} from "../../../common/ActionMenu.svelte";
 
     let {tracker, loggedIn, online = true, onchange, onopen}: {
         tracker: ConfigTracker;
