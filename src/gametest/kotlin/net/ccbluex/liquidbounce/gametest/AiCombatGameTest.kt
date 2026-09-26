@@ -39,7 +39,7 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.PositionMoveRotation
+import net.minecraft.world.entity.PositionPath
 import net.minecraft.world.phys.Vec3
 import org.apache.logging.log4j.LogManager
 import java.util.UUID
@@ -57,7 +57,7 @@ class AiCombatGameTest : FabricClientGameTest {
     override fun runTest(context: ClientGameTestContext) {
         context.waitFor({ ScreenManager.mainBrowser != null && DeepLearningEngine.isInitialized }, 2400)
         context.worldBuilder().setUseConsistentSettings(true).create().use { world ->
-            world.clientLevel.waitForChunksRender()
+            world.connection.waitForChunksRender()
             context.waitFor { it.player?.onGround() == true }
             world.server.runOnServer<RuntimeException> { server ->
                 server.commands.performPrefixedCommand(server.createCommandSourceStack(), "gamemode creative @a")
@@ -93,7 +93,7 @@ class AiCombatGameTest : FabricClientGameTest {
             for (tick in 0 until TICKS) {
                 context.client { client ->
                     client.receive(ClientboundEntityPositionSyncPacket(opponent.id,
-                        PositionMoveRotation(circle(center, tick), Vec3.ZERO, tick * STEP + 90f, 0f), true))
+                        PositionPath.of(circle(center, tick)), tick * STEP + 90f, 0f, true))
                 }
                 context.waitTick()
                 context.client { client ->

@@ -61,10 +61,9 @@ import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
 import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.tags.ItemTags
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
@@ -157,7 +156,7 @@ object CombatPackets : EventListener {
                 packet is ClientboundMoveEntityPacket || packet is ClientboundEntityPositionSyncPacket ||
                 packet is ClientboundTeleportEntityPacket || packet is ClientboundEntityEventPacket
         } else {
-            packet is ServerboundSwingPacket && packet.hand == InteractionHand.MAIN_HAND ||
+            packet is ServerboundPunchPacket ||
                 packet is ServerboundSetCarriedItemPacket
         }
         if (relevant) {
@@ -195,7 +194,7 @@ object CombatPackets : EventListener {
                 is ClientboundEntityEventPacket -> if (packet.eventId == EntityEvent.DEATH) {
                     packet.getEntity(level)?.let { mark(it.id, DEATH) }
                 }
-                is ServerboundSwingPacket -> mark(player.id, SWING)
+                is ServerboundPunchPacket -> mark(player.id, SWING)
                 is ServerboundSetCarriedItemPacket -> mark(player.id, ITEM_SWITCH)
             }
         }
@@ -231,9 +230,9 @@ object CombatSampler {
         val local = entity is LocalPlayer
         // Remote entities interpolate towards the last packet; the packet values are what the server saw.
         val position = if (local) entity.position() else entity.positionCodec.base
-        val interpolation = if (local) null else entity.interpolation
+        val interpolation = if (local) null else entity.clientPositionAndRotation
         // Vanilla sets these when it handles the packet, and the entity tick after this event advances them.
-        val swung = !local && entity.swinging && entity.swingTime == -1
+        val swung = !local && entity.isSwinging && entity.swingState.ticks == 0
         val hurt = entity.hurtTime == entity.hurtDuration && entity.hurtDuration > 0
         val events = CombatPackets.events(entity.id) or (if (swung) SWING else 0) or (if (hurt) HURT else 0)
         return CombatFrame(

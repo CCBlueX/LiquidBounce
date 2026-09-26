@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
+import net.ccbluex.liquidbounce.utils.clicking.ClickTechnique
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -51,11 +52,11 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
     mc.options.keyAttack,
     KillAuraClickerItemCooldown(),
-    techniques = ClickPatterns.SCHEDULED + ClickPatterns.AI,
+    techniques = ClickTechnique.SCHEDULED + ClickTechnique.AI,
 ) {
 
     /** Whether the model times the attacks. */
-    val usesAi get() = technique == ClickPatterns.AI
+    val usesAi get() = technique == ClickTechnique.AI
 
     override val isClickTick: Boolean
         get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.remainingAttackCount == 0)
