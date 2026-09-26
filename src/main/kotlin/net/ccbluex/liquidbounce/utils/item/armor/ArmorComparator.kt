@@ -193,8 +193,8 @@ class ArmorComparator(
         compareBy { getEnchantmentThreshold(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
         compareBy { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
-        compareByCondition(ArmorPiece::isAlreadyEquipped),
-        compareByCondition(ArmorPiece::isReachableByHand)
+        compareBy(ArmorPiece::isAlreadyEquipped),
+        compareBy(ArmorPiece::isReachableByHand)
     )
 
     /**
