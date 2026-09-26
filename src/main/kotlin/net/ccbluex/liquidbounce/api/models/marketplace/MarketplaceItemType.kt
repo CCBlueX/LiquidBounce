@@ -20,9 +20,12 @@ package net.ccbluex.liquidbounce.api.models.marketplace
 
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 
+@AddonApi
 enum class MarketplaceItemType(
     override val tag: String,
     val isListable: Boolean,
@@ -34,12 +37,18 @@ enum class MarketplaceItemType(
     THEME("Theme", true, true),
     @SerializedName("Addon")
     ADDON("Addon", true, true),
+
+    /**
+     * Installed like any item; the ScriptAPI add-on runs them through [MarketplaceManager.registerHandler].
+     */
+    @SerializedName("Script")
+    SCRIPT("Script", true, true),
     @SerializedName("Other")
     OTHER("Other", false, false);
 
     suspend fun reload() = when (this) {
         THEME -> ThemeManager.load()
         ADDON -> AddonInstaller.stageSubscribedAddons()
-        else -> { }
+        else -> MarketplaceManager.reloadHandled(this)
     }
 }

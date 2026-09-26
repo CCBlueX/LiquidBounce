@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.integration.interop
 
 import io.ktor.server.application.install
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.http.content.staticFiles
-import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
@@ -94,7 +94,7 @@ object ClientInteropServer {
 
     private suspend fun startServer(port: Int, authCode: String): Int {
         return try {
-            val engine = embeddedServer(Netty, host = "127.0.0.1", port = port) {
+            val engine = embeddedServer(CIO, host = "127.0.0.1", port = port) {
                 install(StatusPages) {
                     exception<HttpStatusException> { call, cause ->
                         call.respond(cause.status, cause.body)
