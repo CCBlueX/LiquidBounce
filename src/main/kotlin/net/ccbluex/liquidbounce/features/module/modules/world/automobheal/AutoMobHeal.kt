@@ -107,14 +107,14 @@ object AutoMobHeal : ClientModule(
                     continue
                 }
 
-                val slot = findSlot(typedEntity) ?: continue
+                val slot = findSlot(typedEntity, minHealthRatio) ?: continue
                 bestPlan = HealPlan(typedEntity, slot, distanceSq)
             }
 
             return bestPlan
         }
 
-        protected abstract fun findSlot(entity: T): HotbarItemSlot?
+        protected abstract fun findSlot(entity: T, minHealthRatio: Float): HotbarItemSlot?
 
         protected open fun canInteract(entity: T): Boolean {
             return !isBlockedBySecondaryUse(entity)
@@ -145,7 +145,7 @@ object AutoMobHeal : ClientModule(
 
             protected open fun foodOptions(entity: T): List<MobFoodOption> = emptyList()
 
-            override fun findSlot(entity: T): HotbarItemSlot? {
+            override fun findSlot(entity: T, minHealthRatio: Float): HotbarItemSlot? {
                 val missingHealth = (entity.maxHealth - entity.health).coerceAtLeast(0f)
                 val candidates = Slots.OffhandWithHotbar.mapNotNull { slot ->
                     val option = foodOptions(entity).firstOrNull {
@@ -217,7 +217,7 @@ object AutoMobHeal : ClientModule(
             "IronGolem",
             IronGolem::class.java,
         ) {
-            override fun findSlot(entity: IronGolem): HotbarItemSlot? =
+            override fun findSlot(entity: IronGolem, minHealthRatio: Float): HotbarItemSlot? =
                 Slots.OffhandWithHotbar.findClosestSlot(Items.IRON_INGOT)
         }
 
@@ -254,12 +254,15 @@ object AutoMobHeal : ClientModule(
                     (super.shouldHeal(entity, minHealthRatio) || needsArmorRepair(entity) || needsArmorEquip(entity))
             }
 
-            override fun findSlot(entity: Wolf): HotbarItemSlot? {
+            override fun findSlot(entity: Wolf, minHealthRatio: Float): HotbarItemSlot? {
                 if (needsArmorEquip(entity)) {
                     Slots.OffhandWithHotbar.findClosestSlot(Items.WOLF_ARMOR)?.let { return it }
                 }
 
-                super.findSlot(entity)?.let { return it }
+                // Food is only of use while the wolf itself is below the health threshold.
+                if (super.shouldHeal(entity, minHealthRatio)) {
+                    super.findSlot(entity, minHealthRatio)?.let { return it }
+                }
 
                 if (needsArmorRepair(entity)) {
                     Slots.OffhandWithHotbar.findClosestSlot(Items.ARMADILLO_SCUTE)?.let { return it }
