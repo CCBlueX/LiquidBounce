@@ -21,7 +21,7 @@ thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
 retrofit = "3.0.0"
 # djl
-djl = "0.36.0"
+djl = "0.38.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 okhttp = "5.5.0"
 
