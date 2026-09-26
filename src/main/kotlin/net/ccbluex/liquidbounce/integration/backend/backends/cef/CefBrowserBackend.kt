@@ -198,6 +198,8 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                 }
 
             })
+
+            CefClipboardBridge.install()
         }
 
         val support = MCEFAccelerationSupport.getAccelerationSupport()

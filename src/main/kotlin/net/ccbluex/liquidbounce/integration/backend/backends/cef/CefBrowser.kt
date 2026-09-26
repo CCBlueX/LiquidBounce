@@ -35,10 +35,17 @@ import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import org.cef.browser.CefRequestContext
+import net.minecraft.util.Util
 import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
+
+/**
+ * Only Linux needs the clipboard bridge; on Windows and macOS the browser reaches the system
+ * clipboard on its own.
+ */
+private val isLinux = Util.getPlatform() == Util.OS.LINUX
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -264,6 +271,10 @@ class CefBrowser(
             return
         }
 
+        if (isLinux && handleLinuxClipboardShortcut(keyCode, modifiers)) {
+            return
+        }
+
         browserApi.sendKeyPress(scanCode, keyCode, modifiers)
     }
 
@@ -275,6 +286,31 @@ class CefBrowser(
     override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
         browserApi.sendKeyTyped(codepoint)
+    }
+
+    /**
+     * Routes the clipboard shortcuts through [CefClipboardBridge], which is the only way for the
+     * off-screen browser to reach the system clipboard on Linux.
+     *
+     * @return whether the key press was consumed
+     */
+    private fun handleLinuxClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
+        if (modifiers and InputConstants.MOD_CONTROL == 0) {
+            return false
+        }
+
+        val frame = browserApi.focusedFrame ?: return false
+        return when (keyCode) {
+            // Chromium would paste its own clipboard on top of the one we just inserted.
+            InputConstants.KEY_V -> CefClipboardBridge.paste(frame)
+            InputConstants.KEY_C, InputConstants.KEY_X -> {
+                // Chromium still performs the copy itself, keeping its own clipboard intact; the
+                // bridge only reads the selection out alongside it.
+                CefClipboardBridge.copy(frame)
+                false
+            }
+            else -> false
+        }
     }
 
     // TODO: Temporary fix. Should be removed after fix in JCEF
