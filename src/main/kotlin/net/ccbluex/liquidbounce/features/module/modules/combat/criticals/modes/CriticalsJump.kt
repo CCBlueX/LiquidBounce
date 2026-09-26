@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 
 object CriticalsJump : Mode("Jump") {
@@ -43,7 +44,7 @@ object CriticalsJump : Mode("Jump") {
     //   Hop: 0.1 (like in Wurst-Client)
     //   LowJump: 0.3425 (for some weird AAC version)
     //
-    private val height by float("Height", 0.42f, 0.1f..0.42f)
+    private val height by float("Height", LivingEntity.BASE_JUMP_POWER, 0.1f..LivingEntity.BASE_JUMP_POWER)
 
     // Jump crit should just be active until an enemy is in your reach to be attacked
     private val range by float("Range", 4f, 1f..6f)
@@ -91,7 +92,7 @@ object CriticalsJump : Mode("Jump") {
     private val jumpHandler = handler<PlayerJumpEvent> { event ->
         // The `value`-option only changes *normal jumps* with upwards velocity 0.42.
         // Jumps with lower velocity (i.e. from honey blocks) are not affected.
-        val isJumpNormal = event.motion == 0.42f
+        val isJumpNormal = event.motion == LivingEntity.BASE_JUMP_POWER
 
         // Is the jump a normal jump and auto-jumping is enabled.
         if (isJumpNormal && adjustNextJump) {
@@ -182,12 +183,12 @@ object CriticalsJump : Mode("Jump") {
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
-    fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
+    fun shouldWaitForJump(initialMotion: Float = LivingEntity.BASE_JUMP_POWER): Boolean {
         if (!allowsCriticalHit(true) || !running) {
             return false
         }
 
-        val ticksTillFall = initialMotion / 0.08f
+        val ticksTillFall = initialMotion / LivingEntity.DEFAULT_BASE_GRAVITY.toFloat()
         val nextPossibleCrit = calculateTicksUntilNextCrit()
 
         var ticksTillNextOnGround = FallingPlayer(

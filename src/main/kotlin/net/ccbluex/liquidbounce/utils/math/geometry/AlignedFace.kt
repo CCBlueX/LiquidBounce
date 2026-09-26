@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -181,5 +182,53 @@ class AlignedFace(from: Vec3, to: Vec3) {
             Mth.equal(dims.z, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
             else -> error("Face must be axis aligned for this function to work. dimensions=$dimensions")
         }
+    }
+
+    companion {
+        fun get(
+            direction: Direction,
+            minX: Double,
+            minY: Double,
+            minZ: Double,
+            maxX: Double,
+            maxY: Double,
+            maxZ: Double,
+        ): AlignedFace = when (direction) {
+            Direction.DOWN -> AlignedFace(
+                Vec3(minX, minY, minZ),
+                Vec3(maxX, minY, maxZ)
+            )
+
+            Direction.UP -> AlignedFace(
+                Vec3(minX, maxY, minZ),
+                Vec3(maxX, maxY, maxZ)
+            )
+
+            Direction.SOUTH -> AlignedFace(
+                Vec3(minX, minY, maxZ),
+                Vec3(maxX, maxY, maxZ)
+            )
+
+            Direction.NORTH -> AlignedFace(
+                Vec3(minX, minY, minZ),
+                Vec3(maxX, maxY, minZ)
+            )
+
+            Direction.EAST -> AlignedFace(
+                Vec3(maxX, minY, minZ),
+                Vec3(maxX, maxY, maxZ)
+            )
+
+            Direction.WEST -> AlignedFace(
+                Vec3(minX, minY, minZ),
+                Vec3(minX, maxY, maxZ)
+            )
+        }
+
+        fun get(direction: Direction, box: AABB) = get(
+            direction,
+            box.minX, box.minY, box.minZ,
+            box.maxX, box.maxY, box.maxZ,
+        )
     }
 }

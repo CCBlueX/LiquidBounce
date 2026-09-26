@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
@@ -35,61 +34,60 @@ import net.minecraft.util.valueproviders.ConstantFloat
 @Suppress("unused")
 enum class HitFXRegistry(
     override val tag: String,
-    vanillaSounds: Array<SoundEvent> = emptyArray(),
-    private val customSoundIds: Array<String> = emptyArray()
+    vanillaSounds: List<SoundEvent> = [],
+    private val customSoundIds: List<String> = []
 ) : Tagged {
-    HIT("Hit", vanillaSounds = arrayOf(SoundEvents.ARROW_HIT)),
-    ORB("Orb", vanillaSounds = arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
-    BONK("Bonk", customSoundIds = arrayOf("bonk")),
-    BOYKISSER("Boykisser", customSoundIds = arrayOf(
+    HIT("Hit", vanillaSounds = [SoundEvents.ARROW_HIT]),
+    ORB("Orb", vanillaSounds = [SoundEvents.EXPERIENCE_ORB_PICKUP]),
+    BONK("Bonk", customSoundIds = ["bonk"]),
+    BOYKISSER("Boykisser", customSoundIds = [
         "boykisser-1",
         "boykisser-2",
         "boykisser-3",
         "boykisser-4",
         "boykisser-5",
-        "boykisser-6"
-    )),
-    APPLEPAY("ApplePay", customSoundIds = arrayOf("applepay")),
-    AIMBOOSTER("Aimbooster", customSoundIds = arrayOf("aimbooster")),
-    BRING("Bring", customSoundIds = arrayOf("bring")),
-    BRICK("Brick", customSoundIds = arrayOf("brick")),
-    BUMP("Bump", customSoundIds = arrayOf("bump")),
-    GLASS("Glass", customSoundIds = arrayOf("glass-1", "glass-2", "glass-3")),
-    CLICK("Click", customSoundIds = arrayOf("click-1", "click-2", "click-3")),
-    COIN("Coin", customSoundIds = arrayOf("coin")),
-    MEOW("Meow", customSoundIds = arrayOf("meow")),
-    MOAN("Moan", customSoundIds = arrayOf("moan-1", "moan-2", "moan-3", "moan-4")),
-    MAGIC_SQUASH("MagicSquash", customSoundIds = arrayOf("magic_squash")),
-    NYA("NYA", customSoundIds = arrayOf("nya")),
-    OSU("OSU", customSoundIds = arrayOf("osu")),
-    POP("Pop", customSoundIds = arrayOf("pop")),
-    SOFT("Soft", customSoundIds = arrayOf("soft")),
-    SCHOOLBOY("Schoolboy", customSoundIds = arrayOf("schoolboy")),
-    SKEET("Skeet", customSoundIds = arrayOf("skeet")),
-    SLAP("Slap", customSoundIds = arrayOf("slap")),
-    SQUASH("Squash", customSoundIds = arrayOf("squash")),
-    TUNG("Tung", customSoundIds = arrayOf("tung")),
-    TF2CRIT("TF2 Crit", customSoundIds = arrayOf("tf2-crit")),
-    UWU("UWU", customSoundIds = arrayOf("uwu"));
+        "boykisser-6",
+    ]),
+    APPLEPAY("ApplePay", customSoundIds = ["applepay"]),
+    AIMBOOSTER("Aimbooster", customSoundIds = ["aimbooster"]),
+    BRING("Bring", customSoundIds = ["bring"]),
+    BRICK("Brick", customSoundIds = ["brick"]),
+    BUMP("Bump", customSoundIds = ["bump"]),
+    GLASS("Glass", customSoundIds = ["glass-1", "glass-2", "glass-3"]),
+    CLICK("Click", customSoundIds = ["click-1", "click-2", "click-3"]),
+    COIN("Coin", customSoundIds = ["coin"]),
+    MEOW("Meow", customSoundIds = ["meow"]),
+    MOAN("Moan", customSoundIds = ["moan-1", "moan-2", "moan-3", "moan-4"]),
+    MAGIC_SQUASH("MagicSquash", customSoundIds = ["magic_squash"]),
+    NYA("NYA", customSoundIds = ["nya"]),
+    OSU("OSU", customSoundIds = ["osu"]),
+    POP("Pop", customSoundIds = ["pop"]),
+    SOFT("Soft", customSoundIds = ["soft"]),
+    SCHOOLBOY("Schoolboy", customSoundIds = ["schoolboy"]),
+    SKEET("Skeet", customSoundIds = ["skeet"]),
+    SLAP("Slap", customSoundIds = ["slap"]),
+    SQUASH("Squash", customSoundIds = ["squash"]),
+    TUNG("Tung", customSoundIds = ["tung"]),
+    TF2CRIT("TF2 Crit", customSoundIds = ["tf2-crit"]),
+    UWU("UWU", customSoundIds = ["uwu"]);
 
-    val sounds = vanillaSounds + customSoundIds.mapToArray {
+    val sounds = vanillaSounds + customSoundIds.map {
         SoundEvent.createVariableRangeEvent(clientIdentifier(it))
     }
 
-    companion object {
-        @JvmStatic
+    companion {
         fun registerSounds(
             registry: MutableMap<Identifier, WeighedSoundEvents>,
             cache: MutableMap<Identifier, Resource>
         ) {
-            for (id in entries.flatMap { it.customSoundIds.asList() }) {
+            for (id in entries.flatMap { it.customSoundIds }) {
                 val location = clientIdentifier(id)
                 val sound = Sound(
                     location, ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, false, false, 16
                 )
 
                 registry.putIfAbsent(location, WeighedSoundEvents(location, null).apply { addSound(sound) })
-                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources) {
+                cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources.fullResources()) {
                     LiquidBounce.resource("sounds/$id.ogg")
                 })
             }

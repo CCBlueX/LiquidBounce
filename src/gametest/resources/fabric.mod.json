@@ -3,10 +3,12 @@
   "id": "liquidbounce-gametest",
   "version": "1.0.0",
   "name": "LiquidBounce Game Tests",
-  "license": "GPL-3.0-or-later",
   "environment": "client",
   "entrypoints": {
     "fabric-client-gametest": [
+      "net.ccbluex.liquidbounce.gametest.CommandGameTest",
+      "net.ccbluex.liquidbounce.gametest.MarketplaceCommandGameTest",
+      "net.ccbluex.liquidbounce.gametest.LocalConfigTrackingGameTest",
       "net.ccbluex.liquidbounce.gametest.AiCombatGameTest"
     ]
   },

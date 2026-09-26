@@ -91,7 +91,7 @@ open class ClientModule @JvmOverloads constructor(
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
     @AddonApi
-    val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
+    val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYBOARD, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {
