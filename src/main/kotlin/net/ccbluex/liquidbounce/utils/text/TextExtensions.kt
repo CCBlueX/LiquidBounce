@@ -30,6 +30,8 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.FontDescription
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
@@ -188,7 +190,18 @@ fun Component.mapComponent(
     }
 }
 
-fun Component.translated(): Component = mapComponent(contentMapper = ComponentContents::translated)
+fun Component.sanitizeForSerialization(): Component =
+    mapComponent(
+        contentMapper = ComponentContents::translated,
+        styleMapper = Style::stripNonSerializableFont,
+    )
+
+/**
+ * Replaces font descriptions that [ComponentSerialization] cannot encode with the default font.
+ *
+ * @see FontDescription.CODEC
+ */
+private fun Style.stripNonSerializableFont(): Style = if (this.font is FontDescription.Resource) this else this.withFont(null)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
