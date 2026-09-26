@@ -231,6 +231,12 @@ object AutoMobHeal : ClientModule(
             private object Armor : ToggleableValueGroup(this@WolfTarget, "Armor", false) {
                 val equip by boolean("Equip", false)
                 val repairThreshold by float("RepairThreshold", 87.5f, 1f..100f, "%")
+
+                /**
+                 * Vanilla repairs the body armor only while the wolf is sitting, see [Wolf.mobInteract].
+                 * With this off, a standing wolf is settled down first, which is all the server accepts.
+                 */
+                val onlyWhenSitting by boolean("OnlyWhenSitting", true)
             }
 
             init {
@@ -264,6 +270,10 @@ object AutoMobHeal : ClientModule(
 
             private fun needsArmorRepair(entity: Wolf): Boolean {
                 if (!Armor.enabled || !entity.isOwnedBy(player) || !entity.isWearingBodyArmor) {
+                    return false
+                }
+
+                if (Armor.onlyWhenSitting && !entity.isInSittingPose) {
                     return false
                 }
 
