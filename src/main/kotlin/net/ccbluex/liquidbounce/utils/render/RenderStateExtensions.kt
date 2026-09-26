@@ -47,7 +47,7 @@ fun EntityRenderState.setPosition(position: Position) {
     this.x = position.x()
     this.y = position.y()
     this.z = position.z()
-    val cameraPos = mc.gameRenderer.gameRenderState.levelRenderState.cameraRenderState.pos
+    val cameraPos = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState.pos
     this.distanceToCameraSq = cameraPos.distanceToSqr(this.x, this.y, this.z)
 }
 

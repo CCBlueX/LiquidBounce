@@ -18,64 +18,47 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.BooleanArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.Vec3ArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import net.ccbluex.liquidbounce.utils.client.player
 
 /**
  * Teleport Command
  *
  * Allows you to teleport.
  *
+ * Accepts vanilla coordinate semantics: absolute (`100 64 -200`), relative to the
+ * player (`~ ~ ~`, `~5 ~-2 ~`) and local to the look direction (`^ ^ ^5`). An optional
+ * trailing boolean (`true`/`yes`/`on`) replaces Y with the module's HighTP amount.
+ *
  * Module: [ModuleTeleport]
  */
-object CommandTeleport : Command.Factory {
+object CommandTeleport : CommandRegistrar {
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("teleport")
-            .alias("tp")
-            .requiresIngame()
-            .parameter(
-                ParameterBuilder
-                    .begin<Float>("x")
-                    .required()
-                    .build(),
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<Float>("y|z")
-                    .required()
-                    .build()
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<Float>("z")
-                    .optional()
-                    .build()
-            )
-            .handler {
-                val x = (args[0] as String).toDoubleOrNull()
-                val z = (args[args.size - 1] as String).toDoubleOrNull()
-                val y = if (args.size == 3) {
-                    (args[1] as String).toDoubleOrNull()
-                } else {
-                    if (ModuleTeleport.highTp) {
-                        ModuleTeleport.highTpAmount
-                    } else {
-                        player.y
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("teleport", aliases = listOf("tp")) {
+            requires { it.isIngame }
+            argument("pos", Vec3ArgumentType(centerCorrect = false)) { pos ->
+                optional("highTp", BooleanArgumentType("highTp"), default = false) { highTp ->
+                    exec { ctx ->
+                        val position = Vec3ArgumentType.getPosition(ctx, pos.name)
+                        val y = if (ctx.get(highTp)) {
+                            ModuleTeleport.highTpAmount.toDouble()
+                        } else {
+                            position.y
+                        }
+
+                        ModuleTeleport.indicateTeleport(position.x, y, position.z)
+                        1
                     }
                 }
-
-                if (x == null || y == null || z == null) {
-                    throw CommandException(command.result("invalidCoordinates"))
-                }
-
-                ModuleTeleport.indicateTeleport(x, y.toDouble(), z)
             }
-            .build()
+        }
     }
+
 }

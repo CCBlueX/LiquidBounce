@@ -4,9 +4,8 @@
  * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License, either version 3 of
+ * the License, or (at your option) any later version.
  *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +17,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.marketplaceListCommand
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceListCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions.MarketplaceRevisionsCommand
 
 /**
@@ -28,18 +29,17 @@ import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.rev
  *
  * Allows interacting with the LiquidBounce Marketplace
  */
-object CommandMarketplace : Command.Factory {
+object CommandMarketplace : CommandRegistrar {
 
-    override fun createCommand() = CommandBuilder.begin("marketplace")
-        .hub()
-        .subcommand(marketplaceListCommand())
-        .subcommand(MarketplaceSearchCommand)
-        .subcommand(MarketplaceSubscribeCommand)
-        .subcommand(MarketplaceUnsubscribeCommand)
-        .subcommand(MarketplaceUpdateCommand)
-        .subcommand(MarketplaceRevisionsCommand)
-        // Editing items is disabled until proven stable
-        // .subcommand(MarketplaceItemCommand)
-        .build()
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("marketplace") {
+            with(MarketplaceListCommand) { list() }
+            with(MarketplaceSearchCommand) { search() }
+            with(MarketplaceSubscribeCommand) { subscribe() }
+            with(MarketplaceUnsubscribeCommand) { unsubscribe() }
+            with(MarketplaceUpdateCommand) { update() }
+            with(MarketplaceRevisionsCommand) { revisions() }
+        }
+    }
 
 }

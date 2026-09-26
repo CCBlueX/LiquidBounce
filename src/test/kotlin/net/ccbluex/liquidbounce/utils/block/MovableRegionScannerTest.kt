@@ -20,16 +20,16 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.world.level.levelgen.structure.BoundingBox
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class MovableRegionScannerTest {
 
     private lateinit var scanner: MovableRegionScanner
 
-    @BeforeEach
+    @BeforeTest
     fun setup() {
         scanner = MovableRegionScanner()
     }

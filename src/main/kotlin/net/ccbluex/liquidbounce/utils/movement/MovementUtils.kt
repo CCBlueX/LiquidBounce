@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.movement
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectHashSetOf
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -187,6 +188,7 @@ inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
     this.deltaMovement = block(this.deltaMovement)
 }
 
+@AddonApi
 fun LocalPlayer.stopXZVelocity() {
     this.deltaMovement = this.deltaMovement.copy(x = 0.0, z = 0.0)
 }

@@ -1,5 +1,6 @@
 {
   "name": "BlockCounter",
+  "description": "Shows the number of blocks available for bridging.",
   "enabled": true,
   "singleton": true,
   "alignment": {

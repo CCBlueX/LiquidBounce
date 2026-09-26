@@ -32,12 +32,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -49,6 +50,7 @@ import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.WebBlock
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
@@ -117,7 +119,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             return@handler
         }
 
-        trackedWebs.removeIf { trackedPos -> trackedPos.getState()?.block !is WebBlock }
+        trackedWebs.removeIf { trackedPos -> trackedPos.state?.block !is WebBlock }
 
         val now = System.currentTimeMillis()
         val placeAction = Slots.OffhandWithHotbar.findClosestSlot(Items.WATER_BUCKET)?.let { waterSlot ->
@@ -144,7 +146,8 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val action = currentAction ?: return@handler
-        val resolvedHitResult = action.resolveHitResult(traceFromPlayer()) ?: return@handler
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val resolvedHitResult = action.resolveHitResult(traceFromPlayer(rotation)) ?: return@handler
 
         SilentHotbar.selectSlotSilently(this, action.slot, 1)
         val onSuccess = {
@@ -154,6 +157,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
         doPlacement(
             resolvedHitResult,
+            rotation,
             hand = action.slot.useHand,
             onItemUseSuccess = onSuccess,
             onPlacementSuccess = onSuccess,
@@ -189,7 +193,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             slot = plan.hotbarItemSlot,
             rotation = plan.placementTarget.rotation,
             resolveHitResult = { rayTraceResult ->
-                if (plan.doesCorrespondTo(rayTraceResult)) rayTraceResult else null
+                if (plan.placementTarget.doesCrosshairTargetMatchRequirements(rayTraceResult)) rayTraceResult else null
             },
             onSuccess = {
                 markWebPlacementSuccess(webPos)
@@ -296,7 +300,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         pickupPos: BlockPos,
         pickupCenter: Vec3,
     ): BlockHitResult {
-        val fluidTraceResult = traceFromPlayer(includeFluids = true)
+        val fluidTraceResult = traceFromPlayer(fluid = ClipContext.Fluid.SOURCE_ONLY)
         return when {
             // Prefer fluid-inclusive trace so we can hit source blocks hidden behind web geometry.
             fluidTraceResult.type == HitResult.Type.BLOCK && fluidTraceResult.blockPos == pickupPos -> {
@@ -323,10 +327,9 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     ): Direction? {
         return directions
             .filter { side ->
-                val adjacentState = webPos.relative(side).getState() ?: return@filter false
+                val adjacentState = webPos.relative(side).state ?: return@filter false
                 // Find a replaceable side to place water
-                adjacentState.isAir ||
-                    (adjacentState.fluidState.`is`(Fluids.LAVA) && adjacentState.fluidState.isSource)
+                adjacentState.isAir || adjacentState.fluidState.isSourceOfType(Fluids.LAVA)
             }
             .maxByOrNull { side ->
                 player.lookAngle.dot(side.unitVec3)

@@ -18,13 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.command.builder.enumChoice
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.TaggedArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -35,52 +39,44 @@ import net.ccbluex.liquidbounce.utils.combat.Targets
  *
  * Provides subcommands for enemy configuration.
  */
-object CommandTargets : Command.Factory {
+object CommandTargets : CommandRegistrar {
 
-    override fun createCommand() = CommandBuilder
-        .begin("targets")
-        .alias("target", "enemies", "enemy")
-        .subcommand(
-            CommandBuilder
-                .begin("combat")
-                .fromTargets(GlobalSettingsTarget.combatChoices)
-                .build()
-        )
-        .subcommand(
-            CommandBuilder
-                .begin("visual")
-                .fromTargets(GlobalSettingsTarget.visualChoices)
-                .build()
-        )
-        .hub()
-        .build()
-
-    private fun CommandBuilder.fromTargets(targets: MultiChoiceListValue<Targets>): CommandBuilder {
-        this.parameter(
-            ParameterBuilder
-                .enumChoice<Targets>("category") { it in targets.choices }
-                .required()
-                .build()
-        ).handler {
-            val entry = args[0] as Targets
-
-            val state = targets.toggle(entry)
-            val localizedState = if (state) {
-                "enabled"
-            } else {
-                "disabled"
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("targets", aliases = listOf("target", "enemies", "enemy")) {
+            literal("combat") {
+                targetsChoice("category", GlobalSettingsTarget.combatChoices, "combat")
             }
-            chat(
-                regular(command.result(localizedState,
-                    entry.name.lowercase().replaceFirstChar { it.uppercase() })
-                ),
-                metadata = MessageMetadata(id = "CTargets#info")
-            )
-
-            ModuleClickGui.sync()
+            literal("visual") {
+                targetsChoice("category", GlobalSettingsTarget.visualChoices, "visual")
+            }
         }
+    }
 
-        return this
+    private fun CmdLiteralScope.targetsChoice(
+        name: String,
+        targets: MultiChoiceListValue<Targets>,
+        subcommand: String,
+    ) {
+        argument(name, TaggedArgumentType<Targets>(name) { it in targets.choices }) { category ->
+            exec { ctx ->
+                val entry = ctx.get(category)
+
+                val state = targets.toggle(entry)
+                val localizedState = if (state) "enabled" else "disabled"
+                chat(
+                    regular(
+                        translation(
+                            "liquidbounce.command.targets.$subcommand.$localizedState",
+                            entry.name.lowercase().replaceFirstChar { it.uppercase() }
+                        )
+                    ),
+                    metadata = MessageMetadata(id = "CTargets#info")
+                )
+
+                ModuleClickGui.sync()
+                1
+            }
+        }
     }
 
 }

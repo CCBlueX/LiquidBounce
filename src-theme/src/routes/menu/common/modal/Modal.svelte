@@ -1,6 +1,7 @@
 <script lang="ts">
     import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
+    import {portal} from "../../../../integration/util";
 
     export let title: string;
     export let visible: boolean;
@@ -14,7 +15,7 @@
 </script>
 
 {#if visible}
-    <div class="modal-wrapper" transition:fade|global={{duration: 200}}>
+    <div class="modal-wrapper" transition:fade|global={{duration: 200}} use:portal>
         <div class="modal" in:fly|global={{duration: 300, y: -100}} out:fly|global={{duration: 300, y: -100}}>
             <button class="button-modal-close" on:click={handleClick}>
                 <img src="img/menu/icon-close.svg" alt="close">
@@ -38,7 +39,7 @@
     width: 100vw;
     height: 100vh;
     background-color: var(--menu-modal-backdrop-color);
-    z-index: 99999;
+    z-index: 999;
   }
 
   .modal {

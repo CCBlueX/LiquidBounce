@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -44,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -137,7 +139,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
             tree(ExtraLayer)
         }
 
-        val broken = mutableSetOf<BlockPos>()
+        val broken = LongOpenHashSet()
 
         /**
          * With a higher priority so that it runs before [CrystalDestroyFeature].
@@ -159,7 +161,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 val posAsLong = entry.longKey
 
                 // find the list of current breaking data, or else return
-                val breakingProgressions = mc.levelRenderer.destructionProgress[posAsLong] ?: continue
+                val breakingProgressions = world.destructionProgress()[posAsLong] ?: continue
 
                 // find the braking info that doesn't belong to us, if we mine our own surround, it should be ignored
                 val breakingInfo = breakingProgressions.lastOrNull { it.id != player.id } ?: continue
@@ -173,7 +175,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 val pos = BlockPos.of(posAsLong)
                 // add the block to the map of blocks that are being broken
                 if (ExtraLayer.enabled && stage > 0) {
-                    broken.add(pos)
+                    broken.add(posAsLong)
                 }
 
                 // skip to the next entry if the crystal destroy feature is disabled
@@ -303,7 +305,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                     holeBlocks.add(holePos.relative(direction, 2))
                 }
 
-                if (!isDown && (addExtraLayerBlocks || Protect.broken.contains(pos))) {
+                if (!isDown && (addExtraLayerBlocks || Protect.broken.contains(pos.asLong()))) {
                     holeBlocks.add(pos.relative(direction))
                     holeBlocks.add(pos.above())
                     if (Protect.ExtraLayer.corners) {

@@ -27,76 +27,85 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.joinToText
 
 object CommandClientAccountSubcommand {
-    fun accountCommand() = CommandBuilder.begin("account")
-        .hub()
-        .subcommand(loginSubcommand())
-        .subcommand(logoutSubcommand())
-        .subcommand(infoSubcommand())
-        .build()
-
-    private fun infoSubcommand() = CommandBuilder.begin("info")
-        .suspendHandler {
-            if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
-                chat(regular("You are not logged in."))
-                return@suspendHandler
-            }
-
-            chat(regular("Getting user information..."))
-            try {
-                val account = ClientAccountManager.clientAccount
-                account.updateInfo()
-                account.userInformation?.let { info ->
-                    info.nickname?.let { nickname -> chat(regular("Nickname: "), variable(nickname)) }
-                    chat(regular("Email: "), variable(info.email))
-                    chat(regular("User ID: "), variable(info.userId))
-                    chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
-                    chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
+    fun CmdLiteralScope.account() {
+        literal("account") {
+            literal("login") {
+                execSuspend {
+                    login()
                 }
-            } catch (e: HttpException) {
-                chat(markAsError("Failed to get user information: ${e.content}"))
             }
-        }.build()
-
-    private fun logoutSubcommand() = CommandBuilder.begin("logout")
-        .suspendHandler {
-            if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
-                chat(regular("You are not logged in."))
-                return@suspendHandler
+            literal("logout") {
+                execSuspend {
+                    logout()
+                }
             }
-
-            chat(regular("Logging out..."))
-            withContext(Dispatchers.IO) {
-                ClientAccountManager.clientAccount = EMPTY_ACCOUNT
-                ConfigSystem.store(ClientAccountManager)
-                EventManager.callEvent(UserLoggedOutEvent)
-                chat(regular("Successfully logged out."))
+            literal("info") {
+                execSuspend {
+                    info()
+                }
             }
-        }.build()
+        }
+    }
 
-    private fun loginSubcommand() = CommandBuilder.begin("login")
-        .suspendHandler {
-            if (ClientAccountManager.clientAccount != EMPTY_ACCOUNT) {
-                chat(regular("You are already logged in."))
-                return@suspendHandler
+    private suspend fun info() {
+        if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
+            chat(regular("You are not logged in."))
+            return
+        }
+
+        chat(regular("Getting user information..."))
+        try {
+            val account = ClientAccountManager.clientAccount
+            account.updateInfo()
+            account.userInformation?.let { info ->
+                info.nickname?.let { nickname -> chat(regular("Nickname: "), variable(nickname)) }
+                chat(regular("Email: "), variable(info.email))
+                chat(regular("User ID: "), variable(info.userId))
+                chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
+                chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
             }
+        } catch (e: HttpException) {
+            chat(markAsError("Failed to get user information: ${e.content}"))
+        }
+    }
 
-            chat(regular("Starting OAuth authorization process..."))
-            val account = startAuth(::browseUrl)
-            ClientAccountManager.clientAccount = account
+    private suspend fun logout() {
+        if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
+            chat(regular("You are not logged in."))
+            return
+        }
+
+        chat(regular("Logging out..."))
+        withContext(Dispatchers.IO) {
+            ClientAccountManager.clientAccount = EMPTY_ACCOUNT
             ConfigSystem.store(ClientAccountManager)
-            EventManager.callEvent(UserLoggedInEvent)
-            chat(regular("Successfully authorized client."))
-        }.build()
+            EventManager.callEvent(UserLoggedOutEvent)
+            chat(regular("Successfully logged out."))
+        }
+    }
+
+    private suspend fun login() {
+        if (ClientAccountManager.clientAccount != EMPTY_ACCOUNT) {
+            chat(regular("You are already logged in."))
+            return
+        }
+
+        chat(regular("Starting OAuth authorization process..."))
+        val account = startAuth(::browseUrl)
+        ClientAccountManager.clientAccount = account
+        ConfigSystem.store(ClientAccountManager)
+        EventManager.callEvent(UserLoggedInEvent)
+        chat(regular("Successfully authorized client."))
+    }
 }

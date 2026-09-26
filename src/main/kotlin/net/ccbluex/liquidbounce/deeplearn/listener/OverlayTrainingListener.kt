@@ -75,7 +75,7 @@ class OverlayTrainingListener(
         )
 
         mc.execute {
-            mc.gui.setOverlayMessage(progressBar, false)
+            mc.gui.hud.setOverlayMessage(progressBar, false)
         }
     }
 

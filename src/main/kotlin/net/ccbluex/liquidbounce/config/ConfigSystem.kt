@@ -89,7 +89,7 @@ object ConfigSystem {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
         return configs.asSequence()
-            .flatMap { it.collectValuesRecursively().asSequence() }
+            .flatMap { it.collectValuesRecursively(normalizedKey) }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
@@ -97,7 +97,7 @@ object ConfigSystem {
         ensureRootKeys()
         val normalizedKey = normalizeKeyInput(key)
         return configs.asSequence()
-            .flatMap { it.collectValueGroupsRecursively().asSequence() }
+            .flatMap { it.collectValueGroupsRecursively(normalizedKey) }
             .firstOrNull { it.key?.equals(normalizedKey, true) == true }
     }
 
@@ -131,10 +131,16 @@ object ConfigSystem {
      * Add an existing config instance
      */
     fun root(config: Config): Config {
+        require(configs.none { it.loweredName == config.loweredName }) {
+            "A config named '${config.loweredName}' is already registered"
+        }
+
         config.walkInit()
         configs.add(config)
         return config
     }
+
+    fun remove(config: Config): Boolean = configs.remove(config)
 
     /**
      * Create a ZIP file backup of configs
@@ -266,22 +272,31 @@ object ConfigSystem {
             "config name does not match the name in the json object"
         }
 
-        val values = jsonObject.getAsJsonArray("value")
-            .map { valueElement -> valueElement.asJsonObject }
-            .associateBy { valueObj -> valueObj["name"].asString!! }
+        valueGroup.prepareDeserialize(jsonObject)
+
+        val storedValues = jsonObject.getAsJsonArray("value")
+        val valuesByName = buildMap {
+            for (valueElem in storedValues) {
+                val valueObj = valueElem.asJsonObject
+                val valueName = valueObj["name"].asString
+                this.getOrPut(valueName) { ArrayDeque(1) }.addLast(valueObj)
+            }
+        }
 
         // Migration Code for KillAura's Range Values
         if (valueGroup is ModuleKillAura) {
-            valueGroup.range.migrateFromValues(values)
+            valueGroup.range.migrateFromValues(valuesByName)
         }
 
         for (value in valueGroup.inner) {
-            val currentElement = values[value.name]
-            // Alias support
-                ?: values.entries.firstOrNull { entry -> entry.key in value.aliases }?.value
-                ?: continue
+            if (!value.isPersistent) continue
 
-            deserializeValue(value, currentElement)
+            val queue = valuesByName[value.name]
+                ?: value.aliases.firstNotNullOfOrNull { valuesByName[it] }
+                ?: continue
+            if (queue.isEmpty()) continue
+
+            deserializeValue(value, queue.removeFirst())
         }
     }
 

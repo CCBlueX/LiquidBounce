@@ -53,7 +53,7 @@ object ModuleChestCleaner : ClientModule(
 
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
-        val screen = mc.screen as? AbstractContainerScreen<*> ?: return@handler
+        val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: return@handler
         if (screen is InventoryScreen) return@handler
         if (!checkScreenHandlerType.isValid(screen) || !checkScreenTitle.isValid(screen)) return@handler
 
