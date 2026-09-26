@@ -1172,6 +1172,14 @@ public final class net/ccbluex/liquidbounce/render/WorldRenderEnvironment {
 	public static synthetic fun start$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
 }
 
+public final class net/ccbluex/liquidbounce/render/atlas/EntityImageAtlas : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public final class net/ccbluex/liquidbounce/render/atlas/ItemImageAtlas : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
