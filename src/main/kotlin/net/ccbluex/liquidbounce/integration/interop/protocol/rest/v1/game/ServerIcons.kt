@@ -30,54 +30,66 @@ import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 import java.util.Base64
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /**
  * Icons of Minecraft servers, as image URLs for the theme.
+ *
+ * The icon from server-media comes first, as it is usually a nicer version of the server's favicon.
+ * Otherwise, the favicon of the server from the player's server list is used.
  */
 object ServerIcons {
 
-    private val RETRY_AFTER = 5.minutes
+    private val RETRY_DELAY = 5.minutes
 
     private val logger = clientLogger("ServerIcons")
 
-    private val mutex = Mutex()
-
-    @Volatile
-    private var domains: Map<String, String>? = null
-
-    private var failedAt = 0L
-
     /**
-     * The icon of the server [address] belongs to: its icon from server-media, usually a nicer version of its
-     * favicon, otherwise its favicon when it is in the server list. `null` when neither has one.
+     * Returns the icon of the server [address] belongs to, or `null` when there is none.
      */
     suspend fun of(address: String): String? {
         val host = address.dropPort().lowercase()
+        return serverMediaIcon(host) ?: serverListFavicon(host)
+    }
+
+    private suspend fun serverMediaIcon(host: String): String? {
+        val domains = serverMediaDomains() ?: return null
+        val folder = domains[host] ?: domains[host.rootDomain()] ?: return null
+        return ServerMediaApi.iconUrl(folder)
+    }
+
+    private suspend fun serverListFavicon(host: String): String? {
         val domain = host.rootDomain()
-        return serverMedia()?.let { it[host] ?: it[domain] }?.let(ServerMediaApi::iconUrl) ?: favicon(domain)
+        val favicon = withContext(Dispatchers.Minecraft) {
+            ActiveServerList.serverList.servers
+                .filter { it.ip.dropPort().rootDomain() == domain }
+                .firstNotNullOfOrNull { it.iconBytes }
+        } ?: return null
+
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(favicon)
     }
 
-    private suspend fun favicon(domain: String) = withContext(Dispatchers.Minecraft) {
-        val serverList = ActiveServerList.serverList
-        (0 until serverList.size())
-            .map(serverList::get)
-            .firstOrNull { it.iconBytes != null && it.ip.dropPort().rootDomain() == domain }
-            ?.let { "data:image/png;base64," + Base64.getEncoder().encodeToString(it.iconBytes) }
-    }
+    // The server-media index, which maps domains to the folder of their server. It is loaded once;
+    // after a failed attempt, we wait for RETRY_DELAY before trying again.
+    private val indexLock = Mutex()
+    private var domains: Map<String, String>? = null
+    private var retryAt: TimeMark? = null
 
-    private suspend fun serverMedia(): Map<String, String>? = domains ?: mutex.withLock {
-        domains ?: if (System.currentTimeMillis() - failedAt < RETRY_AFTER.inWholeMilliseconds) {
+    private suspend fun serverMediaDomains(): Map<String, String>? = indexLock.withLock {
+        domains?.let { return it }
+        if (retryAt?.hasNotPassedNow() == true) {
+            return null
+        }
+
+        try {
+            ServerMediaApi.getIndex().domains.also { domains = it }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logger.warn("Failed to load the server-media index", e)
+            retryAt = TimeSource.Monotonic.markNow() + RETRY_DELAY
             null
-        } else {
-            try {
-                ServerMediaApi.getIndex().domains.also { domains = it }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("Failed to load the server-media index", e)
-                failedAt = System.currentTimeMillis()
-                null
-            }
         }
     }
 
