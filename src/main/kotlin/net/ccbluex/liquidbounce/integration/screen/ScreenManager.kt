@@ -336,7 +336,6 @@ object ScreenManager : EventListener {
             return false
         }
 
-        // Drawn by the game while no browser is loaded
         if (screen is BrowserSelectionScreen || mc.gui.screen() is BrowserSelectionScreen) {
             return false
         }

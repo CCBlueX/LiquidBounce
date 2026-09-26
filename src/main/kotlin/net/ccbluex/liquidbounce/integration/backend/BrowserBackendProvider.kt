@@ -21,14 +21,10 @@ package net.ccbluex.liquidbounce.integration.backend
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
- * A browser engine the client can render its pages with. Add-ons offer more of them through
- * [net.ccbluex.liquidbounce.features.addon.LiquidBounceAddon.registerBrowserBackend].
+ * A browser engine to render the client's pages with.
  *
- * @param id Stored as the chosen backend and matched by `LB_BROWSER_BACKEND`.
- * @param name Shown when the player picks a backend.
- * @param description Shown under [name], a line on what sets the backend apart.
- * @param selectable Whether the player can pick it, rather than only `LB_BROWSER_BACKEND`.
- * @param create Called once the backend was chosen, before any of its libraries are loaded.
+ * @param id Matches `LB_BROWSER_BACKEND` and the saved choice.
+ * @param selectable False to offer it only through `LB_BROWSER_BACKEND`.
  */
 @AddonApi
 class BrowserBackendProvider @JvmOverloads constructor(

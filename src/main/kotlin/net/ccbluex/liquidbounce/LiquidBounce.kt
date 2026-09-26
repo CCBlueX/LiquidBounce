@@ -394,7 +394,7 @@ object LiquidBounce : EventListener {
         BlurEffectRenderer
         ScreenManager
 
-        // The browser backend picked before is one of the settings
+        // Holds the chosen browser backend
         ConfigSystem.load(GlobalManager)
 
         taskManager = TaskManager(ioScope).apply {

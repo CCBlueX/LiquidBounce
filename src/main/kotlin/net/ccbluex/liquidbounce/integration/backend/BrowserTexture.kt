@@ -28,10 +28,7 @@ import net.minecraft.client.gui.render.TextureSetup
  * @param width The width of the texture.
  * @param height The height of the texture.
  * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
- * @param u1 The left edge of the page in the texture.
- * @param v1 The top edge of the page in the texture.
- * @param u2 The right edge of the page in the texture.
- * @param v2 The bottom edge of the page in the texture.
+ * @param u1 [u1], [v1], [u2] and [v2] bound the page within the texture.
  */
 @JvmRecord
 @AddonApi

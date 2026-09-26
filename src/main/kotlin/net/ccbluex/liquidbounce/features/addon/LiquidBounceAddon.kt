@@ -190,8 +190,7 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     }
 
     /**
-     * Offers a browser backend the player can pick before the client starts its browser. The choice is only
-     * asked for once more than one backend is installed.
+     * Offers a browser backend the player can choose when the client starts.
      */
     fun registerBrowserBackend(provider: BrowserBackendProvider) {
         BrowserBackendManager.registerBackend(provider)

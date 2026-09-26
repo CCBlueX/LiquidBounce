@@ -48,7 +48,7 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
     }
 
     /**
-     * The browser backend the player picked, used from the next start on.
+     * Applies on the next start.
      */
     var backendId by text("Backend", "")
 

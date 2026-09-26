@@ -31,8 +31,7 @@ private const val BUTTON_HEIGHT = 20
 private const val ENTRY_HEIGHT = 44
 
 /**
- * Asks which browser backend renders the client's interface. Drawn by the game itself, as no backend is
- * loaded yet.
+ * Asks which browser backend to use, before any is loaded.
  */
 class BrowserSelectionScreen(
     private val backends: List<BrowserBackendProvider>,
@@ -52,7 +51,6 @@ class BrowserSelectionScreen(
             addRenderableWidget(
                 Button.builder(Component.literal(backend.name)) {
                     selection.complete(backend)
-                    // The loading screen takes over
                     mc.gui.setScreen(null)
                 }
                     .bounds(x, top + index * ENTRY_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT)

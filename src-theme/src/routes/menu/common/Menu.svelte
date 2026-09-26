@@ -31,7 +31,7 @@
     padding: 50px;
     display: flex;
     flex-direction: column;
-    // Pinned to the viewport rather than sized in vh, as browsers disagree on whether zoom scales vh
+    // Not sized in vh, which not every browser scales with zoom
     position: fixed;
     inset: 0;
   }

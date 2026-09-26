@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
 /**
- * The backend to use regardless of what the player picked, if set.
+ * Overrides the player's choice.
  */
 val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend")
 var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
@@ -61,14 +61,11 @@ object BrowserBackendManager : EventListener {
 
     private val providers = linkedMapOf<String, BrowserBackendProvider>()
 
-    /**
-     * The backends the player can pick from, in the order they were registered.
-     */
     val selectableBackends: List<BrowserBackendProvider>
         get() = providers.values.filter(BrowserBackendProvider::selectable)
 
     /**
-     * Completed with the backend the player picks, while they are asked.
+     * Set while the player is asked.
      */
     var pendingSelection: CompletableDeferred<BrowserBackendProvider>? = null
         private set
@@ -87,9 +84,6 @@ object BrowserBackendManager : EventListener {
         ) { ExternalSystemBrowserBackend() })
     }
 
-    /**
-     * Offers another backend, before the browser starts.
-     */
     @AddonApi
     fun registerBackend(provider: BrowserBackendProvider) {
         check(providers.putIfAbsent(provider.id, provider) == null) {
@@ -127,7 +121,7 @@ object BrowserBackendManager : EventListener {
             return
         }
 
-        // The libraries of a backend may clash with another one's, so none are loaded before the player picks
+        // No backend is loaded until the player picks one
         val selection = CompletableDeferred<BrowserBackendProvider>()
         pendingSelection = selection
         logger.info("Asking which browser backend to use.")
@@ -138,15 +132,13 @@ object BrowserBackendManager : EventListener {
 
             GlobalBrowserSettings.backendId = picked.id
             ConfigSystem.store(GlobalManager)
-            // Before this task completes, so the tasks of the backend keep the loading screen up
+            // Within the task, so the loading screen stays until the backend's tasks exist
             mc.submit { use(picked, taskManager) }.await()
         }
     }
 
     /**
-     * Picks the backend without asking: the one `LB_BROWSER_BACKEND` names, or the one picked before. Returns
-     * null when the player should be asked, which is when there is a choice and nothing was picked yet, or
-     * shift is held during start.
+     * Returns null when the player has to be asked.
      */
     private fun chosenBackend(): BrowserBackendProvider? {
         browserBackend?.let { id ->
