@@ -44,7 +44,7 @@ public abstract class MixinFogRenderer {
 
     @Inject(
         method = "updateBuffer(Lnet/minecraft/client/renderer/fog/FogData;)V",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/buffers/GpuBuffer;map(ZZ)Lcom/mojang/blaze3d/buffers/GpuBufferSlice$MappedView;")
+        at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/buffers/GpuBuffer;map(ZZ)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice$MappedView;")
     )
     private void editFogData(FogData fog, CallbackInfo ci) {
         ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyFogData(fog);

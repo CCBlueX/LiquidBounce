@@ -152,7 +152,7 @@ class MicrosoftAccount internal constructor(
             applicationConfig: MsaApplicationConfig = JAVA_APPLICATION_CONFIG,
         ): MicrosoftAccount = build(applicationConfig) { it.login(refreshToken) }
 
-        private fun build(
+        private inline fun build(
             applicationConfig: MsaApplicationConfig,
             login: (JavaAuthManager.Builder) -> JavaAuthManager,
         ): MicrosoftAccount {
