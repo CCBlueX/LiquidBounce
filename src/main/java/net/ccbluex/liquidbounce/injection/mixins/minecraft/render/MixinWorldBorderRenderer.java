@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.mojang.renderpearl.api.commands.RenderPass;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.renderer.WorldBorderRenderer;
@@ -33,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinWorldBorderRenderer {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void render(WorldBorderRenderState state, Vec3 cameraPos, double viewDistanceBlocks, double farPlaneDistance, CallbackInfo ci) {
+    private void render(WorldBorderRenderState state, RenderPass renderPass, Vec3 cameraPos, double renderDistance, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.WORLD_BORDER)) {
             ci.cancel();
         }

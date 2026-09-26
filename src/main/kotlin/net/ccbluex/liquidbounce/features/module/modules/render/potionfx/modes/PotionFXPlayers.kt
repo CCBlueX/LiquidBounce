@@ -90,8 +90,8 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
                         val secondRotation = (entity.tickCount + event.partialTicks) * SecondEffect.rotationSpeed
 
                         withPush {
-                            mulPose(Axis.XP.rotationDegrees(-90f))
-                            mulPose(Axis.ZP.rotationDegrees(rotation))
+                            rotate(Axis.XP.rotationDegrees(-90f))
+                            rotate(Axis.ZP.rotationDegrees(rotation))
                             drawSquareTexture(
                                 texture,
                                 radius * 2,
@@ -102,8 +102,8 @@ object PotionFXPlayers : ToggleableValueGroup(ModulePotionFX, "Players", true) {
                         }
                         if (SecondEffect.enabled) {
                             withPush {
-                                mulPose(Axis.XP.rotationDegrees(-90f))
-                                mulPose(Axis.ZP.rotationDegrees(secondRotation))
+                                rotate(Axis.XP.rotationDegrees(-90f))
+                                rotate(Axis.ZP.rotationDegrees(secondRotation))
                                 drawSquareTexture(
                                     secondaryTexture,
                                     (radius + extraRadius) * 2,

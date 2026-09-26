@@ -20,14 +20,15 @@
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.PrimitiveTopology
-import com.mojang.blaze3d.pipeline.BindGroupLayout
-import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.DepthStencilState
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout
+import com.mojang.renderpearl.api.pipeline.BlendFunction
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.DepthStencilState
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
+import com.mojang.renderpearl.api.pipeline.UniformType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
+import net.minecraft.util.Util
 
 object ClientRenderPipelines {
 
@@ -56,12 +58,14 @@ object ClientRenderPipelines {
             .withLocation(id)
             .apply(builderAction)
             .build().also { r ->
+                RenderPipelines.register(r)
                 renderPipelines.put(id, r)?.let { error("Duplicated render pipeline: $id") }
             }
     }
 
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
-        withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+        withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        withBindGroupLayout(BindGroupLayouts.PROJECTION)
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
         withBindGroupLayout(BindGroupLayouts.SAMPLER0)
@@ -71,6 +75,9 @@ object ClientRenderPipelines {
 
     inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
         this.withBindGroupLayout(BindGroupLayout.builder().apply(block).build())
+
+    inline fun BindGroupLayout.Builder.withSampler(name: String) =
+        this.withUniform(name, UniformType.COMBINED_IMAGE_SAMPLER)
 
     inline fun BindGroupLayout.Builder.withUniformBuffer(define: ClientUniformDefine) = define.appendTo(this)
 
@@ -336,7 +343,7 @@ object ClientRenderPipelines {
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        forWorldRender()
     }
 
     private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
@@ -347,7 +354,7 @@ object ClientRenderPipelines {
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        forWorldRender()
     }
 
     @JvmStatic
@@ -492,6 +499,15 @@ object ClientRenderPipelines {
     }
 
     @JvmField
+    val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
+        screenQuadSnippet()
+        withFragmentShader("core/blit_screen")
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
     val GuiBlurH = newPipeline("blur_h") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.GuiBlurH)
@@ -540,9 +556,9 @@ object ClientRenderPipelines {
         GUI
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            gpuDevice.precompilePipeline(pipeline, ClientShaders)
+            gpuDevice.compilePipeline(pipeline, ClientShaders, Util.backgroundExecutor())
         }
-        logger.info("Loaded ${renderPipelines.size} Render Pipelines.")
+        logger.info("Registered ${renderPipelines.size} Render Pipelines.")
     }
 
 }

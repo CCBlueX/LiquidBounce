@@ -17,14 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.authlib;
+package net.ccbluex.liquidbounce.injection.mixins.renderpearl;
 
-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+import com.mojang.renderpearl.frontend.FrontendRenderPass;
+import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(YggdrasilMinecraftSessionService.class)
-public interface MixinYggdrasilMinecraftSessionServiceAccessor {
-    @Accessor(remap = false)
-    String getBaseUrl();
+@Mixin(FrontendRenderPass.class)
+public abstract class MixinFrontendRenderPass {
+
+    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/renderpearl/frontend/FrontendRenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
+    private void onClose(CallbackInfo callbackInfo) {
+        RenderingDebug.increaseRenderPassCount();
+    }
+
 }

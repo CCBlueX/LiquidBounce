@@ -18,14 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.LiquidBounce
+import com.mojang.renderpearl.api.textures.FilterMode
 import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -35,24 +30,23 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuadSnippet
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.buffers.CachedUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
-import net.ccbluex.liquidbounce.render.withOutputTarget
+import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
-import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.minecraft.client.renderer.BindGroupLayouts
-import net.minecraft.client.renderer.feature.ItemFeatureRenderer
-import net.minecraft.client.renderer.rendertype.OutputTarget
+import net.minecraft.client.renderer.RenderBuffers
+import net.minecraft.client.renderer.SubmitNodeStorage
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
 import org.joml.Vector2f
-import java.util.function.Function
+import java.util.Optional
+import java.util.OptionalDouble
 
+@Suppress("TooManyFunctions")
 object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val modes = choices("Mode", Normal, arrayOf(Normal, Image))
@@ -75,8 +69,6 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
     private val renderTargetHolder = LazyRenderTargetHolder(this.name, useDepth = true)
     private val blitSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
-    private val outputTarget = OutputTarget("liquidbounce_chams", renderTargetHolder)
-
     @ValueClassCandidate
     @JvmRecord
     private data class ImageUniform(
@@ -86,41 +78,136 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         val offsetY: Float = 0f,
     )
 
-    private val pipelineBlit: RenderPipeline =
-        ClientRenderPipelines.newPipeline("chams/blit") {
-            screenQuadSnippet()
-            withFragmentShader("core/blit_screen")
-            withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-            withDepthStencilState(optional())
-        }
-
-    private val remapRenderType: Function<RenderType, RenderType> =
-        Util.memoize { original ->
-            val renderTypeAccessor = original as MixinRenderTypeAccessor
-
-            RenderType.create(
-                "liquidbounce_chams/${renderTypeAccessor.name}",
-                renderTypeAccessor.state.withOutputTarget(outputTarget),
-            )
-        }
-
     private val heldItemEntityContext = ScopedValue.newInstance<Entity>()
-    private val heldItemSubmits = ReferenceOpenHashSet<ItemFeatureRenderer.Submit>()
-
-    private var dirty = false
+    private var entityContext: Entity? = null
+    private var captureDepth = 0
+    private var chamsStorage = SubmitNodeStorage()
+    private var chamsRenderBuffers: RenderBuffers? = null
+    private var chamsDispatcher: FeatureRenderDispatcher? = null
+    private var chamsFrame: FeatureRenderDispatcher.PreparedFrame? = null
 
     private fun supports(renderType: RenderType): Boolean =
         supportedRenderTypes.contains((renderType as MixinRenderTypeAccessor).name)
 
-    /** Remaps an entity render type to the chams target when applicable. */
-    fun remapIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
-        if (!running || !entity.shouldBeShown() || !supports(renderType)) {
-            return renderType
-        }
+    /** Tracks the current entity for subsequent captures within one render pass. */
+    private fun track(entity: Entity) {
+        entityContext = entity
+    }
 
-        dirty = true
-        return remapRenderType.apply(renderType)
+    /**
+     * Tracks an entity render submission while leaving the vanilla render type unchanged.
+     *
+     * A capture context is only established for entities that should be shown as chams, and only
+     * up until the next submission (or the end of the level entity submissions, see [clearEntityContext]).
+     */
+    fun trackIfNeeded(renderType: RenderType, entity: Entity?): RenderType {
+        entityContext = null
+        if (running && entity != null && entity.shouldBeShown() && supports(renderType)) {
+            track(entity)
+        }
+        return renderType
+    }
+
+    fun beginFrame() {
+        chamsFrame?.close()
+        chamsFrame = null
+        resetStorage()
+        entityContext = null
+    }
+
+    private fun resetStorage() {
+        chamsStorage = SubmitNodeStorage().also {
+            it.setUseImprovedTransparency(mc.gameRenderer.useImprovedTransparency())
+        }
+    }
+
+    /**
+     * Clears the tracked entity context once all level entity submissions are done.
+     *
+     * [entityContext] is set during level entity submission to the last chams target and must not
+     * leak into later submissions that are unrelated to any chams target (e.g. first-person held
+     * items rendered after the level), otherwise they would be mistaken for chams targets and
+     * removed from the main render target.
+     *
+     * [heldItemEntityContext] needs no clearing: it is a [ScopedValue] that is only bound inside
+     * [withHeldItemContext] and restored automatically when that block ends.
+     */
+    fun clearEntityContext() {
+        entityContext = null
+    }
+
+    /**
+     * Captures an entity model submission into the chams storage.
+     *
+     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     *         `false` when the submission should keep flowing into the main render target.
+     */
+    @Suppress("UnusedParameter")
+    fun captureModel(
+        model: net.minecraft.client.model.Model<*>,
+        state: Any,
+        poseStack: com.mojang.blaze3d.vertex.PoseStack,
+        renderType: RenderType,
+        lightCoords: Int,
+        overlayCoords: Int,
+        tintedColor: Int,
+        uvMapping: net.minecraft.client.renderer.texture.UvMapping?,
+        outlineColor: Int,
+    ): Boolean {
+        if (!captureTargeted(renderType)) return false
+        captureDepth++
+        try {
+            @Suppress("UNCHECKED_CAST")
+            chamsStorage.submitModel(
+                model as net.minecraft.client.model.Model<Any>, state, poseStack, renderType,
+                lightCoords, overlayCoords, tintedColor, uvMapping, 0
+            )
+        } finally {
+            captureDepth--
+        }
+        return true
+    }
+
+    /**
+     * Captures an item submission into the chams storage.
+     *
+     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     *         `false` when the submission should keep flowing into the main render target.
+     */
+    @Suppress("UnusedParameter")
+    fun captureItem(
+        poseStack: com.mojang.blaze3d.vertex.PoseStack,
+        displayContext: net.minecraft.world.item.ItemDisplayContext,
+        lightCoords: Int,
+        overlayCoords: Int,
+        outlineColor: Int,
+        tintLayers: IntArray,
+        quads: net.minecraft.client.resources.model.geometry.ItemQuads,
+        foilType: net.minecraft.client.renderer.item.ItemStackRenderState.FoilType,
+    ): Boolean {
+        if (!captureTargeted()) return false
+        captureDepth++
+        try {
+            chamsStorage.submitItem(
+                poseStack,
+                displayContext,
+                lightCoords,
+                overlayCoords,
+                0,
+                tintLayers,
+                quads,
+                foilType,
+            )
+        } finally {
+            captureDepth--
+        }
+        return true
+    }
+
+    private fun captureTargeted(renderType: RenderType? = null): Boolean {
+        if (captureDepth > 0) return false
+        if (!running || (entityContext == null && !heldItemEntityContext.isBound)) return false
+        return renderType == null || supports(renderType)
     }
 
     /** Runs a third-person held-item submission with the current entity bound. */
@@ -132,64 +219,61 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         }
     }
 
-    /** Marks an item submit as coming from the current held-item context. */
-    fun markHeldItemSubmitIfActive(submit: ItemFeatureRenderer.Submit) {
-        if (!heldItemEntityContext.isBound) {
-            return
-        }
-
-        heldItemSubmits.add(submit)
-    }
-
-    /** Returns whether the submit was created from a held-item context. */
-    fun isHeldItemSubmit(submit: ItemFeatureRenderer.Submit): Boolean =
-        heldItemSubmits.contains(submit)
-
-    /** Remaps a deferred held-item render type to the chams target when applicable. */
-    fun remapHeldItemRenderTypeIfNeeded(submit: ItemFeatureRenderer.Submit, renderType: RenderType): RenderType {
-        if (!isHeldItemSubmit(submit) || !supports(renderType)) {
-            return renderType
-        }
-
-        dirty = true
-        return remapRenderType.apply(renderType)
-    }
-
-    /** Remaps an immediate held-item render type using the current scoped entity. */
-    fun remapCurrentHeldItemRenderTypeIfNeeded(renderType: RenderType): RenderType {
-        val entity = if (heldItemEntityContext.isBound) heldItemEntityContext.get() else return renderType
-        return remapIfNeeded(renderType, entity)
-    }
-
-    /** Ensures the chams target exists before any remapped draws in this frame. */
-    fun beginFrameIfNeeded() {
-        if (!running || !dirty) {
-            return
-        }
-
+    fun prepareFrame() {
+        if (!running || chamsStorage.submitsPerOrder.isEmpty()) return
         renderTargetHolder.initAndGet()
+        val buffers = chamsRenderBuffers ?: RenderBuffers(1).also { chamsRenderBuffers = it }
+        val dispatcher = chamsDispatcher ?: FeatureRenderDispatcher(
+            buffers,
+            mc.modelManager,
+            mc.atlasManager,
+            mc.font,
+            mc.gameRenderer.gameRenderState(),
+        ).also { chamsDispatcher = it }
+        chamsFrame = dispatcher.prepareFrame(chamsStorage)
+    }
+
+    fun renderChams() {
+        val target = renderTargetHolder.get() ?: return
+        val frame = chamsFrame ?: return
+        target.createRenderPass(
+            { "Chams" },
+            Optional.of(org.joml.Vector4f(0f, 0f, 0f, 0f)),
+            OptionalDouble.of(0.0),
+        ).use { pass ->
+            RenderSystem.bindDefaultUniforms(pass)
+            FeatureRenderDispatcher.renderAllFeatures(pass, frame)
+        }
     }
 
     /** Blits the accumulated chams target into the main render target. */
     fun compositeIfNeeded(target: RenderTarget) {
-        if (!dirty) {
-            heldItemSubmits.clear()
+        if (chamsStorage.submitsPerOrder.isEmpty()) {
             return
         }
-
-        dirty = false
 
         try {
             renderTargetHolder.get()?.let { modes.activeMode.render(target, it) }
         } finally {
-            heldItemSubmits.clear()
+            chamsFrame?.close()
+            chamsFrame = null
+            chamsRenderBuffers?.endFrame()
+            // Reset the accumulated submit storage so the next frame starts empty.
+            // This also serves as the "composited" marker: no dirty flag needed,
+            // emptiness of the storage is the source of truth.
+            resetStorage()
         }
     }
 
     override fun onDisabled() {
-        dirty = false
-        heldItemSubmits.clear()
+        chamsFrame?.close()
+        chamsFrame = null
+        chamsDispatcher?.close()
+        chamsRenderBuffers?.close()
+        chamsDispatcher = null
+        chamsRenderBuffers = null
         renderTargetHolder.close()
+        resetStorage()
     }
 
     private object Normal : ChamsMode("Normal") {
@@ -197,8 +281,8 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
             val colorTexture = chamsTarget.colorTextureView ?: return
 
             target.createRenderPass({ "Chams blit pass" }, useDepthAttachment = false).use { pass ->
-                pass.setPipeline(pipelineBlit)
-                pass.bindTexture("InSampler", colorTexture, blitSampler)
+                pass.setPipeline(ClientRenderPipelines.ChamsBlit)
+                pass.setUniform("InSampler", colorTexture, blitSampler)
                 pass.draw(3, 1, 0, 0)
             }
         }
@@ -237,10 +321,10 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
 
             target.createRenderPass({ "Chams image blit pass" }, useDepthAttachment = false).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ChamsImage)
-                pass.bindTexture("entityColor", colorTexture, blitSampler)
-                pass.bindTexture("entityDepth", chamsDepth, blitSampler)
-                pass.bindTexture("sceneDepth", sceneDepth, blitSampler)
-                pass.bindTexture("image", imageView, sampler)
+                pass.setUniform("entityColor", colorTexture, blitSampler)
+                pass.setUniform("entityDepth", chamsDepth, blitSampler)
+                pass.setUniform("sceneDepth", sceneDepth, blitSampler)
+                pass.setUniform("image", imageView, sampler)
                 pass.setUniform(ClientUniformDefine.CHAMS.uboName, ubo)
                 pass.draw(3, 1, 0, 0)
             }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import com.mojang.blaze3d.Blaze3D
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
@@ -180,7 +181,7 @@ object CommandClientConfigSubcommand {
     }
 
     private fun CmdI18n.browse(): Int {
-        Util.getPlatform().openFile(ConfigSystem.backupFolder)
+        Blaze3D.openPath(ConfigSystem.backupFolder.toPath())
         chat(regular(t("config.browse.browse", variable(ConfigSystem.backupFolder.absolutePath))))
         return 1
     }

@@ -54,8 +54,8 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
         poseStack.withPush {
             val currentRotation = rotationSpeed * age
 
-            mulPose(Axis.XP.rotationDegrees(90f))
-            mulPose(Axis.ZP.rotationDegrees(currentRotation))
+            rotate(Axis.XP.rotationDegrees(90f))
+            rotate(Axis.ZP.rotationDegrees(currentRotation))
             drawSquareTextureGradient(
                 sampler0 = texture,
                 outerRadius = endRadius.endInclusive * progress,

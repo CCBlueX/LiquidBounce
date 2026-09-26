@@ -476,7 +476,7 @@ object LiquidBounce : EventListener {
             logger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
             logger.info("Java Version: ${System.getProperty("java.version")}")
             logger.info("Screen Resolution: ${mc.window.screenWidth}x${mc.window.screenHeight}")
-            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+            logger.info("Refresh Rate: ${mc.window.activeVideoMode?.refreshRate} Hz")
 
             // Initialize event manager
             EventManager
@@ -493,8 +493,8 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).thenRun {
-                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
+                ).thenCompose {
+                    ThemeManager.reloader.reload()
                 }
             }
         }.onFailure {

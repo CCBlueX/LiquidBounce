@@ -35,7 +35,7 @@ public abstract class MixinMappableRingBuffer {
      */
     @ModifyArg(
         method = "currentBuffer",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/buffers/GpuFence;awaitCompletion(J)Z")
+        at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/GpuFence;awaitCompletion(J)Z")
     )
     private long changeAwaitTimeout(long original) {
         if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY) {

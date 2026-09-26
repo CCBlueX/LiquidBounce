@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Translates a key name to an InputUtil.Key using InputConstants key codes.
@@ -68,7 +67,7 @@ fun inputByName(name: String): InputConstants.Key {
  * @return `true` if the key is pressed; otherwise, `false`.
  */
 val InputConstants.Key.isPressed get() =
-    InputConstants.isKeyDown(mc.window, this.value)
+    InputConstants.isKeyDown(this.value)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").
@@ -88,7 +87,7 @@ fun reduceInputName(translationKey: String): String =
  * @return A set of simplified keyboard input names.
  */
 val availableKeyboardKeys: Set<String>
-    get() = InputConstants.Type.KEYSYM.map.values
+    get() = InputConstants.Type.KEYBOARD.map.values
         .map { key -> reduceInputName(key.name) }
         .toSet()
 
@@ -110,7 +109,7 @@ val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys
  * @return null if it's not a valid modifier.
  */
 fun InputConstants.Key.toModifierOrNull(): InputBind.Modifier? {
-    return if (this.type == InputConstants.Type.KEYSYM) {
+    return if (this.type == InputConstants.Type.KEYBOARD) {
         InputBind.Modifier.of(this.value)
     } else {
         null

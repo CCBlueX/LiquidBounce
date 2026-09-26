@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.blaze3d.platform.Lighting
+import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.texture.OverlayTexture
 import net.minecraft.client.renderer.Rect2i
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
@@ -127,7 +129,12 @@ private class ItemTextureRenderer(private val scale: Int) : AbstractAtlasRendere
             )
 
             state.submit(this, submitNodeStorage, LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0)
-            featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
+            featureRenderDispatcher.prepareFrame(submitNodeStorage).use { frame ->
+                createRenderPass().use { pass ->
+                    RenderSystem.bindDefaultUniforms(pass)
+                    FeatureRenderDispatcher.renderAllFeatures(pass, frame)
+                }
+            }
         }
     }
 

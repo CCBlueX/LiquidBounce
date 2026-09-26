@@ -17,22 +17,31 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import com.mojang.blaze3d.systems.RenderPass;
-import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
-import org.objectweb.asm.Opcodes;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(RenderPass.class)
-public abstract class MixinRenderPass {
+/**
+ * Disables the falling leaves particles (cherry, pale oak, tinted leaves).
+ *
+ * @see net.minecraft.world.level.block.FallingParticlesLeavesBlock#animateTick
+ */
+@Mixin(net.minecraft.world.level.block.FallingParticlesLeavesBlock.class)
+public abstract class FallingParticlesLeavesBlock {
 
-    @Inject(method = "close", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/systems/RenderPass;isClosed:Z", opcode = Opcodes.PUTFIELD))
-    private void onClose(CallbackInfo callbackInfo) {
-        RenderingDebug.increaseRenderPassCount();
+    @Inject(method = "makeFallingLeavesParticles", at = @At("HEAD"), cancellable = true)
+    private void hookFallingLeaves(Level level, BlockPos pos, RandomSource random, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.FALLING_LEAVES)) {
+            ci.cancel();
+        }
     }
 
 }

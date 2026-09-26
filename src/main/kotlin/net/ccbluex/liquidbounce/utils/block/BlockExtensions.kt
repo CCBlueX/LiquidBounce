@@ -67,6 +67,7 @@ import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.block.AbstractBedBlock
 import net.minecraft.world.level.block.AbstractChestBlock
 import net.minecraft.world.level.block.AbstractFurnaceBlock
 import net.minecraft.world.level.block.AnvilBlock
@@ -107,9 +108,10 @@ import net.minecraft.world.level.block.LecternBlock
 import net.minecraft.world.level.block.LeverBlock
 import net.minecraft.world.level.block.LightBlock
 import net.minecraft.world.level.block.NoteBlock
-import net.minecraft.world.level.block.RedStoneWireBlock
+import net.minecraft.world.level.block.RedstoneWireBlock
 import net.minecraft.world.level.block.RepeaterBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
+import net.minecraft.world.level.block.ShelfMushroomBlock
 import net.minecraft.world.level.block.ShulkerBoxBlock
 import net.minecraft.world.level.block.StonecutterBlock
 import net.minecraft.world.level.block.SupportType
@@ -131,7 +133,7 @@ import java.util.function.Predicate
 import kotlin.math.ceil
 import kotlin.math.floor
 
-fun Vec3i.toBlockPos() = BlockPos(this)
+fun Vec3i.toBlockPos() = BlockPos(this.x, this.y, this.z)
 
 @AddonApi
 val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
@@ -193,32 +195,36 @@ fun BlockState.outlineBox(blockPos: BlockPos): AABB {
     return outlineShape.boundsOrNull() ?: FULL_BOX
 }
 
-fun Vec3.searchBlocksInCuboid(radius: Float): Iterable<BlockPos> =
-    BlockPos.betweenClosed(
-        floor(x - radius).toInt(),
-        floor(y - radius).toInt(),
-        floor(z - radius).toInt(),
-        ceil(x + radius).toInt(),
-        ceil(y + radius).toInt(),
-        ceil(z + radius).toInt(),
-    )
-
 /**
  * Scan blocks around the position in a cuboid with filtering.
+ *
+ * Uses [net.minecraft.world.level.LevelReader.findBlocksIn] internally, which
+ * skips whole chunk sections through the palette check and only scans loaded
+ * sections within the world height.
  */
 fun Vec3.searchBlocksInCuboid(
     radius: Float,
     filter: BiPredicate<BlockPos, BlockState>,
-): Sequence<Pair<BlockPos, BlockState>> =
-    searchBlocksInCuboid(radius).asSequence().mapNotNull {
-        val state = it.state ?: return@mapNotNull null
+): List<Pair<BlockPos, BlockState>> {
+    val from = BlockPos(
+        floor(this.x - radius).toInt(),
+        floor(this.y - radius).toInt(),
+        floor(this.z - radius).toInt(),
+    )
+    val to = BlockPos(
+        ceil(this.x + radius).toInt(),
+        ceil(this.y + radius).toInt(),
+        ceil(this.z + radius).toInt(),
+    )
 
-        if (filter.test(it, state)) {
-            it.immutable() to state
-        } else {
-            null
+    return buildList {
+        world.findBlocksIn(from, to).forEach { pos, state ->
+            if (filter.test(pos, state)) {
+                this.add(pos.immutable to state)
+            }
         }
     }
+}
 
 /**
  * Scan blocks around the position in a cuboid, filtered and sorted by shape distance from this [Vec3].
@@ -391,12 +397,12 @@ fun BlockState?.anotherChestPartDirection(): Direction? {
 }
 
 fun BlockState?.anotherBedPartDirection(): Direction? {
-    if (this?.block !is BedBlock) return null
+    if (this?.block !is AbstractBedBlock) return null
 
     // [body|head] -> (facing)
-    val bedFacing = this.getValue(BedBlock.FACING)
+    val bedFacing = this.getValue(HorizontalDirectionalBlock.FACING)
 
-    return if (BedBlock.getBlockType(this) == DoubleBlockCombiner.BlockType.FIRST) {
+    return if (AbstractBedBlock.getBlockType(this) == DoubleBlockCombiner.BlockType.FIRST) {
         bedFacing.opposite
     } else {
         bedFacing
@@ -495,11 +501,11 @@ fun doPlacement(
             if (!stack.isEmpty) {
                 val useItemResult = interaction.useItem(player, hand, rotation.yRot, rotation.xRot)
                 if (useItemResult is Success) {
-                    if (useItemResult.swingSource == SwingSource.CLIENT && onItemUseSuccess()) {
+                    if (useItemResult.swingSource == SwingSource.PREDICTED && onItemUseSuccess()) {
                         swingMode.swing(hand)
                     }
 
-                    mc.gameRenderer.itemInHandRenderer.itemUsed(hand) // <- no condition on this
+                    player.itemUsed(hand)
                 }
             }
         }
@@ -525,7 +531,7 @@ private inline fun handleActionsOnAccept(
     shouldSwing: () -> Boolean,
     swingMode: SwingMode,
 ) {
-    if (interactionResult is Success && interactionResult.swingSource != SwingSource.CLIENT) {
+    if (interactionResult is Success && interactionResult.swingSource != SwingSource.PREDICTED) {
         return
     }
 
@@ -534,7 +540,7 @@ private inline fun handleActionsOnAccept(
     }
 
     if (wasStackUsed) {
-        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+        player.itemUsed(hand)
     }
 }
 
@@ -618,7 +624,7 @@ fun doBreak(
 
     if (interaction.continueDestroyBlock(blockPos, direction)) {
         swingMode.swing(InteractionHand.MAIN_HAND)
-        world.addBreakingBlockEffect(blockPos, direction)
+        world.addBreakingBlockEffects(blockPos, direction, false)
     }
 }
 
@@ -636,7 +642,7 @@ fun Block?.fallDamageMultiplier(entity: Entity): Float =
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW -> 0f
         Blocks.HAY_BLOCK, Blocks.HONEY_BLOCK -> 0.2f
         Blocks.SLIME_BLOCK -> if (entity.isSuppressingBounce && isOlderThan1_21_2) 1f else 0f
-        is BedBlock -> 0.5f
+        is AbstractBedBlock, is ShelfMushroomBlock -> 0.5f
         else -> 1f
     }
 
@@ -653,7 +659,7 @@ fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
  * Returns the second bed block position that might not exist (normally beds are two blocks long tho).
  */
 @Suppress("UnusedReceiverParameter")
-fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): BlockPos {
+fun AbstractBedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): BlockPos {
     return pos.relative((state.getValue(HorizontalDirectionalBlock.FACING)).opposite)
 }
 
@@ -672,7 +678,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         return false
     }
 
-    return this is BedBlock || this is AbstractChestBlock<*> || this is AbstractFurnaceBlock || this is AnvilBlock
+    return this is AbstractBedBlock || this is AbstractChestBlock<*> || this is AbstractFurnaceBlock
+        || this is AnvilBlock
         || this is BarrelBlock || this is BeaconBlock || this is BellBlock || this is BrewingStandBlock
         || this is ButtonBlock || this is CakeBlock && player.foodData.needsFood() || this is CandleCakeBlock
         || this is CartographyTableBlock
@@ -685,7 +692,7 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         || this is GrindstoneBlock || this is HopperBlock || this is GameMasterBlock && player.canUseGameMasterBlocks()
         || this is JukeboxBlock && blockState?.getValue(JukeboxBlock.HAS_RECORD) == true || this is LecternBlock
         || this is LeverBlock || this is LightBlock && player.canUseGameMasterBlocks() || this is NoteBlock
-        || this is RedStoneWireBlock || this is RepeaterBlock || this is RespawnAnchorBlock // this only works
+        || this is RedstoneWireBlock || this is RepeaterBlock || this is RespawnAnchorBlock // this only works
         // when we hold glow stone or are not in the nether and the anchor is charged, but it'd be too error-prone when
         // it would be checked as the player can quickly switch to glow stone
         || this is ShulkerBoxBlock || this is StonecutterBlock

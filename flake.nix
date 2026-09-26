@@ -38,7 +38,7 @@
         flite
         git
         glib
-        glfw
+        sdl3
         gtk3
         libGL
         libX11

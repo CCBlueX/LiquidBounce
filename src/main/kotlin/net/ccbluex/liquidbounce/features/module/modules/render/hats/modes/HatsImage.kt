@@ -44,7 +44,7 @@ internal object HatsImage : HatsMode("Image") {
         val texture = image ?: return
 
         poseStack.withPush {
-            mulPose(
+            rotate(
                 ROTATION.scaling(1f)
                     .rotateX(Mth.HALF_PI)
                     .rotateZ(getRotationAngle(spinSpeed))

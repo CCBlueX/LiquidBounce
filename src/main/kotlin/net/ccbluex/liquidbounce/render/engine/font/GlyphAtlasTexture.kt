@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.blaze3d.GpuFormat
+import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.write
 import net.minecraft.client.renderer.texture.AbstractTexture

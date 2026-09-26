@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Cus
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -111,8 +112,8 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
                 }
             }),
             SWING_HAND("SwingHand", {
-                if (!player.swinging) {
-                    player.swing(InteractionHand.MAIN_HAND)
+                if (!player.isSwinging) {
+                    SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
                 }
             }),
             CHANGE_SLOT("ChangeSlot", {
@@ -163,9 +164,10 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
 
         @Suppress("unused")
         val swingRepeatable = tickHandler {
-            if (Swing.enabled && !player.swinging) {
+            if (Swing.enabled && !player.isSwinging) {
                 waitTicks(Swing.delay)
-                player.swing(InteractionHand.MAIN_HAND)
+                val heldItem = player.getItemInHand(InteractionHand.MAIN_HAND)
+                player.swing(InteractionHand.MAIN_HAND, heldItem.getAttackAnimation(), false)
             }
         }
 

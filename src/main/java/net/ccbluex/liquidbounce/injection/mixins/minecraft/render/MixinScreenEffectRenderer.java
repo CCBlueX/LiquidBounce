@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -59,8 +60,7 @@ public abstract class MixinScreenEffectRenderer {
     }
 
     @Inject(method = "submitBlockSprite", at = @At("HEAD"), cancellable = true)
-    private static void hookWallOverlay(TextureAtlasSprite sprite, PoseStack poseStack,
-        SubmitNodeCollector submitNodeCollector, int color, CallbackInfo ci) {
+    private static void hookWallOverlay(Identifier atlasLocation, float u0, float v0, float u1, float v1, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int color, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.WALL_OVERLAY)) {
             ci.cancel();
         }

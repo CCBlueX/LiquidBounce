@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.render.gui
 
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.renderpearl.api.textures.FilterMode
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.uploadRect

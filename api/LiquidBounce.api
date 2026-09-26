@@ -115,7 +115,7 @@ public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValu
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getEnabled ()Z
 	public final fun getEnabledValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
-	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getGpuDevice ()Lcom/mojang/renderpearl/api/device/GpuDevice;
 	public fun getInGame ()Z
 	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
 	public fun getMc ()Lnet/minecraft/client/Minecraft;
@@ -613,7 +613,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public final fun getDescription ()Ljava/lang/String;
 	public fun getDisplayName ()Ljava/lang/String;
-	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getGpuDevice ()Lcom/mojang/renderpearl/api/device/GpuDevice;
 	public final fun getId ()Ljava/lang/String;
 	public fun getInGame ()Z
 	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
@@ -687,6 +687,7 @@ public final class net/ccbluex/liquidbounce/features/command/brigadier/ClientCom
 	public fun customSuggestion (Lcom/mojang/brigadier/context/CommandContext;)Ljava/util/concurrent/CompletableFuture;
 	public fun enabledFeatures ()Lnet/minecraft/world/flag/FeatureFlagSet;
 	public fun getAllTeams ()Ljava/util/Collection;
+	public fun getAvailablePostEffects ()Ljava/util/stream/Stream;
 	public fun getAvailableSounds ()Ljava/util/stream/Stream;
 	public final fun getLevelOrNull ()Lnet/minecraft/client/multiplayer/ClientLevel;
 	public fun getOnlinePlayerNames ()Ljava/util/Collection;
@@ -695,7 +696,7 @@ public final class net/ccbluex/liquidbounce/features/command/brigadier/ClientCom
 	public fun levels ()Ljava/util/Set;
 	public fun permissions ()Lnet/minecraft/server/permissions/PermissionSet;
 	public fun registryAccess ()Lnet/minecraft/core/RegistryAccess;
-	public fun suggestRegistryElements (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/commands/SharedSuggestionProvider$ElementSuggestionType;Lcom/mojang/brigadier/suggestion/SuggestionsBuilder;Lcom/mojang/brigadier/context/CommandContext;)Ljava/util/concurrent/CompletableFuture;
+	public fun suggestRegistryElements (Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/commands/SharedSuggestionProvider$ElementSuggestionType;Lcom/mojang/brigadier/suggestion/SuggestionsBuilder;Lcom/mojang/brigadier/context/CommandContext;Ljava/util/function/Predicate;)Ljava/util/concurrent/CompletableFuture;
 }
 
 public final class net/ccbluex/liquidbounce/features/command/commands/ingame/CommandCenter : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/features/command/CommandRegistrar {
@@ -849,7 +850,7 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 }
 
 public abstract interface class net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
-	public fun getGpuDevice ()Lcom/mojang/blaze3d/systems/GpuDevice;
+	public fun getGpuDevice ()Lcom/mojang/renderpearl/api/device/GpuDevice;
 	public fun getInGame ()Z
 	public fun getInteraction ()Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
 	public fun getMc ()Lnet/minecraft/client/Minecraft;
@@ -859,7 +860,7 @@ public abstract interface class net/ccbluex/liquidbounce/features/module/Minecra
 }
 
 public final class net/ccbluex/liquidbounce/features/module/MinecraftShortcuts$DefaultImpls {
-	public static fun getGpuDevice (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lcom/mojang/blaze3d/systems/GpuDevice;
+	public static fun getGpuDevice (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lcom/mojang/renderpearl/api/device/GpuDevice;
 	public static fun getInGame (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Z
 	public static fun getInteraction (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;
 	public static fun getMc (Lnet/ccbluex/liquidbounce/features/module/MinecraftShortcuts;)Lnet/minecraft/client/Minecraft;
@@ -1167,8 +1168,8 @@ public final class net/ccbluex/liquidbounce/render/WorldRenderEnvironment {
 	public final fun getCamera ()Lnet/minecraft/client/Camera;
 	public final fun getPoseStack ()Lcom/mojang/blaze3d/vertex/PoseStack;
 	public final fun getRenderTarget ()Lcom/mojang/blaze3d/pipeline/RenderTarget;
-	public final fun start (Lcom/mojang/blaze3d/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
-	public static synthetic fun start$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lcom/mojang/blaze3d/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
+	public final fun start (Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
+	public static synthetic fun start$default (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/mesh/MeshBuildScope;
 }
 
 public final class net/ccbluex/liquidbounce/render/atlas/ItemImageAtlas : net/ccbluex/liquidbounce/event/EventListener {
@@ -1711,7 +1712,7 @@ public final class net/ccbluex/liquidbounce/utils/input/InputBind : java/lang/Re
 	public final fun getNewState (Lnet/ccbluex/liquidbounce/event/events/KeyboardKeyEvent;Z)Z
 	public fun hashCode ()I
 	public final fun isUnbound ()Z
-	public final fun matchesKey (II)Z
+	public final fun matchesKey (I)Z
 	public final fun matchesKeyPress (Lnet/ccbluex/liquidbounce/event/events/KeyboardKeyEvent;)Z
 	public final fun matchesKeyRelease (Lnet/ccbluex/liquidbounce/event/events/KeyboardKeyEvent;)Z
 	public final fun matchesModifiers (I)Z

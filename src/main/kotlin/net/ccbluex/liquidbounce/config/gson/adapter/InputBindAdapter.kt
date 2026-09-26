@@ -56,7 +56,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
             // Bind Action goes missing as we cannot access the action that is located
             // one element above - Sorry!
             return InputBind(
-                InputConstants.Type.KEYSYM.getOrCreate(primitive.asInt),
+                InputConstants.Type.KEYBOARD.getOrCreate(primitive.asInt),
                 InputBind.BindAction.TOGGLE,
                 emptySet(),
             )

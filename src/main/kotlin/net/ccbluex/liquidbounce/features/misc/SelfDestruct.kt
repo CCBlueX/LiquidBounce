@@ -83,7 +83,7 @@ object SelfDestruct {
         ScreenManager.restoreOriginalScreen()
         mc.updateTitle()
         mc.window.setIcon(
-            mc.vanillaPackResources,
+            mc.vanillaPackResources.fullResources(),
             if (SharedConstants.getCurrentVersion().stable()) IconSet.RELEASE else IconSet.SNAPSHOT
         )
     }

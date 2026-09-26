@@ -19,27 +19,33 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.interfaces.ClientClockInstanceAddition;
 import net.minecraft.client.ClientClockManager;
 import net.minecraft.core.Holder;
 import net.minecraft.world.clock.WorldClock;
-import net.minecraft.world.clock.WorldClocks;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+/**
+ * Since 26.3 the overworld clock is read through {@code ClockInstance#totalTicks()} instead of the
+ * former {@code ClockManager#getTotalTicks(Holder)}. Tags each clock instance with its definition so
+ * {@link MixinClientClockInstance} can apply the CustomAmbience time override to the overworld clock.
+ *
+ * @see MixinClientClockInstance
+ */
 @NullMarked
 @Mixin(ClientClockManager.class)
 public abstract class MixinClientClockManager {
 
-    @ModifyReturnValue(method = "getTotalTicks", at = @At("RETURN"))
-    private long injectOverrideClockTime(long original, Holder<WorldClock> definition) {
-        if (!definition.is(WorldClocks.OVERWORLD)) {
-            return original;
-        }
-
-        return ModuleCustomAmbience.getWorldClockTime(original);
+    @Inject(
+        method = "lambda$getInstance$0", // computeIfAbsent
+        at = @At("RETURN")
+    )
+    private static void liquidbounce$tagInstance(Holder<WorldClock> definition, CallbackInfoReturnable<ClientClockManager.ClientClockInstance> cir) {
+        ((ClientClockInstanceAddition) cir.getReturnValue()).liquid_bounce$setDefinition(definition);
     }
 
 }

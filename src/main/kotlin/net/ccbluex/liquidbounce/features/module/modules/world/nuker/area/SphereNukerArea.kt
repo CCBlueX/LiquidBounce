@@ -33,9 +33,7 @@ object SphereNukerArea : NukerArea("Sphere") {
 
         val positions = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             isPositionAvailable(eyesPos, rangeSquared, pos, state)
-        }.toMutableList()
-
-        positions.sortBy { (pos, _) ->
+        }.sortedBy { (pos, _) ->
             // If there is a last target, sort by distance to it, otherwise go by hardness
             pos.distSqr(wasTarget ?: player.blockPosition())
         }

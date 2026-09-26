@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.renderpearl.api.device.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.minecraft.client.Minecraft

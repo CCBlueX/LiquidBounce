@@ -24,10 +24,18 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import org.lwjgl.PointerBuffer
-import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.tinyfd.TinyFileDialogs
+import org.lwjgl.sdl.SDLError
+import org.lwjgl.sdl.SDLDialog.SDL_ShowOpenFileDialog
+import org.lwjgl.sdl.SDLDialog.SDL_ShowOpenFolderDialog
+import org.lwjgl.sdl.SDLDialog.SDL_ShowSaveFileDialog
+import org.lwjgl.sdl.SDL_DialogFileCallback
+import org.lwjgl.sdl.SDL_DialogFileFilter
+import org.lwjgl.system.MemoryUtil
+import org.lwjgl.system.Pointer
 import java.io.File
+import java.nio.ByteBuffer
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
 
 /**
  * A value file input that supports different file dialog modes and optional file type filtering.
@@ -92,62 +100,131 @@ enum class FileDialogMode(
     private val fallbackTitle: String
 ) {
     OPEN_FILE("liquidbounce.fileDialog.mode.openFile", "Open File") {
-        override fun selectFilesRaw(extensions: Iterable<String>?) = withFilterPatterns(extensions) {
-            TinyFileDialogs.tinyfd_openFileDialog(
-                title,
-                ConfigSystem.rootFolder.path,
-                it,
-                null,
-                false
-            )
-        }
+        override fun selectFiles(extensions: Iterable<String>?) =
+            showSdlDialog(extensions, save = false, folder = false)
     },
     SAVE_FILE("liquidbounce.fileDialog.mode.saveFile", "Save File As") {
-        override fun selectFilesRaw(extensions: Iterable<String>?) = withFilterPatterns(extensions) {
-            TinyFileDialogs.tinyfd_saveFileDialog(
-                title,
-                ConfigSystem.rootFolder.path,
-                it,
-                null
-            )
-        }
+        override fun selectFiles(extensions: Iterable<String>?) =
+            showSdlDialog(extensions, save = true, folder = false)
     },
     OPEN_DIRECTORY("liquidbounce.fileDialog.mode.openDirectory", "Select Folder") {
-        override fun selectFilesRaw(extensions: Iterable<String>?) = TinyFileDialogs.tinyfd_selectFolderDialog(
-            title,
-            ConfigSystem.rootFolder.path,
-        )
+        override fun selectFiles(extensions: Iterable<String>?) =
+            showSdlDialog(extensions, save = false, folder = true)
     };
 
     val title: String
         get() = LanguageManager.getLanguage()?.getOrDefault(translationKey, fallbackTitle) ?: fallbackTitle
 
-    protected abstract fun selectFilesRaw(extensions: Iterable<String>?): String?
-
-    fun selectFiles(extensions: Iterable<String>? = null): List<String> {
-        // using `|` as a separator because tinyfd separate multiple file selection
-        return selectFilesRaw(extensions)?.split('|') ?: emptyList()
-    }
+    abstract fun selectFiles(extensions: Iterable<String>?): CompletionStage<List<String>>
 
     companion object {
-        private fun <T> withFilterPatterns(
+        private fun showSdlDialog(
             extensions: Iterable<String>?,
-            block: (PointerBuffer?) -> T,
-        ): T? {
-            val patterns = extensions?.map { "*.$it" }.orEmpty()
-            if (patterns.isEmpty()) {
-                return block(null)
-            }
+            save: Boolean,
+            folder: Boolean,
+        ): CompletionStage<List<String>> {
+            val session = NativeDialogSession(extensions)
 
-            return MemoryStack.stackPush().use { stack ->
-                val buffer = stack.mallocPointer(patterns.size)
-
-                for (pattern in patterns) {
-                    buffer.put(stack.ASCII(pattern))
+            try {
+                when {
+                    folder -> SDL_ShowOpenFolderDialog(
+                        session,
+                        MemoryUtil.NULL,
+                        MemoryUtil.NULL,
+                        session.defaultLocation,
+                        false,
+                    )
+                    save -> SDL_ShowSaveFileDialog(
+                        session,
+                        MemoryUtil.NULL,
+                        MemoryUtil.NULL,
+                        session.filters,
+                        session.defaultLocation,
+                    )
+                    else -> SDL_ShowOpenFileDialog(
+                        session,
+                        MemoryUtil.NULL,
+                        MemoryUtil.NULL,
+                        session.filters,
+                        session.defaultLocation,
+                        false,
+                    )
                 }
-
-                block(buffer.flip())
+            } catch (t: Throwable) {
+                session.close()
+                session.future.completeExceptionally(t)
             }
+
+            return session.future
+        }
+
+    }
+}
+
+private class NativeDialogSession(
+    extensions: Iterable<String>?,
+) : SDL_DialogFileCallback(), AutoCloseable {
+
+    val future: CompletableFuture<List<String>> = CompletableFuture()
+
+    val defaultLocation: ByteBuffer = MemoryUtil.memUTF8(ConfigSystem.rootFolder.path)
+    private var filterNameBuf: ByteBuffer? = null
+    private var filterPatternBuf: ByteBuffer? = null
+    val filters: SDL_DialogFileFilter.Buffer? = buildFilters(extensions)
+
+    private fun buildFilters(extensions: Iterable<String>?): SDL_DialogFileFilter.Buffer? {
+        val exts = extensions
+            ?.map { it.trim().removePrefix("*.") }
+            ?.filter { it.isNotEmpty() }
+            .orEmpty()
+        if (exts.isEmpty()) return null
+
+        val pattern = exts.joinToString(";")
+        val name = exts.joinToString(", ") { "*.$it" }
+
+        val nameBuf = MemoryUtil.memUTF8(name).also { filterNameBuf = it }
+        val patternBuf = MemoryUtil.memUTF8(pattern).also { filterPatternBuf = it }
+
+        return SDL_DialogFileFilter.calloc(1).also { buf ->
+            buf[0].name(nameBuf).pattern(patternBuf)
+        }
+    }
+
+    private fun readFileList(filelist: Long): List<String> {
+        return buildList {
+            var i = 0
+            while (true) {
+                val ptr = MemoryUtil.memGetAddress(filelist + i.toLong() * Pointer.POINTER_SIZE)
+                if (ptr == MemoryUtil.NULL) break
+                this += MemoryUtil.memUTF8(ptr)
+                i++
+            }
+        }
+    }
+
+    override fun invoke(userdata: Long, filelist: Long, filter: Int) {
+        try {
+            if (filelist == MemoryUtil.NULL) {
+                val error = SDLError.SDL_GetError() ?: "Unknown SDL error"
+                future.completeExceptionally(IllegalStateException("SDL dialog error: $error"))
+            } else {
+                future.complete(readFileList(filelist))
+            }
+        } catch (t: Throwable) {
+            future.completeExceptionally(t)
+        } finally {
+            this.close()
+        }
+    }
+
+    override fun close() {
+        try {
+            filters?.free()
+            filterNameBuf?.let(MemoryUtil::memFree)
+            filterPatternBuf?.let(MemoryUtil::memFree)
+            MemoryUtil.memFree(defaultLocation)
+        } finally {
+            this.free()
         }
     }
 }

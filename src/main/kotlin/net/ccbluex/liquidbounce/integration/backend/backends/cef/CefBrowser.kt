@@ -260,32 +260,32 @@ class CefBrowser(
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
 
-        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY && handleMacClipboardShortcut(keyCode, modifiers)) {
+        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY && handleMacClipboardShortcut(scanCode, modifiers)) {
             return
         }
 
-        browserApi.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
+        browserApi.sendKeyPress(scanCode, keyCode, modifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
+        browserApi.sendKeyRelease(scanCode, keyCode, modifiers)
     }
 
     override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
+        browserApi.sendKeyTyped(codepoint)
     }
 
     // TODO: Temporary fix. Should be removed after fix in JCEF
-    private fun handleMacClipboardShortcut(keyCode: Int, modifiers: Int): Boolean {
+    private fun handleMacClipboardShortcut(scanCode: Int, modifiers: Int): Boolean {
         val isCommandPressed = modifiers and InputConstants.MOD_SUPER != 0
         if (!isCommandPressed) {
             return false
         }
 
         val frame = browserApi.focusedFrame
-        return when (keyCode) {
+        return when (scanCode) {
             InputConstants.KEY_C -> {
                 frame.copy()
                 true

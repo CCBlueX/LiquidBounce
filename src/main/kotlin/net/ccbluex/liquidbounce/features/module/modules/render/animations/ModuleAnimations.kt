@@ -135,11 +135,11 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
         protected fun applySwingOffset(matrices: PoseStack, arm: HumanoidArm, swingProgress: Float) {
             val armSide = if (arm == HumanoidArm.RIGHT) 1 else -1
             val f = Mth.sin(swingProgress * swingProgress * Math.PI)
-            matrices.mulPose(Axis.YP.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
+            matrices.rotate(Axis.YP.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
             val g = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
-            matrices.mulPose(Axis.ZP.rotationDegrees(armSide.toFloat() * g * -20.0f))
-            matrices.mulPose(Axis.XP.rotationDegrees(g * -80.0f))
-            matrices.mulPose(Axis.YP.rotationDegrees(armSide.toFloat() * -45.0f))
+            matrices.rotate(Axis.ZP.rotationDegrees(armSide.toFloat() * g * -20.0f))
+            matrices.rotate(Axis.XP.rotationDegrees(g * -80.0f))
+            matrices.rotate(Axis.YP.rotationDegrees(armSide.toFloat() * -45.0f))
         }
 
         abstract fun transform(matrices: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float)
@@ -177,12 +177,12 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
             matrices.translate(if (arm == HumanoidArm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
 
             val g = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
-            matrices.mulPose(
+            matrices.rotate(
                 Axis.ZP.rotationDegrees(
                     (if (arm == HumanoidArm.RIGHT) 1 else -1) * g * 10.0f
                 )
             )
-            matrices.mulPose(Axis.XP.rotationDegrees(g * -35.0f))
+            matrices.rotate(Axis.XP.rotationDegrees(g * -35.0f))
         }
 
     }
@@ -207,7 +207,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
                 sine / 2.0f,
                 0.0f
             )
-            matrices.mulPose(rot)
+            matrices.rotate(rot)
 
             matrices.translate(0.0f, translateY, 0.0f)
             applySwingOffset(matrices, arm, 0f)
@@ -240,7 +240,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
                 sine.div(2F),
                 0F
             )
-            matrices.mulPose(rot)
+            matrices.rotate(rot)
 
             matrices.translate(0.0f, translateY - 0.2f, 0.0f)
 
@@ -275,7 +275,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
                 0.0F,
                 0.0F
             )
-            matrices.mulPose(rot)
+            matrices.rotate(rot)
 
             applySwingOffset(matrices, arm, 0f)
         }
@@ -302,7 +302,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
                 sine.div(2f),
                 1.0f
             )
-            matrices.mulPose(rot)
+            matrices.rotate(rot)
 
             matrices.translate(3.4, 0.3, -0.4)
             matrices.translate(-2.10f, -0.2f, 0.1f)
@@ -313,7 +313,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
                 -1.4f,
                 -10.0f
             )
-            matrices.mulPose(rot1)
+            matrices.rotate(rot1)
 
             matrices.translate(if(arm == HumanoidArm.RIGHT) -1f else -2f, translateY, 0f)
 

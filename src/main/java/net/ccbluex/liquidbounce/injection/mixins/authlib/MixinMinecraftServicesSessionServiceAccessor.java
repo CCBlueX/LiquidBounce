@@ -17,18 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
+package net.ccbluex.liquidbounce.injection.mixins.authlib;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.feature.RenderTypeFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+import com.mojang.authlib.services.MinecraftServicesSessionService;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RenderTypeFeatureRenderer.class)
-public abstract class MixinRenderTypeFeatureRenderer {
-
-    @Shadow
-    protected abstract VertexConsumer getVertexBuilder(RenderType renderType);
-
+@Mixin(MinecraftServicesSessionService.class)
+public interface MixinMinecraftServicesSessionServiceAccessor {
+    @Accessor(remap = false)
+    MinecraftServicesDiscoveryService getDiscoveryService();
 }

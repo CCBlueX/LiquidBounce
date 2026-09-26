@@ -69,7 +69,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     @Inject(method = "handleLevelChunkWithLight", at = @At("RETURN"))
     private void injectChunkLoadEvent(ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
+        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.x(), packet.z()));
     }
 
     @Inject(method = "handleForgetLevelChunk", at = @At("RETURN"))
@@ -185,7 +185,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         return original;
     }
 
-    @ModifyExpressionValue(method = "handleParticleEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;getCount()I", ordinal = 1))
+    @ModifyExpressionValue(method = "handleParticleEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;count()I", ordinal = 1))
     private int onParticleAmount(int original) {
         if (ModuleAntiExploit.canLimit(Limit.PARTICLES_AMOUNT) && 500 <= original) {
             ModuleAntiExploit.INSTANCE.notify(Limit.PARTICLES_AMOUNT, "Limited too many particles", true);
@@ -194,7 +194,14 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         return original;
     }
 
-    @ModifyExpressionValue(method = "handleParticleEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;getMaxSpeed()F"))
+    @ModifyExpressionValue(
+        method = "handleParticleEvent",
+        at = {
+            @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;xMaxSpeed()F"),
+            @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;yMaxSpeed()F"),
+            @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/game/ClientboundLevelParticlesPacket;zMaxSpeed()F"),
+        }
+    )
     private float onParticleSpeed(float original) {
         if (ModuleAntiExploit.canLimit(Limit.PARTICLES_SPEED) && 10.0f <= original) {
             ModuleAntiExploit.INSTANCE.notify(Limit.PARTICLES_SPEED, "Limited too fast particles speed", true);

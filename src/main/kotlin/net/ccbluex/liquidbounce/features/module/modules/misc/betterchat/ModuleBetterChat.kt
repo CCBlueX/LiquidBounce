@@ -98,8 +98,8 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
                 }
             }
 
-            if ((InputConstants.isKeyDown(mc.window, InputConstants.KEY_LSHIFT)
-                    || InputConstants.isKeyDown(mc.window, InputConstants.KEY_RSHIFT))
+            if ((InputConstants.isKeyDown(InputConstants.KEY_LSHIFT)
+                    || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT))
                 && button == InputConstants.MOUSE_BUTTON_LEFT
             ) {
                 mc.keyboardHandler.clipboard = content

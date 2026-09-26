@@ -23,8 +23,11 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import kotlin.math.max
 import kotlin.math.min
 
-private const val CHROME_MAX_REFRESH_RATE = 240
-private const val LOWEST_REFRESH_RATE = 60
+private const val CHROME_MAX_REFRESH_RATE = 240F
+private const val LOWEST_REFRESH_RATE = 60F
 
-val refreshRate: Int
-    get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))
+val refreshRate: Float
+    get() = min(
+        CHROME_MAX_REFRESH_RATE,
+        max(LOWEST_REFRESH_RATE, mc.window.activeVideoMode?.refreshRate ?: LOWEST_REFRESH_RATE),
+    )

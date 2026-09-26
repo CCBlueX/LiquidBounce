@@ -111,8 +111,8 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                 withPositionRelativeToCamera(entity.position().add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         withPush {
-                            mulPose(Axis.XP.rotationDegrees(-90f))
-                            mulPose(Axis.ZP.rotationDegrees(rotation))
+                            rotate(Axis.XP.rotationDegrees(-90f))
+                            rotate(Axis.ZP.rotationDegrees(rotation))
                             drawSquareTexture(
                                 texture,
                                 (entity.radius + extraRadius) * 2,
@@ -124,8 +124,8 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                         if (Effect.enabled) {
                             withPush {
                                 translate(0.0, -0.005, 0.0)
-                                mulPose(Axis.XP.rotationDegrees(-90f))
-                                mulPose(Axis.ZP.rotationDegrees(secondRotation))
+                                rotate(Axis.XP.rotationDegrees(-90f))
+                                rotate(Axis.ZP.rotationDegrees(secondRotation))
                                 drawSquareTexture(
                                     secondaryTexture,
                                     (entity.radius + Effect.extraRadius + extraRadius) * 2,
@@ -137,7 +137,7 @@ object PotionFXLingering : ToggleableValueGroup(ModulePotionFX, "LingeringPotion
                         }
                         if (SecondEffects.Flash.enabled) {
                             withPush {
-                                mulPose(mc.gameRenderer.mainCamera().rotation())
+                                rotate(mc.gameRenderer.mainCamera().rotation())
                                 drawSquareTexture(
                                     glow,
                                     SecondEffects.Flash.radius * 2 * glowProgress,

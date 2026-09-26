@@ -25,7 +25,8 @@ import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+import com.mojang.authlib.services.MinecraftServicesSessionService;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleYggdrasilSignatureFix;
 import net.minecraft.world.entity.player.PlayerModelType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,9 +36,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
-@Mixin(YggdrasilMinecraftSessionService.class)
-
-public abstract class MixinYggdrasilMinecraftSessionService {
+@Mixin(MinecraftServicesSessionService.class)
+public abstract class MixinMinecraftServicesSessionService {
     @Inject(
             method = "getPropertySignatureState",
             at = @At("HEAD"),
@@ -54,12 +54,12 @@ public abstract class MixinYggdrasilMinecraftSessionService {
             method = "unpackTextures",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/mojang/authlib/yggdrasil/TextureUrlChecker;isAllowedTextureDomain(Ljava/lang/String;)Z"
+                    target = "Lcom/mojang/authlib/services/MinecraftServicesDiscoveryService;isAllowedTextureDomain(Ljava/lang/String;)Z"
             ),
             remap = false
     )
-    private boolean bypassUrlCheck(String url, Operation<Boolean> original) {
-        return ModuleYggdrasilSignatureFix.INSTANCE.getRunning() || original.call(url);
+    private boolean bypassUrlCheck(MinecraftServicesDiscoveryService instance, String url, Operation<Boolean> original) {
+        return ModuleYggdrasilSignatureFix.INSTANCE.getRunning() || original.call(instance, url);
     }
 
 

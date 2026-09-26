@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f

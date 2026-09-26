@@ -68,43 +68,43 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
 
         when (mode) {
             Mode.Swipe -> {
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * (45.0f + swing * -20.0f)))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * g * -70.0f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(-70f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * -45.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * (45.0f + swing * -20.0f)))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * g * -70.0f))
+                poseStack.rotate(Axis.XP.rotationDegrees(-70f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * -45.0f))
             }
             Mode.Spin -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(swing * -360f))
+                poseStack.rotate(Axis.XP.rotationDegrees(swing * -360f))
             }
             Mode.Hook -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(50f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * (-30f * (1f - g) - 30f)))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * 110f))
+                poseStack.rotate(Axis.XP.rotationDegrees(50f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * (-30f * (1f - g) - 30f)))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * 110f))
             }
             Mode.Dash -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(50f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * (-60f * g - 50f)))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * 110f))
+                poseStack.rotate(Axis.XP.rotationDegrees(50f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * (-60f * g - 50f)))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * 110f))
             }
             Mode.Tap -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(50f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * -60f))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * (110f + 20f * g)))
+                poseStack.rotate(Axis.XP.rotationDegrees(50f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * -60f))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * (110f + 20f * g)))
             }
             Mode.Inject -> {
                 poseStack.translate(0.0, 0.0, (-g / 4.0))
-                poseStack.mulPose(Axis.XP.rotationDegrees(-120f))
+                poseStack.rotate(Axis.XP.rotationDegrees(-120f))
             }
             Mode.Slap -> {
-                poseStack.mulPose(Axis.XP.rotationDegrees(-fSin(swing * 3f) * 60f))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * -60f * g))
+                poseStack.rotate(Axis.XP.rotationDegrees(-fSin(swing * 3f) * 60f))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * -60f * g))
             }
             Mode.Akrien -> {
                 if (swing > 0) {
-                    poseStack.mulPose(Axis.YP.rotationDegrees(i * 45f))
-                    poseStack.mulPose(Axis.XP.rotationDegrees(g * -85.0f))
+                    poseStack.rotate(Axis.YP.rotationDegrees(i * 45f))
+                    poseStack.rotate(Axis.XP.rotationDegrees(g * -85.0f))
                     poseStack.translate(i * -0.1, 0.28, 0.2)
-                    poseStack.mulPose(Axis.XP.rotationDegrees(-85.0f))
+                    poseStack.rotate(Axis.XP.rotationDegrees(-85.0f))
                 } else {
                     val m = 0.2f * fSin(fSqrt * PI * 2f)
                     val f2 = -0.2f * fSin(swing * PI)
@@ -114,30 +114,30 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
             }
 
             Mode.Smooth -> {
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * (45.0f + sin1 * -20.0f)))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(i * sin2 * -20.0f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(sin2 * -80.0f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * -45.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * (45.0f + sin1 * -20.0f)))
+                poseStack.rotate(Axis.ZP.rotationDegrees(i * sin2 * -20.0f))
+                poseStack.rotate(Axis.XP.rotationDegrees(sin2 * -80.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * -45.0f))
                 poseStack.translate(0.0, -0.1, 0.0)
             }
 
             Mode.Power -> {
                 poseStack.translate((-sinSmooth * sinSmooth * sin1 * i).toDouble(), 0.0, 0.0)
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * 61f))
-                poseStack.mulPose(Axis.ZP.rotationDegrees(sin2))
-                poseStack.mulPose(Axis.YP.rotationDegrees(sin2 * sin1 * -5.0f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(sin2 * sin1 * -30.0f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(-60.0f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(sinSmooth * -60.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * 61f))
+                poseStack.rotate(Axis.ZP.rotationDegrees(sin2))
+                poseStack.rotate(Axis.YP.rotationDegrees(sin2 * sin1 * -5.0f))
+                poseStack.rotate(Axis.XP.rotationDegrees(sin2 * sin1 * -30.0f))
+                poseStack.rotate(Axis.XP.rotationDegrees(-60.0f))
+                poseStack.rotate(Axis.XP.rotationDegrees(sinSmooth * -60.0f))
             }
 
             Mode.Feast -> {
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * 30f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(sin2 * 75.0f * i))
-                poseStack.mulPose(Axis.XP.rotationDegrees(sin2 * -45.0f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * 30f))
-                poseStack.mulPose(Axis.XP.rotationDegrees(-80.0f))
-                poseStack.mulPose(Axis.YP.rotationDegrees(i * 35f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * 30f))
+                poseStack.rotate(Axis.YP.rotationDegrees(sin2 * 75.0f * i))
+                poseStack.rotate(Axis.XP.rotationDegrees(sin2 * -45.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * 30f))
+                poseStack.rotate(Axis.XP.rotationDegrees(-80.0f))
+                poseStack.rotate(Axis.YP.rotationDegrees(i * 35f))
             }
         }
     }
@@ -145,10 +145,10 @@ object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations
     private fun applySwingOffset(poseStack: PoseStack, arm: HumanoidArm, swing: Float) {
         val i = if (arm == HumanoidArm.RIGHT) 1 else -1
         val f1 = fSin(swing * swing * PI)
-        poseStack.mulPose(Axis.YP.rotationDegrees(i * (45.0f + f1 * -20.0f)))
+        poseStack.rotate(Axis.YP.rotationDegrees(i * (45.0f + f1 * -20.0f)))
         val g = fSin(fSqrt(swing) * PI)
-        poseStack.mulPose(Axis.ZP.rotationDegrees(i * g * -20.0f))
-        poseStack.mulPose(Axis.XP.rotationDegrees(g * -80.0f))
-        poseStack.mulPose(Axis.YP.rotationDegrees(i * -45.0f))
+        poseStack.rotate(Axis.ZP.rotationDegrees(i * g * -20.0f))
+        poseStack.rotate(Axis.XP.rotationDegrees(g * -80.0f))
+        poseStack.rotate(Axis.YP.rotationDegrees(i * -45.0f))
     }
 }

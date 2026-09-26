@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isUnobstructed
@@ -26,7 +25,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.level.block.Blocks
-import java.util.SequencedSet
 
 class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direction, rotated: Direction)
     : MinecraftShortcuts {
@@ -40,7 +38,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
 
         origin, origin.relative(rotated)
     )
-    val enclosedBlocks = arrayOf(
+    val enclosedBlocks = listOf(
         origin.above(3), origin.relative(rotated).above(3),
         origin.above(2), origin.relative(rotated).above(2),
         origin.above(), origin.relative(rotated).above()
@@ -57,7 +55,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
      */
     fun calculateScore() {
         // there can't be blocks inside the portal
-        if (enclosedBlocks.any { !world.isEmptyBlock(it) }) {
+        if (world.findBlocksIn(enclosedBlocks).filterState { !it.isAir }.anyMatched()) {
             score = -1
             return
         }
@@ -110,10 +108,10 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
     }
 
     /**
-     * Returns a list with all the positions that should be obsidian but aren't.
+     * Returns a sequenced set with all the positions that should be obsidian but aren't.
      */
-    fun confirmPlacements(): SequencedSet<BlockPos> {
-        return frameBlocks.filterTo(ObjectLinkedOpenHashSet()) {
+    fun confirmPlacements() = buildSet {
+        frameBlocks.filterTo(this) {
             val blockState = world.getBlockState(it)
             blockState.block != Blocks.OBSIDIAN && blockState.canBeReplaced()
         }

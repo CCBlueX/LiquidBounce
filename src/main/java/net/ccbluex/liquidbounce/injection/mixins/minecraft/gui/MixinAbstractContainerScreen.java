@@ -143,8 +143,7 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
 
     @Unique
     private boolean matchingItemScrollerMoveConditions(double mouseX, double mouseY) {
-        return getHoveredSlot(mouseX, mouseY) != null
-            && ModuleItemScroller.INSTANCE.canPerformScroll(this.minecraft.getWindow());
+        return getHoveredSlot(mouseX, mouseY) != null && ModuleItemScroller.INSTANCE.canPerformScroll();
     }
 
 }

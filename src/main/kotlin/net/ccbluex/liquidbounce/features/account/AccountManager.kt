@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.account
 
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
-import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -83,9 +81,7 @@ object AccountManager : Config("Accounts"), EventListener {
         val (session, service) = account.login()
 
         val profileKeys = runCatching {
-            // In this case the environment doesn't matter, as it is only used for the profile key
-            val environment = YggdrasilEnvironment.PROD.environment
-            val userAuthenticationService = YggdrasilUserApiService(session.accessToken, Proxy.NO_PROXY, environment)
+            val userAuthenticationService = service.createUserApiService(session.accessToken)
             ProfileKeyPairManager.create(userAuthenticationService, session, mc.gameDirectory.toPath())
         }.onFailure {
             logger.error("Failed to create profile keys for ${session.name} due to ${it.message}")
@@ -93,9 +89,9 @@ object AccountManager : Config("Accounts"), EventListener {
 
         mc.user = session
         mc.services = mc.services.with(
-            service.createMinecraftSessionService(),
-            service.servicesKeySet,
-            service.createProfileRepository(),
+            sessionService = service.createMinecraftSessionService(),
+            servicesKeySet = service.servicesKeySet,
+            profileRepository = service.createProfileRepository(),
         )
         mc.profileKeyPairManager = profileKeys
         invalidateRealms()

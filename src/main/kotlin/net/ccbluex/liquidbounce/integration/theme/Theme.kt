@@ -24,6 +24,7 @@ import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -42,11 +43,9 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.text.capitalize
-import net.minecraft.server.packs.resources.ResourceManager
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
-import java.io.Closeable
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
@@ -68,7 +67,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
             )
             .build()
-    ), Closeable, ResourceManagerReloadListener {
+    ), AutoCloseable, SimpleReloadListener.Sequenced {
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
@@ -280,7 +279,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 background,
                 fragmentShader,
             ).also {
-                it.onResourceReload()
+                it.reload().await()
             }
         }
 
@@ -306,7 +305,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         withContext(Dispatchers.Minecraft) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
-                it.onResourceReload()
+                it.reload().await()
             }
         }
         logger.info("Loaded background image for theme ${metadata.name}")
@@ -333,9 +332,9 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
-    override fun onResourceManagerReload(manager: ResourceManager) {
-        backgroundShader?.onResourceReload()
-        backgroundImage?.onResourceReload()
+    override fun children() = listOfNotNull(backgroundShader, backgroundImage)
+
+    override fun onFinished(futures: List<*>) {
         logger.info("Reloaded theme '${metadata.name}'.")
     }
 

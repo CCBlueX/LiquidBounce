@@ -19,19 +19,20 @@
 
 package net.ccbluex.liquidbounce.render.atlas
 
-import com.mojang.blaze3d.GpuFormat
+import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.blaze3d.ProjectionType
-import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.renderpearl.api.commands.RenderPass
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.copyTo
 import net.ccbluex.liquidbounce.utils.render.readFully
-import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.renderer.Projection
 import net.minecraft.client.renderer.ProjectionMatrixBuffer
 import net.minecraft.client.renderer.Rect2i
@@ -67,8 +68,8 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
             "$label atlas framebuffer",
             textureSize,
             textureSize,
-            true,
             GpuFormat.RGBA8_UNORM,
+            GpuFormat.D32_FLOAT,
         )
     }
     private val framebuffer by framebufferLazy
@@ -117,11 +118,7 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
                 projectionMatrixBuffer.getBuffer(projection),
                 ProjectionType.ORTHOGRAPHIC,
             )
-            withOutputTextureOverride(
-                framebuffer.colorTextureView,
-                framebuffer.depthTextureView,
-                ::renderTiles,
-            )
+            renderTiles()
         } finally {
             RenderSystem.restoreProjectionMatrix()
         }
@@ -156,6 +153,10 @@ internal sealed class AbstractAtlasRenderer<A : Any>(
         } finally {
             poseStack.popPose()
         }
+    }
+
+    protected fun createRenderPass(): RenderPass {
+        return this.framebuffer.createRenderPass({ "$label pass" })
     }
 
     private fun readbackAsync(tileRects: Map<Identifier, Rect2i>): CompletableFuture<A> {

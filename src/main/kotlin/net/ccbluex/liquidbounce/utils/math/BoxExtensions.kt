@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
@@ -62,22 +61,6 @@ fun AABB.worldToLocal(): WorldLocalBox {
     val origin = this.minPosition
     return WorldLocalBox(origin, this - origin)
 }
-
-fun AABB.iterateBlockPos(
-    minYInclusive: Int = minY.floorToInt(),
-    maxYInclusive: Int = maxY.ceilToInt(),
-): Iterable<BlockPos> =
-    BlockPos.betweenClosed(
-        minX.floorToInt(),
-        minYInclusive,
-        minZ.floorToInt(),
-        maxX.ceilToInt(),
-        maxYInclusive,
-        maxZ.ceilToInt(),
-    )
-
-fun AABB.iterateBottomLayerBlockPos(): Iterable<BlockPos> =
-    iterateBlockPos(maxYInclusive = minY.ceilToInt())
 
 fun AABB.centerOnSide(side: Direction): Vec3 {
     val cx = minX + xsize * 0.5

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import kotlin.math.max
 
 /**
  * NoInterpolation module
@@ -29,5 +30,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
  */
 object ModuleNoInterpolation : ClientModule("NoInterpolation", ModuleCategories.WORLD) {
 
-    val value by int("ReduceBy", 3, 1..3)
+    private val value by int("ReduceBy", 3, 1..3)
+
+    @JvmStatic
+    fun reduceInterpolationSteps(original: Int): Int {
+        return if (running) max(original - value, 0) else original
+    }
 }

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.minecraft.client.gui.Gui
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Items
 
@@ -34,7 +33,7 @@ import net.minecraft.world.item.Items
 object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, aliases = listOf("NoRender")) {
     /**
      * @see Items.CARVED_PUMPKIN
-     * @see Gui.renderCameraOverlays
+     * @see net.minecraft.client.gui.Hud.extractCameraOverlays
      */
     @JvmField
     val TEXTURE_PUMPKIN_BLUR: Identifier = Identifier.withDefaultNamespace("textures/misc/pumpkinblur.png")

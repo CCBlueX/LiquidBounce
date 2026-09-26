@@ -6,28 +6,11 @@
  * @see net.minecraft.client.renderer.GlobalSettingsUniform
  */
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-/* #moj_import <minecraft:dynamictransforms.glsl> */
-layout(std140) uniform DynamicTransforms {
-    mat4 ModelViewMat;
-    vec4 ColorModulator;
-    vec3 ModelOffset;
-    mat4 TextureMat;
-};
-/* #moj_import <minecraft:projection.glsl> */
-layout(std140) uniform Projection {
-    mat4 ProjMat;
-};
-/* #moj_import <minecraft:globals.glsl> */
-layout(std140) uniform Globals {
-    ivec3 CameraBlockPos;
-    vec3 CameraOffset;
-    vec2 ScreenSize;
-    float GlintAlpha;
-    float GameTime;
-    int MenuBlurRadius;
-    int UseRgss;
-};
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
+#include <minecraft:globals.glsl>
 
 layout(std140) uniform u_MeshBaseBlockPos {
     ivec3 BaseBlockPos;
@@ -41,9 +24,9 @@ layout(std140) uniform u_DistanceFade {
     vec4 DistanceRanges;
 };
 
-in vec3 Position;
+layout(location = 0) in vec3 Position;
 
-out float alphaFactor;
+layout(location = 0) out float alphaFactor;
 
 void main() {
     vec3 relativePos = Position + vec3(BaseBlockPos - CameraBlockPos) + CameraOffset;

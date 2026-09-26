@@ -1,18 +1,14 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-layout(std140) uniform DynamicTransforms {
-    mat4 ModelViewMat;
-    vec4 ColorModulator;
-    vec3 ModelOffset;
-    mat4 TextureMat;
-};
+#include <minecraft:dynamictransforms.glsl>
 
 uniform sampler2D Sampler0;
 
-in vec2 vUv;
-flat in ivec2 vUv2;
+layout(location = 0) in vec2 vUv;
+layout(location = 1) flat in ivec2 vUv2;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 const float TWO_PI = 6.28318530718;
 const float INNER_RATIO_SCALE = 32767.0;

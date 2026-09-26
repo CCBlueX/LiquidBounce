@@ -58,7 +58,7 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
     public void liquidbounce$setPosition(double x, double y) {
         this.xpos = x;
         this.ypos = y;
-        InputConstants.grabOrReleaseMouse(this.minecraft.getWindow(), InputConstants.CURSOR_NORMAL, this.xpos, this.ypos);
+        InputConstants.releaseMouse(this.minecraft.getWindow(), this.xpos, this.ypos);
     }
 
     /**
@@ -95,8 +95,8 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
      * Hook mouse cursor event
      */
     @Inject(method = "onMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isWindowActive()Z", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
+    private void hookCursorPos(long handle, double xpos, double ypos, double xrel, double yrel, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new MouseCursorEvent(xpos, ypos));
     }
 
     @ModifyExpressionValue(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;isFirstPerson()Z"))

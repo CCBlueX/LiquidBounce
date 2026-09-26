@@ -34,8 +34,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
@@ -52,10 +53,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -98,6 +98,13 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     private int onGroundTicks = 0;
     @Unique
     private int airTicks = 0;
+
+    @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)
+    private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.FLOATING_ITEMS)) {
+            ci.cancel();
+        }
+    }
 
     /**
      * Hook entity tick event
@@ -382,20 +389,6 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))
     private boolean injectAutoJumpAllowed(boolean original) {
         return EventManager.INSTANCE.callEvent(new AllowAutoJumpEvent(original)).isAllowed();
-    }
-
-    @Inject(method = "swing", at = @At("HEAD"), cancellable = true)
-    private void swingHand(InteractionHand hand, CallbackInfo ci) {
-        if (ModuleNoSwing.INSTANCE.getRunning()) {
-            if (!ModuleNoSwing.INSTANCE.shouldHideForServer()) {
-                connection.send(new ServerboundSwingPacket(hand));
-            }
-            if (!ModuleNoSwing.INSTANCE.shouldHideForClient()) {
-                swing(hand, false);
-            }
-
-            ci.cancel();
-        }
     }
 
     @ModifyReturnValue(method = "getJumpRidingScale", at = @At("RETURN"))

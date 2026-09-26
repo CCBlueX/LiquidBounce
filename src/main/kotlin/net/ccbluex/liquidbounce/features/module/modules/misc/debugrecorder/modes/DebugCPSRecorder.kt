@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 
 object DebugCPSRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("CPS") {
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet !is ServerboundSwingPacket) {
+        if (event.packet !is ServerboundPunchPacket) {
             return@handler
         }
 
         recordPacket(JsonObject().apply {
-            addProperty("type", "swingPacket")
+            addProperty("type", "punchPacket")
             addProperty("time", System.currentTimeMillis())
         })
     }

@@ -198,9 +198,9 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
                 with(poseStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
-                    mulPose(mc.gameRenderer.mainCamera().rotation())
+                    rotate(mc.gameRenderer.mainCamera().rotation())
                     scale(-1.0f, 1.0f, -1.0f)
-                    mulPose(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
+                    rotate(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 

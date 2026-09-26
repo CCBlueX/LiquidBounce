@@ -67,7 +67,7 @@ object InputTracker : EventListener {
      * @return True if the key is pressed on the keyboard, false otherwise.
      */
     val KeyMapping.pressedOnKeyboard: Boolean
-        get() = this.key.type == InputConstants.Type.KEYSYM
+        get() = this.key.type == InputConstants.Type.KEYBOARD
             && key.isPressed
 
     /**
@@ -86,7 +86,7 @@ object InputTracker : EventListener {
      */
     fun KeyMapping.wasPressedRecently(withinMs: Long): Boolean {
         return when (this.key.type) {
-            InputConstants.Type.KEYSYM -> wasKeyPressedRecently(this.key.value, withinMs)
+            InputConstants.Type.KEYBOARD -> wasKeyPressedRecently(this.key.value, withinMs)
             InputConstants.Type.MOUSE -> wasMouseButtonPressedRecently(this.key.value, withinMs)
             else -> false
         }
@@ -100,7 +100,7 @@ object InputTracker : EventListener {
     val KeyMapping.timeSinceLastPress: Long
         get() {
             return when (this.key.type) {
-                InputConstants.Type.KEYSYM -> getTimeSinceKeyPress(this.key.value)
+                InputConstants.Type.KEYBOARD -> getTimeSinceKeyPress(this.key.value)
                 InputConstants.Type.MOUSE -> getTimeSinceMousePress(this.key.value)
                 else -> Long.MAX_VALUE
             }

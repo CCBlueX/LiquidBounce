@@ -85,7 +85,7 @@ class WireframePlayer {
         env.withPositionRelativeToCamera(pos) {
             poseStack.withPush {
                 val bodyYaw = -Mth.wrapDegrees(yRot)
-                poseStack.mulPose(quaternion.identity().rotationY(bodyYaw.toRadians()))
+                poseStack.rotate(quaternion.identity().rotationY(bodyYaw.toRadians()))
                 poseStack.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE)
 
                 when (pose) {
@@ -179,7 +179,7 @@ class WireframePlayer {
 
         poseStack.withPush {
             poseStack.translate(RENDER_BODY.center.x, RENDER_BODY.center.y + SWIM_ROOT_Y_OFFSET, RENDER_BODY.center.z)
-            poseStack.mulPose(quaternion.identity().rotationX(SWIM_PART_ROTATION.toRadians()))
+            poseStack.rotate(quaternion.identity().rotationX(SWIM_PART_ROTATION.toRadians()))
             poseStack.translate(-RENDER_BODY.center.x, -RENDER_BODY.center.y, -RENDER_BODY.center.z)
 
             renderPart(RENDER_BODY, color, outlineColor, noDepthTest = noDepthTest)
@@ -240,13 +240,13 @@ class WireframePlayer {
             if (xRot != 0f || yRot != 0f || zRot != 0f) {
                 poseStack.translate(pivot.x, pivot.y, pivot.z)
                 if (zRot != 0f) {
-                    poseStack.mulPose(quaternion.identity().rotationZ(zRot.toRadians()))
+                    poseStack.rotate(quaternion.identity().rotationZ(zRot.toRadians()))
                 }
                 if (yRot != 0f) {
-                    poseStack.mulPose(quaternion.identity().rotationY(yRot.toRadians()))
+                    poseStack.rotate(quaternion.identity().rotationY(yRot.toRadians()))
                 }
                 if (xRot != 0f) {
-                    poseStack.mulPose(quaternion.identity().rotationX(xRot.toRadians()))
+                    poseStack.rotate(quaternion.identity().rotationX(xRot.toRadians()))
                 }
                 poseStack.translate(-pivot.x, -pivot.y, -pivot.z)
             }

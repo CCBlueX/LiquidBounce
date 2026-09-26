@@ -39,11 +39,10 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -123,14 +122,14 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         return original;
     }
 
-    @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
+    @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"))
     private void injectTrueSight(
-        SubmitNodeCollector instance, Model<M> model,
-        Object o, PoseStack matrixStack,
-        RenderType renderLayer, int light,
+        SubmitNodeCollector instance, Model<?> model,
+        Object o, PoseStack poseStack,
+        RenderType renderType, int light,
         int overlay, int tintedColor,
-        TextureAtlasSprite sprite, int outlineColor,
-        ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand, Operation<Void> original,
+        @Nullable UvMapping uvMapping, int outlineColor,
+        Operation<Void> original,
         @Local(argsOnly = true, name = "state") S state
     ) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
@@ -144,23 +143,22 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         }
         original.call(
             instance, model,
-            o, matrixStack,
-            renderLayer, light,
+            o, poseStack,
+            renderType, light,
             overlay, tintedColor,
-            sprite, outlineColor,
-            crumblingOverlayCommand
+            uvMapping, outlineColor
         );
     }
 
     @ModifyReturnValue(method = "getRenderType", at = @At("RETURN"))
     private RenderType injectTrueSight(RenderType original, S state, boolean showBody, boolean translucent, boolean showOutline) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCull(this.getTextureLocation(state));
         }
 
         if (ModuleTrueSight.canRenderEntities(state) && !showBody && !translucent && !showOutline) {
             state.isInvisible = false;
-            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCull(this.getTextureLocation(state));
         }
         return original;
     }
@@ -187,7 +185,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         if (original == null) return null;
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-        return ModuleChams.INSTANCE.remapIfNeeded(original, entity);
+        return ModuleChams.INSTANCE.trackIfNeeded(original, entity);
     }
 
     // FreeCam

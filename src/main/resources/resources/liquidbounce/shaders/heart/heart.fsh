@@ -1,22 +1,13 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-/* #moj_import <minecraft:dynamictransforms.glsl> */
-layout(std140) uniform DynamicTransforms {
-    mat4 ModelViewMat;
-    vec4 ColorModulator;
-    vec3 ModelOffset;
-    mat4 TextureMat;
-};
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
 
-/* #moj_import <minecraft:projection.glsl> */
-layout(std140) uniform Projection {
-    mat4 ProjMat;
-};
+layout(location = 0) in vec4 vColor;
+layout(location = 1) in vec2 vUv;
 
-in vec4 vColor;
-in vec2 vUv;
-
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 float sdHeart(vec2 p) {
     p.x = abs(p.x);

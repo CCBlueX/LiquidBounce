@@ -34,7 +34,7 @@ fun WorldRenderEnvironment.drawLegacy2DMarker(
     backgroundArgb: Int,
 ) {
     withPositionRelativeToCamera(pos) {
-        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()))
+        poseStack.rotate(Axis.YP.rotationDegrees(-camera.yRot()))
         poseStack.scale(-scale, -scale, scale)
 
         drawLegacy2DRects(foregroundArgb, TOP_FOREGROUND_RECTS)

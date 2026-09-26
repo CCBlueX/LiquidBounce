@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import java.util.Map;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityFluidInteraction;
 import net.minecraft.world.level.material.Fluid;
@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(EntityFluidInteraction.class)
 public interface MixinEntityFluidInteractionAccessor {
 
-    @Accessor("trackerByFluid")
-    Map<TagKey<Fluid>, Object> trackerByFluid();
+    @Accessor("currentAccumulators")
+    Reference2ObjectMap<TagKey<Fluid>, ?> currentAccumulators();
 
 }

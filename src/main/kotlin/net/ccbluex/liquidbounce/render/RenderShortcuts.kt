@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer

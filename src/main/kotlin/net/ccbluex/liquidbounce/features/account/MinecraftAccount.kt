@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService
+import com.mojang.authlib.services.MinecraftServicesEnvironment
 import com.mojang.util.UndashedUuid
 import net.ccbluex.liquidbounce.config.gson.util.boolean
 import net.ccbluex.liquidbounce.config.gson.util.obj
@@ -42,7 +42,7 @@ val clientIdentifier: String = UUID.randomUUID().toString()
  * authenticates against Mojang rather than built per login.
  */
 private val mojangAuthentication by lazy {
-    YggdrasilAuthenticationService(Proxy.NO_PROXY, YggdrasilEnvironment.PROD.environment)
+    MinecraftServicesDiscoveryService.create(Proxy.NO_PROXY, true, MinecraftServicesEnvironment.PROD.environment)
 }
 
 /**
@@ -72,7 +72,7 @@ sealed class MinecraftAccount(val service: AccountService) {
 
     val bans = hashMapOf<String, Ban>()
 
-    protected open val authenticationService: YggdrasilAuthenticationService
+    protected open val authenticationService: MinecraftServicesDiscoveryService
         get() = mojangAuthentication
 
     abstract fun refresh()
@@ -87,7 +87,7 @@ sealed class MinecraftAccount(val service: AccountService) {
      * Authenticates the account and returns the session to hand to the game, along with the
      * authentication service that resolves other players' profiles while it is active.
      */
-    fun login(): Pair<SessionWithService, YggdrasilAuthenticationService> {
+    fun login(): Pair<SessionWithService, MinecraftServicesDiscoveryService> {
         if (profile == null) {
             refresh()
         }

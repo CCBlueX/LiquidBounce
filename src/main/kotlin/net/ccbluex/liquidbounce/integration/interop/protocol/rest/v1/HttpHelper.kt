@@ -41,9 +41,8 @@ suspend fun ApplicationCall.respondResource(
 
 suspend fun ApplicationCall.respondImage(
     image: NativeImage,
-    contentType: ContentType? = ContentType.Image.PNG,
     status: HttpStatusCode? = null,
-) = respondOutputStream(contentType, status) {
+) = respondOutputStream(ContentType.Image.PNG, status) {
     image.writeToChannel(Channels.newChannel(this))
 }
 

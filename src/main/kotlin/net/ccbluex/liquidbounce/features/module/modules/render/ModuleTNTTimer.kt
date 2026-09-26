@@ -96,7 +96,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
                 val cameraPos = camera.position()
                 event.poseStack.withPush {
                     translate(pos.x - cameraPos.x, pos.y - cameraPos.y, pos.z - cameraPos.z)
-                    mulPose(event.camera.rotation())
+                    rotate(event.camera.rotation())
                     scale(
                         EntityRenderer.NAMETAG_SCALE * scale,
                         -EntityRenderer.NAMETAG_SCALE * scale,

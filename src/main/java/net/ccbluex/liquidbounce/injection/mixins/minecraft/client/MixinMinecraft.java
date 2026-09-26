@@ -437,7 +437,7 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
     private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
         MeshDraw.DefaultUploader.endFrame();
     }

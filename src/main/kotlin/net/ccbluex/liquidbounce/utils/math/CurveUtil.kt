@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import org.joml.Vector2f
 import org.joml.Vector2fc
@@ -121,7 +120,7 @@ object CurveUtil {
             }
         }
 
-        return points.asObjectList(0, keptSize)
+        return points.slice(0..<keptSize)
     }
 
     private fun normalizeTension(tension: Float): Float {
