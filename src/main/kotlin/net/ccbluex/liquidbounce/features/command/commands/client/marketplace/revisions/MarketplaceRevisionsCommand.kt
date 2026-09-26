@@ -18,18 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.revisions
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 
 /**
  * Manage marketplace item revisions
  */
-object MarketplaceRevisionsCommand : Command.Factory {
+object MarketplaceRevisionsCommand {
 
-    override fun createCommand() = CommandBuilder.begin("revisions")
-        .hub()
-        .subcommand(MarketplaceListRevisionsCommand)
+    fun CmdLiteralScope.revisions() {
+        with(MarketplaceListRevisionsCommand) { revisionsList() }
         // Uploading revision is disabled until proven stable
-        // .subcommand(UploadRevisionCommand)
-        .build()
+        // with(MarketplaceUploadRevisionCommand) { upload() }
+    }
+
 }

@@ -32,11 +32,13 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.protocol.game.ClientboundAnimatePacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
@@ -113,7 +115,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ),
 
             // Chestplate only
-            ELYTRA("Elytra", Items.ELYTRA),
+            ELYTRA("Elytra", { it.isGlider }),
 
             // Helmet only
             TURTLE_SCUTE("TurtleScute", Items.TURTLE_HELMET),
@@ -290,13 +292,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
             is ClientboundAnimatePacket -> {
                 when (packet.action) {
-                    ClientboundAnimatePacket.SWING_MAIN_HAND, ClientboundAnimatePacket.SWING_OFF_HAND -> mc.execute {
-                        swungSet.add(packet.id)
-                    }
                     ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> mc.execute {
                         crittedSet.add(packet.id)
                     }
                 }
+            }
+
+            is ClientboundSwingAnimationPacket -> mc.execute {
+                swungSet.add(packet.entityId)
             }
 
             is ClientboundRemoveEntitiesPacket -> mc.execute {

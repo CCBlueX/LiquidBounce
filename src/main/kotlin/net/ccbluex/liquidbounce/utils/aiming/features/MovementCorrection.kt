@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.utils.aiming.features
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
  * Corrects movement when aiming away from client-side view direction.
  */
+@AddonApi
 enum class MovementCorrection(override val tag: String) : Tagged {
 
     /**

@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump

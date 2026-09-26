@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.item
 import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.core.TypedInstance
 import net.minecraft.core.component.DataComponentGetter
+import net.minecraft.core.component.DataComponentHolder
 import net.minecraft.core.component.DataComponents
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -31,11 +32,14 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.Tool
 
-val ItemStack.isConsumable: Boolean
+val DataComponentHolder.isConsumable: Boolean
     get() = this.has(DataComponents.CONSUMABLE)
 
-val ItemStack.isFood: Boolean
+val DataComponentGetter.isFood: Boolean
     get() = foodComponent != null
+
+val DataComponentHolder.isGlider: Boolean
+    get() = this.has(DataComponents.GLIDER)
 
 val DataComponentGetter.foodComponent: FoodProperties?
     get() = this.get(DataComponents.FOOD)

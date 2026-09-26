@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.withLength
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -105,8 +104,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         REAL,
     }
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmOverloads
         fun getHypotheticalTrajectory(
             simulationOwner: Entity,

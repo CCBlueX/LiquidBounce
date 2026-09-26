@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Translates a key name to an InputUtil.Key using InputConstants key codes.
@@ -28,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
  *
  * The input can be provided in the following formats:
  * - Full key name: "key.mouse.left", "key.keyboard.a", "key.keyboard.keypad.decimal"
- * - Abbreviated: "a" -> "key.keyboard.a", "lshift" -> "key.keyboard.left_shift"
+ * - Abbreviated: "a" -> "key.keyboard.a", "left_shift" -> "key.keyboard.left.shift"
  *
  * @param name The key name as a string.
  * @return The corresponding InputUtil.Key object.
@@ -45,11 +44,18 @@ fun inputByName(name: String): InputConstants.Key {
                 formattedName.startsWith("key.keyboard.", ignoreCase = true) -> formattedName.lowercase()
 
             formattedName.startsWith("mouse.", ignoreCase = true) ||
-                formattedName.startsWith("keyboard.", ignoreCase = true) -> "key.$formattedName"
+                formattedName.startsWith("keyboard.", ignoreCase = true) -> "key.${formattedName.lowercase()}"
 
             else -> "key.keyboard.${formattedName.lowercase()}"
         }
-    return InputConstants.getKey(translationKey)
+
+    return try {
+        InputConstants.getKey(translationKey)
+    } catch (_: IllegalArgumentException) {
+        // Unnamed keys are looked up by their number, so a name that is neither known nor numeric
+        // leaves `getKey` throwing a NumberFormatException instead of reporting an unknown key.
+        InputConstants.UNKNOWN
+    }
 }
 
 /**
@@ -61,7 +67,7 @@ fun inputByName(name: String): InputConstants.Key {
  * @return `true` if the key is pressed; otherwise, `false`.
  */
 val InputConstants.Key.isPressed get() =
-    InputConstants.isKeyDown(mc.window, this.value)
+    InputConstants.isKeyDown(this.value)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").
@@ -76,22 +82,22 @@ fun reduceInputName(translationKey: String): String =
         .removePrefix("keyboard.")
 
 /**
- * Retrieves a set of reduced mouse input names available in InputUtil.
- *
- * @return A set of simplified mouse input names.
- */
-val availableKeyboardKeys: Set<String>
-    get() = InputConstants.Type.MOUSE.map.values
-        .map { key -> reduceInputName(key.name) }
-        .toSet()
-
-/**
  * Retrieves a set of reduced keyboard input names available in InputUtil.
  *
  * @return A set of simplified keyboard input names.
  */
+val availableKeyboardKeys: Set<String>
+    get() = InputConstants.Type.KEYBOARD.map.values
+        .map { key -> reduceInputName(key.name) }
+        .toSet()
+
+/**
+ * Retrieves a set of reduced mouse input names available in InputUtil.
+ *
+ * @return A set of simplified mouse input names.
+ */
 val availableMouseKeys: Set<String>
-    get() = InputConstants.Type.KEYSYM.map.values
+    get() = InputConstants.Type.MOUSE.map.values
         .map { key -> reduceInputName(key.name) }
         .toSet()
 
@@ -103,7 +109,7 @@ val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys
  * @return null if it's not a valid modifier.
  */
 fun InputConstants.Key.toModifierOrNull(): InputBind.Modifier? {
-    return if (this.type == InputConstants.Type.KEYSYM) {
+    return if (this.type == InputConstants.Type.KEYBOARD) {
         InputBind.Modifier.of(this.value)
     } else {
         null

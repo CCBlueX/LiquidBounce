@@ -22,12 +22,12 @@ import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -48,6 +48,7 @@ import net.minecraft.util.Util
  * @param action The action triggered by the bound key (e.g., TOGGLE, HOLD).
  */
 @JvmRecord
+@AddonApi
 data class InputBind(
     val boundKey: InputConstants.Key,
     val action: BindAction,
@@ -73,21 +74,6 @@ data class InputBind(
         this(inputByName(name), BindAction.TOGGLE, emptySet())
 
     /**
-     * Retrieves the name of the key in uppercase format, excluding the category prefixes.
-     *
-     * @return A formatted string representing the bound key's name, or "None" if unbound.
-     */
-    val keyName: String
-        get() = when {
-            isUnbound -> "None"
-            else -> this.boundKey.name
-                .split('.')
-                .drop(2) // Drops the "key.keyboard" or "key.mouse" part
-                .joinToString(separator = "_") // Joins the remaining parts with underscores
-                .uppercase() // Converts the key name to uppercase
-        }
-
-    /**
      * Checks if the key is unbound (i.e., set to UNKNOWN_KEY).
      *
      * @return True if the key is unbound, false otherwise.
@@ -98,16 +84,11 @@ data class InputBind(
     /**
      * Determines if the specified key matches the bound key.
      *
-     * @param keyCode The InputConstants key code to check.
      * @param scanCode The scan code to check.
-     * @return True if the key code or scan code matches the bound key, false otherwise.
+     * @return True if the SDL scan code matches the bound key, false otherwise.
      */
-    fun matchesKey(keyCode: Int, scanCode: Int): Boolean {
-        return if (keyCode == InputConstants.UNKNOWN.value) {
-            this.boundKey.type == InputConstants.Type.SCANCODE && this.boundKey.value == scanCode
-        } else {
-            this.boundKey.type == InputConstants.Type.KEYSYM && this.boundKey.value == keyCode
-        }
+    fun matchesKey(scanCode: Int): Boolean {
+        return this.boundKey.type == InputConstants.Type.KEYBOARD && this.boundKey.value == scanCode
     }
 
     /**
@@ -135,7 +116,7 @@ data class InputBind(
      */
     fun matchesKeyPress(event: KeyboardKeyEvent): Boolean {
         return event.isPressed
-            && matchesKey(event.keyCode, event.scanCode)
+            && matchesKey(event.scanCode)
             && matchesModifiers(event.mods)
     }
 
@@ -144,7 +125,7 @@ data class InputBind(
      */
     fun matchesKeyRelease(event: KeyboardKeyEvent): Boolean {
         if (!event.isReleased) return false
-        val keyReleased = matchesKey(event.keyCode, event.scanCode)
+        val keyReleased = matchesKey(event.scanCode)
         val modifierReleased = event.key.toModifierOrNull().let { it in modifiers && !it!!.isAnyPressed }
 
         return keyReleased || modifierReleased
@@ -178,7 +159,7 @@ data class InputBind(
      * @return The new state.
      */
     fun getNewState(event: KeyboardKeyEvent, currentState: Boolean): Boolean {
-        if (!matchesKey(event.keyCode, event.scanCode)) {
+        if (!matchesKey(event.scanCode)) {
             return currentState
         }
 
@@ -219,12 +200,10 @@ data class InputBind(
          */
         SMART("Smart");
 
-        companion object {
-            @JvmStatic
-            private val LOOKUP_TABLE = BindAction.entries.makeLookupTable()
+        companion {
+            private val byName = BindAction.entries.makeLookupTable()
 
-            @JvmStatic
-            fun of(string: String?): BindAction? = LOOKUP_TABLE[string]
+            fun of(string: String?): BindAction? = byName[string]
         }
     }
 
@@ -232,7 +211,7 @@ data class InputBind(
         SHIFT("Shift", InputConstants.MOD_SHIFT, InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT),
         CONTROL("Control", InputConstants.MOD_CONTROL, InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL),
         ALT("Alt", InputConstants.MOD_ALT, InputConstants.KEY_LALT, InputConstants.KEY_RALT),
-        SUPER("Super", InputConstants.MOD_SUPER, InputConstants.KEY_LSUPER, InputConstants.KEY_RSUPER);
+        SUPER("Super", InputConstants.MOD_SUPER, InputConstants.KEY_LGUI, InputConstants.KEY_RGUI);
 
         /**
          * Check if self is active in [modifiers] value.
@@ -242,7 +221,7 @@ data class InputBind(
         /**
          * Check if any one modifier key is pressed.
          */
-        val isAnyPressed: Boolean get() = this.keyCodes.any { InputConstants.isKeyDown(mc.window, it) }
+        val isAnyPressed: Boolean get() = this.keyCodes.any { InputConstants.isKeyDown(it) }
 
         /**
          * Performs the platform (OS) specified render name of a modifier.
@@ -264,27 +243,22 @@ data class InputBind(
         }
 
         companion object {
-            @JvmStatic
-            private val LOOKUP_TABLE = Modifier.entries.makeLookupTable()
+            private val byName = Modifier.entries.makeLookupTable()
 
-            @JvmStatic
-            private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
+            private val byKeyCode: Int2ReferenceMap<Modifier> = run {
                 val map = Int2ReferenceOpenHashMap<Modifier>()
                 for (modifier in Modifier.entries) {
                     for (keyCode in modifier.keyCodes) {
                         map.put(keyCode, modifier)
                     }
                 }
-                map.unmodifiable()
+                map
             }
 
-            @JvmStatic
-            fun of(string: String?): Modifier? = LOOKUP_TABLE[string]
+            fun of(string: String?): Modifier? = byName[string]
 
-            @JvmStatic
-            fun of(keyCode: Int): Modifier? = KEY_CODE_LOOKUP[keyCode]
+            fun of(keyCode: Int): Modifier? = byKeyCode[keyCode]
 
-            @JvmStatic
             fun fromRawValue(modifiers: Int) = entries.filterTo(enumSetOf()) {
                 it.isActive(modifiers)
             }
@@ -317,10 +291,8 @@ fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
 
 fun InputBind.renderText(): Component = buildText {
     add(
-        inputByName(keyName).let { key ->
-            variable(key.displayName.copy()).bold(true)
-                .copyable(copyContent = key.name)
-        }
+        variable(boundKey.displayName.copy()).bold(true)
+            .copyable(copyContent = boundKey.name)
     )
 
     val divider = regular(" + ")

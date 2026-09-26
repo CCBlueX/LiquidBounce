@@ -96,7 +96,7 @@ abstract class HatsMode(name: String) : Mode(name) {
 
                     withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
                         poseStack.withPush {
-                            if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
+                            if (followRotation) rotate(rotation.toQuaternion(ROTATION))
                             translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
                             drawHat(hurtMarked)
                         }
@@ -111,7 +111,7 @@ abstract class HatsMode(name: String) : Mode(name) {
         block: WorldRenderEnvironment.() -> Unit,
     ) {
         poseStack.withPush {
-            if (!Mth.equal(angle, 0f)) mulPose(Quaternionf().rotationY(angle))
+            if (!Mth.equal(angle, 0f)) rotate(Quaternionf().rotationY(angle))
             block()
         }
     }
