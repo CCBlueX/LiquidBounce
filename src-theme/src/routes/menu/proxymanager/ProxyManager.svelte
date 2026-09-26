@@ -57,6 +57,9 @@
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
     let isConnectedToProxy = false;
+    // Countries seen so far, so that a country the user deselected is not selected again
+    // when its last proxy is removed and a proxy from it shows up later.
+    const knownCountries = new Set<string>();
 
     let currentEditProxy: Proxy | null = null;
 
@@ -80,12 +83,14 @@
     async function refreshProxies() {
         proxies = await getProxies();
 
-        const c = new Set<string>();
-        for (const p of proxies) {
-            c.add(convertCountryCode(p.ipInfo?.country));
+        allCountries = [...new Set(proxies.map(p => convertCountryCode(p.ipInfo?.country)))];
+
+        const unseenCountries = allCountries.filter(c => !knownCountries.has(c));
+        countries = allCountries.filter(c => countries.includes(c) || unseenCountries.includes(c));
+
+        for (const country of allCountries) {
+            knownCountries.add(country);
         }
-        allCountries = Array.from(c);
-        countries = allCountries;
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {

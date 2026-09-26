@@ -27,7 +27,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
@@ -107,7 +107,7 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
             )
         }
 
-        network.send(ServerboundSwingPacket(InteractionHand.MAIN_HAND))
+        network.send(ServerboundPunchPacket.INSTANCE)
 
 //        interaction.sendSequencedPacket(world) { sequence ->
 //            PlayerActionC2SPacket(

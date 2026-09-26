@@ -107,7 +107,7 @@ sealed class EspMode(
             return prepared
         }
 
-        private companion object {
+        companion {
             private val pool = Pool(::BoxBasedEspRenderState, BoxBasedEspRenderState::reset)
 
             private val prepared = ObjectArrayList<BoxBasedEspRenderState>()

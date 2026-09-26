@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.function.ToIntFunction
 
 /**
@@ -106,12 +106,34 @@ class ModeValueGroup<T : Mode>(
         }
     }
 
-    @ScriptApiRequired
+    fun addMode(mode: T) {
+        require(modes.none { it.name.equals(mode.name, ignoreCase = true) }) {
+            "ModeValueGroup '$name' already has a mode named '${mode.name}'"
+        }
+
+        mode.base = this
+        modes.add(mode)
+        // Unwalked groups key their modes once the owner is walked.
+        key?.let { mode.walkKeyPath(it) }
+    }
+
+    fun removeMode(mode: Mode) {
+        if (activeMode === mode) {
+            restore()
+        }
+
+        if (modes.remove(mode)) {
+            mode.base = null
+            mode.unregister()
+        }
+    }
+
+    @AddonApi
     fun getModeStrings(): Array<String> = modes.mapToArray { it.name }
 
 }
 
-abstract class Mode(
+abstract class Mode @JvmOverloads constructor(
     name: String,
     aliases: List<String> = emptyList()
 ) : ValueGroup(name, aliases = aliases), EventListener, Tagged, MinecraftShortcuts {

@@ -21,10 +21,11 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
@@ -80,6 +81,7 @@ inline fun PoseStack.translate(blockPos: Long, origin: BlockPos) {
  *
  * @param renderTarget The render target framebuffer.
  */
+@AddonApi
 class WorldRenderEnvironment internal constructor(
     val renderTarget: RenderTarget,
     val poseStack: PoseStack,
@@ -121,17 +123,19 @@ fun SubmitNodeStorage.submitTextAlwaysOnTop(
     color: Int,
     backgroundColor: Int,
     outlineColor: Int,
-) = this.order(0).alwaysOnTop.submit(
+) = this.seeThrough().submit(
     TextFeatureRenderer.Submit(
         Matrix4f(poseStack.last().pose()),
-        x,
-        y,
-        string,
-        dropShadow,
         displayMode,
         lightCoords,
-        color,
-        backgroundColor,
-        outlineColor,
+        TextFeatureRenderer.Content.Text(
+            x,
+            y,
+            string,
+            dropShadow,
+            color,
+            backgroundColor,
+            outlineColor,
+        )
     )
 )

@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.TreeMap
 
+@AddonApi
 object ModuleCategories {
 
     private val registry = TreeMap<String, ModuleCategory>(String.CASE_INSENSITIVE_ORDER)
@@ -53,13 +55,19 @@ object ModuleCategories {
     val entries: Collection<ModuleCategory> get() = registry.sequencedValues()
 
     @JvmStatic
-    private fun register(category: ModuleCategory): ModuleCategory {
-        if (registry.put(category.tag, category) != null) {
+    fun register(category: ModuleCategory): ModuleCategory {
+        if (registry.putIfAbsent(category.tag, category) != null) {
             error("A module category with the name '${category.tag}' is already registered!")
         }
 
         return category
     }
+
+    /**
+     * Modules filed under [category] must be removed first.
+     */
+    @JvmStatic
+    fun unregister(category: ModuleCategory): Boolean = registry.remove(category.tag, category)
 
     @JvmStatic
     fun byName(name: String): ModuleCategory? {

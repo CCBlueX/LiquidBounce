@@ -21,8 +21,9 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas
@@ -157,6 +158,8 @@ fun GuiGraphicsExtractor.drawLines(
     )
 }
 
+@AddonApi
+@JvmOverloads
 fun GuiGraphicsExtractor.drawQuad(
     x1: Float,
     y1: Float,

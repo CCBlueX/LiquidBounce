@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -28,17 +30,17 @@ import net.ccbluex.liquidbounce.utils.client.mc
  *
  * Allow clears the chat history in the game.
  */
-object CommandClear : Command.Factory {
+object CommandClear : CommandRegistrar {
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("clear") {
+            exec {
                 ModuleBetterChat.antiChatClearPaused = true
                 mc.gui.hud.chat.clearMessages(true)
                 ModuleBetterChat.antiChatClearPaused = false
+                1
             }
-            .build()
+        }
     }
 
 }

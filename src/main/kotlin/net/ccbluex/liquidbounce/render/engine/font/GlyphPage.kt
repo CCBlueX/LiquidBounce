@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.blaze3d.GpuFormat
+import com.mojang.renderpearl.api.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.sdl.SDLVideo
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -197,8 +197,8 @@ abstract class GlyphPage {
                 val baselineX = characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING
                 val baselineY = characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
 
-                when (GLFW.glfwGetPlatform()) {
-                    GLFW.GLFW_PLATFORM_X11 -> {
+                when (SDLVideo.SDL_GetCurrentVideoDriver()) {
+                    "x11" -> {
                         // Java2D's X11 bitmap glyph path can crash in FreeType; rendering the same outline avoids it.
                         // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
                         atlasGraphics.fill(

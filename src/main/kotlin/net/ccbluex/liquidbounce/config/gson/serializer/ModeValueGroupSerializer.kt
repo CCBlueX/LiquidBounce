@@ -32,7 +32,9 @@ import java.lang.reflect.Type
 class ModeValueGroupSerializer private constructor(
     private val withValueType: Boolean,
     private val includePrivate: Boolean,
-    private val includeNotAnOption: Boolean
+    private val includeNotAnOption: Boolean,
+    private val includeTransient: Boolean,
+    private val includeHidden: Boolean,
 ) : JsonSerializer<ModeValueGroup<Mode>> {
 
     override fun serialize(
@@ -48,6 +50,8 @@ class ModeValueGroupSerializer private constructor(
                 src.inner
                     .filter { includeNotAnOption || !it.notAnOption }
                     .filter { includePrivate || it.checkIfInclude() }
+                    .filter { includeTransient || it.isPersistent }
+                    .filter { includeHidden || it.visibleCondition.asBoolean }
             )
         )
 
@@ -70,17 +74,20 @@ class ModeValueGroupSerializer private constructor(
     companion object {
         @JvmField
         val INTEROP_SERIALIZER = ModeValueGroupSerializer(
-            withValueType = true, includePrivate = true, includeNotAnOption = false
+            withValueType = true, includePrivate = true, includeNotAnOption = false,
+            includeTransient = true, includeHidden = false
         )
 
         @JvmField
         val FILE_SERIALIZER = ModeValueGroupSerializer(
-            withValueType = false, includePrivate = true, includeNotAnOption = true
+            withValueType = false, includePrivate = true, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
         )
 
         @JvmField
         val PUBLIC_CONFIG_SERIALIZER = ModeValueGroupSerializer(
-            withValueType = false, includePrivate = false, includeNotAnOption = true
+            withValueType = false, includePrivate = false, includeNotAnOption = true,
+            includeTransient = false, includeHidden = true
         )
     }
 
