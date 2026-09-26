@@ -21,7 +21,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.suggestion.SuggestionProvider
-import net.minecraft.commands.SharedSuggestionProvider
 import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
@@ -42,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
+import net.minecraft.commands.SharedSuggestionProvider
 import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
