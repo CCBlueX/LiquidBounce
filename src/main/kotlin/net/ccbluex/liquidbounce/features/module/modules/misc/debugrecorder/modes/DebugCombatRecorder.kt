@@ -158,7 +158,7 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
             val rotation = RotationManager.currentRotation ?: player.rotation
             val distance = player.eyePosition.distanceTo(entity.eyePosition) + 1.0
             debugParameter("Distance") { distance }
-            val raytraceTarget = findEntityInCrosshair(distance, rotation) { e ->
+            val raytraceTarget = findEntityInCrosshair(distance, rotation = rotation) { e ->
                 e == entity
             }
 
