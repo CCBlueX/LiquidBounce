@@ -159,8 +159,8 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                 withPositionRelativeToCamera(splash.value.pos.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         withPush {
-                            mulPose(Axis.XP.rotationDegrees(-90f))
-                            mulPose(Axis.ZP.rotationDegrees(age * MainEffect.rotationSpeed))
+                            rotate(Axis.XP.rotationDegrees(-90f))
+                            rotate(Axis.ZP.rotationDegrees(age * MainEffect.rotationSpeed))
                             drawSquareTexture(
                                 texture,
                                 radius * 2 * progress,
@@ -172,8 +172,8 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                         if (SecondEffects.Effect.enabled) {
                             withPush {
                                 translate(0.0, -0.005, 0.0)
-                                mulPose(Axis.XP.rotationDegrees(-90f))
-                                mulPose(Axis.ZP.rotationDegrees(age * SecondEffects.Effect.rotationSpeed))
+                                rotate(Axis.XP.rotationDegrees(-90f))
+                                rotate(Axis.ZP.rotationDegrees(age * SecondEffects.Effect.rotationSpeed))
                                 drawSquareTexture(
                                     secondaryTexture,
                                     (radius + extraRadius) * 2 * (progress * animAcceleration).coerceIn(0f, 1f),
@@ -185,7 +185,7 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
                         }
                         if (SecondEffects.Flash.enabled) {
                             withPush {
-                                mulPose(mc.gameRenderer.mainCamera().rotation())
+                                rotate(mc.gameRenderer.mainCamera().rotation())
                                 drawSquareTexture(
                                     glow,
                                     SecondEffects.Flash.radius * 2 * glowProgress,

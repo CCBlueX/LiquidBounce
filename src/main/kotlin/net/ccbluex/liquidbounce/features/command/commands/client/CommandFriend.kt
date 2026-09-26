@@ -62,7 +62,7 @@ object CommandFriend : CommandRegistrar {
                     if (FriendManager.friends.isEmpty()) {
                         throw CommandException(t("clear.noFriends"))
                     } else {
-                        FriendManager.friends.clear()
+                        FriendManager.clear()
 
                         chat(
                             regular(t("clear.success")),
@@ -141,7 +141,7 @@ object CommandFriend : CommandRegistrar {
                     exec { ctx ->
                         val friend = ctx.get(name)
 
-                        FriendManager.friends.remove(friend)
+                        FriendManager.remove(friend.name)
                         chat(
                             regular(
                                 t("remove.success",
@@ -170,7 +170,7 @@ object CommandFriend : CommandRegistrar {
     private fun CmdI18n.addFriend(name: String, alias: String?) {
         val friend = FriendManager.Friend(name, alias)
 
-        if (FriendManager.friends.add(friend)) {
+        if (FriendManager.add(friend)) {
             if (friend.alias == null) {
                 chat(
                     regular(t("add.success", variable(friend.name))),

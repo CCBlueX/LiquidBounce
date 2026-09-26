@@ -35,7 +35,7 @@ enum class AccountService(
     THEALTENING("TheAltening", true, "AlteningAccount"),
     CRACKED("Cracked", false, "CrackedAccount");
 
-    companion object {
+    companion {
         fun bySerialName(serialName: String) = entries.firstOrNull { it.serialName == serialName }
     }
 

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.brigadier
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import net.minecraft.client.multiplayer.ClientLevel
@@ -38,6 +39,7 @@ import net.minecraft.world.flag.FeatureFlagSet
 import net.minecraft.world.flag.FeatureFlags
 import net.minecraft.world.level.Level
 import java.util.concurrent.CompletableFuture
+import java.util.function.Predicate
 import java.util.stream.Stream
 
 /**
@@ -55,6 +57,7 @@ import java.util.stream.Stream
  * instead of each provider hardcoding its candidates. Every delegate falls back to an
  * empty/static value when no server connection exists (main menu, unit tests).
  */
+@AddonApi
 object ClientCommandSource : SharedSuggestionProvider {
 
     val playerOrNull: LocalPlayer?
@@ -73,7 +76,7 @@ object ClientCommandSource : SharedSuggestionProvider {
      * static vanilla lookup so parse/suggestions keep working outside a world.
      */
     internal fun commandBuildContext(): HolderLookup.Provider {
-        return levelOrNull?.registryAccess() ?: VanillaRegistries.createLookup()
+        return levelOrNull?.registryAccess() ?: VanillaRegistries.createWorldLookup()
     }
 
     /**
@@ -103,6 +106,10 @@ object ClientCommandSource : SharedSuggestionProvider {
     override fun getAvailableSounds(): Stream<Identifier> =
         mc()?.soundManager?.availableSounds?.stream() ?: Stream.empty()
 
+    // Replicated from vanilla ClientSuggestionProvider.getAvailablePostEffects.
+    override fun getAvailablePostEffects(): Stream<Identifier> =
+        mc()?.shaderManager?.availablePostEffects ?: Stream.empty()
+
     /**
      * Server-driven custom tab completions require a request/response round-trip with a
      * pending-suggestions id owned by the vanilla `ClientSuggestionProvider`; our client
@@ -128,26 +135,22 @@ object ClientCommandSource : SharedSuggestionProvider {
      *
      * Replicated from vanilla `ClientSuggestionProvider.suggestRegistryElements`, which
      * serves the request from the registries synced with the current server connection;
-     * we resolve the same key against [registryAccess] instead.
+     * we resolve the same key against [registryAccess] instead. Client commands never
+     * reach the server, so a missing key falls back to the static vanilla lookup instead
+     * of issuing a [customSuggestion] request.
      */
-    override fun suggestRegistryElements(
-        key: ResourceKey<out Registry<*>>,
+    override fun <E : Any> suggestRegistryElements(
+        key: ResourceKey<out Registry<E>>,
         elements: SharedSuggestionProvider.ElementSuggestionType,
         builder: SuggestionsBuilder,
         context: CommandContext<*>,
+        filter: Predicate<E>,
     ): CompletableFuture<Suggestions> {
-        return SharedSuggestionProvider.listSuggestions(context, builder, key, elements)
-            .thenApply { built ->
-                // Vanilla falls back to static entries when the synced registry is empty;
-                // our lookup already reflects either world or vanilla state.
-                if (built.isEmpty) {
-                    val holder = commandBuildContext().lookup(key).orElse(null)
-                    if (holder != null) {
-                        suggestRegistryElements(holder as HolderLookup<*>, elements, builder)
-                        return@thenApply builder.build()
-                    }
-                }
-                built
-            }
+        val holder = registryAccess().lookup(key).orElse(null)
+            ?: commandBuildContext().lookup(key).orElse(null)
+        if (holder != null) {
+            suggestRegistryElements(holder, elements, builder, filter)
+        }
+        return builder.buildFuture()
     }
 }

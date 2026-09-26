@@ -20,13 +20,15 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.world.InteractionHand
 import java.util.function.Consumer
 
 @Suppress("unused")
+@AddonApi
 enum class SwingMode(
     override val tag: String,
     val serverSwing: Boolean,
@@ -40,11 +42,15 @@ enum class SwingMode(
     fun swing(hand: InteractionHand) = accept(hand)
 
     override fun accept(hand: InteractionHand) {
+        val animation = player.getItemInHand(hand).attackAnimation
         when (this) {
-            DO_NOT_HIDE -> player.swing(hand)
+            DO_NOT_HIDE -> {
+                player.swing(hand, animation, false)
+                network.send(ServerboundPunchPacket.INSTANCE)
+            }
             HIDE_BOTH -> {}
-            HIDE_CLIENT -> network.send(ServerboundSwingPacket(hand))
-            HIDE_SERVER -> player.swing(hand, false)
+            HIDE_CLIENT -> network.send(ServerboundPunchPacket.INSTANCE)
+            HIDE_SERVER -> player.swing(hand, animation, false)
         }
     }
 }

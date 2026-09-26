@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.buffers;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.util.Mth;
 import org.jspecify.annotations.Nullable;

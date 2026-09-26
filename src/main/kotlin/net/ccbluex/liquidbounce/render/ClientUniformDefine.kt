@@ -19,13 +19,12 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.BindGroupLayout
-import com.mojang.blaze3d.shaders.UniformType
-import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.renderpearl.api.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout
+import com.mojang.renderpearl.api.pipeline.UniformType
+import com.mojang.renderpearl.api.commands.RenderPass
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines.withBindGroupLayout
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.minecraft.client.renderer.MappableRingBuffer

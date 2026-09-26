@@ -33,8 +33,7 @@ import kotlin.math.round
 fun interface PositionExtrapolation {
     fun getPositionInTicks(ticks: Double): Vec3
 
-    companion object {
-        @JvmStatic
+    companion {
         fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
                 is Player -> PlayerSimulationExtrapolation(target)
@@ -42,7 +41,6 @@ fun interface PositionExtrapolation {
             }
         }
 
-        @JvmStatic
         fun constant(pos: Vec3): PositionExtrapolation = PositionExtrapolation { pos }
     }
 }

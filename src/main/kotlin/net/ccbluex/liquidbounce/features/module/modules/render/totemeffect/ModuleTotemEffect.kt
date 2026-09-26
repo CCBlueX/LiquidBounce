@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.totemeffect
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.Expiring
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectShockwave
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectSoul
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.network.isDeathProtection
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -50,13 +52,14 @@ object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) 
         if (!packet.isDeathProtection) return@handler
 
         mc.execute {
-            val entity = event.packet.getEntity(world) ?: return@execute
+            val entity = event.packet.getEntity(world).takeIf { it.shouldBeShown() } ?: return@execute
 
             val lifetime = modes.activeMode.lifetime
             entities.add(TotemPopSnapshot(entity), lifetime)
         }
     }
 
+    @ValueClassCandidate
     data class TotemPopSnapshot(
         val pos: Vec3,
         val xRot: Float,

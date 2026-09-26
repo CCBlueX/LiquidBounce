@@ -21,13 +21,13 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.IndexType
-import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.IndexType
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.renderpearl.api.commands.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -40,15 +40,23 @@ import java.util.Optional
 import java.util.OptionalDouble
 import java.util.function.Supplier
 
-inline fun RenderPass.bindTextures(textures: Map<String, AbstractTexture?>) =
-    textures.forEach { bindTexture(it.key, it.value) }
+inline fun RenderPass.setPipeline(pipeline: RenderPipeline) {
+    setPipeline(RenderSystem.getCompiledPipeline(pipeline))
+}
 
-inline fun RenderPass.bindTexture(name: String, texture: AbstractTexture?) =
-    bindTexture(name, texture?.textureView, texture?.sampler)
+@JvmName("setTextureUniforms")
+inline fun RenderPass.setUniforms(textures: Map<String, AbstractTexture?>) =
+    textures.forEach { setUniform(it.key, it.value) }
 
-inline fun RenderPass.unbindTexture(name: String) =
-    bindTexture(name, null, null)
+@JvmName("setTextureUniform")
+inline fun RenderPass.setUniform(name: String, texture: AbstractTexture?) =
+    setUniform(name, texture?.textureView, texture?.sampler)
 
+@JvmName("unsetTextureUniform")
+inline fun RenderPass.unsetUniform(name: String) =
+    setUniform(name, null, null)
+
+@JvmName("setBufferUniforms")
 inline fun RenderPass.setUniforms(uniforms: Map<String, GpuBufferSlice>) =
     uniforms.forEach { setUniform(it.key, it.value) }
 
@@ -137,15 +145,11 @@ fun RenderTarget.createRenderPass(
     clearColor: Optional<Vector4fc> = Optional.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
-    allowOverride: Boolean = false,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorAttachment =
-        RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this.colorTextureView!!,
+    colorAttachment = this.colorTextureView!!,
     clearColor,
-    depthAttachment =
-        RenderSystem.outputDepthTextureOverride?.takeIf { allowOverride }
-            ?: depthTextureView.takeIf { this.useDepth && useDepthAttachment },
+    depthAttachment = depthTextureView.takeIf { this.hasDepth() && useDepthAttachment },
     clearDepth,
 )
 
@@ -156,10 +160,9 @@ fun RenderTarget.createRenderPass(
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: Optional<Vector4fc> = Optional.empty(),
-    allowOverride: Boolean = false,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorAttachment = RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this,
+    colorAttachment = this,
     clearColor,
 )
 

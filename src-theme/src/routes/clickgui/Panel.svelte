@@ -19,6 +19,7 @@
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
+    export let icon: string | undefined = undefined;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -40,6 +41,10 @@
         expanded: boolean;
         scrollTop: number;
         zIndex: number;
+    }
+
+    function showFallbackIcon(event: Event) {
+        (event.currentTarget as HTMLImageElement).src = "img/clickgui/icon-client.svg";
     }
 
     function clamp(number: number, min: number, max: number) {
@@ -216,8 +221,9 @@
     >
         <img
                 class="icon"
-                src="img/clickgui/icon-{category.toLowerCase()}.svg"
+                src={icon ?? `img/clickgui/icon-${category.toLowerCase()}.svg`}
                 alt="icon"
+                on:error={showFallbackIcon}
         />
         <span class="category">{category}</span>
 

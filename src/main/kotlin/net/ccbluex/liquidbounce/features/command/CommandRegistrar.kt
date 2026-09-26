@@ -20,15 +20,17 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 
 /**
  * A command that registers itself onto a Brigadier [CommandDispatcher].
  *
  * Every inbuilt command is an `object` implementing this interface; the [CommandManager]
- * registers them through [CommandManager.register]. Scripts register their command nodes
- * through [CommandManager.registerScriptCommands] instead.
+ * registers them through [CommandManager.register]. Scripts and add-ons register prebuilt
+ * nodes through [CommandManager.registerNodes] instead.
  */
+@AddonApi
 fun interface CommandRegistrar {
 
     /**

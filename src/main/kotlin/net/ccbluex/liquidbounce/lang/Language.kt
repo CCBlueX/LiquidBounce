@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.NullableBypass
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.locale.Language
@@ -39,7 +40,9 @@ import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
+@AddonApi
 fun translation(key: String, vararg args: Any?): MutableComponent =
     MutableComponent.create(LanguageText(key, args))
 
@@ -79,6 +82,25 @@ object LanguageManager : ValueGroup("Language") {
 
     private val languageRegistry = ConcurrentHashMap<ClientLanguage, net.ccbluex.liquidbounce.lang.ClientLanguage>()
 
+    fun interface TranslationSource {
+        fun load(code: String): Map<String, String>?
+    }
+
+    private val clientTranslations = TranslationSource { code ->
+        javaClass.getResourceAsStream("/resources/liquidbounce/lang/$code.json")
+            ?.readJson<HashMap<String, String>>()
+    }
+
+    private val sources = CopyOnWriteArrayList(listOf(clientTranslations))
+
+    /**
+     * Earlier sources win, so an add-on cannot override a built-in key.
+     */
+    fun registerSource(source: TranslationSource) {
+        sources += source
+        languageRegistry.clear()
+    }
+
     private fun loadLanguage(choice: ClientLanguage): net.ccbluex.liquidbounce.lang.ClientLanguage? {
         require(choice != ClientLanguage.AUTO) { "Cannot load language ${choice.code} because it is auto" }
         require(choice.code != null) { "Cannot load language ${choice.tag} because it has no code" }
@@ -88,12 +110,7 @@ object LanguageManager : ValueGroup("Language") {
         } else {
             runCatching {
                 languageRegistry.computeIfAbsent(choice) {
-                    val languageFile = javaClass.getResourceAsStream(
-                        "/resources/liquidbounce/lang/${choice.code}.json"
-                    )
-                    val translations = languageFile!!.readJson<HashMap<String, String>>()
-
-                    ClientLanguage(translations)
+                    ClientLanguage(mergedTranslations(choice.code))
                 }
             }.onSuccess {
                 logger.info("Loaded language ${choice.code}")
@@ -101,6 +118,23 @@ object LanguageManager : ValueGroup("Language") {
                 logger.error("Failed to load language ${choice.code}", it)
             }.getOrNull()
         }
+    }
+
+    private fun mergedTranslations(code: String): Map<String, String> {
+        val merged = HashMap<String, String>()
+
+        for (source in sources) {
+            val translations = runCatching { source.load(code) }
+                .onFailure { logger.error("Translation source failed for $code", it) }
+                .getOrNull() ?: continue
+
+            for ((key, value) in translations) {
+                merged.putIfAbsent(key, value)
+            }
+        }
+
+        check(merged.isNotEmpty()) { "No translations available for $code" }
+        return merged
     }
 
     fun languageChoiceFromCode(code: String): ClientLanguage? {
