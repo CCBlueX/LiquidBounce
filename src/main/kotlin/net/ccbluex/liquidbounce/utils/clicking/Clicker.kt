@@ -85,7 +85,7 @@ open class Clicker<T>(
 
     private val human = HumanClickTiming()
 
-    private val plan = ClickPlan(ClickTiming { recent, comboMs, cps, random ->
+    private val plan = ClickPlan({ recent, comboMs, cps, random ->
         when (technique) {
             ClickTechnique.HUMAN -> human
             ClickTechnique.CONSTANT -> ConstantClickTiming
