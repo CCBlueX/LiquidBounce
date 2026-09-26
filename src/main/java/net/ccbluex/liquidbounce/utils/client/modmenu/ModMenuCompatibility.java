@@ -38,15 +38,4 @@ public enum ModMenuCompatibility {
 
         return mod == null ? rootMod : mod;
     }
-
-    /**
-     * SAFETY: The method doesn't check if {@link ModMenu} is present and loaded
-     *
-     * @param id modid to associate the mod container
-     * @param mod mod container in the {@link ModMenu} system to add
-     */
-    public final void addModUnchecked(String id, Mod mod) {
-        ModMenu.MODS.put(id, mod);
-        ModMenu.ROOT_MODS.put(id, mod);
-    }
 }

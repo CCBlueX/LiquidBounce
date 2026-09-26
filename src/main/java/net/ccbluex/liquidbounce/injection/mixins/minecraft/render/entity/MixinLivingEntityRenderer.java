@@ -29,13 +29,9 @@ import kotlin.Pair;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderSetupAccessor;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.Model;
@@ -43,11 +39,10 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -58,6 +53,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @NullMarked
 @Mixin(LivingEntityRenderer.class)
@@ -78,11 +75,6 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             if (rotation != null && prevRotation != null) {
                 return new Pair<>(prevRotation, rotation);
             }
-        }
-
-        if (ModuleFreeCam.INSTANCE.getRunning()) {
-            var serverRotation = RotationManager.INSTANCE.getServerRotation();
-            return new Pair<>(serverRotation, serverRotation);
         }
 
         return null;
@@ -130,14 +122,14 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         return original;
     }
 
-    @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
+    @WrapOperation(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"))
     private void injectTrueSight(
-        SubmitNodeCollector instance, Model<M> model,
-        Object o, PoseStack matrixStack,
-        RenderType renderLayer, int light,
+        SubmitNodeCollector instance, Model<?> model,
+        Object o, PoseStack poseStack,
+        RenderType renderType, int light,
         int overlay, int tintedColor,
-        TextureAtlasSprite sprite, int outlineColor,
-        ModelFeatureRenderer.CrumblingOverlay crumblingOverlayCommand, Operation<Void> original,
+        @Nullable UvMapping uvMapping, int outlineColor,
+        Operation<Void> original,
         @Local(argsOnly = true, name = "state") S state
     ) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
@@ -151,23 +143,22 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         }
         original.call(
             instance, model,
-            o, matrixStack,
-            renderLayer, light,
+            o, poseStack,
+            renderType, light,
             overlay, tintedColor,
-            sprite, outlineColor,
-            crumblingOverlayCommand
+            uvMapping, outlineColor
         );
     }
 
     @ModifyReturnValue(method = "getRenderType", at = @At("RETURN"))
     private RenderType injectTrueSight(RenderType original, S state, boolean showBody, boolean translucent, boolean showOutline) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCull(this.getTextureLocation(state));
         }
 
         if (ModuleTrueSight.canRenderEntities(state) && !showBody && !translucent && !showOutline) {
             state.isInvisible = false;
-            return RenderTypes.entityTranslucentCullItemTarget(this.getTextureLocation(state));
+            return RenderTypes.entityTranslucentCull(this.getTextureLocation(state));
         }
         return original;
     }
@@ -189,39 +180,25 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     )
     private @Nullable RenderType render_Chams(
         @Nullable RenderType original,
-        @Local(argsOnly = true, name = "state") S state,
-        @Local(name = "texture") Identifier texture
+        @Local(argsOnly = true, name = "state") S state
     ) {
         if (original == null) return null;
 
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-
-        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
-            RenderSetup renderSetup = ((MixinRenderTypeAccessor) original).getState();
-            boolean affectsOutline = ((MixinRenderSetupAccessor) (Object) renderSetup).getOutlineProperty() == RenderSetup.OutlineProperty.AFFECTS_OUTLINE;
-
-            switch (((MixinRenderTypeAccessor) original).getName()) {
-                case "entity_translucent" -> {
-                    return ModuleChams.ENTITY_TRANSLUCENT.apply(texture, affectsOutline);
-                }
-                case "entity_cutout" -> {
-                    return ModuleChams.ENTITY_CUTOUT.apply(texture);
-                }
-                case "entity_cutout_no_cull" -> {
-                    return ModuleChams.ENTITY_CUTOUT_NO_CULL.apply(texture, affectsOutline);
-                }
-                default -> {
-                    return original;
-                }
-            }
-        }
-
-        return original;
+        return ModuleChams.INSTANCE.trackIfNeeded(original, entity);
     }
 
     // FreeCam
     @ModifyExpressionValue(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getCameraEntity()Lnet/minecraft/world/entity/Entity;"))
     private @Nullable Entity hasLabelGetCameraEntityProxy(@Nullable Entity cameraEntity) {
         return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
+    }
+
+    // AntiBlind
+    @Inject(method = "submit", at = @At("HEAD"), cancellable = true)
+    private void hideInvisibleEntities(S state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
+        if (state.isInvisible && !ModuleAntiBlind.canRender(DoRender.INVISIBLE_ENTITIES)) {
+            ci.cancel();
+        }
     }
 }

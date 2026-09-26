@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
@@ -46,6 +46,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.AttackRange;
@@ -59,6 +60,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
 
 @Mixin(Hud.class)
 public abstract class MixinHud {
@@ -83,17 +86,13 @@ public abstract class MixinHud {
      */
     @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"))
     private void hookRenderEventStart(GuiGraphicsExtractor context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
-            return;
-        }
-
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickCounter.getGameTimeDeltaPartialTick(false)));
 
         // Draw after overlay event
         var component = HudComponentManager.getComponentWithTweak(HudComponentTweak.TWEAK_HOTBAR);
         if (component != null && component.getRunning() &&
                 minecraft.gameMode.getPlayerMode() != GameType.SPECTATOR) {
-            drawHotbar(context, tickCounter, component);
+            extractHotbarForHud(context, tickCounter, component);
         }
     }
 
@@ -201,29 +200,33 @@ public abstract class MixinHud {
     }
 
     @Unique
-    private void drawHotbar(GuiGraphicsExtractor context, DeltaTracker tickCounter, HudComponent hudComponent) {
+    private void extractHotbarForHud(GuiGraphicsExtractor context, DeltaTracker tickCounter, HudComponent hudComponent) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
         }
 
-        var itemWidth = 22.5;
-        var offset = 98;
-        var bounds = hudComponent.getAlignment().getBounds(0, 0);
+        // All values are measured, not calculated (with scale 2)
+        // TODO: fix scaled positions
+        final float guiScale = this.minecraft.getWindow().getGuiScale();
 
-        int center = (int) bounds.xMin();
-        var y = bounds.yMin() - 12;
+        float slotWidth = 22.5F;
+        int offset = 98;
+        var bounds = hudComponent.getAlignment().getBounds(203f, 25f);
 
-        int l = 1;
-        for (int m = 0; m < 9; ++m) {
-            var x = center - offset + m * itemWidth;
-            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity,
-                    playerEntity.getInventory().getNonEquipmentItems().get(m), l++);
+        int xCenter = (int) bounds.xCenter();
+        float y = bounds.yMin() + 5f;
+
+        int seed = 1;
+        List<ItemStack> items = playerEntity.getInventory().getNonEquipmentItems();
+        for (int m = 0; m < Inventory.SELECTION_SIZE; ++m) {
+            float x = xCenter - offset + m * slotWidth;
+            this.extractSlot(context, (int) x, (int) y, tickCounter, playerEntity, items.get(m), seed++);
         }
 
-        var offHandStack = playerEntity.getOffhandItem();
+        ItemStack offHandStack = playerEntity.getOffhandItem();
         if (!hookOffhandItem(offHandStack.isEmpty())) {
-            this.extractSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l);
+            this.extractSlot(context, xCenter - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, seed);
         }
     }
 

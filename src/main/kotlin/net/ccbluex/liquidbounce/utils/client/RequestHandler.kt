@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.minecraft.client.Minecraft
+import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
@@ -33,6 +33,11 @@ class RequestHandler<T> {
         currentTick += deltaTime
     }
 
+    fun clear() {
+        activeRequests.clear()
+        currentTick = 0
+    }
+
     fun request(request: Request<T>) {
         // we remove all requests provided by module on new request
         activeRequests.removeIf { it.provider === request.provider }
@@ -43,7 +48,7 @@ class RequestHandler<T> {
     fun getActiveRequestValue(): T? {
         var top = activeRequests.peek() ?: return null
 
-        if (Minecraft.getInstance()?.isSameThread != false) {
+        if (mc()?.isSameThread != false) {
             // we remove all outdated requests here
             while (top.expiresIn <= currentTick || !top.provider.running) {
                 activeRequests.remove()

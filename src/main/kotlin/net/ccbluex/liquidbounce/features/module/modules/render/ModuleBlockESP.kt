@@ -83,6 +83,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
             GenericStaticColorMode(it, Color4b(255, 179, 72, 50)),
             GenericRainbowColorMode(it)
         )
+    }.apply {
+        onChanged { markDirtyForModes() }
     }
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
@@ -147,7 +149,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                     distanceFade,
                 ) {
                     getDynamicTransformsUniform(
-                        modelView = event.matrixStack.last().pose(),
+                        modelView = event.poseStack.last().pose(),
                         colorModulatorAlpha = 150,
                     )
                 }
@@ -159,7 +161,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
                 distanceFade,
             ) {
                 getDynamicTransformsUniform(
-                    modelView = event.matrixStack.last().pose(),
+                    modelView = event.poseStack.last().pose(),
                 )
             }
         }

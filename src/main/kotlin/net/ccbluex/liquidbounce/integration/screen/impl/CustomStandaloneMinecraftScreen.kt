@@ -20,11 +20,13 @@
 package net.ccbluex.liquidbounce.integration.screen.impl
 
 import net.ccbluex.liquidbounce.additions.setPosition
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 
 class CustomStandaloneMinecraftScreen(
@@ -44,8 +46,8 @@ class CustomStandaloneMinecraftScreen(
         browser.visible = false
     }
 
-    var mouseX = 0.0
-    var mouseY = 0.0
+    private var mouseX = 0.0
+    private var mouseY = 0.0
 
     override fun init() {
         browser.visible = true
@@ -63,6 +65,17 @@ class CustomStandaloneMinecraftScreen(
         mouseY = mc.mouseHandler.ypos()
         mc.mouseHandler.grabMouse()
         super.onClose()
+    }
+
+    /**
+     * Disable [Screen.extractBlurredBackground]
+     */
+    override fun isInGameUi(): Boolean {
+        return screenType == CustomScreenType.CLICK_GUI && ModuleHud.hudEditorSelected
+    }
+
+    override fun extractTransparentBackground(graphics: GuiGraphicsExtractor) {
+        // NOOP because we want no background for HUD editor
     }
 
     override fun isPauseScreen() = false

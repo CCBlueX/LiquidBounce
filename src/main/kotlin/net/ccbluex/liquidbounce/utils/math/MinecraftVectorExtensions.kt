@@ -127,6 +127,8 @@ inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
 
 inline fun Vec3.dot(x: Double, y: Double, z: Double): Double = this.x * x + this.y * y + this.z * z
 
+inline fun Vec3.dot(v: Vector3fc): Double = this.x * v.x() + this.y * v.y() + this.z * v.z()
+
 /**
  * `this.normalize().scale(newLength)`
  *

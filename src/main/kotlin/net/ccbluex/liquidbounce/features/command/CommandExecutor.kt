@@ -19,21 +19,18 @@
 
 package net.ccbluex.liquidbounce.features.command
 
+import com.mojang.brigadier.Command
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -46,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.removeMessage
-import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.ChatFormatting
@@ -54,8 +50,6 @@ import net.minecraft.network.chat.ClickEvent
 import okio.appendingSink
 import okio.buffer
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Links minecraft with the command engine
@@ -68,66 +62,16 @@ object CommandExecutor : EventListener {
     private var isShuttingDown: Boolean = false
 
     /**
-     * Add a wrapped suspend handler to [net.ccbluex.liquidbounce.features.command.builder.CommandBuilder]
-     * if you don't want to block the render thread.
+     * Wraps a suspend handler into a Brigadier [Command], keeping the scheduling,
+     * re-entrance guard and progress-message behavior of the previous meta-model
+     * `suspendHandler`.
      *
      * @param allowParallel allow or prevent duplicated executions
-     * @author MukjepScarlet
      */
-    fun CommandBuilder.suspendHandler(
+    fun wrapSuspend(
         allowParallel: Boolean = false,
-        handler: Command.Handler.Suspend,
-    ) = if (allowParallel) {
-        this.handler {
-            commandCoroutineScope.launch(CoroutineName(command.name)) {
-                with(handler) { this@handler() }
-            }
-        }
-    } else {
-        val running = AtomicBoolean(false)
-        this.handler {
-            if (!running.compareAndSet(false, true)) {
-                chat(
-                    markAsError(
-                        translation("liquidbounce.commandManager.commandExecuting", command.name)
-                    ),
-                    command
-                )
-                return@handler
-            }
-
-            // Progress message job
-            val progressMessageMetadata = MessageMetadata(id = "C${command.name}#progress", remove = true)
-            val progressJob = commandCoroutineScope.launch(CoroutineName("${command.name} Progress")) {
-                val startAt = System.currentTimeMillis()
-                var n = 0
-                val chars = charArrayOf('|', '/', '-', '\\')
-                while (isActive) {
-                    delay(0.25.seconds)
-                    val duration = (System.currentTimeMillis() - startAt) / 1000
-                    val char = chars[n % chars.size]
-                    chat(
-                        regular("<$char> Executing command "),
-                        variable(command.name),
-                        regular(" ("),
-                        variable(duration.toString()),
-                        regular("s)"),
-                        metadata = progressMessageMetadata
-                    )
-                    n++
-                }
-            }
-
-            // Handler job
-            commandCoroutineScope.launch(CoroutineName(command.name)) {
-                with(handler) { this@handler() }
-            }.invokeOnCompletion {
-                running.set(false)
-                progressJob.cancel()
-                mc.gui.hud.chat.removeMessage(progressMessageMetadata.id)
-            }
-        }
-    }
+        handler: KAsyncCommand.Handler<ClientCommandSource>,
+    ): Command<ClientCommandSource> = KAsyncCommand(allowParallel, commandCoroutineScope, handler)
 
     /**
      * Handling exceptions for suspend handlers

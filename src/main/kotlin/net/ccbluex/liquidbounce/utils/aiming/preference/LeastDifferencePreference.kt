@@ -59,19 +59,17 @@ class LeastDifferencePreference(
     }
 
     override fun compare(o1: Rotation, o2: Rotation): Int {
-        val rotationDifferenceO1 = baseRotation.angleTo(o1)
-        val rotationDifferenceO2 = baseRotation.angleTo(o2)
+        val rotationDifferenceO1 = baseRotation.rotationDeltaLengthTo(o1)
+        val rotationDifferenceO2 = baseRotation.rotationDeltaLengthTo(o2)
 
         return rotationDifferenceO1.compareTo(rotationDifferenceO2)
     }
 
-    companion object {
+    companion {
 
-        @JvmStatic
         fun leastDifferenceToCurrentRotation() =
             LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
-        @JvmStatic
         fun leastDifferenceToLastPoint(eyes: Vec3, point: Vec3): LeastDifferencePreference {
             return LeastDifferencePreference(Rotation.lookingAt(point, from = eyes), point)
         }

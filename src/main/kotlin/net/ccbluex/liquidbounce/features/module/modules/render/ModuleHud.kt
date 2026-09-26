@@ -27,21 +27,21 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.LevelLoadingScreen
+import net.minecraft.client.gui.screens.Screen
 
 /**
  * Module HUD
@@ -57,7 +57,33 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 
     private val isVisible: Boolean
-        get() = !isHidingNow && inGame
+        get() = inGame
+
+    var hudEditorSelected = false
+        set(value) {
+            if (value != field) {
+                field = value
+                updateOverlayVisibility(mc.gui.screen())
+            }
+        }
+
+    private fun shouldShowOverlay(screen: Screen?): Boolean =
+        screen !is DisconnectedScreen &&
+            screen !is LevelLoadingScreen &&
+            !(hudEditorSelected && isClickGuiScreen(screen))
+
+    private fun isClickGuiScreen(screen: Screen?): Boolean =
+        screen is CustomSharedMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI ||
+            screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
+
+    private fun updateOverlayVisibility(screen: Screen?) {
+        if (!enabled || !isVisible) {
+            overlay.close()
+            return
+        }
+
+        overlay.visible = shouldShowOverlay(screen)
+    }
 
     private var overlay = CustomOverlay(
         screenType = CustomScreenType.HUD,
@@ -69,6 +95,11 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     object Blur : ToggleableValueGroup(ModuleHud, "Blur", enabled = true) {
+        /**
+         * Gaussian sigma controlling blur strength. Higher values produce stronger blur.
+         */
+        val sigma by float("Sigma", 5.0F, 1.0F..15.0F)
+
         /**
          * The range in which the blending from not-blurred to blurred occurs.
          */
@@ -106,13 +137,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     override fun onEnabled() {
-        if (isHidingNow) {
-            chat(markAsError(message("hidingAppearance")))
-        }
-
-        if (isVisible) {
-            overlay.open()
-        }
+        updateOverlayVisibility(mc.gui.screen())
     }
 
     override fun onDisabled() {
@@ -126,14 +151,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
-        // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
-        if (!enabled || !isVisible) {
-            overlay.close()
-            return@handler
-        }
-
-        // Otherwise, open the tab and set its visibility
-        overlay.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
+        updateOverlayVisibility(event.screen)
     }
 
     @Suppress("unused")
@@ -143,9 +161,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     fun reopen() {
         overlay.close()
-        if (enabled && isVisible) {
-            overlay.open()
-        }
+        updateOverlayVisibility(mc.gui.screen())
     }
 
 }

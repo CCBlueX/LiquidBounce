@@ -22,14 +22,14 @@ import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS
 import net.minecraft.world.level.block.Blocks.ANVIL
 import net.minecraft.world.level.block.Blocks.BARREL
@@ -112,6 +112,7 @@ import net.minecraft.world.level.block.Blocks.TRAPPED_CHEST
 import net.minecraft.world.level.block.Blocks.WATER
 import net.minecraft.world.level.block.Blocks.WATER_CAULDRON
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * XRay module
@@ -128,6 +129,9 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     // Only render blocks with non-solid blocks around
     private val exposedOnly by boolean("ExposedOnly", false)
+        .onChanged(::valueChangedReload)
+
+    val backgroundOpacity by int("BackgroundOpacity", 0, 0..255)
         .onChanged(::valueChangedReload)
 
     private val defaultBlocks = arrayOf<Block>(
@@ -263,11 +267,46 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         exposedOnly -> Pools.MutableBlockPos.use { pos ->
             Direction.entries.any {
-                pos.set(blockPos).move(it.unitVec3i).getState()?.isRedstoneConductor(world, pos) == false
+                pos.setWithOffset(blockPos, it).state?.isRedstoneConductor(world, pos) == false
             }
         }
 
         else -> true
+    }
+
+    fun shouldRenderTransparentBackground(blockState: BlockState) =
+        backgroundOpacity > 0 && blockState.block !in blocks && !blockState.isAir
+
+    fun shouldSkipRender(blockState: BlockState, blockPos: BlockPos) =
+        !shouldRender(blockState, blockPos) && !shouldRenderTransparentBackground(blockState)
+
+    fun transparentBackgroundAlpha(blockState: BlockState) =
+        if (shouldRenderTransparentBackground(blockState)) backgroundOpacity else 255
+
+    /**
+     * Keeps vanilla/Sodium face culling unless this is a whitelisted XRay block hidden behind another block.
+     *
+     * @see net.minecraft.client.renderer.block.ModelBlockRenderer.shouldRenderFace
+     * @see net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext.shouldDrawSide
+     */
+    fun modifyDrawSide(
+        blockState: BlockState,
+        level: BlockGetter,
+        blockPos: BlockPos,
+        side: Direction,
+        original: Boolean
+    ): Boolean {
+        if (original || !shouldRender(blockState, blockPos)) {
+            return original
+        }
+
+        val adjacentPos = blockPos.relative(side)
+        val adjacentState = level.getBlockState(adjacentPos)
+
+        return adjacentState.getFaceOcclusionShape(side.opposite) != Shapes.block()
+            || adjacentState.block != blockState.block
+            || !adjacentState.isSolidRender
+            || !shouldRender(adjacentState, adjacentPos)
     }
 
     fun shouldRender(state: BlockState, otherState: BlockState, side: Direction) = when {
@@ -277,6 +316,13 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
         else -> true
     }
+
+    fun modifyShouldRenderFace(original: Boolean, state: BlockState, otherState: BlockState, side: Direction) =
+        if (shouldRenderTransparentBackground(state)) {
+            original
+        } else {
+            shouldRender(state, otherState, side)
+        }
 
     /**
      * Resets the block list to the default values

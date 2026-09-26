@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSides
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -44,13 +44,15 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 AutoFarmAutoWalk.walkTarget?.let { target ->
-                    drawLine(
-                        relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3f(),
-                        relativeToCamera(target).toVec3f(),
-                        color.argb,
-                    )
+                    withPositionRelativeToCamera {
+                        drawLine(
+                            player.interpolateCurrentPosition(event.partialTicks).toVec3f(),
+                            target.toVec3f(),
+                            color.argb,
+                        )
+                    }
                 }
             }
         }
@@ -84,12 +86,11 @@ object AutoFarmVisualizer : ToggleableValueGroup(ModuleAutoFarm, "Visualize", tr
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
             val fillColor = baseColor.with(a = 50)
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                     if (player.position().horizontalDistanceToSqr(pos) > range.sq()) continue

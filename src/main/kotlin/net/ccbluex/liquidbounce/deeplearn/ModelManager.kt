@@ -19,6 +19,10 @@
 
 package net.ccbluex.liquidbounce.deeplearn
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
@@ -26,11 +30,14 @@ import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
+import java.util.Locale
 import kotlin.time.measureTime
 
 object ModelManager : EventListener, ValueGroup("AI") {
 
     private val logger = clientLogger("AI/ModelManager")
+    private val lifecycleMutex = Mutex()
 
     /**
      * Base models that are always available
@@ -38,8 +45,11 @@ object ModelManager : EventListener, ValueGroup("AI") {
      *
      * The name can contain uppercase characters,
      * but the file should always be lowercase.
+     *
+     * A user model from the models folder with the same name
+     * overrides the bundled model of the same name.
      */
-    val combatModels = arrayOf(
+    private val builtInCombatModels = arrayOf(
         "21KC11KP",
         "19KC8KP"
     )
@@ -47,13 +57,23 @@ object ModelManager : EventListener, ValueGroup("AI") {
     /**
      * Available models from the models folder
      */
-    private val availableCombatModels: List<String>
-        get() = modelsFolder
-            .listFiles { file -> file.isDirectory }
-            ?.map { file -> file.nameWithoutExtension } ?: emptyList()
+    private val availableCombatModels: Array<out String>
+        get() = modelsFolder.list { folder, name -> folder.resolve(name).isDirectory }.orEmpty()
 
-    private val allCombatModels: Array<String>
-        get() = combatModels + availableCombatModels
+    /**
+     * Bundled models merged with user models from the models folder.
+     * User models take precedence over bundled models with the same name,
+     * so that improved copies of bundled models are used instead of the originals.
+     */
+    private val allCombatModels: Collection<String>
+        get() = buildMap {
+            availableCombatModels.forEach { name ->
+                putIfAbsent(name.lowercase(Locale.ENGLISH), name)
+            }
+            builtInCombatModels.forEach { name ->
+                putIfAbsent(name.lowercase(Locale.ENGLISH), name)
+            }
+        }.values
 
     val models = modes(this, "Model", 0) { modeValueGroup ->
         // Empty models for start-up initialization.
@@ -68,43 +88,63 @@ object ModelManager : EventListener, ValueGroup("AI") {
      * when reloading the models. Otherwise, the models are loaded on startup
      * through the choice initialization.
      */
-    fun load() {
+    suspend fun load() = lifecycleMutex.withLock {
         logger.info("Loading models...")
-        val choices = allCombatModels.mapToArray { name ->
-            TwoDimensionalRegressionModel(name, models)
+        val activeModelName = withContext(MinecraftDispatcher) {
+            models.activeMode.name
+        }
+        val choices = withContext(Dispatchers.IO) {
+            loadModels()
         }
 
-        for (model in choices) {
+        val previousModels = withContext(MinecraftDispatcher) {
+            val previousModels = models.modes.toTypedArray()
+
+            runCatching {
+                models.modes = choices.toMutableList()
+                val nextModelName = choices.firstOrNull { model -> model.name == activeModelName }
+                    ?.name ?: choices.first().name
+                models.setByString(nextModelName)
+                ModuleClickGui.sync()
+                previousModels.asList()
+            }.getOrElse { error ->
+                // Roll back the swap, keeping the previous models active.
+                logger.error("Failed to activate the newly loaded models, keeping the previous ones.", error)
+                models.modes = previousModels.toMutableList()
+                models.setByString(activeModelName)
+                choices.forEach { model -> model.close() }
+                emptyList()
+            }
+        }
+
+        withContext(Dispatchers.IO) {
+            previousModels.forEach { model -> model.close() }
+        }
+    }
+
+    private fun loadModels(): List<TwoDimensionalRegressionModel> {
+        val loadedModels = allCombatModels.mapNotNull { name ->
+            val model = TwoDimensionalRegressionModel(name, models)
+
             runCatching {
                 measureTime {
                     model.load()
                 }
             }.onFailure { error ->
                 logger.error("Failed to load model '${model.name}'.", error)
+                model.close()
             }.onSuccess { time ->
                 logger.info("Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
-            }
+            }.getOrNull()?.let { model }
         }
 
-        models.modes = choices.toMutableList()
-        models.setByString(models.activeMode.name)
-        ModuleClickGui.sync()
-    }
-
-    /**
-     * Unload all models.
-     */
-    fun unload() {
-        models.modes.forEach { it.close() }
-        models.modes.clear()
+        check(loadedModels.isNotEmpty()) { "No combat models could be loaded" }
+        return loadedModels
     }
 
     /**
      * Clear out all models and load-in the models again.
      */
-    fun reload() {
-        unload()
-        load()
-    }
+    suspend fun reload() = load()
 
 }

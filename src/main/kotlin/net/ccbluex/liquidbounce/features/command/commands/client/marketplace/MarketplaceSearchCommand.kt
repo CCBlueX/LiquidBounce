@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.onClick
@@ -36,69 +38,68 @@ import net.minecraft.network.chat.HoverEvent
  * Search marketplace items
  */
 @Suppress("LongMethod", "CognitiveComplexMethod")
-object MarketplaceSearchCommand : Command.Factory {
+object MarketplaceSearchCommand {
 
-    override fun createCommand() = CommandBuilder.begin("search")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("query")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .vararg()
-                .required()
-                .build()
-        )
-        .parameter(
-            ParameterBuilder
-                .begin<Int>("page")
-                .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .suspendHandler {
-            val query = (args[0] as Array<*>).joinToString(" ")
-            val page = args.getOrNull(1) as? Int ?: 1
-
-            chat(regular(command.result("searching")))
-
-            val response = MarketplaceApi.getMarketplaceItems(
-                page = page,
-                limit = 10,
-                query = query
-            )
-
-            if (response.items.isEmpty()) {
-                chat(regular(command.result("noResults")))
-                return@suspendHandler
+    fun CmdLiteralScope.search() {
+        literal("search") {
+            argument("query", ClientStringArgumentType.string()) { query ->
+                optional("page", IntegerArgumentType.integer(1), default = 1) { page ->
+                    execSuspend { ctx ->
+                        this@search.search(ctx.get(query), ctx.get(page))
+                    }
+                }
             }
+        }
+    }
 
-            chat(regular(command.result("header",
-                variable(page.toString()),
-                variable(response.pagination.pages.toString())
-            )))
+    private suspend fun CmdI18n.search(query: String, page: Int) {
+        chat(regular(t("search.searching")))
 
-            for (item in response.items) {
-                val isSubscribed = MarketplaceManager.isSubscribed(item.id)
-                val action = if (isSubscribed) "unsubscribe" else "subscribe"
-                chat(
-                    regular(
-                        command.result(
-                            "item",
-                            variable(item.id.toString()),
-                            variable("${item.name}${if (isSubscribed) "*" else ""}"),
-                            variable(item.type.toString().lowercase()),
-                            variable(if (item.featured) "★" else "")
-                        ).onClick(
-                            ClickEvent.SuggestCommand(
-                                ".marketplace $action ${item.id}"
-                            )
-                        ).onHover(
-                            HoverEvent.ShowText(
-                                variable(command.result("hover", variable(action), item.id))
+        val response = MarketplaceApi.getMarketplaceItems(
+            page = page,
+            query = query
+        )
+
+        if (response.items.isEmpty()) {
+            chat(regular(t("search.noResults")))
+            return
+        }
+
+        chat(
+            regular(
+                t("search.header",
+                    variable(page.toString()),
+                    variable(response.pagination.pages.toString())
+                )
+            )
+        )
+
+        for (item in response.items) {
+            val isSubscribed = MarketplaceManager.isSubscribed(item.id)
+            val action = if (isSubscribed) "unsubscribe" else "subscribe"
+            chat(
+                regular(
+                    t("search.item",
+                        variable(item.id.toString()),
+                        variable("${item.name}${if (isSubscribed) "*" else ""}"),
+                        variable(item.type.toString().lowercase()),
+                        variable(if (item.featured) "★" else "")
+                    ).onClick(
+                        ClickEvent.SuggestCommand(
+                            CommandManager.GlobalSettings.prefix + "marketplace $action ${item.id}"
+                        )
+                    ).onHover(
+                        HoverEvent.ShowText(
+                            variable(
+                                t("search.hover",
+                                    variable(action),
+                                    item.id
+                                )
                             )
                         )
                     )
                 )
-            }
+            )
         }
-        .build()
+    }
 }
