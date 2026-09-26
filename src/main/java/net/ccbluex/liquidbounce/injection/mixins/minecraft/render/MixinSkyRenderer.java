@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.state.level.SkyRenderState;
+import org.joml.Vector3fc;
 import org.jspecify.annotations.NullMarked;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,12 +36,12 @@ public abstract class MixinSkyRenderer {
 
     @WrapOperation(
         method = "extractRenderState",
-        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/SkyRenderState;skyColor:I", opcode = Opcodes.PUTFIELD)
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/SkyRenderState;skyColor:Lorg/joml/Vector3fc;", opcode = Opcodes.PUTFIELD)
     )
-    private void applyCustomSkyColor(SkyRenderState instance, int value, Operation<Void> original) {
+    private void applyCustomSkyColor(SkyRenderState instance, Vector3fc value, Operation<Void> original) {
         var customSkyColor = ModuleCustomAmbience.SkyColor.INSTANCE;
         if (customSkyColor.getRunning()) {
-            value = customSkyColor.getColor().argb();
+            value = customSkyColor.getColor().toRgbVector3f();
         }
         original.call(instance, value);
     }

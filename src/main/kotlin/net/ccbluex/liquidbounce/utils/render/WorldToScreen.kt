@@ -26,12 +26,14 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.vertices
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.client.renderer.GameRenderer
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Matrix4fc
 import org.joml.Vector3f
+import org.joml.Vector4f
 import java.text.NumberFormat
 
 /**
@@ -44,6 +46,7 @@ object WorldToScreen {
 
     private val cacheMat4f = Matrix4f()
     private val cacheVec3f = Vector3f()
+    private val cacheVec4f = Vector4f()
 
     @JvmStatic
     fun setMatrices(projectionMatrix: Matrix4fc, modelViewMatrix: Matrix4fc, cameraPos: Vec3) {
@@ -51,29 +54,43 @@ object WorldToScreen {
         this.cachedCameraPos = cameraPos
     }
 
+    /**
+     * @see GameRenderer.projectPointToScreen
+     */
     @JvmStatic
     @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3,
         cameraPos: Vec3 = this.cachedCameraPos,
     ): Vec3f? {
-        val transformedPos = cacheVec3f.set(
-            pos.x - cameraPos.x,
-            pos.y - cameraPos.y,
-            pos.z - cameraPos.z
-        ).mulProject(this.projModelViewMatrix)
+        val transformedPos = cacheVec4f.set(
+            (pos.x - cameraPos.x).toFloat(),
+            (pos.y - cameraPos.y).toFloat(),
+            (pos.z - cameraPos.z).toFloat(),
+            1.0F
+        ).mul(this.projModelViewMatrix)
+
+        if (!transformedPos.x.isFinite() || !transformedPos.y.isFinite() ||
+            !transformedPos.z.isFinite() || !transformedPos.w.isFinite() ||
+            transformedPos.w <= 0.0F
+        ) {
+            return null
+        }
+
+        val ndc = transformedPos.div(transformedPos.w)
 
         val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
-        val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
+        val screenPos = cacheVec3f.set(ndc)
+            .mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
+            .mul(
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().width,
+                guiScaleMul * mc.gameRenderer.mainRenderTarget().height,
+                1.0F,
+            )
 
-        return if (screenPos.x.isFinite() && screenPos.y.isFinite() && screenPos.z.isFinite() && screenPos.z < 1.0F) {
-            Vec3f(screenPos)
-        } else {
-            null
-        }
+        return Vec3f(screenPos)
     }
 
     @JvmStatic
@@ -85,8 +102,8 @@ object WorldToScreen {
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.mainRenderTarget.width),
-            1.0F / (guiScaleMul * mc.mainRenderTarget.height),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().width),
+            1.0F / (guiScaleMul * mc.gameRenderer.mainRenderTarget().height),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 

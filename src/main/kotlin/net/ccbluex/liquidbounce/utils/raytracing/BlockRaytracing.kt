@@ -57,7 +57,7 @@ fun raytraceBlock(
     val entity: Entity = mc.cameraEntity ?: return null
 
     val start = entity.eyePosition
-    val rotationVec = rotation.directionVector
+    val rotationVec = rotation.viewVector
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
 

@@ -118,7 +118,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategorie
 
     @Suppress("unused")
     private val itemLoreQueryHandler = handler<ItemLoreQueryEvent> { event ->
-        if (mc.screen !is ViewedInventoryScreen) return@handler
+        if (mc.gui.screen() !is ViewedInventoryScreen) return@handler
         val player = CommandInvsee.viewedPlayer
         val timeStamp = inventoryMap[player]?.timeMap?.getLong(event.itemStack)?.takeIf { it != 0L } ?: return@handler
         val lastSeen = System.currentTimeMillis() - timeStamp

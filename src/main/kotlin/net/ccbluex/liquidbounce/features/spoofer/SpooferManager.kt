@@ -50,7 +50,7 @@ object SpooferManager : Config("Spoofer") {
     }
 
     private fun registerExpModules() {
-        val modules = ExpCompatibility.INSTANCE.modules ?: return
+        val modules = ExpCompatibility.INSTANCE.modules.ifEmpty { return }
 
         for ((expEnumName, expDisplayName) in modules) {
             // Duplicated with [SpooferFingerprint]

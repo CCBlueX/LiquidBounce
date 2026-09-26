@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -80,8 +81,8 @@ object ModuleProjectilePuncher : ClientModule(
     /**
      * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
      */
-    val repeatable = tickHandler {
-        val target = target ?: return@tickHandler
+    val repeatable = handler<GameTickEvent> {
+        val target = target ?: return@handler
 
         if (target.squaredBoxedDistanceTo(player) > range * range ||
             isLookingAtEntity(
@@ -90,7 +91,7 @@ object ModuleProjectilePuncher : ClientModule(
                 range = range.toDouble(),
                 throughWallsRange = 0.0
             ) == null) {
-            return@tickHandler
+            return@handler
         }
 
         clicker.click {
@@ -138,7 +139,7 @@ object ModuleProjectilePuncher : ClientModule(
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is LargeFireball && entity !is ShulkerBullet) {
+        if (!entity.isWithinWorldBorder || (entity !is LargeFireball && entity !is ShulkerBullet)) {
             return false
         }
 
