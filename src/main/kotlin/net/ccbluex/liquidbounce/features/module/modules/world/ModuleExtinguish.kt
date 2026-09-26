@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
@@ -136,10 +136,9 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         val target = currentTarget ?: return@handler
 
         val rotation = RotationManager.currentRotation ?: player.rotation
-        val rayTraceResult = traceFromPlayer(rotation)
+        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return@handler
 
-        if (!target.doesCorrespondTo(rayTraceResult) ||
-            !SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
+        if (!SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
             return@handler
         }
 

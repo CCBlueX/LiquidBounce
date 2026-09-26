@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -50,7 +50,6 @@ import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -69,6 +68,9 @@ import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.item.component.ResolvableProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import java.util.TreeSet
 import kotlin.time.Duration.Companion.seconds
 
 object GlobalSettingsClientChat : ToggleableValueGroup(
@@ -77,7 +79,20 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     aliases = listOf("GlobalChat", "IRC")
 ) {
 
+    private val logger = clientLogger(this.name)
+
     private var jwtToken by text("JwtToken", "")
+
+    private object FilterConf : ToggleableValueGroup(this, "Filter", false) {
+        private val usernames by textList("Usernames", TreeSet(String.CASE_INSENSITIVE_ORDER))
+        private val filter by enumChoice("UsernameFilter", Filter.BLACKLIST)
+
+        fun shouldShow(username: String): Boolean = !enabled || filter(username, usernames)
+    }
+
+    init {
+        tree(FilterConf)
+    }
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
@@ -89,6 +104,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         .append(" ▸ ".asText().withStyle(ChatFormatting.RESET).withColor(ChatFormatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
+
+    private val filteredNames = hashSetOf<String>()
 
     private fun registerChatWriteCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("chat") {
@@ -151,6 +168,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     override fun onDisabled() {
         chatClient.disconnect()
+        filteredNames.clear()
     }
 
     @Suppress("unused")
@@ -175,6 +193,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
+        if (!FilterConf.shouldShow(event.user.name)) {
+            if (filteredNames.add(event.user.name)) {
+                logger.info("[Chat] Message from ${event.user.name} has been filtered.")
+            }
+            return@suspendHandler
+        }
+
         val resolvableProfile = ResolvableProfile.createUnresolved(event.user.uuid)
         withTimeoutOrNull(5.seconds) {
             resolvableProfile.resolveProfile(mc.services().profileResolver).await()

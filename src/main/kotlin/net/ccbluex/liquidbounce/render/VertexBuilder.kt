@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b

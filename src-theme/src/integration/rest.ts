@@ -1,6 +1,7 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    ModuleCategory,
     Alignment,
     Browser,
     ClientInfo,
@@ -45,6 +46,13 @@ export async function getMetadata(): Promise<Metadata> {
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getCategories(): Promise<ModuleCategory[]> {
+    const response = await fetch(`${API_BASE}/client/modules/categories`);
+    const data: [ModuleCategory] = await response.json();
 
     return data;
 }
@@ -754,6 +762,12 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/shader`, {
+        method: "POST",
+    });
+}
+
+export async function toggleBasicMode() {
+    await fetch(`${API_BASE}/client/basic-mode`, {
         method: "POST",
     });
 }

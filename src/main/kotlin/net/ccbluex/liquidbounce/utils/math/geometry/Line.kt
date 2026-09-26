@@ -32,8 +32,7 @@ data class Line(
     override val anchor: Vec3
         get() = position
 
-    companion object {
-        @JvmStatic
+    companion {
         fun fromPoints(begin: Vec3, end: Vec3): Line {
             return Line(begin, end.subtract(begin))
         }

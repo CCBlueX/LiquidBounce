@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import com.mojang.blaze3d.Blaze3D
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -43,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.util.Util
 import java.net.URI
 
 object CommandClientThemeSubcommand {
@@ -94,7 +94,7 @@ object CommandClientThemeSubcommand {
             }
             literal("browse") {
                 exec {
-                    Util.getPlatform().openFile(ThemeManager.themesFolder)
+                    Blaze3D.openPath(ThemeManager.themesFolder.toPath())
                     chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
                     1
                 }

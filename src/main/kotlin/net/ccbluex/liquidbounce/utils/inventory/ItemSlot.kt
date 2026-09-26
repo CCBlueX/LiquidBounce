@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.asObjectList
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_15_2
@@ -38,6 +39,7 @@ import kotlin.math.abs
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
  */
+@AddonApi
 sealed interface ItemSlot : ItemStackHolder {
     override val itemStack: ItemStack
     val slotType: Type
@@ -161,6 +163,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
 
 private fun AbstractContainerScreen<*>.itemCount() = this.menu.slots.size
 
+@AddonApi
 enum class HotbarItemSlot(
     /**
      * Vanilla hotbar selection index, i.e. [Inventory.selected] / [Inventory.getSelectedSlot].
@@ -324,8 +327,7 @@ enum class ArmorItemSlot(@JvmField val equipmentSlot: EquipmentSlot) : ItemSlot 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) =
         if (screen == null) 8 - this.equipmentSlot.index else null
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmName("of")
         operator fun invoke(equipmentSlot: EquipmentSlot): ArmorItemSlot {
             require(equipmentSlot.type == EquipmentSlot.Type.HUMANOID_ARMOR) {
