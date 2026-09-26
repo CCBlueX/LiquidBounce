@@ -266,6 +266,8 @@
   "liquidbounce.module.autoTrap.description": "Автоматично підпалює цілі навколо вас.",
   "liquidbounce.module.autoWalk.description": "Автоматично змушує вас іти в тому напрямку, куди ви дивитесь.",
   "liquidbounce.module.autoWeapon.description": "Автоматично вибирає найкращу зброю у вашому арсеналі.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Обирає меч, коли AutoBlock блокує лише в небезпеці й ви в небезпеці — щоб у руці був предмет для блоку.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Надає перевагу зброї із зачаруванням «Відкидання», коли ціль стоїть біля безодні, щоб скинути її вниз.",
   "liquidbounce.module.autoWindCharge.description": "Автоматично розганяє вас вітровими зарядами, коли ви тримаєте стрибок.",
   "liquidbounce.module.avoidHazards.description": "Не дає вам потрапити в блоки, які можуть бути небезпечними.",
   "liquidbounce.module.backtrack.description": "Викликає лаг у цілей, що дозволяє атакувати їх ефективніше.",
