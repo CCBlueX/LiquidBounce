@@ -61,7 +61,7 @@ enum class ResourcePolicy(val policyName: String) {
         DISABLED -> ServerData.ServerPackStatus.DISABLED
     }
 
-    companion object {
+    companion {
         fun fromMinecraftPolicy(policy: ServerData.ServerPackStatus) = when (policy) {
             ServerData.ServerPackStatus.PROMPT -> PROMPT
             ServerData.ServerPackStatus.ENABLED -> ENABLED

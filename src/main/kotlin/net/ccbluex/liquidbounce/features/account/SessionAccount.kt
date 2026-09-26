@@ -60,7 +60,7 @@ class SessionAccount(private var session: String) : MinecraftAccount(AccountServ
         session = string("accessToken") ?: throw IllegalArgumentException("'$this' has no access token")
     }
 
-    companion object {
+    companion {
         fun fromToken(token: String) = SessionAccount(token).apply { refresh() }
     }
 

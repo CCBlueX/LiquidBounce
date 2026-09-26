@@ -34,7 +34,7 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     final override val parent: ModeValueGroup<*>
         get() = ModuleTotemEffect.modes
 
-    val lifetime by int("lifetime", 20, 1..200).onChanged { entities.clear() }
+    val lifetime by int("Lifetime", 20, 1..200, aliases = listOf("lifetime")).onChanged { entities.clear() }
     protected val fade by float("Fade", 0.7f, 0f..1f)
     protected val animCurve by easing("AnimCurve", Easing.EXPONENTIAL_OUT)
     protected val canBeCovered by boolean("CanBeCovered", false)

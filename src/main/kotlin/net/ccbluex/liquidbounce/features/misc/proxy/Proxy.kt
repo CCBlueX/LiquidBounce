@@ -61,6 +61,7 @@ data class Proxy(
 
     companion object {
 
+        @JvmField
         val NONE = Proxy("", 0, null, Type.SOCKS5)
 
         /**

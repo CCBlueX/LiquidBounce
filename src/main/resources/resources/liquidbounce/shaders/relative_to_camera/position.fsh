@@ -1,16 +1,11 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-/* #moj_import <minecraft:dynamictransforms.glsl> */
-layout(std140) uniform DynamicTransforms {
-    mat4 ModelViewMat;
-    vec4 ColorModulator;
-    vec3 ModelOffset;
-    mat4 TextureMat;
-};
+#include <minecraft:dynamictransforms.glsl>
 
-in float alphaFactor;
+layout(location = 0) in float alphaFactor;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 void main() {
     fragColor = vec4(ColorModulator.rgb, ColorModulator.a * alphaFactor);
