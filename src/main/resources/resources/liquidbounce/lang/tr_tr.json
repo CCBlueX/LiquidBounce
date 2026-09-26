@@ -257,6 +257,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Yapılandırma yüklenemiyor",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Başarıyla yeniden yüklendi",
   "liquidbounce.module.autoTool.description": "Bir bloğu kazmak için envanterinizdeki en iyi aleti otomatik olarak seçer.",
+  "liquidbounce.module.autoTpa.description": "Işınlanma isteklerini otomatik olarak kabul eder",
   "liquidbounce.module.autoTrap.description": "Hedefleri otomatik olarak ateşe verir veya örümcek ağlarıyla tuzağa düşürür.",
   "liquidbounce.module.autoWalk.description": "Baktığınız yönde otomatik olarak yürümenizi sağlar.",
   "liquidbounce.module.autoWeapon.description": "Hızlı erişim çubuğunuzdaki en iyi silahı otomatik olarak seçer.",

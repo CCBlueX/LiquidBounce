@@ -447,6 +447,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "无法加载配置",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "重新加载成功",
   "liquidbounce.module.autoTool.description": "自动用背包里最好的工具挖方块。",
+  "liquidbounce.module.autoTpa.description": "自动接受传送请求",
   "liquidbounce.module.autoTrap.description": "自动点燃在你周围的敌人。",
   "liquidbounce.module.autoWalk.description": "自动向前移动。",
   "liquidbounce.module.autoWeapon.description": "自动切换到快捷栏中最好的武器。",

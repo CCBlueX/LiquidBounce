@@ -323,6 +323,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Die Konfiguration kann nicht geladen werden",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Erfolgreich neu geladen",
   "liquidbounce.module.autoTool.description": "Wählt automatisch das beste Werkzeug in deinem Inventar aus, um einen Block abzubauen.",
+  "liquidbounce.module.autoTpa.description": "akzeptiert automatisch Teleportationsanfragen",
   "liquidbounce.module.autoTrap.description": "Setzt Ziele automatisch in Brand oder platziert Spinnenweben in sie.",
   "liquidbounce.module.autoWalk.description": "Lässt dich automatisch in die Richtung gehen, in die du blickst.",
   "liquidbounce.module.autoWeapon.description": "Wählt automatisch die beste Waffe in deiner Hotbar aus.",

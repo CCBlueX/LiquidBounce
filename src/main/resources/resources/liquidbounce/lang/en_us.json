@@ -504,6 +504,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
+  "liquidbounce.module.autoTpa.description": "Automatically accepts teleportation requests",
   "liquidbounce.module.autoTrap.description": "Automatically sets targets on fire or traps them in cobwebs.",
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",

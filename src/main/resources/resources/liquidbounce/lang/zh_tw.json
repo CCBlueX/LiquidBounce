@@ -444,6 +444,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "無法載入設定",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "重新載入成功",
   "liquidbounce.module.autoTool.description": "自動用背包里最好的工具挖方塊。",
+  "liquidbounce.module.autoTpa.description": "自動接受傳送請求",
   "liquidbounce.module.autoTrap.description": "自動點燃在你周圍的敵人。",
   "liquidbounce.module.autoWalk.description": "自動向前移動。",
   "liquidbounce.module.autoWeapon.description": "自動切換到快捷欄中最好的武器。",

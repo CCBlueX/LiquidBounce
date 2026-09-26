@@ -276,6 +276,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Kan de configuratie niet laden",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Succesvol herladen",
   "liquidbounce.module.autoTool.description": "Kiest automatisch het beste gereedschap in je inventaris om een blok te breken.",
+  "liquidbounce.module.autoTpa.description": "Accepteert автоматически teleportatieverzoeken",
   "liquidbounce.module.autoTrap.description": "Zet doelwitten in vuur of in spinnenwebben vast.",
   "liquidbounce.module.autoWalk.description": "Laat je automatisch lopen in de richting waarin je kijkt.",
   "liquidbounce.module.autoWeapon.description": "Kiest automatisch het beste wapen uit je hotbar.",

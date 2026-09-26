@@ -257,6 +257,7 @@
   "liquidbounce.module.autoTool.value.equipDelay.description": "Atraso de equipamento.",
   "liquidbounce.module.autoTool.value.mode.description": "Modo de ferramenta.",
   "liquidbounce.module.autoTool.value.swing.description": "Balançar a ferramenta.",
+  "liquidbounce.module.autoTpa.description": "Aceita automaticamente pedidos de teleporte",
   "liquidbounce.module.autoTrap.description": "Automaticamente coloca fogo nas entidades em volta de você.",
   "liquidbounce.module.autoWalk.description": "Automaticamente Faz você andar na direção que esta olhando.",
   "liquidbounce.module.autoWeapon.description": "Seleciona automaticamente a melhor arma na sua barra de ferramentas.",
