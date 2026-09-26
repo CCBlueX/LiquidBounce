@@ -33,7 +33,9 @@ object ArmorEvaluation {
 
     fun findBestArmorPieces(
         slots: List<ItemSlot> = Slots.All,
-        durabilityThreshold: Int = Int.MIN_VALUE
+        durabilityThreshold: Int = Int.MIN_VALUE,
+        mode: ArmorComparatorMode = ArmorComparatorMode.SMART,
+        considerProjectileProtection: Boolean = true
     ): Map<EquipmentSlot, ArmorPiece?> {
         val armorPiecesGroupedByType = groupArmorByType(slots)
 
@@ -44,7 +46,8 @@ object ArmorEvaluation {
 
         // Run some passes in which we try to find best armor pieces based on the parameters of the last pass
         repeat(2) {
-            val comparator = getArmorComparatorFor(currentBestPieces, durabilityThreshold)
+            val comparator =
+                getArmorComparatorFor(currentBestPieces, durabilityThreshold, mode, considerProjectileProtection)
 
             currentBestPieces.clear()
             armorPiecesGroupedByType.mapValuesTo(currentBestPieces) { it.value.maxWithOrNull(comparator) }
@@ -80,19 +83,31 @@ object ArmorEvaluation {
 
     fun getArmorComparatorFor(
         currentKit: Map<EquipmentSlot, ArmorPiece?>,
-        durabilityThreshold: Int = Int.MIN_VALUE
+        durabilityThreshold: Int = Int.MIN_VALUE,
+        mode: ArmorComparatorMode = ArmorComparatorMode.SMART,
+        considerProjectileProtection: Boolean = true
     ): ArmorComparator {
         return getArmorComparatorForParameters(
             ArmorKitParameters.getParametersForSlots(currentKit),
-            durabilityThreshold
+            durabilityThreshold,
+            mode,
+            considerProjectileProtection
         )
     }
 
     fun getArmorComparatorForParameters(
         currentParameters: ArmorKitParameters,
-        durabilityThreshold: Int = Int.MIN_VALUE
+        durabilityThreshold: Int = Int.MIN_VALUE,
+        mode: ArmorComparatorMode = ArmorComparatorMode.SMART,
+        considerProjectileProtection: Boolean = true
     ): ArmorComparator {
-        return ArmorComparator(EXPECTED_DAMAGE, currentParameters, durabilityThreshold)
+        return ArmorComparator(
+            EXPECTED_DAMAGE,
+            currentParameters,
+            durabilityThreshold,
+            mode,
+            considerProjectileProtection
+        )
     }
 
 
