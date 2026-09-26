@@ -117,7 +117,7 @@ internal class UltralightRuntime(folder: File) {
 
     companion object {
         const val ULTRALIGHT_VERSION = "1.4.0"
-        const val UJR_VERSION = "0.1.0"
+        const val UJR_VERSION = "0.2.0"
 
         private const val RUNTIME_URL = "https://api.liquidbounce.net/api/v3/resource/ultralight"
         private const val NATIVES_URL =

@@ -16,7 +16,7 @@ fabric-api = "0.160.5+26.3"
 mcef = "3.5.0-26.3"
 
 # ultralight
-ujr = "0.1.0"
+ujr = "0.2.0"
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # TheAltening
