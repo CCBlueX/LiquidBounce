@@ -34,7 +34,7 @@ fun WorldRenderEnvironment.drawLegacy2DMarker(
     backgroundArgb: Int,
 ) {
     withPositionRelativeToCamera(pos) {
-        poseStack.mulPose(Axis.YP.rotationDegrees(-camera.yRot()))
+        poseStack.rotate(Axis.YP.rotationDegrees(-camera.yRot()))
         poseStack.scale(-scale, -scale, scale)
 
         drawLegacy2DRects(foregroundArgb, TOP_FOREGROUND_RECTS)
@@ -48,7 +48,7 @@ fun WorldRenderEnvironment.drawLegacy2DMarker(
 }
 
 private fun WorldRenderEnvironment.drawLegacy2DRects(color: Int, rects: Array<Rect>) {
-    drawCustomMesh(ClientRenderPipelines.Quads) { pose ->
+    drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
         for (rect in rects) {
             addVertex(pose, rect.x2, rect.y1, 0.0f).setColor(color)
             addVertex(pose, rect.x1, rect.y1, 0.0f).setColor(color)

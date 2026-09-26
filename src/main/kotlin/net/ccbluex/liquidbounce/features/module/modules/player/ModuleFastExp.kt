@@ -42,6 +42,9 @@ import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.world.any
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
@@ -190,8 +193,8 @@ object ModuleFastExp : ClientModule(
     }
 
     private fun anyExpOrbMovingToPlayer(): Boolean =
-        world.entitiesForRendering().any {
-            (it is MixinExperienceOrbAccessor) && it.followingPlayer === player
+        world.entityGetter.any(EntityTypes.EXPERIENCE_ORB) {
+            (it as MixinExperienceOrbAccessor).followingPlayer === player
                 && it.deltaMovement.lengthSqr() > player.deltaMovement.lengthSqr()
         }
 

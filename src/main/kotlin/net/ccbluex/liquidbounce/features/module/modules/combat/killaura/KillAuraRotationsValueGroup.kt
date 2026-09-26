@@ -26,6 +26,11 @@ object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatS
     val rotationTiming by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
     val aimThroughWalls by boolean("ThroughWalls", false)
 
+    /**
+     * When enabled, if current rotation can still raytrace the target, skip rotating.
+     */
+    val lazyRotation by boolean("LazyRotation", false)
+
     enum class KillAuraRotationTiming(override val tag: String) : Tagged {
         NORMAL("Normal"),
         SNAP("Snap"),

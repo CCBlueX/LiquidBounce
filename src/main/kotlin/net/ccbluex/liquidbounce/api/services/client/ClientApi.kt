@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.api.services.client
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.models.client.Build
 import net.ccbluex.liquidbounce.api.models.client.MessageOfTheDay
-import java.io.Reader
 
 object ClientApi : BaseApi(config.apiEndpointV1) {
 
@@ -33,11 +31,5 @@ object ClientApi : BaseApi(config.apiEndpointV1) {
 
     suspend fun requestMessageOfTheDayEndpoint(branch: String = API_BRANCH) =
         get<MessageOfTheDay>("/client/$branch/motd")
-
-    suspend fun requestSettingsList(branch: String = API_BRANCH) =
-        get<Array<AutoSettings>>("/client/$branch/settings")
-
-    suspend fun requestSettingsScript(settingId: String, branch: String = API_BRANCH) =
-        get<Reader>("/client/$branch/settings/$settingId")
 
 }

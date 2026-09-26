@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CompletionHandler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -27,6 +27,7 @@ import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import java.util.function.Consumer
 import java.util.function.Predicate
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
@@ -91,32 +92,34 @@ suspend fun <T : Event> EventListener.waitMatches(
     eventClass: Class<T>,
     priority: Short,
     predicate: Predicate<T>,
-): T {
-    lateinit var eventHook: EventHook<T>
-    lateinit var continuation: CancellableContinuation<T>
-    fun resumeAndUnregister(result: Result<T>) {
-        EventManager.unregisterEventHook(eventClass, eventHook)
-        if (continuation.isActive) {
-            continuation.resumeWith(result)
-        }
-    }
-    eventHook = newEventHook(priority) { event ->
-        try {
-            if (predicate.test(event)) {
-                resumeAndUnregister(Result.success(event))
+): T = suspendCancellableCoroutine { continuation ->
+    val handler = object : CompletionHandler, Consumer<T> {
+        @JvmField val eventHook: EventHook<T> = this@waitMatches.newEventHook(priority, this)
+
+        private fun unregisterAndResume(result: Result<T>) {
+            EventManager.unregisterEventHook(eventClass, eventHook)
+            if (continuation.isActive) {
+                continuation.resumeWith(result)
             }
-        } catch (e: Throwable) {
-            resumeAndUnregister(Result.failure(e))
+        }
+
+        override fun invoke(p1: Throwable?) {
+            EventManager.unregisterEventHook(eventClass, eventHook)
+        }
+
+        override fun accept(event: T) {
+            try {
+                if (predicate.test(event)) {
+                    unregisterAndResume(Result.success(event))
+                }
+            } catch (e: Throwable) {
+                unregisterAndResume(Result.failure(e))
+            }
         }
     }
 
-    return suspendCancellableCoroutine { cont ->
-        continuation = cont
-        cont.invokeOnCancellation {
-            EventManager.unregisterEventHook(eventClass, eventHook)
-        }
-        EventManager.registerEventHook(eventClass, eventHook)
-    }
+    continuation.invokeOnCancellation(handler)
+    EventManager.registerEventHook(eventClass, handler.eventHook)
 }
 
 /**

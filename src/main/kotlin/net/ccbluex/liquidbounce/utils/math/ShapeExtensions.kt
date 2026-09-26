@@ -22,18 +22,12 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import it.unimi.dsi.fastutil.longs.LongArrayList
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import net.ccbluex.fastutil.forEachLong
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import java.util.function.ToDoubleFunction
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -61,7 +55,7 @@ fun VoxelShape.boundsOrNull(): AABB? = if (isEmpty) null else bounds()
 fun VoxelShape.distanceToSqr(position: Vec3): Double =
     this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.POSITIVE_INFINITY
 
-private val AABB_BIGGER_FIRST = Comparator.comparingDouble(ToDoubleFunction(AABB::getSize)).reversed()
+private val AABB_BIGGER_FIRST = Comparator.comparingDouble(AABB::getSize).reversed()
 
 private const val SHAPE_EPSILON = 1.0E-7
 
@@ -89,6 +83,31 @@ fun VoxelShape.toSortedAabbs(): MutableList<AABB> {
 
 fun VoxelShape.toAabbs(destination: MutableCollection<in AABB>) {
     this.forAllBoxes { x1, y1, z1, x2, y2, z2 -> destination.add(AABB(x1, y1, z1, x2, y2, z2)) }
+}
+
+infix fun VoxelShape.intersects(aabb: AABB): Boolean {
+    if (this.isEmpty) return false
+    var any = false
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        any = any || aabb.intersects(x1, y1, z1, x2, y2, z2)
+    }
+    return any
+}
+
+/**
+ * @see AABB.contains
+ */
+operator fun VoxelShape.contains(vec: Vec3): Boolean {
+    if (this.isEmpty) return false
+    var any = false
+    @Suppress("ComplexCondition")
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        any = any || (
+            vec.x >= x1 && vec.x < x2 &&
+            vec.y >= y1 && vec.y < y2 &&
+            vec.z >= z1 && vec.z < z2)
+    }
+    return any
 }
 
 fun VoxelShape.clipAllBoxes(
@@ -163,7 +182,7 @@ fun VoxelShape.forAllSideOutlineEdges(
 }
 
 /**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
+ * Shrinks a [VoxelShape] by the specified amounts on selected axes.
  */
 @Suppress("CognitiveComplexMethod")
 fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
@@ -175,7 +194,7 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
         )
 
         else -> {
-            var shape = Shapes.empty()
+            val shape = ShapeJoiner()
 
             this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                 val width = maxX - minX
@@ -196,105 +215,13 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
                         maxZ - (if (z > 0) z else 0.0)
                     )
 
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
+                    shape.add(shrunkBox)
                 }
             }
 
-            shape
+            shape.value
         }
     }
-}
-
-data class PositionedVoxelShape<K>(
-    val blockPos: Long,
-    val key: K,
-    val shape: VoxelShape,
-)
-
-@Suppress("CognitiveComplexMethod", "LongMethod")
-fun <K> Collection<PositionedVoxelShape<K>>.mergeAdjacentVoxelShapes(): List<PositionedVoxelShape<K>> {
-    if (this.isEmpty()) return emptyList()
-
-    val groupedShapes = HashMap<K, Long2ObjectOpenHashMap<VoxelShape>>()
-
-    for ((blockPos, key, shape) in this) {
-        val shapesByPos = groupedShapes.getOrPut(key, ::Long2ObjectOpenHashMap)
-        shapesByPos.put(blockPos, shape)
-    }
-
-    if (groupedShapes.isEmpty()) {
-        return emptyList()
-    }
-
-    val visited = LongOpenHashSet()
-    val queue = LongArrayList()
-    val componentEntries = LongArrayList()
-
-    val result = ArrayList<PositionedVoxelShape<K>>()
-    for ((key, shapesByPos) in groupedShapes) {
-        visited.clear()
-        queue.clear()
-        componentEntries.clear()
-
-        shapesByPos.keys.forEachLong { startPos ->
-            if (!visited.add(startPos)) {
-                return@forEachLong
-            }
-
-            componentEntries.clear()
-            queue.clear()
-            queue.add(startPos)
-            var queueIndex = 0
-
-            var originLong = startPos
-
-            while (queueIndex < queue.size) {
-                val currentPos = queue.getLong(queueIndex++)
-                if (!shapesByPos.containsKey(currentPos)) continue
-
-                componentEntries.add(currentPos)
-
-                if (BlockPosAsLongComparator.compare(currentPos, originLong) < 0) {
-                    originLong = currentPos
-                }
-
-                for (direction in Direction.entries) {
-                    val neighborPos = BlockPos.offset(currentPos, direction)
-                    if (shapesByPos.containsKey(neighborPos) && visited.add(neighborPos)) {
-                        queue.add(neighborPos)
-                    }
-                }
-            }
-
-            val originX = BlockPos.getX(originLong)
-            val originY = BlockPos.getY(originLong)
-            val originZ = BlockPos.getZ(originLong)
-
-            var mergedShape = Shapes.empty()
-            for (i in componentEntries.indices) {
-                val componentPos = componentEntries.getLong(i)
-                val componentShape = shapesByPos.get(componentPos) ?: continue
-
-                mergedShape = Shapes.joinUnoptimized(
-                    mergedShape,
-                    componentShape.move(
-                        (BlockPos.getX(componentPos) - originX).toDouble(),
-                        (BlockPos.getY(componentPos) - originY).toDouble(),
-                        (BlockPos.getZ(componentPos) - originZ).toDouble(),
-                    ),
-                    BooleanOp.OR,
-                )
-            }
-
-            result += PositionedVoxelShape(
-                blockPos = originLong,
-                key = key,
-                shape = mergedShape.optimize(),
-            )
-        }
-    }
-
-    return result
 }
 
 private class ShapeSurfaceMesh(
@@ -543,7 +470,25 @@ private class ShapeSurfaceMesh(
 
     private fun index(x: Int, y: Int, z: Int): Int = (x * ySize + y) * zSize + z
 
-    companion object {
+    companion {
+        /**
+         * @see VoxelShape.findIndex
+         */
+        private fun findIndex(doubles: DoubleArray, value: Double): Int {
+            var low = 0
+            var high = doubles.size
+            while (low < high) {
+                val mid = (low + high) ushr 1
+                if (value < doubles[mid]) high = mid else low = mid + 1
+            }
+            val index = low - 1
+            if (index !in doubles.indices || doubles[index] != value) {
+                throw IllegalArgumentException("Could not resolve coordinate index for $value")
+            }
+
+            return index
+        }
+
         fun of(shape: VoxelShape): ShapeSurfaceMesh {
             val xs = shape.getCoords(Direction.Axis.X).toDoubleArray()
             val ys = shape.getCoords(Direction.Axis.Y).toDoubleArray()
@@ -556,12 +501,12 @@ private class ShapeSurfaceMesh(
             val mesh = ShapeSurfaceMesh(xs, ys, zs, occupancy)
 
             shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val startX = xs.indexOfCoordinate(minX)
-                val startY = ys.indexOfCoordinate(minY)
-                val startZ = zs.indexOfCoordinate(minZ)
-                val endX = xs.indexOfCoordinate(maxX)
-                val endY = ys.indexOfCoordinate(maxY)
-                val endZ = zs.indexOfCoordinate(maxZ)
+                val startX = findIndex(xs, minX)
+                val startY = findIndex(ys, minY)
+                val startZ = findIndex(zs, minZ)
+                val endX = findIndex(xs, maxX)
+                val endY = findIndex(ys, maxY)
+                val endZ = findIndex(zs, maxZ)
 
                 for (x in startX until endX) {
                     for (y in startY until endY) {
@@ -703,19 +648,10 @@ private class PlaneMask(
     }
 }
 
+@JvmRecord
 private data class FaceComponent(
     val planeIndex: Int,
     val mask: PlaneMask,
 )
-
-private fun DoubleArray.indexOfCoordinate(value: Double): Int {
-    for (index in indices) {
-        if (approximatelyEquals(this[index], value)) {
-            return index
-        }
-    }
-
-    throw IllegalArgumentException("Could not resolve coordinate index for $value")
-}
 
 private fun approximatelyEquals(a: Double, b: Double): Boolean = kotlin.math.abs(a - b) <= SHAPE_EPSILON

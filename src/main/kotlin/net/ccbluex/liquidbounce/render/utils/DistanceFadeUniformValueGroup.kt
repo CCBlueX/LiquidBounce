@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.utils
 
-import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.renderpearl.api.commands.RenderPass
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.render.ClientUniformDefine

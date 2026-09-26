@@ -132,7 +132,7 @@ class TaskProgressScreen(
                 append(task.name)
                 append(": ")
                 append(percentFormat.format(task.progress * 100))
-                append("%")
+                append('%')
                 append(formatTotalSpeed(listOf(task)))
             }.asPlainText(ChatFormatting.GRAY))
         }
@@ -163,7 +163,7 @@ class TaskProgressScreen(
 
     override fun tick() {
         if (taskManager.isCompleted && (BrowserBackendManager.backend?.isInitialized == true || isBrowserDisabled)) {
-            mc.setScreen(TitleScreen())
+            mc.gui.setScreen(TitleScreen())
         }
     }
 

@@ -21,13 +21,17 @@ package net.ccbluex.liquidbounce.event.events
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.annotations.Tag
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.CameraType
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.Minecraft
 import net.minecraft.client.User
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.Screen
@@ -35,9 +39,11 @@ import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.TransferState
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import java.util.function.UnaryOperator
 
+@AddonApi
 @Tag("gameTick")
 object GameTickEvent : Event()
 
@@ -62,6 +68,7 @@ class KeyEvent(
 @Tag("inputHandle")
 object InputHandleEvent : Event()
 
+@AddonApi
 @Tag("movementInput")
 class MovementInputEvent(
     var directionalInput: DirectionalInput,
@@ -119,23 +126,28 @@ class SessionEvent(
     val session: User,
 ) : Event(), WebSocketEvent
 
+@AddonApi
 @Tag("screen")
 class ScreenEvent(
     val screen: Screen?,
 ) : CancellableEvent()
 
+@AddonApi
 @Tag("chatSend")
 class ChatSendEvent(
     val message: String,
 ) : CancellableEvent(), WebSocketEvent
 
+@AddonApi
 @Tag("chatReceive")
 class ChatReceiveEvent(
     val message: String,
     val textData: Component,
     val type: ChatType,
+    @ProtocolExclude
     val applyChatDecoration: UnaryOperator<Component>,
 ) : CancellableEvent(), WebSocketEvent {
+    @AddonApi
     enum class ChatType(override val tag: String) : Tagged {
         CHAT_MESSAGE("ChatMessage"),
         DISGUISED_CHAT_MESSAGE("DisguisedChatMessage"),
@@ -151,6 +163,7 @@ class ServerConnectEvent(
     val cookieStorage: TransferState?,
 ) : CancellableEvent()
 
+@AddonApi
 @Tag("disconnect")
 object DisconnectEvent : Event(), WebSocketEvent
 
@@ -161,9 +174,23 @@ class OverlayMessageEvent(
 ) : Event(), WebSocketEvent
 
 @Tag("perspective")
-class PerspectiveEvent(
-    var perspective: CameraType,
-) : Event()
+object PerspectiveEvent : Event() {
+    var perspective: CameraType = CameraType.FIRST_PERSON
+    var distance: Float = 0f
+    var noClip: Boolean = false
+
+    var lastPerspective: CameraType = CameraType.FIRST_PERSON
+    var lastDistance: Float = 0f
+
+    fun update(mc: Minecraft, entity: Entity?) {
+        lastDistance = distance
+        lastPerspective = perspective
+
+        perspective = mc.options.cameraType
+        noClip = false
+        distance = entity.cameraDistance
+    }
+}
 
 @Tag("itemLoreQuery")
 class ItemLoreQueryEvent(

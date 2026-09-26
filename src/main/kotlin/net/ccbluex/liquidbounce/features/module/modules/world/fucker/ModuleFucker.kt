@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getBlock
@@ -50,6 +51,8 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -58,11 +61,12 @@ import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
+import net.ccbluex.liquidbounce.utils.render.BreakingProgress
+import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
@@ -71,8 +75,6 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
-import java.util.function.ToDoubleFunction
-import java.util.function.ToIntFunction
 import kotlin.math.max
 
 /**
@@ -80,7 +82,11 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule(
+    "Fucker",
+    ModuleCategories.WORLD,
+    aliases = listOf("BedBreaker", "IdNuker"),
+), BreakingProgress.Provider {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -113,6 +119,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
+    private val notDuringCombat by boolean("NotDuringCombat", false)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     private val chestAsFullBlock by boolean("ChestAsFullBlock", false)
@@ -126,6 +133,9 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
             defaultColor = Color4b(255, 0, 0, 90)
         )
     )
+    private val progressRenderer = targetRenderer.tree(
+        BreakingProgressRenderer(targetRenderer, this)
+    )
 
     private val availableToolSlots
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.HotbarAndInventory else Slots.Hotbar
@@ -137,6 +147,19 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+
+    override fun breakingProgress(): BreakingProgress? {
+        val target = currentTarget?.takeIf { it.action == DestroyAction.DESTROY } ?: return null
+        if (ModulePacketMine.running) {
+            return null
+        }
+
+        if (forceImmediateBreak) {
+            return BreakingProgress(target.pos, 1f)
+        }
+
+        return BreakingProgress.Provider.Default.breakingProgress(target.pos)
+    }
 
     private val targetPointProportions = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
     private const val MAX_SURROUNDING_PATH_BLOCKS = 8
@@ -150,11 +173,11 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
-        if (!ignoreUsingItem && player.isUsingItem) {
+        if (!ignoreUsingItem && player.isUsingItem || notDuringCombat && CombatManager.isInCombat) {
             return@handler
         }
 
@@ -164,7 +187,7 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
     @Suppress("unused")
     private val breaker = tickHandler {
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
@@ -210,8 +233,8 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
 
         // Use action should be used if the block is the same as the current target and the action is set to use.
         if (destroyerTarget.action == DestroyAction.USE) {
-            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
-                player.swing(InteractionHand.MAIN_HAND)
+            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult).shouldSwingHand()) {
+                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
             }
 
             waitTicks(delay)
@@ -525,10 +548,10 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
     }
 
     private val SURROUNDING_INFO_COMPARATOR = Comparator
-        .comparingDouble(ToDoubleFunction<SurroundingInfo> { it.resistance })
-        .thenComparingInt(ToIntFunction { it.blockerCount })
-        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToTarget })
-        .thenComparingDouble(ToDoubleFunction { it.firstBlockDistanceToEyes })
+        .comparingDouble<SurroundingInfo> { it.resistance }
+        .thenComparingInt { it.blockerCount }
+        .thenComparingDouble { it.firstBlockDistanceToTarget }
+        .thenComparingDouble { it.firstBlockDistanceToEyes }
 
     private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
@@ -558,13 +581,13 @@ object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = l
         }
 
     private val comparator: Comparator<Pair<BlockPos, BlockState>> = Comparator
-        .comparingDouble(ToDoubleFunction<Pair<BlockPos, BlockState>> { (pos, state) ->
+        .comparingDouble<Pair<BlockPos, BlockState>> { (pos, state) ->
             miningDuration(pos, state)
-        })
-        .thenComparingDouble(ToDoubleFunction { (pos, state) ->
+        }
+        .thenComparingDouble { (pos, state) ->
             state.getShape(world, pos, CollisionContext.of(player))
                 .move(pos)
                 .distanceToSqr(player.eyePosition)
-        })
+        }
 
 }

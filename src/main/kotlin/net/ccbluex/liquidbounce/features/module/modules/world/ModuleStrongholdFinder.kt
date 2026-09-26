@@ -33,15 +33,16 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.world.forEachSectionBlock
 import net.ccbluex.liquidbounce.utils.world.stronghold.EyeMeasurement
 import net.ccbluex.liquidbounce.utils.world.stronghold.PosteriorSnapshot
@@ -56,7 +57,7 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.ChunkPos
@@ -98,6 +99,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val sampleDelayTicks by int("SampleDelayTicks", 2, 0..10)
     private val minEyeHorizontalSpeed by float("MinEyeHorizontalSpeed", 0.02f, 0.001f..0.2f)
     private val maxSampleAgeTicks by int("MaxSampleAgeTicks", 20, 5..100)
+    private val maxEyeSpawnDistance by float("MaxEyeSpawnDistance", 8f, 1f..32f)
 
     private val showTopCandidates by int("ShowTopCandidates", 3, 1..10).onChanged {
         onEstimatorSettingsChanged()
@@ -114,7 +116,7 @@ object ModuleStrongholdFinder : ClientModule(
     private val measurements = mutableListOf<EyeMeasurement>()
     private var posterior: PosteriorSnapshot? = null
     private var lastAnnouncedCandidate: ChunkPos? = null
-    private val detectedPortalBlocks = linkedMapOf<BlockPos, PortalBlockType>()
+    private val detectedPortalBlocks = hashMapOf<BlockPos, PortalBlockType>()
 
     private var hypothesisCache: List<StrongholdHypothesis> = emptyList()
     private var cachedHypothesisCount = -1
@@ -242,28 +244,29 @@ object ModuleStrongholdFinder : ClientModule(
             return@handler
         }
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             if (detectedPortalBlocks.isNotEmpty()) {
                 renderDetectedPortalBlocks(event)
-                return@renderEnvironmentForWorld
+                return@renderEnvironment
             }
 
             if (renderRays) {
                 val color = Color4b.WHITE.alpha(170).argb
-                for (measurement in measurements) {
-                    val start = measurement.throwPos
-                    val direction = Vec3.directionFromRotation(0f, measurement.angleDeg)
-                    val end = measurement.throwPos.add(direction.scale(RAY_RENDER_LENGTH))
+                withPositionRelativeToCamera {
+                    for ((start, angleDeg) in measurements) {
+                        val direction = Vec3.directionFromRotation(0f, angleDeg)
+                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
 
-                    drawLine(
-                        relativeToCamera(start).toVec3f(),
-                        relativeToCamera(end).toVec3f(),
-                        color,
-                    )
+                        drawLine(
+                            start,
+                            end,
+                            color,
+                        )
+                    }
                 }
             }
 
-            val snapshot = posterior ?: return@renderEnvironmentForWorld
+            val snapshot = posterior ?: return@renderEnvironment
             val drawY = player.interpolateCurrentPosition(event.partialTicks).y
             val candidates = snapshot.candidates.take(showTopCandidates)
             candidates.forEachIndexed { index, candidate ->
@@ -279,7 +282,7 @@ object ModuleStrongholdFinder : ClientModule(
                 }
 
                 if ((index == 0 && renderBestChunk) || (index > 0 && renderTopChunks)) {
-                    withPositionRelativeToCamera(Vec3(minX.toDouble(), drawY, minZ.toDouble())) {
+                    withPositionRelativeToCamera(minX.toDouble(), drawY, minZ.toDouble()) {
                         drawPlane(16f, 16f, color, color.darker())
                     }
                 }
@@ -366,22 +369,23 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun handleEyeSpawnPacket(packet: ClientboundAddEntityPacket) {
-        if (packet.type != EntityType.EYE_OF_ENDER) {
+        if (packet.type != EntityTypes.EYE_OF_ENDER) {
             return
         }
 
         val nowTick = player.tickCount
         trimPendingThrows(nowTick)
 
+        val maxSpawnDistanceSqr = maxEyeSpawnDistance * maxEyeSpawnDistance
         val pending = pendingThrows
-            .filter { it.dimension == world.dimension() && nowTick - it.tick in 0..maxSampleAgeTicks }
+            .filter {
+                it.dimension == world.dimension()
+                    && nowTick - it.tick in 0..maxSampleAgeTicks
+                    && it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) <= maxSpawnDistanceSqr
+            }
             .minWithOrNull(
-                compareBy<PendingThrow> { nowTick - it.tick }
-                    .thenBy {
-                        val dx = it.throwPosition.x - packet.x
-                        val dz = it.throwPosition.z - packet.z
-                        dx * dx + dz * dz
-                    }
+                compareBy<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
+                    .thenComparingInt { nowTick - it.tick }
             ) ?: return
 
         pendingThrows.remove(pending)
@@ -416,9 +420,7 @@ object ModuleStrongholdFinder : ClientModule(
     }
 
     private fun removePortalBlocksInChunk(chunkPos: ChunkPos) {
-        detectedPortalBlocks.entries.removeIf { (pos, _) ->
-            chunkPos.contains(pos)
-        }
+        detectedPortalBlocks.keys.removeIf(chunkPos::contains)
     }
 
     private fun WorldRenderEnvironment.renderDetectedPortalBlocks(event: WorldRenderEvent) {
@@ -437,20 +439,20 @@ object ModuleStrongholdFinder : ClientModule(
         val target = closestPortalPos.center
 
         val lineColor = Color4b(255, 80, 80, 220).argb
-        val startRelative = relativeToCamera(start).toVec3f()
+        withPositionRelativeToCamera {
+            drawLine(start, target, lineColor)
 
-        drawLine(startRelative, relativeToCamera(target).toVec3f(), lineColor)
-
-        val deltaX = target.x - start.x
-        val deltaZ = target.z - start.z
-        val horizontalLength = hypot(deltaX, deltaZ)
-        if (horizontalLength > 1e-6) {
-            val markerEnd = Vec3(
-                start.x + deltaX / horizontalLength * 2.0,
-                start.y,
-                start.z + deltaZ / horizontalLength * 2.0
-            )
-            drawLine(startRelative, relativeToCamera(markerEnd).toVec3f(), lineColor)
+            val deltaX = target.x - start.x
+            val deltaZ = target.z - start.z
+            val horizontalLength = hypot(deltaX, deltaZ)
+            if (horizontalLength > 1e-6) {
+                val markerEnd = Vec3(
+                    start.x + deltaX / horizontalLength * 2.0,
+                    start.y,
+                    start.z + deltaZ / horizontalLength * 2.0
+                )
+                drawLine(start, markerEnd, lineColor)
+            }
         }
     }
 

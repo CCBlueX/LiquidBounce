@@ -29,6 +29,7 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
@@ -126,6 +127,8 @@ inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
 
 inline fun Vec3.dot(x: Double, y: Double, z: Double): Double = this.x * x + this.y * y + this.z * z
 
+inline fun Vec3.dot(v: Vector3fc): Double = this.x * v.x() + this.y * v.y() + this.z * v.z()
+
 /**
  * `this.normalize().scale(newLength)`
  *
@@ -181,9 +184,13 @@ inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: 
 inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
     multiply(factorX, factorY, factorZ)
 
+fun Vec3.horizontalDistanceTo(other: Vec3i): Double = horizontalDistanceTo(other.x.toDouble(), other.z.toDouble())
+
 fun Vec3.horizontalDistanceTo(other: Vec3): Double = horizontalDistanceTo(other.x, other.z)
 
 fun Vec3.horizontalDistanceTo(x: Double, z: Double): Double = sqrt(horizontalDistanceToSqr(x, z))
+
+fun Vec3.horizontalDistanceToSqr(other: Vec3i): Double = horizontalDistanceToSqr(other.x.toDouble(), other.z.toDouble())
 
 fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
 
@@ -216,6 +223,13 @@ fun Iterable<Vec3>.average(): Vec3 {
         i++
     }
     return Vec3(x / i, y / i, z / i)
+}
+
+fun Vec3.expandToCube(halfExtents: Double): AABB {
+    return AABB(
+        this.x - halfExtents, this.y - halfExtents, this.z - halfExtents,
+        this.x + halfExtents, this.y + halfExtents, this.z + halfExtents,
+    )
 }
 
 inline fun Vec3i.toVec3d(

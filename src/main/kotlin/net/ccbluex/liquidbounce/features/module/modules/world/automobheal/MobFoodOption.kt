@@ -51,14 +51,12 @@ data class MobFoodOption(
         isBucket: Boolean = false,
     ) : this(item, { healAmount }, isBucket)
 
-    companion object {
-        @JvmStatic
+    companion {
         fun foodNutritionHeal(stack: ItemStack, multiplier: Float): Float {
             val foodProperties = stack.get(DataComponents.FOOD)
             return (foodProperties?.nutrition() ?: 1) * multiplier
         }
 
-        @JvmStatic
         fun ofBucket(item: Item): MobFoodOption {
             return MobFoodOption(
                 item = item,

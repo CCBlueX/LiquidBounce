@@ -19,9 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -32,12 +33,12 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.ccbluex.liquidbounce.utils.render.copyFrom
-import net.ccbluex.liquidbounce.utils.render.copyFully
+import net.ccbluex.liquidbounce.render.setPipeline
+import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.util.ARGB
+import java.util.function.Supplier
 
 /**
  * Module ItemChams
@@ -59,9 +60,9 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
         private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-        private var edited = false
+        @JvmField val OVERRIDE = ScopedValue.newInstance<GpuTextureView>()
 
-        private var storedLightmapTexture: GpuTexture? = null
+        private var textureView: GpuTextureView? = null
 
         private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
 
@@ -70,16 +71,29 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
-        fun applyToTexture(textureView: GpuTextureView) {
-            if (!this.running || edited) return
+        @JvmStatic
+        fun <T : Any> doOverride(op: ScopedValue.CallableOp<T, Throwable>): T {
+            if (!this.running || this.textureView == null) return op.call()
+            return ScopedValue.where(OVERRIDE, this.textureView).call(op)
+        }
 
-            if (this.storedLightmapTexture == null) {
-                this.storedLightmapTexture = textureView.texture().copyFully(
-                    labelGetter = { "$name - Lightmap Texture" },
-                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
-                )
-            } else {
-                this.storedLightmapTexture!!.copyFrom(source = textureView.texture())
+        /**
+         * Regenerates the chams lightmap texture on top of the vanilla lightmap.
+         *
+         * Must be called when no render pass is open.
+         *
+         * @see net.minecraft.client.renderer.Lightmap
+         */
+        @JvmStatic
+        fun refresh(vanillaLightmapView: GpuTextureView) {
+            if (!this.running) return
+
+            if (this.textureView == null) {
+                this.textureView = gpuDevice.createTexture(
+                    "$name - Lightmap Texture",
+                    GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
+                    GpuFormat.RGBA8_UNORM, 16, 16, 1, 1,
+                ).asView()
             }
 
             if (uboDirty) {
@@ -95,32 +109,21 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
                 uboDirty = false
             }
 
-            textureView.createRenderPass(
-                { "$name Pass" },
-                clearColor = optional(-1),
-            ).use { pass ->
+            textureView!!.createRenderPass({ "$name Pass" }).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-                pass.bindTexture("texture0", textureView, sampler)
-                pass.bindTexture("image", textureView, sampler)
+                pass.setUniform("texture0", vanillaLightmapView, sampler)
+                pass.setUniform("image", vanillaLightmapView, sampler)
                 pass.setUniform(ClientUniformDefine.HAND_ITEM_LIGHTMAP.uboName, UBO)
 
-                pass.draw(0, 3)
+                pass.draw(3, 1, 0, 0)
             }
-
-            edited = true
-        }
-
-        fun resetTexture(texture: GpuTextureView) {
-            if (!edited) return
-
-            texture.texture().copyFrom(source = this.storedLightmapTexture!!)
-
-            edited = false
         }
 
         override fun onDisabled() {
             uboDirty = true
+            textureView?.close()
+            textureView = null
             super.onDisabled()
         }
 

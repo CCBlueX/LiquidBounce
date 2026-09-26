@@ -20,11 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast.shouldRecast
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.item.Items
 
 /**
  * Elytra recast module
@@ -40,8 +39,8 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEME
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
             return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
-                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
-                itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
+                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying &&
+                itemStack.isGlider && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
 
     /**

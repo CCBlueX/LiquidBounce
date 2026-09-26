@@ -27,13 +27,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.AvoidHazardInputPlanner
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
-import net.ccbluex.liquidbounce.utils.math.iterateBlockPos
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.world.anyMatched
+import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
@@ -59,8 +61,8 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     private var mode by enumChoice("Mode", AvoidMode.SHAPE)
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
-    // Conflicts with AvoidHazards
-    val cobWebs get() = Avoid.COBWEB in avoid
+    // Solid webs keep NoWeb from ever handling one; steering around them does not
+    val cobWebs get() = mode == AvoidMode.SHAPE && Avoid.COBWEB in avoid
 
     private const val MOVEMENT_PREDICTION_TICKS = 2
     private const val CACTUS_BLOCK_MARGIN = 0.001
@@ -163,8 +165,8 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
     }
 
     private fun isLadderClimbStateAt(pos: BlockPos): Boolean {
-        val currentState = pos.getState() ?: return false
-        return isLadderClimbState(currentState, pos.below().getState())
+        val currentState = pos.state ?: return false
+        return isLadderClimbState(currentState, pos.below().state)
     }
 
     @Suppress("CognitiveComplexMethod")
@@ -177,8 +179,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             return true
         }
 
-        return boundingBox.iterateBlockPos().any { pos ->
-            val blockState = pos.getState() ?: return@any false
+        return world.findBlocksIntersects(boundingBox).anyMatched { pos, blockState ->
             val fluidState = blockState.fluidState
             val block = blockState.block
 
@@ -190,7 +191,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val fluidShape = fluidState.getShape(level, pos)
-                            !fluidShape.isEmpty && boundingBox.intersects(fluidShape.bounds().move(pos))
+                            !fluidShape.isEmpty && fluidShape.move(pos) intersects boundingBox
                         }
                     }
                     Avoid.CACTI -> {
@@ -208,7 +209,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
                             false
                         } else {
                             val shape = blockState.getShape(level, pos)
-                            !shape.isEmpty && boundingBox.intersects(shape.bounds().move(pos))
+                            !shape.isEmpty && shape.move(pos) intersects boundingBox
                         }
                     }
                 }

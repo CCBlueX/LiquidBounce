@@ -47,7 +47,7 @@ object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Bl
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         val packet = event.packet
 
-        if (mc.screen is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
+        if (mc.gui.screen() is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
             event.action = when {
                 packet.isC2SContainerPacket() -> BlinkManager.Action.PASS
                 else -> BlinkManager.Action.QUEUE
@@ -70,7 +70,7 @@ object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Bl
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
+        if (mc.gui.screen() is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
             player.closeContainer()
             notification(
                 "InventoryMove",
