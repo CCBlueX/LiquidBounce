@@ -258,7 +258,7 @@
                 {/if}
             </div>
         {:else}
-            <SessionHistory {sessions} {locations} {now} on:end={e => endSession(e.detail)}/>
+            <SessionHistory {sessions} {now} on:end={e => endSession(e.detail)}/>
         {/if}
     </div>
 </div>

@@ -1,25 +1,18 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {LiquidProxyLocation, LiquidProxySession} from "../../../../integration/types";
+    import type {LiquidProxySession} from "../../../../integration/types";
+    import {REST_BASE} from "../../../../integration/host";
     import MenuListItemTag from "../../common/menulist/MenuListItemTag.svelte";
     import ToolTip from "../../common/ToolTip.svelte";
-    import {formatDuration, locationLabel} from "./liquidproxy";
+    import {formatDuration} from "./liquidproxy";
 
     export let sessions: LiquidProxySession[] = [];
-    export let locations: LiquidProxyLocation[] = [];
     // Ticks so that running sessions count up
     export let now = Date.now();
 
+    const UNKNOWN_SERVER_ICON = `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`;
+
     const dispatch = createEventDispatcher<{ end: string }>();
-
-    function location(session: LiquidProxySession) {
-        const location = locations.find(l => l.code === session.location);
-        return location ? locationLabel(location, locations) : null;
-    }
-
-    function flag(session: LiquidProxySession) {
-        return session.country === "Unknown" ? null : `img/flags/${session.country.toLowerCase()}.svg`;
-    }
 </script>
 
 <div class="session-history">
@@ -27,23 +20,19 @@
 
     <div class="sessions">
         {#each sessions as session (session.id)}
-            {@const image = flag(session)}
-            {@const through = location(session)}
             <div class="session" class:active={session.connected}>
-                {#if image}
-                    <img class="flag" src={image} alt={session.country}>
-                {:else}
-                    <div class="flag"></div>
-                {/if}
+                <div class="image">
+                    <img class="server-icon" src={session.icon ?? UNKNOWN_SERVER_ICON} alt={session.server}>
+                    {#if session.country !== "Unknown"}
+                        <img class="flag" src="img/flags/{session.country.toLowerCase()}.svg" alt={session.country}>
+                    {/if}
+                </div>
 
                 <div class="name">
                     <img class="head" src={session.avatar} alt={session.username}>
                     <span>{session.username}</span>
                     {#if session.type}
                         <MenuListItemTag text={session.type}/>
-                    {/if}
-                    {#if through}
-                        <MenuListItemTag text={through}/>
                     {/if}
                 </div>
 
@@ -128,12 +117,31 @@
     }
   }
 
-  .flag {
+  .image {
     grid-area: a;
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    background-color: var(--menu-base-68-color);
+    position: relative;
+
+    .server-icon {
+      display: block;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background-color: var(--menu-base-68-color);
+    }
+
+    .flag {
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px var(--menu-list-item-background-color);
+    }
+  }
+
+  .session.active .image .flag {
+    box-shadow: 0 0 0 3px var(--accent-color);
   }
 
   .name {

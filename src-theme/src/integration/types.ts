@@ -392,9 +392,9 @@ export interface LiquidProxySession {
     username: string;
     avatar: string;
     server: string;
+    icon?: string;
     country: string;
     type?: string;
-    location: string;
     startedAt: number;
     lastSeenAt: number;
     connected: boolean;

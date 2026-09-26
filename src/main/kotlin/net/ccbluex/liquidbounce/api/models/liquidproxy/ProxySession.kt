@@ -27,8 +27,6 @@ data class ProxySession(
     @SerializedName("conn_id")
     val connId: String,
     val username: String,
-    /** The node, e.g. `fra-1`. Its prefix is the location code. */
-    val node: String,
     @SerializedName("server_addr")
     val serverAddr: String,
     @SerializedName("first_seen")

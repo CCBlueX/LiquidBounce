@@ -30,8 +30,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxySession
 import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxySubscription
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.proxy.liquidproxy.LiquidProxy
 import net.ccbluex.liquidbounce.features.misc.proxy.liquidproxy.LocationProbes
 import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
 import net.ccbluex.liquidbounce.integration.interop.unauthorized
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -171,9 +172,10 @@ private data class SessionInfo(
     val username: String,
     val avatar: String,
     val server: String,
+    /** Favicon of the server, as a URL */
+    val icon: String?,
     val country: String,
     val type: String?,
-    val location: String,
     val startedAt: Long,
     val lastSeenAt: Long,
     val connected: Boolean,
@@ -182,14 +184,14 @@ private data class SessionInfo(
 
 private fun String.epochMillis() = LocalDateTime.parse(this).toInstant(ZoneOffset.UTC).toEpochMilli()
 
-private fun ProxySession.info() = SessionInfo(
+private fun ProxySession.info(icon: String?) = SessionInfo(
     id = connId,
     username = username,
     avatar = formatAvatarUrl(null, username),
     server = serverAddr,
+    icon = icon,
     country = country,
     type = if (ipType == "Isp") "ISP" else ipType,
-    location = node.substringBefore('-'),
     startedAt = firstSeen.epochMillis(),
     lastSeenAt = lastSeen.epochMillis(),
     connected = connected,
@@ -200,7 +202,9 @@ private fun ProxySession.info() = SessionInfo(
 private fun Route.getSessions() = get("/sessions") {
     val sessions = call.liquidProxy { LiquidProxy.sessions() }
     call.respond(JsonArray().apply {
-        sessions.forEach { add(interopGson.toJsonTree(it.info())) }
+        for (session in sessions) {
+            add(interopGson.toJsonTree(session.info(ServerIcons.of(session.serverAddr))))
+        }
     })
 }
 
