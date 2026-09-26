@@ -39,6 +39,7 @@ object SpooferManager : Config("Spoofer") {
 
     init {
         tree(SpooferClient)
+        tree(SpooferClientId)
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
         tree(SpooferFingerprint)
