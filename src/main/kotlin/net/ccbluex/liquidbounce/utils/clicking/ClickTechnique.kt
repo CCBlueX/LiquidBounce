@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import java.util.EnumSet
 
 enum class ClickTechnique(override val tag: String) : Tagged {
     HUMAN("Human"),
@@ -27,4 +28,13 @@ enum class ClickTechnique(override val tag: String) : Tagged {
      * Evenly spaced at the top of the CPS range, for anticheats that only look at the time since the last attack.
      */
     CONSTANT("Constant"),
+
+    /**
+     * Nothing is scheduled ahead; a clicker offering this decides each tick in [Clicker.getClickAmount].
+     */
+    AI("AI");
+
+    companion object {
+        val SCHEDULED: Set<ClickTechnique> = EnumSet.complementOf(EnumSet.of(AI))
+    }
 }

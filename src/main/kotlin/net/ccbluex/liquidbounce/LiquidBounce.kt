@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
@@ -403,7 +402,6 @@ object LiquidBounce : EventListener {
             launch("Deep Learning") { task ->
                 runCatching {
                     DeepLearningEngine.init(task)
-                    ModelManager.load()
                     DeepLearningEngine.markInitialized()
                 }.onFailure { exception ->
                     task.subTasks.clear()

@@ -312,7 +312,6 @@
   "liquidbounce.module.damageParticles.description": "Mostra mudanças de vida das entidades.",
   "liquidbounce.module.dankBobbing.description": "Adiciona mais efeitos de camera.",
   "liquidbounce.module.debug.description": "Apenas de interesse para desenvolvedores.",
-  "liquidbounce.module.debugRecorder.description": "Apenas de interesse para desenvolvedores.",
   "liquidbounce.module.derp.description": "Faz parecer que você está derpando por aí.",
   "liquidbounce.module.disabler.description": "Desativa o anticheat de um servidor.",
   "liquidbounce.module.disabler.vulcan.message": "Você precisa ter uma lança encantada com Riptide na sua mão esquerda para contornar as verificações de movimento do Vulcan.",

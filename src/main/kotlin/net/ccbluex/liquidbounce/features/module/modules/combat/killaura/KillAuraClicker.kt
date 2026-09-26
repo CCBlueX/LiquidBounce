@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
+import net.ccbluex.liquidbounce.utils.clicking.ClickTechnique
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -49,11 +51,32 @@ import kotlin.math.round
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
     mc.options.keyAttack,
-    KillAuraClickerItemCooldown()
+    KillAuraClickerItemCooldown(),
+    techniques = ClickTechnique.SCHEDULED + ClickTechnique.AI,
 ) {
+
+    /** Whether the model times the attacks. */
+    val usesAi get() = technique == ClickTechnique.AI
 
     override val isClickTick: Boolean
         get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.remainingAttackCount == 0)
+
+    /**
+     * The AI technique clicks when the model would, which is only known for this tick; later ticks answer with
+     * the item cooldown the model clicks against.
+     */
+    override fun getClickAmount(tick: Int): Int = when {
+        !usesAi -> super.getClickAmount(tick)
+        tick > 0 -> if (itemCooldown?.isCooldownPassed(tick) != false) 1 else 0
+        clickAmount != null -> 0
+        else -> aiClickAmount()
+    }
+
+    private fun aiClickAmount(): Int {
+        val target = ModuleKillAura.targetTracker.target ?: return 0
+        val live = CombatController.decide(target) ?: return 0
+        return if (live.heads.attacks && live.decision.attack) 1 else 0
+    }
 
     private class KillAuraClickerItemCooldown : ItemCooldown() {
 

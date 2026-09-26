@@ -52,10 +52,6 @@ object DeepLearningEngine {
         mkdirs()
     }
 
-    val modelsFolder = deepLearningFolder.resolve("models").apply {
-        mkdirs()
-    }
-
     init {
         System.setProperty("DJL_CACHE_DIR", djlCacheFolder.absolutePath)
         System.setProperty("ENGINE_CACHE_DIR", enginesCacheFolder.absolutePath)
@@ -67,8 +63,6 @@ object DeepLearningEngine {
         System.setProperty("DJL_DEFAULT_ENGINE", "PyTorch")
         // Enforce CPU pytorch flavor (CUDA often conflicts with NVIDIA CUDA and is too large for our use case)
         System.setProperty("PYTORCH_FLAVOR", "cpu")
-
-        ModelManager
     }
 
     @JvmStatic

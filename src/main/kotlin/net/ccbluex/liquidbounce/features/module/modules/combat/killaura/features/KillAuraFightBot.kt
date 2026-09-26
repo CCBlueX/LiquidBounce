@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.SprintEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
@@ -31,10 +35,12 @@ import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
@@ -65,6 +71,10 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
     private val opponentRange by float("OpponentRange", 3f, 0.1f..10f)
     private val dangerousYawDiff by float("DangerousYaw", 55f, 0f..90f, suffix = "°")
     private val runawayOnCooldown by boolean("RunawayOnCooldown", true)
+    private val ai by boolean("AI", false)
+
+    /** Whether the model moves us within reach; the engine still brings us there. */
+    val usesAi get() = running && ai
 
     internal object TargetFilter : ValueGroup("TargetFilter") {
         internal var range by float("Range", 50f, 10f..100f)
@@ -150,12 +160,24 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
         }
     }
 
+    /** The model needs this tick's decision before the movement input is read. */
+    @Suppress("unused")
+    private val decisionHandler = handler<GameTickEvent> {
+        val target = targetTracker.target
+        if (ai && target != null) {
+            CombatController.decide(target)
+        }
+    }
+
     /**
      * Handles additional movement mechanics like swimming and jumping
      *
      * @param event Movement input event to modify
      */
     override fun handleMovementAssist(event: MovementInputEvent, context: CombatContext) {
+        if (ai && steer(event, context)) {
+            return
+        }
         super.handleMovementAssist(event, context)
 
         val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
@@ -166,6 +188,34 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
         if (contextAllowsJump || leaderAllowsJump) {
             event.jump = true
         }
+    }
+
+    /** Within reach the model presses the keys, and jumps, the way the players it learned from did. */
+    private fun steer(event: MovementInputEvent, context: CombatContext): Boolean {
+        val target = context.combatTarget?.entity as? LivingEntity ?: return false
+        if (!KillAuraAi.canAdjustMovement()) {
+            return false
+        }
+        val live = KillAuraAi.live(target) ?: return false
+        if (live.jump) {
+            event.jump = true
+        }
+        event.directionalInput = KillAuraAi.keys(live, target) ?: return false
+        return true
+    }
+
+    /**
+     * Also in the air: players stop sprinting mid jump. Only the sprint key is pressed, so vanilla still refuses
+     * to sprint in shallow water or while blocking; stopping is always fine. Runs after the engine's own sprint
+     * and leaves KillAura's critical hit sprint stop alone.
+     */
+    @Suppress("unused")
+    private val aiSprintHandler = handler<SprintEvent>(priority = MODEL_STATE) { event ->
+        if (!ai || !KillAuraAi.canAdjustMovement(airborne = true) || ModuleKillAura.shouldBlockSprinting) {
+            return@handler
+        }
+        val target = targetTracker.target ?: return@handler
+        KillAuraAi.live(target)?.let { KillAuraAi.sprint(event, it, target) }
     }
 
     /**

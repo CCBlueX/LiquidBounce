@@ -16,17 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.deeplearn.models
+package net.ccbluex.liquidbounce.deeplearn.combat
 
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
+import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 
-class TwoDimensionalRegressionModel(
-    name: String,
-    parent: ModeValueGroup<*>
-) : ModelWrapper<FloatArray, FloatArray>(
-    name,
-    FloatArrayInAndOutTranslator,
-    2, // X, Y
-    parent
-)
+/**
+ * The model is told how well each fighter trades hits, so it learns what stronger players do differently
+ * from all fights, and plays as one by being given [TARGET].
+ */
+@UnstableAddonApi
+object CombatSkill {
+    /** Hit share of the best quarter of observed players. */
+    const val TARGET = 0.62f
+
+    fun input(timeline: CombatTimeline) = ((timeline.skill - 0.5f) * 4f).coerceIn(-2f, 2f)
+}
