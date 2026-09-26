@@ -81,7 +81,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     /**
      * Dependencies [load] installed; [restartRequired] when one only works after a restart. [unavailable]
-     * are the ones left out since no revision of them loads with this game.
+     * are the ones left out since they or what they need do not load with this game.
      */
     data class LoadResult(
         val installed: List<MarketplaceItem>,
@@ -399,7 +399,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         detach()
     }
 
-    private class Dependencies(val configs: List<Step>, val installables: Collection<MarketplaceItem>)
+    private class Dependencies(val configs: List<Step>, val installables: Collection<Installable>)
+
+    /**
+     * An add-on or script, and the add-ons and scripts it [needs].
+     */
+    private class Installable(val item: MarketplaceItem, val needs: Set<Int>)
 
     /**
      * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
@@ -408,15 +413,17 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      */
     private suspend fun resolve(rootId: Int): Dependencies {
         val configs = mutableListOf<Step>()
-        val installables = linkedMapOf<Int, MarketplaceItem>()
+        val installables = linkedMapOf<Int, Installable>()
         val visiting = hashSetOf<Int>()
-        val done = hashSetOf<Int>()
+        val needsOf = hashMapOf<Int, Set<Int>>()
 
-        suspend fun visit(id: Int) {
-            if (id in done || !visiting.add(id)) {
-                return
+        suspend fun visit(id: Int): Set<Int> {
+            needsOf[id]?.let { return it }
+            if (!visiting.add(id)) {
+                return emptySet()
             }
 
+            val needs = linkedSetOf<Int>()
             for (dependency in MarketplaceApi.getItemDependencies(id)) {
                 val item = dependency.item
                 when (item.type) {
@@ -430,8 +437,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                     }
 
                     MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                        visit(item.id)
-                        installables.putIfAbsent(item.id, item)
+                        installables.putIfAbsent(item.id, Installable(item, visit(item.id)))
+                        needs += item.id
                     }
 
                     else -> {}
@@ -439,7 +446,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             }
 
             visiting.remove(id)
-            done += id
+            needsOf[id] = needs
+            return needs
         }
 
         visit(rootId)
@@ -447,14 +455,24 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Subscribes to the [items] that are missing. One that does not load with this game does not stop
-     * the load; the second list holds those.
+     * Subscribes to the [installables] that are missing. One that does not load with this game does not
+     * stop the load; it and what needs it are left out, and the second list names why.
      */
-    private suspend fun install(items: Collection<MarketplaceItem>): Pair<List<MarketplaceItem>, List<Unavailable>> {
+    private suspend fun install(
+        installables: Collection<Installable>
+    ): Pair<List<MarketplaceItem>, List<Unavailable>> {
         val installed = mutableListOf<MarketplaceItem>()
-        val unavailable = mutableListOf<Unavailable>()
-        for (item in items) {
-            if (MarketplaceManager.isSubscribed(item.id) || item.status != MarketplaceItemStatus.ACTIVE) {
+        val leftOut = linkedMapOf<Int, Unavailable>()
+        for (installable in installables) {
+            val item = installable.item
+            if (MarketplaceManager.isSubscribed(item.id)) {
+                continue
+            }
+
+            val reason = installable.needs.firstNotNullOfOrNull { leftOut[it] }
+                ?: Unavailable(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
+            if (reason != null) {
+                leftOut[item.id] = reason
                 continue
             }
 
@@ -462,10 +480,10 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 MarketplaceManager.subscribe(item)
                 installed += item
             } catch (e: NoCompatibleRevisionException) {
-                unavailable += e.unavailable
+                leftOut[item.id] = e.unavailable
             }
         }
-        return installed to unavailable
+        return installed to leftOut.values.distinct()
     }
 
     /**
