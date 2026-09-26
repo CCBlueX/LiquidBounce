@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.Blaze3D
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -26,6 +27,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate.update
@@ -121,7 +123,7 @@ private fun Route.postBrowse() = post("/browse") {
 
     val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
-    Util.getPlatform().openUri(url)
+    Blaze3D.openUri(url)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
@@ -146,7 +148,7 @@ private fun Route.postBrowsePath() = post("/browsePath") {
         else -> call.forbidden("Invalid file type")
     }
 
-    Util.getPlatform().openFile(directoryToOpen)
+    Blaze3D.openPath(directoryToOpen.toPath())
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
@@ -157,9 +159,7 @@ private fun Route.postFileDialog() = post("/fileDialog") {
         call.receive<RequestBody>()
     }.getOrNull() ?: call.badRequest("No dialog mode provided")
 
-    val files = withContext(Dispatchers.IO) {
-        mode.selectFiles(supportedExtensions)
-    }
+    val files = mode.selectFiles(supportedExtensions).await()
 
     call.respond(JsonObject().apply {
         files.firstOrNull()?.let { addProperty("file", it) }

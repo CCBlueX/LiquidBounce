@@ -21,22 +21,24 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.Camera
+import net.minecraft.client.gui.Font
+import net.minecraft.client.renderer.SubmitNodeStorage
+import net.minecraft.client.renderer.feature.TextFeatureRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
-import net.minecraft.world.phys.Vec3
-import org.joml.Vector3fc
+import net.minecraft.util.FormattedCharSequence
+import org.joml.Matrix4f
 
 inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
     val matrices = Pools.MatStack.borrow()
@@ -79,48 +81,13 @@ inline fun PoseStack.translate(blockPos: Long, origin: BlockPos) {
  *
  * @param renderTarget The render target framebuffer.
  */
+@AddonApi
 class WorldRenderEnvironment internal constructor(
     val renderTarget: RenderTarget,
     val poseStack: PoseStack,
     val camera: Camera,
     private val batchCollector: BatchCollector,
 ) {
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vec3f): Vec3 = Vec3(
-        pos.x - camera.position().x,
-        pos.y - camera.position().y,
-        pos.z - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Position): Vec3 = Vec3(
-        pos.x() - camera.position().x,
-        pos.y() - camera.position().y,
-        pos.z() - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vec3i): Vec3 = Vec3(
-        pos.x.toDouble() - camera.position().x,
-        pos.y.toDouble() - camera.position().y,
-        pos.z.toDouble() - camera.position().z,
-    )
-
-    /**
-     * Converts a world-space position to the camera-relative coordinate system.
-     */
-    fun relativeToCamera(pos: Vector3fc): Vec3 = Vec3(
-        pos.x() - camera.position().x,
-        pos.y() - camera.position().y,
-        pos.z() - camera.position().z,
-    )
-
     /**
      * Low-level draw entrypoint.
      *
@@ -141,3 +108,34 @@ class WorldRenderEnvironment internal constructor(
         return batchCollector.start(key)
     }
 }
+
+/**
+ * @see SubmitNodeStorage.submitText
+ */
+fun SubmitNodeStorage.submitTextAlwaysOnTop(
+    poseStack: PoseStack,
+    x: Float,
+    y: Float,
+    string: FormattedCharSequence,
+    dropShadow: Boolean,
+    displayMode: Font.DisplayMode,
+    lightCoords: Int,
+    color: Int,
+    backgroundColor: Int,
+    outlineColor: Int,
+) = this.seeThrough().submit(
+    TextFeatureRenderer.Submit(
+        Matrix4f(poseStack.last().pose()),
+        displayMode,
+        lightCoords,
+        TextFeatureRenderer.Content.Text(
+            x,
+            y,
+            string,
+            dropShadow,
+            color,
+            backgroundColor,
+            outlineColor,
+        )
+    )
+)

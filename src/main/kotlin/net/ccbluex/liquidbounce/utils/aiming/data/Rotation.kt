@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import java.lang.Math.fma
@@ -34,6 +36,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
+@AddonApi
 @JvmRecord
 data class Rotation @JvmOverloads constructor(
     val yaw: Float,
@@ -66,8 +69,11 @@ data class Rotation @JvmOverloads constructor(
     val directionVector: Vec3
         get() = Vec3.directionFromRotation(pitch, yaw)
 
-    val xRot: Float get() = pitch
-    val yRot: Float get() = yaw
+    val viewVector: Vec3
+        get() = Entity.calculateViewVector(pitch, yaw)
+
+    val xRot: Float inline get() = pitch
+    val yRot: Float inline get() = yaw
 
     @JvmOverloads
     fun toQuaternion(dest: Quaternionf = Quaternionf()): Quaternionf =

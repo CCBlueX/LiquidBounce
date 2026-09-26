@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.text.TextBuilder
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.util.StringDecomposer
-import kotlin.collections.plusAssign
 
 object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
 
@@ -67,7 +66,7 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
 
             val chatText = TextBuilder()
             val text = event.applyChatDecoration.apply(event.textData)
-            chatText.append(text)
+            chatText.add(text)
 
             val other = mc.gui.hud.chat.allMessages.find {
                 (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
@@ -76,7 +75,7 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
             var count = 1
             other?.let {
                 count += (other as GuiMessageAddition).`liquid_bounce$getCount`()
-                chatText.append(" [$count]".asPlainText(ChatFormatting.GRAY))
+                chatText.add(" [$count]".asPlainText(ChatFormatting.GRAY))
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)

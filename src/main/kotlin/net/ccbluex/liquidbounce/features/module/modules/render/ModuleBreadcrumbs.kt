@@ -86,7 +86,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         val lines = height == 0f
 
         event.renderEnvironment {
-            drawCustomMesh(if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads) {
+            drawCustomMesh(if (lines) {
+                ClientRenderPipelines.lines(noDepthTest = true)
+            } else {
+                ClientRenderPipelines.quads(noDepthTest = true)
+            }) {
                 val renderData = RenderData(poseStack.last().pose(), this, colorF, lines)
                 trails.forEach { (entity, trail) ->
                     trail.verifyAndRenderTrail(renderData, event.camera.position(), entity, time)

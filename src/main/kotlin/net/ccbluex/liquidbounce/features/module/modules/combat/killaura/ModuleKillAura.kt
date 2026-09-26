@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_NONE
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ONLYENEMY
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
@@ -392,6 +391,23 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
+        if (rotations.lazyRotation) {
+            val currentRotation = RotationManager.currentRotation ?: player.rotation
+            val currentHit = isLookingAtEntity(
+                fromEntity = player,
+                toEntity = entity,
+                rotation = currentRotation,
+                range = range.toDouble(),
+                throughWallsRange = wallsRange.toDouble(),
+            )
+
+            if (currentHit != null) {
+                debugParameter("Lazy Rotation") { true }
+                return RotationWithVector(currentRotation, currentHit.location)
+            }
+        }
+
+        debugParameter("Lazy Rotation") { false }
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 

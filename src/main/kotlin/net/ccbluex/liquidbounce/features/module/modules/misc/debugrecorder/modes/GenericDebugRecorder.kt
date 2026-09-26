@@ -45,8 +45,8 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
             it.ticksLeft <= 0
         }
 
-        for (scheduledEntityDebug in due) {
-            val entity = world.getEntity(scheduledEntityDebug.entityId)
+        for ((_, entityId) in due) {
+            val entity = world.getEntity(entityId)
 
             if (entity != null) {
                 recordDebugInfo(ModuleDebugRecorder, "entity", debugObject(entity))

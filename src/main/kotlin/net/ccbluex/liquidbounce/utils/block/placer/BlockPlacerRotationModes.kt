@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -34,7 +34,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
-abstract class BlockPlacerRotationMode(
+sealed class BlockPlacerRotationMode(
     name: String,
     private val modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>,
     val placer: BlockPlacer
@@ -60,7 +60,7 @@ abstract class BlockPlacerRotationMode(
 class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>, placer: BlockPlacer)
     : BlockPlacerRotationMode("Normal", modeValueGroup, placer) {
 
-    val rotations = tree(RotationsValueGroup(this))
+    private val rotations = tree(RotationsValueGroup(this))
 
     override fun invoke(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
         val interactedBlockPos = placementTarget.interactedBlockPos
@@ -75,7 +75,7 @@ class NormalRotationMode(modeValueGroup: ModeValueGroup<BlockPlacerRotationMode>
                     max(placer.range, placer.wallRange).toDouble(),
                     RotationManager.currentRotation ?: return@RestrictedSingleUseAction false,
                     interactedBlockPos,
-                    interactedBlockPos.getState()!!
+                    interactedBlockPos.stateOrEmpty
                 ) ?: return@RestrictedSingleUseAction false
 
                 raytraceResult.type == HitResult.Type.BLOCK && raytraceResult.blockPos == interactedBlockPos

@@ -23,19 +23,19 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.google.common.base.Suppliers
 import com.google.common.util.concurrent.Runnables
-import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.buffers.GpuBuffer
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.platform.NativeImage
-import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.renderpearl.api.device.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuSampler
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.renderpearl.api.textures.GpuSampler
+import com.mojang.renderpearl.api.textures.GpuTexture
+import com.mojang.renderpearl.api.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
@@ -78,24 +78,6 @@ inline fun ByteBufferBuilder.begin(pipeline: RenderPipeline): BufferBuilder =
         },
     )
 
-inline fun withOutputTextureOverride(
-    color: GpuTextureView? = null,
-    depth: GpuTextureView? = null,
-    block: () -> Unit,
-) {
-    val oldColor = RenderSystem.outputColorTextureOverride
-    val oldDepth = RenderSystem.outputDepthTextureOverride
-
-    try {
-        RenderSystem.outputColorTextureOverride = color
-        RenderSystem.outputDepthTextureOverride = depth
-        block()
-    } finally {
-        RenderSystem.outputColorTextureOverride = oldColor
-        RenderSystem.outputDepthTextureOverride = oldDepth
-    }
-}
-
 inline fun GpuTexture.clearColor(color: Color4b = Color4b.TRANSPARENT) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color.toVector4f())
 
@@ -104,7 +86,7 @@ inline fun GpuTexture.clearDepth(depth: Double = 0.0) =
 
 fun RenderTarget.clearColorAndDepth(color: Color4b = Color4b.TRANSPARENT, depth: Double = 0.0) {
     val colorAttachment = colorTexture
-    val depthAttachment = depthTexture.takeIf { useDepth }
+    val depthAttachment = depthTexture.takeIf { hasDepth() }
 
     when {
         colorAttachment != null && depthAttachment != null ->
@@ -124,6 +106,28 @@ inline fun GpuBuffer.mapBuffer(read: Boolean = false, write: Boolean = false): G
 
 inline fun GpuBufferSlice.mapBuffer(read: Boolean = false, write: Boolean = false): GpuBufferSlice.MappedView =
     this.map(read, write)
+
+fun GpuBuffer.readFully(): ByteBuffer = read(0L, this.size())
+
+/**
+ * @receiver Should have flag [GpuBuffer.USAGE_MAP_READ]
+ * @return A [ByteBuffer] allocated with [MemoryUtil]
+ */
+fun GpuBuffer.read(offset: Long, length: Long): ByteBuffer = this.map(offset, length, true, false).use {
+    val source = it.data
+    val result = MemoryUtil.memAlloc(source.remaining())
+    try {
+        MemoryUtil.memCopy(
+            MemoryUtil.memAddress(source),
+            MemoryUtil.memAddress(result),
+            result.remaining().toLong(),
+        )
+        result
+    } catch (t: Throwable) {
+        MemoryUtil.memFree(result)
+        throw t
+    }
+}
 
 inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
     gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)

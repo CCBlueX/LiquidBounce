@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.network.sendChatOrCommand
 import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.entity.useItem
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.world.phys.BlockHitResult
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -139,7 +141,12 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
 
                     Action.PLACE_OR_USE -> {
                         val hitResult = mc.hitResult as? BlockHitResult ?: return
-                        doPlacement(hitResult, hand = slot.useHand, swingMode = swingMode)
+                        doPlacement(
+                            hitResult,
+                            RotationManager.currentRotation ?: player.rotation,
+                            hand = slot.useHand,
+                            swingMode = swingMode,
+                        )
                     }
                 }
             }

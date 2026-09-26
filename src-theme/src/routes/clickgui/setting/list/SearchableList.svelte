@@ -8,11 +8,12 @@
     let renderedItems: NamedItem[] = items;
 
     $: {
-        let filteredItems = items;
-        if (searchQuery) {
-            filteredItems = filteredItems.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        }
-        renderedItems = filteredItems;
+        const queryParts = searchQuery.toLowerCase().match(/\S+/g) ?? [];
+
+        renderedItems = items.filter(item => {
+            const name = item.name.toLowerCase();
+            return queryParts.every(part => name.includes(part));
+        });
     }
 </script>
 

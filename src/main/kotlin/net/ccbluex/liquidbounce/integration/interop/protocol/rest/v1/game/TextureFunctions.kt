@@ -20,55 +20,67 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import io.ktor.http.ContentType
+import io.ktor.http.defaultForFilePath
+import io.ktor.http.HttpHeaders
+import io.ktor.server.response.header
+import io.ktor.server.response.respondOutputStream
+import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondImage
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondResource
-import net.ccbluex.liquidbounce.render.gui.ItemImageAtlas
+import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
+import net.ccbluex.liquidbounce.render.atlas.AtlasLookup
+import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
-import net.minecraft.resources.ResourceKey
 import java.util.UUID
 import kotlin.jvm.optionals.getOrNull
 
 // GET /api/v1/client/resource
+//
+// `resources/<namespace>/<path>` from the class path (the client's or an add-on's jar) comes first,
+// then Minecraft's resources.
 private fun Route.getResource() = get {
     val identifier = call.queryParameters["id"]
         ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
         ?: call.badRequest("Invalid identifier $identifier")
-    val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
+    val contentType = ContentType.defaultForFilePath(minecraftIdentifier.path)
 
-    call.respondResource(resource, ContentType.Image.PNG)
+    val bundled = minecraftIdentifier.takeUnless { ".." in it.path }?.let {
+        LiquidBounce::class.java.classLoader.getResource("resources/${it.namespace}/${it.path}")
+    }
+    if (bundled != null) {
+        call.respondOutputStream(contentType) { bundled.openStream().use { it.transferTo(this) } }
+        return@get
+    }
+
+    call.respondResource(mc.resourceManager.getResourceOrThrow(minecraftIdentifier), contentType)
 }
 
 // GET /api/v1/client/resource/itemTexture
 private fun Route.getItemTexture() = get("/itemTexture") {
-    if (!ItemImageAtlas.isAtlasAvailable) {
-        call.internalServerError("Item atlas not available yet")
-    }
-
     val identifier = call.queryParameters["id"]
         ?: call.badRequest("Missing identifier parameter")
     val minecraftIdentifier = Identifier.tryParse(identifier)
         ?: call.badRequest("Invalid identifier $identifier")
 
-    val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
-
-    val of = ResourceKey.create(Registries.ITEM, alternativeIdentifier)
-
-    val image = BuiltInRegistries.ITEM.getValue(of)?.let(ItemImageAtlas::getItemImage)
-        ?: call.badRequest("Item image not found")
-
-    call.respondImage(image)
+    when (val result = ItemImageAtlas.getItemImage(minecraftIdentifier)) {
+        is AtlasLookup.Found -> call.respondBytes(result.bytes, ContentType.Image.PNG)
+        AtlasLookup.Missing -> call.badRequest("Item image not found")
+        AtlasLookup.NotReady -> {
+            call.response.header(HttpHeaders.RetryAfter, 5)
+            call.serviceUnavailable("Item atlas not available yet")
+        }
+    }
 }
 
 // GET /api/v1/client/resource/effectTexture

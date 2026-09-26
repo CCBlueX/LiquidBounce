@@ -59,7 +59,7 @@
 
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
-            {#each nestedSettings as setting (setting.name)}
+            {#each nestedSettings as setting (`${cSetting.active}.${setting.name}`)}
                 <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}
         </div>

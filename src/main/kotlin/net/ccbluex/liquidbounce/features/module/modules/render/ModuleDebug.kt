@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.forEachFloat
 import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.adapter.toUnderlinedString
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -41,6 +43,7 @@ import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
@@ -52,6 +55,8 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.io.File
+import java.time.LocalDateTime
 
 /**
  * Debug module
@@ -69,6 +74,23 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     private val expireTime by int("Expires", 5, 1..30, "secs")
+    private val titleFilter by regex("TitleFilter", Regex(".*"))
+
+    private val debugLog by boolean("DebugLog", false)
+
+    private val outputDir = ConfigSystem.rootFolder.resolve("debug-log").apply { mkdirs() }
+    // TSV: timestamp,debugOwnerId,name,value
+    private var outputFile: File? = null
+
+    fun accepts(owner: DebuggedOwner) = titleFilter.matches(owner.debugDisplayName.string)
+
+    private fun writeLine(
+        time: Long,
+        debuggedKey: DebuggedKey,
+        value: String,
+    ) {
+        outputFile?.appendText("$time\t${debuggedKey.owner.debugOwnerId}\t${debuggedKey.name}\t$value\n")
+    }
 
     private val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -165,10 +187,10 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     private data class DebuggedKey(val owner: DebuggedOwner, val name: String)
 
     private val KEY_COMPARATOR = compareBy<DebuggedKey> { it.owner.debugOwnerId }
-        .thenComparing(DebuggedKey::name)
+        .thenComparing { it.name }
 
     @JvmRecord
-    private data class ParameterCapture(val time: Long = System.currentTimeMillis(), val value: Any?)
+    private data class ParameterCapture(val time: Long, val value: Any?)
 
     private val debugParameters = Object2ObjectRBTreeMap<DebuggedKey, ParameterCapture>(KEY_COMPARATOR)
 
@@ -258,7 +280,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     fun debugGeometry(owner: DebuggedOwner, name: String, geometry: DebuggedGeometry?) {
         // Do not take any new debugging while the module is off
-        if (!running) {
+        if (!running || !accepts(owner)) {
             return
         }
 
@@ -270,27 +292,30 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry?) {
-        if (!running) {
+        if (!running || !accepts(this@debugGeometry)) {
             return
         }
 
-        debugGeometry(owner = this, name, lazyGeometry())
+        debugGeometry(owner = this@debugGeometry, name, lazyGeometry())
     }
 
     fun debugParameter(owner: DebuggedOwner, name: String, value: Any?) {
-        if (!running) {
+        if (!running || !accepts(owner)) {
             return
         }
 
-        debugParameters[DebuggedKey(owner, name)] = ParameterCapture(value = value)
+        val time = System.currentTimeMillis()
+        val debuggedKey = DebuggedKey(owner, name)
+        debugParameters[debuggedKey] = ParameterCapture(time, value)
+        writeLine(time, debuggedKey, value.toString())
     }
 
     inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
-        if (!running) {
+        if (!running || !accepts(this@debugParameter)) {
             return
         }
 
-        debugParameter(owner = this, name, lazyValue())
+        debugParameter(owner = this@debugParameter, name, lazyValue())
     }
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
@@ -303,7 +328,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         fun render()
     }
 
-    class DebuggedLine(line: Line, val color: Color4b) : DebuggedGeometry {
+    class DebuggedLine(private val line: Line, val color: Color4b) : DebuggedGeometry {
         val from: Vec3
         val to: Vec3
 
@@ -316,11 +341,13 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 
@@ -332,23 +359,27 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     ) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3f(),
-                p2 = env.relativeToCamera(p2).toVec3f(),
-                p3 = env.relativeToCamera(p3).toVec3f(),
-                argb = color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawTriangle(
+                    p1 = p1.toVec3f(),
+                    p2 = p2.toVec3f(),
+                    p3 = p3.toVec3f(),
+                    argb = color.argb,
+                )
+            }
         }
     }
 
     class DebuggedLineSegment(val from: Vec3, val to: Vec3, val color: Color4b) : DebuggedGeometry {
         context(env: WorldRenderEnvironment)
         override fun render() {
-            env.drawLine(
-                env.relativeToCamera(from).toVec3f(),
-                env.relativeToCamera(to).toVec3f(),
-                color.argb,
-            )
+            env.withPositionRelativeToCamera {
+                env.drawLine(
+                    from,
+                    to,
+                    color.argb,
+                )
+            }
         }
     }
 
@@ -371,10 +402,18 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         }
     }
 
+    override fun onEnabled() {
+        if (debugLog) {
+            outputFile = outputDir.resolve(LocalDateTime.now().toUnderlinedString() + ".tsv")
+        }
+        super.onEnabled()
+    }
+
     override fun onDisabled() {
         // Might clean up some memory if we disable the module
         debuggedGeometry.clear()
         debugParameters.clear()
+        outputFile = null
         super.onDisabled()
     }
 

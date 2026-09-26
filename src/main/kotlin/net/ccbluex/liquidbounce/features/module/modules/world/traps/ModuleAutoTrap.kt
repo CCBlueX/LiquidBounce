@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
@@ -130,7 +131,8 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@tickHandler
         }
 
-        val raycast = traceFromPlayer()
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val raycast = traceFromPlayer(rotation)
         if (!plan.validate(raycast)) {
             return@tickHandler
         }
@@ -147,6 +149,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
         doPlacement(
             raycast,
+            rotation,
             hand = plan.slot.useHand,
             onPlacementSuccess = onSuccess,
             onItemUseSuccess = onSuccess

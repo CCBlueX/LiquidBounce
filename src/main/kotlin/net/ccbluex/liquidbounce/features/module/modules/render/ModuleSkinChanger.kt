@@ -21,7 +21,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import com.mojang.authlib.services.MinecraftServicesEnvironment
+import com.mojang.authlib.services.response.discovery.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -39,9 +40,8 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
-import net.ccbluex.liquidbounce.authlib.mojangapi.model.ChangeSkinRequest
-import net.ccbluex.liquidbounce.authlib.mojangapi.service.MinecraftServicesApi
-import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.model.ChangeSkinRequest
+import net.ccbluex.liquidbounce.api.thirdparty.mojang.service.MinecraftServicesApi
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -50,7 +50,7 @@ import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraftSessionServiceAccessor
+import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinMinecraftServicesSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
@@ -59,6 +59,7 @@ import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.ClientAsset
+import net.minecraft.core.UUIDUtil
 import net.minecraft.world.entity.player.PlayerModelType
 import net.minecraft.world.entity.player.PlayerSkin
 import okhttp3.MultipartBody
@@ -150,7 +151,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
 
             private suspend fun textureSupplier(username: String): Supplier<PlayerSkin> {
                 val profile = withContext(Dispatchers.IO) {
-                    val uuid = lookupUuidByName(username) ?: generateOfflinePlayerUuid(username)
+                    val uuid = lookupUuidByName(username) ?: UUIDUtil.createOfflinePlayerUUID(username)
                     mc.services.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
@@ -281,20 +282,22 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
     }
 
     private fun canUploadSkin(): Boolean {
-        if (!uploadSkin.get() || mc.user.accountType == "legacy") {
+        if (!running || !uploadSkin.get() || mc.user.accountType == "legacy") {
             return false
         }
 
         val sessionService = mc.services.sessionService
-        if (sessionService !is MixinYggdrasilMinecraftSessionServiceAccessor) {
+        if (sessionService !is MixinMinecraftServicesSessionServiceAccessor) {
             return false
         }
 
-        val baseUrl = sessionService.baseUrl
-        if (!baseUrl.startsWith(YggdrasilEnvironment.PROD.environment.sessionHost)) {
+        val discoveryService = sessionService.discoveryService
+        val sessionUrl = runCatching { discoveryService.getUrl(Service.SESSION, "join") }.getOrNull() ?: ""
+        if (!sessionUrl.startsWith(MinecraftServicesEnvironment.PROD.environment.discoveryUrl
+                    .substringBefore("/minecraft"))) {
             // custom authentication endpoints are used
             // e.g. The Altening
-            logger.info("Skipped skin upload as custom authentication endpoint is used: $baseUrl")
+            logger.info("Skipped skin upload as custom authentication endpoint is used: $sessionUrl")
             return false
         }
 

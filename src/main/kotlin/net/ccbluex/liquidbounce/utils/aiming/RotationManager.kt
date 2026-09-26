@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
@@ -84,6 +85,7 @@ object RotationManager : EventListener {
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
      */
+    @AddonApi
     var currentRotation: Rotation? = null
         private set(value) {
             previousRotation = if (value == null) {
@@ -107,8 +109,19 @@ object RotationManager : EventListener {
     private val freezing
         get() = ModuleFreeze.running
 
+    @AddonApi
     val serverRotation: Rotation
         get() = if (fakeLagging || freezing) theoreticalServerRotation else actualServerRotation
+
+    /**
+     * Yaw used by [net.minecraft.world.entity.Entity.moveRelative] after movement correction.
+     */
+    val movementYaw: Float
+        get() = resolveMovementYaw(
+            playerYaw = player.yRot,
+            managedYaw = currentRotation?.yaw ?: Float.NaN,
+            movementCorrection = activeRotationTarget?.movementCorrection,
+        )
 
     /**
      * The rotation that was already sent to the server and is currently active.
@@ -160,6 +173,7 @@ object RotationManager : EventListener {
         isNormalized = true
     )
 
+    @AddonApi
     @Suppress("LongParameterList")
     fun setRotationTarget(
         rotation: Rotation,
@@ -174,7 +188,12 @@ object RotationManager : EventListener {
         ), priority, provider)
     }
 
-    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) {
+    @AddonApi
+    fun setRotationTarget(plan: RotationTarget, priority: Priority, provider: ClientModule) =
+        setRotationTarget(plan, priority.priority, provider)
+
+    @AddonApi
+    fun setRotationTarget(plan: RotationTarget, priority: Int, provider: ClientModule) {
         if (!allowedToUpdate()) {
             return
         }
@@ -182,7 +201,7 @@ object RotationManager : EventListener {
         rotationTargetHandler.request(
             RequestHandler.Request(
                 if (plan.movementCorrection == MovementCorrection.CHANGE_LOOK) 1 else plan.ticksUntilReset,
-                priority.priority,
+                priority,
                 provider,
                 plan
             )
@@ -363,4 +382,14 @@ object RotationManager : EventListener {
     override val running: Boolean
         get() = inGame
 
+}
+
+internal fun resolveMovementYaw(
+    playerYaw: Float,
+    managedYaw: Float,
+    movementCorrection: MovementCorrection?,
+): Float = if (managedYaw.isFinite() && movementCorrection != null && movementCorrection != MovementCorrection.OFF) {
+    managedYaw
+} else {
+    playerYaw
 }
