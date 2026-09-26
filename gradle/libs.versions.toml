@@ -28,7 +28,7 @@ okhttp = "5.5.0"
 ktor = "3.6.0"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
-fastutil4k = "0.2.8"
+fastutil4k = "0.2.9"
 discord-ipc = "-SNAPSHOT"
 
 # Recommended mods

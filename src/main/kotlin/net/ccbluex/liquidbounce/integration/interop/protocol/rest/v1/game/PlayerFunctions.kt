@@ -166,7 +166,7 @@ data class PlayerInventoryData(
             main = player.inventory.nonEquipmentItems.map(ItemStack::copy),
             crafting = player.inventoryMenu.craftSlots.items.map(ItemStack::copy),
             /** player.enderChestInventory.getHeldStacks().map(ItemStack::copy) */
-            enderChest = EnderChestInventoryTracker.stacks,
+            enderChest = if (player === mc.player) EnderChestInventoryTracker.stacks else [],
         )
     }
 
