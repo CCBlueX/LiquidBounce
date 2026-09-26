@@ -53,6 +53,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceItems
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
@@ -333,6 +334,12 @@ object LiquidBounce : EventListener {
                 MarketplaceConfigs.refresh()
             }
             launch {
+                MarketplaceItems.refresh()
+            }
+            launch {
+                MarketplaceManager.fillAuthors()
+            }
+            launch {
                 IpInfoApi.original
             }
             launch {
@@ -469,7 +476,7 @@ object LiquidBounce : EventListener {
             logger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
             logger.info("Java Version: ${System.getProperty("java.version")}")
             logger.info("Screen Resolution: ${mc.window.screenWidth}x${mc.window.screenHeight}")
-            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+            logger.info("Refresh Rate: ${mc.window.activeVideoMode?.refreshRate} Hz")
 
             // Initialize event manager
             EventManager
@@ -486,8 +493,8 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).thenRun {
-                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
+                ).thenCompose {
+                    ThemeManager.reloader.reload()
                 }
             }
         }.onFailure {

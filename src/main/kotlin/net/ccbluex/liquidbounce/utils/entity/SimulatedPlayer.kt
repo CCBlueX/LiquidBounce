@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionAccessor
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionTrackerAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.math.fastCos
@@ -95,25 +94,14 @@ class SimulatedPlayer(
     private val level: Level get() = player.level()
 
     companion object {
+        /**
+         * In 26.3 [EntityFluidInteraction.update] fully resets all trackers and re-derives
+         * the fluid state from the level every tick, so the only persistent state worth
+         * carrying over is the set of fluids with a current accumulator.
+         */
         private fun EntityFluidInteraction.deepCopy(): EntityFluidInteraction {
-            val sourceTrackers = (this as MixinEntityFluidInteractionAccessor).trackerByFluid()
-            val copy = EntityFluidInteraction(sourceTrackers.keys)
-            @Suppress("CAST_NEVER_SUCCEEDS")
-            val targetTrackers = (copy as MixinEntityFluidInteractionAccessor).trackerByFluid()
-
-            for ((fluid, sourceTracker) in sourceTrackers) {
-                val targetTracker = targetTrackers[fluid] ?: continue
-
-                val sourceAccessor = sourceTracker as MixinEntityFluidInteractionTrackerAccessor
-                val targetAccessor = targetTracker as MixinEntityFluidInteractionTrackerAccessor
-
-                targetAccessor.height(sourceAccessor.height())
-                targetAccessor.eyesInside(sourceAccessor.eyesInside())
-                targetAccessor.accumulatedCurrent(sourceAccessor.accumulatedCurrent())
-                targetAccessor.currentCount(sourceAccessor.currentCount())
-            }
-
-            return copy
+            val fluids = (this as MixinEntityFluidInteractionAccessor).currentAccumulators().keys
+            return EntityFluidInteraction(fluids)
         }
 
         @JvmStatic
@@ -170,6 +158,20 @@ class SimulatedPlayer(
                 player.isUnderWater,
                 player.fluidInteraction.deepCopy(),
             )
+        }
+
+        /**
+         * TODO(26.3): should be replaced
+         */
+        @JvmStatic
+        fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
+            val realXRot = xRot * (Math.PI.toFloat() / 180f)
+            val realYRot = -yRot * (Math.PI.toFloat() / 180f)
+            val yCos = Mth.cos(realYRot.toDouble())
+            val ySin = Mth.sin(realYRot.toDouble())
+            val xCos = Mth.cos(realXRot.toDouble())
+            val xSin = Mth.sin(realXRot.toDouble())
+            return Vec3((ySin * xCos).toDouble(), (-xSin).toDouble(), (yCos * xCos).toDouble())
         }
     }
 
@@ -871,20 +873,6 @@ class SimulatedPlayer(
      * @see net.minecraft.world.entity.Entity.getViewVector
      */
     private fun getViewVector(): Vec3 = calculateViewVector(this.xRot, this.yRot)
-
-    /**
-     * Mirrors 26.1 `Entity#calculateViewVector(float, float)`.
-     * @see net.minecraft.world.entity.Entity.calculateViewVector
-     */
-    private fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
-        val realXRot = xRot * (Math.PI.toFloat() / 180f)
-        val realYRot = -yRot * (Math.PI.toFloat() / 180f)
-        val yCos = Mth.cos(realYRot.toDouble())
-        val ySin = Mth.sin(realYRot.toDouble())
-        val xCos = Mth.cos(realXRot.toDouble())
-        val xSin = Mth.sin(realXRot.toDouble())
-        return Vec3((ySin * xCos).toDouble(), (-xSin).toDouble(), (yCos * xCos).toDouble())
-    }
 
     private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
         val instance = player.getEffect(effect) ?: return false

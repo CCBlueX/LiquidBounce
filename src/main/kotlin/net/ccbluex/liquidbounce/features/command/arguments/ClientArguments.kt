@@ -128,9 +128,9 @@ class Vec3ArgumentType(
                     val origin = player.position()
                     Vec3(coordinates.x().get(origin.x), coordinates.y().get(origin.y), coordinates.z().get(origin.z))
                 }
-                is LocalCoordinates -> Vec3.applyLocalCoordinatesToRotation(
-                    player.rotationVector,
+                is LocalCoordinates -> coordinates.apply(
                     Vec3(coordinates.left(), coordinates.up(), coordinates.forwards()),
+                    player.rotationVector,
                 ).add(player.position())
                 else -> error("Unexpected Coordinates implementation: ${coordinates::class}")
             }

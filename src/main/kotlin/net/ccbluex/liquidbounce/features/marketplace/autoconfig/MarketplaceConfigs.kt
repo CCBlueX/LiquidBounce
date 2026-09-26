@@ -96,7 +96,10 @@ object MarketplaceConfigs {
         listOf(MarketplaceItemType.CONFIG, MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT)
     )
 
-    private suspend fun lookup(input: String, types: List<MarketplaceItemType>) = runCatching {
+    /**
+     * Items of [types] that [input] names, like [find]. A bare name goes to the first of [types] that has it.
+     */
+    internal suspend fun lookup(input: String, types: List<MarketplaceItemType>) = runCatching {
         when {
             input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
                 listOf(MarketplaceApi.getMarketplaceItemByCode(input))

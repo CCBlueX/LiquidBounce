@@ -70,6 +70,8 @@ import java.security.MessageDigest
  * A config's config dependencies are applied before it, depth-first in their order, and
  * its add-on and script dependencies are installed. The settings after the dependencies are
  * its base: an overlay only publishes what differs from it.
+ *
+ * Loading a local config over it stops tracking, unless the local config was saved from it; see [loadedLocal].
  */
 @Suppress("TooManyFunctions")
 object ConfigTracker : Config("MarketplaceConfig"), EventListener {
@@ -104,6 +106,13 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         private set
     var revisionId by int("RevisionId", 0, 0..Int.MAX_VALUE)
         private set
+
+    /**
+     * The local config that last replaced the settings, until a marketplace config does.
+     */
+    var localName by text("LocalName", "")
+        private set
+
     private var backupName by text("BackupName", "")
     private var chainText by text("Chain", "")
     private var baseText by text("Base", "")
@@ -190,6 +199,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 baseText = base?.let(::encodeHashes).orEmpty()
                 baselineText = encodeHashes(snapshot())
                 state = State.TRACKED
+                localName = ""
             }
         }
 
@@ -246,6 +256,32 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                 updateTracking { clearItem() }
             }
         }
+    }
+
+    /**
+     * Id of the tracked config, which a local config saved now keeps as its origin.
+     */
+    val trackedItemId get() = itemId.takeIf { state != State.NONE }
+
+    /**
+     * Settings of the local config [name] were applied, only some modules of it when [partial]. A partial load,
+     * or one of a config saved from the tracked one ([origin] is its [trackedItemId]), goes on as edits of the
+     * tracked config. Any other replaces it: tracking stops, the backup stays.
+     *
+     * @return the address of the config no longer tracked, if any
+     */
+    fun loadedLocal(name: String, origin: Int?, partial: Boolean): String? {
+        if (partial || state != State.NONE && origin == itemId) {
+            recheck()
+            return null
+        }
+
+        val untracked = address.takeIf { state != State.NONE }
+        updateTracking {
+            clearItem()
+            localName = name
+        }
+        return untracked
     }
 
     /**
@@ -440,6 +476,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         baseText = base?.let(::encodeHashes).orEmpty()
         baselineText = encodeHashes(snapshot())
         state = State.TRACKED
+        localName = ""
     }
 
     /**
@@ -589,6 +626,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     private fun clearItem() {
         state = State.NONE
+        localName = ""
         itemId = 0
         itemName = ""
         itemUid = ""

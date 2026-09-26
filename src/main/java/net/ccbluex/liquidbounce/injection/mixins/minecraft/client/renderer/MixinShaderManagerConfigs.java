@@ -19,19 +19,28 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.renderer;
 
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.minecraft.client.renderer.ShaderManager;
+import com.mojang.renderpearl.api.pipeline.ShaderType;
+import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.render.ClientShaders;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ShaderManager.class)
-public abstract class MixinShaderManager {
+import java.util.Locale;
 
-    @Inject(method = "apply(Lnet/minecraft/client/renderer/ShaderManager$Configs;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("TAIL"))
-    private void reloadClientPipelines(CallbackInfo info) {
-        ClientRenderPipelines.INSTANCE.precompile();
+@Mixin(targets = "net.minecraft.client.renderer.ShaderManager$Configs")
+public abstract class MixinShaderManagerConfigs {
+
+    @Inject(method = "getShader", at = @At("HEAD"), cancellable = true)
+    private void getLiquidBounceShader(
+        Identifier id,
+        ShaderType type,
+        CallbackInfoReturnable<String> cir
+    ) {
+        if (id.getNamespace().equals(LiquidBounce.CLIENT_NAME.toLowerCase(Locale.ROOT))) {
+            cir.setReturnValue(ClientShaders.Source.getShader(id, type));
+        }
     }
-
 }
