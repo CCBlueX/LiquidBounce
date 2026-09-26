@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.EntitySelectorValueGroup
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -46,6 +47,8 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "${ConfigSystem.KEY_PREFIX}.module.esp"
+
+    private val entitySelector = tree(EntitySelectorValueGroup("Entities"))
 
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
@@ -67,6 +70,8 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     private val friendColor by color("Friends", Color4b.GREEN)
 
     internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
+    internal fun shouldRender(entity: LivingEntity): Boolean = entitySelector.matches(entity)
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -100,6 +105,6 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
      * Check if the entity requires true sight to be shown with the current ESP mode
      */
     fun requiresTrueSight(entity: LivingEntity) =
-        modes.activeMode.requiresTrueSight && entity.shouldBeShown()
+        modes.activeMode.requiresTrueSight && shouldRender(entity) && entity.shouldBeShown()
 
 }
