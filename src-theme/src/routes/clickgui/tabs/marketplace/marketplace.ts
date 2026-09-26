@@ -9,7 +9,6 @@ import type {
     MarketplaceInstallResult,
     MarketplaceItem,
     MarketplaceItemType,
-    MarketplaceLinkedConfig,
     MarketplacePublished,
     MarketplaceRevision
 } from "../../../../integration/types";
@@ -122,7 +121,7 @@ export function typeName(type: MarketplaceItemType): string {
  * The dialog on screen. [ondone] runs after an edit or delete went through.
  */
 export type DialogRequest =
-    | { kind: "load"; config: MarketplaceLinkedConfig }
+    | { kind: "load"; config: { id: number; address: string } }
     | { kind: "publish" }
     | { kind: "published"; published: MarketplacePublished }
     | { kind: "update" }

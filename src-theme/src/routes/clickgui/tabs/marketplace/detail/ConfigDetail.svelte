@@ -39,8 +39,8 @@
     const config = $derived(detail?.config);
     const tracking = $derived(config && tracker?.id === config.id ? tracker.state : "None");
     const canUpdate = $derived(loggedIn && tracking === "Editing" && !!tracker?.own);
-    const configs = $derived(detail?.dependencies.filter(d => !d.status) ?? []);
-    const installs = $derived(detail?.dependencies.filter(d => !!d.status) ?? []);
+    const configs = $derived(detail?.configs ?? []);
+    const installs = $derived(detail?.installs ?? []);
     const owner = $derived(!!config?.own && loggedIn);
     const composed = $derived(configs.length > 0 || installs.length > 0 || !!detail?.changes?.length);
     const stats = $derived(config && detail ? [
@@ -93,7 +93,7 @@
             image={config?.image ?? UNKNOWN_SERVER} address={config?.address}
             badges={config ? configBadges(config, tracking, config.overlayOn ? "Overlay" : detail?.forkOf && "Fork") : []}
             subtitle="Updated {ago(config?.updatedAt)}{detail?.createdAt ? ` · published ${date(detail.createdAt)}` : ''}"
-            description={detail?.description || detail?.summary}>
+            description={detail?.description}>
     {#snippet actions()}
         {#if detail?.shareCode && loggedIn}
             <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
@@ -133,16 +133,15 @@
                 {#if installs.length > 0}
                     <SectionLabel text="Installs"/>
                     <div class="list">
-                        {#each installs as dependency (dependency.id)}
-                            {@const status = dependency.status!!}
-                            <ListRow image={dependency.image ?? UNKNOWN_PACK} title={dependency.address} dim={!!status.notFor}
+                        {#each installs as item (item.id)}
+                            <ListRow image={item.image ?? UNKNOWN_PACK} title={item.author ? `${item.author}/${item.name}` : item.name}
                                      badges={present(
-                                         typeName(dependency.type),
-                                         status.subscribed && !!status.installed && version(status.installed),
-                                         status.restartRequired && "Restart needed"
+                                         typeName(item.type),
+                                         item.subscribed && !!item.installed && version(item.installed),
+                                         item.restartRequired && "Restart needed"
                                      )}
-                                     subtitle={status.notFor ? `Not for ${status.notFor}` : status.summary}
-                                     onclick={() => onopen("item", dependency.id)}/>
+                                     subtitle={item.notFor ? `Not for ${item.notFor}` : item.summary}
+                                     dim={!!item.notFor} onclick={() => onopen("item", item.id)}/>
                         {/each}
                     </div>
                 {/if}

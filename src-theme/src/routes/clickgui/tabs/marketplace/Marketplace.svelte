@@ -38,7 +38,6 @@
         MarketplaceContext,
         MarketplaceInstalledItem,
         MarketplaceItem,
-        MarketplaceLinkedConfig,
         MarketplacePagination
     } from "../../../../integration/types";
     import {listen} from "../../../../integration/ws";
@@ -268,10 +267,6 @@
         persistFilters();
     }
 
-    function openLoad(config: MarketplaceLinkedConfig) {
-        dialog.set({kind: "load", config});
-    }
-
     async function report(config: MarketplaceConfig, works: boolean) {
         const result = await attempt(() => reportMarketplaceConfig(config.id, works));
         if (result) {
@@ -431,7 +426,7 @@
                         {/snippet}
                         <ListRow image={config.image ?? UNKNOWN_SERVER} address={config.address} subtitle={configLine(config)}
                                  badges={[
-                                     ...configBadges(config, config.tracking, config.overlayOn && `Overlay on ${config.overlayOn.address}`),
+                                     ...configBadges(config, config.tracking, config.overlayOn && `Overlay on ${config.overlayOn}`),
                                      ...config.tags
                                  ]}
                                  active={config.tracking !== "None"} onclick={() => open("config", config.id)}
@@ -441,7 +436,7 @@
                                 <span class="downloads">{count(config.downloads)} downloads</span>
                             {/snippet}
                             {#snippet actions()}
-                                <PillButton title="Load" primary onclick={() => openLoad(config)}/>
+                                <PillButton title="Load" primary onclick={() => dialog.set({kind: "load", config})}/>
                             {/snippet}
                         </ListRow>
                     {/each}

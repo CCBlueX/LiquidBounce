@@ -16,6 +16,7 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    MarketplaceConfig,
     MarketplaceConfigDetail,
     MarketplaceConfigDetails,
     MarketplaceConfigPage,
@@ -25,12 +26,10 @@ import type {
     MarketplaceInstallResult,
     MarketplaceItem,
     MarketplaceItemDetail,
-    MarketplaceItemPage,
     MarketplaceItemType,
     MarketplaceLoadPlan,
-    MarketplaceLoadResult,
+    MarketplacePage,
     MarketplacePublished,
-    MarketplaceReport,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -942,14 +941,12 @@ export async function getMarketplaceLoadPlan(id: number): Promise<MarketplaceLoa
     return await marketplaceRequest(`/configs/${id}/plan`);
 }
 
-export async function loadMarketplaceConfig(id: number, modules: string[] | null): Promise<MarketplaceLoadResult> {
+export async function loadMarketplaceConfig(id: number, modules: string[] | null): Promise<MarketplaceInstallResult> {
     return await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
 }
 
-export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceReport> {
-    return works === null
-        ? await marketplaceRequest(`/configs/${id}/report`, "DELETE")
-        : await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
+export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceConfig> {
+    return await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
 }
 
 export async function copyMarketplaceShareCode(id: number): Promise<string> {
@@ -988,7 +985,7 @@ export async function getMarketplaceItems(
     page: number,
     query: string,
     sort: "top" | "new"
-): Promise<MarketplaceItemPage> {
+): Promise<MarketplacePage<MarketplaceItem>> {
     const searchParams = new URLSearchParams({type, page: page.toString(), query, sort});
 
     return await marketplaceRequest(`/items?${searchParams.toString()}`);

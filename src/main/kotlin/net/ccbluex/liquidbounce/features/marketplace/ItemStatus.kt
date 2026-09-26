@@ -43,7 +43,7 @@ internal data class ItemStatus(
     val installable get() = !subscribed && fitting != null && !unavailable
 }
 
-internal suspend fun MarketplaceItem.checkStatus(): ItemStatus {
+internal suspend fun MarketplaceItem.itemStatus(): ItemStatus {
     val subscribed = MarketplaceManager.getItem(id) ?: return plannedStatus()
 
     val resolution = subscribed.locked { subscribed.resolveRevision(known = this) }
@@ -53,7 +53,7 @@ internal suspend fun MarketplaceItem.checkStatus(): ItemStatus {
         compatible?.revision?.takeIf { it.id == revisionId }
             ?: orNotFound { MarketplaceApi.getMarketplaceItemRevision(id, revisionId) }
     }
-    val runtime = if (type == MarketplaceItemType.SCRIPT) runtimeOf(resolveDependencies(id)) else null
+    val runtime = if (type == MarketplaceItemType.SCRIPT) runtimeOf(dependenciesOf(id)) else null
 
     return ItemStatus(
         subscribed = true,
@@ -66,7 +66,7 @@ internal suspend fun MarketplaceItem.checkStatus(): ItemStatus {
 }
 
 private suspend fun MarketplaceItem.plannedStatus(): ItemStatus {
-    val dependencies = resolveDependencies(id)
+    val dependencies = dependenciesOf(id)
     val plan = planInstalls(dependencies.installables + Installable(this, dependencies.needs))
 
     return ItemStatus(

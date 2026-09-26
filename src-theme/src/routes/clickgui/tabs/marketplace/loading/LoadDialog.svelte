@@ -6,11 +6,11 @@
     import ListRow from "../ui/ListRow.svelte";
     import TextField from "../ui/TextField.svelte";
     import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../../integration/rest";
-    import type {MarketplaceLinkedConfig, MarketplaceLoadPlan} from "../../../../../integration/types";
+    import type {MarketplaceLoadPlan} from "../../../../../integration/types";
     import {attempt, dialog, type DialogRequest, notify, present, typeName, UNKNOWN_PACK, version} from "../marketplace";
 
     // The last config stays while the dialog fades out
-    let config = $state.raw<MarketplaceLinkedConfig | null>(null);
+    let config = $state.raw<{ id: number; address: string } | null>(null);
     let seen: DialogRequest | null = null;
     let plan = $state<MarketplaceLoadPlan | null>(null);
     let pick = $state(false);
@@ -69,7 +69,7 @@
                 {#each plan.installs as install (install.id)}
                     <ListRow image={install.image ?? UNKNOWN_PACK} title={install.name}
                              badges={present(install.restart && "Restart needed")}
-                             subtitle="{typeName(install.type)} · {version(install.revision)}"/>
+                             subtitle="{typeName(install.type)} · {version(install.revision!)}"/>
                 {/each}
             </div>
         {/if}

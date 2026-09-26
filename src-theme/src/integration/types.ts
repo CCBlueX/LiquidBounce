@@ -594,16 +594,24 @@ export interface MarketplacePagination {
     items: number;
 }
 
+export interface MarketplacePage<T> {
+    items: T[];
+    pagination: MarketplacePagination;
+}
+
+/**
+ * [code] tells a page found by share code; [unfeatured] counts the configs the featured filter hides.
+ */
+export interface MarketplaceConfigPage extends MarketplacePage<MarketplaceConfig> {
+    code: boolean;
+    unfeatured: number;
+}
+
 export interface MarketplaceContext {
     server?: string;
     autoConfig: boolean;
     onlyFeatured: boolean;
     user?: string;
-}
-
-export interface MarketplaceLinkedConfig {
-    id: number;
-    address: string;
 }
 
 export interface MarketplaceConfig {
@@ -621,17 +629,41 @@ export interface MarketplaceConfig {
     fails: number;
     downloads: number;
     updatedAt?: number;
-    overlayOn?: MarketplaceLinkedConfig;
+    overlayOn?: string;
     tracking: ConfigTrackerState;
     own: boolean;
     visibility?: MarketplaceVisibility;
 }
 
-export interface MarketplaceConfigPage {
-    items: MarketplaceConfig[];
-    pagination: MarketplacePagination;
-    code: boolean;
-    unfeatured: number;
+export interface MarketplaceLinkedConfig {
+    id: number;
+    address: string;
+    image?: string;
+    featured: boolean;
+}
+
+export interface MarketplaceConfigRevision {
+    id: number;
+    createdAt?: number;
+    changelog?: string;
+    works: number;
+    fails: number;
+    latest: boolean;
+    loaded: boolean;
+    first: boolean;
+}
+
+export interface MarketplaceConfigDetail {
+    config: MarketplaceConfig;
+    description: string;
+    createdAt?: number;
+    shareCode?: string;
+    forkOf?: MarketplaceLinkedConfig;
+    configs: MarketplaceLinkedConfig[];
+    installs: MarketplaceItem[];
+    revisions: MarketplaceConfigRevision[];
+    changes?: string[];
+    report?: boolean;
 }
 
 export interface MarketplaceRevision {
@@ -662,91 +694,34 @@ export interface MarketplaceItem {
     inUse: boolean;
 }
 
-export interface MarketplaceItemPage {
-    items: MarketplaceItem[];
-    pagination: MarketplacePagination;
-}
-
-export interface MarketplaceVersion {
-    revision: MarketplaceRevision;
-    installed: boolean;
-    fits: boolean;
-}
-
 export interface MarketplaceItemDetail {
     item: MarketplaceItem;
     description: string;
     liquidbounce: string;
-    versions: MarketplaceVersion[];
+    versions: {
+        revision: MarketplaceRevision;
+        installed: boolean;
+        fits: boolean;
+    }[];
 }
 
-export interface MarketplaceDependency {
+export interface MarketplacePlannedItem {
     id: number;
     type: MarketplaceItemType;
-    address: string;
+    name: string;
     image?: string;
-    order?: number;
-    featured: boolean;
-    protocol?: string;
-    protocolMatches: boolean;
-    status?: MarketplaceItem;
-}
-
-export interface MarketplaceConfigRevision {
-    id: number;
-    createdAt?: number;
-    changelog?: string;
-    works: number;
-    fails: number;
-    latest: boolean;
-    loaded: boolean;
-    first: boolean;
-}
-
-export interface MarketplaceConfigDetail {
-    config: MarketplaceConfig;
-    summary: string;
-    description: string;
-    createdAt?: number;
-    shareCode?: string;
-    forkOf?: MarketplaceLinkedConfig;
-    dependencies: MarketplaceDependency[];
-    revisions: MarketplaceConfigRevision[];
-    changes?: string[];
-    report?: boolean;
+    revision?: MarketplaceRevision;
+    restart: boolean;
 }
 
 export interface MarketplaceLoadPlan {
-    installs: {
-        id: number;
-        type: MarketplaceItemType;
-        name: string;
-        author?: string;
-        image?: string;
-        revision: MarketplaceRevision;
-        restart: boolean;
-    }[];
-    leftOut: {
-        id: number;
-        type: MarketplaceItemType;
-        name: string;
-        image?: string;
-    }[];
+    installs: MarketplacePlannedItem[];
+    leftOut: MarketplacePlannedItem[];
     modules: string[];
-}
-
-export interface MarketplaceLoadResult {
-    installed: string[];
 }
 
 export interface MarketplaceInstallResult {
     installed: string[];
-}
-
-export interface MarketplaceReport {
-    works: number;
-    fails: number;
-    report?: boolean;
 }
 
 export interface ConfigTracker {
@@ -756,13 +731,11 @@ export interface ConfigTracker {
     image?: string;
     own: boolean;
     backup: boolean;
-    edited: string[];
 }
 
 export interface MarketplacePublished {
     id: number;
     address: string;
-    visibility?: MarketplaceVisibility;
     shareCode?: string;
 }
 

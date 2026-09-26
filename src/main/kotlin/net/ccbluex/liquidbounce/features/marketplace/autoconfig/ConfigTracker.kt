@@ -51,10 +51,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.InstallPlan
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
+import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.marketplace.planInstalls
-import net.ccbluex.liquidbounce.features.marketplace.resolveDependencies
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import java.io.File
@@ -176,7 +176,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = resolveDependencies(item.id)
+        val dependencies = dependenciesOf(item.id)
         val (installed, unavailable) = installDependencies(dependencies.installables)
         val chain = dependencies.configs.map { Step(it.item.id, it.revision.id) }
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
@@ -223,7 +223,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * cache [load] reads them from.
      */
     internal suspend fun plan(item: MarketplaceItem, revisionId: Int): LoadPlan {
-        val dependencies = resolveDependencies(item.id)
+        val dependencies = dependenciesOf(item.id)
         val steps = dependencies.configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
         return LoadPlan(
             installs = planInstalls(dependencies.installables),
@@ -477,13 +477,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         baselineText = encodeHashes(snapshot())
         state = State.TRACKED
         localName = ""
-    }
-
-    /**
-     * The modules changed since the tracked config was applied.
-     */
-    internal suspend fun changedModules(): Set<String> = withContext(Dispatchers.Main) {
-        changedSince(decodeHashes(baselineText)).modules
     }
 
     private class Subset(val modules: Set<String>, val spoofers: Boolean)

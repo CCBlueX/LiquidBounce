@@ -61,7 +61,7 @@ internal val MarketplaceItem.installNeedsRestart
  * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order they are
  * applied, installables after the ones they need, so an add-on is checked with those installed.
  */
-internal suspend fun resolveDependencies(rootId: Int): Dependencies {
+internal suspend fun dependenciesOf(rootId: Int): Dependencies {
     val configs = linkedMapOf<Int, ConfigDependency>()
     val installables = linkedMapOf<Int, Installable>()
     val visiting = hashSetOf<Int>()
@@ -111,32 +111,23 @@ internal suspend fun resolveDependencies(rootId: Int): Dependencies {
  */
 internal suspend fun installDependencies(installables: Collection<Installable>): Installed {
     val installed = mutableListOf<MarketplaceItem>()
-    val leftOut = linkedMapOf<Int, Unavailable>()
-    for (installable in installables) {
-        val item = installable.item
-        if (MarketplaceManager.isSubscribed(item.id)) {
-            continue
-        }
-
-        val reason = leftOutReason(installable, leftOut) ?: try {
+    val skipped = leftOut(installables) { item ->
+        try {
             MarketplaceManager.subscribe(item)
             installed += item
             null
         } catch (e: NoCompatibleRevisionException) {
             e.unavailable
         }
-        if (reason != null) {
-            leftOut[item.id] = reason
-        }
     }
-    return Installed(installed, leftOut.values.distinct())
+    return Installed(installed, skipped.map { it.unavailable }.distinct())
 }
 
 /**
  * Subscribes to [item] after what it needs, as [installDependencies] does.
  */
 internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
-    val dependencies = resolveDependencies(item.id)
+    val dependencies = dependenciesOf(item.id)
     return installDependencies(dependencies.installables + Installable(item, dependencies.needs))
 }
 
@@ -145,38 +136,41 @@ internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
  */
 internal suspend fun planInstalls(installables: Collection<Installable>): InstallPlan {
     val installs = mutableListOf<PlannedInstall>()
-    val leftOut = mutableListOf<LeftOut>()
-    val missing = hashMapOf<Int, Unavailable>()
+    val skipped = leftOut(installables) { item ->
+        val subscribed = SubscribedItem(item)
+        when (val resolution = subscribed.locked { subscribed.resolveRevision(known = item) }) {
+            is RevisionResolution.Compatible -> {
+                installs += PlannedInstall(item, resolution)
+                null
+            }
+
+            is RevisionResolution.NoneCompatible -> resolution.unavailable
+        }
+    }
+    return InstallPlan(installs, skipped)
+}
+
+/**
+ * What of the [installables] is left out, running [install] for each missing one: the inactive ones, the ones
+ * [install] gives a reason for, and what needs any of those, with its reason.
+ */
+private suspend fun leftOut(
+    installables: Collection<Installable>,
+    install: suspend (MarketplaceItem) -> Unavailable?
+): List<LeftOut> {
+    val leftOut = linkedMapOf<Int, LeftOut>()
     for (installable in installables) {
         val item = installable.item
         if (MarketplaceManager.isSubscribed(item.id)) {
             continue
         }
 
-        val reason = leftOutReason(installable, missing) ?: run {
-            val subscribed = SubscribedItem(item)
-            when (val resolution = subscribed.locked { subscribed.resolveRevision(known = item) }) {
-                is RevisionResolution.Compatible -> {
-                    installs += PlannedInstall(item, resolution)
-                    continue
-                }
-
-                is RevisionResolution.NoneCompatible -> resolution.unavailable
-            }
+        val reason = installable.needs.firstNotNullOfOrNull { leftOut[it]?.unavailable }
+            ?: Unavailable(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
+            ?: install(item)
+        if (reason != null) {
+            leftOut[item.id] = LeftOut(item, reason)
         }
-
-        leftOut += LeftOut(item, reason)
-        missing[item.id] = reason
     }
-    return InstallPlan(installs, leftOut)
-}
-
-/**
- * Why [installable] cannot be installed before its revisions are looked at: it is not active, or it
- * needs one of [leftOut], whose reason it takes over.
- */
-private fun leftOutReason(installable: Installable, leftOut: Map<Int, Unavailable>): Unavailable? {
-    val item = installable.item
-    return installable.needs.firstNotNullOfOrNull(leftOut::get)
-        ?: Unavailable(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
+    return leftOut.values.toList()
 }

@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
-
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import io.ktor.http.HttpStatusCode
@@ -31,176 +29,53 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
-import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.UpdateResult
-import net.ccbluex.liquidbounce.features.marketplace.checkStatus
 import net.ccbluex.liquidbounce.features.marketplace.installWithDependencies
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.logger
 
 private const val PAGE_SIZE = 20
-private const val REVIEW_PAGE_SIZE = 100
 private const val REVISION_PAGE_SIZE = 50
-private const val SUMMARY_LENGTH = 200
-
-/**
- * [liquidbounce] are the LiquidBounce versions an add-on revision works with.
- */
-internal data class RevisionView(
-    val id: Int,
-    val version: String,
-    val liquidbounce: String?,
-    val createdAt: Long?,
-    val changelog: String?,
-)
-
-/**
- * An add-on, script or theme as the marketplace tab lists it. [notFor] is the running LiquidBounce
- * when nothing fits it.
- */
-internal data class ItemRow(
-    val id: Int,
-    val type: MarketplaceItemType,
-    val name: String,
-    val author: String?,
-    val image: String?,
-    val summary: String,
-    val featured: Boolean,
-    val downloads: Int,
-    val rating: Double?,
-    val reviews: Int,
-    val subscribed: Boolean,
-    val installable: Boolean,
-    val notFor: String?,
-    val installed: RevisionView?,
-    val update: Boolean,
-    val restartRequired: Boolean,
-    val inUse: Boolean,
-)
-
-private data class ItemPage(val items: List<ItemRow>, val pagination: Pagination)
-
-private data class VersionRow(val revision: RevisionView, val installed: Boolean, val fits: Boolean)
-
-/**
- * [liquidbounce] is the version of the running LiquidBounce, which the versions that do not fit are not for.
- */
-private data class ItemDetail(
-    val item: ItemRow,
-    val description: String,
-    val liquidbounce: String,
-    val versions: List<VersionRow>,
-)
-
-private data class InstallResult(val installed: List<String>)
-
-private data class InstalledItem(val id: Int, val type: MarketplaceItemType, val name: String)
-
-internal fun MarketplaceItemRevision.view() = RevisionView(
-    id = id,
-    version = version,
-    liquidbounce = liquidbounce?.toString(),
-    createdAt = epochMillis(createdAt),
-    changelog = changelog?.takeIf(String::isNotBlank),
-)
-
-internal fun MarketplaceItem.summary() = description.lineSequence()
-    .map(String::trim)
-    .firstOrNull { it.isNotEmpty() && !it.startsWith("![") }
-    ?.removePrefix("#")?.trim()
-    ?.take(SUMMARY_LENGTH)
-    .orEmpty()
-
-internal suspend fun itemRow(item: MarketplaceItem): ItemRow = coroutineScope {
-    val rating = async { rating(item.id) }
-    val status = item.checkStatus()
-
-    ItemRow(
-        id = item.id,
-        type = item.type,
-        name = item.name,
-        author = item.author,
-        image = item.thumbnailPid?.let(MarketplaceApi::fileUrl),
-        summary = item.summary(),
-        featured = item.featured,
-        downloads = item.downloads,
-        rating = rating.await().first,
-        reviews = rating.await().second,
-        subscribed = status.subscribed,
-        installable = status.installable,
-        notFor = if (status.notFor) "v${AddonInstaller.liquidbounce}" else null,
-        installed = status.installed?.view(),
-        update = status.hasUpdate,
-        restartRequired = status.restartRequired,
-        inUse = ThemeManager.marketplaceThemes[item.id]?.let { it === ThemeManager.theme } == true,
-    )
-}
-
-/**
- * The average of every review and how many there are. Reviews failing to load leave the row without
- * a rating rather than without the row.
- */
-private suspend fun rating(id: Int): Pair<Double?, Int> {
-    val ratings = mutableListOf<Int>()
-    var page = 1
-    try {
-        do {
-            val reviews = MarketplaceApi.getReviews(id, page, REVIEW_PAGE_SIZE)
-            reviews.items.mapTo(ratings) { it.rating }
-        } while (page++ < reviews.pagination.pages)
-    } catch (e: Exception) {
-        if (e.httpException == null) throw e
-        logger.debug("Failed to load the reviews of marketplace item $id", e)
-        return null to 0
-    }
-    return ratings.average().takeIf { ratings.isNotEmpty() } to ratings.size
-}
 
 private fun Route.getItems() = get {
-    val parameters = call.queryParameters
-    val type = MarketplaceItemType.entries.find { it.tag.equals(parameters["type"], true) && it.isSubscribable }
-        ?: call.badRequest("Unknown type ${parameters["type"]}")
-    val page = parameters["page"]?.toIntOrNull() ?: 1
-    val query = parameters["query"]?.trim()?.takeIf(String::isNotEmpty)
-    val sort = if (parameters["sort"] == "new") MarketplaceApi.Sort.CREATED else MarketplaceApi.Sort.SCORE
+    val name = call.queryParameters["type"]
+    val type = MarketplaceItemType.entries.find { it.tag.equals(name, true) && it.isSubscribable }
+        ?: call.badRequest("Unknown type $name")
+    val list = call.listQuery
 
-    val response = call.marketplace {
+    call.respondMarketplace {
         val response = MarketplaceApi.getMarketplaceItems(
-            page = page,
+            page = list.page,
             limit = PAGE_SIZE,
-            query = query,
+            query = list.query,
             type = type,
-            filter = MarketplaceApi.Filter(sort = sort)
+            filter = MarketplaceApi.Filter(sort = list.sort)
         )
-        val items = coroutineScope { response.items.map { async { itemRow(it) } }.awaitAll() }
-        ItemPage(items, response.pagination)
+        val items = coroutineScope { response.items.map { async { itemView(it) } }.awaitAll() }
+        PageView(items, response.pagination)
     }
-    call.respond(response)
 }
 
 private fun Route.getItem() = get {
     val id = call.requireId()
-    val detail = call.marketplace {
+    call.respondMarketplace {
         val item = MarketplaceApi.getMarketplaceItem(id)
-        ItemDetail(itemRow(item), item.description, "v${AddonInstaller.liquidbounce}", versions(item))
+        ItemDetailView(itemView(item), item.description, "v${AddonInstaller.liquidbounce}", versions(item))
     }
-    call.respond(detail)
 }
 
 /**
  * Every revision, newest first. For an add-on, only those the marketplace offers for this game fit.
  */
-private suspend fun versions(item: MarketplaceItem): List<VersionRow> {
+private suspend fun versions(item: MarketplaceItem): List<VersionView> {
     val revisions = revisions(item.id)
     val fitting = if (item.type == MarketplaceItemType.ADDON) {
         revisions(item.id, AddonInstaller.minecraft, AddonInstaller.liquidbounce).mapTo(HashSet()) { it.id }
@@ -210,7 +85,7 @@ private suspend fun versions(item: MarketplaceItem): List<VersionRow> {
     val installed = MarketplaceManager.getItem(item.id)?.installedRevisionId
 
     return revisions.map { revision ->
-        VersionRow(revision.view(), revision.id == installed, fitting == null || revision.id in fitting)
+        VersionView(revision.view(), revision.id == installed, fitting == null || revision.id in fitting)
     }
 }
 
@@ -230,10 +105,9 @@ private suspend fun revisions(
 
 private fun Route.postInstall() = post("/install") {
     val id = call.requireId()
-    val result = call.marketplace {
-        installWithDependencies(MarketplaceApi.getMarketplaceItem(id))
+    call.respondMarketplace {
+        InstallResult(installWithDependencies(MarketplaceApi.getMarketplaceItem(id)).installed.map { it.name })
     }
-    call.respond(InstallResult(result.installed.map { it.name }))
 }
 
 private fun Route.postUpdate() = post("/update") {
@@ -241,7 +115,7 @@ private fun Route.postUpdate() = post("/update") {
     val subscribed = MarketplaceManager.getItem(id) ?: call.notFound(id.toString(), "Not installed")
     when (val result = call.marketplace { MarketplaceManager.update(subscribed) }) {
         is UpdateResult.Updated, is UpdateResult.NoUpdate ->
-            call.respond(call.marketplace { itemRow(MarketplaceApi.getMarketplaceItem(id)) })
+            call.respondMarketplace { itemView(MarketplaceApi.getMarketplaceItem(id)) }
         is UpdateResult.Incompatible -> call.badRequest(result.unavailable.text().string)
         is UpdateResult.Failed -> throw marketplaceFailure(result.error as? Exception ?: Exception(result.error))
     }
