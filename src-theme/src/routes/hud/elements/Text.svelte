@@ -13,8 +13,14 @@
     let textStyle = "";
 
     const PLACEHOLDER_PATTERN = /{(\w+(?:\.\w+)*)}/g;
+    const UPDATE_TIMEOUT = 100;
+
+    let lastUpdate = Date.now();
 
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
+        if (Date.now() - lastUpdate < UPDATE_TIMEOUT) return;
+        lastUpdate = Date.now();
+
         playerData = event.playerData;
     });
 

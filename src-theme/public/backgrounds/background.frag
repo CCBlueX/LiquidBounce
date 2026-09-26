@@ -8,7 +8,7 @@ layout(std140) uniform ThemeBackgroundData {
 };
 
 // Output color
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // Simple hash function
 float hash(float n) {

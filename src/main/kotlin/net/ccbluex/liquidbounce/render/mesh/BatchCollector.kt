@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.mesh
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
@@ -30,12 +30,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.ClientTesselator
 import net.ccbluex.liquidbounce.render.bindDefaultUniforms
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.bindTextures
+import net.ccbluex.liquidbounce.render.setUniforms
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.bindAndDraw
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw.DefaultUploader.toMeshDraw
-import net.ccbluex.liquidbounce.render.setUniforms
+import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.render.setupRenderTypeScissor
 
 internal class BatchCollector {
@@ -89,13 +89,13 @@ internal class BatchCollector {
                 return
             }
 
-            for (draw in drawOrder) {
-                if (draw.readyToBuild) {
-                    draw.builder.build()?.use { meshData ->
+            for ((key, builder, order, readyToBuild) in drawOrder) {
+                if (readyToBuild) {
+                    builder.build()?.use { meshData ->
                         builtBuffers += BuiltDraw(
-                            draw.key,
-                            meshData.toMeshDraw(draw.key.pipeline),
-                            draw.order,
+                            key,
+                            meshData.toMeshDraw(key.pipeline),
+                            order,
                         )
                     }
                 }
@@ -107,19 +107,18 @@ internal class BatchCollector {
 
             builtBuffers.sort()
 
-            renderTarget.createRenderPass(
-                { "BatchCollector draw" },
-                allowOverride = true,
-            ).use { pass ->
+            renderTarget.createRenderPass({ "BatchCollector draw" }).use { pass ->
                 pass.setupRenderTypeScissor()
                 pass.bindDefaultUniforms()
                 dynamicTransforms?.let(pass::bindDynamicTransformsUniform)
 
                 builtBuffers.forEach { draw ->
+                    pass.pushDebugGroup { "BatchCollector draw key=${draw.key}" }
                     pass.setPipeline(draw.key.pipeline)
                     pass.setUniforms(draw.key.uniforms)
-                    pass.bindTextures(draw.key.textures)
+                    pass.setUniforms(draw.key.textures)
                     pass.bindAndDraw(draw.meshDraw)
+                    pass.popDebugGroup()
                 }
             }
         } finally {

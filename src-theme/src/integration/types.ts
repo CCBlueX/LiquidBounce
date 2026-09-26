@@ -17,6 +17,11 @@ export interface Metadata {
     }[];
 }
 
+export interface ModuleCategory {
+    name: string;
+    icon: string | null;
+}
+
 export interface Module {
     name: string;
     category: string;
@@ -304,6 +309,7 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
+    lan?: boolean;
 }
 
 export interface TextComponent {

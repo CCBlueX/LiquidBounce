@@ -25,7 +25,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import java.util.BitSet
 import kotlin.random.Random
 

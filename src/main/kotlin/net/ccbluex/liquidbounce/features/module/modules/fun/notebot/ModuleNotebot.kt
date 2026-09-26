@@ -57,8 +57,7 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
  */
 object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQuit = true) {
 
-    // LWJGL native bug (windows)
-    private val song = file("Song") // , supportedExtensions = setOf("nbs")
+    private val song = file("Song", supportedExtensions = setOf("nbs"))
     private val pianoOnly by boolean("PianoOnly", false)
     val reuseBlocks by boolean("ReuseBlocks", true).onChanged { enabled = false }
     val range by float("Range", 6f, 1f..6f)

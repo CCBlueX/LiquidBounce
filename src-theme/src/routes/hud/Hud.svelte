@@ -24,6 +24,7 @@
     import Text from "./elements/Text.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
+    import ClosedCaptions from "./elements/ClosedCaptions.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
@@ -31,6 +32,7 @@
         HUD_EDITOR_ELEMENTS_CONTEXT,
         type HudEditorDragState
     } from "../clickgui/tabs/hud_editor/constants";
+    import Image from "./elements/Image.svelte";
 
     export let inEditor = false;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
@@ -82,6 +84,7 @@
                     componentId={c.id}
                     componentName={c.name}
                     alignment={c.settings.alignment}
+                    zIndex={c.settings.zIndex ?? 0}
                     magneticallyReferenced={magneticTargetIds.includes(c.id)}
                     width={c.width}
                     height={c.height}
@@ -93,7 +96,7 @@
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
-                    <Notifications/>
+                    <Notifications settings={c.settings}/>
                 {:else if c.name === "TargetHud"}
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
@@ -104,7 +107,7 @@
                     <Scoreboard settings={c.settings}/>
                 {:else if c.name === "ArmorItems"}
                     <GenericPlayerInventory
-                            rowLength={1}
+                            rowLength={c.settings.layout === "Horizontal" ? 4 : 1}
                             backgroundColor="transparent"
                             gap="2px"
                             getRenderedStacks={it => Array.from(it.armor).reverse()}
@@ -126,9 +129,11 @@
                 {:else if c.name === "Text"}
                     <Text settings={c.settings}/>
                 {:else if c.name === "Image"}
-                    <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
+                    <Image componentId={c.id} settings={c.settings}/>
                 {:else if c.name === "KeyBinds"}
                     <KeyBinds/>
+                {:else if c.name === "ClosedCaptions"}
+                    <ClosedCaptions/>
                 {:else if c.width !== undefined && c.height !== undefined}
                     <div></div>
                 {/if}

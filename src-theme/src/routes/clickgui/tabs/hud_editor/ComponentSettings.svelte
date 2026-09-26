@@ -89,7 +89,7 @@
 >
     <div class="settings" style="transform: translateX({marginLeft}px)">
         {#if configurable !== undefined}
-            <TogglableSetting path={name} bind:setting={configurable} on:change={handleSettingChange}>
+            <TogglableSetting path="hud.components.{name}.{id}" bind:setting={configurable} on:change={handleSettingChange}>
                 <div class="remove-component" slot="control" let:disable let:label>
                     <button
                             title="Remove component"

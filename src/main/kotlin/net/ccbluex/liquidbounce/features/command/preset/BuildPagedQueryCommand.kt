@@ -18,28 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.command.preset
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.Parameter.Verificator.Result
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import com.mojang.brigadier.arguments.IntegerArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
+import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.bold
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import java.util.function.IntConsumer
 import kotlin.math.ceil
-
-private val TEXT_SPACE: Component = " ".asPlainText()
 
 @Suppress("CognitiveComplexMethod")
 private fun buildPaginationText(
@@ -113,49 +112,45 @@ private fun buildPaginationText(
         if (currentPage == maxPage) disabled() else pageAction(currentPage + 1).withColor(ChatFormatting.GRAY)
     }
 
-    return texts.joinToText(TEXT_SPACE)
+    return texts.joinToText(PlainText.SPACE)
 }
 
 /**
- * Builds a general paged query command with one optional integer parameter.
- *
- * @param pageSize the size of a single page. should be greater than 0.
- * @param header the generator function for page header before all items.
- * @param items provides all items. This function should be light-weighted.
- * @param eachRow controls how to render the item in chat HUD.
- *
- * @author MukjepScarlet
+ * Adds the optional page argument and executor to this literal (e.g. `.help [page]`).
+ * For a listing that lives under `list`, use [pagedList].
  */
-fun <T> CommandBuilder.pagedQuery(
+fun <T> CmdLiteralScope.pagedQuery(
     pageSize: Int = 8,
-    header: Command.() -> Component,
+    header: () -> Component,
     items: () -> Collection<T>,
-    eachRow: Command.(index: Int, T) -> Component,
-): Command {
+    eachRow: (index: Int, T) -> Component,
+) {
     require(pageSize > 0) { "pageSize must be greater than 0" }
 
-    fun maxPage() = ceil(items().size.toFloat() / pageSize).toInt()
+    fun pageCount(itemCount: Int) = ceil(itemCount.toFloat() / pageSize).toInt().coerceAtLeast(1)
 
-    fun Command.sendPage(currentPage: Int) {
-        val msgId = "C${this.name}#PagedQuery"
+    fun sendPage(requestedPage: Int) {
+        val msgId = "C$path#PagedQuery"
         val msgMetadata = MessageMetadata(id = msgId, remove = false)
         fun send(text: Component) = chat(text, metadata = msgMetadata)
 
         val all = items()
-        val maxPage = maxPage()
+        val maxPage = pageCount(all.size)
+        val currentPage = requestedPage.coerceAtMost(maxPage)
         val currentPageItems = if (all is List<T>) {
             all.subList((currentPage - 1) * pageSize, minOf(currentPage * pageSize, all.size))
         } else {
-            all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
+            val drop = all.drop((currentPage - 1) * pageSize)
+            drop.subList(0, minOf(pageSize, drop.size))
         }
 
         mc.gui.hud.chat.removeMessage(msgId) // remove old
 
         // Header
-        send(header(this))
+        send(header())
         // Content
         currentPageItems.forEachIndexed { index, item ->
-            send(eachRow(this, index, item))
+            send(eachRow(index, item))
         }
         // Pagination
         if (maxPage > 1) {
@@ -163,19 +158,22 @@ fun <T> CommandBuilder.pagedQuery(
         }
     }
 
-    return parameter(
-        ParameterBuilder.begin<Int>("page")
-            .verifiedBy {
-                val input = it.toIntOrNull() ?: return@verifiedBy Result.Error("'$it' is not an integer")
-                val maxPage = maxPage()
-                if (input in 1..maxPage) {
-                    Result.Ok(input)
-                } else {
-                    Result.Error("'$it' is not in range 1..$maxPage")
-                }
-            }.optional().build()
-    ).handler {
-        val currentPage = args.getOrNull(0) as Int? ?: 1
-        command.sendPage(currentPage)
-    }.build()
+    optional("page", IntegerArgumentType.integer(1), default = 1) { page ->
+        exec { ctx ->
+            sendPage(ctx.get(page))
+            1
+        }
+    }
+}
+
+/** Adds a `list [page]` subcommand with the same paging UI as [pagedQuery]. */
+fun <T> CmdLiteralScope.pagedList(
+    pageSize: Int = 8,
+    header: () -> Component,
+    items: () -> Collection<T>,
+    eachRow: (index: Int, T) -> Component,
+) {
+    literal("list") {
+        pagedQuery(pageSize, header, items, eachRow)
+    }
 }

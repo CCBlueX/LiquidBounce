@@ -20,15 +20,15 @@
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.GpuFormat
-import com.mojang.blaze3d.PrimitiveTopology
-import com.mojang.blaze3d.pipeline.BindGroupLayout
-import com.mojang.blaze3d.pipeline.BlendFunction
-import com.mojang.blaze3d.pipeline.ColorTargetState
-import com.mojang.blaze3d.pipeline.DepthStencilState
-import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.CompareOp
+import com.mojang.renderpearl.api.GpuFormat
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout
+import com.mojang.renderpearl.api.pipeline.BlendFunction
+import com.mojang.renderpearl.api.pipeline.ColorTargetState
+import com.mojang.renderpearl.api.pipeline.DepthStencilState
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
+import com.mojang.renderpearl.api.pipeline.UniformType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.client.renderer.BindGroupLayouts
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.resources.Identifier
+import net.minecraft.util.Util
 
 object ClientRenderPipelines {
 
@@ -57,12 +58,14 @@ object ClientRenderPipelines {
             .withLocation(id)
             .apply(builderAction)
             .build().also { r ->
+                RenderPipelines.register(r)
                 renderPipelines.put(id, r)?.let { error("Duplicated render pipeline: $id") }
             }
     }
 
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
-        withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+        withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+        withBindGroupLayout(BindGroupLayouts.PROJECTION)
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
         withBindGroupLayout(BindGroupLayouts.SAMPLER0)
@@ -72,6 +75,11 @@ object ClientRenderPipelines {
 
     inline fun RenderPipeline.Builder.withBindGroupLayout(block: BindGroupLayout.Builder.() -> Unit) =
         this.withBindGroupLayout(BindGroupLayout.builder().apply(block).build())
+
+    inline fun BindGroupLayout.Builder.withSampler(name: String) =
+        this.withUniform(name, UniformType.COMBINED_IMAGE_SAMPLER)
+
+    inline fun BindGroupLayout.Builder.withUniformBuffer(define: ClientUniformDefine) = define.appendTo(this)
 
     inline fun RenderPipeline.Builder.withUniformBuffer(define: ClientUniformDefine) =
         withBindGroupLayout(define.bindGroupLayout)
@@ -200,6 +208,12 @@ object ClientRenderPipelines {
             withCull(false)
         }
 
+        @JvmField
+        val FontMask = newPipeline("gui/font_mask") {
+            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            withFragmentShader(ClientShaders.Fragment.FontMask)
+        }
+
         @JvmStatic
         fun lines(cull: Boolean) = if (cull) Lines else LinesNoCull
 
@@ -219,15 +233,21 @@ object ClientRenderPipelines {
     @JvmField
     val LinesWithWidth = newPipeline("lines_with_width") {
         withSnippet(RenderPipelines.LINES_SNIPPET)
-        withDepthStencilState(DepthStencilState(CompareOp.LESS_THAN_OR_EQUAL, false))
         forWorldRender()
     }
 
-    @JvmField
-    val Lines = newPipeline("lines") {
+    private val Lines = newPipeline("lines") {
         posColorSnippet(PrimitiveTopology.DEBUG_LINES)
         forWorldRender()
     }
+
+    private val LinesDepthTested = newPipeline("lines_depth_tested") {
+        posColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun lines(noDepthTest: Boolean) = if (noDepthTest) Lines else LinesDepthTested
 
     private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
@@ -239,7 +259,7 @@ object ClientRenderPipelines {
 
     private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
+        relativePosSnippet(PrimitiveTopology.DEBUG_LINES)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
         forWorldRender()
@@ -254,11 +274,18 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val Triangles = newPipeline("triangles") {
+    private val Triangles = newPipeline("triangles") {
         posColorSnippet(PrimitiveTopology.TRIANGLES)
         forWorldRender()
     }
+
+    private val TrianglesDepthTested = newPipeline("triangles_depth_tested") {
+        posColorSnippet(PrimitiveTopology.TRIANGLES)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun triangles(noDepthTest: Boolean) = if (noDepthTest) Triangles else TrianglesDepthTested
 
     private val TriangleStrip = newPipeline("triangle_strip") {
         posColorSnippet(PrimitiveTopology.TRIANGLE_STRIP)
@@ -273,11 +300,18 @@ object ClientRenderPipelines {
     @JvmStatic
     fun triangleStrip(noDepthTest: Boolean) = if (noDepthTest) TriangleStripNoDepthTest else TriangleStrip
 
-    @JvmField
-    val Quads = newPipeline("quads") {
+    private val Quads = newPipeline("quads") {
         posColorSnippet(PrimitiveTopology.QUADS)
         forWorldRender()
     }
+
+    private val QuadsDepthTested = newPipeline("quads_depth_tested") {
+        posColorSnippet(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+    }
+
+    @JvmStatic
+    fun quads(noDepthTest: Boolean) = if (noDepthTest) Quads else QuadsDepthTested
 
     private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
@@ -304,33 +338,50 @@ object ClientRenderPipelines {
      */
     private val OutlineQuads = newPipeline("outline_quads") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        forWorldRender()
     }
 
     private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
         withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
         withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
         withVertexBinding(0, DefaultVertexFormat.POSITION)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
         withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        forWorldRender()
     }
 
     @JvmStatic
     fun outlineQuads(useColor: Boolean) = if (useColor) OutlineQuads else OutlineQuadsNoColor
 
-    @JvmField
-    val TexQuads = newPipeline("tex_quads") {
+    private val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender()
+    }
+
+    private val TexQuadsDepthTested = newPipeline("tex_quads_depth_tested") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
+        withPrimitiveTopology(PrimitiveTopology.QUADS)
+        forWorldRender(noDepthTest = false)
+        withDepthStencilState(DepthStencilState.DEFAULT)
+    }
+
+    @JvmStatic
+    fun texQuads(noDepthTest: Boolean) = if (noDepthTest) TexQuads else TexQuadsDepthTested
+
+    @JvmField
+    val FontMaskQuads = newPipeline("font_mask_quads") {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
@@ -420,29 +471,67 @@ object ClientRenderPipelines {
     }
 
     @JvmField
+    val ChamsImage = newPipeline("chams/image_blit") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.Chams)
+        withBindGroupLayout {
+            withSampler("entityColor")
+            withSampler("entityDepth")
+            withSampler("sceneDepth")
+            withSampler("image")
+        }
+        withUniformBuffer(ClientUniformDefine.CHAMS)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
     val ItemChams = newPipeline("item_chams") {
         screenQuadSnippet()
         withFragmentShader(ClientShaders.Fragment.Glow)
         withBindGroupLayout {
             withSampler("texture0")
             withSampler("image")
+            withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         }
-        withUniformBuffer(ClientUniformDefine.HAND_ITEM_LIGHTMAP)
         withColorTargetState(ColorTargetState.DEFAULT)
         withDepthStencilState(optional())
     }
 
     @JvmField
-    val GuiBlur = newPipeline("blur") {
+    val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
         screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.GuiBlur)
+        withFragmentShader("core/blit_screen")
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
+    val GuiBlurH = newPipeline("blur_h") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.GuiBlurH)
+        withBindGroupLayout {
+            withSampler("texture0")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
+        }
+        withCull(false)
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
+    @JvmField
+    val GuiBlurV = newPipeline("blur_v") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.GuiBlurV)
         withBindGroupLayout {
             withSampler("texture0")
             withSampler("overlay")
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR)
+            withUniformBuffer(ClientUniformDefine.GUI_BLUR_KERNEL)
         }
-        withUniformBuffer(ClientUniformDefine.GUI_BLUR)
         withCull(false)
-        withColorTargetState(ColorTargetState.DEFAULT)
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
         withDepthStencilState(optional())
     }
 
@@ -467,9 +556,9 @@ object ClientRenderPipelines {
         GUI
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            gpuDevice.precompilePipeline(pipeline, ClientShaders)
+            gpuDevice.compilePipeline(pipeline, ClientShaders, Util.backgroundExecutor())
         }
-        logger.info("Loaded ${renderPipelines.size} Render Pipelines.")
+        logger.info("Registered ${renderPipelines.size} Render Pipelines.")
     }
 
 }

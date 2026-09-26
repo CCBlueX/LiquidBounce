@@ -1,6 +1,7 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    ModuleCategory,
     Alignment,
     Browser,
     ClientInfo,
@@ -45,6 +46,13 @@ export async function getMetadata(): Promise<Metadata> {
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getCategories(): Promise<ModuleCategory[]> {
+    const response = await fetch(`${API_BASE}/client/modules/categories`);
+    const data: [ModuleCategory] = await response.json();
 
     return data;
 }
@@ -270,6 +278,18 @@ export async function getServers(): Promise<Server[]> {
     return data;
 }
 
+export async function getLanServers(): Promise<Server[]> {
+    const response = await fetch(`${API_BASE}/client/servers/lan`);
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data: Server[] = await response.json();
+
+    return data;
+}
+
 export async function connectToServer(address: string) {
     await fetch(`${API_BASE}/client/servers/connect`, {
         method: "POST",
@@ -290,13 +310,13 @@ export async function removeServer(id: number) {
     });
 }
 
-export async function addServer(name: string, address: string, serverResourcePacks: string) {
+export async function addServer(name: string, address: string, resourcePackPolicy: string) {
     await fetch(`${API_BASE}/client/servers/add`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({name, address, serverResourcePacks})
+        body: JSON.stringify({name, address, resourcePackPolicy})
     });
 }
 
@@ -392,15 +412,31 @@ export async function addAlteningAccount(token: string) {
     });
 }
 
-export async function addMicrosoftAccount() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
+export async function addMicrosoftAccountWebView() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/webview`, {
         method: "POST",
     });
 }
 
-export async function addMicrosoftAccountCopyUrl() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft/clipboard`, {
+export async function addMicrosoftAccountDeviceCode() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code`, {
         method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountDeviceCodeCopyUrl() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code/clipboard`, {
+        method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountCredentials(email: string, password: string) {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/credentials`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({email, password})
     });
 }
 
@@ -675,9 +711,23 @@ export async function setComponentAlignment(id: string, alignment: Alignment): P
     });
 }
 
+export async function bringComponentToFront(id: string): Promise<number> {
+    const response = await fetch(`${API_BASE}/client/components/${id}/z-index`, {
+        method: "POST"
+    });
+
+    const data: { zIndex: number } = await response.json();
+    return data.zIndex;
+}
+
 export async function getComponentSettings(id: string): Promise<ConfigurableSetting> {
     const response = await fetch(`${API_BASE}/client/components/${id}/settings`);
     return await response.json();
+}
+
+export function getComponentFileUrl(id: string, cacheKey?: string): string {
+    const url = `${API_BASE}/client/components/${id}/file`;
+    return cacheKey === undefined ? url : `${url}?v=${encodeURIComponent(cacheKey)}`;
 }
 
 export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
@@ -712,6 +762,12 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/shader`, {
+        method: "POST",
+    });
+}
+
+export async function toggleBasicMode() {
+    await fetch(`${API_BASE}/client/basic-mode`, {
         method: "POST",
     });
 }
