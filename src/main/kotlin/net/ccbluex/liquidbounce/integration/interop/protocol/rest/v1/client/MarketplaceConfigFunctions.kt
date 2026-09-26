@@ -31,6 +31,7 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -55,7 +56,6 @@ import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 
@@ -553,7 +553,7 @@ private fun Route.patchConfig() = patch {
             )
         )
     }
-    withContext(MinecraftDispatcher) { ConfigTracker.renamed(updated) }
+    withContext(Dispatchers.Main) { ConfigTracker.renamed(updated) }
     MarketplaceConfigs.refresh()
     call.respond(call.marketplace { configRow(updated, ownUserId()) })
 }

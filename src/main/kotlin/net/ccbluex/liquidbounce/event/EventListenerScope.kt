@@ -24,12 +24,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import net.minecraft.ReportedException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.AbstractCoroutineContextElement
@@ -62,7 +62,7 @@ val EventListener.eventListenerScope: CoroutineScope
             }
                 + CoroutineName(it.toString()) // Name
                 // Render thread + Auto cancel on not listening
-                + it.wrapContinuationInterceptor(MinecraftDispatcher)
+                + it.wrapContinuationInterceptor(Dispatchers.Main)
         )
     }
 

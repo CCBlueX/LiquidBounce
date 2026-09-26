@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.randomUsername
@@ -36,6 +38,20 @@ import kotlin.random.Random
 private const val UPDATE_ON_PLAYER_REMOVAL = false
 
 /**
+ * How many distinct texts are memoized per [NameProtectMappings.ReplacementInstructions].
+ */
+private const val REPLACEMENT_CACHE_SIZE = 512
+
+/**
+ * Matches found by [NameProtectMappings.findReplacements], sorted by start index.
+ */
+typealias Replacements = List<Pair<Emit, NameProtectMappings.MappingData>>
+
+fun interface ColorGetter {
+    operator fun invoke(): Color4b
+}
+
+/**
  * Keeps track of the current name protect mappings and contains functions for replacement.
  */
 class NameProtectMappings {
@@ -44,6 +60,11 @@ class NameProtectMappings {
     private var friendMappings = emptyMap<String, String>()
     private var otherPlayerMappings = emptySet<String>()
 
+    /**
+     * Replaced as a whole on every rebuild, so readers either see the previous or the next
+     * fully built matcher.
+     */
+    @Volatile
     private var replacementInstructions: ReplacementInstructions? = null
 
     private fun shouldUpdate(
@@ -83,7 +104,7 @@ class NameProtectMappings {
 
         otherPlayers.subList(0, 200.coerceAtMost(otherPlayers.size)).forEach { playerName ->
             // Prevent DoS attacks
-            if (playerName.length !in 3..20) {
+            if (playerName.length !in 2..20) {
                 return@forEach
             }
 
@@ -98,7 +119,7 @@ class NameProtectMappings {
 
         this.friendMappings = friendMappings.toMap()
 
-        this.otherPlayerMappings = otherPlayers.toHashSet()
+        this.otherPlayerMappings = otherPlayers.toSet()
 
         this.usernameReplacement = username
 
@@ -112,21 +133,36 @@ class NameProtectMappings {
     /**
      * Returns a list of all emits, sorted by their start
      */
-    fun findReplacements(text: CharSequence): List<Pair<Emit, MappingData>> {
-        val currentInstructions = this.replacementInstructions ?: return emptyList()
-
-        return currentInstructions.matcher.parseText(text)
-            .mapToArray { it to currentInstructions.replacements[it.keyword]!! }
-            .apply { sortBy { it.first.start } }
-            .unmodifiable()
-    }
+    fun findReplacements(text: CharSequence): Replacements =
+        this.replacementInstructions?.match(text).orEmpty()
 
     /**
-     * It is important for synchronization purposes that this is a class with immutable fields
+     * Memoized variant of [findReplacements], which must only be called from the thread that calls
+     * [update] because [ReplacementInstructions.matchCached] is not thread-safe.
      */
-    private class ReplacementInstructions(val matcher: Trie, val replacements: Map<String, MappingData>)
-    class MappingData(val newName: String, val colorGetter: () -> Color4b)
-    class ColoringInfo(val username: () -> Color4b, val friends: () -> Color4b, val otherPlayers: () -> Color4b)
+    fun findReplacementsCached(text: CharSequence): Replacements =
+        this.replacementInstructions?.matchCached(text).orEmpty()
+
+    /**
+     * A built matcher together with the mappings it resolves to.
+     *
+     * Immutable, so it can be swapped in for readers as a whole. The memoized matches are tied to
+     * this instance, which makes them expire exactly when the mappings are rebuilt.
+     */
+    private class ReplacementInstructions(val matcher: Trie, val replacements: Map<String, MappingData>) {
+        private val cache = LfuCache<CharSequence, Replacements>(REPLACEMENT_CACHE_SIZE)
+
+        fun match(text: CharSequence): Replacements =
+            matcher.parseText(text)
+                .mapToArray { it to replacements[it.keyword]!! }
+                .apply { sortBy { it.first.start } }
+                .unmodifiable()
+
+        fun matchCached(text: CharSequence): Replacements = cache.getOrPut(text) { match(text) }
+    }
+
+    class MappingData(val newName: String, val colorGetter: ColorGetter)
+    class ColoringInfo(val username: ColorGetter, val friends: ColorGetter, val otherPlayers: ColorGetter)
 }
 
 private fun getEntropySourceFrom(playerName: String): Random {

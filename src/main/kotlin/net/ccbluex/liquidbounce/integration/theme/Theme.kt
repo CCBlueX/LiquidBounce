@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.text.capitalize
 import okhttp3.Headers
@@ -273,7 +272,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
 
-        withContext(Dispatchers.Minecraft) {
+        withContext(Dispatchers.Main) {
             backgroundShader = ThemeBackground.Shader.build(
                 metadata,
                 background,
@@ -303,7 +302,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<NativeImage>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        withContext(Dispatchers.Minecraft) {
+        withContext(Dispatchers.Main) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
                 it.reload().await()
             }

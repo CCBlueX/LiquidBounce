@@ -125,6 +125,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         context.drawTexQuad(
             texture.textureSetup,
             x0 = x, y0 = y, x1 = x + width, y1 = y + height,
+            u1 = texture.u1, v1 = texture.v1, u2 = texture.u2, v2 = texture.v2,
             pipeline = pipeline,
         )
     }

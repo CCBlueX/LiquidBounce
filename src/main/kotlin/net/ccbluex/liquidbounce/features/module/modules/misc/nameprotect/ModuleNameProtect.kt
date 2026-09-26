@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -40,8 +39,6 @@ import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
 import net.minecraft.util.StringDecomposer
-
-private const val DEFAULT_CACHE_SIZE = 512
 
 /**
  * NameProtect module
@@ -124,12 +121,6 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         )
     }
 
-    private val stringMappingCache =
-        LfuCache<String, String>(DEFAULT_CACHE_SIZE)
-    private val orderedTextMappingCache =
-        LfuCache<FormattedCharSequence, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
-            mappedCharListPool.recycle(v.mappedCharacters)
-        }
     private val mappedCharListPool = Pool(
         initializer = { ObjectArrayList(128) },
         finalizer = ObjectArrayList<MappedCharacter>::clear,
@@ -138,13 +129,11 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     fun replace(original: String): String =
         when {
             !running -> original
-            mc.isSameThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
-            else -> uncachedReplace(original)
+            mc.isSameThread -> applyReplacements(original, replacementMappings.findReplacementsCached(original))
+            else -> applyReplacements(original, replacementMappings.findReplacements(original))
         }
 
-    private fun uncachedReplace(original: String): String {
-        val replacements = replacementMappings.findReplacements(original)
-
+    private fun applyReplacements(original: String, replacements: Replacements): String {
         if (replacements.isEmpty()) {
             return original
         }
@@ -177,35 +166,46 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     fun wrap(original: FormattedCharSequence): FormattedCharSequence =
         when {
             !running -> original
-            mc.isSameThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
-            else -> uncachedWrap(original)
+            mc.isSameThread -> uncachedWrap(original, useCache = true)
+            else -> uncachedWrap(original, useCache = false)
         }
 
     /**
-     * Wraps an [FormattedCharSequence] to apply name protection.
+     * The collected characters are indexed by code point, while the indices reported by
+     * [org.ahocorasick.trie.Emit] count UTF-16 code units. The two only diverge on text holding
+     * surrogate pairs, so indices are translated with [codePointIndex].
      */
-    private fun uncachedWrap(original: FormattedCharSequence): WrappedOrderedText {
-        val mappedCharacters = mappedCharListPool.borrow()
-
+    private fun uncachedWrap(original: FormattedCharSequence, useCache: Boolean): FormattedCharSequence {
         val originalCharacters = mappedCharListPool.borrow()
 
-        original.accept { _, style, codePoint ->
-            originalCharacters += MappedCharacter(
-                style,
-                style.color?.bypassesNameProtection ?: false,
-                codePoint
-            )
+        val text = Pools.StringBuilder.use { builder ->
+            original.accept { _, style, codePoint ->
+                builder.appendCodePoint(codePoint)
+                originalCharacters += MappedCharacter(
+                    style,
+                    style.color?.bypassesNameProtection ?: false,
+                    codePoint
+                )
 
-            true
-        }
-
-        val replacements = Pools.StringBuilder.use {
-            it.ensureCapacity(originalCharacters.size)
-            for (c in originalCharacters) {
-                it.appendCodePoint(c.codePoint)
+                true
             }
-            replacementMappings.findReplacements(it)
+
+            builder.toString()
         }
+
+        val replacements = if (useCache) {
+            replacementMappings.findReplacementsCached(text)
+        } else {
+            replacementMappings.findReplacements(text)
+        }
+
+        if (replacements.isEmpty()) {
+            mappedCharListPool.recycle(originalCharacters)
+
+            return original
+        }
+
+        val mappedCharacters = mappedCharListPool.borrow()
 
         var currReplacementIndex = 0
         var currentIndex = 0
@@ -213,7 +213,7 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         while (currentIndex < originalCharacters.size) {
             val replacement = replacements.getOrNull(currReplacementIndex)
 
-            val replacementStartIdx = replacement?.first?.start
+            val replacementStartIdx = replacement?.let { text.codePointIndex(it.first.start) }
 
             if (replacementStartIdx == currentIndex) {
                 if (originalCharacters[replacementStartIdx].bypassesNameProtection) {
@@ -222,18 +222,20 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
                     continue
                 }
 
-                val color = replacement.second.colorGetter()
+                val newName = replacement.second.newName
 
-                mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
-                replacement.second.newName.mapTo(mappedCharacters) { ch ->
-                    MappedCharacter(
-                        originalCharacters[currentIndex].style.withColor(color.argb),
-                        false,
-                        ch.code
-                    )
+                // Every character of the replacement shares one style
+                val style = originalCharacters[currentIndex].style.withColor(replacement.second.colorGetter().argb)
+
+                mappedCharacters.ensureCapacity(mappedCharacters.size + newName.length)
+                var nameIndex = 0
+                while (nameIndex < newName.length) {
+                    val codePoint = newName.codePointAt(nameIndex)
+                    mappedCharacters += MappedCharacter(style, false, codePoint)
+                    nameIndex += Character.charCount(codePoint)
                 }
 
-                currentIndex = replacement.first.end + 1
+                currentIndex = text.codePointIndex(replacement.first.end + 1)
                 currReplacementIndex += 1
             } else {
                 val maxCopyIdx = replacementStartIdx ?: originalCharacters.size
@@ -258,16 +260,35 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     private class WrappedOrderedText(@JvmField val mappedCharacters: ObjectArrayList<MappedCharacter>) :
         FormattedCharSequence {
         override fun accept(visitor: FormattedCharSink): Boolean {
-            for (index in 0 until mappedCharacters.size) {
-                val char = mappedCharacters[index] as MappedCharacter
-                if (!visitor.accept(index, char.style, char.codePoint)) {
+            var index = 0
+            for (element in mappedCharacters) {
+                if (!visitor.accept(index, element.style, element.codePoint)) {
                     return false
                 }
+
+                index += Character.charCount(element.codePoint)
             }
 
             return true
         }
     }
+}
+
+/**
+ * Translates a UTF-16 index into this string to the index of the code point list built from it.
+ *
+ * The two differ by the number of surrogate pairs that end at or before [charIndex], so text
+ * without surrogate pairs maps onto itself.
+ */
+internal fun String.codePointIndex(charIndex: Int): Int {
+    var cursor = 0
+    var pairs = 0
+    while (cursor < charIndex) {
+        val count = Character.charCount(codePointAt(cursor))
+        if (count == 2) pairs++
+        cursor += count
+    }
+    return charIndex - pairs
 }
 
 /**

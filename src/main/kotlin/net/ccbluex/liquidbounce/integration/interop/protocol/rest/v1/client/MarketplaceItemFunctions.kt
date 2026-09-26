@@ -26,6 +26,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -46,7 +47,6 @@ import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 
 private const val PAGE_SIZE = 20
 private const val REVIEW_PAGE_SIZE = 100
@@ -261,7 +261,7 @@ private fun Route.postApply() = post("/apply") {
     val id = call.requireId()
     val theme = ThemeManager.marketplaceThemes[id] ?: call.notFound(id.toString(), "Theme not loaded")
 
-    withContext(MinecraftDispatcher) {
+    withContext(Dispatchers.Main) {
         ThemeManager.theme = theme
         ConfigSystem.store(ThemeManager)
     }

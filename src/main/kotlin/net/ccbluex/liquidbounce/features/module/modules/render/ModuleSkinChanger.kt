@@ -52,8 +52,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinMinecraftServicesSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.client.multiplayer.PlayerInfo
@@ -218,7 +216,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                         file.readNativeImage()
                     }
 
-                    withContext(Dispatchers.Minecraft) {
+                    withContext(Dispatchers.Main) {
                         nativeImage.registerTexture(identifier)
                     }
 
