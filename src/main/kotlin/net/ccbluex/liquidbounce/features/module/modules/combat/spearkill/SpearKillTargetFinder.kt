@@ -41,7 +41,7 @@ internal object SpearKillTargetFinder {
     fun findTarget(maxTargetDistance: Float): Pair<LivingEntity, Double>? {
         val eye = player.eyePosition
         val lookEnd = eye.add(player.lookAngle.scale(maxTargetDistance.toDouble()))
-        val attackRange = player.getAttackRangeWith(player.useItem)
+        val reach = player.getAttackRangeWith(player.useItem).reach()
         var best: Pair<LivingEntity, Double>? = null
         var bestDistSq = Double.MAX_VALUE
 
@@ -50,25 +50,32 @@ internal object SpearKillTargetFinder {
             player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(player.bbWidth / 2.0)
         ) { it !== player && it.isAlive && it.isWithinWorldBorder && it.boundingBox.clip(eye, lookEnd).isPresent }) {
 
-            val candidate = scoreCandidate(entity, eye, lookEnd, attackRange, bestDistSq) ?: continue
+            val candidate = scoreCandidate(entity, eye, lookEnd, reach, bestDistSq) ?: continue
             best = candidate.entity to candidate.distanceToDamage
             bestDistSq = candidate.distSq
         }
         return best
     }
 
+    /**
+     * The reach [net.minecraft.world.entity.projectile.ProjectileUtil.getHitEntitiesAlong] uses: the weapon's
+     * maximum reach extended by the attacker's own movement along the look direction.
+     */
+    private fun AttackRange.reach(): Double =
+        effectiveMaxRange(player) + player.deltaMovement.dot(player.lookAngle).coerceAtLeast(0.0)
+
     private fun scoreCandidate(
         entity: LivingEntity,
         eye: Vec3,
         lookEnd: Vec3,
-        attackRange: AttackRange,
+        reach: Double,
         bestDistSq: Double
     ): Candidate? {
         val hitPosition = entity.boundingBox.clip(eye, lookEnd).orElse(null) ?: return null
         if (!hasLineOfSight(eye, hitPosition)) return null
 
         val distanceToTarget = hitPosition.distanceTo(eye)
-        val distanceToDamage = (distanceToTarget - attackRange.effectiveMaxRange(player)).coerceAtLeast(0.0)
+        val distanceToDamage = (distanceToTarget - reach).coerceAtLeast(0.0)
         if (distanceToDamage <= 0.0) return null
 
         val distSq = distanceToDamage * distanceToDamage
