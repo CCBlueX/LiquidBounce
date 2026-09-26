@@ -585,8 +585,6 @@ export type MinecraftKey = MinecraftMouseKey | MinecraftKeyboardKey;
 
 export type MarketplaceItemType = "Config" | "Theme" | "Addon" | "Script" | "Other";
 
-export type ConfigTrackerState = "None" | "Tracked" | "Editing";
-
 export type MarketplaceVisibility = "public" | "unlisted";
 
 export interface MarketplacePagination {
@@ -624,8 +622,6 @@ export interface MarketplaceConfig {
     downloads: number;
     updatedAt?: number;
     overlayOn?: string;
-    tracking: ConfigTrackerState;
-    own: boolean;
     visibility?: MarketplaceVisibility;
 }
 
@@ -643,7 +639,6 @@ export interface MarketplaceConfigRevision {
     works: number;
     fails: number;
     latest: boolean;
-    loaded: boolean;
     first: boolean;
 }
 
@@ -651,7 +646,6 @@ export interface MarketplaceConfigDetail {
     config: MarketplaceConfig;
     description: string;
     createdAt?: number;
-    shareCode?: string;
     forkOf?: MarketplaceLinkedConfig;
     configs: MarketplaceLinkedConfig[];
     installs: MarketplaceItem[];
@@ -703,33 +697,10 @@ export interface MarketplaceInstallResult {
     installed: string[];
 }
 
-export interface ConfigTracker {
-    state: ConfigTrackerState;
-    id: number;
-    address: string;
-    image?: string;
-    own: boolean;
-    backup: boolean;
-}
-
-export interface MarketplacePublished {
-    id: number;
-    address: string;
-    shareCode?: string;
-}
-
 export interface MarketplaceInstalledItem {
     id: number;
     type: MarketplaceItemType;
     name: string;
-}
-
-export interface MarketplaceConfigDetails {
-    name: string;
-    description: string;
-    tags: string[];
-    servers: string[];
-    visibility: MarketplaceVisibility;
 }
 
 export interface MarketplaceConfigQuery {

@@ -3,13 +3,10 @@ import {REST_BASE} from "../../../../integration/host";
 import {ago, errorMessage, present} from "../../../../util/utils";
 import {notify} from "../../clickgui_store";
 import type {
-    ConfigTrackerState,
     MarketplaceConfig,
-    MarketplaceConfigDetail,
     MarketplaceInstallResult,
     MarketplaceItem,
     MarketplaceItemType,
-    MarketplacePublished,
     MarketplaceRevision
 } from "../../../../integration/types";
 
@@ -24,18 +21,12 @@ export function version(revision: MarketplaceRevision): string {
     return /^v\d/i.test(revision.version) ? revision.version : `v${revision.version}`;
 }
 
-export function trackingName(state: ConfigTrackerState): string {
-    return state === "Editing" ? "Edited" : state === "Tracked" ? "Tracked" : "";
-}
-
 /**
- * The badges of a config in its [tracking] state, with [overlay] telling what it loads on.
+ * The badges of a config, with [overlay] telling what it loads on.
  */
-export function configBadges(config: MarketplaceConfig, tracking: ConfigTrackerState, overlay?: string | false): string[] {
+export function configBadges(config: MarketplaceConfig, overlay?: string | false): string[] {
     return present(
-        trackingName(tracking),
         config.featured && "Featured",
-        config.own && "Yours",
         config.visibility === "unlisted" && "Unlisted",
         overlay,
         config.binds && "Binds"
@@ -70,15 +61,9 @@ export function typeName(type: MarketplaceItemType): string {
 }
 
 /**
- * The dialog on screen. [ondone] runs after an edit or delete went through.
+ * The dialog on screen.
  */
-export type DialogRequest =
-    | { kind: "load"; config: { id: number; address: string } }
-    | { kind: "publish" }
-    | { kind: "published"; published: MarketplacePublished }
-    | { kind: "update" }
-    | { kind: "edit"; detail: MarketplaceConfigDetail; ondone: () => void }
-    | { kind: "delete"; config: MarketplaceConfig; ondone: () => void };
+export type DialogRequest = { kind: "load"; config: { id: number; address: string } };
 
 export const dialog = writable<DialogRequest | null>(null);
 
