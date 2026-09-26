@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.clicking
 
 import it.unimi.dsi.fastutil.longs.LongArrayList
 import java.util.Random
+import java.util.function.IntPredicate
 import kotlin.math.abs
 
 /**
@@ -61,7 +62,7 @@ class ClickPlan(
     /**
      * Adds a guaranteed click to tick `n` when nothing is planned for it.
      */
-    var enforced: (Int) -> Boolean = { false }
+    var enforced = IntPredicate { false }
 
     var tickTime = 0L
         private set
@@ -123,7 +124,7 @@ class ClickPlan(
 
     fun clicksAt(tick: Int): Int {
         val planned = if (tick <= 0) due else plannedAt(tick)
-        return if (planned == 0 && enforced(tick.coerceAtLeast(0))) 1 else planned
+        return if (planned == 0 && enforced.test(tick.coerceAtLeast(0))) 1 else planned
     }
 
     private fun plannedAt(tick: Int): Int {
