@@ -68,11 +68,15 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
 
     private val isUsingSpear get() = player.isUsingItem && player.useItem.isSpear
 
+    /**
+     * [KineticWeapon.damageEntities] starts the damage window at [KineticWeapon.delayTicks] and ends it at
+     * [KineticWeapon.computeDamageUseDuration].
+     */
     private val KineticWeapon.isChargeAttackActive
-        get() = player.ticksUsingItem < computeDamageUseDuration() - delayTicks
+        get() = player.ticksUsingItem < computeDamageUseDuration()
 
     private val KineticWeapon.hasChargeStarted
-        get() = player.ticksUsingItem > delayTicks
+        get() = player.ticksUsingItem >= delayTicks
 
     private val KineticWeapon.isChargeSpent
         get() = player.ticksUsingItem > computeDamageUseDuration()
