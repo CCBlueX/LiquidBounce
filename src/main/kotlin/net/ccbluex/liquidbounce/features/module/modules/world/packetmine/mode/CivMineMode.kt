@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.utils.client.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
@@ -91,7 +91,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             val slot1 = Slots.Hotbar.findBestToolToMineBlock(
                 state,
                 predicate = ItemStack::isCorrectToolForDrops,
-            )?.hotbarSlot
+            )?.inventorySlot
             if (slot1 != null && slot1 != oldSlot) {
                 network.sendHeldItemChange(slot1)
             } else {

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.blink
 import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.forEachIsInstance
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -41,18 +40,22 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
+import net.ccbluex.liquidbounce.utils.network.position
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
@@ -63,7 +66,6 @@ import net.minecraft.network.protocol.handshake.ClientIntentionPacket
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
 import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.sounds.SoundEvents
-import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -78,8 +80,8 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
-            .filterIsInstance<ServerboundMovePlayerPacket> { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
-            .map { playerMoveC2SPacket -> Vec3(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
+            .filterIsInstance(ServerboundMovePlayerPacket::hasPosition)
+            .map { p -> p.position }
 
     val isLagging
         get() = packetQueue.isNotEmpty()
@@ -149,12 +151,18 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
             }
 
             // Ignore message-related packets
-            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
+            is ServerboundChatPacket,
+            is ClientboundSystemChatPacket,
+            is ClientboundDisguisedChatPacket,
+            is ServerboundChatCommandPacket -> {
                 return@handler
             }
 
-            // Flush on teleport or disconnect
-            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
+            // Flush on teleport, reconnect, or disconnect
+            is ClientboundPlayerPositionPacket,
+            is ClientboundDisconnectPacket,
+            is ClientboundRespawnPacket,
+            is ClientboundLoginPacket -> {
                 flush(origin)
                 return@handler
             }
@@ -190,26 +198,18 @@ object BlinkManager : EventListener, ValueGroup("BlinkManager") {
         }
     }
 
-    private fun getEspData(): BlinkEspData? {
-        val pos = positions.firstOrNull() ?: return null
-        val rotation = RotationManager.actualServerRotation
-
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
-        if (perspectiveEvent.perspective == CameraType.FIRST_PERSON) {
-            return null
-        }
-
-        return BlinkEspData(player, pos, rotation)
-    }
+    private fun getEspData() = positions
+        .firstOrNull()
+        ?.takeUnless { PerspectiveEvent.perspective == CameraType.FIRST_PERSON }
+        ?.let { BlinkEspData(player, it, RotationManager.actualServerRotation) }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
         if (lineColor.a > 0) {
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 drawLineStrip(
                     argb = lineColor.argb,
-                    positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
+                    positions = MutableVertexList(positions.size).addAllRelativeToCamera(positions, camera),
                 )
             }
         }
@@ -300,4 +300,3 @@ data class PacketSnapshot(
     val origin: TransferOrigin,
     val timestamp: Long
 )
-

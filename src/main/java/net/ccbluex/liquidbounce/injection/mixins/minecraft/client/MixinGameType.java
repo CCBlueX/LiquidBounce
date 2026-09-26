@@ -34,7 +34,7 @@ public abstract class MixinGameType {
      * <p>
      * With this injection though, this is no longer a problem.
      */
-    @ModifyVariable(method = "byName(Ljava/lang/String;Lnet/minecraft/world/level/GameType;)Lnet/minecraft/world/level/GameType;", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = "byName(Ljava/lang/String;Lnet/minecraft/world/level/GameType;)Lnet/minecraft/world/level/GameType;", at = @At("HEAD"), argsOnly = true, name = "defaultMode")
     private static GameType setDefaultAsNull(GameType gameMode) {
         return null;
     }

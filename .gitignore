@@ -14,3 +14,7 @@
 /.kotlin/
 .DS_Store
 *.log
+/.fabric/
+.env
+/anti-cheats/
+.narrafork

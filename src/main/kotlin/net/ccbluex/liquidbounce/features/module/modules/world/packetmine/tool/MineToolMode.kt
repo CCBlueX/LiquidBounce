@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModuleP
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.FluidTags
 import net.minecraft.world.effect.MobEffectUtil
@@ -36,7 +34,6 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 
 /**

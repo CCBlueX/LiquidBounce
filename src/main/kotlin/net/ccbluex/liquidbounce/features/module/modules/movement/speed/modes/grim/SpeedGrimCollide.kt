@@ -23,11 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.entity.movementForward
-import net.ccbluex.liquidbounce.utils.entity.movementSideways
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.phys.Vec2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,19 +51,16 @@ class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("GrimColli
      */
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        if (player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) {
+        if (player.input.moveVector == Vec2.ZERO) {
             return@handler
         }
 
-        var collisions = 0
         val box = player.boundingBox.inflate(shrinkBox.toDouble())
 
-        for (entity in world.entitiesForRendering()) {
-            val entityBox = entity.boundingBox
-
-            if (canCauseSpeed(entity) && box.intersects(entityBox)) {
-                collisions++
-            }
+        val collisions = world.getEntities(player, box) { entity ->
+            entity is LivingEntity && entity !is ArmorStand
+        }.count {
+            box.intersects(it.boundingBox)
         }
 
         // Grim gives 0.08 leniency per entity which is customizable by speed.
@@ -73,8 +68,5 @@ class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("GrimColli
         val boost = this.speed * collisions
         player.push(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
     }
-
-    private fun canCauseSpeed(entity: Entity) =
-        entity != player && entity is LivingEntity && entity !is ArmorStand
 
 }

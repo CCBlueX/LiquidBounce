@@ -40,9 +40,38 @@
     const EPS = 1e-9;
     // Points at the exact edges of the x-axis are locked. This margin prevents additional points from being locked.
     const EDGE_MARGIN = 1e-6;
-    const COLOR_ACCENT = "#4677ff"; // NOTE: This should be read from a color file in the future.
-    const COLOR_GRID = "#333333";
-    const COLOR_DIMMED_TEXT = "rgba(211, 211, 211, 255)";
+    let themeObserver: MutationObserver | null = null;
+
+    function getThemeColor(name: string) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function applyThemeColors() {
+        if (!chart) {
+            return;
+        }
+
+        const accentColor = getThemeColor("--clickgui-curve-accent-color");
+        const gridColor = getThemeColor("--clickgui-curve-grid-color");
+        const axisColor = getThemeColor("--clickgui-curve-axis-color");
+
+        const dataset = chart.data.datasets[0];
+        dataset.borderColor = accentColor;
+        dataset.pointBackgroundColor = accentColor;
+        dataset.pointHoverBackgroundColor = accentColor;
+
+        const xAxis = chart.options.scales?.x as any;
+        const yAxis = chart.options.scales?.y as any;
+
+        xAxis.grid.color = gridColor;
+        yAxis.grid.color = gridColor;
+        xAxis.ticks.color = axisColor;
+        yAxis.ticks.color = axisColor;
+        xAxis.title.color = axisColor;
+        yAxis.title.color = axisColor;
+
+        chart.update();
+    }
 
     function clamp(v: number, min: number, max: number) {
         return Math.min(Math.max(v, min), max)
@@ -138,12 +167,12 @@
                     showLine: true,
                     parsing: false,
                     borderWidth: 2,
-                    borderColor: COLOR_ACCENT,
+                    borderColor: getThemeColor("--clickgui-curve-accent-color"),
                     pointRadius: 5,
-                    pointBackgroundColor: COLOR_ACCENT,
+                    pointBackgroundColor: getThemeColor("--clickgui-curve-accent-color"),
                     pointBorderWidth: 0,
                     pointHoverRadius: 6,
-                    pointHoverBackgroundColor: COLOR_ACCENT,
+                    pointHoverBackgroundColor: getThemeColor("--clickgui-curve-accent-color"),
                     tension: cSetting.tension
                 }]
             },
@@ -156,15 +185,15 @@
                         min: cSetting.xAxis.range.from,
                         max: cSetting.xAxis.range.to,
                         grid: {
-                            color: COLOR_GRID
+                            color: getThemeColor("--clickgui-curve-grid-color")
                         },
                         ticks: {
-                            color: COLOR_DIMMED_TEXT
+                            color: getThemeColor("--clickgui-curve-axis-color")
                         },
                         title: {
                             display: true,
                             text: cSetting.xAxis.label,
-                            color: COLOR_DIMMED_TEXT
+                            color: getThemeColor("--clickgui-curve-axis-color")
                         }
                     },
                     y: {
@@ -172,15 +201,15 @@
                         min: cSetting.yAxis.range.from,
                         max: cSetting.yAxis.range.to,
                         grid: {
-                            color: COLOR_GRID
+                            color: getThemeColor("--clickgui-curve-grid-color")
                         },
                         ticks: {
-                            color: COLOR_DIMMED_TEXT
+                            color: getThemeColor("--clickgui-curve-axis-color")
                         },
                         title: {
                             display: true,
                             text: cSetting.yAxis.label,
-                            color: COLOR_DIMMED_TEXT
+                            color: getThemeColor("--clickgui-curve-axis-color")
                         }
                     }
                 },
@@ -224,7 +253,16 @@
 
         // Ensure endpoints exist and snap exactly to min/max at startup
         ensureEndpoints();
+        applyThemeColors();
         chart.update();
+
+        themeObserver = new MutationObserver(() => {
+            applyThemeColors();
+        });
+        themeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["style", "class"]
+        });
     });
 
     // Adds a new point close to the position that was clicked.
@@ -270,6 +308,8 @@
     }
 
     onDestroy(() => {
+        themeObserver?.disconnect();
+        themeObserver = null;
         chart?.destroy();
         chart = null;
     });
@@ -289,7 +329,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
 
   .setting {
     padding: 7px 0;
@@ -310,7 +349,7 @@
   }
 
   .title {
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     font-weight: 600;
   }

@@ -19,9 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -34,8 +33,7 @@ import kotlin.math.round
 fun interface PositionExtrapolation {
     fun getPositionInTicks(ticks: Double): Vec3
 
-    companion object {
-        @JvmStatic
+    companion {
         fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
                 is Player -> PlayerSimulationExtrapolation(target)
@@ -43,7 +41,6 @@ fun interface PositionExtrapolation {
             }
         }
 
-        @JvmStatic
         fun constant(pos: Vec3): PositionExtrapolation = PositionExtrapolation { pos }
     }
 }
@@ -58,7 +55,7 @@ class LinearPositionExtrapolation(
     constructor(entity: Entity) : this(entity.position(), entity.position() - entity.lastPos)
 
     override fun getPositionInTicks(ticks: Double): Vec3 {
-        return basePosition + velocity * ticks
+        return basePosition.fma(ticks, velocity)
     }
 
 }

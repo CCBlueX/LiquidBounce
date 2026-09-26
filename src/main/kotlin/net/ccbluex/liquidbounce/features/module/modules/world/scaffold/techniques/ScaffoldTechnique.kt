@@ -23,8 +23,10 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
@@ -43,7 +45,24 @@ sealed class ScaffoldTechnique(name: String) : Mode(name) {
 
     open fun getRotations(target: BlockPlacementTarget?) = target?.rotation
 
+    /**
+     * Traces from the player's current eye, which is the eye the server uses when it processes the interaction.
+     * [target]'s aim may have been derived from a predicted position, so this is the check that decides whether the
+     * click actually happens.
+     */
     open fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        traceFromPlayer(rotation)
+        target?.verifyClick(rotation)
+
+    /**
+     * Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block.
+     */
+    protected fun priorityComparator(
+        predictedPos: Vec3,
+        optimalLine: Line?,
+    ): Comparator<BlockPos> = if (optimalLine != null) {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToLine(optimalLine)
+    } else {
+        BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos)
+    }
 
 }

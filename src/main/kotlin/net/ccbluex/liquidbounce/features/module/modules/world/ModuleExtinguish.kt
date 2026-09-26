@@ -31,15 +31,16 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.liquid.TimedPickupTracker
 import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
@@ -73,6 +74,10 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     override fun onEnabled() {
         currentTarget = null
         pickupTracker.clear()
+    }
+
+    override fun onDisabled() {
+        SilentHotbar.resetSlot(this)
     }
 
     @Suppress("unused")
@@ -130,13 +135,12 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
     private val tickHandler = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
 
-        val rayTraceResult = traceFromPlayer()
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rayTraceResult = target.placementTarget.verifyClick(rotation) ?: return@handler
 
-        if (!target.doesCorrespondTo(rayTraceResult)) {
+        if (!SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)) {
             return@handler
         }
-
-        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
 
         val successFunction = {
             cooldownTimer.waitForAtLeast((cooldown * 1000.0F).toLong())
@@ -145,8 +149,13 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
             true
         }
 
-        doPlacement(rayTraceResult, hand = target.hotbarItemSlot.useHand,
-            onItemUseSuccess = successFunction, onPlacementSuccess = successFunction)
+        doPlacement(
+            rayTraceResult,
+            rotation,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = successFunction,
+            onPlacementSuccess = successFunction,
+        )
     }
 
     private fun planExtinguishing(): PlacementPlan? {

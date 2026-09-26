@@ -63,7 +63,6 @@
 </span>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
 
   .wrapper {
     column-gap: 2px;
@@ -72,12 +71,12 @@
   }
 
   .dimmed {
-    color: $clickgui-text-dimmed-color;
+    color: var(--clickgui-text-dimmed-color);
   }
 
   .modifier:after {
     content: "+";
-    color: $clickgui-text-dimmed-color;
+    color: var(--clickgui-text-dimmed-color);
     opacity: 0.8;
     line-height: 1;
     font-family: monospace;

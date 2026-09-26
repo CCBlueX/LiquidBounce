@@ -27,16 +27,21 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.math.dot
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -47,6 +52,11 @@ import net.minecraft.world.phys.Vec3
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER) {
     private val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
+    private val maxRenderDistance by int("MaxRenderDistance", 96, 16..512, "m")
+    private val cullBehindPlayer by boolean("CullBehindPlayer", false)
+    private val showMultiShot by boolean("ShowMultiShot", true)
+    private val lineWidth by float("LineWidth", 1f, 1f..16f)
+    private val activeLineWidth by float("ActiveLineWidth", 2f, 1f..16f)
 
     private val trajectoryTypes by multiEnumChoice("TrajectoryTypes", TrajectoryType.entries, canBeNone = false)
 
@@ -74,9 +84,20 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
+            val viewPos = camera.position()
+            val viewDirection = camera.forwardVector()
+            val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
+
             for (entity in world.entitiesForRendering()) {
-                val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
+                val delta = entity.position().subtract(viewPos)
+                val deltaLengthSq = delta.lengthSqr()
+                if (deltaLengthSq > maxRenderDistanceSq ||
+                    cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
+                    continue
+                }
+
+                val (trajectoryInfo, trajectoryType) = EntityTrajectoryResolver.resolveEntityTrajectory(
                     entity,
                     activeTrajectoryArrow,
                     activeTrajectoryOther
@@ -84,11 +105,14 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
                 if (trajectoryType !in trajectoryTypes) continue
 
+                val displayOwner = (entity as? TraceableEntity)?.owner
+                val icon = TrajectoryDisplayResolver.resolveEntityIcon(
+                    entity, activeTrajectoryArrow, activeTrajectoryOther
+                )
                 val trajectoryRenderer = TrajectoryInfoRenderer(
-                    owner = (entity as? TraceableEntity)?.owner ?: entity,
-                    icon = TrajectoryData.getRenderIconForOtherEntity(
-                        entity, activeTrajectoryArrow, activeTrajectoryOther
-                    ),
+                    simulationOwner = displayOwner ?: entity,
+                    displayOwner = displayOwner,
+                    icon = icon,
                     velocity = entity.deltaMovement,
                     pos = entity.position(),
                     trajectoryInfo = trajectoryInfo,
@@ -97,7 +121,11 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     renderOffset = Vec3.ZERO,
                 )
 
-                val color = TrajectoryData.getColorForEntity(entity)
+                val color = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = trajectoryType,
+                    colorSource = icon,
+                    entity = entity,
+                )
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
                     maxSimulatedTicks,
@@ -105,11 +133,23 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     trajectoryColor = color,
                     blockHitColor = color,
                     entityHitColor = color,
+                    lineWidth = activeLineWidth,
                 )
             }
 
             if (otherPlayers) {
                 for (otherPlayer in world.players()) {
+                    if (otherPlayer !== player) {
+                        val delta = otherPlayer.eyePosition.subtract(viewPos)
+                        val deltaLengthSq = delta.lengthSqr()
+                        if (deltaLengthSq > maxRenderDistanceSq) {
+                            continue
+                        }
+                        if (cullBehindPlayer && delta.dot(viewDirection) < 0.0 && deltaLengthSq > 9.0) {
+                            continue
+                        }
+                    }
+
                     // Including the user
                     drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
                 }
@@ -128,13 +168,24 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         otherPlayer: Player,
         partialTicks: Float,
     ) {
-        val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, alwaysShowBow)?.let {
+        val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
+            activeTrajectoryOther &&
+            TrajectoryType.FishingBobber in trajectoryTypes
+
+        val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {
+                return@firstNotNullOfOrNull null
+            }
+
+            HeldItemTrajectoryResolver.resolveHeldItemShots(
+                otherPlayer,
+                stack,
+                alwaysShowBow,
+                includeMultiShot = showMultiShot
+            )?.let {
                 it to stack
             }
         } ?: return
-
-        if (trajectoryInfoTyped.type !in trajectoryTypes) return
 
         val rotation = if (otherPlayer === player) {
             if (ModuleFreeCam.running) {
@@ -147,22 +198,38 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             otherPlayer.rotation
         }
 
-        val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            owner = otherPlayer,
-            icon = stack,
-            trajectoryInfo = trajectoryInfoTyped.info,
-            trajectoryType = trajectoryInfoTyped.type,
-            rotation = rotation,
-            partialTicks = partialTicks
-        )
+        trajectoryShotDescriptors.forEach { shotDescriptor ->
+            if (shotDescriptor.trajectoryType !in trajectoryTypes) {
+                return@forEach
+            }
 
-        simulationResults += renderer to renderer.drawTrajectoryForProjectile(
-            maxSimulatedTicks,
-            partialTicks,
-            trajectoryColor = Color4b.WHITE,
-            blockHitColor = Color4b(0, 160, 255, 150),
-            entityHitColor = Color4b(255, 0, 0, 100),
-        )
+            val shotRotation = Rotation(
+                yaw = rotation.yaw + shotDescriptor.yawOffsetDegrees,
+                pitch = rotation.pitch,
+                isNormalized = rotation.isNormalized
+            )
+
+            val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                simulationOwner = otherPlayer,
+                icon = if (shotDescriptor.icon.isEmpty) stack else shotDescriptor.icon,
+                trajectoryInfo = shotDescriptor.trajectoryInfo,
+                trajectoryType = shotDescriptor.trajectoryType,
+                rotation = shotRotation,
+                partialTicks = partialTicks
+            )
+
+            simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                maxSimulatedTicks,
+                partialTicks,
+                trajectoryColor = TrajectoryDisplayResolver.resolveTrajectoryColor(
+                    trajectoryType = shotDescriptor.trajectoryType,
+                    colorSource = shotDescriptor.colorSource,
+                ),
+                blockHitColor = Color4b(0, 160, 255, 150),
+                entityHitColor = Color4b.RED.alpha(100),
+                lineWidth = lineWidth,
+            )
+        }
     }
 
     private enum class Show(

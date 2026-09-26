@@ -19,17 +19,36 @@
 
 package net.ccbluex.liquidbounce.config.types
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.configs
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.io.File
 
+@AddonApi
 open class Config(name: String, value: MutableCollection<Value<*>> = mutableListOf()) : ValueGroup(name, value) {
+
+    /** Writes the file now; the client does so on exit anyway. */
+    fun saveToDisk() = ConfigSystem.store(this)
+
+    /** Re-reads the file, dropping unsaved changes. */
+    fun loadFromDisk() = ConfigSystem.load(this)
 
     val jsonFile: File
         get() {
             require(this in configs) { "${this.name} is not registered" }
             return File(rootFolder, "${this.loweredName}.json")
+        }
+
+    /**
+     * We write to this temp file, we can safely rename [jsonTmpFile] to [jsonFile],
+     * to eliminate any chances of data loss.
+     */
+    val jsonTmpFile: File
+        get() {
+            require(this in configs) { "${this.name} is not registered" }
+            return File(rootFolder, "${this.loweredName}.json.tmp")
         }
 
 }

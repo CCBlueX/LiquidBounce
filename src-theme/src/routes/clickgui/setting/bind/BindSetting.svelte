@@ -9,13 +9,14 @@
     import {isClickGuiScreen, UNKNOWN_KEY} from "../../../../util/utils";
 
     /**
-     * https://www.glfw.org/docs/3.3/group__keys.html
+     * SDL keycodes of the modifier keys (see org.lwjgl.sdl.SDLKeycode)
+     * https://wiki.libsdl.org/SDL3/SDL_Keycode
      */
     const KEY_TOKEN_TO_MODIFIERS: Record<number, BindModifier> = {
-        340: "Shift", 344: "Shift",
-        341: "Control", 345: "Control",
-        342: "Alt", 346: "Alt",
-        343: "Super", 347: "Super",
+        1073742049: "Shift", 1073742053: "Shift", // SDLK_LSHIFT / SDLK_RSHIFT
+        1073742048: "Control", 1073742052: "Control", // SDLK_LCTRL / SDLK_RCTRL
+        1073742050: "Alt", 1073742054: "Alt", // SDLK_LALT / SDLK_RALT
+        1073742051: "Super", 1073742055: "Super", // SDLK_LGUI / SDLK_RGUI
     } as const;
 
     /**
@@ -42,7 +43,7 @@
      */
     const nextBindEvent = () => Promise.any([
         waitMatches("mouseButton", (e: MouseButtonEvent) =>
-            isClickGuiScreen(e.screen) && !(e.button === 0 /* LMB */ && isHovered)
+            isClickGuiScreen(e.screen) && !(e.button === 1 /* SDL_BUTTON_LEFT */ && isHovered)
         ),
         waitMatches("keyboardKey", (e: KeyboardKeyEvent) =>
             isClickGuiScreen(e.screen)
@@ -58,7 +59,8 @@
     const handleBindEventIfNotModifier = (event: MouseButtonEvent | KeyboardKeyEvent) => {
         if (Object.hasOwn(event, "keyCode")) {
             const e = event as KeyboardKeyEvent;
-            if (e.keyCode === 256 /* GLFW_KEY_ESCAPE */) {
+            // ESC is pressed (SDL keycode of SDLK_ESCAPE)
+            if (e.keyCode === 27 /* SDLK_ESCAPE */) {
                 handleActionChange(UNKNOWN_KEY);
                 return;
             }
@@ -180,7 +182,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
 
   .name {
     text-align: center;
@@ -204,12 +205,12 @@
 
   .change-bind {
     background-color: transparent;
-    border: solid 2px $accent-color;
+    border: solid 2px var(--accent-color);
     border-radius: 3px;
     cursor: pointer;
     padding: 4px;
     font-weight: 500;
-    color: $clickgui-text-color;
+    color: var(--clickgui-text-color);
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;

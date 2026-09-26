@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
+import net.ccbluex.liquidbounce.integration.backend.isBrowserAccelerationDisabled
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
@@ -55,7 +56,7 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
         val accelerationFlags = backend?.accelerationFlags ?: BrowserAccelerationFlags.UNSUPPORTED
 
-        if (!BrowserBackendManager.disableAcceleration && accelerationFlags.isSupported) {
+        if (!isBrowserAccelerationDisabled && accelerationFlags.isSupported) {
             accelerated = if (accelerationFlags.isBeta) {
                 boolean("AcceleratedPaint(BETA)", false)
             } else {
@@ -79,14 +80,14 @@ open class BrowserSettings(
     /**
      * The maximum frames per second the browser renderer should run at.
      */
-    val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS").onChanged {
+    val fps = int("Fps", fpsLimit, 0..max(0, refreshRate.toInt()), "FPS").onChanged {
         mc.execute(update)
     }
 
     val currentFps: Int
         get() {
             val fpsValue = fps.get()
-            return if (fpsValue <= 0) refreshRate else fpsValue
+            return if (fpsValue <= 0) refreshRate.toInt() else fpsValue
         }
 
 }

@@ -28,10 +28,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.AnchoredHotbarSwapController
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
@@ -82,7 +83,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             private val swapController = AnchoredHotbarSwapController(
                 owner = this,
                 inventoryConstraints = inventoryConstraints,
-                swapDelayProvider = { swapPreviousDelay },
+                swapDelayProvider = { swapBackDelay },
             )
 
             override fun onDisabled() {
@@ -112,7 +113,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             if (!ConsiderInventory.running) {
                 return Slots.Hotbar.findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
             } else {
-                val slot = (Slots.Hotbar + Slots.Inventory)
+                val slot = Slots.HotbarAndInventory
                     .findBestToolToMineBlock(blockState, ignoreDurability, SilkTouchHandler)
 
                 return when (slot) {
@@ -163,9 +164,16 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         tree(SilkTouchHandler)
     }
 
-    private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
+    private val swapBackDelay by int("SwapBackDelay", 20, 1..100, "ticks", aliases = listOf("SwapPreviousDelay"))
+
+    private val switchDelay by int("SwitchDelay", 0, 0..100, "ticks")
+
+    // Tracks the current block breaking session so the switch is delayed only once per block
+    private var breakingPos: BlockPos? = null
+    private var breakingStartedTick = 0
 
     private val requireSneaking by boolean("RequireSneaking", false)
+    private val notDuringCombat by boolean("NotDuringCombat", false)
 
     private object RequireNearBed : ToggleableValueGroup(
         this, "RequireNearBed", enabled = false
@@ -207,16 +215,37 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isShiftKeyDown || RequireNearBed.enabled && !RequireNearBed.matches()) {
+        if (switchDelay > 0) {
+            // A new block starts a new breaking session and re-arms the delay
+            if (breakingPos != pos) {
+                breakingPos = pos
+                breakingStartedTick = player.tickCount
+            }
+            if (player.tickCount - breakingStartedTick < switchDelay) {
+                return
+            }
+        }
+
+        val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
+        val cancelDueToNotSneaking = requireSneaking && !player.isShiftKeyDown
+        if (cancelDueToCombat
+            || cancelDueToNotSneaking
+            || RequireNearBed.enabled && !RequireNearBed.matches()
+        ) {
             if (isInventoryConsidered) {
                 DynamicSelectMode.ConsiderInventory.onNoTool()
             }
             return
         }
 
-        val blockState = pos.getState()!!
+        val blockState = pos.stateOrEmpty
         val slot = toolSelector.activeMode.getTool(blockState) ?: return
-        SilentHotbar.selectSlotSilently(this, slot, swapPreviousDelay)
+        SilentHotbar.selectSlotSilently(this, slot, swapBackDelay)
+    }
+
+    override fun onDisabled() {
+        SilentHotbar.resetSlot(this)
+        breakingPos = null
     }
 
 

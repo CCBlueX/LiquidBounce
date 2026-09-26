@@ -61,6 +61,7 @@ data class Proxy(
 
     companion object {
 
+        @JvmField
         val NONE = Proxy("", 0, null, Type.SOCKS5)
 
         /**
@@ -84,18 +85,18 @@ data class Proxy(
 
             val proxyText = text.substringAfter("://")
             return when {
-                "@" in proxyText -> {
-                    val (credentials, addr) = proxyText.split("@", limit = 2)
-                    val (username, password) = credentials.split(":", limit = 2)
-                    val (host, port) = addr.split(":", limit = 2)
+                '@' in proxyText -> {
+                    val (credentials, addr) = proxyText.split('@', limit = 2)
+                    val (username, password) = credentials.split(':', limit = 2)
+                    val (host, port) = addr.split(':', limit = 2)
 
                     Proxy(host, port.toInt(), credentials(username, password), proxyType)
                 }
 
                 proxyText.count { it == ':' } == 3 -> {
-                    val parts = proxyText.split(":", limit = 4)
+                    val parts = proxyText.split(':', limit = 4)
 
-                    return when {
+                    when {
                         // host:port:username:password
                         parts[1].isValidPort() -> Proxy(
                             parts[0],
@@ -117,7 +118,7 @@ data class Proxy(
                 }
 
                 else -> {
-                    val (host, port) = proxyText.split(":", limit = 2)
+                    val (host, port) = proxyText.split(':', limit = 2)
                     Proxy(host, port.toInt(), null, proxyType)
                 }
             }

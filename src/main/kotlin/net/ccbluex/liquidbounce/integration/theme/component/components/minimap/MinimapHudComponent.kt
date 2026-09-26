@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.render.getBounds
@@ -36,17 +35,17 @@ import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
@@ -64,11 +63,17 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalOffset = 7,
     verticalAlignment = Alignment.ScreenAxisY.TOP,
     verticalOffset = 180,
-)) {
+), description = "Shows nearby terrain and entities.") {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
     private val fixedDirection by boolean("FixedDirection", false)
+
+    override val guiScaledWidth: Float
+        get() = size.toFloat()
+
+    override val guiScaledHeight: Float
+        get() = size.toFloat()
 
     private object TextureValueGroup : ToggleableValueGroup(this, "Texture", true) {
         val vertexColor by color("VertexColor", Color4b.WHITE)
@@ -126,7 +131,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     ) : ToggleableValueGroup(this, name, false) {
         val placement by enumChoice("Placement", Placement.TOP_LEFT)
 
-        fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
+        fun render(ctx: GuiGraphicsExtractor, boundingBox: BoundingBox2f) {
             if (enabled) {
                 ctx.pose().withPush {
                     when (placement) {
@@ -148,18 +153,18 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
 
         fun interface Renderer {
-            operator fun invoke(ctx: GuiGraphics)
+            operator fun invoke(ctx: GuiGraphicsExtractor)
         }
     }
 
     private val extraElements = arrayOf(
         ExtraElement("Compass", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.COMPASS } ?: COMPASS
-            ctx.renderItem(stack, 0, 0)
+            ctx.item(stack, 0, 0)
         },
         ExtraElement("Clock", GuiRenderer.DEFAULT_ITEM_SIZE.toFloat()) { ctx ->
             val stack = player.inventory.nonEquipmentItems.find { it.item === Items.CLOCK } ?: CLOCK
-            ctx.renderItem(stack, 0, 0)
+            ctx.item(stack, 0, 0)
         },
     )
 
@@ -175,21 +180,14 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        if (HideAppearance.isHidingNow) {
-            return@handler
-        }
-
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
 
         val minimapSize = size
 
-        val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val boundingBox = getGuiScaledBounds(minimapSize.toFloat(), minimapSize.toFloat())
 
-        val centerBB = Vec2(
-            boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
-            boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
-        )
+        val centerBB = boundingBox.centerVec
 
         val baseX = (playerPos.x / 16.0).toInt()
         val baseZ = (playerPos.z / 16.0).toInt()
@@ -260,7 +258,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawShadowForBB(
+    private fun GuiGraphicsExtractor.drawShadowForBB(
         boundingBox: BoundingBox2f,
         bounds: ScreenRectangle,
         from: Color4b,
@@ -302,7 +300,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawMinimapTexture(
+    private fun GuiGraphicsExtractor.drawMinimapTexture(
         bounds: ScreenRectangle,
         baseX: Int,
         baseZ: Int,
@@ -326,7 +324,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos.asLong(baseX + x, baseZ + z)
+                    val chunkPos = ChunkPos.pack(baseX + x, baseZ + z)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
@@ -347,7 +345,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawEntities(
+    private fun GuiGraphicsExtractor.drawEntities(
         tickDelta: Float,
         baseX: Float,
         baseZ: Float,
@@ -397,7 +395,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun GuiGraphics.drawOutOfBoundsEntityMarkers(
+    private fun GuiGraphicsExtractor.drawOutOfBoundsEntityMarkers(
         tickDelta: Float,
         center: Vec2,
         boundingBox: BoundingBox2f,

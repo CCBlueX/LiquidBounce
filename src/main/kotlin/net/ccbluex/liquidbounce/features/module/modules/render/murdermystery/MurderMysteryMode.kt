@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.network.chat.Component

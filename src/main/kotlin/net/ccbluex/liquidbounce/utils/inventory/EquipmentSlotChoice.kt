@@ -28,7 +28,7 @@ import net.minecraft.world.entity.LivingEntity
 
 enum class EquipmentSlotChoice(
     override val tag: String,
-    val slot: EquipmentSlot,
+    @JvmField val slot: EquipmentSlot,
     override val tagAliases: List<String> = emptyList(),
 ) : Tagged {
     MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
@@ -45,8 +45,7 @@ enum class EquipmentSlotChoice(
         return itemStack[DataComponents.DYED_COLOR]?.rgb?.let { opaque(it) }
     }
 
-    companion object {
-        @JvmStatic
+    companion {
         fun allHumanoidArmor() = enumSetOf(FEET, LEGS, CHEST, HEAD)
     }
 }

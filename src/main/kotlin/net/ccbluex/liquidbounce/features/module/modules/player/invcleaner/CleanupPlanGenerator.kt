@@ -19,13 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.minecraft.world.item.Item
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
-    private val availableItems: List<ItemSlot>,
+    availableItems: List<ItemSlot>,
 ) : ItemPacker.ItemAmountConstraintProvider {
+    private val availableItems = availableItems.filterNot {
+        it.itemStack.item in template.itemBlacklist
+    }
+
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
 
     private val packer = ItemPacker()
@@ -99,7 +105,7 @@ class CleanupPlanGenerator(
     }
 
     private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
-        val itemsByType = HashMap<ItemAndComponents, MutableList<ItemSlot>>()
+        val itemsByType = Object2ObjectOpenHashMap<ItemAndComponents, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack
@@ -127,8 +133,11 @@ class CleanupPlanGenerator(
 
         for (constraintInfo in constraints) {
             val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
+            val projectedCount = currentCount + constraintInfo.amountAddedByItem
 
-            if (currentCount > constraintInfo.group.acceptableRange.last) {
+            // Evaluate the post-addition state so a single accepted stack cannot push the plan
+            // beyond the configured maximum for this constraint group.
+            if (projectedCount > constraintInfo.group.acceptableRange.last) {
                 return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
             } else if (currentCount < constraintInfo.group.acceptableRange.first) {
                 return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.NOT_SATISFIED
@@ -151,12 +160,13 @@ class CleanupPlanPlacementTemplate(
     /**
      * Contains requests for each slot (e.g. Slot 1 -> SWORD, Slot 8 -> BLOCK, etc.)
      */
-    val slotContentMap: Map<ItemSlot, ItemSortChoice>,
+    val slotContentMap: Map<out ItemSlot, ItemSortChoice>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
      * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
      */
     val itemAmountConstraintProvider: (ItemFacet) -> MutableList<ItemConstraintInfo>,
+    val itemBlacklist: Set<Item>,
     /**
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */

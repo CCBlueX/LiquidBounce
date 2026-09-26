@@ -18,37 +18,37 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.outlineBox
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
-import net.ccbluex.liquidbounce.utils.client.getFace
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.block.outlineShape
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.math.centerPointOf
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.contains
+import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.block.SupportType
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import java.util.function.ToDoubleFunction
-
-private inline fun <T> compareBy(keyExtractor: ToDoubleFunction<T>): Comparator<T> =
-    Comparator.comparingDouble(keyExtractor)
+import net.minecraft.world.phys.shapes.VoxelShape
+import java.util.Comparator.comparingDouble
 
 enum class AimMode(override val tag: String) : Tagged {
     CENTER("Center"),
@@ -64,34 +64,33 @@ enum class AimMode(override val tag: String) : Tagged {
 /**
  * Parameters used when generating a targeting plan for a block placement.
  */
-class BlockPlacementTargetFindingOptions(
+data class BlockPlacementTargetFindingOptions(
     val offsetOptions: BlockOffsetOptions,
     val faceHandlingOptions: FaceHandlingOptions,
     val stackToPlaceWith: ItemStack,
     val playerLocationOnPlacement: PlayerLocationOnPlacement
 ) {
     companion object {
-        @JvmField
-        val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareBy { vec ->
-            -player.distanceToSqr(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
-        }
-
         @JvmStatic
-        fun leastBlockDistanceToLine(optimalLine: Line): Comparator<Vec3i> =
-            compareBy { vec ->
-                val blockPos = vec.toBlockPos()
-                val blockState = world.getBlockState(blockPos)
-                val box = blockState.outlineBox(blockPos)
-                -optimalLine.distanceToSqr(box)
+        fun leastBlockDistanceToLine(line: Line): Comparator<BlockPos> =
+            comparingDouble { blockPos ->
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -line.distanceToSqr(blockPos.center)
+                } else {
+                    -(line.getNearestPointTo(shape)?.distanceSquared ?: Double.POSITIVE_INFINITY)
+                }
             }
 
         @JvmStatic
-        fun leastBlockDistanceToPos(pos: Vec3): Comparator<Vec3i> =
-            compareBy { vec ->
-                val blockPos = vec.toBlockPos()
-                val blockState = world.getBlockState(blockPos)
-                val box = blockState.outlineBox(blockPos)
-                -box.distanceToSqr(pos)
+        fun leastBlockDistanceToPos(pos: Vec3): Comparator<BlockPos> =
+            comparingDouble { blockPos ->
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -blockPos.distToCenterSqr(pos)
+                } else {
+                    -shape.distanceToSqr(pos)
+                }
             }
     }
 }
@@ -103,15 +102,23 @@ class BlockPlacementTargetFindingOptions(
  * Prioritized with [priorityComparator]
  * @param priorityComparator compares two offsets by their priority. An offset which ranks higher is prioritized.
  */
-class BlockOffsetOptions(
+data class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
-    val priorityComparator: Comparator<Vec3i>,
+    val priorityComparator: Comparator<BlockPos>,
 ) {
     companion object {
         @JvmField
         val Default = BlockOffsetOptions(
             BlockPosOffsets.NO_OFFSET.offsets,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            comparingDouble { blockPos ->
+                val pos = player.position()
+                val shape = blockPos.outlineShape.move(blockPos)
+                if (shape.isEmpty) {
+                    -blockPos.distToCenterSqr(pos)
+                } else {
+                    -shape.distanceToSqr(pos)
+                }
+            },
         )
     }
 }
@@ -125,204 +132,202 @@ class BlockOffsetOptions(
  * The expand-scaffold, for example, needs them to be considered to
  * work.
  */
-class FaceHandlingOptions(
+data class FaceHandlingOptions(
     val facePositionFactory: FaceTargetPositionFactory,
     val considerFacingAwayFaces: Boolean = false,
 )
 
 /**
- * Contains information about where the player will be _on placement_.
+ * Contains the player's state on placement. Everything that depends on the player has to be read from here instead
+ * of the live player, so that the aim is derived from one single state.
+ *
+ * The state may be a prediction of where the player will be when the block is actually placed (scaffold predicts it
+ * to pre-aim). It is only what the _aim_ is derived from: whether the click is possible right now has to be verified
+ * against the eye the server will use for the interaction, see [BlockPlacementTarget.doesCrosshairTargetMatchRequirements].
  *
  * @param position the player's position (on placement)
  * @param pose the player's pose (on placement)
+ * @param rotation the rotation to aim from. Target finding keeps the rotation change minimal relative to it
+ * @param movingHorizontally whether the player moves horizontally (on placement)
  */
-class PlayerLocationOnPlacement(
-    val position: Vec3,
-    val pose: Pose = player.pose
+data class PlayerLocationOnPlacement(
+    val position: Vec3 = player.position(),
+    val pose: Pose = player.pose,
+    val rotation: Rotation = RotationManager.serverRotation,
+    val movingHorizontally: Boolean = player.input.keyPresses.anyHorizontal,
 ) {
-    val eyeHeight: Float get() = player.getEyeHeight(pose)
-    val eyePos: Vec3 get() = position.add(0.0, eyeHeight.toDouble(), 0.0)
+    val eyeHeight: Float = player.getEyeHeight(pose)
+    val eyePos: Vec3 = position.add(0.0, eyeHeight.toDouble(), 0.0)
 }
 
 /**
- * A draft of a block placement
+ * A click a placement can be performed with
  *
- * @param blockPosToInteractWith the blockPos the player is eventually clicking on. Might not be the target pos, because
+ * @param clickedBlockPos the blockPos the player is eventually clicking on. Might not be the target pos, because
  * you need to interact with a neighboring block in order to place a block at a position
- * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is
- * not the target pos, this will always point to it
+ * @param direction the clicked face of [clickedBlockPos]. If [clickedBlockPos] is not the target pos, this always
+ * points to it
+ * @param pointOnFace the exact point on [direction]'s face that is aimed at
  */
 private data class BlockTargetPlan(
-    val blockPosToInteractWith: BlockPos,
-    val interactionDirection: Direction,
+    val clickedBlockPos: BlockPos,
+    val direction: Direction,
+    val pointOnFace: PointOnFace,
 ) {
-
-    // FIXME: find actual point with raycast
     /**
-     * The center on the target block face
-     *
-     * Note: no check for raycast!
+     * [pointOnFace] in world coordinates.
      */
-    val targetPositionOnBlock: Vec3 =
-        AABB(blockPosToInteractWith).centerPointOf(interactionDirection)
-
-    /**
-     * cosine of the angle between the expected player's eye position and the normal of the targeted face.
-     */
-    fun calculateAngleToPlayerEyeCosine(eyePos: Vec3): Double {
-        val deltaToPlayerPos = eyePos.subtract(targetPositionOnBlock)
-
-        return deltaToPlayerPos.dot(Vec3.atLowerCornerOf(interactionDirection.unitVec3i)) / deltaToPlayerPos.length()
-    }
-
+    val interactionPoint: Vec3 = pointOnFace.point + clickedBlockPos
 }
 
-private enum class BlockTargetingMode {
-    PLACE_AT_NEIGHBOR {
-        override fun getTargetPlan(
-            pos: BlockPos,
-            direction: Direction
-        ): BlockTargetPlan? {
-            val currPos = pos.offset(direction.opposite.unitVec3i)
-            val currState = currPos.getState() ?: return null
-
-            if (currState.canBeReplaced()) {
-                return null
-            }
-
-            return BlockTargetPlan(currPos, direction)
-        }
-    },
-
-    REPLACE_EXISTING_BLOCK {
-        override fun getTargetPlan(
-            pos: BlockPos,
-            direction: Direction
-        ): BlockTargetPlan = BlockTargetPlan(pos, direction)
-    };
-
-    /**
-     * @return null if it is impossible to target the block with the given parameters
-     */
-    abstract fun getTargetPlan(pos: BlockPos, direction: Direction): BlockTargetPlan?
-
-}
-
-private fun findBestTargetPlanForTargetPosition(
+/**
+ * Finds the click that places the stack at [posToInvestigate], preferring the face the click most directly reaches.
+ *
+ * The block either has to be placed against one of the neighbouring blocks or replaces [posToInvestigate] itself.
+ * Which of both happens is decided by vanilla from the clicked face and point. `BlockItem.updatePlacementContext`
+ * runs first — scaffolding moves the placed block off the block that was clicked — and [BlockPlaceContext.clickedPos]
+ * of that result is what has to equal [posToInvestigate].
+ *
+ * @return null if there is no click placing the stack at [posToInvestigate]
+ */
+private fun findBestTargetPlan(
     posToInvestigate: BlockPos,
-    mode: BlockTargetingMode,
-    targetFindingOptions: BlockPlacementTargetFindingOptions
+    options: BlockPlacementTargetFindingOptions
 ): BlockTargetPlan? {
-    val directions = Direction.entries
+    val eyePos = options.playerLocationOnPlacement.eyePos
+    val considerFacingAwayFaces = options.faceHandlingOptions.considerFacingAwayFaces
 
-    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.eyePos
+    var bestPlan: BlockTargetPlan? = null
+    var bestFacing = Double.NEGATIVE_INFINITY
 
-    val options = directions.mapNotNull { direction ->
-        val targetPlan = mode.getTargetPlan(posToInvestigate, direction) ?: return@mapNotNull null
+    // Rank the candidates by how directly their face points at the eye: 1.0 when the eye is straight in front of the
+    // face, 0.0 when it lies in the face plane. This is what decides which face a click reaches — a steeply
+    // downward look clicks the top face, even though a side face's sampled point lies closer to the eye.
+    fun consider(clickedBlockPos: BlockPos, direction: Direction, outlineShape: VoxelShape) {
+        if (outlineShape.isEmpty) return
 
-        // Check if the target face is pointing away from the player
-        if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&
-            targetPlan.calculateAngleToPlayerEyeCosine(playerEyePositionOnPlacement) < 0) {
-            return@mapNotNull null
+        val plan = findTargetPlan(clickedBlockPos, direction, posToInvestigate, outlineShape, options) ?: return
+
+        val toEye = eyePos.subtract(plan.interactionPoint)
+        val facing = toEye.dot(plan.direction.unitVec3) / toEye.length()
+
+        if (!considerFacingAwayFaces && facing < 0.0) {
+            return
         }
 
-        return@mapNotNull targetPlan
+        if (facing > bestFacing) {
+            bestPlan = plan
+            bestFacing = facing
+        }
     }
 
-    val currentRotation = RotationManager.serverRotation
+    // Scaffolding and light are a full cube only while that item is in the main hand. The placement raycast uses
+    // CollisionContext.of(player), so the sampled face has to come from that same context. An empty one never does.
+    val collisionContext = CollisionContext.of(player)
+    val targetShape = posToInvestigate.outlineShape(collisionContext)
 
-    return options.minByOrNull {
-        val targetRotation = Rotation.lookingAt(point = it.targetPositionOnBlock, from = playerEyePositionOnPlacement)
+    for (direction in Direction.entries) {
+        val neighbour = posToInvestigate.relative(direction.opposite)
+        consider(neighbour, direction, neighbour.outlineShape(collisionContext))
+        consider(posToInvestigate, direction, targetShape)
+    }
 
-        currentRotation.angleTo(targetRotation)
+    return bestPlan
+}
+
+/**
+ * @return the click on [clickedBlockPos]'s [direction] face, or null if it would not place the stack at
+ * [posToInvestigate]
+ */
+private fun findTargetPlan(
+    clickedBlockPos: BlockPos,
+    direction: Direction,
+    posToInvestigate: BlockPos,
+    outlineShape: VoxelShape,
+    options: BlockPlacementTargetFindingOptions
+): BlockTargetPlan? {
+    val pointOnFace = findTargetPointOnFace(clickedBlockPos, direction, outlineShape, options) ?: return null
+
+    val plan = BlockTargetPlan(clickedBlockPos, direction, pointOnFace)
+
+    // Let vanilla decide where the clicked block ends up: it is replaced if it is replaceable with the stack,
+    // otherwise the block is placed on the clicked face. Scaffolding then walks off that block.
+    val eyeLocal = options.playerLocationOnPlacement.eyePos - clickedBlockPos
+    val placementContext = BlockPlaceContext(
+        player,
+        InteractionHand.MAIN_HAND,
+        options.stackToPlaceWith,
+        BlockHitResult(plan.interactionPoint, direction, clickedBlockPos, outlineShape.contains(eyeLocal)),
+    )
+
+    if (placementContext.resolvePlacementAt(posToInvestigate) == null) {
+        return null
+    }
+
+    return plan
+}
+
+private data class PointOnFace(
+    val face: AlignedFace,
+    val point: Vec3,
+) {
+    companion object {
+        private val comparators = enumMapOf<Direction, Comparator<PointOnFace>> { direction ->
+            comparingDouble<PointOnFace> {
+                it.point.subtract(0.5, 0.5, 0.5)
+                    .multiply(direction.unitVec3)
+                    .lengthSqr()
+            }.thenComparingDouble { it.point.y }
+        }
+
+        fun comparator(direction: Direction): Comparator<PointOnFace> =
+            comparators[direction]!!
     }
 }
 
 /**
- * @return null if it is impossible to target the block with the given parameters
+ * Whether this position already holds a solid block, i.e. one that carries the player or another block on its top
+ * center.
+ *
+ * A partially filled position (a slab, a flower) does not count: the stack cannot go there, but the offsets are
+ * still worth investigating, which is why the requested position must not be filtered by "can receive the stack".
+ * That check belongs to the candidates, see [findTargetPlan].
  */
-fun getTargetPlanForPositionAndDirection(
-    pos: BlockPos,
-    direction: Direction,
-    mode: BlockTargetingMode
-): BlockTargetPlan? {
-    when (mode) {
-        BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
-            val currPos = pos.offset(direction.opposite.unitVec3i)
-            val currState = currPos.getState() ?: return null
+private fun BlockPos.holdsSolidBlock(): Boolean =
+    stateOrEmpty.isFaceSturdy(world, this, Direction.UP, SupportType.CENTER)
 
-            if (currState.canBeReplaced()) {
-                return null
-            }
-
-            return BlockTargetPlan(currPos, direction)
-        }
-        BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
-            return BlockTargetPlan(pos, direction)
-        }
-    }
-}
-
-private class PointOnFace(val face: AlignedFace, val point: Vec3)
-
+/**
+ * Finds the best way to place [BlockPlacementTargetFindingOptions.stackToPlaceWith] at [pos] or, if [pos] cannot
+ * receive it, at one of the positions the offset options investigate (in priority order).
+ *
+ * @return null when neither [pos] nor any investigated offset can receive the stack
+ */
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
-    val state = pos.getState()!!
-
-    // We cannot place blocks when there is already a block at that position
-    if (isBlockSolid(state, pos)) {
+    // Nothing to place — searching the offsets would only find a spot for a stray block next to the one at [pos].
+    if (pos.holdsSolidBlock()) {
         return null
     }
 
     val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith { a, b ->
         // Sort DESCENDING!
-        options.offsetOptions.priorityComparator.compare(b.offset(pos), a.offset(pos))
+        options.offsetOptions.priorityComparator.compare(pos + b, pos + a)
     }
 
     for (offset in offsetsToInvestigate) {
         val posToInvestigate = pos.offset(offset)
-        val blockStateToInvestigate = posToInvestigate.getState()!!
 
-        // Already a block in that position?
-        if (isBlockSolid(blockStateToInvestigate, posToInvestigate)) {
-            continue
-        }
-
-        // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
-        // target the block in order to replace it. If there is no block at the target position yet, we need to target
-        // a neighboring block
-        val targetMode = if (blockStateToInvestigate.isAir || !blockStateToInvestigate.fluidState.isEmpty) {
-            BlockTargetingMode.PLACE_AT_NEIGHBOR
-        } else {
-            BlockTargetingMode.REPLACE_EXISTING_BLOCK
-        }
-
-        // Check if we can actually replace the block?
-        if (targetMode == BlockTargetingMode.REPLACE_EXISTING_BLOCK
-            && !blockStateToInvestigate.canBeReplacedWith(posToInvestigate, options.stackToPlaceWith)
-        ) {
-            continue
-        }
-
-        // Find the best plan to do the placement
-        val targetPlan = findBestTargetPlanForTargetPosition(posToInvestigate, targetMode, options) ?: continue
-
-        val currPos = targetPlan.blockPosToInteractWith
-
-        // We found the optimal block to place the block/face to place at. Now we need to find a point on the face.
-        // to rotate to
-        val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
-
-        val rotation = Rotation.lookingAt(
-            point = pointOnFace.point.add(Vec3.atLowerCornerOf(currPos)),
-            from = options.playerLocationOnPlacement.eyePos,
-        )
+        val targetPlan = findBestTargetPlan(posToInvestigate, options) ?: continue
 
         return BlockPlacementTarget(
-            currPos,
+            targetPlan.clickedBlockPos,
             posToInvestigate,
-            targetPlan.interactionDirection,
-            pointOnFace.face.from.y + currPos.y,
-            rotation
+            targetPlan.direction,
+            targetPlan.interactionPoint,
+            targetPlan.pointOnFace.face.from.y + targetPlan.clickedBlockPos.y,
+            Rotation.lookingAt(
+                point = targetPlan.interactionPoint,
+                from = options.playerLocationOnPlacement.eyePos,
+            ),
         )
     }
 
@@ -330,40 +335,47 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 }
 
 private fun findTargetPointOnFace(
-    currState: BlockState,
-    currPos: BlockPos,
-    targetPlan: BlockTargetPlan,
+    clickedBlockPos: BlockPos,
+    direction: Direction,
+    outlineShape: VoxelShape,
     options: BlockPlacementTargetFindingOptions
 ): PointOnFace? {
-    val shapeBBs = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
+    val comparator = PointOnFace.comparator(direction)
+    var best: PointOnFace? = null
 
-    val face = shapeBBs.mapNotNull {
-        val face = it.getFace(targetPlan.interactionDirection)
+    outlineShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
+        val face = AlignedFace.get(direction, minX, minY, minZ, maxX, maxY, maxZ)
 
         var searchFace = face
 
         // Try to aim at the upper portion of the block which makes it easier to switch from full blocks to half blocks
         if (searchFace.to.y >= 0.9) {
-            searchFace = searchFace.truncateY(0.6).requireNonEmpty() ?: face
+            searchFace = searchFace.truncateY(0.51).requireNonEmpty() ?: face
         }
 
-        val targetPos = options.faceHandlingOptions.facePositionFactory.producePositionOnFace(searchFace, currPos)
-            ?: return@mapNotNull null
+        val targetPos =
+            options.faceHandlingOptions.facePositionFactory.producePositionOnFace(
+                searchFace,
+                clickedBlockPos,
+                options.playerLocationOnPlacement,
+            ) ?: return@forAllBoxes
 
-        PointOnFace(
-            face,
-            targetPos
-        )
-    }.maxWithOrNull(
-        Comparator.comparingDouble<PointOnFace> {
-            it.point.subtract(0.5, 0.5, 0.5)
-                .multiply(Vec3.atLowerCornerOf(targetPlan.interactionDirection.unitVec3i))
-                .lengthSqr()
-        }.thenComparingDouble { it.point.y }
-    )
-    return face
+        val pointOnFace = PointOnFace(face, targetPos)
+
+        if (best == null || comparator.compare(pointOnFace, best) > 0) {
+            best = pointOnFace
+        }
+    }
+
+    return best
 }
 
+
+/**
+ * Tolerance for [BlockPlacementTarget.minPlacementY]: the hit position is reconstructed by interpolating the ray,
+ * so a hit exactly on the face plane can land a few ulps below the box boundary.
+ */
+private const val FACE_HIT_EPSILON = 1.0E-7
 
 data class BlockPlacementTarget(
     /**
@@ -376,16 +388,25 @@ data class BlockPlacementTarget(
     val placedBlock: BlockPos,
     val direction: Direction,
     /**
-     * Some blocks must be placed above a certain height of the block. For example stairs and slabs must be placed
-     * at the upper half (=> minY = 0.5) in order to be placed correctly
+     * Exact point on [interactedBlockPos] selected by target finding.
+     */
+    val interactionPoint: Vec3,
+    /**
+     * Lower bound (world y) of the shape box [interactionPoint] was sampled from. One block face can consist of
+     * several boxes lying in the same plane (a stair's north face is a lower slab box plus an upper step box), which
+     * [direction] alone cannot tell apart.
      */
     val minPlacementY: Double,
+    /**
+     * The rotation aiming at [interactionPoint]. It is derived from the (possibly predicted)
+     * [PlayerLocationOnPlacement.eyePos], so a click has to be verified from the eye the server will use.
+     */
     val rotation: Rotation
 ) {
 
     val blockHitResult: BlockHitResult
         get() = BlockHitResult(
-            interactedBlockPos.center,
+            interactionPoint,
             direction,
             interactedBlockPos,
             false
@@ -396,23 +417,14 @@ data class BlockPlacementTarget(
             crosshairTarget.type != HitResult.Type.BLOCK -> false
             crosshairTarget.blockPos != this.interactedBlockPos -> false
             crosshairTarget.direction != this.direction -> false
-            crosshairTarget.location.y < this.minPlacementY -> false
+            crosshairTarget.location.y < this.minPlacementY - FACE_HIT_EPSILON -> false
             else -> true
         }
     }
 }
 
-private fun isBlockSolid(state: BlockState, pos: BlockPos) =
-    state.isFaceSturdy(mc.level!!, pos, Direction.UP, SupportType.CENTER)
-
-class PlacementPlan(
+data class PlacementPlan(
     val targetPos: BlockPos,
     val placementTarget: BlockPlacementTarget,
     val hotbarItemSlot: HotbarItemSlot
-) {
-    fun doesCorrespondTo(rayTraceResult: BlockHitResult, sideMustMatch: Boolean = true): Boolean {
-        return rayTraceResult.type == HitResult.Type.BLOCK
-            && rayTraceResult.blockPos == this.placementTarget.interactedBlockPos
-            && (!sideMustMatch || rayTraceResult.direction == this.placementTarget.direction)
-    }
-}
+)

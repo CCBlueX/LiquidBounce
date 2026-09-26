@@ -21,13 +21,15 @@ package net.ccbluex.liquidbounce.config.autoconfig
 
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
-import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.joinToText
-import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.text.PlainText.NEW_LINE
 import net.ccbluex.liquidbounce.utils.text.PlainText.SPACE
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @JvmRecord
 data class AutoConfigMetadata(
@@ -72,5 +74,10 @@ data class AutoConfigMetadata(
     }
 
     fun asText(): Component = asTexts().joinToText(NEW_LINE)
+
+    companion object {
+        @JvmField
+        val FORMATTER: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+    }
 
 }

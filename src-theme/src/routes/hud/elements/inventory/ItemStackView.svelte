@@ -30,7 +30,6 @@
 </div>
 
 <style lang="scss">
-  @use "../../../../colors" as *;
 
   .hidden {
     display: none;
@@ -44,7 +43,7 @@
 
   .mask {
     position: absolute;
-    background: radial-gradient(circle, rgba(112, 48, 160, 0.8), rgba(255, 105, 180, 0) 100%);
+    background: radial-gradient(circle, var(--item-enchant-glow-start-color), var(--item-enchant-glow-end-color) 100%);
     mix-blend-mode: screen;
     scale: 105%;
     top: 0;
@@ -65,7 +64,7 @@
     left: 10%;
     width: 80%;
     height: 2px;
-    background-color: rgba($item-damage-base-color, 0.68);
+    background-color: var(--item-damage-background-color);
   }
 
   .durability {
@@ -79,7 +78,7 @@
     right: 0;
     font-size: 14px;
     font-weight: bold;
-    text-shadow: 1px 1px black; // This is inconsistent with other UI elements but it looks better so I will let it pass ~Senk Ju
+    text-shadow: 1px 1px var(--item-count-shadow-color); // This is inconsistent with other UI elements but it looks better so I will let it pass ~Senk Ju
     font-family: monospace;
   }
 </style>

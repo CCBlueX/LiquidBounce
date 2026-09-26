@@ -56,22 +56,22 @@ fun traceFromPlayer(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     block: ClipContext.Block = ClipContext.Block.OUTLINE,
-    includeFluids: Boolean = false,
+    fluid: ClipContext.Fluid = ClipContext.Fluid.NONE,
     tickDelta: Float = 1f,
 ): BlockHitResult {
     return traceFromPoint(
         range = range,
         block = block,
-        includeFluids = includeFluids,
+        fluid = fluid,
         start = player.getEyePosition(tickDelta),
-        direction = rotation.directionVector
+        direction = rotation.viewVector
     )
 }
 
 fun traceFromPoint(
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     block: ClipContext.Block = ClipContext.Block.OUTLINE,
-    includeFluids: Boolean = false,
+    fluid: ClipContext.Fluid = ClipContext.Fluid.NONE,
     start: Vec3,
     direction: Vec3,
     entity: Entity = mc.cameraEntity!!,
@@ -82,7 +82,7 @@ fun traceFromPoint(
         start,
         end,
         block,
-        if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
+        fluid,
         entity,
     )
 }
@@ -92,15 +92,17 @@ fun traceFromPoint(
  *
  * @see net.minecraft.world.entity.LivingEntity.hasLineOfSight
  */
+@JvmOverloads
 fun hasLineOfSight(
     eyes: Vec3,
     vec3: Vec3,
+    entity: Entity = player,
 ): Boolean {
-    return world.clip(
+    return entity.level().clip(
         eyes,
         vec3,
         ClipContext.Block.COLLIDER,
         ClipContext.Fluid.NONE,
-        player,
+        entity,
     ).type == HitResult.Type.MISS
 }

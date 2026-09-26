@@ -26,7 +26,7 @@ class TwoDimensionalRegressionModel(
     parent: ModeValueGroup<*>
 ) : ModelWrapper<FloatArray, FloatArray>(
     name,
-    FloatArrayInAndOutTranslator(),
+    FloatArrayInAndOutTranslator,
     2, // X, Y
     parent
 )

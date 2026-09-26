@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 
 /**
  * @param stacksToKeep armor items which should be kept since they might be strong in future situations

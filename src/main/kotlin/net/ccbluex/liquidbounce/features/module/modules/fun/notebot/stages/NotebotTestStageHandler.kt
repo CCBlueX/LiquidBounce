@@ -46,6 +46,7 @@ class NotebotTestStageHandler(engine: NotebotEngine): ModuleNotebot.NotebotStage
         }
 
         if (!untestedBlock.canTestRightNow()) {
+            remainingNoteBlocks.add(untestedBlock)
             return
         }
 

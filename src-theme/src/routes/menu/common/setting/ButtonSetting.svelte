@@ -30,14 +30,12 @@
 </button>
 
 <style lang="scss">
-  @use "sass:color";
-  @use "../../../../colors.scss" as *;
 
   .button-setting {
     position: relative;
     border: none;
-    background-color: $accent-color;
-    color: $menu-text-color;
+    background-color: var(--menu-button-background-color);
+    color: var(--menu-text-color);
     font-family: "Inter", sans-serif;
     padding: 20px;
     border-radius: 5px;
@@ -49,15 +47,15 @@
     }
 
     &.secondary {
-      background-color: rgba($menu-base-color, .36);
+      background-color: var(--menu-button-secondary-background-color);
     }
 
     &:not([disabled]):hover {
-      background-color: color.adjust(color.adjust($accent-color, $saturation: -30%), $lightness: -10%);
+      background-color: var(--menu-button-hover-background-color);
       cursor: pointer;
 
       &.secondary {
-        background-color: color.adjust(color.adjust($menu-base-color, $saturation: -30%), $lightness: -10%);
+        background-color: var(--menu-button-secondary-hover-background-color);
       }
     }
 

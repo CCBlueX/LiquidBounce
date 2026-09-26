@@ -18,11 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
-import org.junit.jupiter.api.Assertions.assertArrayEquals
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class StrongholdHypothesisGeneratorTest {
+
+    companion object {
+        init {
+            // Stronghold generation reads vanilla bootstrap state without starting the game.
+            MinecraftBootstrap.ensureInitialized()
+        }
+    }
 
     @Test
     fun `generator emits fixed stronghold count`() {
@@ -30,8 +38,7 @@ class StrongholdHypothesisGeneratorTest {
 
         assertEquals(10, hypotheses.size)
         hypotheses.forEach {
-            assertEquals(128, it.chunkX.size)
-            assertEquals(128, it.chunkZ.size)
+            assertEquals(128, it.chunks.size)
         }
     }
 
@@ -39,7 +46,7 @@ class StrongholdHypothesisGeneratorTest {
     fun `ring distribution matches vanilla concentric rings`() {
         val ringDistribution = StrongholdHypothesisGenerator.ringDistribution()
 
-        assertArrayEquals(intArrayOf(3, 6, 10, 15, 21, 28, 36, 9), ringDistribution)
+        assertContentEquals(intArrayOf(3, 6, 10, 15, 21, 28, 36, 9), ringDistribution)
     }
 
     @Test
@@ -47,7 +54,6 @@ class StrongholdHypothesisGeneratorTest {
         val generatedA = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
         val generatedB = StrongholdHypothesisGenerator.generate(1, seed = 42L).first()
 
-        assertArrayEquals(generatedA.chunkX, generatedB.chunkX)
-        assertArrayEquals(generatedA.chunkZ, generatedB.chunkZ)
+        assertContentEquals(generatedA.chunks, generatedB.chunks)
     }
 }

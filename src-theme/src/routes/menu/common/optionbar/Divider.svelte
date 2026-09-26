@@ -1,12 +1,11 @@
 <div class="divider"></div>
 
 <style lang="scss">
-  @use "../../../../colors.scss" as *;
 
   .divider {
     height: 100%;
     width: 4px;
-    background-color: rgba($menu-base-color, .36);
+    background-color: var(--menu-option-bar-divider-color);
     border-radius: 5px;
   }
 </style>

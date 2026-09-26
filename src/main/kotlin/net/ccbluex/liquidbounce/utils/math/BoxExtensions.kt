@@ -20,16 +20,26 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
-import net.minecraft.core.BlockPos
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.max
-import kotlin.math.min
+
+val AABB.vertices: Array<Vec3>
+    get() = arrayOf(
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+    )
 
 // Box operators
 
@@ -45,76 +55,26 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
-fun AABB.iterateBlockPos(
-    minYInclusive: Int = minY.floorToInt(),
-    maxYInclusive: Int = maxY.ceilToInt(),
-): Iterable<BlockPos> =
-    BlockPos.betweenClosed(
-        minX.floorToInt(),
-        minYInclusive,
-        minZ.floorToInt(),
-        maxX.ceilToInt(),
-        maxYInclusive,
-        maxZ.ceilToInt(),
-    )
+data class WorldLocalBox(val origin: Vec3, val localBox: AABB)
 
-fun AABB.iterateBottomLayerBlockPos(): Iterable<BlockPos> =
-    iterateBlockPos(maxYInclusive = minY.ceilToInt())
+fun AABB.worldToLocal(): WorldLocalBox {
+    val origin = this.minPosition
+    return WorldLocalBox(origin, this - origin)
+}
 
-fun AABB.centerPointOf(side: Direction): Vec3 {
+fun AABB.centerOnSide(side: Direction): Vec3 {
     val cx = minX + xsize * 0.5
     val cy = minY + ysize * 0.5
     val cz = minZ + zsize * 0.5
 
-    return when (side) {
-        Direction.DOWN -> Vec3(cx, minY, cz)
-        Direction.UP -> Vec3(cx, maxY, cz)
-        Direction.NORTH -> Vec3(cx, cy, minZ)
-        Direction.SOUTH -> Vec3(cx, cy, maxZ)
-        Direction.WEST -> Vec3(minX, cy, cz)
-        Direction.EAST -> Vec3(maxX, cy, cz)
-    }
+    return pointOnSide(cx, cy, cz, side)
 }
 
 /**
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.
  */
 fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
-    val d = p.subtract(start)
-
-    var tEntry = Double.NEGATIVE_INFINITY
-    var tExit = Double.POSITIVE_INFINITY
-
-    fun checkSide(axis: Direction.Axis): Boolean {
-        val d1 = axis.choose(d.x, d.y, d.z)
-        val min = min(axis)
-        val max = max(axis)
-        val p0 = axis.choose(start.x, start.y, start.z)
-
-        // parallel and outside, no need to check anything else
-        if (d1 == 0.0) {
-            if (p0 < min || p0 > max) {
-                return true
-            }
-            return false
-        }
-
-        val t1 = (min - p0) / d1
-        val t2 = (max - p0) / d1
-        tEntry = maxOf(tEntry, min(t1, t2))
-        tExit = minOf(tExit, max(t1, t2))
-
-        return tEntry > tExit
-    }
-
-    if (checkSide(Direction.Axis.X) ||
-        checkSide(Direction.Axis.Y) ||
-        checkSide(Direction.Axis.Z)
-    ) {
-        return false
-    }
-
-    return tEntry <= tExit
+    return if (start == p) contains(start) else Line.fromPoints(start, p).intersects(this)
 }
 
 fun AABB.getCoordinate(direction: Direction): Double =
@@ -135,18 +95,86 @@ fun AABB.getNearestPoint(from: Position): Vec3 {
     )
 }
 
+/**
+ * Squared distance from this box to a point without allocating a temporary [Vec3].
+ *
+ * @see net.minecraft.world.phys.AABB.distanceToSqr
+ */
+fun AABB.distanceToSqr(x: Double, y: Double, z: Double): Double {
+    val dx = maxOf(minX - x, x - maxX, 0.0)
+    val dy = maxOf(minY - y, y - maxY, 0.0)
+    val dz = maxOf(minZ - z, z - maxZ, 0.0)
+    return Mth.lengthSquared(dx, dy, dz)
+}
+
 fun AABB.getNearestPointOnSide(from: Vec3, side: Direction): Vec3 {
     val nearest = getNearestPoint(from)
-    val x = nearest.x
-    val y = nearest.y
-    val z = nearest.z
+    return pointOnSide(nearest.x, nearest.y, nearest.z, side)
+}
 
-    return when (side) {
+fun AABB.samplePointOnSide(side: Direction, a: Double, b: Double): Vec3 {
+    val spot = when (side) {
+        Direction.DOWN -> Vec3(a, 0.0, b)
+        Direction.UP -> Vec3(a, 1.0, b)
+        Direction.NORTH -> Vec3(a, b, 0.0)
+        Direction.SOUTH -> Vec3(a, b, 1.0)
+        Direction.WEST -> Vec3(0.0, a, b)
+        Direction.EAST -> Vec3(1.0, a, b)
+    }
+
+    return pointAtProportion(spot.x, spot.y, spot.z)
+}
+
+fun AABB.pointAtProportion(p: Double): Vec3 =
+    pointAtProportion(p, p, p)
+
+fun AABB.pointAtProportion(pX: Double, pY: Double, pZ: Double): Vec3 = Vec3(
+    Math.fma(xsize, pX, minX),
+    Math.fma(ysize, pY, minY),
+    Math.fma(zsize, pZ, minZ),
+)
+
+private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): Vec3 =
+    when (side) {
         Direction.DOWN -> Vec3(x, minY, z)
         Direction.UP -> Vec3(x, maxY, z)
         Direction.NORTH -> Vec3(x, y, minZ)
         Direction.SOUTH -> Vec3(x, y, maxZ)
-        Direction.WEST -> Vec3(maxX, y, z)
-        Direction.EAST -> Vec3(minX, y, z)
+        Direction.WEST -> Vec3(minX, y, z)
+        Direction.EAST -> Vec3(maxX, y, z)
+    }
+
+/**
+ * Get visible sides from [eyes] **outside** the box.
+ * @return size in [0..3], 0=inside
+ */
+fun AABB.visibleSidesTo(eyes: Vec3): List<Direction> = buildList(3) {
+    if (eyes.x < minX) {
+        this.add(Direction.WEST)
+    } else if (eyes.x > maxX) {
+        this.add(Direction.EAST)
+    }
+
+    if (eyes.y < minY) {
+        this.add(Direction.DOWN)
+    } else if (eyes.y > maxY) {
+        this.add(Direction.UP)
+    }
+
+    if (eyes.z < minZ) {
+        this.add(Direction.NORTH)
+    } else if (eyes.z > maxZ) {
+        this.add(Direction.SOUTH)
+    }
+}
+
+fun AABB.isSideVisible(direction: Direction, eyes: Vec3): Boolean {
+    return when (direction) {
+        Direction.WEST -> eyes.x < this.minX
+        Direction.EAST -> eyes.x > this.maxX
+        Direction.DOWN -> eyes.y < this.minY
+        Direction.UP -> eyes.y > this.maxY
+        Direction.NORTH -> eyes.z < this.minZ
+        Direction.SOUTH -> eyes.z > this.maxZ
     }
 }

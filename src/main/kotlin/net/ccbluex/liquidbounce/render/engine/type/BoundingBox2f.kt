@@ -32,8 +32,12 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
     )
 
     init {
-        require(xMin <= xMax) { "xMin must be less than or equal to xMax" }
-        require(yMin <= yMax) { "yMin must be less than or equal to yMax" }
+        require(xMin <= xMax) {
+            "xMin must be less than or equal to xMax (xMin=$xMin, xMax=$xMax, yMin=$yMin, yMax=$yMax)"
+        }
+        require(yMin <= yMax) {
+            "yMin must be less than or equal to yMax (xMin=$xMin, xMax=$xMax, yMin=$yMin, yMax=$yMax)"
+        }
     }
 
     fun contains(x: Float, y: Float): Boolean {

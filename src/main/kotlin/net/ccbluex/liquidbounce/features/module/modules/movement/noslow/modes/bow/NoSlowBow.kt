@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bow
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
@@ -29,6 +30,12 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.world.item.ItemUseAnimation
 
 internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
+
+    private val animations = enumSetOf(
+        ItemUseAnimation.BOW,
+        ItemUseAnimation.CROSSBOW,
+        ItemUseAnimation.TRIDENT,
+    )
 
     val modes = modes(this, "Choice") {
         arrayOf(
@@ -47,16 +54,10 @@ internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
             }
 
             // Check if we are using a block item
-            return player.isUsingItem && player.useItem.useAnimation in arrayOf(
-                ItemUseAnimation.BOW,
-                ItemUseAnimation.CROSSBOW,
-                ItemUseAnimation.SPEAR
-            )
+            return player.isUsingItem && player.useItem.useAnimation in animations
         }
 
     @Suppress("unused")
-    private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == ItemUseAnimation.BOW || action == ItemUseAnimation.CROSSBOW || action == ItemUseAnimation.SPEAR
-    })
+    private val noBlockInteract = tree(NoSlowNoBlockInteract(this, animations::contains))
 
 }
