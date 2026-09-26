@@ -19,8 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.utils.collection.Pools;
-import net.ccbluex.liquidbounce.render.gui.element.PoseReusableGuiElementRenderState;
+import net.ccbluex.liquidbounce.render.gui.element.RecyclableGuiElementRenderState;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.state.gui.ScreenArea;
 import org.spongepowered.asm.mixin.Final;
@@ -49,13 +48,13 @@ public abstract class MixinGuiRenderState {
     private void clear(CallbackInfo ci) {
         for (GuiRenderState.Node layer : strata) {
             if (layer.elementStates != null) {
-                layer.elementStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
+                layer.elementStates.forEach(liquid_bounce$tryRecycle);
                 ARRAY_LIST.recycle((ArrayList) layer.elementStates);
                 layer.elementStates = null;
             }
 
             if (layer.glyphStates != null) {
-                layer.glyphStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
+                layer.glyphStates.forEach(liquid_bounce$tryRecycle);
                 ARRAY_LIST.recycle((ArrayList) layer.glyphStates);
                 layer.glyphStates = null;
             }
@@ -78,9 +77,9 @@ public abstract class MixinGuiRenderState {
     }
 
     @Unique
-    private static final Consumer<ScreenArea> liquid_bounce$tryRecycleMatrix3x2f = element -> {
-        if (element instanceof PoseReusableGuiElementRenderState t) {
-            Pools.Mat3x2f.recycle(t.pose());
+    private static final Consumer<ScreenArea> liquid_bounce$tryRecycle = element -> {
+        if (element instanceof RecyclableGuiElementRenderState recyclable) {
+            recyclable.recycle();
         }
     };
 

@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.mojang.blaze3d.textures.GpuTexture;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.state.LightmapRenderState;
 import org.jspecify.annotations.NullMarked;
@@ -29,7 +32,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @NullMarked
@@ -40,16 +42,12 @@ public abstract class MixinLightmap {
     @Final
     private GpuTexture texture;
 
-    /**
-     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams.Lightmap
-     */
-    @ModifyArg(
-        method = "<init>",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/GpuDevice;createTexture(Ljava/lang/String;ILcom/mojang/blaze3d/textures/TextureFormat;IIII)Lcom/mojang/blaze3d/textures/GpuTexture;"),
-        index = 1
+    @ModifyReturnValue(
+        method = "getTextureView",
+        at = @At("RETURN")
     )
-    private int makeTextureCopiable(int usage) {
-        return usage | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
+    private GpuTextureView lightmapOverride(GpuTextureView original) {
+        return ModuleItemChams.Lightmap.OVERRIDE.orElse(original);
     }
 
     /**

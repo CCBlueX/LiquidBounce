@@ -49,7 +49,7 @@ private fun getTag() = if (mc.isSingleplayer) {
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
-    val guiMessage = GuiMessage(mc.gui.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
+    val guiMessage = GuiMessage(mc.gui.hud.guiTicks, message, null, GuiMessageSource.SYSTEM_CLIENT, getTag())
     (guiMessage as GuiMessageLineAddition).`liquid_bounce$setId`(id)
     (guiMessage as GuiMessageAddition).`liquid_bounce$setCount`(count)
     this.logChatMessage(guiMessage)

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.util.PriorityQueue
+import java.util.function.Function
 import java.util.function.Predicate
 import java.util.function.ToDoubleFunction
 
@@ -51,7 +52,7 @@ private data class QueueEntry<T>(
 fun <T> aStarShortestPath(
     start: T,
     isGoal: Predicate<T>,
-    neighbors: (T) -> Iterable<WeightedEdge<T>>,
+    neighbors: Function<T, Iterable<WeightedEdge<T>>>,
     heuristic: ToDoubleFunction<T>,
     maxIterations: Int = Int.MAX_VALUE,
     maxCost: Double = Double.POSITIVE_INFINITY,
@@ -64,7 +65,7 @@ fun <T> aStarShortestPath(
     }
     val previous = Object2ObjectOpenHashMap<T, T>()
 
-    val queue = PriorityQueue(Comparator.comparingDouble(ToDoubleFunction(QueueEntry<T>::fScore)))
+    val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore })
     queue.add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
 
     var iterations = 0
@@ -84,24 +85,24 @@ fun <T> aStarShortestPath(
             return ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
         }
 
-        for (edge in neighbors(current.node)) {
-            require(edge.cost >= 0.0) { "Path search edge costs must be non-negative." }
+        for ((node, cost) in neighbors.apply(current.node)) {
+            require(cost >= 0.0) { "Path search edge costs must be non-negative." }
 
-            val candidateG = current.gScore + edge.cost
+            val candidateG = current.gScore + cost
             if (candidateG > maxCost) {
                 continue
             }
 
-            val knownG = gScores.getDouble(edge.node)
+            val knownG = gScores.getDouble(node)
             if (candidateG >= knownG) {
                 continue
             }
 
-            gScores.put(edge.node, candidateG)
-            previous.put(edge.node, current.node)
+            gScores.put(node, candidateG)
+            previous.put(node, current.node)
 
-            val fScore = candidateG + heuristic.applyAsDouble(edge.node)
-            queue.add(QueueEntry(edge.node, candidateG, fScore))
+            val fScore = candidateG + heuristic.applyAsDouble(node)
+            queue.add(QueueEntry(node, candidateG, fScore))
         }
     }
 

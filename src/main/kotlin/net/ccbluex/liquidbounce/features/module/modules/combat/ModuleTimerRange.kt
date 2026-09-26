@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -29,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import kotlin.random.Random
 
 /**
  * TimerRange module
@@ -39,7 +39,7 @@ import kotlin.random.Random
 
 object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
 
-    private val chance by int("Chance", 100, 0..100, "%")
+    private val chance = percentageChance("Chance", 100f)
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
     private val normalSpeed by float("NormalSpeed", 0.9F, 0.1F..10F)
     private val inRangeSpeed by float("InRangeSpeed", 0.95F, 0.1F..10F)
@@ -93,9 +93,7 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
             return 1.0f
         }
 
-        if (world.findEnemy(0f, distanceToStartWorking) == null
-            || chance != 100 && Random.nextInt(100) > chance)
-        {
+        if (world.findEnemy(0f, distanceToStartWorking) == null || !chance.asBoolean) {
             return null
         }
 

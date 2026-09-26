@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.item.armor
 
 import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.item.armorToughness
 import net.ccbluex.liquidbounce.utils.item.armorValue
 import net.ccbluex.liquidbounce.utils.item.durability
@@ -27,8 +26,8 @@ import net.ccbluex.liquidbounce.utils.item.equipmentSlot
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.entity.EquipmentSlot
@@ -72,11 +71,10 @@ value class ArmorKitParameters private constructor(
 ) {
     fun getParametersForSlot(slotType: EquipmentSlot) = this.slots[slotType]!!
 
-    companion object {
+    companion {
         /**
          * Returns for each slot the summed up armor parameters without that slot.
          */
-        @JvmStatic
         fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorKitParameters {
             // Sum up all parameters
             val totalArmorKitParameters =
@@ -178,8 +176,8 @@ class ArmorComparator(
         compareBy { getEnchantmentThreshold(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
         compareBy { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
-        compareByCondition(ArmorPiece::isAlreadyEquipped),
-        compareByCondition(ArmorPiece::isReachableByHand)
+        compareBy(ArmorPiece::isAlreadyEquipped),
+        compareBy(ArmorPiece::isReachableByHand)
     )
 
     /**

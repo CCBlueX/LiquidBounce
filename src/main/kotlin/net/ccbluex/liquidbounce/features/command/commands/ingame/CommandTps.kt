@@ -18,13 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.math.roundToDecimalPlaces
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 
 /**
@@ -36,20 +39,29 @@ import net.minecraft.network.protocol.game.ClientboundSetTimePacket
  *
  * @author ccetl
  */
-object CommandTps : Command.Factory {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("tps")
-            .requiresIngame()
-            .handler {
+object CommandTps : CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("tps") {
+            requires { it.isIngame }
+            exec {
                 val tps = ServerObserver.tps
-                chat(regular(command.result("tpsCheck", variable(
-                    if (tps.isNaN()) command.result("nan").string else tps.roundToDecimalPlaces(2).toString()
-                ))), command)
+                chat(
+                    regular(
+                        t("tpsCheck",
+                            variable(
+                                if (tps.isNaN()) {
+                                    t("nan").string
+                                } else {
+                                    tps.roundToDecimalPlaces(2).toString()
+                                }
+                            )
+                        )
+                    ),
+                    metadata = MessageMetadata(id = "Ctps#info")
+                )
+                1
             }
-            .build()
+        }
     }
 
 }
-

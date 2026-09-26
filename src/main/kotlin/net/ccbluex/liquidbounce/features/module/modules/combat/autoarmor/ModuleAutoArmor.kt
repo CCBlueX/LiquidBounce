@@ -36,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparatorMode
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.item.Items
 
 /**
  * AutoArmor module
@@ -137,7 +137,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
-        if (stackInArmor.item == Items.ELYTRA) {
+        if (stackInArmor.isGlider) {
             return null
         }
 
