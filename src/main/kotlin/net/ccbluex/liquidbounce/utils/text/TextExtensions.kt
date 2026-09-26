@@ -201,7 +201,8 @@ fun Component.sanitizeForSerialization(): Component =
  *
  * @see FontDescription.CODEC
  */
-private fun Style.stripNonSerializableFont(): Style = if (this.font is FontDescription.Resource) this else this.withFont(null)
+private fun Style.stripNonSerializableFont(): Style =
+    if (this.font is FontDescription.Resource) this else this.withFont(null)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
