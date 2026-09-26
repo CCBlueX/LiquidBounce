@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render.placement
 
+import net.ccbluex.liquidbounce.utils.math.longFrom32
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Direction.DOWN
@@ -103,7 +104,7 @@ internal value class BlockCuller(val owner: Owner) {
 
         // combines the data in a single long and inverts it, so that all vertices that are to be rendered are
         // represented by 1s
-        return ((faces.toLong() shl 32) or edges.toLong())
+        return longFrom32(faces, edges)
     }
 
     /**

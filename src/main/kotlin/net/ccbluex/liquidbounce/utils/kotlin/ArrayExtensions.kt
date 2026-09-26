@@ -105,19 +105,6 @@ fun <T> List<T>.subList(fromIndex: Int): List<T> {
     return this.subList(fromIndex, this.size)
 }
 
-fun <T> MutableList<T>.removeRange(fromInclusive: Int = 0, endExclusive: Int = this.size) {
-    this.subList(fromInclusive, endExclusive).clear()
-}
-
-/**
- * A JavaScript-styled forEach
- */
-inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self: C) -> Unit) {
-    forEachIndexed { i, item ->
-        action(item, i, this)
-    }
-}
-
 /**
  * Inserts a new element into a sorted list while maintaining the order.
  */

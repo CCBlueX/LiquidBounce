@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
@@ -34,8 +35,9 @@ import net.minecraft.world.entity.Entity
  * @param rotation The rotation we want to aim at.
  * @param angleSmooth The mode of the smoother.
  */
+@AddonApi
 @Suppress("LongParameterList")
-class RotationTarget(
+class RotationTarget @JvmOverloads constructor(
     val rotation: Rotation,
     var entity: Entity? = null,
     /**
@@ -47,7 +49,7 @@ class RotationTarget(
     /**
      * The ticks until reset defines the amount of ticks until we are rotating back.
      */
-    val ticksUntilReset: Int,
+    val ticksUntilReset: Int = 1,
     /**
      * The reset threshold defines the threshold at which we are going to reset the aim plan.
      * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim.
@@ -55,12 +57,12 @@ class RotationTarget(
      * TODO: Replace this with a fixed check that checks if our current mouse movement
      *   outperforms the threshold.
      */
-    val resetThreshold: Float,
+    val resetThreshold: Float = 1f,
     /**
      * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating.
      */
-    val considerInventory: Boolean,
-    val movementCorrection: MovementCorrection,
+    val considerInventory: Boolean = false,
+    val movementCorrection: MovementCorrection = MovementCorrection.SILENT,
     /**
      * What should be done if the target rotation has been reached. Can be `null`.
       */

@@ -104,7 +104,7 @@ class FailRotationProcessor(owner: EventListener? = null)
             ModuleDebug.debugParameter(this, "DeltaYaw", deltaYaw)
             ModuleDebug.debugParameter(this, "DeltaPitch", deltaPitch)
 
-            return Rotation(
+            Rotation(
                 targetRotation.yaw + deltaYaw + shiftRotation.yaw,
                 targetRotation.pitch + deltaPitch + shiftRotation.pitch
             )

@@ -24,6 +24,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.gson.serializer.ValueGroupSerializer.Companion.serializeReadOnly
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import java.lang.reflect.Type
 
 object ReadOnlyComponentSerializer : JsonSerializer<HudComponent> {
@@ -34,10 +35,14 @@ object ReadOnlyComponentSerializer : JsonSerializer<HudComponent> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
+        addProperty("description", src.componentDescription)
         addProperty("id", src.id.toString())
         add("settings", serializeReadOnly(src, context))
+
+        if (src is NativeHudComponent) {
+            addProperty("width", src.width)
+            addProperty("height", src.height)
+        }
     }
-
-
 
 }

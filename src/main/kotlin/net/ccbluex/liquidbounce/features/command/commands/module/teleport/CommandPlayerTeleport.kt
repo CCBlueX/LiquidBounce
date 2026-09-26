@@ -18,14 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
-import net.ccbluex.liquidbounce.features.command.Command
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
+import kotlin.math.floor
 
 /**
  * Teleport Command
@@ -34,44 +38,40 @@ import java.awt.datatransfer.StringSelection
  *
  * Module: [ModuleTeleport]
  */
-object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
-
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("playerteleport")
-            .alias("playertp", "ptp")
-            .requiresIngame()
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("player")
-                    .required()
-                    .build(),
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("copy")
-                    .optional()
-                    .build()
-            )
-            .handler {
-                val player = world.players().find { it.gameProfile.name.equals(args[0] as String, true) }
-                    ?: throw CommandException(command.result("playerNotFound"))
-
-                val y = if (ModuleTeleport.highTp) {
-                        ModuleTeleport.highTpAmount
-                    } else {
-                        player.y
+object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("playerteleport", aliases = listOf("playertp", "ptp")) {
+            requires { it.isIngame }
+            argument("player", PlayerInfoArgumentType) { player ->
+                optional("copy", ClientStringArgumentType.word(), default = null) { copy ->
+                    exec { ctx ->
+                        teleportTo(ctx.get(player).profile.name, copy = ctx.get(copy) == "copy")
+                        1
                     }
-
-                if (args.size > 1 && args[1] == "copy") {
-                    val clipboard = ".teleport ${player.x.toInt()} ${y.toInt()} ${player.z.toInt()}"
-
-                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(clipboard), null)
-                    return@handler
                 }
-
-                ModuleTeleport.indicateTeleport(player.x, y.toDouble(), player.z)
             }
-            .build()
+        }
     }
+
+    private fun CmdI18n.teleportTo(playerName: String, copy: Boolean) {
+        val target = world.players().find { it.gameProfile.name.equals(playerName, true) }
+            ?: throw CommandException(t("playerNotFound"))
+
+        val y = if (ModuleTeleport.highTp) {
+            ModuleTeleport.highTpAmount
+        } else {
+            target.y
+        }
+
+        if (copy) {
+            val clipboard = ".teleport ${floor(target.x).toInt()} " +
+                "${floor(y.toDouble()).toInt()} ${floor(target.z).toInt()}"
+
+            mc.keyboardHandler.clipboard = clipboard
+            return
+        }
+
+        ModuleTeleport.indicateTeleport(target.x, y.toDouble(), target.z)
+    }
+
 }

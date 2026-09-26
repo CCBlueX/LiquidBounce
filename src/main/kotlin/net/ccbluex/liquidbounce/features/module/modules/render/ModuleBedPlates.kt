@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
@@ -92,23 +93,9 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 Blocks.WATER,
 
                 Blocks.GLASS,
-                Blocks.WHITE_STAINED_GLASS,
-                Blocks.ORANGE_STAINED_GLASS,
-                Blocks.MAGENTA_STAINED_GLASS,
-                Blocks.LIGHT_BLUE_STAINED_GLASS,
-                Blocks.YELLOW_STAINED_GLASS,
-                Blocks.LIME_STAINED_GLASS,
-                Blocks.PINK_STAINED_GLASS,
-                Blocks.GRAY_STAINED_GLASS,
-                Blocks.LIGHT_GRAY_STAINED_GLASS,
-                Blocks.CYAN_STAINED_GLASS,
-                Blocks.PURPLE_STAINED_GLASS,
-                Blocks.BLUE_STAINED_GLASS,
-                Blocks.BROWN_STAINED_GLASS,
-                Blocks.GREEN_STAINED_GLASS,
-                Blocks.RED_STAINED_GLASS,
-                Blocks.BLACK_STAINED_GLASS,
-            )
+            ).apply {
+                addAll(Blocks.STAINED_GLASS)
+            }
 
             override fun test(block: Block): Boolean {
                 val state = block.defaultBlockState()
@@ -222,7 +209,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[if (showBed) index - 1 else index]
@@ -236,12 +223,12 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 Color4b.WHITE
                             }.argb
 
-                        renderItem(stack, x, y)
+                        item(stack, x, y)
                         val countString = stack.count.toString()
                         pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawString(
+                                text(
                                     textRenderer,
                                     ROMAN_NUMERALS[surroundingBlock.layer],
                                     x,
@@ -251,7 +238,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                                 )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
-                            drawString(
+                            text(
                                 textRenderer,
                                 countString,
                                 x + 19 - 2 - textRenderer.width(countString),

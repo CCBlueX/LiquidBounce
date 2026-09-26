@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.Test
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
@@ -65,7 +65,7 @@ class NormalizedPlaneTest {
         for (parameter in doubleArrayOf(-1.0, 0.0, 1.0)) {
             val point = line.pointAt(parameter)
             val signedDistance = point.dot(plane.normalVec) - plane.pos.dot(plane.normalVec)
-            org.junit.jupiter.api.Assertions.assertTrue(
+            kotlin.test.assertTrue(
                 abs(signedDistance) <= tolerance,
                 "Expected point $point on plane ${plane.normalVec} @ ${plane.pos}, got signed distance $signedDistance",
             )

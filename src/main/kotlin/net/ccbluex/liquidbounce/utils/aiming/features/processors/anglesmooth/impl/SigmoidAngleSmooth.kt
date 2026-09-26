@@ -49,7 +49,7 @@ class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Vec2 {
-        val rotationDifference = currentRotation.angleTo(targetRotation)
+        val rotationDifference = currentRotation.rotationDeltaLengthTo(targetRotation).coerceAtMost(180f)
 
         val (horizontalTurnSpeed, verticalTurnSpeed) = if (rotationTarget != null) {
             horizontalTurnSpeed.random() to verticalTurnSpeed.random()
@@ -69,9 +69,7 @@ class SigmoidAngleSmooth(parent: ModeValueGroup<*>) : FactorAngleSmooth("Sigmoid
         val sigmoid = 1 / (1 + exp((-steepness * (scaledDifference - midpoint)).toDouble()))
         val interpolatedSpeed = sigmoid * turnSpeed
 
-        return interpolatedSpeed.toFloat()
-            .coerceAtLeast(0f)
-            .coerceAtMost(180f)
+        return interpolatedSpeed.toFloat().coerceIn(0f, 180f)
     }
 
 }

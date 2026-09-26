@@ -18,5 +18,15 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
-@JvmRecord
-data class UV2f(val u: Float, val v: Float)
+import net.ccbluex.liquidbounce.utils.kotlin.FloatFloatValuePair
+
+@JvmInline
+value class UV2f private constructor(private val pair: FloatFloatValuePair) {
+    val u: Float inline get() = component1()
+    val v: Float inline get() = component2()
+
+    constructor(u: Float, v: Float) : this(FloatFloatValuePair(u, v))
+
+    operator fun component1(): Float = pair.left
+    operator fun component2(): Float = pair.right
+}

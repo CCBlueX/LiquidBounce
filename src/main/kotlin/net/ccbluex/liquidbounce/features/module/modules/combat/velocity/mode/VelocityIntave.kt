@@ -75,7 +75,7 @@ object VelocityIntave : VelocityMode("Intave") {
             val shouldJump = Random.nextInt(100) < chance
                 && player.hurtTime > 5
                 && !LocalPlayerFallDamageTracker.isCurrentFallDamage
-            val canJump = player.onGround() && mc.screen !is InventoryScreen
+            val canJump = player.onGround() && mc.gui.screen() !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 
             if (randomize.enabled) {

@@ -17,6 +17,7 @@
     "singleplayer"
   ],
   "overlays": [
+    "basicmenu",
     "hud",
     "inventory",
     "container",
@@ -42,7 +43,8 @@
     "Taco",
     "Image",
     "Text",
-    "KeyBinds"
+    "KeyBinds",
+    "ClosedCaptions"
   ],
   "fonts": [
     "Inter-Black.ttf",

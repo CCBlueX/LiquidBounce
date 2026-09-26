@@ -20,11 +20,16 @@
 package net.ccbluex.liquidbounce.integration.backend.browser
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.joml.Vector2d
+import org.joml.Vector2dc
+import org.joml.Vector2i
+import org.joml.Vector2ic
 import kotlin.math.ln
 
 /**
  * Represents a browser viewport with position, dimensions and rendering quality utilities
  */
+@JvmRecord
 data class BrowserViewport(
     val x: Int,
     val y: Int,
@@ -37,15 +42,15 @@ data class BrowserViewport(
      * Transform global coordinates to viewport-relative coordinates
      * @return Pair of (transformedX, transformedY) coordinates
      */
-    fun transform(globalX: Double, globalY: Double): Pair<Double, Double> =
-        Pair(globalX - x, globalY - y)
+    fun transform(globalX: Double, globalY: Double): Vector2dc =
+        Vector2d(globalX - x, globalY - y)
 
     /**
      * Get the scaled dimensions for rendering based on quality setting
      * @return Pair of (scaledWidth, scaledHeight)
      */
-    fun getScaledDimensions(quality: Float): Pair<Int, Int> =
-        Pair(
+    fun getScaledDimensions(quality: Float): Vector2ic =
+        Vector2i(
             (width * quality).toInt().coerceAtLeast(1),
             (height * quality).toInt().coerceAtLeast(1)
         )
@@ -59,20 +64,19 @@ data class BrowserViewport(
      * Transform mouse coordinates according to quality scaling
      * @return Pair of (scaledX, scaledY) coordinates
      */
-    fun transformMouse(mouseX: Double, mouseY: Double, quality: Float): Pair<Int, Int> =
-        Pair((mouseX * quality).toInt(), (mouseY * quality).toInt())
+    fun transformMouse(mouseX: Double, mouseY: Double, quality: Float): Vector2ic =
+        Vector2i((mouseX * quality).toInt(), (mouseY * quality).toInt())
 
-    companion object {
+    companion {
         /**
          * Creates a fullscreen viewport matching the current window dimensions
          */
-        val FULLSCREEN
-            get() = BrowserViewport(
-                x = 0,
-                y = 0,
-                width = mc.window.width,
-                height = mc.window.height,
-                fullScreen = true
-            )
+        fun fullscreen() = BrowserViewport(
+            x = 0,
+            y = 0,
+            width = mc.window.width,
+            height = mc.window.height,
+            fullScreen = true
+        )
     }
 }

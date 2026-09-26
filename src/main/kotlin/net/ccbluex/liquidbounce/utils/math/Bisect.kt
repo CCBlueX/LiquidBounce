@@ -30,10 +30,12 @@ fun findFunctionMinimumByBisect(
     minDelta: Double = 1E-4,
     function: Double2DoubleFunction,
 ): DoubleDoublePair {
+    require(from.isFinite() && to.isFinite()) { "Search interval must be finite" }
+    require(from <= to) { "Search interval must satisfy from <= to" }
+    require(minDelta.isFinite() && minDelta > 0.0) { "minDelta must be finite and greater than 0" }
+
     var lowerBound = from
     var upperBound = to
-
-    var t = 0
 
     while (upperBound - lowerBound > minDelta) {
         val mid = (lowerBound + upperBound) * 0.5
@@ -46,8 +48,6 @@ fun findFunctionMinimumByBisect(
         } else {
             lowerBound = mid
         }
-
-        t++
     }
 
     val x = (lowerBound + upperBound) * 0.5

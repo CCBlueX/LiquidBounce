@@ -29,10 +29,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
 object CriticalsBlink : Mode("Blink") {
@@ -49,7 +51,7 @@ object CriticalsBlink : Mode("Blink") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        enemyInRange = world.findEnemy(0.0f..range) != null
+        enemyInRange = world.findEnemy(0.0f, range) != null
     }
 
     @Suppress("unused")
@@ -65,7 +67,9 @@ object CriticalsBlink : Mode("Blink") {
                 is ServerboundPlayerActionPacket,
                 is ServerboundSignUpdatePacket,
                 is ServerboundInteractPacket,
-                is ServerboundSwingPacket,
+                is ServerboundAttackPacket,
+                is ServerboundSpectatorActionPacket,
+                is ServerboundPunchPacket,
                 is ServerboundResourcePackPacket -> BlinkManager.Action.PASS
                 else -> BlinkManager.Action.QUEUE
             }

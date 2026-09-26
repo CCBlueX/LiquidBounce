@@ -41,11 +41,11 @@ open class RangeValueGroup(
     /**
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
-    internal val interactionRange: Float
+    val interactionRange: Float
         get() = (mc.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
             ?: 3.0F) + maxRangeIncrease
 
-    internal val interactionThroughWallsRange
+    val interactionThroughWallsRange
         get() = throughWallsRange
 
     /**
@@ -88,10 +88,10 @@ open class RangeValueGroup(
 
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
-            max(0f, attackRange.minRange/* - minRangeDecrease*/),
-            attackRange.maxRange + this@RangeValueGroup.maxRangeIncrease,
-            max(0f, attackRange.minCreativeRange/* - minRangeDecrease*/),
-            attackRange.maxCreativeRange + this@RangeValueGroup.maxRangeIncrease,
+            max(0f, attackRange.minReach/* - minRangeDecrease*/),
+            attackRange.maxReach + this@RangeValueGroup.maxRangeIncrease,
+            max(0f, attackRange.minCreativeReach/* - minRangeDecrease*/),
+            attackRange.maxCreativeReach + this@RangeValueGroup.maxRangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )

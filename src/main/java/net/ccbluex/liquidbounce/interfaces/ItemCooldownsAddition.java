@@ -20,12 +20,11 @@
 package net.ccbluex.liquidbounce.interfaces;
 
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public interface ItemCooldownsAddition {
 
-    @Nullable Entry liquidBounce$getCooldown(@NotNull ItemStack stack);
+    @Nullable Entry liquidBounce$getCooldown(ItemStack stack);
 
     record Entry(int currentTick, int startTick, int endTick) {
     }

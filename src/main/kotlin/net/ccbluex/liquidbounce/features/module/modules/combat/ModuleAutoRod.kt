@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.complement
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -41,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.releaseUsingItemInTickLoop
+import net.ccbluex.liquidbounce.utils.network.releaseUsingItemInTickLoop
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -57,13 +59,15 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.ccbluex.liquidbounce.utils.world.entityGetter
+import net.ccbluex.liquidbounce.utils.world.firstOrNull
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.projectile.FishingHook
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import java.util.function.BooleanSupplier
-import java.util.function.Function
 
 /**
  * Auto use fishing rod for combat.
@@ -81,7 +85,10 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit
     private val minHealth by float("MinHealth", 10f, 1f..20f)
     private val minTargetHealth by float("MinTargetHealth", 4f, 1f..20f)
-    private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
+    private val requires by multiEnumChoice<KillAuraRequirements>(
+        "Requires",
+        choices = enumSetOf(KillAuraRequirements.EMPTY_HAND).complement()
+    )
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
@@ -119,9 +126,9 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         priority = FIRST_PRIORITY,
         initialValue = null,
     ) { _, _ ->
-        world.entitiesForRendering().firstOrNull { entity ->
-            entity is FishingHook && entity.playerOwner === player
-        } as FishingHook?
+        world.entityGetter.firstOrNull(EntityTypes.FISHING_BOBBER) {
+            it.playerOwner === player
+        }
     }
 
     private var availableRodSlot by computedOn<GameTickEvent, HotbarItemSlot?>(
@@ -169,7 +176,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         val target = targetTracker.target ?: return@tickHandler
 
         val rotation = gravityType.apply(target) ?: return@tickHandler
-        val rotationDifference = RotationManager.serverRotation.angleTo(rotation)
+        val rotationDifference = RotationManager.serverRotation.directionAngleTo(rotation)
         if (rotationDifference > aimOffThreshold) return@tickHandler
 
         // If the player used rod manually, skip use
@@ -216,11 +223,11 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
-    private enum class GravityType(override val tag: String) : Tagged, Function<LivingEntity, Rotation?> {
+    private enum class GravityType(override val tag: String) : Tagged {
         LINEAR("Linear"),
         PROJECTILE("Projectile");
 
-        override fun apply(target: LivingEntity): Rotation? = when (this) {
+        fun apply(target: LivingEntity): Rotation? = when (this) {
             LINEAR -> {
                 val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
@@ -241,7 +248,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
         HOLDING_CONSUMABLE("HoldingConsumable");
 
         override fun getAsBoolean(): Boolean = when (this) {
-            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.screen is AbstractContainerScreen<*>
+            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.gui.screen() is AbstractContainerScreen<*>
             USING_ITEM -> player.isUsingItem
             HOLDING_CONSUMABLE -> player.mainHandItem.isConsumable || player.offhandItem.isConsumable
         }

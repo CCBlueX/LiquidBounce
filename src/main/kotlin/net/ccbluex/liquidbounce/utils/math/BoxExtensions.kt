@@ -20,17 +20,26 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+
+val AABB.vertices: Array<Vec3>
+    get() = arrayOf(
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
+    )
 
 // Box operators
 
@@ -46,21 +55,12 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
-fun AABB.iterateBlockPos(
-    minYInclusive: Int = minY.floorToInt(),
-    maxYInclusive: Int = maxY.ceilToInt(),
-): Iterable<BlockPos> =
-    BlockPos.betweenClosed(
-        minX.floorToInt(),
-        minYInclusive,
-        minZ.floorToInt(),
-        maxX.ceilToInt(),
-        maxYInclusive,
-        maxZ.ceilToInt(),
-    )
+data class WorldLocalBox(val origin: Vec3, val localBox: AABB)
 
-fun AABB.iterateBottomLayerBlockPos(): Iterable<BlockPos> =
-    iterateBlockPos(maxYInclusive = minY.ceilToInt())
+fun AABB.worldToLocal(): WorldLocalBox {
+    val origin = this.minPosition
+    return WorldLocalBox(origin, this - origin)
+}
 
 fun AABB.centerOnSide(side: Direction): Vec3 {
     val cx = minX + xsize * 0.5
@@ -144,36 +144,37 @@ private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): 
         Direction.EAST -> Vec3(maxX, y, z)
     }
 
-fun AABB.getFace(direction: Direction): AlignedFace {
+/**
+ * Get visible sides from [eyes] **outside** the box.
+ * @return size in [0..3], 0=inside
+ */
+fun AABB.visibleSidesTo(eyes: Vec3): List<Direction> = buildList(3) {
+    if (eyes.x < minX) {
+        this.add(Direction.WEST)
+    } else if (eyes.x > maxX) {
+        this.add(Direction.EAST)
+    }
+
+    if (eyes.y < minY) {
+        this.add(Direction.DOWN)
+    } else if (eyes.y > maxY) {
+        this.add(Direction.UP)
+    }
+
+    if (eyes.z < minZ) {
+        this.add(Direction.NORTH)
+    } else if (eyes.z > maxZ) {
+        this.add(Direction.SOUTH)
+    }
+}
+
+fun AABB.isSideVisible(direction: Direction, eyes: Vec3): Boolean {
     return when (direction) {
-        Direction.DOWN -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.minY, this.maxZ)
-        )
-
-        Direction.UP -> AlignedFace(
-            Vec3(this.minX, this.maxY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.SOUTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.maxZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.NORTH -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.minZ)
-        )
-
-        Direction.EAST -> AlignedFace(
-            Vec3(this.maxX, this.minY, this.minZ),
-            Vec3(this.maxX, this.maxY, this.maxZ)
-        )
-
-        Direction.WEST -> AlignedFace(
-            Vec3(this.minX, this.minY, this.minZ),
-            Vec3(this.minX, this.maxY, this.maxZ)
-        )
+        Direction.WEST -> eyes.x < this.minX
+        Direction.EAST -> eyes.x > this.maxX
+        Direction.DOWN -> eyes.y < this.minY
+        Direction.UP -> eyes.y > this.maxY
+        Direction.NORTH -> eyes.z < this.minZ
+        Direction.SOUTH -> eyes.z > this.maxZ
     }
 }

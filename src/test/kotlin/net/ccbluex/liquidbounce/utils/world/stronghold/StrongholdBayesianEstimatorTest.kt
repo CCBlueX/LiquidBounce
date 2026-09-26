@@ -22,21 +22,19 @@ import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.minecraft.util.Mth
 import net.minecraft.util.Mth.wrapDegrees
 import net.minecraft.world.level.ChunkPos
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import java.util.Random
 import kotlin.math.atan2
 
 class StrongholdBayesianEstimatorTest {
 
     companion object {
-        @JvmStatic
-        @BeforeAll
-        fun bootstrapMinecraft() {
+        init {
+            // Stronghold generation reads vanilla bootstrap state without starting the game.
             MinecraftBootstrap.ensureInitialized()
         }
     }
@@ -76,7 +74,7 @@ class StrongholdBayesianEstimatorTest {
 
         assertNotNull(posterior)
         val best = posterior!!.candidates.first()
-        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.toLong())
+        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.pack())
     }
 
     @Test
@@ -143,10 +141,10 @@ class StrongholdBayesianEstimatorTest {
     @Test
     fun `nearest stronghold consistency gate can reject inconsistent throws`() {
         val hypothesis = StrongholdHypothesis(
-            LongArray(128) { ChunkPos.asLong(100000, 100000) },
+            LongArray(128) { ChunkPos.pack(100000, 100000) },
         ).also {
-            it.chunks[0] = ChunkPos.ZERO.toLong()
-            it.chunks[1] = ChunkPos.asLong(200, 0)
+            it.chunks[0] = ChunkPos.ZERO.pack()
+            it.chunks[1] = ChunkPos.pack(200, 0)
         }
 
         val measurementA = EyeMeasurement(

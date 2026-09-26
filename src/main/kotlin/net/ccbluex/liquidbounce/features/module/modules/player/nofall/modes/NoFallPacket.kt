@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.network.MovePacketType
 
 internal object NoFallPacket : NoFallMode("Packet") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)

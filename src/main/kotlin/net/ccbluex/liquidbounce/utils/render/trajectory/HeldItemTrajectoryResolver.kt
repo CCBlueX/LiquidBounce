@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.minecraft.core.component.DataComponentGetter
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BowItem
@@ -39,6 +40,8 @@ import net.minecraft.world.item.component.ChargedProjectiles
 import net.minecraft.world.item.enchantment.Enchantments
 
 object HeldItemTrajectoryResolver {
+    private const val MAX_PREVIEWED_SHOTS = 16
+
     @JvmStatic
     /**
      * Resolves one or more rendered trajectory shots for held items.
@@ -60,36 +63,39 @@ object HeldItemTrajectoryResolver {
     ): List<TrajectoryShotDescriptor>? {
         return when (stack.item) {
             is BowItem -> {
-                val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
-                    40
-                } else {
-                    player.ticksUsingItem
-                }
+                val drawing = player.activeItem === stack
+                val useTime = bowUsageDuration(alwaysShowBow, drawing, player.ticksUsingItem) ?: return null
 
                 val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
-                singleShot(stack, TrajectoryDescriptor(trajectoryInfo, TrajectoryType.Arrow))
+                singleShot(
+                    icon = stack,
+                    trajectoryDescriptor = TrajectoryDescriptor(trajectoryInfo, TrajectoryType.Arrow),
+                    colorSource = player.getProjectile(stack),
+                )
             }
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
                 val chargedProjectileCount = chargedProjectiles?.items?.size ?: 0
-                val isMultiShot = stack.getEnchantment(Enchantments.MULTISHOT) > 0
+                val multishotLevel = stack.getEnchantment(Enchantments.MULTISHOT)
                 val shotCount = when {
                     !includeMultiShot -> 1
                     chargedProjectileCount > 0 -> chargedProjectileCount
-                    isMultiShot -> 3
+                    multishotLevel > 0 -> 2 * multishotLevel + 1
                     else -> 1
                 }.coerceAtLeast(1)
+                val chargedProjectile: DataComponentGetter = chargedProjectiles?.items?.firstOrNull() ?: ItemStack.EMPTY
 
                 val trajectoryDescriptor = if (isCrossbowFirework(chargedProjectiles)) {
                     TrajectoryDescriptor.FIREWORK_ROCKET
                 } else {
-                    TrajectoryDescriptor.BOW_ARROW
+                    TrajectoryDescriptor.CROSSBOW_ARROW
                 }
 
-                getShotYawOffsets(shotCount).map { yawOffsetDegrees ->
+                getShotYawOffsets(shotCount, multishotLevel).map { yawOffsetDegrees ->
                     trajectoryDescriptor.toShotDescriptor(
                         yawOffsetDegrees = yawOffsetDegrees,
-                        icon = stack
+                        icon = stack,
+                        colorSource = chargedProjectile,
                     )
                 }
             }
@@ -121,30 +127,40 @@ object HeldItemTrajectoryResolver {
         return chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)
     }
 
+    private fun bowUsageDuration(alwaysShowBow: Boolean, drawing: Boolean, ticksUsingItem: Int): Int? = when {
+        !alwaysShowBow && !drawing -> null
+        alwaysShowBow && !drawing -> 40
+        else -> ticksUsingItem
+    }
+
     private fun singleShot(
-        stack: ItemStack,
+        icon: ItemStack,
         trajectoryDescriptor: TrajectoryDescriptor,
+        colorSource: ItemStack = icon,
     ): List<TrajectoryShotDescriptor> {
-        return listOf(trajectoryDescriptor.toShotDescriptor(icon = stack))
+        return listOf(trajectoryDescriptor.toShotDescriptor(icon = icon, colorSource = colorSource))
     }
 
     /**
-     * Yaw offset model for multi-shot trajectory preview.
-     *
-     * The `[-10, 0, +10]` branch mirrors vanilla triple-shot spread behavior.
-     * @see net.minecraft.world.item.ProjectileWeaponItem.shoot
+     * Mirrors vanilla spread generation in [net.minecraft.world.item.ProjectileWeaponItem.shoot].
+     * @see net.minecraft.world.item.enchantment.EnchantmentHelper.processProjectileSpread
      */
-    private fun getShotYawOffsets(shotCount: Int): FloatArray {
-        return when (shotCount) {
-            1 -> floatArrayOf(0f)
-            3 -> floatArrayOf(-10f, 0f, 10f)
-            else -> {
-                val spread = 20f
-                val step = spread / (shotCount - 1).toFloat()
-                FloatArray(shotCount) { index ->
-                    -spread * 0.5f + step * index.toFloat()
-                }
-            }
+    private fun getShotYawOffsets(shotCount: Int, multishotLevel: Int): FloatArray {
+        if (shotCount <= 1) {
+            return floatArrayOf(0f)
         }
+
+        val maxAngle = 10f * multishotLevel
+        val step = 2f * maxAngle / (shotCount - 1).toFloat()
+        val angleOffset = (shotCount - 1) % 2 * step / 2f
+        val offsets = FloatArray(minOf(shotCount, MAX_PREVIEWED_SHOTS))
+        var direction = 1f
+
+        for (i in offsets.indices) {
+            offsets[i] = angleOffset + direction * ((i + 1) / 2) * step
+            direction = -direction
+        }
+
+        return offsets
     }
 }

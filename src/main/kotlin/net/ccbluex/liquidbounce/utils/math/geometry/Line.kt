@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 data class Line(
@@ -33,8 +32,7 @@ data class Line(
     override val anchor: Vec3
         get() = position
 
-    companion object {
-        @JvmStatic
+    companion {
         fun fromPoints(begin: Vec3, end: Vec3): Line {
             return Line(begin, end.subtract(begin))
         }

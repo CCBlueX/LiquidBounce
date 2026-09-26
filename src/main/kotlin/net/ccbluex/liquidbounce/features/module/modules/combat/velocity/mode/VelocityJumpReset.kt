@@ -19,18 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
-import kotlin.random.Random
 
 /**
  * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
  */
 internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
-    private val chance by float("Chance", 100f, 0f..100f, "%")
+    private val chance = percentageChance("Chance", 100f)
 
     private object JumpByReceivedHits : ToggleableValueGroup(this, "JumpByReceivedHits", false) {
         val hitsUntilJump by intRange("HitsUntilJump", 2..2, 0..10)
@@ -53,8 +53,8 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
         if (player.hurtTime != 9 || !player.onGround() || !player.isSprinting ||
-            LocalPlayerFallDamageTracker.isCurrentFallDamage || !isCooldownOver() ||
-            chance != 100f && Random.nextInt(100) > chance) {
+            LocalPlayerFallDamageTracker.isCurrentFallDamage || !isCooldownOver() || !chance.asBoolean)
+        {
             updateLimit()
             return@handler
         }

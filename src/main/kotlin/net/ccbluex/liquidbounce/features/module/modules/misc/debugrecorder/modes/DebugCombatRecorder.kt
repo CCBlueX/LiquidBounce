@@ -34,12 +34,11 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -50,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
@@ -104,7 +104,7 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
 
             if (targetEntityId != target.id) {
                 // Check if we are moving towards the target
-                if (next.angleTo(targetRotation) >= current.angleTo(targetRotation)) {
+                if (next.directionAngleTo(targetRotation) >= current.directionAngleTo(targetRotation)) {
                     fightMap.remove(target.id)
                     trainingCollection.remove(target.id)
                     continue
@@ -179,14 +179,12 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
 
         val sampleBuffer = buffer ?: return@sequenceHandler
         sampleBuffer.forEach(::recordPacket)
-        chat("Recorded ${sampleBuffer.size} samples for ${entity.name.string}".asText())
+        chat("Recorded ${sampleBuffer.size} samples for ${entity.name.string}".asPlainText())
     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        renderEnvironmentForWorld(matrixStack) {
+        event.renderEnvironment {
             targetTracker.targets().forEach { entity ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val eyePos = pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)

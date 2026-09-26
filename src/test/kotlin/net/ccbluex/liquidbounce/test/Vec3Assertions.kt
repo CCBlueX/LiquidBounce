@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.test
 
 import net.minecraft.world.phys.Vec3
-import org.junit.jupiter.api.Assertions.assertEquals
+import kotlin.test.assertEquals
 
 fun assertVec3Equals(expected: Vec3, actual: Vec3, tolerance: Double) {
     assertEquals(expected.x, actual.x, tolerance, "x")

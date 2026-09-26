@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -67,10 +68,9 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
 
         val unrotatedOffset = (player.position() - fallOffPoint).yRot(lineDirAngle)
 
-        val x = getAvgPlacementPos()
-
-        if (x != null) {
-            logger.debug(x.distanceTo(unrotatedOffset))
+        debugParameter("AvgPlacementPos") {
+            val x = getAvgPlacementPos()
+            x?.let { it to it.distanceTo(unrotatedOffset) }
         }
 
         lastPlacementOffsets.addLast(unrotatedOffset)
@@ -106,9 +106,14 @@ object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Predic
         // If the next placement point is far in the future. Don't predict for now
         val fallOffPoint = getFallOffPositionOnLine(optimalLine) ?: return null
 
-        val fallOffPointToPlayer = fallOffPoint - player.position()
+        val playerPos = player.position()
+        val fallOffPointToPlayer = fallOffPoint - playerPos
         val bootstrapPos = getBootstrapPlacementPos(fallOffPoint, fallOffPointToPlayer)
-        val last = getAvgPlacementPos() ?: return bootstrapPos
+        // Keep the current lateral offset before enough history is available.
+        val last = getAvgPlacementPos()
+            ?: return ScaffoldMovementPlanner.getCurrentSupportReference()?.let {
+                bootstrapPos.add(it.offsetX, 0.0, it.offsetZ)
+            } ?: bootstrapPos
 
         val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
         val predictedPos = fallOffPoint + last.yRot(-lineDirAngle)

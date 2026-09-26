@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import java.lang.Math.fma
@@ -34,6 +36,7 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
+@AddonApi
 @JvmRecord
 data class Rotation @JvmOverloads constructor(
     val yaw: Float,
@@ -57,8 +60,8 @@ data class Rotation @JvmOverloads constructor(
         @JvmStatic
         fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
-                Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
-                Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())
+                yaw = Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
+                pitch = Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat()),
             )
         }
     }
@@ -66,8 +69,11 @@ data class Rotation @JvmOverloads constructor(
     val directionVector: Vec3
         get() = Vec3.directionFromRotation(pitch, yaw)
 
-    val xRot: Float get() = pitch
-    val yRot: Float get() = yaw
+    val viewVector: Vec3
+        get() = Entity.calculateViewVector(pitch, yaw)
+
+    val xRot: Float inline get() = pitch
+    val yRot: Float inline get() = yaw
 
     @JvmOverloads
     fun toQuaternion(dest: Quaternionf = Quaternionf()): Quaternionf =
@@ -102,12 +108,22 @@ data class Rotation @JvmOverloads constructor(
     }
 
     /**
-     * Calculates the angle between this and the other rotation.
+     * Calculates the great-circle angle between the two view directions.
      *
-     * @return angle in degrees
+     * This intentionally ignores differences that do not change the forward vector, such as yaw
+     * at a vertical pitch. Use [rotationDeltaLengthTo] for mouse movement, smoothing and rotation
+     * state comparisons.
+     *
+     * @return direction angle in degrees
      */
-    fun angleTo(other: Rotation): Float {
-        return rotationDeltaTo(other).length().coerceAtMost(180.0F)
+    fun directionAngleTo(other: Rotation): Float {
+        val direction = directionVector
+        val otherDirection = other.directionVector
+
+        return atan2(
+            direction.cross(otherDirection).length(),
+            direction.dot(otherDirection)
+        ).toDegrees().toFloat()
     }
 
     /**
@@ -123,6 +139,14 @@ data class Rotation @JvmOverloads constructor(
     }
 
     /**
+     * Calculates the Euclidean length of the wrapped yaw/pitch control delta.
+     *
+     * Unlike [directionAngleTo], this preserves yaw differences at vertical pitches and therefore
+     * matches Minecraft's independent mouse, packet and movement rotation axes.
+     */
+    fun rotationDeltaLengthTo(other: Rotation): Float = rotationDeltaTo(other).length()
+
+    /**
      * Calculates a new rotation that is closer to the [other] rotation by a limiting factor of
      * [horizontalFactor] and [verticalFactor], which should be between 0 and 180 degrees.
      */
@@ -132,9 +156,9 @@ data class Rotation @JvmOverloads constructor(
         val straightLineYaw = abs(diff.deltaYaw / rotationDifference) * horizontalFactor
         val straightLinePitch = abs(diff.deltaPitch / rotationDifference) * verticalFactor
 
-        return Rotation(
-            this.yaw + diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
-            this.pitch + diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch)
+        return this.add(
+            y = diff.deltaYaw.coerceIn(-straightLineYaw, straightLineYaw),
+            x = diff.deltaPitch.coerceIn(-straightLinePitch, straightLinePitch),
         )
     }
 
@@ -147,8 +171,15 @@ data class Rotation @JvmOverloads constructor(
     )
 
     @JvmOverloads
-    fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
-        return angleTo(other) <= tolerance
+    fun isDirectionCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
+        directionAngleTo(other) <= tolerance
+
+    @JvmOverloads
+    fun isRotationDeltaCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
+        rotationDeltaLengthTo(other) <= tolerance
+
+    fun add(x: Float, y: Float): Rotation {
+        return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)
     }
 
 }

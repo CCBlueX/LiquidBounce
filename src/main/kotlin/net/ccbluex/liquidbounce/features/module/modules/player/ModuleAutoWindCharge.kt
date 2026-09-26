@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.item.Items
 
 /**
@@ -88,7 +87,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
 
         if (Rotate.enabled) {
             fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.angleTo(rotation) <= 1.0f
+                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
             }
 
             tickConditional(20) {

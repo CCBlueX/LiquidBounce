@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
-import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -30,8 +29,6 @@ import java.util.Optional
 import kotlin.random.Random
 
 object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>() {
-
-    private val defaultRng = Random(Random.nextLong())
 
     @JvmField
     val TEXT_POOL = Pool(
@@ -75,20 +72,19 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val color = style.color?.let { Color4b.fullAlpha(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
-        result.chars.ensureCapacity(textAsString.length)
-        var rng: Random? = null
-        for (char in textAsString) {
-            val actualChar = if (obfuscated) {
-                if (rng == null) rng = Random(defaultRng.nextLong())
-                generateObfuscatedChar(rng)
+        val codepointCount = textAsString.codePointCount(0, textAsString.length)
+        val start = result.chars.size
+        result.chars.ensureCapacity(start + codepointCount)
+        textAsString.codePoints().forEach { codepoint ->
+            val actualCodepoint = if (obfuscated) {
+                generateObfuscatedChar(Random.Default)
             } else {
-                char
+                codepoint
             }
 
-            result.chars.add(ProcessedText.ProcessedChar(actualChar, font, obfuscated, color))
+            result.chars.add(ProcessedText.ProcessedChar(actualCodepoint, font, obfuscated, color))
         }
 
-        val start = result.chars.size - textAsString.length
         val end = result.chars.size
 
         if (style.isUnderlined) {

@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -43,10 +43,12 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
@@ -71,8 +73,8 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
         private val testPacket: Predicate<Packet<*>?>
     ) : Tagged, Predicate<Packet<*>?> by testPacket {
         ENTITY_INTERACT("EntityInteract", {
-            it is ServerboundInteractPacket
-            || it is ServerboundSwingPacket
+            it is ServerboundInteractPacket || it is ServerboundAttackPacket || it is ServerboundSpectatorActionPacket
+            || it is ServerboundPunchPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
             it is ServerboundUseItemOnPacket
@@ -94,14 +96,14 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private var isEnemyNearby = false
 
     @Suppress("unused")
-    private val gameTickHandler = tickHandler {
+    private val gameTickHandler = handler<GameTickEvent> {
         isEnemyNearby = world.findEnemy(range) != null
 
         if (ModuleAutoDodge.enabled) {
-            val position = positions.firstOrNull() ?: return@tickHandler
+            val position = positions.firstOrNull() ?: return@handler
 
             if (ModuleAutoDodge.getInflictedHit(position) == null) {
-                return@tickHandler
+                return@handler
             }
 
             val evadingPacket = ModuleAutoDodge.findAvoidingArrowPosition()
@@ -127,7 +129,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
         if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
-            || mc.screen != null
+            || mc.gui.screen() != null
         ) {
             return@handler
         }
@@ -155,7 +157,9 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             }
 
             is ServerboundInteractPacket,
-            is ServerboundSwingPacket -> {
+            is ServerboundAttackPacket,
+            is ServerboundSpectatorActionPacket,
+            is ServerboundPunchPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()
                     return@handler

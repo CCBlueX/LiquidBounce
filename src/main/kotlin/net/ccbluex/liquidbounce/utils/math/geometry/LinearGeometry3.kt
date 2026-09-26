@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.dot
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.core.Direction
-import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3

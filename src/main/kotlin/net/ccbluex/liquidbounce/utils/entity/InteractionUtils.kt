@@ -22,10 +22,9 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.useItem
+import net.ccbluex.liquidbounce.utils.network.useItem
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
@@ -35,7 +34,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 
 fun InteractionResult.shouldSwingHand() =
-    this is InteractionResult.Success && this.swingSource === SwingSource.CLIENT
+    this is InteractionResult.Success && this.swingSource === SwingSource.PREDICTED
 
 private inline val gameMode: MultiPlayerGameMode
     get() = mc.gameMode!!
@@ -86,11 +85,11 @@ fun useItem(
     val useItemResult = gameMode.useItem(player, hand, yRot, xRot)
 
     if (useItemResult is InteractionResult.Success) {
-        if (useItemResult.swingSource === SwingSource.CLIENT) {
+        if (useItemResult.swingSource === SwingSource.PREDICTED) {
             swingMode.accept(hand)
         }
 
-        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+        player.itemUsed(hand)
     }
 
     return useItemResult
@@ -135,21 +134,8 @@ fun interactEntity(
     // Skipped check:
     // player.isWithinEntityInteractionRange(entity, 0.0)
 
-    val result = when {
-        // ~1.7.10
-        isOlderThanOrEquals1_7_10 -> gameMode.interact(player, entity, hand)
-
-        // 1.8~1.21.11
-        else -> {
-            val result = gameMode.interactAt(player, entity, hitResult, hand)
-            // In vanilla 1.21.11 only ArmorStand can skip this
-            if (!result.consumesAction()) {
-                gameMode.interact(player, entity, hand)
-            } else {
-                result
-            }
-        }
-    }
+    // ViaVersion handles 1.7.6/1.21.11/current protocol of this packet
+    val result = gameMode.interact(player, entity, hitResult, hand)
 
     if (result.shouldSwingHand()) {
         swingMode.swing(hand)
@@ -216,10 +202,10 @@ fun interactBlock(
     val oldCount = itemStack.count
     val useResult = gameMode.useItemOn(player, hand, hitResult)
     if (useResult is InteractionResult.Success) {
-        if (useResult.swingSource === SwingSource.CLIENT) {
+        if (useResult.swingSource === SwingSource.PREDICTED) {
             swingMode.swing(hand)
             if (!itemStack.isEmpty && (itemStack.count != oldCount || player.hasInfiniteMaterials())) {
-                mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
+                player.itemUsed(hand)
             }
         }
     }

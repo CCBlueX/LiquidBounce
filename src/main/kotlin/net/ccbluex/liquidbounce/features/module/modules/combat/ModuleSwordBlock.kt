@@ -24,8 +24,9 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
-import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
+import net.ccbluex.liquidbounce.utils.entity.isInHand
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
@@ -40,14 +41,22 @@ import net.minecraft.world.item.ShieldItem
 object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, aliases = listOf("OldBlocking")) {
 
     val onlyVisual by boolean("OnlyVisual", false)
-    val fakeOnPressing by boolean("FakeOnPressing", false)
+    val fakeOnPressing by boolean("FakeOnPressing", false).doNotIncludeAlways()
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
     val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
-    private val LivingEntity.shouldApplySwordBlockAnimation
-        get() = (isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem)
-            || (fakeOnPressing && mc.options.keyUse.isPressedOnAny)
+    private val LivingEntity.shouldApplySwordBlockAnimation: Boolean
+        get() {
+            if (this === player &&
+                (KillAuraAutoBlock.blockVisual || fakeOnPressing && mc.options.keyUse.isPressedOnAny)) {
+                return true
+            }
+
+            val usingItem = this.usingItemOrNull ?: return false
+            return isInHand(usingItem, InteractionHand.OFF_HAND) && usingItem.item is ShieldItem ||
+                isInHand(usingItem, InteractionHand.MAIN_HAND) && !isBlocksAttacksExisting
+        }
 
     /**
      * Determines if the sword block animation should be applied no matter if we
@@ -55,10 +64,10 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
      */
     @JvmStatic
     @JvmOverloads
-    fun shouldAnimateSwordBlock(entity: LivingEntity, itemStack: ItemStack = entity.mainHandItem): Boolean {
+    fun shouldAnimateSwordBlock(entity: LivingEntity, mainHandItem: ItemStack = entity.mainHandItem): Boolean {
         return running
-            && (entity.shouldApplySwordBlockAnimation || KillAuraAutoBlock.blockVisual && entity === player)
-            && itemStack.isSword
+            && entity.shouldApplySwordBlockAnimation
+            && mainHandItem.isSword
     }
 
     @JvmOverloads
@@ -85,7 +94,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
 
         // If we are already on the old combat protocol or anything blockable protocol,
         // we don't need to do anything
-        if (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5) {
+        if (isBlocksAttacksExisting) {
             return@sequenceHandler
         }
 

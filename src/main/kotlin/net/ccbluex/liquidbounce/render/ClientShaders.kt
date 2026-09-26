@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.shaders.ShaderSource
-import com.mojang.blaze3d.shaders.ShaderType
+import com.mojang.renderpearl.api.pipeline.ShaderSource
+import com.mojang.renderpearl.api.pipeline.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.resources.Identifier
@@ -55,6 +55,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.vsh")
 
         @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.vsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
 
     }
@@ -65,16 +68,25 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
 
         @JvmField
+        val FontMask = "font_mask"("shaders/font_mask.frag")
+
+        @JvmField
         val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.fsh")
 
         @JvmField
         val Blit = "blit"("shaders/blit.frag")
 
         @JvmField
+        val Chams = "chams"("shaders/chams.frag")
+
+        @JvmField
         val Blend = "blend"("shaders/blend.frag")
 
         @JvmField
-        val GuiBlur = "blur"("shaders/blur/ui_blur.frag")
+        val GuiBlurH = "blur_h"("shaders/blur/ui_blur_h.frag")
+
+        @JvmField
+        val GuiBlurV = "blur_v"("shaders/blur/ui_blur_v.frag")
 
         @JvmField
         val Glow = "glow"("shaders/glow/glow.frag")
@@ -89,7 +101,13 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val GuiCircleLut = "gui_circle_lut"("shaders/circle/gui_circle_lut.fsh")
 
         @JvmField
+        val GuiRoundedRect = "gui_rounded_rect"("shaders/gui/rounded_rect.fsh")
+
+        @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.fsh")
+
+        @JvmField
+        val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
 
     }
 
@@ -102,15 +120,27 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         return k
     }
 
-    override fun get(identifier: Identifier, type: ShaderType): String? {
+    override fun getShader(identifier: Identifier, type: ShaderType): String? {
         if (type != this.type) return null
         return shaders[identifier]
     }
 
-    companion object : ShaderSource {
-        override fun get(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
-            ShaderType.VERTEX -> Vertex[identifier, shaderType]
-            ShaderType.FRAGMENT -> Fragment[identifier, shaderType]
+    override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+
+    override fun close() {
+        // NOOP
+    }
+
+    companion object Source : ShaderSource {
+        override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
+            ShaderType.VERTEX -> Vertex.getShader(identifier, shaderType)
+            ShaderType.FRAGMENT -> Fragment.getShader(identifier, shaderType)
+        }
+
+        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+
+        override fun close() {
+            // NOOP
         }
     }
 

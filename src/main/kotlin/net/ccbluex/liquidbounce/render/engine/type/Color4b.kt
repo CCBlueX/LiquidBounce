@@ -20,16 +20,19 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import java.awt.Color
+import java.lang.Math.fma
+import java.util.function.ToIntFunction
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.network.chat.TextColor
 import net.minecraft.util.ARGB
 import net.minecraft.world.item.DyeColor
+import org.joml.Vector3f
 import org.joml.Vector4f
-import java.awt.Color
-import java.lang.Math.fma
-import java.util.function.ToIntFunction
 
 @JvmRecord
+@AddonApi
 data class Color4b(val argb: Int) {
 
     @JvmOverloads
@@ -176,7 +179,7 @@ data class Color4b(val argb: Int) {
 
     fun darker() = Color4b(darkerChannel(r), darkerChannel(g), darkerChannel(b), a)
 
-    private fun darkerChannel(value: Int) = (value * 0.7).toInt().coerceAtLeast(0)
+    private fun darkerChannel(value: Int) = (value * 0.7f).toInt().coerceAtLeast(0)
 
     /**
      * Interpolates this color with another color using the given percentage.
@@ -234,7 +237,7 @@ data class Color4b(val argb: Int) {
         val r = this.r
         val g = this.g
         val b = this.b
-        return DyeColor.entries.minBy {
+        return DyeColor.VALUES.minBy {
             val rgb = toRgb.applyAsInt(it)
             (ARGB.red(rgb) - r).sq() +
                 (ARGB.green(rgb) - g).sq() +
@@ -246,4 +249,10 @@ data class Color4b(val argb: Int) {
     fun toVector4f(dest: Vector4f = Vector4f()): Vector4f {
         return dest.set(r / 255f, g / 255f, b / 255f, a / 255f)
     }
+
+    @JvmOverloads
+    fun toRgbVector3f(dest: Vector3f = Vector3f()): Vector3f {
+        return dest.set(r / 255f, g / 255f, b / 255f)
+    }
+
 }
