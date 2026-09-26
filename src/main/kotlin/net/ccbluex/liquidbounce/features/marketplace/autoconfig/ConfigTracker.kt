@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
@@ -48,8 +47,10 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
+import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
+import net.ccbluex.liquidbounce.features.marketplace.installDependencies
+import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import java.io.File
@@ -169,9 +170,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = resolve(item.id)
-        val (installed, unavailable) = install(dependencies.installables)
-        val chain = dependencies.configs
+        val dependencies = dependenciesOf(item.id)
+        val (installed, unavailable) = installDependencies(dependencies.installables)
+        val chain = dependencies.configs.map { Step(it.item.id, it.revision.id) }
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
         withContext(Dispatchers.Main) {
@@ -198,10 +199,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         return LoadResult(
             installed,
-            installed.any {
-                it.type == MarketplaceItemType.ADDON ||
-                    it.type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(it.type)
-            },
+            installed.any { it.installNeedsRestart },
             unavailable
         )
     }
@@ -397,93 +395,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         MarketplaceApi.deleteMarketplaceItem(session, id)
         MarketplaceManager.marketplaceRoot.resolve("configs/$id").deleteRecursively()
         detach()
-    }
-
-    private class Dependencies(val configs: List<Step>, val installables: Collection<Installable>)
-
-    /**
-     * An add-on or script, and the add-ons and scripts it [needs].
-     */
-    private class Installable(val item: MarketplaceItem, val needs: Set<Int>)
-
-    /**
-     * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
-     * they are applied, installables after the ones they need, so an add-on is checked with those
-     * installed.
-     */
-    private suspend fun resolve(rootId: Int): Dependencies {
-        val configs = mutableListOf<Step>()
-        val installables = linkedMapOf<Int, Installable>()
-        val visiting = hashSetOf<Int>()
-        val needsOf = hashMapOf<Int, Set<Int>>()
-
-        suspend fun visit(id: Int): Set<Int> {
-            needsOf[id]?.let { return it }
-            if (!visiting.add(id)) {
-                return emptySet()
-            }
-
-            val needs = linkedSetOf<Int>()
-            for (dependency in MarketplaceApi.getItemDependencies(id)) {
-                val item = dependency.item
-                when (item.type) {
-                    MarketplaceItemType.CONFIG -> {
-                        visit(item.id)
-                        val revision = dependency.liveRevision
-                            ?: error("Config dependency ${item.name} has nothing published")
-                        if (configs.none { it.itemId == item.id }) {
-                            configs += Step(item.id, revision.id)
-                        }
-                    }
-
-                    MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                        installables.putIfAbsent(item.id, Installable(item, visit(item.id)))
-                        needs += item.id
-                    }
-
-                    else -> {}
-                }
-            }
-
-            visiting.remove(id)
-            needsOf[id] = needs
-            return needs
-        }
-
-        visit(rootId)
-        return Dependencies(configs, installables.values)
-    }
-
-    /**
-     * Subscribes to the [installables] that are missing. One that does not load with this game does not
-     * stop the load; it and what needs it are left out, and the second list names why.
-     */
-    private suspend fun install(
-        installables: Collection<Installable>
-    ): Pair<List<MarketplaceItem>, List<Unavailable>> {
-        val installed = mutableListOf<MarketplaceItem>()
-        val leftOut = linkedMapOf<Int, Unavailable>()
-        for (installable in installables) {
-            val item = installable.item
-            if (MarketplaceManager.isSubscribed(item.id)) {
-                continue
-            }
-
-            val reason = installable.needs.firstNotNullOfOrNull { leftOut[it] }
-                ?: Unavailable(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
-            if (reason != null) {
-                leftOut[item.id] = reason
-                continue
-            }
-
-            try {
-                MarketplaceManager.subscribe(item)
-                installed += item
-            } catch (e: NoCompatibleRevisionException) {
-                leftOut[item.id] = e.unavailable
-            }
-        }
-        return installed to leftOut.values.distinct()
     }
 
     /**
