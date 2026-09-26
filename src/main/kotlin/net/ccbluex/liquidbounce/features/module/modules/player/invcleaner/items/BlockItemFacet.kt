@@ -16,10 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -36,7 +39,7 @@ class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemType.BLOCK.defaultCategory
+        get() = ItemCategory(GenericItemType.BLOCK)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as BlockItemFacet)

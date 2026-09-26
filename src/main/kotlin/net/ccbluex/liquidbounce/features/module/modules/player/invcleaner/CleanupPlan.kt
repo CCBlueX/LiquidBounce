@@ -22,13 +22,10 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.core.Holder
-import net.minecraft.core.TypedInstance
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.level.ItemLike
 import kotlin.math.ceil
 
 @JvmRecord
@@ -39,16 +36,12 @@ data class InventorySwap(val from: ItemSlot, val to: ItemSlot, val priority: Pri
  * [ItemStack]s with same [Item] and [DataComponentPatch] can be merged.
  */
 @JvmRecord
-data class ItemAndComponents @JvmOverloads constructor(
-    val item: Item,
-    val componentsPatch: DataComponentPatch = DataComponentPatch.EMPTY,
-) : TypedInstance<Item> {
+data class ItemAndComponents(val item: Item, val componentChanges: DataComponentPatch) {
     constructor(itemStack: ItemStack) : this(itemStack.item, itemStack.componentsPatch)
 
-    override fun typeHolder(): Holder<Item> = BuiltInRegistries.ITEM.wrapAsHolder(this.item)
-
     fun toItemStack(count: Int): ItemStack {
-        return ItemStack(this.typeHolder(), count, componentsPatch)
+        val itemKey = BuiltInRegistries.ITEM.wrapAsHolder(item)
+        return ItemStack(itemKey, count, componentChanges)
     }
 }
 

@@ -16,27 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.PreferStackSize
-import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class ArrowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<ArrowItemFacet>(
-                PreferStackSize.PREFER_FEWER.asHolderComparator(),
+                compareBy { it.itemStack.count },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
     }
 
     override val category: ItemCategory
-        get() = ItemType.ARROW.defaultCategory
+        get() = ItemCategory(GenericItemType.ARROW)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as ArrowItemFacet)

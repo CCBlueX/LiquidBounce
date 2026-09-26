@@ -23,8 +23,10 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.asIntList
 import net.ccbluex.fastutil.mapToIntArray
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -38,7 +40,7 @@ import net.minecraft.world.item.SplashPotionItem
 
 class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory
-        get() = ItemType.POTION.defaultCategory
+        get() = ItemCategory(GenericItemType.POTION)
 
     companion object {
         /**

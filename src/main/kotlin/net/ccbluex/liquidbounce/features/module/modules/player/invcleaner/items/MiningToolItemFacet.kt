@@ -16,10 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_BETTER_DURABILITY
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -29,29 +33,17 @@ import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ToolMaterial
-import net.minecraft.world.item.component.Tool
 import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
-        const val MASK_AXE = 1 shl 0
-        const val MASK_PICKAXE = 1 shl 1
-        const val MASK_SHOVEL = 1 shl 2
-        const val MASK_HOE = 1 shl 3
-
-        private val VALUE_ESTIMATOR =
+        val VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
             )
         private val COMPARATOR =
-            /**
-             * @see ToolMaterial.applyToolProperties
-             * @see Tool.Rule.minesAndDrops
-             */
             ComparatorChain<MiningToolItemFacet>(
                 compareBy {
                     val toolComponent = it.itemStack.toolComponent ?: return@compareBy 0f
@@ -64,23 +56,31 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
-
-        // TODO: compare multi tool item
-        private val ItemStack.miningToolType: Int
-            get() {
-                var bits = 0
-                if (isAxe) bits = bits or MASK_AXE
-                if (isPickaxe) bits = bits or MASK_PICKAXE
-                if (isShovel) bits = bits or MASK_SHOVEL
-                if (isHoe) bits = bits or MASK_HOE
-                if (bits == 0) error("Item ${this.item} is not a mining tool")
-                return bits
-            }
     }
 
-    override val category = ItemCategory(ItemType.TOOL, this.itemStack.miningToolType)
+    private val subtype = ItemToolType.guessType(itemSlot.itemStack)
+
+    override val category: ItemCategory
+        get() = ItemCategory(GenericItemType.TOOL, subtype)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
+    }
+
+    enum class ItemToolType {
+        AXE,
+        PICKAXE,
+        SHOVEL,
+        HOE;
+
+        companion object {
+            fun guessType(stack: net.minecraft.world.item.ItemStack) = when {
+                stack.isPickaxe -> PICKAXE
+                stack.isAxe -> AXE
+                stack.isShovel -> SHOVEL
+                stack.isHoe -> HOE
+                else -> error("Unknown tool item ${stack.item}.")
+            }
+        }
     }
 }
