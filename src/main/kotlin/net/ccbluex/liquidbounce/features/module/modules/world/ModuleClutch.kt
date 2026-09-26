@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -220,7 +221,8 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
         val slot = currentSlot ?: return@handler
 
         val reach = effectiveBlockReach()
-        val rayTraceResult = traceFromPlayer(range = reach.toDouble())
+        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rayTraceResult = traceFromPlayer(rotation, range = reach.toDouble())
 
         if (rayTraceResult.blockPos != target.interactedBlockPos) {
             return@handler
@@ -244,6 +246,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
 
         doPlacement(
             rayTraceResult,
+            rotation,
             hand = slot.useHand,
             onItemUseSuccess = onSuccess,
             onPlacementSuccess = onSuccess,
