@@ -491,6 +491,7 @@
   "liquidbounce.module.clickTp.messages.success": "已傳送到 %s，%s，%s",
   "liquidbounce.module.clientSpoofer.description": "將你的遊戲客戶端標識偽裝為另一個。",
   "liquidbounce.module.clip.description": "允許你穿過方塊。",
+  "liquidbounce.module.clutch.description": "當你掉入虛空時自動在腳下放置方塊。",
   "liquidbounce.module.clip.messages.whoosh": "嗖嗖！",
   "liquidbounce.module.combineMobs.description": "合併擠在一起的實體。",
   "liquidbounce.module.consoleSpammer.description": "向伺服器控制台發送大量錯誤資訊。",
