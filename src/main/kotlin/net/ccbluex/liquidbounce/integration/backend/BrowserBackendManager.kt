@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSystemBrowserBackend
+import net.ccbluex.liquidbounce.integration.backend.backends.ultralight.UltralightBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -70,6 +71,7 @@ object BrowserBackendManager : EventListener {
             }
             "cef" -> CefBrowserBackend()
             "external" -> ExternalSystemBrowserBackend()
+            "ultralight" -> UltralightBrowserBackend()
             else -> error("Unknown browser backend: $browserBackend")
         }
         this.backend = browserBackend

@@ -973,6 +973,14 @@ public final class net/ccbluex/liquidbounce/integration/backend/backends/externa
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/integration/backend/backends/ultralight/UltralightBrowserBackend : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public final class net/ccbluex/liquidbounce/integration/backend/browser/BrowserRenderer : java/lang/AutoCloseable, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;

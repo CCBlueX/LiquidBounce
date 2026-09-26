@@ -14,6 +14,9 @@ fabric-api = "0.160.5+26.3"
 
 # mcef
 mcef = "3.5.0-26.3"
+
+# ultralight
+ujr = "0.1.0"
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # TheAltening
@@ -82,6 +85,8 @@ retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = 
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
 mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
+ujr-core = { group = "net.ccbluex.ultralight", name = "ultralight-java-reborn-core", version.ref = "ujr" }
+ujr-platform-jni = { group = "net.ccbluex.ultralight", name = "ultralight-java-reborn-platform-jni", version.ref = "ujr" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
