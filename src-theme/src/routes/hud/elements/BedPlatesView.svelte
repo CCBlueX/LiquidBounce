@@ -138,10 +138,8 @@
 {/if}
 
 <style lang="scss">
-  @use "../../../colors" as *;
-
   .container {
-    background-color: rgba($hotbar-base-color, 0.5);
+    background-color: color-mix(in srgb, var(--hotbar-base-color) 50%, transparent);
     display: flex;
     flex-direction: column;
     gap: 4px;
