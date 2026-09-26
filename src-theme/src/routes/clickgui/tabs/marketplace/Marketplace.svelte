@@ -2,24 +2,24 @@
     import {onMount} from "svelte";
     import ScaledClickGuiContent from "../../ScaledClickGuiContent.svelte";
     import Switch from "../../setting/common/Switch.svelte";
-    import Segmented from "./Segmented.svelte";
-    import Button from "./Button.svelte";
-    import Chip from "./Chip.svelte";
-    import Label from "./Label.svelte";
-    import Message from "./Message.svelte";
-    import Row from "./Row.svelte";
-    import Tag from "./Tag.svelte";
+    import SegmentedControl from "./ui/SegmentedControl.svelte";
+    import PillButton from "./ui/PillButton.svelte";
+    import ToggleChip from "./ui/ToggleChip.svelte";
+    import SectionLabel from "./ui/SectionLabel.svelte";
+    import Notice from "./ui/Notice.svelte";
+    import ListRow from "./ui/ListRow.svelte";
+    import Badge from "./ui/Badge.svelte";
     import Address from "./Address.svelte";
-    import Toast from "./Toast.svelte";
-    import ConfigRow from "./ConfigRow.svelte";
-    import ItemRow from "./ItemRow.svelte";
-    import TrackerMenu from "./TrackerMenu.svelte";
-    import ConfigDetail from "./ConfigDetail.svelte";
-    import ItemDetail from "./ItemDetail.svelte";
-    import LoadPlanModal from "./LoadPlanModal.svelte";
-    import PublishModal from "./PublishModal.svelte";
-    import PublishedModal from "./PublishedModal.svelte";
-    import UpdateModal from "./UpdateModal.svelte";
+    import Toast from "./ui/Toast.svelte";
+    import ConfigRow from "./list/ConfigRow.svelte";
+    import ItemRow from "./list/ItemRow.svelte";
+    import TrackerMenu from "./list/TrackerMenu.svelte";
+    import ConfigDetail from "./detail/ConfigDetail.svelte";
+    import ItemDetail from "./detail/ItemDetail.svelte";
+    import LoadPlanModal from "./loading/LoadPlanModal.svelte";
+    import PublishModal from "./publishing/PublishModal.svelte";
+    import PublishedModal from "./publishing/PublishedModal.svelte";
+    import UpdateModal from "./publishing/UpdateModal.svelte";
     import {
         applyMarketplaceTheme,
         changeConfigTracker,
@@ -360,10 +360,10 @@
             {/key}
         {:else}
             <div class="toolbar">
-                <Segmented options={Object.keys(TYPES)} value={type} onchange={changeType}/>
+                <SegmentedControl options={Object.keys(TYPES)} value={type} onchange={changeType}/>
                 <input class="search" type="text" spellcheck="false" bind:value={search} oninput={handleSearch}
                        placeholder={configTab ? "Search or paste a share code" : `Search ${type.toLowerCase()}`}/>
-                <Segmented options={["Top", "New"]} value={sort} onchange={changeSort}/>
+                <SegmentedControl options={["Top", "New"]} value={sort} onchange={changeSort}/>
                 <div class="spacer"></div>
                 {#if configTab && tracker && (tracker.state !== "None" || tracker.backup)}
                     <TrackerMenu {tracker} {loggedIn} online={!offline}
@@ -373,16 +373,16 @@
                                  onopen={() => tracker && open("config", tracker.id)}/>
                 {/if}
                 {#if !loggedIn}
-                    <Button title="Log in" primary onclick={login}/>
+                    <PillButton title="Log in" primary onclick={login}/>
                 {:else if configTab && !offline}
-                    <Button title="Publish..." onclick={() => publishOpen = true}/>
+                    <PillButton title="Publish..." onclick={() => publishOpen = true}/>
                 {/if}
             </div>
 
             {#if configTab && !offline}
                 <div class="filters">
                     {#if context?.server}
-                        <Chip text="On {context.server}" active={onServer}
+                        <ToggleChip text="On {context.server}" active={onServer}
                               onclick={() => { onServer = !onServer; persistFilters(); }}/>
                     {/if}
                     <div class="switch">
@@ -391,7 +391,7 @@
                     {#if tagOptions.length > 0}
                         <span class="divider"></span>
                         {#each tagOptions as tag (tag)}
-                            <Chip text={tag} active={tags.includes(tag)} onclick={() => toggleTag(tag)}/>
+                            <ToggleChip text={tag} active={tags.includes(tag)} onclick={() => toggleTag(tag)}/>
                         {/each}
                     {/if}
                 </div>
@@ -399,37 +399,37 @@
 
             <div class="panel">
                 {#if offline}
-                    <Message title="Can't reach the marketplace">
+                    <Notice title="Can't reach the marketplace">
                         {#snippet actions()}
-                            <Button title="Retry" primary onclick={reload}/>
+                            <PillButton title="Retry" primary onclick={reload}/>
                         {/snippet}
-                    </Message>
+                    </Notice>
                     {#if (tracker && tracker.state !== "None") || installed.length > 0}
-                        <div class="section"><Label text="On this client"/></div>
+                        <div class="section"><SectionLabel text="On this client"/></div>
                         {#if tracker && tracker.state !== "None"}
-                            <Row image={tracker.image ?? UNKNOWN_SERVER} active>
+                            <ListRow image={tracker.image ?? UNKNOWN_SERVER} active>
                                 {#snippet title()}<Address address={tracker!!.address}/>{/snippet}
-                                {#snippet tags()}<Tag text={tracker!!.state === "Editing" ? "Edited" : "Tracked"}/>{/snippet}
+                                {#snippet tags()}<Badge text={tracker!!.state === "Editing" ? "Edited" : "Tracked"}/>{/snippet}
                                 {#snippet subtitle()}Config{/snippet}
-                            </Row>
+                            </ListRow>
                         {/if}
                         {#each installed as item (item.id)}
-                            <Row image={UNKNOWN_PACK}>
+                            <ListRow image={UNKNOWN_PACK}>
                                 {#snippet title()}{item.name}{/snippet}
                                 {#snippet subtitle()}{typeName(item.type)}{/snippet}
-                            </Row>
+                            </ListRow>
                         {/each}
                     {/if}
                 {:else if error}
-                    <Message title="Couldn't load the marketplace">
+                    <Notice title="Couldn't load the marketplace">
                         {error}
                         {#snippet actions()}
-                            <Button title="Retry" primary onclick={reload}/>
+                            <PillButton title="Retry" primary onclick={reload}/>
                         {/snippet}
-                    </Message>
+                    </Notice>
                 {:else if configTab}
                     {#if codeResult && configs.length > 0}
-                        <div class="section"><Label text="Share code"/></div>
+                        <div class="section"><SectionLabel text="Share code"/></div>
                     {/if}
                     {#each configs as config (config.id)}
                         <ConfigRow {config} {loggedIn}
@@ -439,30 +439,30 @@
                     {/each}
                     {#if !loading && configs.length === 0}
                         {#if codeResult}
-                            <Message title="No config has this share code">
+                            <Notice title="No config has this share code">
                                 {#snippet actions()}
-                                    <Button title="Clear search" onclick={clearFilters}/>
+                                    <PillButton title="Clear search" onclick={clearFilters}/>
                                 {/snippet}
-                            </Message>
+                            </Notice>
                         {:else if featuredOnly && unfeatured > 0}
-                            <Message title="No featured config{server ? ` for ${server}` : ''}">
+                            <Notice title="No featured config{server ? ` for ${server}` : ''}">
                                 {unfeatured} {unfeatured === 1 ? "config matches" : "configs match"}, none featured yet.
                                 {server && context?.autoConfig && context?.onlyFeatured
                                     ? "AutoConfig loads nothing here while its OnlyFeatured setting is on." : ""}
                                 {#snippet actions()}
-                                    <Button title="Show {unfeatured === 1 ? 'it' : `${unfeatured} configs`}" primary
+                                    <PillButton title="Show {unfeatured === 1 ? 'it' : `${unfeatured} configs`}" primary
                                             onclick={showUnfeatured}/>
-                                    <Button title="Clear filters" onclick={clearFilters}/>
+                                    <PillButton title="Clear filters" onclick={clearFilters}/>
                                 {/snippet}
-                            </Message>
+                            </Notice>
                         {:else}
-                            <Message title="No config found">
+                            <Notice title="No config found">
                                 {#snippet actions()}
                                     {#if filtered}
-                                        <Button title="Clear filters" onclick={clearFilters}/>
+                                        <PillButton title="Clear filters" onclick={clearFilters}/>
                                     {/if}
                                 {/snippet}
-                            </Message>
+                            </Notice>
                         {/if}
                     {/if}
                 {:else}
@@ -475,7 +475,7 @@
                                  onopen={() => open("item", item.id)}/>
                     {/each}
                     {#if !loading && items.length === 0}
-                        <Message title="Nothing found"/>
+                        <Notice title="Nothing found"/>
                     {/if}
                 {/if}
                 <div class="end" use:visible={loadMore}></div>

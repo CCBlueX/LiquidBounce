@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import Chip from "./Chip.svelte";
-    import Label from "./Label.svelte";
-    import Input from "./Input.svelte";
-    import Segmented from "./Segmented.svelte";
-    import {publishMarketplaceConfig} from "../../../../integration/rest";
-    import type {ConfigTracker, MarketplaceContext, MarketplacePublished} from "../../../../integration/types";
-    import {attempt} from "./marketplace";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import ToggleChip from "../ui/ToggleChip.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import TextField from "../ui/TextField.svelte";
+    import SegmentedControl from "../ui/SegmentedControl.svelte";
+    import {publishMarketplaceConfig} from "../../../../../integration/rest";
+    import type {ConfigTracker, MarketplaceContext, MarketplacePublished} from "../../../../../integration/types";
+    import {attempt} from "../marketplace";
 
     type Kind = "New" | "Overlay" | "Fork";
 
@@ -72,9 +72,9 @@
 <Dialog bind:open title="Publish config" width={580}>
     <div class="switches">
         {#if kinds.length > 1}
-            <Segmented options={kinds} value={kind} onchange={value => kind = value}/>
+            <SegmentedControl options={kinds} value={kind} onchange={value => kind = value}/>
         {/if}
-        <Segmented options={["Public", "Unlisted"]} value={visibility} onchange={value => visibility = value}/>
+        <SegmentedControl options={["Public", "Unlisted"]} value={visibility} onchange={value => visibility = value}/>
     </div>
     {#if kind !== "New"}
         <div class="base">{kind === "Overlay" ? "On top of" : "Copy of"} {tracker?.address}</div>
@@ -82,30 +82,30 @@
 
     <div class="row">
         <div>
-            <Label text="Name"/>
-            <Input bind:value={name} prefix={context?.user ? `${context.user}/` : undefined} maxlength={64}/>
+            <SectionLabel text="Name"/>
+            <TextField bind:value={name} prefix={context?.user ? `${context.user}/` : undefined} maxlength={64}/>
         </div>
         <div>
-            <Label text="Servers"/>
-            <Input bind:value={servers}/>
+            <SectionLabel text="Servers"/>
+            <TextField bind:value={servers}/>
         </div>
     </div>
 
-    <Label text="Description"/>
-    <Input bind:value={description} multiline/>
+    <SectionLabel text="Description"/>
+    <TextField bind:value={description} multiline/>
 
     {#if tags.length > 0}
-        <Label text="Tags"/>
+        <SectionLabel text="Tags"/>
         <div class="chips">
             {#each tags as tag (tag)}
-                <Chip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
+                <ToggleChip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
             {/each}
         </div>
     {/if}
 
     {#snippet footer()}
-        <Button title="Cancel" onclick={() => open = false}/>
-        <Button title="Publish" primary disabled={loading || name.trim() === ""} onclick={publish}/>
+        <PillButton title="Cancel" onclick={() => open = false}/>
+        <PillButton title="Publish" primary disabled={loading || name.trim() === ""} onclick={publish}/>
     {/snippet}
 </Dialog>
 

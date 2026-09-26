@@ -1,6 +1,6 @@
 <script lang="ts">
     import {fly} from "svelte/transition";
-    import {toast} from "./marketplace";
+    import {toast} from "../marketplace";
 
     const SHOWN = 4000;
 

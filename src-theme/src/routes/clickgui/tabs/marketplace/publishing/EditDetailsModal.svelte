@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import Chip from "./Chip.svelte";
-    import Label from "./Label.svelte";
-    import Input from "./Input.svelte";
-    import Segmented from "./Segmented.svelte";
-    import {setMarketplaceConfigDetails} from "../../../../integration/rest";
-    import type {MarketplaceConfigDetail} from "../../../../integration/types";
-    import {attempt, notify} from "./marketplace";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import ToggleChip from "../ui/ToggleChip.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import TextField from "../ui/TextField.svelte";
+    import SegmentedControl from "../ui/SegmentedControl.svelte";
+    import {setMarketplaceConfigDetails} from "../../../../../integration/rest";
+    import type {MarketplaceConfigDetail} from "../../../../../integration/types";
+    import {attempt, notify} from "../marketplace";
 
     let {open = $bindable(), detail, tags, onsaved}: {
         open: boolean;
@@ -67,35 +67,35 @@
 
 <Dialog bind:open title="Edit {detail.config.address}" width={580}>
     <div class="switches">
-        <Segmented options={["Public", "Unlisted"]} value={visibility} onchange={value => visibility = value}/>
+        <SegmentedControl options={["Public", "Unlisted"]} value={visibility} onchange={value => visibility = value}/>
     </div>
 
     <div class="row">
         <div>
-            <Label text="Name"/>
-            <Input bind:value={name} maxlength={64}/>
+            <SectionLabel text="Name"/>
+            <TextField bind:value={name} maxlength={64}/>
         </div>
         <div>
-            <Label text="Servers"/>
-            <Input bind:value={servers}/>
+            <SectionLabel text="Servers"/>
+            <TextField bind:value={servers}/>
         </div>
     </div>
 
-    <Label text="Description"/>
-    <Input bind:value={description} multiline/>
+    <SectionLabel text="Description"/>
+    <TextField bind:value={description} multiline/>
 
     {#if tags.length > 0}
-        <Label text="Tags"/>
+        <SectionLabel text="Tags"/>
         <div class="chips">
             {#each tags as tag (tag)}
-                <Chip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
+                <ToggleChip text={tag} active={selectedTags.includes(tag)} onclick={() => toggle(tag)}/>
             {/each}
         </div>
     {/if}
 
     {#snippet footer()}
-        <Button title="Cancel" onclick={() => open = false}/>
-        <Button title="Save" primary disabled={loading || name.trim() === ""} onclick={save}/>
+        <PillButton title="Cancel" onclick={() => open = false}/>
+        <PillButton title="Save" primary disabled={loading || name.trim() === ""} onclick={save}/>
     {/snippet}
 </Dialog>
 

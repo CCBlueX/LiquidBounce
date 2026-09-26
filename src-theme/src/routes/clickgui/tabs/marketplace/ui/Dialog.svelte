@@ -2,7 +2,7 @@
     import type {Snippet} from "svelte";
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {typing} from "./marketplace";
+    import {typing} from "../marketplace";
 
     let {open = $bindable(), title, width = 560, children, footer}: {
         open: boolean;

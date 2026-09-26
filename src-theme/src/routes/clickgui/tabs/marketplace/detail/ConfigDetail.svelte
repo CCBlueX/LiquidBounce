@@ -1,22 +1,22 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import DetailHead from "./DetailHead.svelte";
-    import Button from "./Button.svelte";
-    import Menu from "./Menu.svelte";
-    import Tag from "./Tag.svelte";
-    import Label from "./Label.svelte";
-    import Message from "./Message.svelte";
-    import Row from "./Row.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import ActionMenu from "../ui/ActionMenu.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import Notice from "../ui/Notice.svelte";
+    import ListRow from "../ui/ListRow.svelte";
     import Stat from "./Stat.svelte";
-    import Address from "./Address.svelte";
-    import EditDetailsModal from "./EditDetailsModal.svelte";
-    import DeleteModal from "./DeleteModal.svelte";
-    import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../integration/rest";
+    import Address from "../Address.svelte";
+    import EditDetailsModal from "../publishing/EditDetailsModal.svelte";
+    import DeleteModal from "../publishing/DeleteModal.svelte";
+    import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {
         ConfigTracker,
         MarketplaceConfigDetail,
         MarketplaceLinkedConfig
-    } from "../../../../integration/types";
+    } from "../../../../../integration/types";
     import {
         ago,
         attempt,
@@ -29,7 +29,7 @@
         UNKNOWN_PACK,
         UNKNOWN_SERVER,
         version
-    } from "./marketplace";
+    } from "../marketplace";
 
     let {id, loggedIn, tracker, tags, onback, onload, onupdate, onopen}: {
         id: number;
@@ -103,24 +103,24 @@
 
             {#snippet tags()}
                 {#if tracking !== "None"}
-                    <Tag text={tracking === "Editing" ? "Edited" : "Tracked"}/>
+                    <Badge text={tracking === "Editing" ? "Edited" : "Tracked"}/>
                 {/if}
                 {#if config.featured}
-                    <Tag text="Featured"/>
+                    <Badge text="Featured"/>
                 {/if}
                 {#if config.own}
-                    <Tag text="Yours"/>
+                    <Badge text="Yours"/>
                 {/if}
                 {#if config.visibility === "unlisted"}
-                    <Tag text="Unlisted"/>
+                    <Badge text="Unlisted"/>
                 {/if}
                 {#if config.overlayOn}
-                    <Tag text="Overlay"/>
+                    <Badge text="Overlay"/>
                 {:else if detail?.forkOf}
-                    <Tag text="Fork"/>
+                    <Badge text="Fork"/>
                 {/if}
                 {#if config.binds}
-                    <Tag text="Binds"/>
+                    <Badge text="Binds"/>
                 {/if}
             {/snippet}
 
@@ -130,24 +130,24 @@
 
             {#snippet actions()}
                 {#if detail?.shareCode && loggedIn}
-                    <Button title={detail.shareCode} mono onclick={copyShareCode}/>
+                    <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
                 {/if}
                 {#if loggedIn}
-                    <Button title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>
-                    <Button title="Broken · {config.fails}" active={detail?.report === false}
+                    <PillButton title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>
+                    <PillButton title="Broken · {config.fails}" active={detail?.report === false}
                             onclick={() => report(false)}/>
                 {/if}
                 {#if canUpdate}
-                    <Button title="Update..." onclick={onupdate}/>
+                    <PillButton title="Update..." onclick={onupdate}/>
                 {/if}
-                <Button title="Load" primary onclick={load}/>
+                <PillButton title="Load" primary onclick={load}/>
                 {#if owner}
-                    <Menu entries={[
+                    <ActionMenu entries={[
                         {title: "Edit details", onclick: () => editOpen = true},
                         {title: "Delete config", danger: true, onclick: () => deleteOpen = true}
                     ]}>
                         {#snippet trigger()}More{/snippet}
-                    </Menu>
+                    </ActionMenu>
                 {/if}
             {/snippet}
         </DetailHead>
@@ -178,76 +178,76 @@
             <div class="columns" class:single={!composed}>
                 <div class="column">
                     {#if configs.length > 0}
-                        <Label text="Depends on"/>
+                        <SectionLabel text="Depends on"/>
                         <div class="list">
                             {#each configs as dependency (dependency.id)}
-                                <Row image={dependency.image ?? UNKNOWN_SERVER}
+                                <ListRow image={dependency.image ?? UNKNOWN_SERVER}
                                      onclick={() => onopen("config", dependency.id)}>
                                     {#snippet title()}<Address address={dependency.address}/>{/snippet}
                                     {#snippet tags()}
                                         {#if dependency.featured}
-                                            <Tag text="Featured"/>
+                                            <Badge text="Featured"/>
                                         {/if}
                                     {/snippet}
-                                </Row>
+                                </ListRow>
                             {/each}
                         </div>
                     {/if}
 
                     {#if installs.length > 0}
-                        <Label text="Installs"/>
+                        <SectionLabel text="Installs"/>
                         <div class="list">
                             {#each installs as dependency (dependency.id)}
                                 {@const status = dependency.status!!}
-                                <Row image={dependency.image ?? UNKNOWN_PACK} dim={!!status.notFor}
+                                <ListRow image={dependency.image ?? UNKNOWN_PACK} dim={!!status.notFor}
                                      onclick={() => onopen("item", dependency.id)}>
                                     {#snippet title()}{dependency.address}{/snippet}
                                     {#snippet tags()}
-                                        <Tag text={typeName(dependency.type)}/>
+                                        <Badge text={typeName(dependency.type)}/>
                                         {#if status.subscribed && status.installed}
-                                            <Tag text={version(status.installed)}/>
+                                            <Badge text={version(status.installed)}/>
                                         {/if}
                                         {#if status.restartRequired}
-                                            <Tag text="Restart needed"/>
+                                            <Badge text="Restart needed"/>
                                         {/if}
                                     {/snippet}
                                     {#snippet subtitle()}
                                         {status.notFor ? `Not for ${status.notFor}` : status.summary}
                                     {/snippet}
-                                </Row>
+                                </ListRow>
                             {/each}
                         </div>
                     {/if}
 
                     {#if detail.changes && detail.changes.length > 0}
-                        <Label text="What it changes"/>
+                        <SectionLabel text="What it changes"/>
                         <div class="chips">
                             {#each detail.changes as module (module)}
-                                <Tag text={module}/>
+                                <Badge text={module}/>
                             {/each}
                         </div>
                     {/if}
                 </div>
 
                 <div class="column">
-                    <Label text="History"/>
+                    <SectionLabel text="History"/>
                     <div class="list">
                         {#each detail.revisions as revision (revision.id)}
-                            <Row active={revision.latest}>
+                            <ListRow active={revision.latest}>
                                 {#snippet title()}{date(revision.createdAt)}{/snippet}
                                 {#snippet tags()}
                                     {#if revision.latest}
-                                        <Tag text="Latest"/>
+                                        <Badge text="Latest"/>
                                     {/if}
                                     {#if revision.loaded}
-                                        <Tag text="Loaded"/>
+                                        <Badge text="Loaded"/>
                                     {/if}
                                 {/snippet}
                                 {#snippet subtitle()}
                                     {revision.changelog ?? (revision.first ? "First version" : "")}
                                 {/snippet}
                                 {#snippet meta()}{reports(revision.works, revision.fails)}{/snippet}
-                            </Row>
+                            </ListRow>
                         {/each}
                     </div>
                 </div>
@@ -257,12 +257,12 @@
         <DetailHead {onback}>
             {#snippet title()}Config{/snippet}
         </DetailHead>
-        <Message title="Couldn't open this config">
+        <Notice title="Couldn't open this config">
             {error}
             {#snippet actions()}
-                <Button title="Retry" primary onclick={refresh}/>
+                <PillButton title="Retry" primary onclick={refresh}/>
             {/snippet}
-        </Message>
+        </Notice>
     {/if}
 </div>
 

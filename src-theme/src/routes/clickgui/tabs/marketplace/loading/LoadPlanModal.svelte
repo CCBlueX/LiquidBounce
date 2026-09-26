@@ -1,15 +1,15 @@
 <script lang="ts">
-    import Switch from "../../setting/common/Switch.svelte";
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import Chip from "./Chip.svelte";
-    import Tag from "./Tag.svelte";
-    import Label from "./Label.svelte";
-    import Row from "./Row.svelte";
-    import Input from "./Input.svelte";
-    import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../integration/rest";
-    import type {MarketplaceLinkedConfig, MarketplaceLoadPlan} from "../../../../integration/types";
-    import {attempt, notify, typeName, UNKNOWN_PACK, version} from "./marketplace";
+    import Switch from "../../../setting/common/Switch.svelte";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import ToggleChip from "../ui/ToggleChip.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import ListRow from "../ui/ListRow.svelte";
+    import TextField from "../ui/TextField.svelte";
+    import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../../integration/rest";
+    import type {MarketplaceLinkedConfig, MarketplaceLoadPlan} from "../../../../../integration/types";
+    import {attempt, notify, typeName, UNKNOWN_PACK, version} from "../marketplace";
 
     let {open = $bindable(), config}: {
         open: boolean;
@@ -69,30 +69,30 @@
 <Dialog bind:open title="Load {config?.address ?? ''}" width={560}>
     {#if plan}
         {#if plan.installs.length > 0}
-            <Label text="Installs"/>
+            <SectionLabel text="Installs"/>
             <div class="list">
                 {#each plan.installs as install (install.id)}
-                    <Row image={install.image ?? UNKNOWN_PACK}>
+                    <ListRow image={install.image ?? UNKNOWN_PACK}>
                         {#snippet title()}{install.name}{/snippet}
                         {#snippet tags()}
                             {#if install.restart}
-                                <Tag text="Restart needed"/>
+                                <Badge text="Restart needed"/>
                             {/if}
                         {/snippet}
                         {#snippet subtitle()}{typeName(install.type)} · {version(install.revision)}{/snippet}
-                    </Row>
+                    </ListRow>
                 {/each}
             </div>
         {/if}
 
         {#if plan.leftOut.length > 0}
-            <Label text="Left out"/>
+            <SectionLabel text="Left out"/>
             <div class="list">
                 {#each plan.leftOut as leftOut (leftOut.id)}
-                    <Row image={leftOut.image ?? UNKNOWN_PACK}>
+                    <ListRow image={leftOut.image ?? UNKNOWN_PACK}>
                         {#snippet title()}{leftOut.name}{/snippet}
                         {#snippet subtitle()}{typeName(leftOut.type)}{/snippet}
-                    </Row>
+                    </ListRow>
                 {/each}
             </div>
         {/if}
@@ -105,10 +105,10 @@
                 {/if}
             </div>
             {#if pick}
-                <Input bind:value={filter} placeholder="Filter"/>
+                <TextField bind:value={filter} placeholder="Filter"/>
                 <div class="chips">
                     {#each shown as module (module)}
-                        <Chip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
+                        <ToggleChip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
                     {/each}
                 </div>
             {/if}
@@ -116,8 +116,8 @@
     {/if}
 
     {#snippet footer()}
-        <Button title="Cancel" onclick={() => open = false}/>
-        <Button title="Load" primary disabled={!plan || loading || (pick && modules.length === 0)} onclick={load}/>
+        <PillButton title="Cancel" onclick={() => open = false}/>
+        <PillButton title="Load" primary disabled={!plan || loading || (pick && modules.length === 0)} onclick={load}/>
     {/snippet}
 </Dialog>
 

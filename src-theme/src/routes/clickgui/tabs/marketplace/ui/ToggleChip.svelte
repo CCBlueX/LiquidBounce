@@ -2,15 +2,11 @@
     let {text, active = false, onclick}: {
         text: string;
         active?: boolean;
-        onclick?: () => void;
+        onclick: () => void;
     } = $props();
 </script>
 
-{#if onclick}
-    <button type="button" class="chip" class:active onclick={onclick}>{text}</button>
-{:else}
-    <span class="chip" class:active>{text}</span>
-{/if}
+<button type="button" class="chip" class:active {onclick}>{text}</button>
 
 <style lang="scss">
   .chip {
@@ -23,23 +19,16 @@
     border: none;
     border-radius: 3px;
     padding: 4px 8px;
-    transition: ease color .2s;
-
-    &.active {
-      color: var(--clickgui-selection-chip-selected-color);
-      background-color: var(--clickgui-selection-chip-selected-background-color);
-    }
-  }
-
-  button.chip {
     cursor: pointer;
+    transition: ease color .2s;
 
     &:hover {
       color: var(--clickgui-text-color);
     }
 
-    &.active:hover {
+    &.active {
       color: var(--clickgui-selection-chip-selected-color);
+      background-color: var(--clickgui-selection-chip-selected-background-color);
     }
   }
 </style>

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import Row from "./Row.svelte";
-    import Tag from "./Tag.svelte";
-    import Button from "./Button.svelte";
-    import Address from "./Address.svelte";
-    import type {MarketplaceConfig} from "../../../../integration/types";
-    import {ago, count, reports, UNKNOWN_SERVER} from "./marketplace";
+    import ListRow from "../ui/ListRow.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import Address from "../Address.svelte";
+    import type {MarketplaceConfig} from "../../../../../integration/types";
+    import {ago, count, reports, UNKNOWN_SERVER} from "../marketplace";
 
     let {config, loggedIn, onload, onopen, onreport}: {
         config: MarketplaceConfig;
@@ -22,35 +22,35 @@
 </script>
 
 {#snippet report()}
-    <Button title="Works" onclick={() => onreport(true)}/>
-    <Button title="Broken" onclick={() => onreport(false)}/>
+    <PillButton title="Works" onclick={() => onreport(true)}/>
+    <PillButton title="Broken" onclick={() => onreport(false)}/>
 {/snippet}
 
-<Row image={config.image ?? UNKNOWN_SERVER} onclick={onopen} active={config.tracking !== "None"}
+<ListRow image={config.image ?? UNKNOWN_SERVER} onclick={onopen} active={config.tracking !== "None"}
      hover={loggedIn ? report : undefined}>
     {#snippet title()}<Address address={config.address}/>{/snippet}
 
     {#snippet tags()}
         {#if config.tracking !== "None"}
-            <Tag text={config.tracking === "Editing" ? "Edited" : "Tracked"}/>
+            <Badge text={config.tracking === "Editing" ? "Edited" : "Tracked"}/>
         {/if}
         {#if config.featured}
-            <Tag text="Featured"/>
+            <Badge text="Featured"/>
         {/if}
         {#if config.own}
-            <Tag text="Yours"/>
+            <Badge text="Yours"/>
         {/if}
         {#if config.visibility === "unlisted"}
-            <Tag text="Unlisted"/>
+            <Badge text="Unlisted"/>
         {/if}
         {#if config.overlayOn}
-            <Tag text="Overlay on {config.overlayOn.address}"/>
+            <Badge text="Overlay on {config.overlayOn.address}"/>
         {/if}
         {#if config.binds}
-            <Tag text="Binds"/>
+            <Badge text="Binds"/>
         {/if}
         {#each config.tags as tag (tag)}
-            <Tag text={tag}/>
+            <Badge text={tag}/>
         {/each}
     {/snippet}
 
@@ -62,9 +62,9 @@
     {/snippet}
 
     {#snippet primary()}
-        <Button title="Load" primary onclick={onload}/>
+        <PillButton title="Load" primary onclick={onload}/>
     {/snippet}
-</Row>
+</ListRow>
 
 <style lang="scss">
   .reports {

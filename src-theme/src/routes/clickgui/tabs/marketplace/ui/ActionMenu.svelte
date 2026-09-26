@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {Snippet} from "svelte";
     import {fly} from "svelte/transition";
-    import type {MenuEntry} from "./marketplace";
+    import type {MenuEntry} from "../marketplace";
 
     let {entries, trigger, active = false}: {
         entries: MenuEntry[];

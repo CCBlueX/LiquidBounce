@@ -1,9 +1,9 @@
 <script lang="ts">
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import {deleteMarketplaceConfig} from "../../../../integration/rest";
-    import type {MarketplaceConfig} from "../../../../integration/types";
-    import {attempt, notify} from "./marketplace";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import {deleteMarketplaceConfig} from "../../../../../integration/rest";
+    import type {MarketplaceConfig} from "../../../../../integration/types";
+    import {attempt, notify} from "../marketplace";
 
     let {open = $bindable(), config, ondeleted}: {
         open: boolean;
@@ -37,8 +37,8 @@
     <p>Removes it for everyone, with its history and reports.</p>
 
     {#snippet footer()}
-        <Button title="Keep it" onclick={() => open = false}/>
-        <Button title="Delete" danger disabled={loading} onclick={remove}/>
+        <PillButton title="Keep it" onclick={() => open = false}/>
+        <PillButton title="Delete" danger disabled={loading} onclick={remove}/>
     {/snippet}
 </Dialog>
 

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import Row from "./Row.svelte";
-    import Tag from "./Tag.svelte";
-    import Button from "./Button.svelte";
+    import ListRow from "../ui/ListRow.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import PillButton from "../ui/PillButton.svelte";
     import ItemAction from "./ItemAction.svelte";
-    import type {MarketplaceItem} from "../../../../integration/types";
-    import {count, UNKNOWN_PACK, version} from "./marketplace";
+    import type {MarketplaceItem} from "../../../../../integration/types";
+    import {count, UNKNOWN_PACK, version} from "../marketplace";
 
     let {item, busy = false, oninstall, onupdate, onremove, onapply, onopen}: {
         item: MarketplaceItem;
@@ -18,26 +18,26 @@
 </script>
 
 {#snippet remove()}
-    <Button title="Remove" disabled={busy} onclick={onremove}/>
+    <PillButton title="Remove" disabled={busy} onclick={onremove}/>
 {/snippet}
 
-<Row image={item.image ?? UNKNOWN_PACK} onclick={onopen} hover={item.subscribed ? remove : undefined} dim={!!item.notFor}>
+<ListRow image={item.image ?? UNKNOWN_PACK} onclick={onopen} hover={item.subscribed ? remove : undefined} dim={!!item.notFor}>
     {#snippet title()}
         {item.name}{#if item.author}<span class="author">by {item.author}</span>{/if}
     {/snippet}
 
     {#snippet tags()}
         {#if item.subscribed && item.installed}
-            <Tag text={version(item.installed)}/>
+            <Badge text={version(item.installed)}/>
         {/if}
         {#if item.restartRequired}
-            <Tag text="Restart needed"/>
+            <Badge text="Restart needed"/>
         {/if}
         {#if item.inUse}
-            <Tag text="In use"/>
+            <Badge text="In use"/>
         {/if}
         {#if item.featured}
-            <Tag text="Featured"/>
+            <Badge text="Featured"/>
         {/if}
     {/snippet}
 
@@ -56,7 +56,7 @@
     {#snippet primary()}
         <ItemAction {item} {busy} {oninstall} {onupdate} {onapply}/>
     {/snippet}
-</Row>
+</ListRow>
 
 <style lang="scss">
   .author {

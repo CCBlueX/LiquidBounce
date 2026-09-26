@@ -1,15 +1,14 @@
 <script lang="ts">
-    let {value = $bindable(), placeholder = "", prefix, multiline = false, maxlength, mono = false}: {
+    let {value = $bindable(), placeholder = "", prefix, multiline = false, maxlength}: {
         value: string;
         placeholder?: string;
         prefix?: string;
         multiline?: boolean;
         maxlength?: number;
-        mono?: boolean;
     } = $props();
 </script>
 
-<div class="input" class:mono>
+<div class="input">
     {#if prefix}
         <span class="prefix">{prefix}</span>
     {/if}
@@ -49,9 +48,5 @@
       color: var(--clickgui-text-dimmed-color);
       opacity: .6;
     }
-  }
-
-  .mono :is(input, textarea) {
-    font-family: monospace;
   }
 </style>

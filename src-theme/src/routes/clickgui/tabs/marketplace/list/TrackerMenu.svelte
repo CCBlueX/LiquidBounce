@@ -1,8 +1,8 @@
 <script lang="ts">
-    import Menu from "./Menu.svelte";
-    import Address from "./Address.svelte";
-    import type {ConfigTracker} from "../../../../integration/types";
-    import type {MenuEntry} from "./marketplace";
+    import ActionMenu from "../ui/ActionMenu.svelte";
+    import Address from "../Address.svelte";
+    import type {ConfigTracker} from "../../../../../integration/types";
+    import type {MenuEntry} from "../marketplace";
 
     let {tracker, loggedIn, online = true, onchange, onpublish, onupdate, onopen}: {
         tracker: ConfigTracker;
@@ -40,7 +40,7 @@
     });
 </script>
 
-<Menu {entries} active={tracker.state !== "None"}>
+<ActionMenu {entries} active={tracker.state !== "None"}>
     {#snippet trigger()}
         {#if tracker.state === "None"}
             <span>Settings backup</span>
@@ -49,7 +49,7 @@
             <span><Address address={tracker.address}/>{tracker.state === "Editing" ? "*" : ""}</span>
         {/if}
     {/snippet}
-</Menu>
+</ActionMenu>
 
 <style lang="scss">
   .state {

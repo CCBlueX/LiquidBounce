@@ -1,11 +1,11 @@
 <script lang="ts">
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import Tag from "./Tag.svelte";
-    import Address from "./Address.svelte";
-    import {copyMarketplaceShareCode} from "../../../../integration/rest";
-    import type {MarketplacePublished} from "../../../../integration/types";
-    import {attempt, notify} from "./marketplace";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import Address from "../Address.svelte";
+    import {copyMarketplaceShareCode} from "../../../../../integration/rest";
+    import type {MarketplacePublished} from "../../../../../integration/types";
+    import {attempt, notify} from "../marketplace";
 
     let {open = $bindable(), published, onopen}: {
         open: boolean;
@@ -32,7 +32,7 @@
         <div class="head">
             <span class="address"><Address address={published.address}/></span>
             {#if published.shareCode}
-                <Tag text="Unlisted"/>
+                <Badge text="Unlisted"/>
             {/if}
         </div>
         {#if published.shareCode}
@@ -41,11 +41,11 @@
     {/if}
 
     {#snippet footer()}
-        <Button title="Open" onclick={openPage}/>
+        <PillButton title="Open" onclick={openPage}/>
         {#if published?.shareCode}
-            <Button title="Copy code" primary onclick={copy}/>
+            <PillButton title="Copy code" primary onclick={copy}/>
         {:else}
-            <Button title="Done" primary onclick={() => open = false}/>
+            <PillButton title="Done" primary onclick={() => open = false}/>
         {/if}
     {/snippet}
 </Dialog>

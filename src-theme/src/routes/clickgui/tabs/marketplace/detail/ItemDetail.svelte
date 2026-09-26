@@ -1,11 +1,11 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import DetailHead from "./DetailHead.svelte";
-    import ItemAction from "./ItemAction.svelte";
-    import Button from "./Button.svelte";
-    import Tag from "./Tag.svelte";
-    import Label from "./Label.svelte";
-    import Message from "./Message.svelte";
+    import ItemAction from "../list/ItemAction.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import Badge from "../ui/Badge.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import Notice from "../ui/Notice.svelte";
     import Stat from "./Stat.svelte";
     import {
         applyMarketplaceTheme,
@@ -13,9 +13,9 @@
         installMarketplaceItem,
         removeMarketplaceItem,
         updateMarketplaceItem
-    } from "../../../../integration/rest";
-    import type {MarketplaceItemDetail} from "../../../../integration/types";
-    import {attempt, count, date, message, notifyInstalled, typeName, UNKNOWN_PACK, version} from "./marketplace";
+    } from "../../../../../integration/rest";
+    import type {MarketplaceItemDetail} from "../../../../../integration/types";
+    import {attempt, count, date, message, notifyInstalled, typeName, UNKNOWN_PACK, version} from "../marketplace";
 
     let {id, onback}: {
         id: number;
@@ -61,16 +61,16 @@
 
             {#snippet tags()}
                 {#if item.subscribed}
-                    <Tag text="Installed"/>
+                    <Badge text="Installed"/>
                 {/if}
                 {#if item.restartRequired}
-                    <Tag text="Restart needed"/>
+                    <Badge text="Restart needed"/>
                 {/if}
                 {#if item.inUse}
-                    <Tag text="In use"/>
+                    <Badge text="In use"/>
                 {/if}
                 {#if item.featured}
-                    <Tag text="Featured"/>
+                    <Badge text="Featured"/>
                 {/if}
             {/snippet}
 
@@ -80,7 +80,7 @@
 
             {#snippet actions()}
                 {#if item.subscribed}
-                    <Button title="Remove" disabled={busy} onclick={() => run(() => removeMarketplaceItem(id))}/>
+                    <PillButton title="Remove" disabled={busy} onclick={() => run(() => removeMarketplaceItem(id))}/>
                 {/if}
                 <ItemAction {item} {busy}
                             oninstall={() => run(async () => notifyInstalled(await installMarketplaceItem(id)))}
@@ -108,7 +108,7 @@
                 <p class="description">{detail.description || item.summary}</p>
             {/if}
 
-            <Label text="Versions"/>
+            <SectionLabel text="Versions"/>
             <div class="versions">
                 {#each detail.versions as entry (entry.revision.id)}
                     <div class="version" class:installed={entry.installed} class:unfit={!entry.fits && !entry.installed}>
@@ -118,7 +118,7 @@
                         <span>{entry.revision.liquidbounce ?? ""}</span>
                         <span class="tag">
                             {#if entry.installed}
-                                <Tag text="Installed"/>
+                                <Badge text="Installed"/>
                             {:else if !entry.fits}
                                 Not for {detail.liquidbounce}
                             {/if}
@@ -131,12 +131,12 @@
         <DetailHead {onback}>
             {#snippet title()}Item{/snippet}
         </DetailHead>
-        <Message title="Couldn't open this item">
+        <Notice title="Couldn't open this item">
             {error}
             {#snippet actions()}
-                <Button title="Retry" primary onclick={refresh}/>
+                <PillButton title="Retry" primary onclick={refresh}/>
             {/snippet}
-        </Message>
+        </Notice>
     {/if}
 </div>
 

@@ -1,11 +1,11 @@
 <script lang="ts">
-    import Dialog from "./Dialog.svelte";
-    import Button from "./Button.svelte";
-    import Label from "./Label.svelte";
-    import Input from "./Input.svelte";
-    import {updateTrackedConfig} from "../../../../integration/rest";
-    import type {ConfigTracker} from "../../../../integration/types";
-    import {attempt, notify} from "./marketplace";
+    import Dialog from "../ui/Dialog.svelte";
+    import PillButton from "../ui/PillButton.svelte";
+    import SectionLabel from "../ui/SectionLabel.svelte";
+    import TextField from "../ui/TextField.svelte";
+    import {updateTrackedConfig} from "../../../../../integration/rest";
+    import type {ConfigTracker} from "../../../../../integration/types";
+    import {attempt, notify} from "../marketplace";
 
     let {open = $bindable(), tracker}: {
         open: boolean;
@@ -33,11 +33,11 @@
 </script>
 
 <Dialog bind:open title="Update {tracker?.address ?? ''}" width={460}>
-    <Label text="Changelog"/>
-    <Input bind:value={changelog} multiline/>
+    <SectionLabel text="Changelog"/>
+    <TextField bind:value={changelog} multiline/>
 
     {#snippet footer()}
-        <Button title="Cancel" onclick={() => open = false}/>
-        <Button title="Update" primary disabled={loading} onclick={update}/>
+        <PillButton title="Cancel" onclick={() => open = false}/>
+        <PillButton title="Update" primary disabled={loading} onclick={update}/>
     {/snippet}
 </Dialog>
