@@ -89,6 +89,7 @@ class MicrosoftAccount internal constructor(
         /**
          * The official Minecraft (Java Edition) launcher application.
          */
+        @JvmField
         val JAVA_APPLICATION_CONFIG: MsaApplicationConfig =
             MsaApplicationConfig(MsaConstants.JAVA_TITLE_ID, MsaConstants.SCOPE_TITLE_AUTH)
 
@@ -103,8 +104,8 @@ class MicrosoftAccount internal constructor(
          * or timed out.
          */
         fun buildFromWebView(
-            onOpen: (ExternalBrowserMsaAuthService) -> Unit,
-            onClose: (ExternalBrowserMsaAuthService) -> Unit,
+            onOpen: Consumer<ExternalBrowserMsaAuthService>,
+            onClose: Consumer<ExternalBrowserMsaAuthService>,
             applicationConfig: MsaApplicationConfig = JAVA_APPLICATION_CONFIG,
             timeoutMs: Int = DEFAULT_TIMEOUT_MS,
         ): MicrosoftAccount = build(applicationConfig) {
@@ -151,7 +152,7 @@ class MicrosoftAccount internal constructor(
             applicationConfig: MsaApplicationConfig = JAVA_APPLICATION_CONFIG,
         ): MicrosoftAccount = build(applicationConfig) { it.login(refreshToken) }
 
-        private fun build(
+        private inline fun build(
             applicationConfig: MsaApplicationConfig,
             login: (JavaAuthManager.Builder) -> JavaAuthManager,
         ): MicrosoftAccount {

@@ -102,16 +102,16 @@ object WingsLines : WingsMode("Lines") {
             else -> 27.5f
         }
         poseStack.withPush {
-            mulPose(Axis.XP.rotationDegrees(90f))
-            mulPose(Axis.ZP.rotationDegrees(bodyRot))
-            mulPose(Axis.XP.rotationDegrees(shiftOffset))
+            rotate(Axis.XP.rotationDegrees(90f))
+            rotate(Axis.ZP.rotationDegrees(bodyRot))
+            rotate(Axis.XP.rotationDegrees(shiftOffset))
 
             for (i in (0 until linesCount)) {
                 val angle = angles.first.toFloat() + (i * step)
 
                 poseStack.withPush {
                     translate(0.1 + (0.0375 * i), 0.0, -0.1 - (0.0375 * i))
-                    mulPose(Axis.YP.rotationDegrees(angle))
+                    rotate(Axis.YP.rotationDegrees(angle))
                     drawWingPair(
                         WingsOptions.wingsLength - 0.25f,
                         WingsOptions.wingsWidth,
@@ -121,7 +121,7 @@ object WingsLines : WingsMode("Lines") {
 
                 poseStack.withPush {
                     translate(-0.1 - (0.0375 * i), 0.0, -0.1 - (0.0375 * i))
-                    mulPose(Axis.YP.rotationDegrees(-angle))
+                    rotate(Axis.YP.rotationDegrees(-angle))
                     drawWingPair(
                         WingsOptions.wingsLength,
                         WingsOptions.wingsWidth,

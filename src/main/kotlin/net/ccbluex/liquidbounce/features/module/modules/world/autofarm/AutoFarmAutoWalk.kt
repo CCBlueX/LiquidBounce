@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.mapReadOnly
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -45,9 +45,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
     private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
 
     private object ToItems : ToggleableValueGroup(this, "ToItems", true) {
-        private val range by float("Range", 20f, 8f..64f).onChanged {
-            rangeSquared = it.sq()
-        }
+        val rangeSquared by float("Range", 20f, 8f..64f).mapReadOnly { it.sq() }
 
         private val items by items("Items", itemSortedSetOf())
         private val filter by enumChoice("Filter", Filter.BLACKLIST)
@@ -55,9 +53,6 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         fun shouldPickUp(itemEntity: ItemEntity): Boolean {
             return filter(itemEntity.item.item, items)
         }
-
-        var rangeSquared: Float = range.sq()
-            private set
     }
 
     init {
@@ -74,19 +69,18 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
         if (!toPlant) return setOf(AutoFarmTrackedState.ReadyForHarvest)
 
         // we should always walk to blocks we want to destroy because we can do so even without any items
-        val allowedStates = objectHashSetOf<AutoFarmTrackedState>()
+        return buildSet {
+            this.add(AutoFarmTrackedState.ReadyForHarvest)
 
-        allowedStates.add(AutoFarmTrackedState.ReadyForHarvest)
+            for (slot in Slots.OffhandWithHotbar) {
+                val item = slot.itemStack.item
+                AutoFarmTrackedState.Plantable.entries.filterTo(this) { it.items.contains(item) }
 
-        for (slot in Slots.OffhandWithHotbar) {
-            val item = slot.itemStack.item
-            AutoFarmTrackedState.Plantable.entries.filterTo(allowedStates) { it.items.contains(item) }
-
-            if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {
-                allowedStates.add(AutoFarmTrackedState.Bonemealable)
+                if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                    this.add(AutoFarmTrackedState.Bonemealable)
+                }
             }
         }
-        return allowedStates
     }
 
     private fun findWalkToBlock(): Vec3? {
@@ -119,14 +113,18 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<Vec3?>(ModuleAutoFarm, "AutoW
 
     private fun findWalkToItem(): Vec3? = world.entityGetter
         .filter(EntityTypes.ITEM, ToItems::shouldPickUp)
-        .weightedMinByOrNullAtMost(ToItems.rangeSquared.toDouble()) {
-            it.distanceToSqr(player)
-        }?.position()
+        .weightedMinByOrNullAtMost(ToItems.rangeSquared.toDouble(), player::distanceToSqr)
+        ?.position()
 
     override fun createNavigationContext(): Vec3? {
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && ToItems.enabled) {
-            notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
+            notification(
+                ModuleAutoFarm.message("inventoryFull"),
+                ModuleAutoFarm.message("noLongerCollecting"),
+                NotificationEvent.Severity.ERROR
+            )
+            invHadSpace = false
             return null
         }
         invHadSpace = invHasSpace

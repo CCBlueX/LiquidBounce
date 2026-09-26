@@ -61,6 +61,13 @@ private fun Route.postToggleShader() = post {
     call.respond(HttpStatusCode.NoContent)
 }
 
+// POST /api/v1/client/basic-mode
+private fun Route.postToggleBasicMode() = post {
+    ThemeManager.basicMode = !ThemeManager.basicMode
+    ConfigSystem.store(ThemeManager)
+    call.respond(HttpStatusCode.NoContent)
+}
+
 
 // GET /api/v1/client/fonts
 private fun Route.getFonts() = get { call.respond(FontManager.fontFaces.keys) }
@@ -85,5 +92,8 @@ internal fun Route.themeRoutes() {
     route("/shader") {
         getToggleShaderInfo()
         postToggleShader()
+    }
+    route("/basic-mode") {
+        postToggleBasicMode()
     }
 }

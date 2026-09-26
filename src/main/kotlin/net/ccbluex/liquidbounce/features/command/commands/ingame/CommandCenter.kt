@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -34,16 +36,18 @@ import net.ccbluex.liquidbounce.utils.math.center
  *
  * Centers you at your current position.
  */
-object CommandCenter : Command.Factory, EventListener {
+object CommandCenter : EventListener, CommandRegistrar {
 
     var state = CenterHandlerState.INACTIVE
 
-    override fun createCommand(): Command {
-        return CommandBuilder
-            .begin("center")
-            .requiresIngame()
-            .handler { state = CenterHandlerState.APPLY_ON_NEXT_EVENT }
-            .build()
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("center") {
+            requires { it.isIngame }
+            exec {
+                state = CenterHandlerState.APPLY_ON_NEXT_EVENT
+                1
+            }
+        }
     }
 
     @Suppress("unused")

@@ -35,12 +35,13 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.addon.AddonManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
@@ -52,7 +53,11 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceItems
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -69,7 +74,6 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -207,7 +211,7 @@ object LiquidBounce : EventListener {
 
         // Initialize managers and features
         Client
-        initializeManagers(workerDispatcher, renderThreadDispatcher)
+        initializeManagers(renderThreadDispatcher)
         initializeFeatures()
         initializeResources(workerDispatcher)
         prepareGuiStage(renderThreadDispatcher)
@@ -233,6 +237,7 @@ object LiquidBounce : EventListener {
 
         // Load all configurations
         ConfigSystem.loadAll()
+        AddonManager.notifyStarted()
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
@@ -245,16 +250,8 @@ object LiquidBounce : EventListener {
      * Initializes managers for Event Listener registration.
      */
     private suspend fun initializeManagers(
-        workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
     ) = withContext(renderThreadDispatcher) {
-        // Script system
-        val scriptEngineJob = launch(workerDispatcher) {
-            runCatching(ScriptManager::initializeEngine).onFailure { error ->
-                logger.error("[ScriptAPI] Failed to initialize script engine.", error)
-            }
-        }
-
         // Config
         ConfigSystem
 
@@ -282,25 +279,24 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(SpooferManager)
         ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
+        ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
 
-        scriptEngineJob.join()
+        AddonManager.discover()
     }
 
     /**
-     * Initializes in-built and script features.
+     * Initializes in-built and add-on features.
      */
     private fun initializeFeatures() {
         // Register commands and modules
         CommandManager.registerInbuilt()
         ModuleManager.registerInbuilt()
 
-        // Load user scripts
-        runCatching(ScriptManager::loadAll).onFailure { error ->
-            logger.error("ScriptManager was unable to load scripts.", error)
-        }
+        AddonManager.registerCategories()
+        AddonManager.initializeAddons()
     }
 
     /**
@@ -335,8 +331,13 @@ object LiquidBounce : EventListener {
                 HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
-                // Load configs
-                AutoConfig.reloadConfigs()
+                MarketplaceConfigs.refresh()
+            }
+            launch {
+                MarketplaceItems.refresh()
+            }
+            launch {
+                MarketplaceManager.fillAuthors()
             }
             launch {
                 IpInfoApi.original
@@ -376,10 +377,15 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
+
+        // Preload marketplace items
+        ConfigSystem.load(MarketplaceManager)
+        MarketplaceManager.subscribedItems.forEach(SubscribedItem::restoreRetired)
+        AddonInstaller.stageSubscribedAddons()
+        MarketplaceManager.reloadHandlers()
+
         if (!ClientInteropServer.isSkipping) {
             ThemeManager.init()
-            // Preload marketplace items
-            ConfigSystem.load(MarketplaceManager)
             ConfigSystem.load(ThemeManager)
             ThemeManager.load()
         }
@@ -448,6 +454,8 @@ object LiquidBounce : EventListener {
             ClientInteropServer.stop()
         }
 
+        AddonManager.notifyStopping()
+
         // Save all configurations
         ConfigSystem.storeAll()
 
@@ -468,7 +476,7 @@ object LiquidBounce : EventListener {
             logger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
             logger.info("Java Version: ${System.getProperty("java.version")}")
             logger.info("Screen Resolution: ${mc.window.screenWidth}x${mc.window.screenHeight}")
-            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+            logger.info("Refresh Rate: ${mc.window.activeVideoMode?.refreshRate} Hz")
 
             // Initialize event manager
             EventManager
@@ -485,8 +493,8 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).thenRun {
-                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
+                ).thenCompose {
+                    ThemeManager.reloader.reload()
                 }
             }
         }.onFailure {

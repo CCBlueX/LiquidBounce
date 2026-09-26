@@ -98,7 +98,7 @@ class BreakingProgressRenderer @JvmOverloads constructor(
                 progress.pos.y + height.toDouble() - cameraPos.y,
                 progress.pos.z + 0.5 - cameraPos.z,
             )
-            mulPose(camera.rotation())
+            rotate(camera.rotation())
             scale(
                 EntityRenderer.NAMETAG_SCALE * scale,
                 -EntityRenderer.NAMETAG_SCALE * scale,

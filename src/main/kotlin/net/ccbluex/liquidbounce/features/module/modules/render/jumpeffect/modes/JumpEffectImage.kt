@@ -54,8 +54,8 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
         poseStack.withPush {
             val currentRotation = rotationSpeed * age
 
-            mulPose(Axis.XP.rotationDegrees(90f))
-            mulPose(Axis.ZP.rotationDegrees(currentRotation))
+            rotate(Axis.XP.rotationDegrees(90f))
+            rotate(Axis.ZP.rotationDegrees(currentRotation))
             drawSquareTextureGradient(
                 sampler0 = texture,
                 outerRadius = endRadius.endInclusive * progress,
@@ -69,6 +69,7 @@ internal object JumpEffectImage : JumpEffectMode("Image") {
         }
     }
 
+    @Suppress("unused")
     private enum class PresetTexture(override val tag: String, val path: String) : TextureMode.Builtin.Preset {
         LIQUIDBOUNCE(CLIENT_NAME, "jump_effect/liquidbounce.png"),
         LIQUIDBOUNCE_LOGO(CLIENT_NAME + "WithLogo", "jump_effect/liquidbounce_with_logo.png");

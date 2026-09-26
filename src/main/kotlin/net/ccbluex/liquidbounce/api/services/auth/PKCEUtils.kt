@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.services.auth
 
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
 import java.security.MessageDigest
 import java.util.Base64
 import java.util.UUID
@@ -26,7 +27,7 @@ object PKCEUtils {
     data class PKCEPair(val codeVerifier: String, val codeChallenge: String)
 
     fun generatePKCE(): PKCEPair {
-        val codeVerifier = UUID.randomUUID().toString().replace("-", "")
+        val codeVerifier = UUID.randomUUID().toUndashedString()
         val codeChallenge = Base64.getEncoder().encodeToString(
             MessageDigest.getInstance("SHA-256").digest(codeVerifier.toByteArray(Charsets.US_ASCII))
         ).replace("=", "").replace('+', '-').replace('/', '_')

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor;
 import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
@@ -169,7 +169,7 @@ public abstract class MixinMinecraft {
             ordinal = 1),
             cancellable = true)
     private void getClientTitle(CallbackInfoReturnable<String> callback) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
+        if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
         }
 
@@ -437,7 +437,7 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
+    @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;submit()V", shift = At.Shift.BEFORE))
     private void endDynamicGpuBufferFrame(boolean advanceGameTime, CallbackInfo ci) {
         MeshDraw.DefaultUploader.endFrame();
     }
