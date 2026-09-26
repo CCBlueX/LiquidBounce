@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 
 
+@AddonApi
 enum class Priority(val priority: Int) {
     NOT_IMPORTANT(-20),
     NORMAL(0),
@@ -39,6 +41,7 @@ enum class Priority(val priority: Int) {
     IMPORTANT_FOR_USER_SAFETY(60);
 }
 
+@AddonApi
 object EventPriorityConvention {
 
     /**

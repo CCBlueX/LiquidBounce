@@ -18,72 +18,126 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
+import it.unimi.dsi.fastutil.io.FastBufferedInputStream
+import it.unimi.dsi.fastutil.io.FastBufferedOutputStream
 import org.apache.commons.compress.archivers.ArchiveInputStream
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import java.io.File
 import java.io.InputStream
+import java.nio.file.LinkOption
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createDirectory
+import kotlin.io.path.outputStream
+import kotlin.io.path.readAttributes
+
+@Suppress("ThrowsCount")
+private fun Path.createDirectoryNoFollow(relative: Path) {
+    fun Path.readAttrsNoFollow(): BasicFileAttributes? =
+        try {
+            readAttributes(LinkOption.NOFOLLOW_LINKS)
+        } catch (_: java.nio.file.NoSuchFileException) {
+            null
+        }
+
+    var current = this
+    for (part in relative) {
+        current = current.resolve(part)
+        val attrs = current.readAttrsNoFollow()
+        when {
+            attrs == null -> current.createDirectory()
+            attrs.isSymbolicLink -> throw SecurityException("Symlink in extraction path: $current")
+            attrs.isDirectory -> {}
+            else -> throw java.nio.file.FileAlreadyExistsException(current.toString())
+        }
+
+        val after = current.readAttrsNoFollow()
+            ?: throw SecurityException("Directory vanished: $current")
+        if (!after.isDirectory) {
+            throw SecurityException("Path component is not a real directory: $current")
+        }
+        // toRealPath() resolves any junction/symlink in the chain;
+        // deviating from the lexical path means a link was followed
+        if (current.toRealPath() != current) {
+            throw SecurityException("Symlink in extraction path: $current")
+        }
+    }
+}
 
 /**
- * Extracts an [ArchiveInputStream] to a specified [folder]
+ * Extracts an [ArchiveInputStream] to a specified [folder] and closes it.
  */
-private fun ArchiveInputStream<*>.extractTo(folder: File) = use { ais ->
-    if (!folder.exists()) {
-        folder.mkdir()
-    }
+@Suppress("CognitiveComplexMethod")
+private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
+    val destDir = folder.createDirectories().toRealPath()
 
-    while (true) {
-        // Lunar Client uses a stone age version of Apache Commons Compress that does not have the nextEntry method.
-        @Suppress("DEPRECATION")
-        val entry = when (ais) {
-            is TarArchiveInputStream -> ais.nextTarEntry
-            is ZipArchiveInputStream -> ais.nextZipEntry
-            else -> ais.nextEntry
-        }  ?: break
-
-        if (entry.isDirectory) {
-            continue
+    for (entry in ais) {
+        if (entry is ZipArchiveEntry && entry.isUnixSymlink) {
+            throw SecurityException("Refusing symlink entry: ${entry.name}")
         }
 
-        val newFile = File(folder, entry.name).apply {
-            parentFile?.mkdirs()
+        val relative = destDir.fileSystem.getPath(entry.name)
+        if (relative.isAbsolute) {
+            throw SecurityException("Absolute entry path: ${entry.name}")
         }
 
-        // Ensure the entry is within the target directory to prevent zip slip
-        if (!newFile.canonicalPath.startsWith(folder.canonicalPath)) {
+        val target = destDir.resolve(entry.name).normalize()
+        if (!target.startsWith(destDir) || target == destDir && !entry.isDirectory) {
             throw SecurityException("Entry is outside of the target directory: ${entry.name}")
         }
 
-        newFile.outputStream().buffered().use { ais.copyTo(it) }
+        if (entry.isDirectory) {
+            destDir.createDirectoryNoFollow(destDir.relativize(target))
+            continue
+        }
+
+        if (!ais.canReadEntryData(entry)) {
+            continue
+        }
+
+        destDir.createDirectoryNoFollow(destDir.relativize(target.parent ?: destDir))
+        FastBufferedOutputStream(
+            target.outputStream(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)
+        ).use { ais.transferTo(it) }
     }
 }
 
 /**
  * Extracts a ZIP archive from an [InputStream] to a specified [folder] and close it
  */
-fun extractZip(zipStream: InputStream, folder: File) =
-    ZipArchiveInputStream(zipStream.buffered()).extractTo(folder)
+fun extractZip(zipStream: InputStream, folder: File) = extractZip(zipStream, folder.toPath())
+
+/**
+ * Extracts a ZIP archive from an [InputStream] to a specified [folder] and close it
+ */
+fun extractZip(zipStream: InputStream, folder: Path) =
+    ZipArchiveInputStream(zipStream).extractTo(folder)
 
 /**
  * Extracts a ZIP file to a specified [folder]
  */
-fun extractZip(zipFile: File, folder: File) = extractZip(zipFile.inputStream(), folder)
+fun extractZip(zipFile: File, folder: File) = extractZip(zipFile, folder.toPath())
 
 /**
- * Creates a ZIP file from multiple files
+ * Extracts a ZIP file to a specified [folder]
+ */
+fun extractZip(zipFile: File, folder: Path) = extractZip(FastBufferedInputStream(zipFile.inputStream()), folder)
+
+/**
+ * Creates a ZIP file from multiple files (flatten)
  */
 fun Collection<File>.createZipArchive(file: File) {
-    ZipArchiveOutputStream(file.outputStream().buffered()).use { aos ->
+    ZipArchiveOutputStream(file).use { aos ->
         for (item in this) {
-            if (!item.isFile) continue
+            if (!item.isFile || !item.canRead()) continue
 
             aos.putArchiveEntry(ZipArchiveEntry(item, item.name))
-            item.inputStream().buffered().use { it.copyTo(aos) }
+            aos.write(item)
             aos.closeArchiveEntry()
         }
-
-        aos.finish()
     }
 }

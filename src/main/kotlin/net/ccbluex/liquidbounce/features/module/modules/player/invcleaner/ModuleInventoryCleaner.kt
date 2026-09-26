@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -45,16 +45,23 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  *
  * Automatically throws away useless items and sorts them.
  */
-object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategories.PLAYER,
+object ModuleInventoryCleaner : ClientModule(
+    "InventoryCleaner", ModuleCategories.PLAYER,
     aliases = listOf("InventoryManager")
 ) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
+
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
     private val maxArrows by int("MaximumArrows", 128, 0..2500)
     private val maxThrowables by int("MaximumThrowables", 64, 0..600)
     private val maxFoods by int("MaximumFoodPoints", 200, 0..2000)
+    private val maxWaterBuckets by int("MaximumWaterBuckets", 2, 0..16)
+    private val maxLavaBuckets by int("MaximumLavaBuckets", 2, 0..16)
+    private val maxMilkBuckets by int("MaximumMilkBuckets", 2, 0..16)
+
+    private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
 
     private val isGreedy by boolean("Greedy", true)
 
@@ -72,7 +79,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
     private fun buildSlotTargetMap(): Map<HotbarItemSlot, ItemSortChoice> {
         val slotTargets = enumMapOf<HotbarItemSlot, ItemSortChoice>()
 
-        if (!isOlderThanOrEqual1_8) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
+        if (HotbarItemSlot.OFFHAND.canBeSwapTarget) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
         slotTargets[HotbarItemSlot.SLOT_0] = slotItem1
         slotTargets[HotbarItemSlot.SLOT_1] = slotItem2
         slotTargets[HotbarItemSlot.SLOT_2] = slotItem3
@@ -113,6 +120,9 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
                     ItemType.BLOCK.defaultCategory, maxBlocks,
                     ItemType.THROWABLE.defaultCategory, maxThrowables,
                     ItemType.ARROW.defaultCategory, maxArrows,
+                    ItemSortChoice.WATER.category, maxWaterBuckets,
+                    ItemSortChoice.LAVA.category, maxLavaBuckets,
+                    ItemSortChoice.MILK.category, maxMilkBuckets,
                 ),
                 desiredValuePerFunction = referenceIntArrayMapOf(
                     ItemFunction.FOOD, maxFoods,
@@ -123,6 +133,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
             return CleanupPlanPlacementTemplate(
                 slotTargets,
                 itemAmountConstraintProvider = constraintProvider::getConstraints,
+                itemBlacklist = itemsBlackList,
                 forbiddenSlots = forbiddenSlots,
                 forbiddenSlotsToFill = forbiddenSlotsToFill,
                 isGreedy = isGreedy,
@@ -182,16 +193,16 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategorie
         return true
     }
 
-    /**
-     * Handles disposal of unwanted items
-     * @return true if an item was scheduled for disposal, false otherwise
-     */
     private fun processItemDisposal(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
         currentInventorySlots: List<ItemSlot>
     ): Boolean {
-        val itemsToDispose = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
+        val planDisposalItems = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
+        val blacklistedItems = currentInventorySlots.filter { it.itemStack.item in itemsBlackList }
+
+        // Blacklisted items
+        val itemsToDispose = (blacklistedItems + planDisposalItems).distinct()
         val itemToThrow = itemsToDispose.firstOrNull() ?: return false
 
         event.schedule(

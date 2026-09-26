@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.ccbluex.liquidbounce.utils.render.entity
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
 import net.minecraft.world.entity.Entity
@@ -71,6 +72,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
         clone.yHeadRot = entity.yHeadRot
         clone.copyPosition(entity)
         clone.setUUID(UUID.randomUUID())
+        clone.id = world.nextLocalEntityId()
         clone.inventory.replaceWith(entity.inventory)
         clone.health = entity.getActualHealth()
         world.addEntity(clone)
@@ -117,8 +119,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     }
 
     override fun onDisabled() {
-        for (loggedOffPlayer in lastSeenPlayers.values) {
-            val playerEntity = loggedOffPlayer.entity
+        for ((_, playerEntity) in lastSeenPlayers.values) {
             // Use [mc.world] instead of [world] to prevent NPE when the module is disabled
             // outside the game
             mc.level?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
@@ -133,6 +134,6 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     }
 
     fun isLogoffEntity(entityId: Int) = this.running
-        && lastSeenPlayers.any { (_, logOffPlayer) -> logOffPlayer.entity.id == entityId }
+        && lastSeenPlayers.values.any { (_, playerEntity) -> playerEntity.id == entityId }
 
 }

@@ -30,18 +30,19 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.StaticMeshStorage
 import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -50,6 +51,9 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.PositionedVoxelShape
+import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.mergeAdjacentVoxelShapes
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.core.BlockPos
@@ -65,6 +69,7 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BrewingStandBlockEntity
 import net.minecraft.world.level.block.entity.ChestBlockEntity
+import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity
 import net.minecraft.world.level.block.entity.CrafterBlockEntity
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity
 import net.minecraft.world.level.block.entity.DispenserBlockEntity
@@ -111,6 +116,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         object Hopper : ChestType("Hopper", Color4b(Color.GRAY))
         object ShulkerBox : ChestType("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
         object Pot : ChestType("Pot", Color4b(209, 134, 0))
+        object Bookshelf : ChestType("Bookshelf", Color4b(139, 90, 43))
         object Shelf : ChestType("Shelf", Color4b(160, 82, 45))
     }
 
@@ -124,6 +130,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         ChestType.Hopper,
         ChestType.ShulkerBox,
         ChestType.Pot,
+        ChestType.Bookshelf,
         ChestType.Shelf,
     )
 
@@ -132,6 +139,9 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
+    private val mergeAdjacent by boolean("MergeAdjacent", false).onChanged {
+        markDirtyForModes()
+    }
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
 
@@ -149,8 +159,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         private val dirtyFlag = atomic(true)
 
-        private val blockFacesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
-        private val blockOutlinesRenderState = StaticMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
+        private val blockFacesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
+        private val blockOutlinesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
 
         fun markDirty() {
             if (this.running) {
@@ -179,32 +189,32 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             if (outline) {
-                mc.mainRenderTarget.drawGenericBlockESP(
+                mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                     renderState = blockOutlinesRenderState,
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
                     distanceFade = distanceFade,
                 ) {
                     getDynamicTransformsUniform(
-                        modelView = event.matrixStack.last().pose(),
+                        modelView = event.poseStack.last().pose(),
                     )
                 }
             }
 
-            mc.mainRenderTarget.drawGenericBlockESP(
+            mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
                 renderState = blockFacesRenderState,
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
                 distanceFade = distanceFade,
             ) {
                 getDynamicTransformsUniform(
-                    modelView = event.matrixStack.last().pose(),
+                    modelView = event.poseStack.last().pose(),
                 )
             }
 
             if (entityBoxes.isEmpty()) return@handler
 
-            val matrixStack = event.matrixStack
+            val matrixStack = event.poseStack
 
-            renderEnvironmentForWorld(matrixStack) {
+            event.renderEnvironment {
                 for ((entity, box, color) in entityBoxes) {
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
@@ -249,16 +259,16 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 return@handler
             }
 
-            val origin = BlockPos.containing(player.position())
+            val mergedShapes = collectTrackedBlockShapes()
 
             blockFacesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
-                origin = origin,
-            ) { pose ->
-                forEachTrackedBlockShapes { blockPos, type, outlineShape ->
+                origin = player.blockPosition(),
+            ) { pose, origin ->
+                for (mergedShape in mergedShapes) {
                     pose.withPush {
-                        translate(blockPos.subtract(origin))
-                        addShapeFaces(last().pose(), outlineShape, type.color.alpha(50))
+                        translate(mergedShape.blockPos, origin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(50))
                     }
                 }
             }
@@ -266,12 +276,12 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             if (outline) {
                 blockOutlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
-                    origin = origin,
-                ) { pose ->
-                    forEachTrackedBlockShapes { blockPos, type, outlineShape ->
+                    origin = player.blockPosition(),
+                ) { pose, origin ->
+                    for (mergedShape in mergedShapes) {
                         pose.withPush {
-                            translate(blockPos.subtract(origin))
-                            addShapeOutlines(last().pose(), outlineShape, type.color.alpha(100))
+                            translate(mergedShape.blockPos, origin)
+                            addShapeOutlines(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(100))
                         }
                     }
                 }
@@ -283,7 +293,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     object GlowMode : Mode("Glow") {
         private val dirtyFlag = atomic(true)
 
-        private val renderState = StaticMeshStorage("${ModuleStorageESP.name} $name")
+        private val renderState = CachedMeshStorage("${ModuleStorageESP.name} $name")
 
         internal fun markDirty() {
             if (this.running) {
@@ -307,10 +317,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         @Suppress("unused")
         private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
-                return@handler
-            }
-
             val dirty = event.renderTarget.drawGenericBlockESP(
                 renderState = renderState,
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
@@ -336,14 +342,13 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
                 origin = player.blockPosition(),
-            ) { pose ->
-                val origin = renderState.baseBlockPos
+            ) { pose, origin ->
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
-                forEachTrackedBlockShapes({ it.renderShape != RenderShape.MODEL }) { blockPos, type, outlineShape ->
+                for (mergedShape in collectTrackedBlockShapes { it.renderShape != RenderShape.MODEL }) {
                     pose.withPush {
-                        translate(blockPos.subtract(origin))
-                        addShapeFaces(last().pose(), outlineShape, type.color)
+                        translate(mergedShape.blockPos, origin)
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color)
                     }
                 }
             }
@@ -352,21 +357,31 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (StorageScanner.isEmpty()) return@handler
-
         val types = allTypes.filter { it.tracers && !it.color.isTransparent }
         if (types.isEmpty()) return@handler
 
-        renderEnvironmentForWorld(event.matrixStack) {
+        event.renderEnvironment {
             val eyeVector = Vec3f.eyeVector(camera)
 
-            for (type in types) {
-                for (blockPos in StorageScanner.iterate(type)) {
-                    if (!type.shouldRender(blockPos)) continue
-                    val pos = relativeToCamera(blockPos.center).toVec3f()
+            if (!StorageScanner.isEmpty()) {
+                for (type in types) {
+                    for (blockPos in StorageScanner.iterate(type)) {
+                        if (!type.shouldRender(blockPos)) continue
+                        val pos = blockPos.center.subtract(camera.position()).toVec3f()
 
-                    drawLine(eyeVector, pos, type.color.argb)
+                        drawLine(eyeVector, pos, type.color.argb)
+                    }
                 }
+            }
+
+            for (entity in mc.level?.entitiesForRendering() ?: return@handler) {
+                val category = entity.categorize() ?: continue
+                if (!category.shouldRender(entity) || !category.tracers) continue
+
+                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight, 0f)
+
+                drawLines(category.color.argb, eyeVector, pos, pos, topPos)
             }
         }
     }
@@ -397,6 +412,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             is HopperBlockEntity -> ChestType.Hopper
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot
+            is ChiseledBookShelfBlockEntity -> ChestType.Bookshelf
             is ShelfBlockEntity -> ChestType.Shelf
             else -> null
         }
@@ -419,6 +435,29 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         }
     }
 
+    private inline fun collectTrackedBlockShapes(
+        skipWhen: (BlockState) -> Boolean = { false },
+    ): List<PositionedVoxelShape<ChestType>> {
+        val shapes = buildList {
+            forEachTrackedBlockShapes(skipWhen) { blockPos, type, outlineShape ->
+                add(
+                    PositionedVoxelShape(
+                        blockPos = blockPos.asLong(),
+                        key = type,
+                        shape = outlineShape,
+                    )
+                )
+            }
+        }
+
+        return if (mergeAdjacent) shapes.mergeAdjacentVoxelShapes() else shapes
+    }
+
+    private fun markDirtyForModes() {
+        GlowMode.markDirty()
+        BoxMode.markDirty()
+    }
+
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             if (!state.hasBlockEntity()) return null
@@ -428,8 +467,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         }
 
         override fun onUpdated() {
-            GlowMode.markDirty()
-            BoxMode.markDirty()
+            markDirtyForModes()
         }
     }
 
@@ -442,4 +480,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             return super.running
         }
 
+    fun showTracers() : Boolean {
+        return this.running && allTypes.any { it.tracers }
+    }
 }

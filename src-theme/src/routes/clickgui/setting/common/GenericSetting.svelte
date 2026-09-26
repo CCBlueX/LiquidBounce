@@ -21,6 +21,7 @@
     import ItemListSetting from "../list/ItemListSetting.svelte";
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
     import CurveSetting from "../CurveSetting.svelte";
+    import RegistryMutableListSetting from "../list/RegistryMutableListSetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -60,6 +61,8 @@
         <ItemListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "REGISTRY_LIST" }
         <RegistryListSetting {path} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "REGISTRY_MUTABLE_LIST" }
+        <RegistryMutableListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "VECTOR3_I" }

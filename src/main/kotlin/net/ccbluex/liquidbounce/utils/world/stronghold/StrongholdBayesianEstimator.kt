@@ -19,19 +19,16 @@
 package net.ccbluex.liquidbounce.utils.world.stronghold
 
 import it.unimi.dsi.fastutil.longs.LongDoubleImmutablePair
-import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.longDoubleHashMapOf
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.utils.client.toDegrees
-import net.minecraft.util.Mth
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.minecraft.util.Mth.wrapDegrees
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.ChunkPos.getX
 import net.minecraft.world.level.ChunkPos.getZ
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 import kotlin.math.exp
 
 private const val CHUNK_CENTER_OFFSET = 8
@@ -160,7 +157,7 @@ object StrongholdBayesianEstimator {
         candidates.sortByDescending { it.probability }
 
         return PosteriorSnapshot(
-            candidates = candidates.asObjectList(length = minOf(candidates.size, topCandidates)),
+            candidates = candidates.slice(0..<minOf(candidates.size, topCandidates)),
             confidence = candidates.first().probability,
             sampleCount = measurements.size,
         )
@@ -189,7 +186,7 @@ object StrongholdBayesianEstimator {
     private fun angleToYaw(fromX: Double, fromZ: Double, toX: Double, toZ: Double): Float {
         val dx = toX - fromX
         val dz = toZ - fromZ
-        return Mth.wrapDegrees(atan2(dz, dx).toDegrees().toFloat() - 90f)
+        return Vec3(dx, 0.0, dz).yaw
     }
 
     private fun chunkCenter(coordinate: Int): Double = coordinate * CHUNK_SIZE.toDouble() + CHUNK_CENTER_OFFSET

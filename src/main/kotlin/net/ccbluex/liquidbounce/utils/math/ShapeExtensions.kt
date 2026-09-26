@@ -22,14 +22,12 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
-import net.minecraft.core.Direction
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
-import java.util.function.ToDoubleFunction
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -45,16 +43,7 @@ inline fun VoxelShape.ifEmpty(defaultValue: () -> VoxelShape): VoxelShape {
 
 inline fun VoxelShape?.orEmpty(): VoxelShape = this ?: Shapes.empty()
 
-fun Iterable<VoxelShape>.allEmpty(): Boolean {
-    if (this is Collection && isEmpty()) return true
-
-    val iterator = this.iterator()
-    while (iterator.hasNext()) {
-        val element = iterator.next()
-        if (!element.isEmpty) return false
-    }
-    return true
-}
+fun Iterable<VoxelShape>.allEmpty(): Boolean = all { it.isEmpty }
 
 fun Iterable<VoxelShape>.anyNotEmpty(): Boolean = any { !it.isEmpty }
 
@@ -66,7 +55,7 @@ fun VoxelShape.boundsOrNull(): AABB? = if (isEmpty) null else bounds()
 fun VoxelShape.distanceToSqr(position: Vec3): Double =
     this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.POSITIVE_INFINITY
 
-private val AABB_BIGGER_FIRST = Comparator.comparingDouble(ToDoubleFunction(AABB::getSize)).reversed()
+private val AABB_BIGGER_FIRST = Comparator.comparingDouble(AABB::getSize).reversed()
 
 private const val SHAPE_EPSILON = 1.0E-7
 
@@ -86,9 +75,39 @@ fun interface DoubleFaceConsumer {
  * Order: bigger first
  */
 fun VoxelShape.toSortedAabbs(): MutableList<AABB> {
-    val list: MutableList<AABB> = this.toAabbs() // -> ArrayList
+    val list = ArrayList<AABB>()
+    this.toAabbs(list)
     list.sortWith(AABB_BIGGER_FIRST)
     return list
+}
+
+fun VoxelShape.toAabbs(destination: MutableCollection<in AABB>) {
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 -> destination.add(AABB(x1, y1, z1, x2, y2, z2)) }
+}
+
+infix fun VoxelShape.intersects(aabb: AABB): Boolean {
+    if (this.isEmpty) return false
+    var any = false
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        any = any || aabb.intersects(x1, y1, z1, x2, y2, z2)
+    }
+    return any
+}
+
+/**
+ * @see AABB.contains
+ */
+operator fun VoxelShape.contains(vec: Vec3): Boolean {
+    if (this.isEmpty) return false
+    var any = false
+    @Suppress("ComplexCondition")
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        any = any || (
+            vec.x >= x1 && vec.x < x2 &&
+            vec.y >= y1 && vec.y < y2 &&
+            vec.z >= z1 && vec.z < z2)
+    }
+    return any
 }
 
 fun VoxelShape.clipAllBoxes(
@@ -111,9 +130,8 @@ fun VoxelShape.clipAllBoxes(
                 to,
             ).toList()
 
-        else -> {
-            val list = mutableListOf<Vec3>()
-            this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
+        else -> buildList {
+            forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                 AABB.clip(
                     minX + base.x,
                     minY + base.y,
@@ -124,10 +142,9 @@ fun VoxelShape.clipAllBoxes(
                     from,
                     to,
                 ).orElse(null)?.let {
-                    list.add(it)
+                    this.add(it)
                 }
             }
-            list
         }
     }
 }
@@ -165,7 +182,7 @@ fun VoxelShape.forAllSideOutlineEdges(
 }
 
 /**
- * Shrinks a VoxelShape by the specified amounts on selected axes.
+ * Shrinks a [VoxelShape] by the specified amounts on selected axes.
  */
 @Suppress("CognitiveComplexMethod")
 fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelShape {
@@ -177,7 +194,7 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
         )
 
         else -> {
-            var shape = Shapes.empty()
+            val shape = ShapeJoiner()
 
             this.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                 val width = maxX - minX
@@ -198,11 +215,11 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
                         maxZ - (if (z > 0) z else 0.0)
                     )
 
-                    shape = Shapes.joinUnoptimized(shape, shrunkBox, BooleanOp.OR)
+                    shape.add(shrunkBox)
                 }
             }
 
-            shape
+            shape.value
         }
     }
 }
@@ -281,7 +298,7 @@ private class ShapeSurfaceMesh(
 
             val seed = findSeedCell(mask, direction, planeIndex, hitPos)
             if (seed == -1L) continue
-            return FaceComponent(planeIndex, floodFill(mask, seed.high(), seed.low()))
+            return FaceComponent(planeIndex, floodFill(mask, seed.high32(), seed.low32()))
         }
 
         return null
@@ -295,7 +312,7 @@ private class ShapeSurfaceMesh(
                 }
 
                 if (faceContainsPoint(direction, planeIndex, u, v, hitPos)) {
-                    return toLong(u, v)
+                    return longFrom32(u, v)
                 }
             }
         }
@@ -453,7 +470,25 @@ private class ShapeSurfaceMesh(
 
     private fun index(x: Int, y: Int, z: Int): Int = (x * ySize + y) * zSize + z
 
-    companion object {
+    companion {
+        /**
+         * @see VoxelShape.findIndex
+         */
+        private fun findIndex(doubles: DoubleArray, value: Double): Int {
+            var low = 0
+            var high = doubles.size
+            while (low < high) {
+                val mid = (low + high) ushr 1
+                if (value < doubles[mid]) high = mid else low = mid + 1
+            }
+            val index = low - 1
+            if (index !in doubles.indices || doubles[index] != value) {
+                throw IllegalArgumentException("Could not resolve coordinate index for $value")
+            }
+
+            return index
+        }
+
         fun of(shape: VoxelShape): ShapeSurfaceMesh {
             val xs = shape.getCoords(Direction.Axis.X).toDoubleArray()
             val ys = shape.getCoords(Direction.Axis.Y).toDoubleArray()
@@ -466,12 +501,12 @@ private class ShapeSurfaceMesh(
             val mesh = ShapeSurfaceMesh(xs, ys, zs, occupancy)
 
             shape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
-                val startX = xs.indexOfCoordinate(minX)
-                val startY = ys.indexOfCoordinate(minY)
-                val startZ = zs.indexOfCoordinate(minZ)
-                val endX = xs.indexOfCoordinate(maxX)
-                val endY = ys.indexOfCoordinate(maxY)
-                val endZ = zs.indexOfCoordinate(maxZ)
+                val startX = findIndex(xs, minX)
+                val startY = findIndex(ys, minY)
+                val startZ = findIndex(zs, minZ)
+                val endX = findIndex(xs, maxX)
+                val endY = findIndex(ys, maxY)
+                val endZ = findIndex(zs, maxZ)
 
                 for (x in startX until endX) {
                     for (y in startY until endY) {
@@ -613,25 +648,10 @@ private class PlaneMask(
     }
 }
 
+@JvmRecord
 private data class FaceComponent(
     val planeIndex: Int,
     val mask: PlaneMask,
 )
 
-private fun DoubleArray.indexOfCoordinate(value: Double): Int {
-    for (index in indices) {
-        if (approximatelyEquals(this[index], value)) {
-            return index
-        }
-    }
-
-    throw IllegalArgumentException("Could not resolve coordinate index for $value")
-}
-
 private fun approximatelyEquals(a: Double, b: Double): Boolean = kotlin.math.abs(a - b) <= SHAPE_EPSILON
-
-private fun toLong(high: Int, low: Int): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFF)
-
-private fun Long.high(): Int = (this ushr 32).toInt()
-
-private fun Long.low(): Int = (this and 0xFFFFFFFF).toInt()

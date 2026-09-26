@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.utils.client.handlePacket
+import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket

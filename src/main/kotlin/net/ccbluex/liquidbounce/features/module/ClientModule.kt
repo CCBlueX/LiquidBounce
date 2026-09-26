@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module
 
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.loadingNow
@@ -38,7 +37,8 @@ import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -48,14 +48,13 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 
 /**
  * A module also called 'hack' can be enabled and handle events
  */
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
-open class ClientModule(
+@AddonApi
+open class ClientModule @JvmOverloads constructor(
     name: String, // name parameter in configurable
     @Exclude val category: ModuleCategory, // module category
     bind: Int = InputConstants.UNKNOWN.value, // default bind
@@ -68,10 +67,19 @@ open class ClientModule(
     hide: Boolean = false // default hide
 ) : ToggleableValueGroup(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
-    protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
+    protected val logger = clientLogger("Module/$name")
+
+    init {
+        category.inclusionGroup?.let { group ->
+            this.inclusionGroup(group)
+        }
+    }
 
     override val debugDisplayName: Component
         get() = this.name.asPlainText(Style.EMPTY + ChatFormatting.GOLD + ChatFormatting.BOLD)
+
+    override val debugOwnerId: String
+        get() = "Module$name"
 
     /**
      * If a module is running or not is separated from the enabled state. A module can be paused even when
@@ -82,7 +90,8 @@ open class ClientModule(
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
-    internal val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
+    @AddonApi
+    val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYBOARD, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {
@@ -90,6 +99,13 @@ open class ClientModule(
             }
         }
     val bind get() = bindValue.get()
+
+    /**
+     * True when something outside LiquidBounce acts on [bind], so the module manager leaves it alone.
+     */
+    @AddonApi
+    open val externalBind: Boolean
+        get() = false
 
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
@@ -114,7 +130,7 @@ open class ClientModule(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    @ScriptApiRequired
+    @AddonApi
     open val settings by lazy { inner.associateBy { it.name } }
 
     /**
@@ -195,6 +211,10 @@ open class ClientModule(
      * Requires that [ValueGroup.walkKeyPath] has previously been run.
      */
     fun verifyFallbackDescription() {
+        if (hasLiteralDescription) {
+            return
+        }
+
         if (!LanguageManager.hasFallbackTranslation(descriptionKey!!)) {
             logger.warn("$name is missing fallback description key $descriptionKey")
         }

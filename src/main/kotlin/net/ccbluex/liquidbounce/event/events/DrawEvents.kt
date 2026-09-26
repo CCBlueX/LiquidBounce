@@ -23,9 +23,14 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
+import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.minecraft.client.Camera
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.renderer.state.level.CameraRenderState
+import net.minecraft.client.renderer.SubmitNodeStorage
+import org.joml.Matrix4fc
 
 @Tag("gameRender")
 object GameRenderEvent : Event()
@@ -33,8 +38,42 @@ object GameRenderEvent : Event()
 @Tag("screenRender")
 class ScreenRenderEvent(val context: GuiGraphicsExtractor, val partialTicks: Float) : Event()
 
+@AddonApi
 @Tag("worldRender")
-class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val partialTicks: Float) : Event()
+class WorldRenderEvent(
+    val poseStack: PoseStack,
+    val camera: Camera,
+    val partialTicks: Float,
+    val renderTarget: RenderTarget,
+) : Event(), AutoCloseable {
+
+    @Deprecated("For scripts only", ReplaceWith("poseStack"))
+    val matrixStack get() = poseStack
+
+    private val batchCollector = BatchCollector()
+
+    val environment = WorldRenderEnvironment(
+        renderTarget = renderTarget,
+        poseStack = poseStack,
+        camera = camera,
+        batchCollector = batchCollector,
+    )
+
+    override fun close() {
+        batchCollector.flush(renderTarget, getDynamicTransformsUniform())
+    }
+
+}
+
+/**
+ * Fired before vanilla collects level features into its [SubmitNodeStorage].
+ */
+@Tag("worldFeatureSubmit")
+class WorldFeatureSubmitEvent(
+    val poseStack: PoseStack,
+    val camera: Camera,
+    val submitNodeStorage: SubmitNodeStorage,
+) : Event()
 
 /**
  * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
@@ -46,9 +85,7 @@ class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val parti
 class DrawOutlinesEvent(
     val renderTarget: RenderTarget,
     val pose: PoseStack,
-    val cameraState: CameraRenderState,
     val partialTicks: Float,
-    val type: OutlineType,
 ) : Event() {
     var dirtyFlag: Boolean = false
         private set
@@ -59,13 +96,9 @@ class DrawOutlinesEvent(
     fun markDirty() {
         this.dirtyFlag = true
     }
-
-    enum class OutlineType {
-        INBUILT_OUTLINE,
-        MINECRAFT_GLOW
-    }
 }
 
+@AddonApi
 @Tag("overlayRender")
 class OverlayRenderEvent(
     val context: GuiGraphicsExtractor,

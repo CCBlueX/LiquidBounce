@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
@@ -30,16 +31,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
-import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -71,9 +72,22 @@ public abstract class MixinCamera {
     @Shadow
     private @Nullable Entity entity;
 
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER))
     private void hookFreeCamModifiedPosition(float partialTicks, CallbackInfo ci) {
         ModuleFreeCam.INSTANCE.applyCameraPosition(this.entity, partialTicks);
+    }
+
+    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
+    private void hookFreeCamModifiedRotation(Args args, @Local(argsOnly = true, name = "partialTicks") float partialTicks) {
+        if (this.entity == this.minecraft.player && ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
+            final Rotation rot = ModuleFreeCam.PositionState.INSTANCE.interpolateRot(partialTicks);
+            args.set(0, rot.yaw());
+            args.set(1, rot.pitch());
+        }
     }
 
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER), cancellable = true)
@@ -81,10 +95,11 @@ public abstract class MixinCamera {
         var freeLook = ModuleFreeLook.INSTANCE.getRunning();
         var freeLockInvertedView = ModuleFreeLook.INSTANCE.isInvertedView();
         var qps = ModuleQuickPerspectiveSwap.INSTANCE.getRunning();
-        var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook && !this.detached;
+        var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook
+            && this.minecraft.options.getCameraType().isFirstPerson();
 
         if (freeLook || qps) {
-            if (!rearView) this.detached = true;
+            this.detached = true;
 
             if (freeLook) {
                 var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
@@ -97,16 +112,14 @@ public abstract class MixinCamera {
                 }
             }
 
-            if (qps) {
+            if (qps && !rearView) {
                 setRotation(yRot + 180.0f, freeLook && !freeLockInvertedView ? xRot : -xRot);
             }
 
             float scale = this.entity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
-            float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
+            float desiredCameraDistance = PerspectiveEvent.INSTANCE.getDistance();
 
-            if (!rearView) {
-                move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
-            }
+            move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
 
             ci.cancel();
             return;
@@ -117,22 +130,6 @@ public abstract class MixinCamera {
             this.setPosition(screen.getCameraPos());
             this.setRotation(screen.getCameraRotation().yRot(), screen.getCameraRotation().xRot());
         }
-
-        var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
-        var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
-        var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        var changeLook = rotationTarget != null &&
-            rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
-        if (currentRotation == null || previousRotation == null || !changeLook ||
-            !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
-            return;
-        }
-
-        setRotation(
-            Mth.lerp(partialTicks, previousRotation.yRot(), currentRotation.yRot()),
-            Mth.lerp(partialTicks, previousRotation.xRot(), currentRotation.xRot())
-        );
     }
 
     @Inject(method = "alignWithEntity", at = @At("TAIL"))
@@ -142,23 +139,17 @@ public abstract class MixinCamera {
         }
     }
 
-    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
-    private int hookCameraClip(int constant) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? 0 : constant;
-    }
-
-    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
-    private float modifyDesiredCameraDistance(float original) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
-    }
-
-    @Redirect(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 modifyPositionVehicle(Vec3 instance, Vec3 vec) {
+    @ModifyArg(
+        method = "alignWithEntity",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(Lnet/minecraft/world/phys/Vec3;)V")
+    )
+    private Vec3 modifyPositionVehicle(Vec3 original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return vec;
+            return original;
         }
 
-        return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
+        ModuleSmoothCamera.cameraUpdate(original);
+        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
     }
 
     @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
@@ -222,6 +213,22 @@ public abstract class MixinCamera {
         }
     }
 
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void tick(CallbackInfo ci) {
+        final PerspectiveEvent event = PerspectiveEvent.INSTANCE;
+        event.update(minecraft, entity);
+
+        EventManager.INSTANCE.callEvent(event);
+    }
+
+    /**
+     * Set as spectator to disable smart culling
+     */
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isSpectator()Z"))
+    private boolean hookFreeCamDisableSmartCullInBlocks(boolean original) {
+        return original || ModuleFreeCam.INSTANCE.getRunning();
+    }
+
     @ModifyExpressionValue(method = "alignWithEntity",
         at = @At(
             value = "INVOKE",
@@ -229,8 +236,23 @@ public abstract class MixinCamera {
         )
     )
     private CameraType hookPerspectiveEventOnCamera(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
+        return PerspectiveEvent.INSTANCE.getPerspective();
+    }
+
+    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
+    private int hookCameraClip(int constant) {
+        return (PerspectiveEvent.INSTANCE.getNoClip()) ? 0 : constant;
+    }
+
+    @ModifyExpressionValue(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
+    private float hookCameraDistance(float original, float partialTicks) {
+        if (!PerspectiveEvent.INSTANCE.getNoClip()) {
+            return original;
+        }
+
+        final float lastDistance = PerspectiveEvent.INSTANCE.getLastDistance();
+        final float distance = PerspectiveEvent.INSTANCE.getDistance();
+        return distance != lastDistance ? Mth.lerp(partialTicks, lastDistance, distance) : distance;
     }
 
 }
-

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -33,7 +33,9 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import org.apache.logging.log4j.LogManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
+import org.cef.browser.CefRequestContext
+import net.minecraft.client.input.InputQuirks
 import org.apache.logging.log4j.Logger
 import org.joml.component1
 import org.joml.component2
@@ -45,11 +47,22 @@ class CefBrowser(
     viewport: BrowserViewport,
     val settings: BrowserSettings,
     override var priority: Short = 0,
+    override val isIncognito: Boolean = false,
     inputAcceptor: InputAcceptor? = null
 ) : Browser, InputHandler, MinecraftShortcuts {
 
     internal val browserApi: MCEFBrowser
     private val logger: Logger
+
+    /**
+     * Request context of an incognito browser, disposed along with it.
+     *
+     * A context created this way has no cache path, so CEF keeps its cookies, local storage and cache
+     * in memory and throws all of it away with the context. The global context, which every other
+     * browser shares, persists them to disk instead.
+     */
+    private val requestContext: CefRequestContext? =
+        if (isIncognito) CefRequestContext.createContext(null) else null
 
     init {
         require(url.isNotEmpty()) { "URL cannot be empty." }
@@ -63,7 +76,8 @@ class CefBrowser(
             MCEFBrowserSettings(
                 settings.currentFps,
                 GlobalBrowserSettings.accelerated?.get() == true
-            )
+            ),
+            requestContext
         ).apply {
             addOnPaintListener {
                 comparePaintWithViewpoint(it.width, it.height)
@@ -73,7 +87,7 @@ class CefBrowser(
             }
         }
 
-        logger = LogManager.getLogger("$CLIENT_NAME/CefBrowser/${browserApi.hashCode()}")
+        logger = clientLogger("CefBrowser/${browserApi.hashCode()}")
         logger.info("Initializing Browser API (url='$url')")
     }
 
@@ -195,6 +209,9 @@ class CefBrowser(
         inputListener?.close()
         backend.removeBrowser(this)
         browserApi.close()
+
+        // Only after the browser is gone, since the context outlives nothing else.
+        requestContext?.dispose()
     }
 
     override fun update(width: Int, height: Int) {
@@ -213,6 +230,7 @@ class CefBrowser(
         "hash='${browserApi.hashCode()}', " +
         "id='${browserApi.identifier}', " +
         "url='$url', " +
+        "incognito=$isIncognito, " +
         "visible=$visible, " +
         "priority=$priority" +
         ")"
@@ -241,17 +259,51 @@ class CefBrowser(
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
+
+        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY && handleMacClipboardShortcut(scanCode, modifiers)) {
+            return
+        }
+
+        browserApi.sendKeyPress(scanCode, keyCode, modifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
+        browserApi.sendKeyRelease(scanCode, keyCode, modifiers)
     }
 
     override fun charTyped(codepoint: Int) {
         browserApi.setFocus(true)
-        browserApi.sendKeyTyped(codepoint.toChar(), 0) // TODO: GLFW update removed modifiers here
+        browserApi.sendKeyTyped(codepoint)
+    }
+
+    // TODO: Temporary fix. Should be removed after fix in JCEF
+    private fun handleMacClipboardShortcut(scanCode: Int, modifiers: Int): Boolean {
+        val isCommandPressed = modifiers and InputConstants.MOD_SUPER != 0
+        if (!isCommandPressed) {
+            return false
+        }
+
+        val frame = browserApi.focusedFrame
+        return when (scanCode) {
+            InputConstants.KEY_C -> {
+                frame.copy()
+                true
+            }
+            InputConstants.KEY_V -> {
+                frame.paste()
+                true
+            }
+            InputConstants.KEY_X -> {
+                frame.cut()
+                true
+            }
+            InputConstants.KEY_A -> {
+                frame.selectAll()
+                true
+            }
+            else -> false
+        }
     }
 
     private fun comparePaintWithViewpoint(width: Int, height: Int) {

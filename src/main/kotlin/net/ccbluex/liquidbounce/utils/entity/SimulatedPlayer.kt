@@ -24,13 +24,12 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionAccessor
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityFluidInteractionTrackerAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.math.fastCos
+import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -95,25 +94,14 @@ class SimulatedPlayer(
     private val level: Level get() = player.level()
 
     companion object {
+        /**
+         * In 26.3 [EntityFluidInteraction.update] fully resets all trackers and re-derives
+         * the fluid state from the level every tick, so the only persistent state worth
+         * carrying over is the set of fluids with a current accumulator.
+         */
         private fun EntityFluidInteraction.deepCopy(): EntityFluidInteraction {
-            val sourceTrackers = (this as MixinEntityFluidInteractionAccessor).trackerByFluid()
-            val copy = EntityFluidInteraction(sourceTrackers.keys)
-            @Suppress("CAST_NEVER_SUCCEEDS")
-            val targetTrackers = (copy as MixinEntityFluidInteractionAccessor).trackerByFluid()
-
-            for ((fluid, sourceTracker) in sourceTrackers) {
-                val targetTracker = targetTrackers[fluid] ?: continue
-
-                val sourceAccessor = sourceTracker as MixinEntityFluidInteractionTrackerAccessor
-                val targetAccessor = targetTracker as MixinEntityFluidInteractionTrackerAccessor
-
-                targetAccessor.height(sourceAccessor.height())
-                targetAccessor.eyesInside(sourceAccessor.eyesInside())
-                targetAccessor.accumulatedCurrent(sourceAccessor.accumulatedCurrent())
-                targetAccessor.currentCount(sourceAccessor.currentCount())
-            }
-
-            return copy
+            val fluids = (this as MixinEntityFluidInteractionAccessor).currentAccumulators().keys
+            return EntityFluidInteraction(fluids)
         }
 
         @JvmStatic
@@ -409,7 +397,7 @@ class SimulatedPlayer(
 
         var vec3d = this.deltaMovement
         if ((horizontalCollision || this.jumping) && (
-                this.isClimbing() || pos.toBlockPos().getState()
+                this.isClimbing() || pos.toBlockPos().state
                     ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
                 )
         ) {
@@ -592,7 +580,7 @@ class SimulatedPlayer(
         val clampedX = Mth.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
         val clampedZ = Mth.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
         var clampedY = max(motion.y, -0.15000000596046448)
-        if (clampedY < 0.0 && !pos.toBlockPos().getState()!!
+        if (clampedY < 0.0 && !pos.toBlockPos().state!!
                 .`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder
         ) {
             clampedY = 0.0
@@ -616,7 +604,7 @@ class SimulatedPlayer(
 
     private fun isClimbing(): Boolean {
         val blockPos = pos.toBlockPos()
-        val blockState = blockPos.getState()!!
+        val blockState = blockPos.state!!
         return if (blockState.`is`(BlockTags.CLIMBABLE)) {
             true
         } else if (blockState.block is TrapDoorBlock && this.trapdoorUsableAsLadder(blockPos, blockState)) {
@@ -870,21 +858,7 @@ class SimulatedPlayer(
      * Mirrors 26.1 `Entity#getViewVector()`.
      * @see net.minecraft.world.entity.Entity.getViewVector
      */
-    private fun getViewVector(): Vec3 = calculateViewVector(this.xRot, this.yRot)
-
-    /**
-     * Mirrors 26.1 `Entity#calculateViewVector(float, float)`.
-     * @see net.minecraft.world.entity.Entity.calculateViewVector
-     */
-    private fun calculateViewVector(xRot: Float, yRot: Float): Vec3 {
-        val realXRot = xRot * (Math.PI.toFloat() / 180f)
-        val realYRot = -yRot * (Math.PI.toFloat() / 180f)
-        val yCos = Mth.cos(realYRot.toDouble())
-        val ySin = Mth.sin(realYRot.toDouble())
-        val xCos = Mth.cos(realXRot.toDouble())
-        val xSin = Mth.sin(realXRot.toDouble())
-        return Vec3((ySin * xCos).toDouble(), (-xSin).toDouble(), (yCos * xCos).toDouble())
-    }
+    private fun getViewVector(): Vec3 = Entity.calculateViewVector(xRot, yRot)
 
     private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
         val instance = player.getEffect(effect) ?: return false

@@ -20,13 +20,14 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
+import net.ccbluex.liquidbounce.utils.block.isUnobstructed
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
+import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
@@ -57,10 +58,11 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
     /**
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
      */
+    @Suppress("ComplexCondition")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
-            isGoal = ::canPlace,
+            isGoal = { pos -> pos.hasAnySolidPlacementNeighbor() && (pos == targetPos || placer.canClickPlace(pos)) },
             neighbors = { current ->
                 val rangeSq = placer.range.sq()
                 val queuedBlocks = placer.blocks.keys
@@ -72,13 +74,14 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
                         if (
                             // don't place helping blocks where the structure will be
                             blockedPositions.contains(neighbor) ||
-
+                            // skip positions that already hold a non-replaceable block
+                            !neighbor.stateOrEmpty.canBeReplaced() ||
                             // exclude blocks where the structure is...
                             // this useless because we already search the shortest path under all structure blocks?
                             queuedBlocks.contains(neighbor.asLong()) ||
                             neighbor.distManhattan(targetPos) > depth ||
-                            player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
-                            neighbor.isBlockedByEntities()
+                            neighbor.distToCenterSqr(player.eyePosition) > rangeSq ||
+                            !neighbor.isUnobstructed()
                         ) {
                             continue
                         }
@@ -90,13 +93,6 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
         ) ?: return null
 
         return shortestPath.nodes.toOrderedSet()
-    }
-
-    private fun canPlace(pos: BlockPos): Boolean {
-        val cache = BlockPos.MutableBlockPos()
-        return Direction.entries.any {
-            !cache.setWithOffset(pos, it).getState()!!.canBeReplaced()
-        }
     }
 
 }

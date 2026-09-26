@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -37,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.math.min
 
 /**
@@ -116,7 +116,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
 
             val targetRotation = entity.rotation.copy(pitch = 0.0f)
             val requiredTargetRotation = Rotation.lookingAt(playerPosition, entity.eyePosition).copy(pitch = 0.0f)
-            val outOfDanger = targetRotation.angleTo(requiredTargetRotation) > dangerousYawDiff
+            val outOfDanger = abs(targetRotation.rotationDeltaTo(requiredTargetRotation).deltaYaw) > dangerousYawDiff
 
             CombatTarget(entity, distance, range, outOfDistance, targetRotation, requiredTargetRotation, outOfDanger)
         }
@@ -176,7 +176,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
     override fun getMovementRotation(): Rotation {
         val movementRotation = super.getMovementRotation()
         val movementPitch = targetTracker.target?.let { entity ->
-            Rotation.lookingAt(point = entity.box.center, from = player.eyePosition).pitch
+            Rotation.lookingAt(point = entity.boundingBox.center, from = player.eyePosition).pitch
         } ?: return movementRotation
 
         return movementRotation.copy(pitch = movementPitch)
@@ -219,7 +219,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
                     return@mapNotNull null
                 }
 
-                val isInAngle = rotation.angleTo(combatTarget.targetRotation) <= dangerousYawDiff
+                val isInAngle = abs(rotation.rotationDeltaTo(combatTarget.targetRotation).deltaYaw) <= dangerousYawDiff
                 ModuleDebug.debugGeometry(
                     this,
                     "Possible Position $yaw",

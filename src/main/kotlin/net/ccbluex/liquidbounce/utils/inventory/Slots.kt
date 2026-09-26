@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import java.util.function.Predicate
 
 fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(item: Item): T? =
     findClosestSlot { it.item === item }
@@ -37,9 +39,19 @@ fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(items: Collection<Item>): T
     findClosestSlot { it.item in items }
 
 inline fun <T : HotbarItemSlot> Iterable<T>.findClosestSlot(predicate: (ItemStack) -> Boolean): T? {
-    return this.filter { predicate(it.itemStack) }.minWithOrNull(HotbarItemSlot.PREFER_NEARBY)
+    var candidate: T? = null
+    for (slot in this) {
+        if (!predicate(slot.itemStack)) continue
+        candidate = if (candidate == null) {
+            slot
+        } else {
+            minOf(candidate, slot, HotbarItemSlot.PREFER_NEARBY)
+        }
+    }
+    return candidate
 }
 
+@AddonApi
 class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
     val stacks: Array<ItemStack>
         get() = slots.mapToArray { it.itemStack }
@@ -49,11 +61,13 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
 
     fun findSlot(item: Item): T? = findSlot { it.item === item }
 
-    fun has(item: Item): Boolean = findSlot(item) != null
-
+    // Java takes the Predicate overload; both would match a lambda otherwise.
+    @JvmSynthetic
     inline fun findSlot(predicate: (ItemStack) -> Boolean): T? {
         return if (mc.player == null) null else find { predicate(it.itemStack) }
     }
+
+    fun findSlot(predicate: Predicate<ItemStack>): T? = findSlot(predicate::test)
 
     operator fun plus(other: Slots<*>): Slots<ItemSlot> {
         return Slots(this.slots + other.slots)
@@ -75,6 +89,12 @@ class Slots<T : ItemSlot>(private val slots: List<T>) : List<T> by slots {
          */
         @JvmField
         val Inventory = Slots(InventoryItemSlot.ALL)
+
+        /**
+         * Hotbar + Inventory
+         */
+        @JvmField
+        val HotbarAndInventory = Hotbar + Inventory
 
         /**
          * Armor slots 0~3

@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.api.thirdparty
 
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import com.mojang.util.UndashedUuid
+import net.ccbluex.liquidbounce.api.core.HttpClient.mojangApiClient
+import java.util.UUID
 
-object MojangApi : BaseApi("https://api.mojang.com") {
-
-    suspend fun getNames(uuidAsString: String): List<UsernameRecord> =
-        get<List<UsernameRecord>>("/user/profiles/$uuidAsString/names")
-
-    data class UsernameRecord(val name: String, val changedToAt: Int?)
-
+internal suspend fun lookupUuidByName(username: String): UUID? = try {
+    UndashedUuid.fromString(mojangApiClient.mcServicesApi.lookupUuidByName(username).id)
+} catch (e: retrofit2.HttpException) {
+    if (e.code() == 404) null else throw IllegalStateException("Failed to execute profile lookup", e)
 }

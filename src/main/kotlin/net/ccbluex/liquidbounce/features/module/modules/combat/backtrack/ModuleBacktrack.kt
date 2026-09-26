@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -63,8 +64,8 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     val delay by intRange("Delay", 100..150, 0..1000, "ms")
     private val nextBacktrackDelay by intRange("NextBacktrackDelay", 0..10, 0..2000, "ms")
     private val trackingBuffer by int("TrackingBuffer", 500, 0..2000, "ms")
-    private val chance by float("Chance", 50f, 0f..100f, "%")
-    private var currentChance = (0..100).random()
+    private val chance = percentageChance("Chance", 50f)
+    private var chancePassed = chance.asBoolean
 
     private object PauseOnHurtTime : ToggleableValueGroup(this, "PauseOnHurtTime", false) {
         val hurtTime by int("HurtTime", 3, 0..10)
@@ -220,7 +221,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         attackChronometer.reset() // Update the last attack time
-        currentChance = (0..100).random()
+        chancePassed = chance.asBoolean
 
         if (targetMode != Mode.ATTACK) {
             return@handler
@@ -295,7 +296,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
             target.shouldBeAttacked() &&
             player.tickCount > 10 &&
-            currentChance < chance &&
+            chancePassed &&
             chronometer.hasElapsed() &&
             !shouldPause() &&
             !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong()) &&

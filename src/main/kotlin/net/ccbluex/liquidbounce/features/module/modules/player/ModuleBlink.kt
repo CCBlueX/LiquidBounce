@@ -36,10 +36,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.Modul
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.entity.EntityLookup
 import java.util.UUID
@@ -82,6 +83,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
              * @see EntityLookup.add
              */
             clone.setUUID(UUID.randomUUID())
+            clone.id = world.nextLocalEntityId()
             world.addEntity(clone)
 
             dummyPlayer = clone
@@ -110,7 +112,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
         if (ambush &&
             (packet is ServerboundInteractPacket
                 || packet is ServerboundAttackPacket
-                || packet is ServerboundSpectateEntityPacket)) {
+                || packet is ServerboundSpectatorActionPacket)) {
             enabled = false
             return@handler
         }

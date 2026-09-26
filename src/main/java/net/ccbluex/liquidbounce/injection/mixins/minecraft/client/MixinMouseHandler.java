@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.ccbluex.liquidbounce.additions.MouseHandlerAddition;
@@ -57,13 +58,13 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
     public void liquidbounce$setPosition(double x, double y) {
         this.xpos = x;
         this.ypos = y;
-        InputConstants.grabOrReleaseMouse(this.minecraft.getWindow(), InputConstants.CURSOR_NORMAL, this.xpos, this.ypos);
+        InputConstants.releaseMouse(this.minecraft.getWindow(), this.xpos, this.ypos);
     }
 
     /**
      * Hook mouse button event
      */
-    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
         final var button = input.button();
         EventManager.INSTANCE.callEvent(new MouseButtonEvent(
@@ -71,14 +72,14 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
                 button,
                 action,
                 input.modifiers(),
-                this.minecraft.screen
+                this.minecraft.gui.screen()
         ));
     }
 
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getOverlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;overlay()Lnet/minecraft/client/gui/screens/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }
@@ -94,8 +95,8 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
      * Hook mouse cursor event
      */
     @Inject(method = "onMove", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isWindowActive()Z", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
+    private void hookCursorPos(long handle, double xpos, double ypos, double xrel, double yrel, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new MouseCursorEvent(xpos, ypos));
     }
 
     @ModifyExpressionValue(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/CameraType;isFirstPerson()Z"))
@@ -108,16 +109,14 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
         return original || ModuleZoom.INSTANCE.getRunning();
     }
 
-    @WrapWithCondition(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"), require = 1, allow = 1)
-    private boolean modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY) {
+    @WrapOperation(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"), require = 1, allow = 1)
+    private void modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY, Operation<Void> original) {
         final MouseRotationEvent event = new MouseRotationEvent(cursorDeltaX, cursorDeltaY);
         EventManager.INSTANCE.callEvent(event);
 
         if (!event.isCancelled()) {
-            instance.turn(event.getCursorDeltaX(), event.getCursorDeltaY());
+            original.call(instance, event.getCursorDeltaX(), event.getCursorDeltaY());
         }
-
-        return false;
     }
 
 }

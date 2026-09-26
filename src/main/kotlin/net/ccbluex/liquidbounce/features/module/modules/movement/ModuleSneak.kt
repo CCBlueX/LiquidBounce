@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StartSneaking
-import net.ccbluex.liquidbounce.utils.client.send1_21_5StopSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
+import net.ccbluex.liquidbounce.utils.network.send1_21_5StopSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
@@ -77,8 +77,26 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     private object Vanilla : Mode("Vanilla") {
 
+        private var networkSneaking = false
+
         override val parent: ModeValueGroup<Mode>
             get() = modes
+
+        @Suppress("unused")
+        private val networkTick = handler<PlayerNetworkMovementTickEvent> {
+            if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) {
+                return@handler
+            }
+
+            val shouldSneak = !player.moving || !notDuringMove
+            if (shouldSneak && !networkSneaking) {
+                network.send1_21_5StartSneaking()
+                networkSneaking = true
+            } else if (!shouldSneak && networkSneaking) {
+                network.send1_21_5StopSneaking()
+                networkSneaking = false
+            }
+        }
 
         @Suppress("unused")
         private val sneakNetworkHandler = handler<PacketEvent> { event ->
@@ -87,6 +105,13 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
             }
 
             event.packet.forceSneak = true
+        }
+
+        override fun disable() {
+            if (networkSneaking) {
+                network.send1_21_5StopSneaking()
+                networkSneaking = false
+            }
         }
 
     }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.horizontalAnchor
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.scale
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.shadow
@@ -29,14 +30,22 @@ import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 
+@AddonApi
 abstract class AbstractFontRenderer<T : ProcessedText> {
 
     abstract val size: Float
     abstract val height: Float
+
+    /**
+     * Scales this renderer's text metrics to vanilla's 9px GUI font line height.
+     */
+    val scaleToVanillaFont: Float
+        get() = mc.font.lineHeight.toFloat() / this.height
 
     /**
      * Draws a string with minecraft font markup on GUI with [GuiGraphicsExtractor].
@@ -79,6 +88,44 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     /**
      * @param defaultColor The color of the font when no minecraft-markup applies
      */
+    /**
+     * Draws [text] on the GUI at [x]/[y] in GUI pixels; [scale] 1 is this font's own size, the default
+     * matches vanilla's. For Kotlin the context overloads with [DrawParameters] do the same.
+     *
+     * @return the width drawn
+     */
+    @JvmOverloads
+    fun draw(
+        ctx: GuiGraphicsExtractor,
+        text: Component,
+        x: Float,
+        y: Float,
+        color: Color4b = Color4b.WHITE,
+        shadow: Boolean = false,
+        scale: Float = scaleToVanillaFont,
+        horizontalAnchor: HorizontalAnchor? = null,
+        verticalAnchor: VerticalAnchor? = null,
+    ): Float {
+        val processed = process(text, color)
+        return with(ctx) {
+            draw(processed) {
+                this.x = x
+                this.y = y
+                this.shadow = shadow
+                this.scale = scale
+                this.horizontalAnchor = horizontalAnchor
+                this.verticalAnchor = verticalAnchor
+            }
+        }
+    }
+
+    /**
+     * Width of [text] in GUI pixels at [scale], the default being vanilla's size.
+     */
+    @JvmOverloads
+    fun getStringWidth(text: Component, scale: Float = scaleToVanillaFont, shadow: Boolean = false): Float =
+        getStringWidth(process(text), shadow) * scale
+
     fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T =
         process(text.asPlainText(), defaultColor)
 

@@ -36,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.clicking.ItemCooldown
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.send1_11_1OpenInventory
-import net.ccbluex.liquidbounce.utils.client.sendCloseInventory
+import net.ccbluex.liquidbounce.utils.network.send1_11_1OpenInventory
+import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
@@ -120,7 +120,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         }
 
         // 1. Stop blocking
-        if (player.isBlockingServerside) {
+        if (player.isBlockingServerside || KillAuraAutoBlock.enforcedBlockingHand != null) {
             if (!KillAuraAutoBlock.enabled && !ModuleMultiActions.mayAttackWhileUsing()) {
                 return
             }

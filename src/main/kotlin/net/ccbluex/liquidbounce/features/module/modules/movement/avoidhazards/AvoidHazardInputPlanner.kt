@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards
 
-import net.ccbluex.liquidbounce.utils.client.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Mth
 import kotlin.math.abs

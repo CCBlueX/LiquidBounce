@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.integration.backend
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -30,11 +29,10 @@ import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSy
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 
 val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend") ?: "cef"
 var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
@@ -44,7 +42,7 @@ val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
 
 object BrowserBackendManager : EventListener {
 
-    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/BrowserBackendManager")
+    private val logger = clientLogger("BrowserBackendManager")
 
     val isInitialized: Boolean
         get() = backend?.isInitialized ?: false

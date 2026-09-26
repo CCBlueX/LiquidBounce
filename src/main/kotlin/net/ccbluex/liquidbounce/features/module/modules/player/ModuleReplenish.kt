@@ -135,6 +135,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
             // refill
             when {
                 Features.USE_SWAP in features &&
+                    slot.canBeSwapTarget &&
                     slotWithMaxCount.itemStack.count.let { it > itemStack.count && it > itemThreshold } ->
                     event.schedule(
                         constraints,
@@ -188,11 +189,11 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     override val running: Boolean
         get() = super.running &&
             (InsideOf.CHESTS in insideOf
-                || (mc.screen !is AbstractContainerScreen<*>
-                || mc.screen is InventoryScreen)
+                || (mc.gui.screen() !is AbstractContainerScreen<*>
+                || mc.gui.screen() is InventoryScreen)
                 ) &&
             (InsideOf.INVENTORIES in insideOf
-                || mc.screen !is InventoryScreen
+                || mc.gui.screen() !is InventoryScreen
                 )
 
     private enum class Features(

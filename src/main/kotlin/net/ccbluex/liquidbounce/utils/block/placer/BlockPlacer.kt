@@ -29,41 +29,47 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
 import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickTrace
+import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickableCenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FailedClick
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
+import java.util.function.Function
+import java.util.function.LongPredicate
 import kotlin.math.max
 
 @Suppress("TooManyFunctions")
@@ -71,7 +77,7 @@ class BlockPlacer(
     name: String,
     val module: ClientModule,
     val priority: Priority,
-    val slotFinder: (BlockPos?) -> HotbarItemSlot?,
+    val slotFinder: Function<BlockPos?, HotbarItemSlot?>,
     allowSupportPlacements: Boolean = true
 ) : ValueGroup(name), EventListener {
 
@@ -81,7 +87,7 @@ class BlockPlacer(
     val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
 
     /**
-     * Construct a center hit result when the raytrace result is invalid.
+     * Construct a hit result at the point selected by target finding when the raytrace result is invalid.
      * This can make the module rotations wrong as well as place a bit outside the range,
      * but it makes the placements a lot more reliable and works on most servers.
      */
@@ -142,11 +148,14 @@ class BlockPlacer(
 
     private val inaccessible = LongOpenHashSet()
     var ticksToWait = 0
+        private set
     var ranAction = false
     private var sneakTimes = 0
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent>(priority = -20) {
+        debugParameter("Blocks") { blocks }
+
         if (ticksToWait > 0) {
             ticksToWait--
         } else if (ranAction) {
@@ -154,7 +163,7 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>
+        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
         val usingItem = !ignoreUsingItem && player.isUsingItem
         if (inventoryOpen || usingItem) {
             return@handler
@@ -165,7 +174,7 @@ class BlockPlacer(
         }
 
         // return if no blocks are available
-        val slot = slotFinder(null) ?: return@handler
+        val slot = slotFinder.apply(null) ?: return@handler
 
         val itemStack = slot.itemStack
 
@@ -247,6 +256,8 @@ class BlockPlacer(
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
         var hasPlaced = false
 
+        val searchOptions = createSearchOptions(itemStack)
+
         for (entry in blocks.fastIterator()) {
             val posAsLong = entry.longKey
 
@@ -254,33 +265,27 @@ class BlockPlacer(
                 continue
             }
 
-            val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions.Default,
-                FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
-                stackToPlaceWith = itemStack,
-                PlayerLocationOnPlacement(position = player.position()),
-            )
-
             // TODO prioritize faces where sneaking is not required
             val pos = blockPosCache.set(posAsLong)
             val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: continue
 
             // Check if we can reach the target
             if (!canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
-                inaccessible.add(posAsLong)
+                // The target may become reachable after adding support blocks. Keep it eligible for
+                // support search instead of treating a temporary reach failure as a blocked position.
                 continue
             }
 
             debugGeometry("PlacementTarget") {
-                ModuleDebug.DebuggedPoint(pos.center, Color4b.GREEN.with(a = 100))
+                DebuggedPoint(placementTarget.interactionPoint, Color4b.GREEN.with(a = 100))
             }
 
             // sneak when placing on interactable block to not trigger their action
-            if (placementTarget.interactedBlockPos.getState().isInteractable) {
+            if (placementTarget.interactedBlockPos.state.isInteractable) {
                 sneakTimes = sneak.random()
             }
 
-            if (rotationMode.activeMode(entry.booleanValue, pos, placementTarget)) {
+            if (rotationMode.activeMode(entry.booleanValue, pos.immutable(), placementTarget)) {
                 return true
             }
 
@@ -292,7 +297,7 @@ class BlockPlacer(
 
     private fun isBlocked(posAsLong: Long): Boolean {
         val pos = blockPosCache.set(posAsLong)
-        if (!pos.getState()!!.canBeReplaced()) {
+        if (!pos.stateOrEmpty.canBeReplaced()) {
             inaccessible.add(posAsLong)
             return true
         }
@@ -305,69 +310,89 @@ class BlockPlacer(
         }
 
         if (blockedResult.keyBoolean()) {
-            inaccessible.add(posAsLong)
             return true
         }
 
         return false
     }
 
-    fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget) {
+    fun doPlacement(isSupport: Boolean, pos: BlockPos, placementTarget: BlockPlacementTarget): Boolean {
         // choose block to place
         val slot = if (isSupport) {
             support.filter.getSlot(support.blocks)
         } else {
-            slotFinder(pos)
-        } ?: return
+            slotFinder.apply(pos)
+        } ?: return false
 
         val verificationRotation = rotationMode.activeMode.getVerificationRotation(placementTarget.rotation)
 
         // check if we can still reach the target
         if (!canReach(placementTarget.interactedBlockPos, verificationRotation)) {
-            return
+            return false
         }
 
         // get the block hit result needed for the placement
-        val blockHitResult = raytraceTarget(
-            placementTarget.interactedBlockPos,
-            verificationRotation,
-            placementTarget.direction
-        ) ?: return
+        val blockHitResult = raytraceTarget(placementTarget, verificationRotation) ?: return false
 
-        SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
-
-        if (slot.itemStack.item !is BlockItem || pos.getState()!!.canBeReplaced()) {
-            blocks.remove(pos.asLong())
-
-            // place the block
-            doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
-            placedRenderer.addBlock(pos)
-            targetRenderer.removeBlock(pos)
+        if (!SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())) {
+            return false
         }
+
+        if (slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()) {
+            var result = false
+            val onSuccess = {
+                removeFromQueue(pos)
+                placedRenderer.addBlock(pos)
+                result = true
+                true
+            }
+
+            doPlacement(
+                blockHitResult,
+                rotation = verificationRotation,
+                hand = slot.useHand,
+                onPlacementSuccess = onSuccess,
+                onItemUseSuccess = onSuccess,
+                swingMode = swingMode,
+            )
+
+            return result
+        }
+
+        return false
     }
 
-    private fun raytraceTarget(pos: BlockPos, providedRotation: Rotation, direction: Direction): BlockHitResult? {
-        val blockHitResult = raytraceBlock(
-            range = max(range, wallRange).toDouble(),
+    private fun raytraceTarget(placementTarget: BlockPlacementTarget, providedRotation: Rotation): BlockHitResult? =
+        placementTarget.verifyClick(
             rotation = providedRotation,
-            pos = pos,
-            state = pos.getState()!!
+            range = max(range, wallRange).toDouble(),
+            trace = ClickTrace.TARGET_SHAPE,
+            onFailure = if (constructFailResult) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
         )
 
-        if (blockHitResult != null && blockHitResult.type == HitResult.Type.BLOCK && blockHitResult.blockPos == pos) {
-            return blockHitResult.withDirection(direction)
-        }
+    /**
+     * Builds the target-finding options used for block placements, shared by the actual placement
+     * ([scheduleCurrentPlacements]) and the support path reachability check ([canClickPlace]).
+     */
+    private fun createSearchOptions(stackToPlaceWith: ItemStack): BlockPlacementTargetFindingOptions =
+        BlockPlacementTargetFindingOptions(
+            BlockOffsetOptions.Default,
+            FaceHandlingOptions(ClickableCenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
+            stackToPlaceWith = stackToPlaceWith,
+            PlayerLocationOnPlacement(),
+        )
 
-        if (constructFailResult) {
-            return BlockHitResult(pos.center, direction, pos, false)
-        }
-
-        return null
+    /**
+     * Traces from the player's eyes along [rotation] and returns the hit result if it hits [pos].
+     */
+    private fun raycastHitResult(pos: BlockPos, rotation: Rotation, range: Double): BlockHitResult? {
+        val raycast = traceFromPlayer(range = range, rotation = rotation)
+        return raycast.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
     }
 
     fun canReach(pos: BlockPos, rotation: Rotation): Boolean {
         // not the exact distance but good enough
-        val distance = pos.getCenterDistanceSquaredEyes()
+        val distance = pos.distToCenterSqr(player.eyePosition)
         val wallRangeSq = wallRange.toDouble().sq()
 
         // if the wall range already covers it, the actual range doesn't matter
@@ -375,14 +400,38 @@ class BlockPlacer(
             return true
         }
 
-        val raycast = traceFromPlayer(range = range.toDouble(), rotation = rotation)
-        return raycast.type == HitResult.Type.BLOCK && raycast.blockPos == pos
+        return raycastHitResult(pos, rotation, range.toDouble()) != null
+    }
+
+    /**
+     * Checks whether the player can currently click-place a block at [pos] from their position.
+     *
+     * This mirrors the exact placement check done in [scheduleCurrentPlacements] (same search options,
+     * including face-away handling), so a support path never ends at a position the actual placement
+     * would reject. On top of that it requires the chosen click point to be unobstructed from the
+     * player's current view — if it is not visible (e.g. the target face is occluded by the block
+     * itself), the position is rejected and the support search keeps going past it.
+     */
+    fun canClickPlace(pos: BlockPos): Boolean {
+        if (!pos.stateOrEmpty.canBeReplaced()) {
+            return false
+        }
+
+        val placementTarget = findBestBlockPlacementTarget(pos, createSearchOptions(Items.SANDSTONE.defaultInstance))
+            ?: return false
+
+        // Strict occlusion check. canReach would accept anything inside wall range, and a TARGET_SHAPE trace only
+        // clips the given block's shape (accepting a block behind a wall), so trace the whole world and require the
+        // ray to hit the target block AND the intended face.
+        return placementTarget.verifyClick(
+            range = max(range, wallRange).toDouble(),
+        ) != null
     }
 
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      */
-    fun update(positions: Set<BlockPos>) {
+    fun update(positions: Collection<BlockPos>) {
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
@@ -406,10 +455,10 @@ class BlockPlacer(
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
-        blocks.computeIfAbsent(pos.asLong()) {
+        blocks.computeIfAbsent(pos.asLong(), LongPredicate {
             targetRenderer.addBlock(blockPosCache.set(it), update, FULL_BOX)
             isSupport
-        }
+        })
     }
 
     /**
@@ -431,7 +480,7 @@ class BlockPlacer(
     }
 
     /**
-     * THis should be called when the module using this placer is disabled.
+     * This should be called when the module using this placer is disabled.
      */
     fun disable() {
         reset()

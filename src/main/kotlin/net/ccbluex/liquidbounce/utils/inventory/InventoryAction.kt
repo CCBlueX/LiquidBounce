@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.item.ItemStack
 
@@ -45,9 +46,8 @@ sealed interface InventoryAction {
         val actionType: ContainerInput,
     ) : InventoryAction {
 
-        companion object {
+        companion {
 
-            @JvmStatic
             fun performThrow(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -58,7 +58,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.THROW
             )
 
-            @JvmStatic
             fun performQuickMove(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -69,7 +68,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.QUICK_MOVE
             )
 
-            @JvmStatic
             fun performSwap(
                 screen: AbstractContainerScreen<*>? = null,
                 from: ItemSlot,
@@ -81,7 +79,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.SWAP
             )
 
-            @JvmStatic
             fun performPickupAll(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -92,7 +89,6 @@ sealed interface InventoryAction {
                 actionType = ContainerInput.PICKUP_ALL
             )
 
-            @JvmStatic
             fun performPickup(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
@@ -106,7 +102,6 @@ sealed interface InventoryAction {
             /**
              * pickup -> pickup all -> pickup to handle remaining items
              */
-            @JvmStatic
             fun performMergeStack(
                 screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot,
@@ -124,6 +119,13 @@ sealed interface InventoryAction {
                 return false
             }
 
+            if (actionType == ContainerInput.SWAP &&
+                button == Inventory.SLOT_OFFHAND &&
+                !HotbarItemSlot.OFFHAND.canBeSwapTarget
+            ) {
+                return false
+            }
+
             // Screen is null, which means we are targeting the player inventory
             if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
                 !interaction.isServerControlledInventory
@@ -132,7 +134,7 @@ sealed interface InventoryAction {
             }
 
             // Check if current screen is the same as the screen we want to interact with
-            val screen = mc.screen as? AbstractContainerScreen<*> ?: return false
+            val screen = mc.gui.screen() as? AbstractContainerScreen<*> ?: return false
             return screen.syncId == this.screen.syncId
         }
 
@@ -208,11 +210,9 @@ sealed interface InventoryAction {
         val slot: ItemSlot? = null,
     ) : InventoryAction {
 
-        companion object {
-            @JvmStatic
+        companion {
             fun performThrow(itemStack: ItemStack) = Creative(itemStack)
 
-            @JvmStatic
             fun performFillSlot(itemStack: ItemStack, slot: ItemSlot) = Creative(itemStack, slot)
         }
 

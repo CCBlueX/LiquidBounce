@@ -65,3 +65,17 @@ sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     @Tag("clearTitle")
     class Clear(var reset: Boolean) : TitleEvent()
 }
+
+@Tag("closedCaptions")
+class ClosedCaptionsEvent(val entries: Array<ClosedCaptionEntry>) : Event(), WebSocketEvent {
+    override val serializeAsync: Boolean = false
+}
+
+enum class ClosedCaptionDirection { NONE, LEFT, RIGHT }
+
+data class ClosedCaptionEntry(
+    val text: Component,
+    val direction: ClosedCaptionDirection,
+    val textColor: Int,
+    val backgroundColor: Int,
+)

@@ -32,9 +32,9 @@ import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
 object CriticalsBlink : Mode("Blink") {
@@ -68,8 +68,8 @@ object CriticalsBlink : Mode("Blink") {
                 is ServerboundSignUpdatePacket,
                 is ServerboundInteractPacket,
                 is ServerboundAttackPacket,
-                is ServerboundSpectateEntityPacket,
-                is ServerboundSwingPacket,
+                is ServerboundSpectatorActionPacket,
+                is ServerboundPunchPacket,
                 is ServerboundResourcePackPacket -> BlinkManager.Action.PASS
                 else -> BlinkManager.Action.QUEUE
             }

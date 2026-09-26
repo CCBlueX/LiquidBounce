@@ -1,6 +1,7 @@
 {
   "name": "Hotbar",
-  "enabled": true,
+  "description": "Replaces the vanilla hotbar and status display.",
+  "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "CenterTranslated",

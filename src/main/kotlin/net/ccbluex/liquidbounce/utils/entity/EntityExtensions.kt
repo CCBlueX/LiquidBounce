@@ -22,29 +22,30 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
-import net.ccbluex.liquidbounce.utils.block.collisionShape
-import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.allEmpty
 import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.math.iterateBottomLayerBlockPos
+import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.ccbluex.liquidbounce.utils.world.anyMatched
+import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
@@ -85,6 +86,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.MagmaBlock
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.EntityCollisionContext
 import net.minecraft.world.scores.DisplaySlot
@@ -92,6 +94,7 @@ import java.lang.Math.fma
 import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -157,7 +160,7 @@ private fun LivingEntity.getBlockedDamage(source: DamageSource, damageAmount: Fl
     }
 
     val horizontalAngle = source.sourcePosition?.let { sourcePosition ->
-        val viewVector = calculateViewVector(0.0F, yHeadRot)
+        val viewVector = Entity.calculateViewVector(0.0F, yHeadRot)
         val sourceDirection = sourcePosition
             .subtract(position())
             .copy(y = 0.0)
@@ -175,8 +178,9 @@ val Entity.netherPosition: Vec3
         Vec3(x / 8.0, y, z / 8.0)
     }
 
+@AddonApi
 val LocalPlayer.moving
-    get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
+    get() = input.moveVector != Vec2.ZERO
 
 val ClientInput.untransformed: Input
     get() = (this as ClientInputAddition).`liquid_bounce$getUntransformed`()
@@ -186,6 +190,9 @@ val ClientInput.initial: Input
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
+
+val InteractionHand.opposite: InteractionHand
+    get() = if (this === InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
 
 fun GameType.shortName(): String = when (this) {
     GameType.SURVIVAL -> "S"
@@ -199,9 +206,6 @@ val LocalPlayer.airTicks: Int
 
 val LocalPlayer.onGroundTicks: Int
     get() = (this as LocalPlayerAddition).`liquid_bounce$getOnGroundTicks`()
-
-val LocalPlayer.direction: Float
-    get() = getMovementDirectionOfInput(DirectionalInput(input))
 
 /**
  * Check if the attack speed is below 1 tick. If so, we have a cooldown.
@@ -242,10 +246,6 @@ val LivingEntity.isBlockingServerside: Boolean
         return false
     }
 
-inline fun LocalPlayer.setDeltaMovement(block: (Vec3) -> Vec3) {
-    this.deltaMovement = block(this.deltaMovement)
-}
-
 /**
  * @see LocalPlayer.isSlowDueToUsingItem
  */
@@ -269,7 +269,6 @@ fun LocalPlayer.isCloseToEdge(
     distance: Double = 0.1,
     pos: Vec3 = this.position(),
 ): Boolean {
-    val alpha = (getMovementDirectionOfInput(directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
     simulatedInput.set(
         jump = false,
@@ -285,9 +284,10 @@ fun LocalPlayer.isCloseToEdge(
 
     val nextVelocity = simulatedPlayer.deltaMovement
     val direction = if (nextVelocity.horizontalDistanceSqr() > 0.003 * 0.003) {
-        nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
+        nextVelocity.copy(y = 0.0).normalize()
     } else {
-        Vec3(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
+        val movementYaw = getMovementDirectionOfInput(directionalInput)
+        Vec3.directionFromRotation(0.0F, movementYaw)
     }
 
     val from = pos.add(0.0, -0.1, 0.0)
@@ -297,7 +297,7 @@ fun LocalPlayer.isCloseToEdge(
         return true
     }
 
-    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.multiply(1.0, 0.0, 1.0))
+    val playerPosInTwoTicks = simulatedPlayer.pos.add(nextVelocity.copy(y = 0.0))
 
     return wouldBeCloseToFallOff(pos) || wouldBeCloseToFallOff(playerPosInTwoTicks)
 }
@@ -348,9 +348,12 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput = Dire
     return actualYaw
 }
 
+@AddonApi
 inline val Entity.horizontalSpeed: Double
     get() = deltaMovement.horizontalDistance()
 
+@AddonApi
+@JvmOverloads
 fun Vec3.withStrafe(
     speed: Double = horizontalDistance(),
     strength: Double = 1.0,
@@ -382,10 +385,20 @@ val Entity.rotation: Rotation
 val LocalPlayer.lastRotation: Rotation
     get() = Rotation(this.yRotLast, this.xRotLast, true)
 
+/**
+ * Check if the entity is inside the world border.
+ *
+ * Mirrors the server-side attack/interact border check.
+ *
+ * @see net.minecraft.server.network.ServerGamePacketListenerImpl.handleAttack
+ */
+val Entity.isWithinWorldBorder: Boolean
+    get() = level().worldBorder.isWithinBounds(blockPosition())
+
 val Entity.box: AABB
     get() = boundingBox.inflate(pickRadius.toDouble())
 
-private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera.position()
+private val cameraPos: Vec3 get() = mc.gameRenderer.mainCamera().position()
 
 fun Position.cameraDistanceSq() = cameraPos.distanceToSqr(x(), y(), z())
 
@@ -585,7 +598,7 @@ fun LivingEntity.getDamageFromExplosion(
     power: Float = 6f,
     explosionRange: Float = power * 2f, // allows setting precomputed values
     damageDistance: Float = explosionRange * explosionRange,
-    exclude: Array<BlockPos>? = null,
+    exclude: Collection<BlockPos>? = null,
     include: BlockPos? = null,
     maxBlastResistance: Float? = null,
     entityBoundingBox: AABB? = null,
@@ -633,7 +646,7 @@ fun LivingEntity.getDamageFromExplosion(
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
     source: Vec3,
-    exclude: Array<BlockPos>?,
+    exclude: Collection<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?,
     entityBoundingBox: AABB?
@@ -769,7 +782,7 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
-fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
+fun Entity.doesCollideAt(pos: Vec3 = this.position()): Boolean {
     return !this.level().getBlockCollisions(this, getBoundingBoxAt(pos)).allEmpty()
 }
 
@@ -777,7 +790,7 @@ fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
 fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.move(pos - this.position())
+    val offsetBb = getBoundingBoxAt(pos)
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true
@@ -853,8 +866,34 @@ fun AABB.isOnMagmaBlock(): Boolean {
     val expandedBox = inflate(0.0, 0.1, 0.0)
         .move(0.0, -0.1, 0.0)
 
-    return expandedBox.iterateBottomLayerBlockPos().any {
-        it.getBlock() is MagmaBlock &&
-            expandedBox.intersects(it.collisionShape.bounds().move(it))
-    }
+    // Scan the blocks in the bottom layer of the expanded box with the vanilla block scan API,
+    // keeping the per-block collision shape check from the original implementation.
+    return world.findBlocksIntersects(expandedBox.setMaxY(expandedBox.minY))
+        .filterState { it.block is MagmaBlock }
+        .anyMatched { pos, state ->
+            val shape = state.getCollisionShape(world, pos)
+            shape intersects expandedBox
+        }
 }
+
+val Entity?.cameraDistance: Float
+    get() {
+        var scale: Float
+        var distance: Float
+        if (this is LivingEntity) {
+            scale = this.scale
+            distance = this.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat()
+        } else {
+            scale = 1f
+            distance = 4f
+        }
+
+        (this?.vehicle as? LivingEntity)
+            ?.takeIf { this.isPassenger }
+            ?.also { mount ->
+                scale = max(scale, mount.scale)
+                distance = max(distance, mount.getAttributeValue(Attributes.CAMERA_DISTANCE).toFloat())
+            }
+
+        return scale * distance
+    }

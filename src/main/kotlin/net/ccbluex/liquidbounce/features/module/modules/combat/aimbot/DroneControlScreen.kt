@@ -19,13 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.toDegrees
+import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
@@ -43,11 +44,9 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2d
-import org.lwjgl.glfw.GLFW
-import kotlin.math.hypot
 import kotlin.math.pow
 
-private const val DRAG_BUTTON = 0
+private const val DRAG_BUTTON = InputConstants.MOUSE_BUTTON_LEFT
 
 /**
  * Zoom by another 25% every mouse tick.
@@ -91,10 +90,10 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         ).toFloat().toDegrees()
 
         val pitchDelta =
-            Vector2d(newWorldRay.direction.y, hypot(newWorldRay.direction.x, newWorldRay.direction.z)).angle(
+            Vector2d(newWorldRay.direction.y, newWorldRay.direction.horizontalDistance()).angle(
                 Vector2d(
                     prevWorldRay.direction.y,
-                    hypot(prevWorldRay.direction.x, prevWorldRay.direction.z)
+                    prevWorldRay.direction.horizontalDistance(),
                 )
             ).toFloat().toDegrees()
 
@@ -104,7 +103,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     }
 
     override fun keyPressed(input: KeyEvent): Boolean {
-        if (input.key == GLFW.GLFW_KEY_SPACE) {
+        if (input.key == InputConstants.KEY_SPACE) {
             ModuleDroneControl.mayShoot = true
         }
 
@@ -139,7 +138,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         val focusedEntity = this.focusedEntity
 
         if (mc.options.keyShift.isPressedOnAny && focusedEntity != null) {
-            val rot = Rotation.lookingAt(point = focusedEntity.entity.box.center, from = this.cameraPos)
+            val rot = Rotation.lookingAt(point = focusedEntity.entity.boundingBox.center, from = this.cameraPos)
 
             this.cameraRotation = rot
         }
@@ -152,7 +151,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
             this.dragStartPos = null
         }
 
-        if (button != 1) {
+        if (button != InputConstants.MOUSE_BUTTON_RIGHT) {
             return true
         }
 

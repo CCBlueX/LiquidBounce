@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
@@ -28,9 +29,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.anotherBedPartDirection
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -43,7 +44,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.sdl.SDLKeycode
 
 fun isSelfBedChoices(choice: ModeValueGroup<IsSelfBedMode>): Array<IsSelfBedMode> {
     return arrayOf(
@@ -122,8 +123,8 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
 
     class Manual(parent: ModeValueGroup<*>) : IsSelfBedMode("Manual", parent) {
 
-        private val trackKey by key("Track", GLFW.GLFW_KEY_KP_ADD)
-        private val untrackKey by key("Untrack", GLFW.GLFW_KEY_KP_SUBTRACT)
+        private val trackKey by key("Track", InputConstants.KEY_ADD)
+        private val untrackKey by key("Untrack", SDLKeycode.SDLK_KP_MINUS)
 
         private val trackedPos = BlockPos.MutableBlockPos()
 
@@ -135,11 +136,11 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
         override fun isSelfBed(
             block: BedBlock,
             pos: BlockPos,
-        ): Boolean = pos == trackedPos || pos.relative(pos.getState().anotherBedPartDirection()!!) == trackedPos
+        ): Boolean = pos == trackedPos || pos.relative(pos.state.anotherBedPartDirection()!!) == trackedPos
 
         @Suppress("unused")
         private val keyHandler = handler<KeyboardKeyEvent> { event ->
-            if (event.action != GLFW.GLFW_PRESS) return@handler
+            if (!event.isPressed) return@handler
 
             when (event.key) {
                 trackKey -> {

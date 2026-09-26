@@ -21,18 +21,20 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.GuiCircleLutAtlas
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
-import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.math.ceilToInt
+import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.render.gui.element.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.QuadGuiElementRenderState
+import net.ccbluex.liquidbounce.render.gui.element.RoundedRectGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.render.gui.element.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
@@ -78,7 +80,7 @@ private fun Matrix3x2fc.transformMaxBounds(
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
+ * @see net.minecraft.client.renderer.state.gui.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphicsExtractor.getBounds(left: Float, top: Float, right: Float, bottom: Float): ScreenRectangle {
     val rect = this.pose().transformMaxBounds(left, top, right, bottom)
@@ -86,7 +88,7 @@ fun GuiGraphicsExtractor.getBounds(left: Float, top: Float, right: Float, bottom
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
+ * @see net.minecraft.client.renderer.state.gui.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphicsExtractor.getBoundsXYWH(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
     return getBounds(x, y, x + w, y + h)
@@ -112,6 +114,7 @@ inline fun GuiGraphicsExtractor.ScissorStack.withPush(
     rect: ScreenRectangle,
     block: GuiGraphicsExtractor.ScissorStack.() -> Unit,
 ) {
+    if (rect.width <= 0 || rect.height <= 0) return
     push(rect)
     try {
         block()
@@ -155,6 +158,8 @@ fun GuiGraphicsExtractor.drawLines(
     )
 }
 
+@AddonApi
+@JvmOverloads
 fun GuiGraphicsExtractor.drawQuad(
     x1: Float,
     y1: Float,
@@ -202,6 +207,44 @@ fun GuiGraphicsExtractor.drawQuad(
             bounds,
         )
     }
+}
+
+fun GuiGraphicsExtractor.drawRoundedRect(
+    x1: Float,
+    y1: Float,
+    x2: Float,
+    y2: Float,
+    radius: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+    outlineWidth: Float = 1.0f,
+) {
+    val x11 = minOf(x1, x2)
+    val y11 = minOf(y1, y2)
+    val x21 = maxOf(x1, x2)
+    val y21 = maxOf(y1, y2)
+
+    val fill = fillColor ?: Color4b.TRANSPARENT
+    val outline = outlineColor ?: Color4b.TRANSPARENT
+    if (fill.isTransparent && (outline.isTransparent || outlineWidth <= 0.0f)) {
+        return
+    }
+
+    this.guiRenderState.addGuiElement(
+        RoundedRectGuiElementRenderState(
+            x11,
+            y11,
+            x21,
+            y21,
+            radius.coerceAtLeast(0.0f),
+            fill.argb,
+            outline.argb,
+            outlineWidth.coerceAtLeast(0.0f),
+            copyPosePooled(),
+            this.scissorStack.peek(),
+            getBounds(x11, y11, x21, y21),
+        )
+    )
 }
 
 inline fun GuiGraphicsExtractor.drawQuadXYWH(

@@ -24,8 +24,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.phys.Vec3
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class BlockBoxExtensionsTest {
 

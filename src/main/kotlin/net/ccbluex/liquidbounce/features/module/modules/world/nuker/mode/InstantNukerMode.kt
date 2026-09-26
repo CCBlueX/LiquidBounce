@@ -49,7 +49,7 @@ object InstantNukerMode : Mode("Instant") {
             return@tickHandler
         }
 
-        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 

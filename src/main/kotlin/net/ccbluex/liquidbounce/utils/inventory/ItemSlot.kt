@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.asObjectList
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_15_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
@@ -36,6 +39,7 @@ import kotlin.math.abs
 /**
  * Represents an inventory slot (e.g. Hotbar Slot 0, OffHand, Chestslot 5, etc.)
  */
+@AddonApi
 sealed interface ItemSlot : ItemStackHolder {
     override val itemStack: ItemStack
     val slotType: Type
@@ -45,7 +49,7 @@ sealed interface ItemSlot : ItemStackHolder {
      */
     fun getIdForServer(screen: AbstractContainerScreen<*>?): Int?
 
-    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.screen as? AbstractContainerScreen<*>)
+    fun getIdForServerWithCurrentScreen() = getIdForServer(mc.gui.screen() as? AbstractContainerScreen<*>)
 
     override fun hashCode(): Int
 
@@ -120,7 +124,7 @@ class VirtualItemSlot(
 class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
 
     override val itemStack: ItemStack
-        get() = (mc.screen as AbstractContainerScreen<*>).menu.slots[this.slotInContainer].item
+        get() = (mc.gui.screen() as AbstractContainerScreen<*>).menu.slots[this.slotInContainer].item
 
     override val slotType: ItemSlot.Type
         get() = ItemSlot.Type.CONTAINER
@@ -159,6 +163,7 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
 
 private fun AbstractContainerScreen<*>.itemCount() = this.menu.slots.size
 
+@AddonApi
 enum class HotbarItemSlot(
     /**
      * Vanilla hotbar selection index, i.e. [Inventory.selected] / [Inventory.getSelectedSlot].
@@ -196,6 +201,9 @@ enum class HotbarItemSlot(
     val isOffHand: Boolean
         get() = hotbarIndex == null
 
+    val canBeSwapTarget: Boolean
+        get() = !isOffHand || !isOlderThanOrEqual1_15_2
+
     /**
      * Vanilla [InteractionHand] corresponding to this slot when performing item use / interaction logic.
      */
@@ -220,6 +228,7 @@ enum class HotbarItemSlot(
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int? {
         return when {
+            isOffHand && isOlderThanOrEqual1_8 -> null
             screen == null -> playerInventoryMenuSlot
             hotbarIndex != null -> screen.itemCount() - Inventory.SELECTION_SIZE + hotbarIndex
             else -> null
@@ -318,8 +327,7 @@ enum class ArmorItemSlot(@JvmField val equipmentSlot: EquipmentSlot) : ItemSlot 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) =
         if (screen == null) 8 - this.equipmentSlot.index else null
 
-    companion object {
-        @JvmStatic
+    companion {
         @JvmName("of")
         operator fun invoke(equipmentSlot: EquipmentSlot): ArmorItemSlot {
             require(equipmentSlot.type == EquipmentSlot.Type.HUMANOID_ARMOR) {

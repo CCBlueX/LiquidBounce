@@ -30,11 +30,16 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eagle", false) {
 
     private val blocksToEagle = intRange("BlocksToEagle", 0..0, 0..10).asRefreshable()
-    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
+    private val edgeDistance = floatRange("EdgeDistance", 0.01f..0.05f, 0.01f..1.3f).asRefreshable()
     private val onlyOnGround by boolean("OnlyOnGround", true)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
+
+    override fun onEnabled() {
+        placedBlocks = 0
+        super.onEnabled()
+    }
 
     @Suppress("unused")
     private val stateUpdateHandler =
@@ -55,7 +60,7 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eag
 
         val shouldBeActive = !player.abilities.flying && placedBlocks == 0
 
-        return shouldBeActive && player.isCloseToEdge(input, edgeDistance.toDouble())
+        return shouldBeActive && player.isCloseToEdge(input, edgeDistance.current.toDouble())
     }
 
     fun onBlockPlacement() {
@@ -68,6 +73,7 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eag
         if (placedBlocks > blocksToEagle.current) {
             placedBlocks = 0
             blocksToEagle.refresh()
+            edgeDistance.refresh()
         }
     }
 
