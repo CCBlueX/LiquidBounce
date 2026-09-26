@@ -264,12 +264,10 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
         abstract fun rotationFor(target: LivingEntity): Rotation?
 
-        companion object {
-            @JvmStatic
+        companion {
             fun from(slot: HotbarItemSlot): GravityType =
                 from(slot.itemStack.item)
 
-            @JvmStatic
             fun from(item: Item): GravityType {
                 return when (gravityType) {
                     AUTO -> {

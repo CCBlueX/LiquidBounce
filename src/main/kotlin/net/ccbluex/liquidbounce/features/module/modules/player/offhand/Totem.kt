@@ -214,7 +214,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 return 0f
             }
 
-            val overworld = !world.bedRule.explodes
+            val overworld = !world.bedRule.destroyOnUse
             val nether = world.respawnAnchorWorks
             val playerPos = player.blockPosition()
             var maxDamage = 0f

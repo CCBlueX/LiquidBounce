@@ -35,10 +35,11 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.ChatScreen
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
@@ -103,9 +104,24 @@ object ThemeManager : Config("theme") {
             return@onChange enabled
         }
 
-    internal val reloader = ResourceManagerReloadListener { resourceManager ->
-        themes.forEach { it.onResourceManagerReload(resourceManager) }
-        logger.info("Reloaded ${themes.size} themes.")
+    private val BASIC_MODE_OVERRIDE = env("LB_BASIC_MODE", "net.ccbluex.liquidbounce.ui.basicMode")?.toBoolean()
+        ?: env("LB_UI_HIDE", "net.ccbluex.liquidbounce.ui.hide")?.toBoolean()?.also {
+            logger.warn("LB_UI_HIDE is deprecated, use LB_BASIC_MODE instead.")
+        }
+
+    var basicMode by boolean("BasicMode", false)
+
+    val isBasicMode get() = BASIC_MODE_OVERRIDE ?: basicMode
+
+    /**
+     * Reloads all loaded themes asynchronously.
+     */
+    internal val reloader = object : SimpleReloadListener.Sequenced {
+        override fun children() = themes
+
+        override fun onFinished(futures: List<*>) {
+            logger.info("Reloaded ${futures.size} themes.")
+        }
     }
 
     init {

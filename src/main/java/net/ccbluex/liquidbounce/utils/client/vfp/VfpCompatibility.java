@@ -40,7 +40,7 @@ public enum VfpCompatibility {
 
     public @Nullable ClientProtocolVersion unsafeGetProtocolVersion() {
         try {
-            ProtocolVersion version = ViaFabricPlus.getImpl().getTargetVersion();
+            ProtocolVersion version = ViaFabricPlus.api().targetVersion();
             return new ClientProtocolVersion(version.getName(), version.getVersion());
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to get protocol version", throwable);
@@ -71,7 +71,7 @@ public enum VfpCompatibility {
                 currentScreen = new TitleScreen();
             }
 
-            ViaFabricPlus.getImpl().openProtocolSelectionScreen(currentScreen);
+            ViaFabricPlus.api().screens().openViaFabricPlusScreen(currentScreen);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to open ViaFabricPlus screen", throwable);
         }
@@ -84,7 +84,7 @@ public enum VfpCompatibility {
             }
 
             ProtocolVersion version = ProtocolVersion.getProtocol(protocolId);
-            ViaFabricPlus.getImpl().setTargetVersion(version);
+            ViaFabricPlus.api().setTargetVersion(version);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to select protocol version", throwable);
         }
@@ -92,7 +92,7 @@ public enum VfpCompatibility {
 
     public boolean isEqual1_8() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             // Check if the version is equal to 1.8
             return version.equalTo(ProtocolVersion.v1_8);
@@ -104,7 +104,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_8() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             // Check if the version is older or equal than 1.8
             return version.olderThanOrEqualTo(ProtocolVersion.v1_8);
@@ -116,7 +116,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_7_10() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             // Check if the version is older or equal than 1.7.10
             return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
@@ -128,7 +128,7 @@ public enum VfpCompatibility {
 
     public boolean isNewerThanOrEqual1_16() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.newerThanOrEqualTo(ProtocolVersion.v1_16);
         } catch (Throwable throwable) {
@@ -139,7 +139,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_15_2() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.olderThanOrEqualTo(ProtocolVersion.v1_15_2);
         } catch (Throwable throwable) {
@@ -150,7 +150,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_12_2() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.olderThanOrEqualTo(ProtocolVersion.v1_12_2);
         } catch (Throwable throwable) {
@@ -161,7 +161,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThan1_21_2() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.olderThan(ProtocolVersion.v1_21_2);
         } catch (Throwable throwable) {
@@ -170,9 +170,20 @@ public enum VfpCompatibility {
         }
     }
 
+    public boolean isOlderThan1_21() {
+        try {
+            var version = ViaFabricPlus.api().targetVersion();
+
+            return version.olderThan(ProtocolVersion.v1_21);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 1.21", throwable);
+            return false;
+        }
+    }
+
     public boolean isEqual1_21_4() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.equalTo(ProtocolVersion.v1_21_4);
         } catch (Throwable throwable) {
@@ -183,7 +194,7 @@ public enum VfpCompatibility {
 
     public boolean isNewerThanOrEqual1_21_5() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.newerThanOrEqualTo(ProtocolVersion.v1_21_5);
         } catch (Throwable throwable) {
@@ -194,7 +205,7 @@ public enum VfpCompatibility {
 
     public boolean isNewerThanOrEqual1_21_6() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.newerThanOrEqualTo(ProtocolVersion.v1_21_6);
         } catch (Throwable throwable) {
@@ -205,7 +216,7 @@ public enum VfpCompatibility {
 
     public boolean isNewerThanOrEqual1_21_9() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.newerThanOrEqualTo(ProtocolVersion.v1_21_9);
         } catch (Throwable throwable) {
@@ -216,7 +227,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_21_11() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             return version.olderThanOrEqualTo(ProtocolVersion.v1_21_11);
         } catch (Throwable throwable) {
@@ -227,7 +238,7 @@ public enum VfpCompatibility {
 
     public boolean isOlderThanOrEqual1_11_1() {
         try {
-            var version = ViaFabricPlus.getImpl().getTargetVersion();
+            var version = ViaFabricPlus.api().targetVersion();
 
             // Check if the version is older or equal than 1.11.1
             return version.olderThanOrEqualTo(ProtocolVersion.v1_11_1);

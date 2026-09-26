@@ -67,14 +67,32 @@ inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)
 inline fun <reified T> JsonDeserializationContext.deserialize(json: JsonElement): T =
     deserialize(json, object : TypeToken<T>() {}.type)
 
-fun jsonArrayOf(vararg elements: JsonElement) = JsonArray(elements.size).apply {
-    elements.forEach { add(it) }
-}
+@DslMarker
+annotation class JsonDsl
 
-class JsonArrayBuilder(initialCapacity: Int) {
-    private val backend = JsonArray(initialCapacity)
+@JsonDsl
+@JvmInline
+value class JsonArrayBuilder(private val backend: JsonArray) {
 
-    operator fun JsonElement.unaryPlus() {
+    constructor(initialCapacity: Int) : this(JsonArray(initialCapacity))
+
+    operator fun JsonElement?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Boolean?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun String?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Number?.unaryPlus() {
+        backend.add(this)
+    }
+
+    operator fun Char?.unaryPlus() {
         backend.add(this)
     }
 
@@ -82,10 +100,10 @@ class JsonArrayBuilder(initialCapacity: Int) {
 }
 
 inline fun jsonArray(
-    initialCapacity: Int = 10,
     builderAction: JsonArrayBuilder.() -> Unit
-) = JsonArrayBuilder(initialCapacity).apply(builderAction).build()
+) = JsonArrayBuilder(JsonArray()).apply(builderAction).build()
 
+@JsonDsl
 @JvmInline
 value class JsonObjectBuilder(private val backend: JsonObject) {
 
@@ -109,23 +127,16 @@ value class JsonObjectBuilder(private val backend: JsonObject) {
         backend.addProperty(this, value)
     }
 
-    inline operator fun String.invoke(builderAction: JsonObjectBuilder.() -> Unit) {
+    inline infix fun String.obj(builderAction: JsonObjectBuilder.() -> Unit) {
         invoke(jsonObject(builderAction))
     }
 
-    /**
-     * Fallback
-     */
-    operator fun String.invoke(value: Any?) {
-        when (value) {
-            null -> backend.add(this, JsonNull.INSTANCE)
-            is String -> backend.addProperty(this, value)
-            is Number -> backend.addProperty(this, value)
-            is Boolean -> backend.addProperty(this, value)
-            is JsonElement -> backend.add(this, value)
-            is JsonObjectBuilder -> backend.add(this, value.build())
-            else -> throw IllegalArgumentException("Unsupported type: ${value::class.java}")
-        }
+    inline infix fun String.array(builderAction: JsonArrayBuilder.() -> Unit) {
+        invoke(jsonArray(builderAction))
+    }
+
+    operator fun String.get(vararg elements: JsonElement?) {
+        invoke(JsonArray(elements.size).apply { elements.forEach(::add) })
     }
 
     fun build() = backend

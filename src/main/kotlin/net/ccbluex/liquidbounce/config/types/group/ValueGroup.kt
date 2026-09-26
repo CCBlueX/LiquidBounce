@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.config.types.list.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.list.RegistryMutableListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
@@ -66,7 +67,8 @@ import java.util.SequencedSet
 import java.util.function.ToIntFunction
 
 @Suppress("TooManyFunctions")
-open class ValueGroup(
+@AddonApi
+open class ValueGroup @JvmOverloads constructor(
     name: String,
     value: MutableCollection<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE,
@@ -274,36 +276,74 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = value(Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType))
 
-    internal inline fun <T : MutableCollection<E>, reified E> list(
+    // Inline bodies are compiled into add-on jars, so the reified builders only forward to these.
+
+    fun <T : MutableCollection<E>, E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java))
+        innerType: Class<E>,
+    ) = value(ListValue(name, defaultValue, innerValueType = valueType, innerType = innerType))
 
-    internal inline fun <T : MutableCollection<E>, reified E> mutableList(
+    inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(MutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = list(name, defaultValue, valueType, E::class.java)
 
-    internal inline fun <T : MutableSet<E>, reified E> itemList(
+    fun <T : MutableCollection<E>, E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(MutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableCollection<E>, reified E> mutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = mutableList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableSet<E>, E> itemList(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
         valueType: ValueType,
-    ) = value(ItemListValue(name, defaultValue, items, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(ItemListValue(name, defaultValue, items, valueType, innerType))
 
-    internal inline fun <T : SequencedSet<E>, reified E> registryList(
+    inline fun <T : MutableSet<E>, reified E> itemList(
+        name: String,
+        defaultValue: T,
+        items: Set<ItemListValue.NamedItem<E>>,
+        valueType: ValueType,
+    ) = itemList(name, defaultValue, items, valueType, E::class.java)
+
+    fun <T : SequencedSet<E>, E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryListValue(name, defaultValue, valueType, E::class.java))
+        innerType: Class<E>,
+    ) = value(RegistryListValue(name, defaultValue, valueType, innerType))
 
-    internal inline fun <T : MutableList<E>, reified E> registryMutableList(
+    inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
-    ) = value(RegistryMutableListValue(name, defaultValue, valueType, E::class.java))
+    ) = registryList(name, defaultValue, valueType, E::class.java)
+
+    fun <T : MutableList<E>, E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+        innerType: Class<E>,
+    ) = value(RegistryMutableListValue(name, defaultValue, valueType, innerType))
+
+    inline fun <T : MutableList<E>, reified E> registryMutableList(
+        name: String,
+        defaultValue: T,
+        valueType: ValueType,
+    ) = registryMutableList(name, defaultValue, valueType, E::class.java)
 
     private fun <T : Any> rangedValue(
         name: String,
@@ -325,12 +365,18 @@ open class ValueGroup(
 
     // Fixed data types
 
+    // `boolean`, `int` and `float` are Java keywords, hence the JVM names.
+
+    @JvmName("bool")
+    @JvmOverloads
     fun boolean(
         name: String,
         default: Boolean,
         aliases: List<String> = emptyList(),
     ) = value(name, default, ValueType.BOOLEAN, aliases)
 
+    @JvmName("floating")
+    @JvmOverloads
     fun float(
         name: String,
         default: Float,
@@ -339,6 +385,12 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.FLOAT, aliases)
 
+    @JvmName("floating")
+    @JvmOverloads
+    fun float(name: String, default: Float, min: Float, max: Float, suffix: String = "") =
+        float(name, default, min..max, suffix)
+
+    @JvmOverloads
     fun floatRange(
         name: String,
         default: ClosedFloatingPointRange<Float>,
@@ -347,6 +399,8 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE, aliases)
 
+    @JvmName("integer")
+    @JvmOverloads
     fun int(
         name: String,
         default: Int,
@@ -355,6 +409,12 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.INT, aliases)
 
+    @JvmName("integer")
+    @JvmOverloads
+    fun int(name: String, default: Int, min: Int, max: Int, suffix: String = "") =
+        int(name, default, min..max, suffix)
+
+    @JvmOverloads
     fun intRange(
         name: String,
         default: IntRange,
@@ -363,15 +423,17 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ) = rangedValue(name, default, range, suffix, ValueType.INT_RANGE, aliases)
 
+    @JvmOverloads
     fun bind(name: String, default: Int = InputConstants.UNKNOWN.value) = bind(
         name,
-        InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
+        InputBind(InputConstants.Type.KEYBOARD, default, InputBind.BindAction.TOGGLE)
     )
 
     fun bind(name: String, default: InputBind) = value(BindValue(name, defaultValue = default))
 
-    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
+    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYBOARD.getOrCreate(default))
 
+    @JvmOverloads
     fun key(name: String, default: InputConstants.Key = InputConstants.UNKNOWN) =
         value(name, default, ValueType.KEY)
 
@@ -504,6 +566,25 @@ open class ValueGroup(
         aliases: List<String> = emptyList(),
     ): ChoiceListValue<T> where T : Enum<T>, T : Tagged = enumChoice(name, default, enumSetAllOf(), aliases)
 
+    /**
+     * For Java, which cannot call the reified overload.
+     */
+    fun <T> enumChoice(name: String, default: T): ChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        enumChoice(name, default, EnumSet.allOf(default.declaringJavaClass), emptyList())
+
+    /**
+     * For Java, which cannot call the reified overloads.
+     */
+    @JvmOverloads
+    fun <T> multiEnumChoice(
+        name: String,
+        type: Class<T>,
+        default: Collection<T>,
+        canBeNone: Boolean = true,
+    ): MultiChoiceListValue<T> where T : Enum<T>, T : Tagged =
+        multiEnumChoice(name, EnumSet.noneOf(type).apply { addAll(default) }, EnumSet.allOf(type), canBeNone, false)
+
+    @JvmOverloads
     fun <T : Tagged> enumChoice(
         name: String,
         default: T,

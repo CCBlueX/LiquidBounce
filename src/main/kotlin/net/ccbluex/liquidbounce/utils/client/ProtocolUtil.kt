@@ -30,7 +30,7 @@ val usesViaFabricPlus = runCatching {
     Class.forName("com.viaversion.viafabricplus.ViaFabricPlus")
 
     // Register ViaFabricPlus protocol version change callback
-    ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
+    ViaFabricPlus.api().addChangeProtocolVersionListener { _, _ ->
         // Update the window title
         mc.execute {
             mc.updateTitle()
@@ -129,6 +129,17 @@ val isOlderThanOrEqual1_12_2: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_12_2
     }.onFailure {
         logger.error("Failed to check if the server is using 1.12.2", it)
+    }.getOrDefault(false)
+
+/**
+ * 1.21 added rotation fields to [net.minecraft.network.protocol.game.ServerboundUseItemPacket].
+ * Older protocols need the movement rotation packet to be sent before a use-item interaction.
+ */
+val isOlderThan1_21: Boolean
+    get() = runCatching {
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_21
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-1.21 protocol", it)
     }.getOrDefault(false)
 
 /**
