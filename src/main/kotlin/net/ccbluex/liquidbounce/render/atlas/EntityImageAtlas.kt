@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.atlas
 
 import com.mojang.authlib.GameProfile
+import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.Rect2i
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.entity.Entity
@@ -137,7 +139,12 @@ private class EntityTextureRenderer : AbstractAtlasRenderer<EntityAtlas>("Entity
 
             val cameraState = mc.gameRenderer.gameRenderState().levelRenderState.cameraRenderState
             mc.entityRenderDispatcher.submit(state, cameraState, 0.0, 0.0, 0.0, this, submitNodeStorage)
-            featureRenderDispatcher.renderAllFeatures(submitNodeStorage)
+            featureRenderDispatcher.prepareFrame(submitNodeStorage).use { frame ->
+                createRenderPass().use { pass ->
+                    RenderSystem.bindDefaultUniforms(pass)
+                    FeatureRenderDispatcher.renderAllFeatures(pass, frame)
+                }
+            }
         }
     }
 
