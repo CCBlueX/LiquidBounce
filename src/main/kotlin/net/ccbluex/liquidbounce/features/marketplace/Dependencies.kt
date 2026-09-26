@@ -65,10 +65,10 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
     val configs = linkedMapOf<Int, ConfigDependency>()
     val installables = linkedMapOf<Int, Installable>()
     val visiting = hashSetOf<Int>()
-    val resolved = hashMapOf<Int, Set<Int>>()
+    val needsOf = hashMapOf<Int, Set<Int>>()
 
     suspend fun visit(id: Int): Set<Int> {
-        resolved[id]?.let { return it }
+        needsOf[id]?.let { return it }
         if (!visiting.add(id)) {
             return emptySet()
         }
@@ -97,7 +97,7 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
         }
 
         visiting.remove(id)
-        resolved[id] = needs
+        needsOf[id] = needs
         return needs
     }
 
