@@ -68,7 +68,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     public abstract Font getFont();
 
     @Inject(method = "shouldRender", at = @At("HEAD"), cancellable = true)
-    private void shouldRender(T entity, Frustum frustum, double x, double y, double z, CallbackInfoReturnable<Boolean> cir) {
+    private void shouldRender(T entity, Frustum culler, double camX, double camY, double camZ, float partialTicks, CallbackInfoReturnable<Boolean> cir) {
         if (ModuleCombineMobs.INSTANCE.getRunning() && ModuleCombineMobs.INSTANCE.trackEntity(entity)) {
             cir.setReturnValue(false);
         }
@@ -104,7 +104,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
         matrices.pushPose();
         matrices.translate(0.0D, f, 0.0D);
-        matrices.mulPose(this.entityRenderDispatcher.camera.rotation());
+        matrices.rotate(this.entityRenderDispatcher.camera.rotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);
 
         var matrix4f = matrices.last().pose();

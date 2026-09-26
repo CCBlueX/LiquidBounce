@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.FireworkRocketItem
@@ -82,7 +81,6 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
     private inline val BlockHitResult.isAirOrFluid: Boolean
         get() = world.getBlockState(blockPos).isAir ||
             (liquidPlace && !world.getFluidState(blockPos).isEmpty && !ModuleLiquidPlace.running)
-
 
     private fun ItemStack.isAirPlaceableAt(hit: BlockHitResult): Boolean {
         if (isEmpty || isConsumable) return false

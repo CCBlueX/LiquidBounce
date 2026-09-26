@@ -110,7 +110,7 @@ enum class CustomScreenType(
         "options",
         recognizer = { it is OptionsScreen },
         open = {
-            mc.gui.setScreen(OptionsScreen(ScreenManager.parent, mc.options, mc.level != null))
+            mc.gui.setScreen(OptionsScreen(ScreenManager.parent, mc.options))
         }
     ),
 
@@ -144,10 +144,9 @@ enum class CustomScreenType(
 
     fun open() = mc.execute(open)
 
-    companion object {
-        @JvmStatic
+    companion {
         fun byName(name: String) = entries.find { it.routeName == name }
-        @JvmStatic
+
         fun recognize(screen: Screen) = entries.find { it.recognizer.test(screen) }
     }
 

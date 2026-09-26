@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.Environment
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.thealtening.api.TheAltening
 import com.thealtening.api.TheAlteningException
 import net.ccbluex.liquidbounce.config.gson.util.int
@@ -33,9 +33,7 @@ const val ALTENING_SESSION = "http://sessionserver.thealtening.com"
 
 val alteningEnvironment = Environment(
     ALTENING_SESSION,
-    "https://api.minecraftservices.com",
-    "https://api.minecraftservices.com",
-    "PROD",
+    "TheAltening",
 )
 
 /**
@@ -61,8 +59,8 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
     var hypixelRank: String = ""
         private set
 
-    override val authenticationService: YggdrasilAuthenticationService by lazy {
-        YggdrasilAuthenticationService(Proxy.NO_PROXY, alteningEnvironment)
+    override val authenticationService: MinecraftServicesDiscoveryService by lazy {
+        MinecraftServicesDiscoveryService.create(Proxy.NO_PROXY, false, alteningEnvironment)
     }
 
     override fun refresh() {
@@ -89,7 +87,7 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
         hypixelRank = string("hypixelRank").orEmpty()
     }
 
-    companion object {
+    companion {
 
         fun fromToken(accountToken: String) = AlteningAccount(accountToken).apply { refresh() }
 

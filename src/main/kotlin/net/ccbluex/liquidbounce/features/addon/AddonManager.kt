@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -52,6 +53,8 @@ object AddonManager {
     val pendingRestart: Boolean get() = pendingRestarts.isNotEmpty()
 
     val restartReasons: Collection<String> get() = pendingRestarts.values
+
+    internal val restartRequiredItems: Set<Int> get() = pendingRestarts.keys.toSet()
 
     operator fun get(id: String): LiquidBounceAddon? = loadedAddons.find { it.id.equals(id, true) }
 
@@ -187,6 +190,11 @@ object AddonManager {
             step("config ${config.name}") { ConfigSystem.remove(config) }
         }
         addon.registeredConfigs.clear()
+
+        addon.registeredItemHandlers.forEach { (type, handler) ->
+            step("marketplace handler for $type") { MarketplaceManager.unregisterHandler(type, handler) }
+        }
+        addon.registeredItemHandlers.clear()
 
         step("event hooks") { addon.unregister() }
 
