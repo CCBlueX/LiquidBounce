@@ -24,6 +24,7 @@ import org.cef.CefSettings
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefDisplayHandlerAdapter
+import java.util.UUID
 
 /**
  * Connects the system clipboard to the clipboard of the embedded Chromium on Linux.
@@ -46,7 +47,30 @@ object CefClipboardBridge {
      */
     private const val MARKER = "\u0001LiquidBounceClipboard\u0001"
 
+    /**
+     * How long a copy may take to report back. Anything later is treated as unsolicited.
+     */
+    private const val REPLY_TIMEOUT_MS = 2_000L
+
+    /**
+     * The copy we are waiting for a reply to.
+     *
+     * A page can log whatever it likes, so a payload is only accepted while it answers a copy the
+     * user just triggered: same browser, matching token, inside [REPLY_TIMEOUT_MS], once. That
+     * still trusts the page the shortcut was sent to - scripts running there see the token we
+     * injected - but it keeps every other page, and every other moment, out of the clipboard.
+     */
+    private var pendingCopy: PendingCopy? = null
+
     private var installed = false
+
+    private class PendingCopy(val browser: CefBrowser, val token: String) {
+        private val issuedAt = System.currentTimeMillis()
+
+        fun matches(browser: CefBrowser?, token: String) = this.browser === browser
+            && this.token == token
+            && System.currentTimeMillis() - issuedAt <= REPLY_TIMEOUT_MS
+    }
 
     fun install() {
         if (installed) {
@@ -63,7 +87,20 @@ object CefClipboardBridge {
                     return false
                 }
 
-                val selection = message.substring(MARKER.length)
+                val payload = message.substring(MARKER.length)
+                val separator = payload.indexOf('\u0001')
+                if (separator < 0) {
+                    return true
+                }
+
+                val pending = pendingCopy
+                if (pending == null || !pending.matches(browser, payload.substring(0, separator))) {
+                    // Swallow it anyway - it was addressed to us, whoever sent it.
+                    return true
+                }
+                pendingCopy = null
+
+                val selection = payload.substring(separator + 1)
                 mc.execute { mc.keyboardHandler.clipboard = selection }
 
                 // Swallow it, so the payload never reaches the log.
@@ -89,9 +126,12 @@ object CefClipboardBridge {
 
     /**
      * Reports the selection of [frame] back through the console, from where [install] copies it to
-     * the system clipboard.
+     * the system clipboard. The token ties the reply to this call.
      */
-    fun copy(frame: CefFrame) {
+    fun copy(browser: CefBrowser, frame: CefFrame) {
+        val token = UUID.randomUUID().toString()
+        pendingCopy = PendingCopy(browser, token)
+
         frame.executeJavaScript(
             """
             (function() {
@@ -105,7 +145,7 @@ object CefClipboardBridge {
                     selection = range ? range.toString() : '';
                 }
                 if (selection) {
-                    console.log(${quote(MARKER)} + selection);
+                    console.log(${quote(MARKER + token + "\u0001")} + selection);
                 }
             })()
             """.trimIndent(),

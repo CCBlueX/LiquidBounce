@@ -306,7 +306,7 @@ class CefBrowser(
             InputConstants.KEY_C, InputConstants.KEY_X -> {
                 // Chromium still performs the copy itself, keeping its own clipboard intact; the
                 // bridge only reads the selection out alongside it.
-                CefClipboardBridge.copy(frame)
+                CefClipboardBridge.copy(browserApi, frame)
                 false
             }
             else -> false
