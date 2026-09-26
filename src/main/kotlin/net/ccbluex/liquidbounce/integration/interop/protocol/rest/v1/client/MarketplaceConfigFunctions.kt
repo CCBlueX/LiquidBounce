@@ -49,7 +49,6 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -104,16 +103,6 @@ private suspend fun itemDetails(request: DetailsRequest, visibility: Marketplace
 private suspend fun liveConfig(id: Int, session: OAuthSession?): Pair<MarketplaceItem, Int> {
     val item = MarketplaceApi.getMarketplaceItem(id, session)
     return item to (item.liveRevisionId ?: error("${item.name} has nothing published"))
-}
-
-private fun Route.getContext() = get("/context") {
-    val user = ownUser()
-    call.respond(ContextView(
-        server = currentServer(),
-        autoConfig = ModuleAutoConfig.enabled,
-        onlyFeatured = ModuleAutoConfig.onlyFeatured,
-        user = user?.nickname ?: user?.name,
-    ))
 }
 
 private fun Route.getTags() = get("/tags") {
@@ -367,7 +356,6 @@ private fun Route.postUpdate() = post("/update") {
 }
 
 internal fun Route.marketplaceConfigRoutes() = route("/marketplace") {
-    getContext()
     getTags()
     route("/configs") {
         getConfigs()

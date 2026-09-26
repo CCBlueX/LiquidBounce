@@ -26,7 +26,6 @@ import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
-import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
@@ -110,17 +109,15 @@ internal suspend fun optionalSession(): OAuthSession? {
 }
 
 /**
- * The marketplace user of the account, `null` while logged out or unknown.
+ * The marketplace user id of the account, `null` while logged out or unknown.
  */
-internal suspend fun ownUser(): UserInformation? {
+internal suspend fun ownUserId(): String? {
     val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
     if (account.userInformation == null) {
         runCatching { account.updateInfo() }.onFailure { logger.debug("Failed to load the account", it) }
     }
-    return account.userInformation
+    return account.userInformation?.userId
 }
-
-internal suspend fun ownUserId() = ownUser()?.userId
 
 internal fun currentServer() = mc.currentServer?.ip?.dropPort()?.rootDomain()
 

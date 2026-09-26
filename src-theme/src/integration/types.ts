@@ -296,6 +296,7 @@ export interface Session {
 export interface Server {
     id: number;
     address: string;
+    rootDomain: string;
     icon: string;
     label: TextComponent | string;
     players: {
@@ -605,13 +606,6 @@ export interface MarketplacePage<T> {
 export interface MarketplaceConfigPage extends MarketplacePage<MarketplaceConfig> {
     code: boolean;
     unfeatured: number;
-}
-
-export interface MarketplaceContext {
-    server?: string;
-    autoConfig: boolean;
-    onlyFeatured: boolean;
-    user?: string;
 }
 
 export interface MarketplaceConfig {

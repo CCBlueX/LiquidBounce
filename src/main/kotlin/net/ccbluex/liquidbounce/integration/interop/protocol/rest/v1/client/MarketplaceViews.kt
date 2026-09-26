@@ -47,13 +47,6 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
 private const val SUMMARY_LENGTH = 200
 private const val REVIEW_PAGE_SIZE = 100
 
-internal data class ContextView(
-    val server: String?,
-    val autoConfig: Boolean,
-    val onlyFeatured: Boolean,
-    val user: String?,
-)
-
 /**
  * Only a page of configs has [code] and [unfeatured], which tells it apart for the theme.
  */

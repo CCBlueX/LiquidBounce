@@ -20,11 +20,13 @@
         changeConfigTracker,
         getClientUser,
         getConfigTracker,
+        getCurrentServer,
         getInstalledMarketplaceItems,
         getMarketplaceConfigs,
-        getMarketplaceContext,
         getMarketplaceItems,
         getMarketplaceTags,
+        getModule,
+        getModuleSettings,
         installMarketplaceItem,
         loginClientUser,
         MarketplaceError,
@@ -33,9 +35,9 @@
         updateMarketplaceItem
     } from "../../../../integration/rest";
     import type {
+        ClientUser,
         ConfigTracker,
         MarketplaceConfig,
-        MarketplaceContext,
         MarketplaceInstalledItem,
         MarketplaceItem,
         MarketplacePagination
@@ -85,9 +87,10 @@
     let search = $state("");
     let query = "";
 
-    let context = $state<MarketplaceContext | null>(null);
+    let currentServer = $state<string | undefined>();
+    let autoConfigOnlyFeatured = $state(false);
     let tracker = $state<ConfigTracker | null>(null);
-    let loggedIn = $state(false);
+    let user = $state<ClientUser | null>(null);
     let tagOptions = $state<string[]>([]);
 
     let configs = $state<MarketplaceConfig[]>([]);
@@ -105,12 +108,13 @@
 
     let view = $state<{ kind: "browse" } | { kind: "config" | "item"; id: number }>({kind: "browse"});
 
+    const loggedIn = $derived(user !== null);
     const configTab = $derived(type === "Configs");
-    const server = $derived(onServer ? context?.server : undefined);
+    const server = $derived(onServer ? currentServer : undefined);
     const filtered = $derived(search.trim() !== "" || (configTab && (featuredOnly || !!server || tags.length > 0)));
 
     onMount(async () => {
-        await Promise.all([refreshContext(), refreshTracker(), refreshUser()]);
+        await Promise.all([refreshServer(), refreshAutoConfig(), refreshTracker(), refreshUser()]);
         await reload();
     });
 
@@ -119,16 +123,26 @@
     listen("userLoggedOut", refreshAccount);
 
     async function refreshAccount() {
-        await Promise.all([refreshUser(), refreshContext(), refreshTracker()]);
+        await Promise.all([refreshUser(), refreshTracker()]);
         await reload();
     }
 
-    async function refreshContext() {
-        context = await attempt(getMarketplaceContext) ?? null;
+    async function refreshServer() {
+        currentServer = (await attempt(getCurrentServer))?.rootDomain;
+    }
+
+    // With OnlyFeatured, AutoConfig loads nothing on a server that has no featured config
+    async function refreshAutoConfig() {
+        const [module, settings] = await attempt(() => Promise.all([
+            getModule("AutoConfig"),
+            getModuleSettings("AutoConfig")
+        ])) ?? [];
+        autoConfigOnlyFeatured = !!module?.enabled
+            && !!settings?.value.some(setting => setting.name === "OnlyFeatured" && setting.value === true);
     }
 
     async function refreshUser() {
-        loggedIn = (await attempt(getClientUser) ?? null) !== null;
+        user = await attempt(getClientUser) ?? null;
     }
 
     async function refreshTracker() {
@@ -375,8 +389,8 @@
 
             {#if configTab && !offline}
                 <div class="filters">
-                    {#if context?.server}
-                        <ToggleChip text="On {context.server}" active={onServer}
+                    {#if currentServer}
+                        <ToggleChip text="On {currentServer}" active={onServer}
                                     onclick={() => { onServer = !onServer; persistFilters(); }}/>
                     {/if}
                     <div class="switch">
@@ -450,7 +464,7 @@
                         {:else if featuredOnly && unfeatured > 0}
                             <Notice title="No featured config{server ? ` for ${server}` : ''}">
                                 {unfeatured} {unfeatured === 1 ? "config matches" : "configs match"}, none featured yet.
-                                {server && context?.autoConfig && context?.onlyFeatured
+                                {server && autoConfigOnlyFeatured
                                     ? "AutoConfig loads nothing here while its OnlyFeatured setting is on." : ""}
                                 {#snippet actions()}
                                     <PillButton title="Show {unfeatured === 1 ? 'it' : `${unfeatured} configs`}" primary
@@ -502,7 +516,7 @@
     </div>
 
     <LoadDialog/>
-    <ConfigDialog {tracker} {context} tags={tagOptions} onopen={id => open("config", id)}/>
+    <ConfigDialog {tracker} user={user?.nickname ?? user?.name} tags={tagOptions} onopen={id => open("config", id)}/>
     <Toast/>
 </ScaledClickGuiContent>
 

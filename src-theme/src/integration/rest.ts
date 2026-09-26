@@ -21,7 +21,6 @@ import type {
     MarketplaceConfigDetails,
     MarketplaceConfigPage,
     MarketplaceConfigQuery,
-    MarketplaceContext,
     MarketplaceInstalledItem,
     MarketplaceInstallResult,
     MarketplaceItem,
@@ -303,6 +302,19 @@ export async function getLanServers(): Promise<Server[]> {
     const data: Server[] = await response.json();
 
     return data;
+}
+
+/**
+ * The server the client is connected to, `null` in singleplayer and the menus.
+ */
+export async function getCurrentServer(): Promise<Omit<Server, "id" | "online"> | null> {
+    const response = await fetch(`${API_BASE}/client/servers/current`);
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    return await response.json();
 }
 
 export async function connectToServer(address: string) {
@@ -910,10 +922,6 @@ async function marketplaceRequest<T>(path: string, method = "GET", body?: unknow
     }
 
     return response.status === 204 ? undefined as T : await response.json();
-}
-
-export async function getMarketplaceContext(): Promise<MarketplaceContext> {
-    return await marketplaceRequest("/context");
 }
 
 export async function getMarketplaceTags(): Promise<string[]> {

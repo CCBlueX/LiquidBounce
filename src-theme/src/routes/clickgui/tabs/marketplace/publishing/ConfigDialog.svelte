@@ -10,20 +10,20 @@
     import {
         copyMarketplaceShareCode,
         deleteMarketplaceConfig,
-        getMarketplaceContext,
+        getCurrentServer,
         publishMarketplaceConfig,
         setMarketplaceConfigDetails,
         updateTrackedConfig
     } from "../../../../../integration/rest";
-    import type {ConfigTracker, MarketplaceConfigDetails, MarketplaceContext} from "../../../../../integration/types";
+    import type {ConfigTracker, MarketplaceConfigDetails} from "../../../../../integration/types";
     import {attempt, dialog, type DialogRequest, notify} from "../marketplace";
 
     type Kind = "New" | "Overlay" | "Fork";
     type Request = Exclude<DialogRequest, { kind: "load" }>;
 
-    let {tracker, context, tags, onopen}: {
+    let {tracker, user, tags, onopen}: {
         tracker: ConfigTracker | null;
-        context: MarketplaceContext | null;
+        user?: string | null;
         tags: string[];
         onopen: (id: number) => void;
     } = $props();
@@ -89,7 +89,7 @@
 
     // The page stays loaded while the player joins and leaves servers, so it asks for the current one
     async function insertServer() {
-        const server = (await attempt(getMarketplaceContext))?.server;
+        const server = (await attempt(getCurrentServer))?.rootDomain;
         if (server && servers === "") {
             servers = server;
         }
@@ -191,7 +191,7 @@
             <div>
                 <SectionLabel text="Name"/>
                 <TextField bind:value={name} maxlength={64}
-                           prefix={request.kind === "publish" && context?.user ? `${context.user}/` : undefined}/>
+                           prefix={request.kind === "publish" && user ? `${user}/` : undefined}/>
             </div>
             <div>
                 <SectionLabel text="Servers"/>
