@@ -59,6 +59,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.entity.LivingEntity
 import java.util.function.BooleanSupplier
 import kotlin.math.abs
 import kotlin.random.Random
@@ -333,7 +334,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         private var serverY: Double = 0.0
         private var isFalling = false
         private var targetGroundY: Double = 0.0
-        private val gravity = 0.08
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -370,7 +370,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                 }
 
                 if (isFalling) {
-                    serverY -= gravity
+                    serverY -= LivingEntity.DEFAULT_BASE_GRAVITY
                     if (serverY <= targetGroundY) {
                         serverY = targetGroundY
                         isFalling = false
@@ -411,7 +411,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
             )
             val blockState = player.level().getBlockState(blockPos)
             if (!blockState.isAir) {
-                return blockPos.y.toDouble() + blockState.getCollisionShape(player.level(), blockPos).max(Direction.Axis.Y)
+                return blockPos.y.toDouble() +
+                    blockState.getCollisionShape(player.level(), blockPos).max(Direction.Axis.Y)
             }
             for (dy in 1..10) {
                 val below = blockPos.below(dy)
