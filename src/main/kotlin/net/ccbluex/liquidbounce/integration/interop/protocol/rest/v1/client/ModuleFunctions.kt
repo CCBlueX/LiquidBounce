@@ -37,6 +37,8 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -44,6 +46,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import org.apache.commons.io.input.CharSequenceReader
@@ -143,6 +146,9 @@ private data class ModuleRequest(val name: String) {
         withContext(Dispatchers.Minecraft) {
             try {
                 module.enabled = supposedNew
+                if (!inGame) {
+                    EventManager.callEvent(ModuleToggleEvent(module.name, module.hidden, module.enabled))
+                }
                 ConfigSystem.store(modulesConfig)
             } catch (e: Exception) {
                 logger.error("Failed to toggle module ${this@ModuleRequest.name}", e)
