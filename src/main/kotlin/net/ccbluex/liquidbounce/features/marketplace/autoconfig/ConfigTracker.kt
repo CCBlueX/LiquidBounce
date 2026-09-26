@@ -29,26 +29,31 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.obj
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventListenerScope
+import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.marketplace.InstallPlan
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
+import net.ccbluex.liquidbounce.features.marketplace.installDependencies
+import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
+import net.ccbluex.liquidbounce.features.marketplace.planInstalls
+import net.ccbluex.liquidbounce.features.marketplace.resolveDependencies
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
@@ -81,7 +86,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     /**
      * Dependencies [load] installed; [restartRequired] when one only works after a restart. [unavailable]
-     * are the ones left out since no revision of them loads with this game.
+     * are the ones left out since they or what they need do not load with this game.
      */
     data class LoadResult(
         val installed: List<MarketplaceItem>,
@@ -114,6 +119,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     private var baselineText by text("Baseline", "")
 
     val hasBackup get() = backupName.isNotEmpty()
+
+    private val needsBackup get() = !hasBackup || !backupFile(backupName).exists()
 
     /**
      * Config dependencies applied before the tracked config, in order.
@@ -169,9 +176,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = resolve(item.id)
-        val (installed, unavailable) = install(dependencies.installables)
-        val chain = dependencies.configs
+        val dependencies = resolveDependencies(item.id)
+        val (installed, unavailable) = installDependencies(dependencies.installables)
+        val chain = dependencies.configs.map { Step(it.item.id, it.revision.id) }
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
         withContext(MinecraftDispatcher) {
@@ -198,12 +205,39 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         return LoadResult(
             installed,
-            installed.any {
-                it.type == MarketplaceItemType.ADDON ||
-                    it.type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(it.type)
-            },
+            installed.any { it.installNeedsRestart },
             unavailable
         )
+    }
+
+    /**
+     * What [load] installs, and the [modules] its configs set, to restrict a load to.
+     */
+    internal class LoadPlan(
+        val installs: InstallPlan,
+        val modules: List<String>
+    )
+
+    /**
+     * Plans loading [revisionId] of [item]. Only the revisions it applies are downloaded, to the
+     * cache [load] reads them from.
+     */
+    internal suspend fun plan(item: MarketplaceItem, revisionId: Int): LoadPlan {
+        val dependencies = resolveDependencies(item.id)
+        val steps = dependencies.configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
+        return LoadPlan(
+            installs = planInstalls(dependencies.installables),
+            modules = steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
+        )
+    }
+
+    /**
+     * The modules [revisionId] of [itemId] sets.
+     */
+    internal suspend fun modules(itemId: Int, revisionId: Int): List<String> {
+        val config = readConfig(revisionFile(itemId, revisionId))
+        val modules = if (config.string("name") == "modules") config else config.obj("modules")
+        return modules?.get("value")?.asJsonArray?.map { it.asJsonObject["name"].asString }.orEmpty()
     }
 
     /**
@@ -316,7 +350,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -324,11 +358,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(
-                visibility = visibility,
-                forkedFromItemId = itemId,
-                forkedFromRevisionId = revisionId
-            )
+            details.copy(forkedFromItemId = itemId, forkedFromRevisionId = revisionId)
         )
     }
 
@@ -340,7 +370,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         session: OAuthSession,
         name: String,
         description: String,
-        visibility: MarketplaceItemVisibility,
+        details: MarketplaceApi.ItemDetails,
     ): MarketplaceItem {
         check(state == State.EDITING) { "Not editing a config" }
 
@@ -351,7 +381,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             session,
             name,
             description,
-            MarketplaceApi.ItemDetails(visibility = visibility),
+            details,
             withContext(MinecraftDispatcher) { changedSince(base) }
         ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
 
@@ -390,82 +420,15 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         }
     }
 
-    suspend fun delete(session: OAuthSession) {
-        check(state != State.NONE) { "No tracked config" }
-
-        val id = itemId
+    /**
+     * Deletes the config [id] from the marketplace, and stops tracking it when it is the tracked one.
+     */
+    suspend fun delete(session: OAuthSession, id: Int) {
         MarketplaceApi.deleteMarketplaceItem(session, id)
         MarketplaceManager.marketplaceRoot.resolve("configs/$id").deleteRecursively()
-        detach()
-    }
-
-    private class Dependencies(val configs: List<Step>, val installables: Collection<MarketplaceItem>)
-
-    /**
-     * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order
-     * they are applied, installables after the ones they need, so an add-on is checked with those
-     * installed.
-     */
-    private suspend fun resolve(rootId: Int): Dependencies {
-        val configs = mutableListOf<Step>()
-        val installables = linkedMapOf<Int, MarketplaceItem>()
-        val visiting = hashSetOf<Int>()
-        val done = hashSetOf<Int>()
-
-        suspend fun visit(id: Int) {
-            if (id in done || !visiting.add(id)) {
-                return
-            }
-
-            for (dependency in MarketplaceApi.getItemDependencies(id)) {
-                val item = dependency.item
-                when (item.type) {
-                    MarketplaceItemType.CONFIG -> {
-                        visit(item.id)
-                        val revision = dependency.liveRevision
-                            ?: error("Config dependency ${item.name} has nothing published")
-                        if (configs.none { it.itemId == item.id }) {
-                            configs += Step(item.id, revision.id)
-                        }
-                    }
-
-                    MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                        visit(item.id)
-                        installables.putIfAbsent(item.id, item)
-                    }
-
-                    else -> {}
-                }
-            }
-
-            visiting.remove(id)
-            done += id
+        if (state != State.NONE && id == itemId) {
+            detach()
         }
-
-        visit(rootId)
-        return Dependencies(configs, installables.values)
-    }
-
-    /**
-     * Subscribes to the [items] that are missing. One that does not load with this game does not stop
-     * the load; the second list holds those.
-     */
-    private suspend fun install(items: Collection<MarketplaceItem>): Pair<List<MarketplaceItem>, List<Unavailable>> {
-        val installed = mutableListOf<MarketplaceItem>()
-        val unavailable = mutableListOf<Unavailable>()
-        for (item in items) {
-            if (MarketplaceManager.isSubscribed(item.id) || item.status != MarketplaceItemStatus.ACTIVE) {
-                continue
-            }
-
-            try {
-                MarketplaceManager.subscribe(item)
-                installed += item
-            } catch (e: NoCompatibleRevisionException) {
-                unavailable += e.unavailable
-            }
-        }
-        return installed to unavailable
     }
 
     /**
@@ -514,6 +477,13 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         baselineText = encodeHashes(snapshot())
         state = State.TRACKED
         localName = ""
+    }
+
+    /**
+     * The modules changed since the tracked config was applied.
+     */
+    internal suspend fun changedModules(): Set<String> = withContext(MinecraftDispatcher) {
+        changedSince(decodeHashes(baselineText)).modules
     }
 
     private class Subset(val modules: Set<String>, val spoofers: Boolean)
@@ -582,7 +552,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * @return the settings before the last config, when there was more than one
      */
     private fun apply(configs: List<JsonObject>, modules: Collection<ValueGroup>): Map<String, String>? {
-        val createdBackup = !hasBackup || !backupFile(backupName).exists()
+        val createdBackup = needsBackup
         if (createdBackup) {
             val name = "marketplace_preload_${System.currentTimeMillis()}"
             ConfigSystem.backup(name, backedUpConfigs)
@@ -686,6 +656,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         detectionJob?.cancel()
         ConfigSystem.store(this)
         EventManager.callEvent(RefreshArrayListEvent)
+        EventManager.callEvent(ConfigTrackerChangeEvent)
     }
 
 }

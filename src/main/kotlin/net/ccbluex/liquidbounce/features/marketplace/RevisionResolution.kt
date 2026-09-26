@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -63,10 +64,11 @@ class NoCompatibleRevisionException(val unavailable: Unavailable) : Exception(un
 
 /**
  * The revision this item should have installed: the newest one, for an add-on the newest one the
- * marketplace offers for this game. Callers hold [SubscribedItem.locked].
+ * marketplace offers for this game. [known] spares fetching the item when the caller has it. Callers
+ * hold [SubscribedItem.locked].
  */
-internal suspend fun SubscribedItem.resolveRevision(): RevisionResolution {
-    val item = MarketplaceApi.getMarketplaceItem(id)
+internal suspend fun SubscribedItem.resolveRevision(known: MarketplaceItem? = null): RevisionResolution {
+    val item = known ?: MarketplaceApi.getMarketplaceItem(id)
     if (item.status != MarketplaceItemStatus.ACTIVE) {
         return RevisionResolution.NoneCompatible(Unavailable(name, false))
     }

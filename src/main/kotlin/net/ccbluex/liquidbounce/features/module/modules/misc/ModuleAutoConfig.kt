@@ -52,7 +52,7 @@ object ModuleAutoConfig : ClientModule(
     @Volatile
     private var isScheduled = false
 
-    private val onlyFeatured by boolean("OnlyFeatured", true)
+    internal val onlyFeatured by boolean("OnlyFeatured", true)
 
     init {
         doNotIncludeAlways()
