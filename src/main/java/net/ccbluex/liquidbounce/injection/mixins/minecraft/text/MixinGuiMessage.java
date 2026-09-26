@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition;
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.multiplayer.chat.GuiMessage;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -28,20 +29,20 @@ import org.spongepowered.asm.mixin.Unique;
 public abstract class MixinGuiMessage implements GuiMessageLineAddition, GuiMessageAddition {
 
     @Unique
-    private String liquid_bounce$id = null;
+    private @Nullable String liquid_bounce$id = null;
 
     @Unique
-    int liquid_bounce$count = 1;
+    private int liquid_bounce$count = 1;
 
     @Unique
     @Override
-    public void liquid_bounce$setId(String id) {
+    public void liquid_bounce$setId(@Nullable String id) {
         this.liquid_bounce$id = id;
     }
 
     @Unique
     @Override
-    public String liquid_bounce$getId() {
+    public @Nullable String liquid_bounce$getId() {
         return liquid_bounce$id;
     }
 

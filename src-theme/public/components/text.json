@@ -1,5 +1,6 @@
 {
   "name": "Text",
+  "description": "Displays customizable text.",
   "enabled": false,
   "singleton": false,
   "alignment": {

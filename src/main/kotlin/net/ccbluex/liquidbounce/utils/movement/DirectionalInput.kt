@@ -19,16 +19,26 @@
 
 package net.ccbluex.liquidbounce.utils.movement
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.entity.untransformed
+import net.minecraft.client.Options
 import net.minecraft.client.player.ClientInput
 import net.minecraft.world.entity.player.Input
 
+@AddonApi
 data class DirectionalInput(
     val forwards: Boolean,
     val backwards: Boolean,
     val left: Boolean,
     val right: Boolean,
 ) {
+
+    constructor(options: Options) : this(
+        options.keyUp.isDown,
+        options.keyDown.isDown,
+        options.keyLeft.isDown,
+        options.keyRight.isDown
+    )
 
     constructor(input: ClientInput) : this(
         input.untransformed

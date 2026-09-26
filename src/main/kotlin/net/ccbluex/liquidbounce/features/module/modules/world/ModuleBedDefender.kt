@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isAnyChest
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
@@ -60,6 +61,13 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             .then(ItemSlot.PREFER_MORE_ITEM)
             .then(HotbarItemSlot.PREFER_NEARBY)
 
+    // Layer(ASC) Center Distance(DESC)
+    private val placementTargetComparator = Comparator
+        .comparingInt(IntLongPair::leftInt)
+        .thenComparingDouble {
+            player.eyePosition.distanceToCenterSqr(it.rightLong())
+        }
+
     private fun findBestBlockSlot(): HotbarItemSlot? {
         return Slots.OffhandWithHotbar
             .filter {
@@ -77,7 +85,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
+        if (!placer.ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -89,7 +97,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             return@handler
         }
 
-        placer.slotFinder(null) ?: return@handler
+        placer.slotFinder.apply(null) ?: return@handler
 
         val eyesPos = player.eyePosition
         val rangeSq = placer.range * placer.range
@@ -117,26 +125,18 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             return@handler
         }
 
-        val updatePositions = placementPositions.apply {
-            // Layer(ASC) Center Distance(DESC)
-            sortWith(
-                Comparator.comparingInt<IntLongPair> { it.leftInt() }
-                    .thenComparingDouble {
-                        eyesPos.distanceToCenterSqr(it.rightLong())
-                    }
-            )
-        }
+        placementPositions.sortWith(placementTargetComparator)
 
         debugGeometry("PlacementPositions") {
             ModuleDebug.DebugCollection(
-                updatePositions.map { (_, pos) ->
+                placementPositions.map { (_, pos) ->
                     ModuleDebug.DebuggedPoint(BlockPos.of(pos).center, Color4b.RED.with(a = 100))
                 }
             )
         }
 
         // Need ordered set (like TreeSet/LinkedHashSet)
-        placer.update(updatePositions.mapTo(linkedSetOf()) { BlockPos.of(it.rightLong()) })
+        placer.update(placementPositions.mapTo(linkedSetOf()) { BlockPos.of(it.rightLong()) })
     }
 
     override fun onDisabled() {

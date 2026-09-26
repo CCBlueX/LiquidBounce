@@ -39,15 +39,15 @@ abstract class TextProcessor<T : ProcessedText> {
          *      If null, obfuscated characters will be replaced with `_`
          */
         @JvmStatic
-        protected fun generateObfuscatedChar(obfuscationRng: Random?): Char {
-            return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
+        protected fun generateObfuscatedChar(obfuscationRng: Random?): Int {
+            return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'.code
         }
 
         /**
          * Contains the chars for the `§k` formatting
          */
         @JvmField
-        val RANDOM_CHARS = "1234567890abcdefghijklmnopqrstuvwxyz~!@#$%^&*()-=_+{}[]".toCharArray()
+        val RANDOM_CHARS: IntArray = "1234567890abcdefghijklmnopqrstuvwxyz~!@#$%^&*()-=_+{}[]".codePoints().toArray()
 
         @JvmStatic
         val hexColors: Array<Color4b> = Array(16) { i ->

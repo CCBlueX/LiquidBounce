@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import java.awt.Dimension
 
 class DynamicAtlasAllocatorTest {
@@ -230,20 +230,20 @@ class DynamicAtlasAllocatorTest {
 
         allocator.free(handle!!)
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             handle.pos
         }
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             handle.dimension
         }
     }
 
     @Test
     fun testInitRejectsNonPositiveVerticalCutSize() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             DynamicAtlasAllocator(Dimension(16, 16), 0, Dimension(4, 4))
         }
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             DynamicAtlasAllocator(Dimension(16, 16), -1, Dimension(4, 4))
         }
     }
@@ -270,7 +270,7 @@ class DynamicAtlasAllocatorTest {
 
         allocator.free(handle!!)
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             allocator.free(handle)
         }
     }

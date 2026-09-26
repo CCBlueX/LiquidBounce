@@ -28,7 +28,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
-import java.util.function.ToIntFunction
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -36,7 +35,7 @@ fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
     Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
 
 fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =
-    Comparator.comparingInt(ToIntFunction { it.getEnchantment(key) })
+    Comparator.comparingInt { it.getEnchantment(key) }
 
 @JvmField
 val COMPARING_DESCRIPTION_ID: Comparator<ItemStack> = Comparator.comparing { it.item.descriptionId }
@@ -125,7 +124,7 @@ class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<It
 
 object PreferStackSize {
     @JvmField
-    val PREFER_FEWER: Comparator<ItemStack> = Comparator.comparingInt(ToIntFunction(ItemStack::getCount))
+    val PREFER_FEWER: Comparator<ItemStack> = Comparator.comparingInt(ItemStack::getCount)
 
     @JvmField
     val PREFER_MORE: Comparator<ItemStack> = PREFER_FEWER.reversed()

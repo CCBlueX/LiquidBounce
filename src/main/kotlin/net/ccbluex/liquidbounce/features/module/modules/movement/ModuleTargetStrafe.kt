@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.wat
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
@@ -155,7 +155,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 return@handler
             }
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            event.renderEnvironment {
                 val orbitOuterRadius = state.orbitRadius + width / 2f
                 val orbitInnerRadius = (state.orbitRadius - width / 2f).coerceAtLeast(0f)
                 val orbitPosition = target.interpolateCurrentPosition(event.partialTicks)
@@ -167,7 +167,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
                 }
 
                 if (!showNextPoint) {
-                    return@renderEnvironmentForWorld
+                    return@renderEnvironment
                 }
 
                 val markerColor = if (state.nextPointValid) pointColor else invalidPointColor

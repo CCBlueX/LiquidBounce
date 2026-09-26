@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -60,7 +60,7 @@ internal object NoFallRettungsplatform : NoFallMode("Rettungsplatform") {
             ModuleNoFall.debugParameter("Collision") {
                 collision?.getBlock()
             }
-            if (collision != null && collision.getState()?.isAir == false) {
+            if (collision != null && collision.state?.isAir == false) {
                 return@tickHandler
             }
 

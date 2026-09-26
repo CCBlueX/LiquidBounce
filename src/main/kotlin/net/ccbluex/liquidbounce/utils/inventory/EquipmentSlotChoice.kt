@@ -45,8 +45,7 @@ enum class EquipmentSlotChoice(
         return itemStack[DataComponents.DYED_COLOR]?.rgb?.let { opaque(it) }
     }
 
-    companion object {
-        @JvmStatic
+    companion {
         fun allHumanoidArmor() = enumSetOf(FEET, LEGS, CHEST, HEAD)
     }
 }
