@@ -42,7 +42,7 @@ open class ItemCooldown : ValueGroup("ItemCooldown", aliases = listOf("Cooldown"
      * @see Player.getAttackStrengthScale
      */
     fun cooldownProgress(baseTime: Int = 0) =
-        (player.attackStrengthTicker + baseTime).toFloat() / player.currentItemAttackStrengthDelay
+        (player.attackStrengthTicker + baseTime + 1).toFloat() / player.currentItemAttackStrengthDelay
 
     /**
      * Generates a new cooldown based on the range that was set by the user.
