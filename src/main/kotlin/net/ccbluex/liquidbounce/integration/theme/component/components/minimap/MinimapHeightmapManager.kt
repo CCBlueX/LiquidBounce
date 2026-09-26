@@ -25,6 +25,7 @@ import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.ChunkPos.containing
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.level.material.MapColor
 import java.util.concurrent.ConcurrentHashMap
 
@@ -104,7 +105,9 @@ class MinimapHeightmapManager {
     }
 
     private fun ChunkAccess.calculateHeight(x: Int, z: Int, maxY: Int? = null): Int {
-        val maxHeight = (maxY ?: height) - 1
+        // The client ships a primed WORLD_SURFACE heightmap and it is never lower than a surface
+        // block, so the scan can start there instead of at the top of the world.
+        val maxHeight = maxY?.minus(1) ?: getHeight(Heightmap.Types.WORLD_SURFACE, x, z)
 
         val pos = BlockPos.MutableBlockPos(x, maxHeight, z)
 
