@@ -623,6 +623,7 @@
   "liquidbounce.module.holeESP.description": "Detects and displays safe spots for crystal PvP.",
   "liquidbounce.module.holeFiller.description": "Automatically fills safe spots for crystal PvP.",
   "liquidbounce.module.hud.description": "Shows an in-game overlay with various useful tools.",
+  "liquidbounce.module.interceptElytra.description": "Shoots wind charges at elytra gliders to intercept and knock them out of the air.",
   "liquidbounce.module.inventoryCleaner.description": "Automatically sorts your inventory and drops unnecessary items.",
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "You are no longer lagging and we closed your screen.",

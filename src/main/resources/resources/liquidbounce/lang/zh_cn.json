@@ -566,6 +566,7 @@
   "liquidbounce.module.holeESP.description": "检测并显示水晶PvP的安全点。",
   "liquidbounce.module.holeFiller.description": "自动填充水晶PvP的安全点，使其失效。",
   "liquidbounce.module.hud.description": "显示一个游戏内叠加界面，包含多种有用的工具。",
+  "liquidbounce.module.interceptElytra.description": "向鞘翅滑翔的玩家发射风弹，将其拦截并击落。",
   "liquidbounce.module.inventoryCleaner.description": "自动整理背包并丢弃不需要的物品。",
   "liquidbounce.module.inventoryMove.description": "允许你在打开背包的时候移动。",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "你不再滞后，我们关闭了你的背包屏幕。",

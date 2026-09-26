@@ -431,6 +431,7 @@
   "liquidbounce.module.holeESP.description": "Находит и отображает безопасные места для сражения на кристаллах.",
   "liquidbounce.module.holeFiller.description": "Автоматически заполняет безопасные места для PvP с кристаллами.",
   "liquidbounce.module.hud.description": "Показывает внутриигровой оверлей с различными полезными инструментами.",
+  "liquidbounce.module.interceptElytra.description": "Запускает ветровые заряды в планирующих на элитрах игроков, чтобы сбить их с неба.",
   "liquidbounce.module.inventoryCleaner.description": "Автоматически выбрасывает бесполезные предметы и сортирует оставшиеся.",
   "liquidbounce.module.inventoryMove.description": "Позволяет ходить с открытым инвентарём.",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "Вы больше не лагаете, и мы закрыли ваш экран.",
