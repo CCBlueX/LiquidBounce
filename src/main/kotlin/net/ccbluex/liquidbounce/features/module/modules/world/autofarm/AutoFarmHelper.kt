@@ -101,3 +101,16 @@ inline val BlockState.supportsCrops: Boolean get() = `is`(BlockTags.SUPPORTS_CRO
 inline val BlockState.supportsCocoa: Boolean get() = `is`(BlockTags.SUPPORTS_COCOA)
 
 inline val BlockState.supportsNetherWart: Boolean get() = `is`(BlockTags.SUPPORTS_NETHER_WART)
+
+/**
+ * Whether the position holding this state can ever be tracked by [AutoFarmBlockTracker].
+ *
+ * Air is deliberately not a candidate: a plantable position is reported through the block it
+ * relies on, which this predicate matches instead.
+ */
+fun BlockState.isAutoFarmCandidate(): Boolean =
+    block.harvestAction != null ||
+        block is StemBlock ||
+        supportsCrops ||
+        supportsNetherWart ||
+        supportsCocoa

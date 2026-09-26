@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.state
@@ -36,9 +37,11 @@ import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.DoubleBlockCombiner
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 
-object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>() {
+object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>(), Predicate<BlockState> {
     private var maxLayers: Int = 0
 
     private val subscribers = ReferenceOpenHashSet<Subscriber>()
@@ -107,12 +110,59 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
             z - (bedDirection.stepZ * 0.5) + 0.5,
         )
 
-        return BedState(bedBlock, this, renderPos, getBedSurroundingBlocks(headState))
+        return BedState(bedBlock, this.immutable, renderPos, getBedSurroundingBlocks(headState))
+    }
+
+    override val shouldCallRecordBlockOnChunkUpdate: Boolean
+        get() = false
+
+    /**
+     * [net.minecraft.world.level.chunk.ChunkAccess.findBlocks] filters whole sections through
+     * [net.minecraft.world.level.chunk.LevelChunkSection.maybeHas] before touching any block.
+     */
+    override fun chunkUpdate(chunk: LevelChunk) {
+        chunk.findBlocks(this) { pos, state ->
+            getStateFor(pos, state)?.let { track(pos, it) }
+        }
+
+        updateBedsAround(chunk)
+    }
+
+    /**
+     * Beds tracked from the neighbouring chunks can have this chunk's blocks among their surroundings.
+     */
+    private fun updateBedsAround(chunk: LevelChunk) {
+        val distance = maxLayers
+        val chunkPos = chunk.pos
+        val x = chunkPos.minBlockX - distance..chunkPos.maxBlockX + distance
+        val z = chunkPos.minBlockZ - distance..chunkPos.maxBlockZ + distance
+
+        updateBedsIf { it.x in x && it.z in z }
+    }
+
+    /**
+     * Recomputes every tracked bed accepted by [isNear].
+     */
+    private inline fun updateBedsIf(isNear: (BlockPos) -> Boolean) {
+        allPositions().forEach { bedPos ->
+            // Update if the block is close to a bed
+            if (!isNear(bedPos)) {
+                return@forEach
+            }
+
+            val bedState = bedPos.state
+            if (bedState == null || !bedState.isBed) {
+                // The tracked block is not a bed anymore, remove it
+                untrack(bedPos)
+            } else {
+                track(bedPos, bedPos.getBedPlates(bedState))
+            }
+        }
     }
 
     @Suppress("detekt:CognitiveComplexMethod")
     override fun getStateFor(pos: BlockPos, state: BlockState): BedState? {
-        return if (state.isBed) {
+        return if (this.test(state)) {
             val part = BedBlock.getBlockType(state)
             // Only track the first part (head) of the bed
             if (part == DoubleBlockCombiner.BlockType.FIRST) {
@@ -123,21 +173,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         } else {
             // A non-bed block was updated, we need to update the bed blocks around it
             val distance = maxLayers
-
-            allPositions().forEach { bedPos ->
-                // Update if the block is close to a bed
-                if (bedPos.distManhattan(pos) > distance) {
-                    return@forEach
-                }
-
-                val bedState = bedPos.state
-                if (bedState == null || !bedState.isBed) {
-                    // The tracked block is not a bed anymore, remove it
-                    untrack(bedPos)
-                } else {
-                    track(bedPos, bedPos.getBedPlates(bedState))
-                }
-            }
+            updateBedsIf { it.distManhattan(pos) <= distance }
 
             null
         }
@@ -147,6 +183,8 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
         val beds = iterate().mapTo(mutableListOf()) { it.value }
         EventManager.callEvent(BedStateChangeEvent(beds))
     }
+
+    override fun test(state: BlockState): Boolean = state.isBed
 
     interface Subscriber {
         val maxLayers: Int
