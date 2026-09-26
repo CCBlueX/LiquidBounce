@@ -10,6 +10,7 @@
     import {
         copyMarketplaceShareCode,
         deleteMarketplaceConfig,
+        getMarketplaceContext,
         publishMarketplaceConfig,
         setMarketplaceConfigDetails,
         updateTrackedConfig
@@ -70,7 +71,8 @@
         request = next;
         if (next.kind === "publish") {
             kind = kinds[0];
-            fill({name: "", description: "", servers: context?.server ? [context.server] : [], tags: [], visibility: "public"});
+            fill({name: "", description: "", servers: [], tags: [], visibility: "public"});
+            insertServer();
         } else if (next.kind === "edit") {
             const {config} = next.detail;
             fill({...config, description: next.detail.description, visibility: config.visibility ?? "public"});
@@ -83,6 +85,14 @@
         servers = details.servers.join(", ");
         selectedTags = [...details.tags];
         visibility = details.visibility === "unlisted" ? "Unlisted" : "Public";
+    }
+
+    // The page stays loaded while the player joins and leaves servers, so it asks for the current one
+    async function insertServer() {
+        const server = (await attempt(getMarketplaceContext))?.server;
+        if (server && servers === "") {
+            servers = server;
+        }
     }
 
     function details(): MarketplaceConfigDetails {
