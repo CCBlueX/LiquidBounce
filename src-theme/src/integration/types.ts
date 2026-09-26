@@ -352,6 +352,62 @@ export interface World {
     version: string;
 }
 
+export interface LiquidProxyPlan {
+    level: number;
+    name: string;
+    description?: string;
+}
+
+export interface LiquidProxySubscription {
+    plan: string;
+    state: "active" | "expired" | "unavailable";
+    expiresAt: number;
+    autoRenew: boolean;
+}
+
+export interface LiquidProxyState {
+    loggedIn: boolean;
+    email?: string;
+    subscription?: LiquidProxySubscription;
+    plans: LiquidProxyPlan[];
+    level: number;
+    forwardAuthentication: boolean;
+    location?: string;
+    connected?: string;
+}
+
+export interface LiquidProxyLocation {
+    code: string;
+    name: string;
+    countryCode: string;
+    latitude?: number;
+    longitude?: number;
+    probed: boolean;
+    latency?: number;
+    maintenance: boolean;
+}
+
+export interface LiquidProxySession {
+    id: string;
+    username: string;
+    avatar: string;
+    server: string;
+    country: string;
+    type?: string;
+    location: string;
+    startedAt: number;
+    lastSeenAt: number;
+    connected: boolean;
+    error?: string;
+}
+
+export interface LiquidProxyCredentials {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+}
+
 export interface Proxy {
     id: number;
     host: string;
