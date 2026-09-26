@@ -36,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.math.dot
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.trajectory.EntityTrajectoryResolver
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryDisplayResolver
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player

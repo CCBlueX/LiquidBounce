@@ -22,14 +22,11 @@ package net.ccbluex.liquidbounce.config.gson.serializer
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
-import net.ccbluex.liquidbounce.config.OptionalInclusion
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import java.lang.reflect.Type
 
 class ValueGroupSerializer(

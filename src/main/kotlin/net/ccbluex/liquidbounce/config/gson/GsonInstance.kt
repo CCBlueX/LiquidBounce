@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.config.gson
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.features.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.adapter.AlignmentAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
@@ -58,6 +57,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.account.MinecraftAccount
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
