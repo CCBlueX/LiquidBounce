@@ -15,16 +15,14 @@
     import type {MarketplaceItemDetail} from "../../../../../integration/types";
     import {
         attempt,
-        count,
-        date,
         itemBadges,
-        message,
         notifyInstalled,
         reviews,
         typeName,
         UNKNOWN_PACK,
         version
     } from "../marketplace";
+    import {compactNumber, date, errorMessage} from "../../../../../util/utils";
 
     let {id, onback}: {
         id: number;
@@ -41,7 +39,7 @@
     const stats = $derived(item ? [
         {label: "Installed", value: installed && version(installed)},
         {label: "Newest release", value: newest && `${version(newest)}${newest.createdAt ? ` · ${date(newest.createdAt)}` : ""}`},
-        {label: "Downloads", value: count(item.downloads)},
+        {label: "Downloads", value: compactNumber(item.downloads)},
         {label: reviews(item.reviews), value: item.rating?.toFixed(1)}
     ] : []);
 
@@ -52,7 +50,7 @@
         try {
             detail = await getMarketplaceItemDetail(id);
         } catch (e) {
-            error = message(e);
+            error = errorMessage(e);
         }
     }
 

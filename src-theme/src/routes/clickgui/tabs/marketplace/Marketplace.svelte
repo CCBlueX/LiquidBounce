@@ -48,22 +48,20 @@
         attempt,
         configBadges,
         configLine,
-        count,
         dialog,
         itemBadges,
-        message,
         notify,
         notifyInstalled,
         reports,
         reviews,
         trackingName,
         typeName,
-        typing,
         UNKNOWN_PACK,
         UNKNOWN_SERVER,
-        version,
-        visible
+        version
     } from "./marketplace";
+    import {compactNumber, errorMessage} from "../../../../util/utils";
+    import {typing, visible} from "../../../../integration/util";
 
     const TYPES = {
         "Configs": "Config",
@@ -198,7 +196,7 @@
                 offline = true;
                 installed = await attempt(getInstalledMarketplaceItems) ?? [];
             } else {
-                error = message(e);
+                error = errorMessage(e);
             }
         } finally {
             if (id === request) {
@@ -447,7 +445,7 @@
                                  hover={loggedIn ? reportButtons : undefined}>
                             {#snippet meta()}
                                 <span class="reports">{reports(config.works, config.fails)}</span>
-                                <span class="downloads">{count(config.downloads)} downloads</span>
+                                <span class="downloads">{compactNumber(config.downloads)} downloads</span>
                             {/snippet}
                             {#snippet actions()}
                                 <PillButton title="Load" primary onclick={() => dialog.set({kind: "load", config})}/>
@@ -498,7 +496,7 @@
                                 {#if item.rating !== undefined}
                                     <span>{item.rating.toFixed(1)} from {reviews(item.reviews)}</span>
                                 {/if}
-                                <span class="downloads">{count(item.downloads)} downloads</span>
+                                <span class="downloads">{compactNumber(item.downloads)} downloads</span>
                             {/snippet}
                             {#snippet actions()}
                                 <ItemAction {item} busy={busy === item.id} oninstall={() => install(item)}

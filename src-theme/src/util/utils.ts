@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import dateFormat from "dateformat";
 import type {Screen} from "../integration/types";
 
 export const UNKNOWN_KEY = "key.keyboard.unknown";
@@ -33,4 +34,45 @@ export function isAnniversary() {
     const end = new Date(now.getFullYear(), 3, 7);   // April 7
 
     return now >= start && now <= end;
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+
+export function date(time: number | undefined): string {
+    return time === undefined ? "" : dateFormat(time, "mmm d, yyyy");
+}
+
+export function ago(time: number | undefined): string {
+    if (time === undefined) {
+        return "";
+    }
+
+    const days = Math.floor((Date.now() - time) / DAY);
+    if (days <= 0) {
+        return "today";
+    } else if (days === 1) {
+        return "yesterday";
+    } else if (days < 7) {
+        return `${days} days ago`;
+    } else if (days < 14) {
+        return "last week";
+    } else if (days <= 28) {
+        return `${Math.floor(days / 7)} weeks ago`;
+    }
+    return `on ${date(time)}`;
+}
+
+export function compactNumber(value: number): string {
+    return value < 1000 ? value.toString() : `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+}
+
+export function errorMessage(e: unknown): string {
+    return e instanceof Error ? e.message : String(e);
+}
+
+/**
+ * The values that are set, for lists built from conditions.
+ */
+export function present(...values: (string | false | null | undefined)[]): string[] {
+    return values.filter((value): value is string => !!value);
 }

@@ -9,21 +9,17 @@
     import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
-        ago,
         attempt,
         configBadges,
-        count,
-        date,
         dialog,
-        message,
         notify,
-        present,
         reports,
         typeName,
         UNKNOWN_PACK,
         UNKNOWN_SERVER,
         version
     } from "../marketplace";
+    import {ago, compactNumber, date, errorMessage, present} from "../../../../../util/utils";
 
     let {id, loggedIn, tracker, onback, onopen}: {
         id: number;
@@ -47,7 +43,7 @@
         {label: "Last revision", value: ago(config.updatedAt)},
         {label: "Made on", value: config.protocol},
         {label: "Reports", value: reports(config.works, config.fails)},
-        {label: "Downloads", value: count(config.downloads)},
+        {label: "Downloads", value: compactNumber(config.downloads)},
         {label: "Visibility", value: config.visibility === "unlisted" ? "Unlisted" : "Public"},
         {label: "Servers", value: config.servers.join(", ") || "Any server"},
         {label: "Fork of", value: detail.forkOf?.address, onclick: () => detail?.forkOf && onopen("config", detail.forkOf.id)}
@@ -60,7 +56,7 @@
         try {
             detail = await getMarketplaceConfig(id);
         } catch (e) {
-            error = message(e);
+            error = errorMessage(e);
         }
     }
 
