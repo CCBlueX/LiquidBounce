@@ -427,12 +427,12 @@ open class ValueGroup @JvmOverloads constructor(
     @JvmOverloads
     fun bind(name: String, default: Int = InputConstants.UNKNOWN.value) = bind(
         name,
-        InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
+        InputBind(InputConstants.Type.KEYBOARD, default, InputBind.BindAction.TOGGLE)
     )
 
     fun bind(name: String, default: InputBind) = value(BindValue(name, defaultValue = default))
 
-    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
+    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYBOARD.getOrCreate(default))
 
     @JvmOverloads
     fun key(name: String, default: InputConstants.Key = InputConstants.UNKNOWN) =

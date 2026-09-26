@@ -44,7 +44,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.BedBlock
 import org.joml.Vector3d
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.sdl.SDLKeycode
 
 fun isSelfBedChoices(choice: ModeValueGroup<IsSelfBedMode>): Array<IsSelfBedMode> {
     return arrayOf(
@@ -124,7 +124,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
     class Manual(parent: ModeValueGroup<*>) : IsSelfBedMode("Manual", parent) {
 
         private val trackKey by key("Track", InputConstants.KEY_ADD)
-        private val untrackKey by key("Untrack", GLFW.GLFW_KEY_KP_SUBTRACT)
+        private val untrackKey by key("Untrack", SDLKeycode.SDLK_KP_MINUS)
 
         private val trackedPos = BlockPos.MutableBlockPos()
 

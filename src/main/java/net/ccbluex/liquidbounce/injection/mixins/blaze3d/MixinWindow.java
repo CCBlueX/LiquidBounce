@@ -28,11 +28,9 @@ import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent;
 import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
-import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackMetadataResources;
 import net.minecraft.server.packs.resources.IoSupplier;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -43,18 +41,13 @@ import java.util.List;
 @Mixin(Window.class)
 public abstract class MixinWindow {
 
-    @Shadow
-    @Final
-    private long handle;
-
     /**
      * Set the window icon to our client icon.
      *
      * @return modified game icon
      */
-    @WrapOperation(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
-    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resources,
-        Operation<List<IoSupplier<InputStream>>> original) {
+    @WrapOperation(method = "setIcon(Lnet/minecraft/server/packs/PackMetadataResources;Lcom/mojang/blaze3d/platform/IconSet;)V", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackMetadataResources;)Ljava/util/List;"))
+    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackMetadataResources resources, Operation<List<IoSupplier<InputStream>>> original) {
         if (SelfDestruct.INSTANCE.isDestructed()) {
             return original.call(instance, resources);
         }
@@ -80,17 +73,13 @@ public abstract class MixinWindow {
      * Hook window resize
      */
     @Inject(method = "onResize", at = @At("RETURN"))
-    public void hookResize(long window, int width, int height, CallbackInfo callbackInfo) {
-        if (window == handle) {
-            EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
-        }
+    public void hookResize(int newWidth, int newHeight, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new WindowResizeEvent(newWidth, newHeight));
     }
 
     @Inject(method = "onFramebufferResize", at = @At("RETURN"))
-    public void hookFramebufferResize(long window, int width, int height, CallbackInfo callbackInfo) {
-        if (window == handle) {
-            EventManager.INSTANCE.callEvent(new FramebufferResizeEvent(width, height));
-        }
+    public void hookFramebufferResize(int newWidth, int newHeight, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new FramebufferResizeEvent(newWidth, newHeight));
     }
 
     @Inject(method = "setGuiScale", at = @At("RETURN"))

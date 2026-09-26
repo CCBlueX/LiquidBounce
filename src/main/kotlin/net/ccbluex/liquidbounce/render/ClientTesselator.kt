@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import net.ccbluex.fastutil.Pool

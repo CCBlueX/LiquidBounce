@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.netty.buffer.ByteBuf;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.VarInt;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
 import org.spongepowered.asm.mixin.Final;
@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerboundUseItemPacket.class)
@@ -66,10 +67,29 @@ public abstract class MixinServerboundUseItemPacket {
 
     /**
      * @see NoSlowSharedInvalidHand
+     * @param original {@link InteractionHand#STREAM_CODEC}
      */
-    @WrapOperation(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeEnum(Ljava/lang/Enum;)Lnet/minecraft/network/FriendlyByteBuf;"))
-    private static FriendlyByteBuf writeEnum(FriendlyByteBuf instance, Enum<?> value, Operation<FriendlyByteBuf> original) {
-        return value == null ? instance.writeVarInt(-1) : original.call(instance, value);
+    @ModifyArg(
+        method = "<clinit>",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/network/codec/StreamCodec;composite(Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lnet/minecraft/network/codec/StreamCodec;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;)Lnet/minecraft/network/codec/StreamCodec;"),
+        index = 0
+    )
+    private static StreamCodec<ByteBuf, InteractionHand> writeEnum(StreamCodec<ByteBuf, InteractionHand> original) {
+        return new StreamCodec<>() {
+            @Override
+            public InteractionHand decode(ByteBuf input) {
+                return original.decode(input);
+            }
+
+            @Override
+            public void encode(ByteBuf output, InteractionHand value) {
+                if (value == null) {
+                    VarInt.write(output, -1);
+                } else {
+                    original.encode(output, value);
+                }
+            }
+        };
     }
 
 }

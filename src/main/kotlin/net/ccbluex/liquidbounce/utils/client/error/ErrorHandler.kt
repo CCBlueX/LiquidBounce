@@ -27,7 +27,15 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.WINDOWS
-import org.lwjgl.util.tinyfd.TinyFileDialogs
+import org.lwjgl.sdl.SDLMessageBox.SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT
+import org.lwjgl.sdl.SDLMessageBox.SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT
+import org.lwjgl.sdl.SDLMessageBox.SDL_MESSAGEBOX_ERROR
+import org.lwjgl.sdl.SDLMessageBox.SDL_ShowMessageBox
+import org.lwjgl.sdl.SDLMessageBox.SDL_ShowSimpleMessageBox
+import org.lwjgl.sdl.SDL_MessageBoxButtonData
+import org.lwjgl.sdl.SDL_MessageBoxData
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.system.MemoryUtil
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.math.min
@@ -47,8 +55,7 @@ class ErrorHandler private constructor(
     private val additionalMessage: String? = null,
     private val needToReport: Boolean = true
 ) {
-    companion object {
-        @JvmStatic
+    companion {
         @JvmOverloads
         fun fatal(
             error: Throwable,
@@ -206,22 +213,39 @@ class ErrorHandler private constructor(
                 false
             }
 
-            needToReport -> {
-                TinyFileDialogs.tinyfd_messageBox(
-                    title,
-                    message,
-                    "yesno",
-                    "error",
-                    1,
-                ) == 1
+            needToReport -> MemoryStack.stackPush().use { stack ->
+                val buttons = SDL_MessageBoxButtonData.calloc(2, stack).also { buf ->
+                    buf[0].set(
+                        SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT,
+                        1,
+                        stack.UTF8("Yes"),
+                    )
+                    buf[1].set(
+                        SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT,
+                        0,
+                        stack.UTF8("No"),
+                    )
+                }
+
+                val messageBoxData = SDL_MessageBoxData.calloc(stack).set(
+                    SDL_MESSAGEBOX_ERROR,
+                    MemoryUtil.NULL,
+                    stack.UTF8(title),
+                    stack.UTF8(message),
+                    buttons,
+                    null,
+                )
+
+                val buttonIdBuf = stack.mallocInt(1)
+                SDL_ShowMessageBox(messageBoxData, buttonIdBuf) && buttonIdBuf.get(0) == 1
             }
+
             else -> {
-                TinyFileDialogs.tinyfd_messageBox(
+                SDL_ShowSimpleMessageBox(
+                    SDL_MESSAGEBOX_ERROR,
                     title,
                     message,
-                    "ok",
-                    "error",
-                    1,
+                    MemoryUtil.NULL,
                 )
 
                 false

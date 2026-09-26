@@ -125,7 +125,7 @@ class TaggedArgumentType<T : Tagged>(
         return builder.suggestMatching(values, Tagged::tag, include = predicate)
     }
 
-    companion object {
+    companion {
         inline operator fun <reified T> invoke(
             parameterName: String,
             noinline predicate: (T) -> Boolean = { true },

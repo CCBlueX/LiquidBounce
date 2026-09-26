@@ -36,9 +36,9 @@ class InputBindTest {
 
     @Test
     fun `renderText displays the bound keyboard key`() {
-        assertRendersKey(InputConstants.Type.KEYSYM, InputConstants.KEY_K)
-        assertRendersKey(InputConstants.Type.KEYSYM, InputConstants.KEY_LSHIFT)
-        assertRendersKey(InputConstants.Type.KEYSYM, InputConstants.KEY_NUMPAD0)
+        assertRendersKey(InputConstants.Type.KEYBOARD, InputConstants.KEY_K)
+        assertRendersKey(InputConstants.Type.KEYBOARD, InputConstants.KEY_LSHIFT)
+        assertRendersKey(InputConstants.Type.KEYBOARD, InputConstants.KEY_NUMPAD0)
     }
 
     /**
