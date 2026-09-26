@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
 import okhttp3.Cache
@@ -65,7 +64,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 val renderScope = CoroutineScope(
-    Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
+    Dispatchers.Main + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
         if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
         }

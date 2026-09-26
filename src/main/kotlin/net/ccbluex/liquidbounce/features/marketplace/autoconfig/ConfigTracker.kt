@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,7 +52,6 @@ import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionExcepti
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 import java.security.MessageDigest
 
@@ -174,7 +174,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         val chain = dependencies.configs
         val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
 
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             val base = apply(configs, modules)
 
             if (modules.isNotEmpty()) {
@@ -213,7 +213,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     suspend fun loadExternal(source: String, modules: Collection<ValueGroup> = emptyList()) {
         val config = publicGson.newJsonReader(source.reader()).use { it.parseTree().asJsonObject }
 
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             apply(listOf(config), modules)
 
             if (modules.isNotEmpty()) {
@@ -257,7 +257,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         check(state != State.NONE) { "No tracked config" }
 
         val configs = (chain + Step(itemId, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             apply(configs, emptyList())
             updateTracking {
                 baselineText = encodeHashes(snapshot())
@@ -269,7 +269,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     /**
      * Returns to the settings from before the first marketplace load.
      */
-    suspend fun restoreBackup() = withContext(MinecraftDispatcher) {
+    suspend fun restoreBackup() = withContext(Dispatchers.Main) {
         check(hasBackup) { "No backup to restore" }
 
         val name = backupName
@@ -285,7 +285,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     /**
      * Keeps the current settings and stops tracking.
      */
-    suspend fun detach() = withContext(MinecraftDispatcher) {
+    suspend fun detach() = withContext(Dispatchers.Main) {
         if (hasBackup) {
             backupFile(backupName).delete()
         }
@@ -303,7 +303,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     ): MarketplaceItem {
         val (item, revision) = publish(session, name, description, details, null) { }
 
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             track(item, revision, emptyList(), null)
         }
         return item
@@ -352,10 +352,10 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             name,
             description,
             MarketplaceApi.ItemDetails(visibility = visibility),
-            withContext(MinecraftDispatcher) { changedSince(base) }
+            withContext(Dispatchers.Main) { changedSince(base) }
         ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
 
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             track(item, revision, chain, base)
         }
         return item
@@ -369,12 +369,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         check(state == State.EDITING) { "Not editing a config" }
 
         val subset = if (hasBase) {
-            withContext(MinecraftDispatcher) { changedSince(decodeHashes(baseText)) }
+            withContext(Dispatchers.Main) { changedSince(decodeHashes(baseText)) }
         } else {
             null
         }
         val revision = uploadSettings(session, itemId, changelog, subset)
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             updateTracking {
                 revisionId = revision.id
                 baselineText = encodeHashes(snapshot())
@@ -531,7 +531,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     ): MarketplaceItemRevision {
         val file = File.createTempFile("marketplace_config", ".json")
         try {
-            withContext(MinecraftDispatcher) {
+            withContext(Dispatchers.Main) {
                 file.bufferedWriter().use { writer ->
                     if (subset == null) {
                         AutoConfig.serializeAutoConfig(writer)
