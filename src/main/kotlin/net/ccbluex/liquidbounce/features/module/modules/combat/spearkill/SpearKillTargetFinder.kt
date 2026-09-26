@@ -31,8 +31,8 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 /**
- * Finds the best [ModuleSpearKill] target: the closest entity along the player's look ray
- * that is still outside the held spear's effective attack range and not occluded by terrain.
+ * Finds the best [ModuleSpearKill] target: the closest entity along the player's look ray that a lunge can
+ * bring into the spear's damage window and that is not occluded by terrain.
  */
 internal object SpearKillTargetFinder {
 
@@ -41,7 +41,7 @@ internal object SpearKillTargetFinder {
     fun findTarget(maxTargetDistance: Float): Pair<LivingEntity, Double>? {
         val eye = player.eyePosition
         val lookEnd = eye.add(player.lookAngle.scale(maxTargetDistance.toDouble()))
-        val reach = player.getAttackRangeWith(player.useItem).reach()
+        val lungeTarget = player.getAttackRangeWith(player.useItem).lungeTarget()
         var best: Pair<LivingEntity, Double>? = null
         var bestDistSq = Double.MAX_VALUE
 
@@ -50,7 +50,7 @@ internal object SpearKillTargetFinder {
             player.boundingBox.expandTowards(lookEnd.subtract(eye)).inflate(player.bbWidth / 2.0)
         ) { it !== player && it.isAlive && it.isWithinWorldBorder && it.boundingBox.clip(eye, lookEnd).isPresent }) {
 
-            val candidate = scoreCandidate(entity, eye, lookEnd, reach, bestDistSq) ?: continue
+            val candidate = scoreCandidate(entity, eye, lookEnd, lungeTarget, bestDistSq) ?: continue
             best = candidate.entity to candidate.distanceToDamage
             bestDistSq = candidate.distSq
         }
@@ -58,24 +58,29 @@ internal object SpearKillTargetFinder {
     }
 
     /**
-     * The reach [net.minecraft.world.entity.projectile.ProjectileUtil.getHitEntitiesAlong] uses: the weapon's
-     * maximum reach extended by the attacker's own movement along the look direction.
+     * Distance from the eye a lunge should leave the target at: the middle of the spear's damage window.
+     * The far edge leaves no margin for a target moving away, and the lunge is what gains the relative speed
+     * the kinetic damage condition requires.
+     *
+     * @see net.minecraft.world.entity.projectile.ProjectileUtil.getHitEntitiesAlong
      */
-    private fun AttackRange.reach(): Double =
-        effectiveMaxRange(player) + player.deltaMovement.dot(player.lookAngle).coerceAtLeast(0.0)
+    private fun AttackRange.lungeTarget(): Double {
+        val max = effectiveMaxRange(player) + player.deltaMovement.dot(player.lookAngle).coerceAtLeast(0.0)
+        return (effectiveMinRange(player) + max) / 2.0
+    }
 
     private fun scoreCandidate(
         entity: LivingEntity,
         eye: Vec3,
         lookEnd: Vec3,
-        reach: Double,
+        lungeTarget: Double,
         bestDistSq: Double
     ): Candidate? {
         val hitPosition = entity.boundingBox.clip(eye, lookEnd).orElse(null) ?: return null
         if (!hasLineOfSight(eye, hitPosition)) return null
 
         val distanceToTarget = hitPosition.distanceTo(eye)
-        val distanceToDamage = (distanceToTarget - reach).coerceAtLeast(0.0)
+        val distanceToDamage = (distanceToTarget - lungeTarget).coerceAtLeast(0.0)
         if (distanceToDamage <= 0.0) return null
 
         val distSq = distanceToDamage * distanceToDamage
