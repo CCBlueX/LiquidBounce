@@ -40,9 +40,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -52,11 +54,32 @@ import java.util.List;
 public abstract class MixinClientLevel {
 
     @ModifyReturnValue(method = "getMarkerParticleTarget", at = @At("RETURN"))
-    private Block injectBlockParticle(Block original) {
-        if (ModuleTrueSight.INSTANCE.getRunning() && ModuleTrueSight.INSTANCE.getBarriers()) {
+    private @Nullable Block injectBlockParticle(@Nullable Block original) {
+        var trueSight = ModuleTrueSight.INSTANCE;
+        if (trueSight.getRunning() && (trueSight.getBarriers() || trueSight.getLights())) {
             return Blocks.BARRIER;
         }
         return original;
+    }
+
+    @Redirect(
+        method = "doAnimateTick",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;",
+            ordinal = 1
+        )
+    )
+    private Block injectTrueSightMarkerParticle(BlockState state) {
+        var trueSight = ModuleTrueSight.INSTANCE;
+        if (!trueSight.getRunning() || (!trueSight.getBarriers() && !trueSight.getLights())) {
+            return state.getBlock();
+        }
+
+        var block = state.getBlock();
+        // BARRIER only serves as the shared marker target here; the state itself keeps the actual particle texture.
+        return (trueSight.getBarriers() && block == Blocks.BARRIER)
+            || (trueSight.getLights() && block == Blocks.LIGHT) ? Blocks.BARRIER : block;
     }
 
     @Inject(method = "addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V", at = @At("HEAD"), cancellable = true)

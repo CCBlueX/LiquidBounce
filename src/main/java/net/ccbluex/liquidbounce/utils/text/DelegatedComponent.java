@@ -44,7 +44,7 @@ public interface DelegatedComponent extends Component, Supplier<Component> {
     /**
      * Creates a lazy delegated component based on {@link kotlin.Lazy}.
      */
-    static DelegatedComponent lazy(Function0<Component> initializer) {
+    static DelegatedComponent lazy(Function0<? extends Component> initializer) {
         return LazyKt.lazy(initializer)::getValue;
     }
 

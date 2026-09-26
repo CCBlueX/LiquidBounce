@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
@@ -34,18 +35,21 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.shapes.VoxelShape
 
+@AddonApi
 @Tag("worldChange")
 class WorldChangeEvent(val world: ClientLevel?) : Event()
 
 @Tag("chunkUnload")
 class ChunkUnloadEvent(val pos: ChunkPos) : Event()
 
+@AddonApi
 @Tag("chunkLoad")
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
 @Tag("chunkDeltaUpdate")
 class ChunkDeltaUpdateEvent(val packet: ClientboundSectionBlocksUpdatePacket) : Event()
 
+@AddonApi
 @Tag("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
 
@@ -72,5 +76,6 @@ class EntityEquipmentChangeEvent(
 @Tag("fluidPush")
 class FluidPushEvent : CancellableEvent()
 
+@AddonApi
 @Tag("worldEntityRemove")
 class WorldEntityRemoveEvent(val entity: Entity, val reason: Entity.RemovalReason) : Event()

@@ -23,12 +23,14 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
+import net.minecraft.network.protocol.game.ServerboundPunchPacket;
 import net.minecraft.server.RunningOnDifferentThreadException;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -51,6 +53,11 @@ public abstract class MixinConnection {
      */
     @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void hookSendingPacket(Packet<?> packet, final CallbackInfo callbackInfo) {
+        if (packet instanceof ServerboundPunchPacket && ModuleNoSwing.INSTANCE.shouldHideForServer()) {
+            callbackInfo.cancel();
+            return;
+        }
+
         final PacketEvent event = new PacketEvent(TransferOrigin.OUTGOING, packet, true);
 
         EventManager.INSTANCE.callEvent(event);

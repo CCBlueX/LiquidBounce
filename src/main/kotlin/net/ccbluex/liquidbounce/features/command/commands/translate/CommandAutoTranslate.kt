@@ -18,44 +18,63 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.CommandRegistrar
+import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
+import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 
-object CommandAutoTranslate : ValueGroup("AutoTranslate"), Command.Factory {
-
+object CommandAutoTranslate : ValueGroup("AutoTranslate"), CommandRegistrar {
     var languageCode by text("LanguageCode", "en")
         private set
 
-    override fun createCommand() = CommandBuilder.begin("autotranslate")
-        .hub()
-        .subcommand(languageCommand())
-        .build()
-
-    private fun languageCommand() = CommandBuilder.begin("language")
-        .handler {
-            chat(command.result("code", languageCode, languageCodes[languageCode]?.displayName ?: "Unknown"), command)
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("autotranslate") {
+            literal("language") {
+                exec {
+                    chat(
+                        t("language.code",
+                            languageCode,
+                            languageCodes[languageCode]?.displayName ?: "Unknown"
+                        ),
+                        metadata = MessageMetadata(id = "Clanguage#info")
+                    )
+                    1
+                }
+                literal("set") {
+                    argument(
+                        "languageCode",
+                        ClientStringArgumentType.word(),
+                        suggestions(strings = { languageCodes.keys }),
+                    ) { codeArg ->
+                        exec { ctx ->
+                            val code = ctx.get(codeArg)
+                            val name = languageCodes[code]?.displayName
+                                ?: throw CommandException(
+                                    t("language.set.unrecognized",
+                                        code
+                                    )
+                                )
+                            languageCode = code
+                            chat(
+                                t("language.set.set",
+                                    code,
+                                    name
+                                ),
+                                metadata = MessageMetadata(id = "Cset#info")
+                            )
+                            1
+                        }
+                    }
+                }
+            }
         }
-        .subcommand(setLanguageCommand())
-        .build()
-
-    private fun setLanguageCommand() = CommandBuilder.begin("set")
-        .parameter(
-            ParameterBuilder.begin<String>("languageCode")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .autocompletedFrom { languageCodes.keys }
-                .required()
-                .build()
-        )
-        .handler {
-            val code = args[0] as String
-            val name = languageCodes[code]?.displayName ?: throw CommandException(command.result("unrecognized", code))
-            languageCode = code
-            chat(command.result("set", code, name), command)
-        }
-        .build()
+    }
 
 }

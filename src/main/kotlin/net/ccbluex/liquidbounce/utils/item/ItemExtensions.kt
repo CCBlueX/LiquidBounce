@@ -69,6 +69,7 @@ import net.minecraft.world.item.FlintAndSteelItem
 import net.minecraft.world.item.HangingEntityItem
 import net.minecraft.world.item.InstrumentItem
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemInstance
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.KnowledgeBookItem
@@ -144,11 +145,12 @@ fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemSta
     return itemStack
 }
 
-fun ItemStack.getPotionEffects(): Iterable<MobEffectInstance> {
+fun DataComponentGetter.getPotionEffects(): Iterable<MobEffectInstance> {
     return this[DataComponents.POTION_CONTENTS]?.allEffects ?: emptyList()
 }
 
 /**
+ * @see ItemStack.isSameItemSameComponents
  * @return if this item stack has same [Item] and [net.minecraft.core.component.DataComponentPatch]
  * with the other item stack
  */
@@ -158,7 +160,7 @@ fun ItemStack.canMerge(other: ItemStack): Boolean {
     return this.isMergeable(other) && this.count + other.count <= this.maxStackSize
 }
 
-val ItemStack.attackDamage: Double
+val ItemInstance.attackDamage: Double
     get() {
         val baseDamage = getAttributeValue(
             Attributes.ATTACK_DAMAGE,
@@ -179,7 +181,7 @@ val ItemStack.attackDamage: Double
     }
 
 @JvmOverloads
-fun ItemStack.getSharpnessDamage(level: Int = getEnchantment(Enchantments.SHARPNESS)): Double =
+fun ItemInstance.getSharpnessDamage(level: Int = getEnchantment(Enchantments.SHARPNESS)): Double =
     if (!isOlderThanOrEqual1_8) {
         when (level) {
             0 -> 0.0
@@ -189,7 +191,7 @@ fun ItemStack.getSharpnessDamage(level: Int = getEnchantment(Enchantments.SHARPN
         level * 1.25
     }
 
-val ItemStack.attackSpeed: Double
+val DataComponentGetter.attackSpeed: Double
     get() = getAttributeValue(
         Attributes.ATTACK_SPEED,
         EquipmentSlot.MAINHAND,

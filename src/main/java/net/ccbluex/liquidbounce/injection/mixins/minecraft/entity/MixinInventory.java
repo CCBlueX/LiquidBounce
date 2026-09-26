@@ -43,9 +43,12 @@ public abstract class MixinInventory implements InventoryAddition {
 
     /**
      * Override the original slot based on the server-side slot information.
+     *
+     * @see net.minecraft.world.entity.player.Inventory#getSelectedItem()
+     * @see net.minecraft.world.entity.player.Inventory#setSelectedItem(net.minecraft.world.item.ItemStack)
      */
     @ModifyExpressionValue(
-            method = {"removeFromSelected", "tick", "getSelectedItem"},
+            method = {"removeFromSelected", "tick", "getSelectedItem", "setSelectedItem"},
             at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/player/Inventory;selected:I", opcode = Opcodes.GETFIELD)
     )
     private int hookOverrideOriginalSlot(int original) {

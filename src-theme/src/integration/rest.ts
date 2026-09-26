@@ -1,6 +1,7 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    ModuleCategory,
     Alignment,
     Browser,
     ClientInfo,
@@ -45,6 +46,13 @@ export async function getMetadata(): Promise<Metadata> {
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
     const data: [Module] = await response.json();
+
+    return data;
+}
+
+export async function getCategories(): Promise<ModuleCategory[]> {
+    const response = await fetch(`${API_BASE}/client/modules/categories`);
+    const data: [ModuleCategory] = await response.json();
 
     return data;
 }
@@ -404,15 +412,31 @@ export async function addAlteningAccount(token: string) {
     });
 }
 
-export async function addMicrosoftAccount() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
+export async function addMicrosoftAccountWebView() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/webview`, {
         method: "POST",
     });
 }
 
-export async function addMicrosoftAccountCopyUrl() {
-    await fetch(`${API_BASE}/client/accounts/new/microsoft/clipboard`, {
+export async function addMicrosoftAccountDeviceCode() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code`, {
         method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountDeviceCodeCopyUrl() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/device-code/clipboard`, {
+        method: "POST",
+    });
+}
+
+export async function addMicrosoftAccountCredentials(email: string, password: string) {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/credentials`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({email, password})
     });
 }
 
@@ -701,6 +725,11 @@ export async function getComponentSettings(id: string): Promise<ConfigurableSett
     return await response.json();
 }
 
+export function getComponentFileUrl(id: string, cacheKey?: string): string {
+    const url = `${API_BASE}/client/components/${id}/file`;
+    return cacheKey === undefined ? url : `${url}?v=${encodeURIComponent(cacheKey)}`;
+}
+
 export async function setComponentSettings(id: string, settings: ConfigurableSetting): Promise<void> {
     await fetch(`${API_BASE}/client/components/${id}/settings`, {
         method: "PUT",
@@ -733,6 +762,12 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/shader`, {
+        method: "POST",
+    });
+}
+
+export async function toggleBasicMode() {
+    await fetch(`${API_BASE}/client/basic-mode`, {
         method: "POST",
     });
 }

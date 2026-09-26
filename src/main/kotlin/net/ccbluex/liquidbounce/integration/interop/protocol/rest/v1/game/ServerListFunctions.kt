@@ -21,6 +21,14 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -31,12 +39,13 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option.MixinServerListAccessor
+import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.netty.http.routing.Routing
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -57,7 +66,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
 // GET /api/v1/client/servers
-private fun Routing.getServers() = get {
+private fun Route.getServers() = get {
     runCatching {
         serverList.load()
         pingThemAll()
@@ -81,7 +90,7 @@ private fun Routing.getServers() = get {
 }
 
 // POST /api/v1/client/servers/connect
-private fun Routing.postConnect() = post("/connect") {
+private fun Route.postConnect() = post("/connect") {
     data class ServerConnectRequest(val address: String)
 
     val serverConnectRequest = call.receive<ServerConnectRequest>()
@@ -93,11 +102,11 @@ private fun Routing.postConnect() = post("/connect") {
     mc.execute {
         ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/servers/add
-private fun Routing.putAddServer() = put("/add") {
+private fun Route.putAddServer() = put("/add") {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
 
     val serverAddRequest = call.receive<ServerAddRequest>()
@@ -114,11 +123,11 @@ private fun Routing.putAddServer() = put("/add") {
     serverList.add(serverInfo, false)
     serverList.save()
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/servers/remove
-private fun Routing.deleteServer() = delete("/remove") {
+private fun Route.deleteServer() = delete("/remove") {
     data class ServerRemoveRequest(val id: Int)
 
     val serverRemoveRequest = call.receive<ServerRemoveRequest>()
@@ -127,11 +136,11 @@ private fun Routing.deleteServer() = delete("/remove") {
     serverList.remove(serverInfo)
     serverList.save()
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/servers/edit
-private fun Routing.putEditServer() = put("/edit") {
+private fun Route.putEditServer() = put("/edit") {
     data class ServerEditRequest(
         val id: Int,
         val name: String,
@@ -149,22 +158,22 @@ private fun Routing.putEditServer() = put("/edit") {
     }
     serverList.save()
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/servers/swap
-private fun Routing.postSwapServers() = post("/swap") {
+private fun Route.postSwapServers() = post("/swap") {
     data class ServerSwapRequest(val from: Int, val to: Int)
 
     val serverSwapRequest = call.receive<ServerSwapRequest>()
 
     serverList.swap(serverSwapRequest.from, serverSwapRequest.to)
     serverList.save()
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/servers/order
-private fun Routing.postOrderServers() = post("/order") {
+private fun Route.postOrderServers() = post("/order") {
     data class ServerOrderRequest(val order: List<Int>)
 
     val serverOrderRequest = call.receive<ServerOrderRequest>()
@@ -175,11 +184,11 @@ private fun Routing.postOrderServers() = post("/order") {
         }
     serverList.save()
 
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/servers/lan
-private fun Routing.getLanServers() = get("/lan") {
+private fun Route.getLanServers() = get("/lan") {
     runCatching {
         call.respond(ActiveServerList.getLanServers())
     }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
@@ -218,7 +227,11 @@ object ActiveServerList : EventListener {
     }
 
     private fun startLanDetection() {
-        lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
+        try {
+            lanDetector = LanServerDetection.LanServerDetector(lanServerList).apply { start() }
+        } catch (exception: Exception) {
+            logger.warn("Unable to start LAN server detection", exception)
+        }
     }
 
     private fun stopLanDetection() {
@@ -353,7 +366,7 @@ val ServerList.servers: List<ServerData>
 
 fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }
 
-internal fun Routing.serverListRoutes() = route("/servers") {
+internal fun Route.serverListRoutes() = route("/servers") {
     getServers()
     getLanServers()
     putAddServer()

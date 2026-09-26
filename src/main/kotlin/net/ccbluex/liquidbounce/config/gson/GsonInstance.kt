@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.config.gson
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.features.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.gson.adapter.AlignmentAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.CodecBasedAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.ColorAdapter
@@ -106,7 +106,7 @@ val publicGson: Gson = GsonBuilder()
     .setPrettyPrinting()
     .addSerializationExclusionStrategy(ExcludeStrategy)
     .registerCommonTypeAdapters()
-    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.FILE_SERIALIZER)
+    .registerTypeAdapter(ModeValueGroup::class.java, ModeValueGroupSerializer.PUBLIC_CONFIG_SERIALIZER)
     .registerTypeHierarchyAdapter(ValueGroup::class.java, ValueGroupSerializer.PUBLIC_SERIALIZER)
     .create()
 

@@ -47,9 +47,9 @@ class NotebotEngine(
             return
         }
 
-        val soundKey = packet.sound.unwrapKey().get()
+        val soundLocation = packet.sound.value().location
 
-        if (packet.source != SoundSource.RECORDS || !soundKey.identifier().path.contains("note_block")) {
+        if (packet.source != SoundSource.RECORDS || !soundLocation.path.contains("note_block")) {
             return
         }
 

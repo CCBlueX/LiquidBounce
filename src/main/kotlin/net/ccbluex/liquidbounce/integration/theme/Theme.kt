@@ -24,28 +24,28 @@ import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.text.capitalize
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.server.packs.resources.ResourceManager
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener
-import okhttp3.Headers.Companion.headersOf
-import java.io.Closeable
+import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
+import net.ccbluex.liquidbounce.utils.text.capitalize
+import okhttp3.Headers
 import java.io.File
 import java.io.InputStream
 import java.util.Locale
@@ -59,11 +59,15 @@ import java.util.Locale
 class Theme private constructor(val origin: Origin, url: String) :
     BaseApi(
         url.trimEnd('/'),
-        defaultHeaders = headersOf(
-            HttpHeaderNames.COOKIE.toString(),
-            "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
-        )
-    ), Closeable, ResourceManagerReloadListener {
+        // DO NOT use headersOf(...) because LunarClient uses an outdated version of
+        // the OkHttp library.
+        defaultHeaders = Headers.Builder()
+            .add(
+                HttpHeaderNames.COOKIE.toString(),
+                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
+            )
+            .build()
+    ), AutoCloseable, SimpleReloadListener.Sequenced {
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
@@ -275,7 +279,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 background,
                 fragmentShader,
             ).also {
-                it.onResourceReload()
+                it.reload().await()
             }
         }
 
@@ -301,7 +305,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         withContext(Dispatchers.Minecraft) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
-                it.onResourceReload()
+                it.reload().await()
             }
         }
         logger.info("Loaded background image for theme ${metadata.name}")
@@ -312,7 +316,7 @@ class Theme private constructor(val origin: Origin, url: String) :
      * Get the URL to the given page name in the theme.
      */
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
-        val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
+        val baseUrlWithFragment = "$baseUrl/?${AuthConfig.AUTH_CODE_PARAM}=" +
             "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
             if (origin.external) add("port=${ClientInteropServer.PORT}")
@@ -328,9 +332,9 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
-    override fun onResourceManagerReload(manager: ResourceManager) {
-        backgroundShader?.onResourceReload()
-        backgroundImage?.onResourceReload()
+    override fun children() = listOfNotNull(backgroundShader, backgroundImage)
+
+    override fun onFinished(futures: List<*>) {
         logger.info("Reloaded theme '${metadata.name}'.")
     }
 
@@ -342,14 +346,12 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.tag}, url=$baseUrl)"
 
-    companion object {
+    companion {
 
         private val logger = clientLogger("Theme")
 
-        @JvmStatic
         suspend fun load(url: String) = Theme(Origin.REMOTE, url).loadAll()
 
-        @JvmStatic
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
             url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"

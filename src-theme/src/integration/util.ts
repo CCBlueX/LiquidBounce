@@ -39,6 +39,10 @@ export function intToRgba(value: number): number[] {
     return [red, green, blue, alpha];
 }
 
+export function intToHex(value: number): string {
+    return rgbaToHex(intToRgba(value));
+}
+
 export const swap = (array: any[], i: number, j: number) => {
     if (i < 0 || i >= array.length || j < 0 || j >= array.length) return;
 

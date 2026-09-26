@@ -19,8 +19,10 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.util.UUID
@@ -28,6 +30,7 @@ import java.util.UUID
 /**
  * Represents a HUD component
  */
+@AddonApi
 abstract class HudComponent(
     name: String,
     enabled: Boolean,
@@ -52,10 +55,16 @@ abstract class HudComponent(
 
     protected fun registerComponentListen(valueGroup: ValueGroup) {
         for (v in valueGroup.inner) {
-            if (v is ValueGroup) {
-                registerComponentListen(v)
-            } else {
-                v.onChanged {
+            when (v) {
+                is ModeValueGroup<*> -> {
+                    v.onChanged {
+                        HudComponentManager.updateComponents()
+                    }
+                    registerComponentListen(v)
+                    v.modes.forEach(::registerComponentListen)
+                }
+                is ValueGroup -> registerComponentListen(v)
+                else -> v.onChanged {
                     HudComponentManager.updateComponents()
                 }
             }

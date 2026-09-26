@@ -46,7 +46,7 @@ internal class TimedPickupTracker @JvmOverloads constructor(
         val timestamp: Long,
     )
 
-    private val trackedPositions = ArrayDeque<TrackedPos>(capacity.coerceAtLeast(0))
+    private val trackedPositions = ArrayDeque<TrackedPos>(capacity)
 
     /**
      * Removes all tracked entries.

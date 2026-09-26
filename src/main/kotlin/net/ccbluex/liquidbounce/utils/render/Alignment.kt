@@ -20,9 +20,11 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.mc
 
+@AddonApi
 class Alignment(
     horizontalAlignment: ScreenAxisX,
     horizontalOffset: Int,
@@ -30,8 +32,7 @@ class Alignment(
     verticalOffset: Int,
 ) : ValueGroup("Alignment") {
 
-    companion object {
-        @JvmStatic
+    companion {
         fun center() = Alignment(ScreenAxisX.CENTER, 0, ScreenAxisY.CENTER, 0)
     }
 

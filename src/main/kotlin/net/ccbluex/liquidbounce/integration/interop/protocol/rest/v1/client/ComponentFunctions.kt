@@ -19,47 +19,56 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonObject
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.config.types.FileValue
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
+import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.notFound
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.respondJsonWriter
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.ccbluex.netty.http.routing.Routing
 import org.apache.commons.io.input.CharSequenceReader
+import java.util.Locale
 
 // GET /api/v1/client/components/native
-private fun Routing.getNativeComponents() = get("/native") {
-    call.respond(
-        HudComponentManager.nativeComponents,
-        accessibleInteropGson,
+private fun Route.getNativeComponents() = get("/native") {
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.nativeComponents
+    ))
+}
+
+// GET /api/v1/client/components/{id}
+private fun Route.getComponents() = get("/{id}") {
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.getComponents(call.parameters["id"]))
     )
 }
 
-// GET /api/v1/client/components/:id
-private fun Routing.getComponents() = get("/:id") {
-    call.respond(
-        HudComponentManager.getComponents(call.parameters["id"]),
-        accessibleInteropGson,
-    )
+// GET /api/v1/client/components/{id}/catalog
+private fun Route.getComponentCatalog() = get("/{id}/catalog") {
+    call.respond(accessibleInteropGson.toJsonTree(
+        HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty())
+    ))
 }
 
-// GET /api/v1/client/components/:id/catalog
-private fun Routing.getComponentCatalog() = get("/:id/catalog") {
-    call.respond(
-        HudComponentManager.getComponentCatalog(call.parameters["id"].orEmpty()),
-        accessibleInteropGson,
-    )
-}
-
-// POST /api/v1/client/components/:id
-private fun Routing.postComponent() = post("/:id") {
+// POST /api/v1/client/components/{id}
+private fun Route.postComponent() = post("/{id}") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     HudComponentManager.getComponent(id)
+        ?: HudComponentManager.getFactory(id)
         ?: call.notFound(id, "HUD component not found")
 
     withContext(Dispatchers.Minecraft) {
@@ -67,11 +76,11 @@ private fun Routing.postComponent() = post("/:id") {
             ?: call.badRequest("HUD component cannot be added again")
         ConfigSystem.store(modulesConfig)
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// POST /api/v1/client/components/:id/z-index
-private fun Routing.postComponentZIndex() = post("/:id/z-index") {
+// POST /api/v1/client/components/{id}/z-index
+private fun Route.postComponentZIndex() = post("/{id}/z-index") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     val component = HudComponentManager.getComponent(id)
         ?: call.notFound(id, "HUD component not found")
@@ -82,18 +91,20 @@ private fun Routing.postComponentZIndex() = post("/:id/z-index") {
         }
     }
 
-    call.respond(JsonObject().apply {
-        addProperty("zIndex", zIndex)
-    })
+    call.respondJsonWriter {
+        beginObject()
+        name("zIndex").value(zIndex)
+        endObject()
+    }
 }
 
-// POST /api/v1/client/components/:id/alignment
-private fun Routing.postComponentAlignment() = post("/:id/alignment") {
+// POST /api/v1/client/components/{id}/alignment
+private fun Route.postComponentAlignment() = post("/{id}/alignment") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     val component = HudComponentManager.getComponent(id)
         ?: call.notFound(id, "HUD component not found")
     val alignment = runCatching {
-        requireNotNull(accessibleInteropGson.fromJson(call.body, Alignment::class.java))
+        requireNotNull(accessibleInteropGson.fromJson(call.receiveText(), Alignment::class.java))
     }.getOrElse {
         call.badRequest("Invalid alignment")
     }
@@ -102,11 +113,11 @@ private fun Routing.postComponentAlignment() = post("/:id/alignment") {
         component.alignment.setFrom(alignment)
         ConfigSystem.store(modulesConfig)
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-// GET /api/v1/client/components/:id/settings
-private fun Routing.getComponentSettings() = get("/:id/settings") {
+// GET /api/v1/client/components/{id}/settings
+private fun Route.getComponentSettings() = get("/{id}/settings") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     val component = HudComponentManager.getComponent(id)
         ?: call.notFound(id, "HUD component not found")
@@ -114,24 +125,51 @@ private fun Routing.getComponentSettings() = get("/:id/settings") {
     call.respond(ConfigSystem.serializeValueGroup(component, gson = interopGson))
 }
 
-// PUT /api/v1/client/components/:id/settings
-private fun Routing.putComponentSettings() = put("/:id/settings") {
+// GET /api/v1/client/components/{id}/file
+private fun Route.getComponentFile() = get("/{id}/file") {
+    val id = call.parameters["id"] ?: call.badRequest("Missing component id")
+    // Strict check, only default theme component 'Image' uses this feature currently
+    val component = HudComponentManager.getComponent(id)
+        ?.takeIf { it.name == "Image" }
+        ?: call.notFound(id, "Image HUD component not found")
+    val fileValue = component.collectValuesRecursively()
+        .filterIsInstance<FileValue>()
+        .find { it.name == "File" }
+        ?: call.notFound(id, "Image file setting not found")
+    val file = fileValue.absoluteFile
+
+    if (!file.isFile) {
+        call.notFound(file.path, "File not found")
+    }
+
+    val supportedExtensions = fileValue.supportedExtensions
+    if (supportedExtensions != null && supportedExtensions.none { extension ->
+            extension.equals(file.extension, ignoreCase = true)
+        }) {
+        call.badRequest("Unsupported file extension: ${file.extension.lowercase(Locale.ROOT)}")
+    }
+
+    call.respondFile(file)
+}
+
+// PUT /api/v1/client/components/{id}/settings
+private fun Route.putComponentSettings() = put("/{id}/settings") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
     val component = HudComponentManager.getComponent(id)
         ?: call.notFound(id, "HUD component not found")
 
     withContext(Dispatchers.Minecraft) {
         val wasEnabled = component.enabled
-        ConfigSystem.deserializeValueGroup(component, CharSequenceReader(call.body))
+        ConfigSystem.deserializeValueGroup(component, CharSequenceReader(call.receiveText()))
         if (wasEnabled && !component.enabled) {
             component.resetAlignment()
         }
         ConfigSystem.store(modulesConfig)
     }
-    call.respondNoContent()
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
-internal fun Routing.componentRoutes() = route("/components") {
+internal fun Route.componentRoutes() = route("/components") {
     getNativeComponents()
     getComponentCatalog()
     getComponents()
@@ -139,5 +177,6 @@ internal fun Routing.componentRoutes() = route("/components") {
     postComponentZIndex()
     postComponentAlignment()
     getComponentSettings()
+    getComponentFile()
     putComponentSettings()
 }
