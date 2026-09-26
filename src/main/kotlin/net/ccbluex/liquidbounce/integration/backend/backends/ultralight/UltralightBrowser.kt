@@ -36,7 +36,6 @@ import net.janrupf.ujr.api.UltralightScrollEventBuilder
 import net.janrupf.ujr.api.UltralightSession
 import net.janrupf.ujr.api.UltralightView
 import net.janrupf.ujr.api.UltralightViewConfigBuilder
-import net.janrupf.ujr.api.bitmap.UltralightBitmapSurface
 import net.janrupf.ujr.api.cursor.UlCursor
 import net.janrupf.ujr.api.event.UlScrollEventType
 import net.janrupf.ujr.api.listener.UlMessageLevel
@@ -60,6 +59,28 @@ for (const name of ['HTMLMediaElement', 'HTMLAudioElement', 'HTMLVideoElement'])
         window[name] = class extends HTMLElement {};
     }
 }
+"""
+
+/**
+ * Ultralight draws elements with a CSS mask blank on the GPU, so the theme's masked icons show their white image
+ * instead, and hovered title buttons keep their accent background for it to stay visible. The masked enchantment glow
+ * of items is left out.
+ */
+private const val MASK_WORKAROUND_SCRIPT = """
+document.addEventListener('DOMContentLoaded', () => {
+    const style = document.createElement('style');
+    style.textContent = `
+        .title-button-icon, .category-icon { mask-image: none !important; background: none !important; }
+        .title-button-icon-size, .category-icon-size { visibility: visible !important; }
+        :root {
+            --menu-main-button-icon-hover-background-color: var(--accent-color) !important;
+            --menu-child-button-hover-background-color: var(--accent-color) !important;
+            --menu-child-button-hover-text-color: var(--menu-text-color) !important;
+        }
+        .item-stack .mask { display: none !important; }
+    `;
+    document.head.appendChild(style);
+});
 """
 
 /**
@@ -91,7 +112,6 @@ class UltralightBrowser internal constructor(
     }
 
     private val view: UltralightView
-    private val paintTarget = UltralightPaintTarget()
 
     @Volatile
     private var currentUrl = url
@@ -107,6 +127,7 @@ class UltralightBrowser internal constructor(
         val quality = GlobalBrowserSettings.quality
         val (width, height) = viewport.getScaledDimensions(quality)
         val config = UltralightViewConfigBuilder()
+            .accelerated(true)
             .transparent(true)
             .initialDeviceScale(quality)
             .build()
@@ -168,19 +189,18 @@ class UltralightBrowser internal constructor(
 
     override val texture: BrowserTexture?
         get() {
-            if (!paintTarget.isTextureReady || paintTarget.isUnpainted) {
+            val target = view.renderTarget()
+            if (target.isEmpty) {
                 return null
             }
 
-            return BrowserTexture(paintTarget.textureSetup!!, viewport.width, viewport.height, true)
+            val textureSetup = backend.gpuDriver.textureSetup(target.textureId()) ?: return null
+            val uv = target.uvCoords()
+            return BrowserTexture(
+                textureSetup, viewport.width, viewport.height, true,
+                uv.left, uv.top, uv.right, uv.bottom
+            )
         }
-
-    /**
-     * Uploads what Ultralight painted since the last frame, called after the backend rendered.
-     */
-    fun paint() {
-        paintTarget.paint(view.surface() as UltralightBitmapSurface)
-    }
 
     override fun forceReload() = onRenderThread { view.reload() }
 
@@ -199,7 +219,6 @@ class UltralightBrowser internal constructor(
             // The view is freed once it is garbage collected, so stop the page right away
             view.stop()
             view.loadURL("about:blank")
-            paintTarget.close()
         }
     }
 
@@ -284,6 +303,7 @@ class UltralightBrowser internal constructor(
             // Runs before any script of the page
             if (isMainFrame) {
                 view.evaluateScript(MEDIA_ELEMENTS_SCRIPT)
+                view.evaluateScript(MASK_WORKAROUND_SCRIPT)
             }
         }
 

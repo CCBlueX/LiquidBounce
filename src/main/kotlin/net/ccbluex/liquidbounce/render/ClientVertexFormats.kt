@@ -31,6 +31,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_FORMAT
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_FORMAT
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_SEMANTIC_NAME
+import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.vertex.VertexFormat
 
 object ClientVertexFormats {
@@ -83,5 +84,30 @@ object ClientVertexFormats {
         .addAttribute(UV1_SEMANTIC_NAME, UV1_FORMAT)
         .addAttribute(UV2_SEMANTIC_NAME, UV2_FORMAT)
         .addAttribute(LINE_WIDTH_SEMANTIC_NAME, LINE_WIDTH_FORMAT)
+        .build()
+
+    /**
+     * Vertex format of Ultralight's fill shader, `2f_4ub_2f_2f_28f`: position, color, texture and object coordinates,
+     * then seven vectors of data depending on the fill type.
+     */
+    @JvmField
+    val ULTRALIGHT_FILL: VertexFormat = VertexFormat.builder(0)
+        .addAttribute("in_Position", GpuFormat.RG32_FLOAT)
+        .addAttribute("in_Color", GpuFormat.RGBA8_UNORM)
+        .addAttribute("in_TexCoord", GpuFormat.RG32_FLOAT)
+        .addAttribute("in_ObjCoord", GpuFormat.RG32_FLOAT)
+        .apply {
+            repeat(7) { addAttribute("in_Data$it", GpuFormat.RGBA32_FLOAT) }
+        }
+        .build()
+
+    /**
+     * Vertex format of Ultralight's path shader, `2f_4ub_2f`: position, color and object coordinates.
+     */
+    @JvmField
+    val ULTRALIGHT_FILL_PATH: VertexFormat = VertexFormat.builder(0)
+        .addAttribute("in_Position", GpuFormat.RG32_FLOAT)
+        .addAttribute("in_Color", GpuFormat.RGBA8_UNORM)
+        .addAttribute("in_TexCoord", GpuFormat.RG32_FLOAT)
         .build()
 }

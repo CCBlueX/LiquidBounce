@@ -69,9 +69,13 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
 
     private var ujr: UltralightJavaReborn? = null
     private var rendererInstance: UltralightRenderer? = null
+    private var gpuDriverInstance: UltralightGpuDriver? = null
 
     internal val renderer: UltralightRenderer
         get() = requireNotNull(rendererInstance) { "Ultralight is not started" }
+
+    internal val gpuDriver: UltralightGpuDriver
+        get() = requireNotNull(gpuDriverInstance) { "Ultralight is not started" }
 
     override val isInitialized: Boolean
         get() = rendererInstance != null
@@ -119,16 +123,19 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
         val environment = PlatformEnvironment.loadWith(UJRJniPlatformProviderFactory().create(options), options)
         ujr = UltralightJavaReborn(environment).apply { activate() }
 
+        val gpuDriver = UltralightGpuDriver()
+        gpuDriverInstance = gpuDriver
+
         UltralightPlatform.instance().apply {
             setLogger(UltralightLoggerBridge)
             usePlatformFontLoader()
             setFilesystem(UltralightFilesystemBridge)
             setClipboard(UltralightClipboardBridge)
+            setGPUDriver(gpuDriver)
             setConfig(
                 UltralightConfigBuilder()
                     .cachePath(folder.resolve("cache").absolutePath)
                     .resourcePathPrefix(UltralightFilesystemBridge.RESOURCE_PREFIX)
-                    .bitmapAlignment(0)
                     .build()
             )
         }
@@ -141,6 +148,8 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
         rendererInstance = null
         ujr?.cleanup()
         ujr = null
+        gpuDriverInstance?.close()
+        gpuDriverInstance = null
     }
 
     override fun update() {
@@ -149,9 +158,8 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
         try {
             renderer.update()
             renderer.refreshDisplay(0)
+            // Draws the pages through the GPU driver
             renderer.render()
-
-            browsers.forEach(UltralightBrowser::paint)
         } catch (e: Exception) {
             logger.error("Failed to render the browsers", e)
         }
