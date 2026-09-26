@@ -4,9 +4,6 @@ import type { PersistentStorageItem } from "./types";
 let loadedOnce = false;
 let persistentDataUpdateTimeout: null | number = null;
 
-let markLoaded: () => void;
-export const persistentDataLoaded = new Promise<void>(resolve => markLoaded = resolve);
-
 export async function insertPersistentData() {
     const items = await getPersistentStorageItems();
 
@@ -14,7 +11,6 @@ export async function insertPersistentData() {
         localStorage.setItem(key, value);
     }
     loadedOnce = true;
-    markLoaded();
 }
 
 export async function updatePersistentData() {
