@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.KnockbackItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
@@ -111,6 +112,15 @@ enum class ItemType(
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+
+    /**
+     * A dedicated slot for the best Knockback item (e.g. a Knockback stick for sending players into
+     * the void). Intentionally a LOW allocation priority and NOT a [ItemFunction.WEAPON_LIKE], so a
+     * real weapon is still picked as the main weapon first, while a separate, lesser Knockback item
+     * is still kept and sorted into its own slot rather than thrown away. Only the single best
+     * Knockback item is kept ([oneIsSufficient]); worse Knockback items are discarded.
+     */
+    KNOCKBACK(true, allocationPriority = Priority.NORMAL),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -148,6 +158,11 @@ enum class ItemSortChoice(
     WEAPON("Weapon", ItemType.WEAPON.defaultCategory),
     SPEAR("Spear", ItemType.SPEAR.defaultCategory, { it.isSpear }),
     MACE("Mace", ItemType.MACE.defaultCategory, { it.item is MaceItem }),
+    BEST_KNOCKBACK(
+        "BestKnockback",
+        ItemType.KNOCKBACK.defaultCategory,
+        { it.getEnchantment(Enchantments.KNOCKBACK) > 0 },
+    ),
     BOW("Bow", ItemType.BOW.defaultCategory),
     CROSSBOW("Crossbow", ItemType.CROSSBOW.defaultCategory),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
@@ -208,6 +223,18 @@ class ItemCategorization(
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
+    /**
+     * The highest Knockback level among real weapons (swords, spears, maces, axes) in the inventory.
+     * A dedicated "best knockback" item is only worth keeping if it knocks back *harder* than the
+     * weapon we would already be holding — otherwise it is redundant and should be thrown out.
+     */
+    private val maxWeaponKnockback: Int =
+        availableItems.asSequence()
+            .map { it.itemStack }
+            .filter { it.isSword || it.isSpear || it.item is MaceItem || it.isAxe }
+            .maxOfOrNull { it.getEnchantment(Enchantments.KNOCKBACK) }
+            ?: 0
+
     init {
         val findBestArmorPieces = ArmorEvaluation.findBestArmorPieces(slots = availableItems)
 
@@ -238,6 +265,14 @@ class ItemCategorization(
         return buildList {
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
+
+            // Anything with Knockback can serve as a dedicated "best knockback" item (e.g. a stick
+            // with Knockback II for sending players into the void) — but only if it knocks back
+            // harder than the weapon we already keep. A spare item with the same (or lower) Knockback
+            // as our main weapon is redundant, so we don't keep it in a dedicated slot.
+            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > maxWeaponKnockback) {
+                add(KnockbackItemFacet(slot))
+            }
 
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))
