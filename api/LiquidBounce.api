@@ -199,6 +199,7 @@ public class net/ccbluex/liquidbounce/config/types/group/ValueGroup : net/ccblue
 	public final fun integer (Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public static synthetic fun integer$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;IIILjava/lang/String;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
 	public static synthetic fun integer$default (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Ljava/lang/String;ILkotlin/ranges/IntRange;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/RangedValue;
+	public final fun inventoryPreset ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun item (Ljava/lang/String;Lnet/minecraft/world/item/Item;)Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun itemList (Ljava/lang/String;Ljava/util/List;)Lnet/ccbluex/liquidbounce/config/types/list/RegistryMutableListValue;
 	public final fun itemList (Ljava/lang/String;Ljava/util/Set;Ljava/util/Set;Lnet/ccbluex/liquidbounce/config/types/ValueType;Ljava/lang/Class;)Lnet/ccbluex/liquidbounce/config/types/list/ItemListValue;

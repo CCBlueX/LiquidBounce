@@ -212,7 +212,7 @@ class ItemCategorization(
             item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             slot.itemStack.isSpear -> arrayOf(SpearItemFacet(slot))
             item is MaceItem -> arrayOf(MaceItemFacet(slot))
-            item.itemStack.isAxe -> {
+            slot.itemStack.isAxe -> {
                 val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
                 when {
                     sharpnessLevel >= 100 -> arrayOf(GodAxeFacet(slot))
