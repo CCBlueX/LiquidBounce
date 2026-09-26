@@ -48,13 +48,11 @@ import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.marketplace.InstallPlan
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.Unavailable
 import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
-import net.ccbluex.liquidbounce.features.marketplace.planInstalls
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import java.io.File
@@ -211,24 +209,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * What [load] installs, and the [modules] its configs set, to restrict a load to.
+     * The modules loading [revisionId] of [item] sets, to restrict a load to. Only the revisions it applies are
+     * downloaded, to the cache [load] reads them from.
      */
-    internal class LoadPlan(
-        val installs: InstallPlan,
-        val modules: List<String>
-    )
-
-    /**
-     * Plans loading [revisionId] of [item]. Only the revisions it applies are downloaded, to the
-     * cache [load] reads them from.
-     */
-    internal suspend fun plan(item: MarketplaceItem, revisionId: Int): LoadPlan {
-        val dependencies = dependenciesOf(item.id)
-        val steps = dependencies.configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
-        return LoadPlan(
-            installs = planInstalls(dependencies.installables),
-            modules = steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
-        )
+    internal suspend fun modulesToLoad(item: MarketplaceItem, revisionId: Int): List<String> {
+        val steps = dependenciesOf(item.id).configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
+        return steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
     }
 
     /**

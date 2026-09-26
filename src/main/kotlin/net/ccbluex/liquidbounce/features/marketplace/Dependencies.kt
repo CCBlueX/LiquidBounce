@@ -40,13 +40,6 @@ internal class Installable(val item: MarketplaceItem, val needs: Set<Int>)
 
 internal data class Installed(val installed: List<MarketplaceItem>, val unavailable: List<Unavailable>)
 
-/**
- * What [installDependencies] would do.
- */
-internal class InstallPlan(val installs: List<PlannedInstall>, val leftOut: List<LeftOut>)
-
-internal class PlannedInstall(val item: MarketplaceItem, val resolution: RevisionResolution.Compatible)
-
 internal class LeftOut(val item: MarketplaceItem, val unavailable: Unavailable)
 
 /**
@@ -132,29 +125,10 @@ internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
 }
 
 /**
- * Plans [installDependencies] without installing anything.
- */
-internal suspend fun planInstalls(installables: Collection<Installable>): InstallPlan {
-    val installs = mutableListOf<PlannedInstall>()
-    val skipped = leftOut(installables) { item ->
-        val subscribed = SubscribedItem(item)
-        when (val resolution = subscribed.locked { subscribed.resolveRevision(known = item) }) {
-            is RevisionResolution.Compatible -> {
-                installs += PlannedInstall(item, resolution)
-                null
-            }
-
-            is RevisionResolution.NoneCompatible -> resolution.unavailable
-        }
-    }
-    return InstallPlan(installs, skipped)
-}
-
-/**
  * What of the [installables] is left out, running [install] for each missing one: the inactive ones, the ones
  * [install] gives a reason for, and what needs any of those, with its reason.
  */
-private suspend fun leftOut(
+internal suspend fun leftOut(
     installables: Collection<Installable>,
     install: suspend (MarketplaceItem) -> Unavailable?
 ): List<LeftOut> {

@@ -208,12 +208,14 @@ private suspend fun revisions(item: MarketplaceItem): List<ConfigRevisionView> =
     }
 }
 
-private fun Route.getPlan() = get("/plan") {
+/**
+ * The modules a load can be restricted to.
+ */
+private fun Route.getModules() = get("/modules") {
     val id = call.requireId()
     call.respondMarketplace {
         val (item, revisionId) = liveConfig(id, optionalSession())
-        val plan = ConfigTracker.plan(item, revisionId)
-        LoadPlanView(plan.installs.installs.map { it.view() }, plan.installs.leftOut.map { it.view() }, plan.modules)
+        ConfigTracker.modulesToLoad(item, revisionId)
     }
 }
 
@@ -361,7 +363,7 @@ internal fun Route.marketplaceConfigRoutes() = route("/marketplace") {
         getConfigs()
         route("/{id}") {
             getConfig()
-            getPlan()
+            getModules()
             postLoad()
             putReport()
             patchConfig()

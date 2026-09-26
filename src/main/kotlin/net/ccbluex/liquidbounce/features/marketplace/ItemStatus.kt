@@ -44,7 +44,7 @@ internal data class ItemStatus(
 }
 
 internal suspend fun MarketplaceItem.itemStatus(): ItemStatus {
-    val subscribed = MarketplaceManager.getItem(id) ?: return plannedStatus()
+    val subscribed = MarketplaceManager.getItem(id) ?: return unsubscribedStatus()
 
     val resolution = subscribed.locked { subscribed.resolveRevision(known = this) }
     val compatible = resolution as? RevisionResolution.Compatible
@@ -65,16 +65,32 @@ internal suspend fun MarketplaceItem.itemStatus(): ItemStatus {
     )
 }
 
-private suspend fun MarketplaceItem.plannedStatus(): ItemStatus {
+/**
+ * Which revision installing it picks, walking what it needs as [installDependencies] does, without installing.
+ */
+private suspend fun MarketplaceItem.unsubscribedStatus(): ItemStatus {
     val dependencies = dependenciesOf(id)
-    val plan = planInstalls(dependencies.installables + Installable(this, dependencies.needs))
+    var fitting: MarketplaceItemRevision? = null
+    val leftOut = leftOut(dependencies.installables + Installable(this, dependencies.needs)) { item ->
+        val subscribed = SubscribedItem(item)
+        when (val resolution = subscribed.locked { subscribed.resolveRevision(known = item) }) {
+            is RevisionResolution.Compatible -> {
+                if (item.id == id) {
+                    fitting = resolution.revision
+                }
+                null
+            }
+
+            is RevisionResolution.NoneCompatible -> resolution.unavailable
+        }
+    }
 
     return ItemStatus(
         subscribed = false,
         installed = null,
-        fitting = plan.installs.find { it.item.id == id }?.resolution?.revision,
-        unavailable = plan.leftOut.isNotEmpty(),
-        notFor = plan.leftOut.any { it.unavailable.published },
+        fitting = fitting,
+        unavailable = leftOut.isNotEmpty(),
+        notFor = leftOut.any { it.unavailable.published },
         restartRequired = restartRequired(null),
     )
 }

@@ -26,7 +26,6 @@ import type {
     MarketplaceItem,
     MarketplaceItemDetail,
     MarketplaceItemType,
-    MarketplaceLoadPlan,
     MarketplacePage,
     MarketplacePublished,
     Metadata,
@@ -945,8 +944,8 @@ export async function getMarketplaceConfig(id: number): Promise<MarketplaceConfi
     return await marketplaceRequest(`/configs/${id}`);
 }
 
-export async function getMarketplaceLoadPlan(id: number): Promise<MarketplaceLoadPlan> {
-    return await marketplaceRequest(`/configs/${id}/plan`);
+export async function getMarketplaceConfigModules(id: number): Promise<string[]> {
+    return await marketplaceRequest(`/configs/${id}/modules`);
 }
 
 export async function loadMarketplaceConfig(id: number, modules: string[] | null): Promise<MarketplaceInstallResult> {

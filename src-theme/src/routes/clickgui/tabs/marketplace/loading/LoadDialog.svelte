@@ -2,23 +2,20 @@
     import Switch from "../../../setting/common/Switch.svelte";
     import Dialog from "../ui/Dialog.svelte";
     import ToggleChip from "../ui/ToggleChip.svelte";
-    import SectionLabel from "../ui/SectionLabel.svelte";
-    import ListRow from "../ui/ListRow.svelte";
     import TextField from "../ui/TextField.svelte";
-    import {getMarketplaceLoadPlan, loadMarketplaceConfig} from "../../../../../integration/rest";
-    import type {MarketplaceLoadPlan} from "../../../../../integration/types";
-    import {attempt, dialog, type DialogRequest, notify, present, typeName, UNKNOWN_PACK, version} from "../marketplace";
+    import {getMarketplaceConfigModules, loadMarketplaceConfig} from "../../../../../integration/rest";
+    import {attempt, dialog, type DialogRequest, notify} from "../marketplace";
 
     // The last config stays while the dialog fades out
     let config = $state.raw<{ id: number; address: string } | null>(null);
     let seen: DialogRequest | null = null;
-    let plan = $state<MarketplaceLoadPlan | null>(null);
+    let available = $state<string[]>([]);
     let pick = $state(false);
     let modules = $state<string[]>([]);
     let filter = $state("");
 
     const open = $derived($dialog?.kind === "load");
-    const shown = $derived(plan?.modules.filter(module => module.toLowerCase().includes(filter.trim().toLowerCase())) ?? []);
+    const shown = $derived(available.filter(module => module.toLowerCase().includes(filter.trim().toLowerCase())));
 
     $effect.pre(() => {
         const next = $dialog;
@@ -26,18 +23,19 @@
             seen = next;
             if (next?.kind === "load") {
                 config = next.config;
-                fetchPlan(next.config.id);
+                fetchModules(next.config.id);
             }
         }
     });
 
-    async function fetchPlan(id: number) {
-        plan = null;
+    async function fetchModules(id: number) {
+        available = [];
         pick = false;
         filter = "";
-        plan = await attempt(() => getMarketplaceLoadPlan(id)) ?? null;
-        if (plan) {
-            modules = [...plan.modules];
+        const fetched = await attempt(() => getMarketplaceConfigModules(id));
+        if (fetched) {
+            available = fetched;
+            modules = [...fetched];
         } else {
             dialog.set(null);
         }
@@ -61,54 +59,26 @@
 </script>
 
 <Dialog {open} onclose={() => dialog.set(null)} title="Load {config?.address ?? ''}" width={560}
-        confirm="Load" disabled={!plan || (pick && modules.length === 0)} onconfirm={load}>
-    {#if plan}
-        {#if plan.installs.length > 0}
-            <SectionLabel text="Installs"/>
-            <div class="list">
-                {#each plan.installs as install (install.id)}
-                    <ListRow image={install.image ?? UNKNOWN_PACK} title={install.name}
-                             badges={present(install.restart && "Restart needed")}
-                             subtitle="{typeName(install.type)} · {version(install.revision!)}"/>
-                {/each}
-            </div>
-        {/if}
-
-        {#if plan.leftOut.length > 0}
-            <SectionLabel text="Left out"/>
-            <div class="list">
-                {#each plan.leftOut as leftOut (leftOut.id)}
-                    <ListRow image={leftOut.image ?? UNKNOWN_PACK} title={leftOut.name} subtitle={typeName(leftOut.type)}/>
-                {/each}
-            </div>
-        {/if}
-
-        {#if plan.modules.length > 0}
-            <div class="pick">
-                <Switch name="Only some modules" bind:value={pick}/>
-                {#if pick}
-                    <span class="count">{modules.length}/{plan.modules.length}</span>
-                {/if}
-            </div>
+        confirm="Load" disabled={pick && modules.length === 0} onconfirm={load}>
+    {#if available.length > 0}
+        <div class="pick">
+            <Switch name="Only some modules" bind:value={pick}/>
             {#if pick}
-                <TextField bind:value={filter} placeholder="Filter"/>
-                <div class="chips">
-                    {#each shown as module (module)}
-                        <ToggleChip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
-                    {/each}
-                </div>
+                <span class="count">{modules.length}/{available.length}</span>
             {/if}
+        </div>
+        {#if pick}
+            <TextField bind:value={filter} placeholder="Filter"/>
+            <div class="chips">
+                {#each shown as module (module)}
+                    <ToggleChip text={module} active={modules.includes(module)} onclick={() => toggle(module)}/>
+                {/each}
+            </div>
         {/if}
     {/if}
 </Dialog>
 
 <style lang="scss">
-  .list {
-    border-radius: 5px;
-    overflow: hidden;
-    background-color: var(--clickgui-module-settings-background-color);
-  }
-
   .pick {
     display: flex;
     align-items: center;

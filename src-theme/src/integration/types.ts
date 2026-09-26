@@ -699,21 +699,6 @@ export interface MarketplaceItemDetail {
     }[];
 }
 
-export interface MarketplacePlannedItem {
-    id: number;
-    type: MarketplaceItemType;
-    name: string;
-    image?: string;
-    revision?: MarketplaceRevision;
-    restart: boolean;
-}
-
-export interface MarketplaceLoadPlan {
-    installs: MarketplacePlannedItem[];
-    leftOut: MarketplacePlannedItem[];
-    modules: string[];
-}
-
 export interface MarketplaceInstallResult {
     installed: string[];
 }

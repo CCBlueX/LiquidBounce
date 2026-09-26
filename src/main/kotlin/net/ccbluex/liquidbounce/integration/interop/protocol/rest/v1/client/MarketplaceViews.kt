@@ -32,10 +32,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
-import net.ccbluex.liquidbounce.features.marketplace.LeftOut
-import net.ccbluex.liquidbounce.features.marketplace.PlannedInstall
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
-import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.marketplace.itemStatus
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -158,24 +155,6 @@ internal data class ItemDetailView(
     val versions: List<VersionView>,
 )
 
-/**
- * An add-on or script a load installs at [revision], or leaves out without one.
- */
-internal data class PlannedItem(
-    val id: Int,
-    val type: MarketplaceItemType,
-    val name: String,
-    val image: String?,
-    val revision: RevisionView?,
-    val restart: Boolean,
-)
-
-internal data class LoadPlanView(
-    val installs: List<PlannedItem>,
-    val leftOut: List<PlannedItem>,
-    val modules: List<String>,
-)
-
 internal data class InstallResult(val installed: List<String>)
 
 internal data class TrackerView(
@@ -245,11 +224,6 @@ internal fun MarketplaceItemRevision.view() = RevisionView(
     createdAt = epochMillis(createdAt),
     changelog = changelog?.takeIf(String::isNotBlank),
 )
-
-internal fun PlannedInstall.view() =
-    PlannedItem(item.id, item.type, item.name, item.thumbnail, resolution.revision.view(), item.installNeedsRestart)
-
-internal fun LeftOut.view() = PlannedItem(item.id, item.type, item.name, item.thumbnail, null, false)
 
 /**
  * The first line of the description that is not an image, without its heading mark.
