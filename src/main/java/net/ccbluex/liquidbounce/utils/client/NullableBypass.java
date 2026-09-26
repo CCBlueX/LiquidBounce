@@ -38,9 +38,9 @@ public final class NullableBypass {
     public static ServerboundUseItemPacket createWithNullHand(ServerboundUseItemPacket originalPacket) {
         return UseItemPacketRotation.createExplicit(
             null,
-            originalPacket.getSequence(),
-            originalPacket.getYRot(),
-            originalPacket.getXRot()
+            originalPacket.sequence(),
+            originalPacket.yRot(),
+            originalPacket.xRot()
         );
     }
 

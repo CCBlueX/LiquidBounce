@@ -1,19 +1,15 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 
-layout(std140) uniform DynamicTransforms {
-    mat4 ModelViewMat;
-    vec4 ColorModulator;
-    vec3 ModelOffset;
-    mat4 TextureMat;
-};
+#include <minecraft:dynamictransforms.glsl>
 
-in vec2 vUv;
-in vec4 vColor;
-flat in ivec2 vSize;
-flat in ivec2 vParameters;
-flat in float vStrokeWidth;
+layout(location = 0) in vec2 vUv;
+layout(location = 1) in vec4 vColor;
+layout(location = 2) flat in ivec2 vSize;
+layout(location = 3) flat in ivec2 vParameters;
+layout(location = 4) in float vStrokeWidth;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 float sdRoundBox(vec2 p, vec2 halfSize, float radius) {
     float r = min(radius, min(halfSize.x, halfSize.y));

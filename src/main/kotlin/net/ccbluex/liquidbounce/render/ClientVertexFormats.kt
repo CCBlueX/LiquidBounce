@@ -31,7 +31,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_FORMAT
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV1_SEMANTIC_NAME
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_FORMAT
 import com.mojang.blaze3d.vertex.DefaultVertexFormat.UV2_SEMANTIC_NAME
-import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.renderpearl.api.vertex.VertexFormat
 
 object ClientVertexFormats {
 

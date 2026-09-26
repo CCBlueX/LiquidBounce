@@ -54,9 +54,9 @@ open class FakePlayer @JvmOverloads constructor(
         this.xOld = snapshot.lastX
         this.yOld = snapshot.lastY
         this.zOld = snapshot.lastZ
-        this.swinging = snapshot.handSwinging
-        this.swingTime = snapshot.handSwingTicks
-        this.attackAnim = snapshot.handSwingProgress
+        snapshot.currentSwing?.let {
+            this.swing(it.hand, it.animation, false)
+        }
         this.yRot = snapshot.yaw
         this.yRotO = snapshot.lastYaw
         this.xRot = snapshot.pitch
@@ -66,7 +66,6 @@ open class FakePlayer @JvmOverloads constructor(
         this.yHeadRot = snapshot.headYaw
         this.yHeadRotO = snapshot.lastHeadYaw
         this.pose = snapshot.pose
-        this.swingingArm = snapshot.preferredHand
         this.inventory.replaceWith(snapshot.inventory)
         this.walkAnimation.position = snapshot.limbPos
     }
