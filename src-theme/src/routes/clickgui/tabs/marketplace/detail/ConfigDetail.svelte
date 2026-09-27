@@ -9,7 +9,6 @@
     import {copyMarketplaceShareCode, getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
-        attempt,
         configBadges,
         dialog,
         reports,
@@ -65,13 +64,9 @@
         }
 
         const next = detail.report === works ? null : works;
-        if (await attempt(() => reportMarketplaceConfig(id, next))) {
+        if (await reportMarketplaceConfig(id, next).catch(() => null)) {
             await refresh();
         }
-    }
-
-    async function copyShareCode() {
-        await attempt(() => copyMarketplaceShareCode(id));
     }
 
     function load() {
@@ -88,7 +83,7 @@
             description={detail?.description}>
     {#snippet actions()}
         {#if detail?.shareCode && loggedIn}
-            <PillButton title={detail.shareCode} mono onclick={copyShareCode}/>
+            <PillButton title={detail.shareCode} mono onclick={() => copyMarketplaceShareCode(id).catch(() => null)}/>
         {/if}
         {#if config && loggedIn}
             <PillButton title="Works · {config.works}" active={detail?.report === true} onclick={() => report(true)}/>

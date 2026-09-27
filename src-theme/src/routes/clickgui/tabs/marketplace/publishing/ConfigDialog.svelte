@@ -15,7 +15,7 @@
         updateTrackedConfig
     } from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetails} from "../../../../../integration/types";
-    import {attempt, dialog, type DialogRequest} from "../marketplace";
+    import {dialog, type DialogRequest} from "../marketplace";
 
     type Kind = "New" | "Overlay" | "Fork";
     type Request = Exclude<DialogRequest, { kind: "load" }>;
@@ -88,7 +88,7 @@
 
     // The page stays loaded while the player joins and leaves servers, so it asks for the current one
     async function insertServer() {
-        const server = (await attempt(getCurrentServer))?.rootDomain;
+        const server = (await getCurrentServer().catch(() => null))?.rootDomain;
         if (server && servers === "") {
             servers = server;
         }
@@ -115,7 +115,7 @@
     async function confirm(): Promise<boolean> {
         switch (request.kind) {
             case "publish": {
-                const published = await attempt(() => publishMarketplaceConfig(kind as Kind, details()));
+                const published = await publishMarketplaceConfig(kind as Kind, details()).catch(() => null);
                 if (published) {
                     dialog.set({kind: "published", published});
                 }
@@ -123,14 +123,14 @@
             }
             case "edit": {
                 const {config} = request.detail;
-                const saved = await attempt(() => setMarketplaceConfigDetails(config.id, details()).then(() => true));
+                const saved = await setMarketplaceConfigDetails(config.id, details()).then(() => true, () => false);
                 if (saved) {
                     request.ondone();
                 }
-                return !!saved;
+                return saved;
             }
             case "update": {
-                const result = await attempt(() => updateTrackedConfig(changelog.trim()));
+                const result = await updateTrackedConfig(changelog.trim()).catch(() => null);
                 if (result) {
                     changelog = "";
                 }
@@ -138,18 +138,14 @@
             }
             case "delete": {
                 const {config} = request;
-                const deleted = await attempt(() => deleteMarketplaceConfig(config.id).then(() => true));
+                const deleted = await deleteMarketplaceConfig(config.id).then(() => true, () => false);
                 if (deleted) {
                     request.ondone();
                 }
-                return !!deleted;
+                return deleted;
             }
         }
         return false;
-    }
-
-    async function copy(id: number) {
-        await attempt(() => copyMarketplaceShareCode(id));
     }
 </script>
 
@@ -158,7 +154,7 @@
         {@const result = request.published}
         <PillButton title="Open" onclick={() => { close(); onopen(result.id); }}/>
         {#if result.shareCode}
-            <PillButton title="Copy code" primary onclick={() => copy(result.id)}/>
+            <PillButton title="Copy code" primary onclick={() => copyMarketplaceShareCode(result.id).catch(() => null)}/>
         {:else}
             <PillButton title="Done" primary onclick={close}/>
         {/if}

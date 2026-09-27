@@ -79,14 +79,3 @@ export type DialogRequest =
     | { kind: "delete"; config: MarketplaceConfig; ondone: () => void };
 
 export const dialog = writable<DialogRequest | null>(null);
-
-/**
- * Runs [action], `undefined` when it fails. The client tells the player why an action failed.
- */
-export async function attempt<T>(action: () => Promise<T>): Promise<T | undefined> {
-    try {
-        return await action();
-    } catch {
-        return undefined;
-    }
-}

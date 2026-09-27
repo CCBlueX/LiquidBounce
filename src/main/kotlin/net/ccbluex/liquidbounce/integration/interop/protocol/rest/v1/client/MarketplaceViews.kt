@@ -223,13 +223,18 @@ internal fun MarketplaceItemRevision.view() = RevisionView(
     changelog = changelog?.takeIf(String::isNotBlank),
 )
 
+private val MARKDOWN_IMAGE = Regex("""!\[[^\]]*]\([^)]*\)""")
+private val MARKDOWN_LINK = Regex("""\[([^\]]*)]\([^)]*\)""")
+// Heading, quote and list marks, emphasis, code and HTML tags
+private val MARKDOWN_MARKS =
+    Regex("""^(#+|>|[-*+]|\d+\.)\s+|\*\*|__|~~|`|<[^>]+>|(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)""")
+
 /**
- * The first line of the description that is not an image, without its heading mark.
+ * The first line of the description with text, without its markdown.
  */
 private fun MarketplaceItem.summary() = description.lineSequence()
-    .map(String::trim)
-    .firstOrNull { it.isNotEmpty() && !it.startsWith("![") }
-    ?.removePrefix("#")?.trim()
+    .map { it.replace(MARKDOWN_IMAGE, "").replace(MARKDOWN_LINK, "$1").replace(MARKDOWN_MARKS, "").trim() }
+    .firstOrNull(String::isNotEmpty)
     ?.take(SUMMARY_LENGTH)
     .orEmpty()
 
