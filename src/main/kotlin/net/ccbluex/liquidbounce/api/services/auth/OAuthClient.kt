@@ -19,22 +19,14 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.async
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -44,36 +36,46 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.UUID
 import java.util.function.Consumer
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * OAuth client for handling the authentication flow
  */
 object OAuthClient : EventListener {
 
-    private val AUTH_TIMEOUT = 5.minutes
-
-    private class PendingAuth(val url: String, val account: Deferred<ClientAccount>)
-
-    private val mutex = Mutex()
+    @Volatile
+    private var serverPort: Int? = null
 
     @Volatile
-    private var pendingAuth: PendingAuth? = null
+    private var authCodeDeferred: CompletableDeferred<String>? = null
+
+    @Volatile
+    private var server: EmbeddedServer<*, *>? = null
 
     /**
-     * Start the OAuth authentication flow. While one is pending, this opens its URL again and waits for the
-     * same result, and one that is not finished within [AUTH_TIMEOUT] fails.
+     * Start the OAuth authentication flow
      *
      * @param onUrl Callback for when the authorization URL is ready
      * @return Client account with the authenticated session
      */
     suspend fun startAuth(onUrl: Consumer<String>): ClientAccount {
-        val auth = mutex.withLock {
-            pendingAuth?.takeIf { it.account.isActive } ?: beginAuth().also { pendingAuth = it }
+        val (codeVerifier, codeChallenge) = PKCEUtils.generatePKCE()
+        val state = UUID.randomUUID().toString()
+
+        if (serverPort == null) {
+            serverPort = startKtorServer()
         }
 
-        onUrl.accept(auth.url)
-        return auth.account.await()
+        val redirectUri = "http://127.0.0.1:$serverPort/"
+        logger.info("OAuth server started on port $serverPort.")
+        val authUrl = buildAuthUrl(codeChallenge, state, redirectUri)
+
+        onUrl.accept(authUrl)
+        val code = waitForAuthCode()
+        val tokenResponse = AuthenticationApi.exchangeToken(AUTH_CLIENT_ID, code, codeVerifier, redirectUri)
+
+        serverPort = null
+
+        return ClientAccount(session = tokenResponse.toAuthSession())
     }
 
     /**
@@ -84,48 +86,19 @@ object OAuthClient : EventListener {
         return tokenResponse.toAuthSession()
     }
 
-    private suspend fun beginAuth(): PendingAuth {
-        val (codeVerifier, codeChallenge) = PKCEUtils.generatePKCE()
-        val state = UUID.randomUUID().toString()
-        val code = CompletableDeferred<String>()
+    private suspend fun startKtorServer(): Int {
+        val deferred = CompletableDeferred<String>()
+        authCodeDeferred = deferred
 
-        val server = startKtorServer(state, code)
-        val port = server.engine.resolvedConnectors().first().port
-        val redirectUri = "http://127.0.0.1:$port/"
-        logger.info("OAuth server started on port $port.")
-
-        val account = ioScope.async {
-            try {
-                val authCode = withTimeoutOrNull(AUTH_TIMEOUT) { code.await() } ?: error("The login timed out")
-                val tokenResponse = AuthenticationApi.exchangeToken(AUTH_CLIENT_ID, authCode, codeVerifier, redirectUri)
-                ClientAccount(session = tokenResponse.toAuthSession())
-            } finally {
-                withContext(NonCancellable) {
-                    server.stopSuspend(gracePeriodMillis = 1000, timeoutMillis = 2000)
-                }
-            }
-        }
-
-        return PendingAuth(buildAuthUrl(codeChallenge, state, redirectUri), account)
-    }
-
-    private fun startKtorServer(state: String, code: CompletableDeferred<String>): EmbeddedServer<*, *> {
         val server = embeddedServer(CIO, host = "127.0.0.1", port = 0) {
             routing {
                 get("/") {
-                    val parameters = call.request.queryParameters
-                    // Anything else on this port could have opened the redirect
-                    if (parameters["state"] != state) {
-                        call.respond(HttpStatusCode.BadRequest)
-                        return@get
-                    }
-
-                    val authCode = parameters["code"]
-                    if (authCode != null) {
+                    val code = call.request.queryParameters["code"]
+                    if (code != null) {
                         call.respondText(SUCCESS_HTML, ContentType.Text.Html)
-                        code.complete(authCode)
+                        deferred.complete(code)
                     } else {
-                        code.completeExceptionally(
+                        deferred.completeExceptionally(
                             IllegalArgumentException("No code found in the redirect URL")
                         )
                     }
@@ -134,13 +107,26 @@ object OAuthClient : EventListener {
         }
 
         server.start(wait = false)
-        return server
+        this.server = server
+
+        val port = server.engine.resolvedConnectors().first().port
+
+        deferred.invokeOnCompletion {
+            ioScope.launch {
+                server.stopSuspend(gracePeriodMillis = 1000, timeoutMillis = 2000)
+            }
+            this.server = null
+        }
+
+        return port
     }
 
     private fun buildAuthUrl(codeChallenge: String, state: String, redirectUri: String): String {
         return "$AUTH_AUTHORIZE_URL?client_id=$AUTH_CLIENT_ID&redirect_uri=$redirectUri&" +
             "response_type=code&state=$state&code_challenge=$codeChallenge&code_challenge_method=S256"
     }
+
+    private suspend fun waitForAuthCode(): String = authCodeDeferred!!.await()
 
     private const val SUCCESS_HTML = """
         <!DOCTYPE html>
