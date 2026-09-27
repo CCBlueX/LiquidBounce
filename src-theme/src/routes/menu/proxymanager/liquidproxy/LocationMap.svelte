@@ -148,7 +148,7 @@
                     on:pointerdown|stopPropagation={() => moved = true}
                     on:click={() => handleLocationClick(location)}>
                 <ToolTip text={tooltip(location)}
-                         color={isAvailable(location) ? "var(--accent-color)" : "var(--tooltip-background-color)"}/>
+                         color={isAvailable(location) ? "var(--tooltip-background-color)" : "var(--menu-base-68-color)"}/>
                 <span class="dot"></span>
             </button>
         {/if}
