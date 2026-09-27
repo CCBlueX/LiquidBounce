@@ -210,7 +210,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             .filter { itemFacet ->
                 val itemStack = itemFacet.itemStack
 
-                // Самое главное: ветки inside when должны возвращать TRUE или FALSE!
+                
                 when {
                     // A mace's smash attack cannot be blocked by a shield
                     requiresMace -> WeaponType.MACE.test(itemStack)
