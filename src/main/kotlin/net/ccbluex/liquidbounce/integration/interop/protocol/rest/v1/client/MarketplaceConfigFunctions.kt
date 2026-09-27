@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonObject
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
@@ -53,10 +52,14 @@ import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
+import net.minecraft.network.chat.MutableComponent
 
 private const val PAGE_SIZE = 20
 private const val HISTORY_SIZE = 10
@@ -276,12 +279,12 @@ private fun Route.putReport() = put("/report") {
 }
 
 private fun Route.patchConfig() = patch {
-    val id = call.requireId()
-    val request = call.receive<DetailsRequest>()
-    val visibility = call.visibility(request)
-    val session = call.requireSession()
-    val updated = call.marketplace {
-        MarketplaceApi.updateMarketplaceItem(
+    val view = call.marketplaceAction {
+        val id = call.requireId()
+        val request = call.receive<DetailsRequest>()
+        val visibility = call.visibility(request)
+        val session = call.requireSession()
+        val updated = MarketplaceApi.updateMarketplaceItem(
             session,
             id,
             request.name.trim(),
@@ -289,29 +292,38 @@ private fun Route.patchConfig() = patch {
             request.description,
             itemDetails(request, visibility)
         )
+        withContext(Dispatchers.Main) { ConfigTracker.renamed(updated) }
+        MarketplaceConfigs.refresh()
+        tellPlayer(configCommand.t("set.updated", variable(updated.name)))
+        configView(updated, ownUserId())
     }
-    withContext(Dispatchers.Main) { ConfigTracker.renamed(updated) }
-    MarketplaceConfigs.refresh()
-    call.respondMarketplace { configView(updated, ownUserId()) }
+    call.respond(view)
 }
 
 /**
  * Only unlisted configs have a share code, and only their author gets it.
  */
 private fun Route.postCopyShareCode() = post("/share-code") {
-    val id = call.requireId()
-    val session = call.requireSession()
-    val code = call.marketplace { MarketplaceApi.getMarketplaceItem(id, session).shareCode }
-        ?: call.forbidden("Only the author of an unlisted config has its share code")
-    mc.execute { mc.keyboardHandler.clipboard = code }
-    call.respond(JsonObject().apply { addProperty("shareCode", code) })
+    call.marketplaceAction {
+        val id = call.requireId()
+        val session = call.requireSession()
+        val code = MarketplaceApi.getMarketplaceItem(id, session).shareCode
+            ?: call.forbidden("Only the author of an unlisted config has its share code")
+        mc.execute { mc.keyboardHandler.clipboard = code }
+        tellPlayer(configCommand.t("info.shareCode", variable(code).copyable()))
+    }
+    call.respond(HttpStatusCode.NoContent)
 }
 
 private fun Route.deleteConfig() = delete {
-    val id = call.requireId()
-    val session = call.requireSession()
-    call.marketplace { ConfigTracker.delete(session, id) }
-    MarketplaceConfigs.refresh()
+    call.marketplaceAction {
+        val id = call.requireId()
+        val session = call.requireSession()
+        val name = MarketplaceApi.getMarketplaceItem(id, session).name
+        ConfigTracker.delete(session, id)
+        MarketplaceConfigs.refresh()
+        tellPlayer(configCommand.t("delete.deleted", variable(name)))
+    }
     call.respond(HttpStatusCode.NoContent)
 }
 
@@ -319,8 +331,11 @@ private fun Route.getTracker() = get {
     call.respond(trackerView())
 }
 
-private fun Route.postTrackerAction(path: String, action: suspend () -> Unit) = post(path) {
-    call.marketplace { action() }
+/**
+ * Runs the tracker [action], which returns what to tell the player.
+ */
+private fun Route.postTrackerAction(path: String, action: suspend () -> MutableComponent) = post(path) {
+    call.marketplaceAction { tellPlayer(action()) }
     call.respond(trackerView())
 }
 
@@ -328,46 +343,52 @@ private fun Route.postTrackerAction(path: String, action: suspend () -> Unit) = 
  * Overlay and Fork publish the edits made to the tracked config.
  */
 private fun Route.postPublish() = post("/publish") {
-    val request = call.receive<DetailsRequest>()
-    val kind = request.kind
-    val visibility = call.visibility(request)
-    if (kind != "New" && ConfigTracker.state != ConfigTracker.State.EDITING) {
-        call.badRequest("Only an edited marketplace config can be published as ${kind?.lowercase()}")
-    }
+    val item = call.marketplaceAction {
+        val request = call.receive<DetailsRequest>()
+        val kind = request.kind
+        val visibility = call.visibility(request)
+        if (kind != "New" && ConfigTracker.state != ConfigTracker.State.EDITING) {
+            call.badRequest("Only an edited marketplace config can be published as ${kind?.lowercase()}")
+        }
 
-    val session = call.requireSession()
-    val name = request.name.trim()
-    val item = call.marketplace {
+        val session = call.requireSession()
+        val name = request.name.trim()
         if (kind == "Fork" && ownUserId() == ConfigTracker.itemUid) {
             call.forbidden("${ConfigTracker.address} is yours, update it instead")
         }
 
         val details = itemDetails(request, visibility)
-        when (kind) {
+        val published = when (kind) {
             "New" -> ConfigTracker.create(session, name, request.description, details)
             "Overlay" -> ConfigTracker.overlay(session, name, request.description, details)
             "Fork" -> ConfigTracker.fork(session, name, request.description, details)
             else -> call.badRequest("Unknown kind $kind")
         }
+        MarketplaceConfigs.refresh()
+        tellPlayer(configCommand.t("publish.published", variable(published.name)))
+        published.shareCode?.let { code ->
+            mc.execute { chat(regular(configCommand.t("info.shareCode", variable(code).copyable()))) }
+        }
+        published
     }
-    MarketplaceConfigs.refresh()
     call.respond(PublishedView(item.id, item.displayAddress, item.shareCode))
 }
 
 private fun Route.postUpdate() = post("/update") {
     data class UpdateRequest(val changelog: String?)
 
-    val changelog = call.receive<UpdateRequest>().changelog?.trim()?.takeIf(String::isNotEmpty)
-    if (ConfigTracker.state != ConfigTracker.State.EDITING) {
-        call.badRequest("Nothing changed since ${ConfigTracker.address} was loaded")
-    }
+    call.marketplaceAction {
+        val changelog = call.receive<UpdateRequest>().changelog?.trim()?.takeIf(String::isNotEmpty)
+        if (ConfigTracker.state != ConfigTracker.State.EDITING) {
+            call.badRequest("Nothing changed since ${ConfigTracker.address} was loaded")
+        }
 
-    val session = call.requireSession()
-    call.marketplace {
+        val session = call.requireSession()
         if (ownUserId() != ConfigTracker.itemUid) {
             call.forbidden("${ConfigTracker.address} is not yours")
         }
         ConfigTracker.update(session, changelog)
+        tellPlayer(configCommand.t("update.updated", variable(ConfigTracker.itemName)))
     }
     call.respond(trackerView())
 }
@@ -388,9 +409,19 @@ internal fun Route.marketplaceConfigRoutes() = route("/marketplace") {
     }
     route("/tracker") {
         getTracker()
-        postTrackerAction("/revert", ConfigTracker::revert)
-        postTrackerAction("/restore") { ConfigTracker.restoreBackup() }
-        postTrackerAction("/detach") { ConfigTracker.detach() }
+        postTrackerAction("/revert") {
+            ConfigTracker.revert()
+            configCommand.t("revert.reverted", variable(ConfigTracker.itemName))
+        }
+        postTrackerAction("/restore") {
+            ConfigTracker.restoreBackup()
+            configCommand.t("restore.restored")
+        }
+        postTrackerAction("/detach") {
+            val name = ConfigTracker.itemName
+            ConfigTracker.detach()
+            configCommand.t("detach.detached", variable(name))
+        }
         postPublish()
         postUpdate()
     }

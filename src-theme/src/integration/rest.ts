@@ -955,8 +955,8 @@ export async function reportMarketplaceConfig(id: number, works: boolean | null)
     return await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
 }
 
-export async function copyMarketplaceShareCode(id: number): Promise<string> {
-    return (await marketplaceRequest<{ shareCode: string }>(`/configs/${id}/share-code`, "POST")).shareCode;
+export async function copyMarketplaceShareCode(id: number) {
+    await marketplaceRequest(`/configs/${id}/share-code`, "POST");
 }
 
 export async function setMarketplaceConfigDetails(id: number, details: MarketplaceConfigDetails) {
