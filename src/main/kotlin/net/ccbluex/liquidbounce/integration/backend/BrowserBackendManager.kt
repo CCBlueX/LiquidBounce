@@ -97,6 +97,7 @@ object BrowserBackendManager : EventListener {
 
     fun init() {
         PersistentLocalStorage
+        GlobalBrowserSettings.createBackendChoice(selectableBackends)
     }
 
     /**
@@ -130,7 +131,7 @@ object BrowserBackendManager : EventListener {
             val picked = selection.await()
             pendingSelection = null
 
-            GlobalBrowserSettings.backendId = picked.id
+            GlobalBrowserSettings.backendChoice.set(picked)
             ConfigSystem.store(GlobalManager)
             // Within the task, so the loading screen stays until the backend's tasks exist
             mc.submit { use(picked, taskManager) }.await()
@@ -157,7 +158,7 @@ object BrowserBackendManager : EventListener {
             return null
         }
 
-        return selectable.firstOrNull { it.id == GlobalBrowserSettings.backendId }
+        return GlobalBrowserSettings.backendChoice.get() as? BrowserBackendProvider
     }
 
     private fun use(provider: BrowserBackendProvider, taskManager: TaskManager) {

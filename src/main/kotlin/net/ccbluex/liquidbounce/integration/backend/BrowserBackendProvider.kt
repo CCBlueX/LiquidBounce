@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 
 /**
@@ -33,4 +34,9 @@ class BrowserBackendProvider @JvmOverloads constructor(
     val description: String,
     val selectable: Boolean = true,
     val create: () -> BrowserBackend,
-)
+) : Tagged {
+    override val tag get() = name
+
+    // Saved choices from before it was a choice hold the id
+    override val tagAliases get() = if (id.equals(name, ignoreCase = true)) emptyList() else listOf(id)
+}
