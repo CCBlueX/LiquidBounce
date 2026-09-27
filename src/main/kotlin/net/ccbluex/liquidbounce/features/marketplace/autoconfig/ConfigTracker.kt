@@ -53,7 +53,9 @@ import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.io.StringWriter
 import java.security.MessageDigest
 
 /**
@@ -458,36 +460,32 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         changelog: String?,
         subset: Subset?
     ): MarketplaceItemRevision {
-        val file = File.createTempFile("marketplace_config", ".json")
-        try {
-            withContext(Dispatchers.Main) {
-                file.bufferedWriter().use { writer ->
-                    if (subset == null) {
-                        AutoConfig.serializeAutoConfig(writer)
-                    } else {
-                        AutoConfig.serializeAutoConfig(
-                            writer,
-                            modules = subset.modules,
-                            includeSpoofers = subset.spoofers
-                        )
-                    }
+        val settings = withContext(Dispatchers.Main) {
+            StringWriter().also { writer ->
+                if (subset == null) {
+                    AutoConfig.serializeAutoConfig(writer)
+                } else {
+                    AutoConfig.serializeAutoConfig(
+                        writer,
+                        modules = subset.modules,
+                        includeSpoofers = subset.spoofers
+                    )
                 }
-            }
-
-            val revision = MarketplaceApi.createMarketplaceItemRevision(
-                session,
-                itemId,
-                file,
-                version = LiquidBounce.clientVersion,
-                changelog = changelog,
-                includesBinds = false
-            )
-
-            file.copyTo(cacheFile(itemId, revision.id), overwrite = true)
-            return revision
-        } finally {
-            file.delete()
+            }.toString()
         }
+
+        val revision = MarketplaceApi.createMarketplaceItemRevision(
+            session,
+            itemId,
+            "config.json",
+            settings.toRequestBody(HttpClient.MediaTypes.OCTET_STREAM),
+            version = LiquidBounce.clientVersion,
+            changelog = changelog,
+            includesBinds = false
+        )
+
+        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.writeText(settings)
+        return revision
     }
 
     private suspend fun revisionFile(itemId: Int, revisionId: Int): File {
