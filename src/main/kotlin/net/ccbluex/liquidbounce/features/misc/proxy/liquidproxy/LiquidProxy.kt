@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.misc.proxy.liquidproxy
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.ccbluex.liquidbounce.api.core.httpException
+import net.ccbluex.liquidbounce.api.core.orNotFound
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxyLocation
@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
-import java.io.IOException
 
 /**
  * LiquidProxy, set up from the LiquidBounce account it is bought with.
@@ -87,14 +86,7 @@ internal object LiquidProxy : Config("liquidProxy"), EventListener {
         }
 
         val session = account?.takeSession() ?: return null
-        val subscription = try {
-            LiquidProxyApi.getSubscription(session)
-        } catch (e: IOException) {
-            if (e.httpException?.code != NOT_FOUND) {
-                throw e
-            }
-            null
-        }
+        val subscription = orNotFound { LiquidProxyApi.getSubscription(session) }
 
         types = subscription?.let { LiquidProxyApi.getSubscriptionTypes(session) }.orEmpty()
         this.subscription = subscription
@@ -190,7 +182,5 @@ internal object LiquidProxy : Config("liquidProxy"), EventListener {
         subscription = null
         types = emptyList()
     }
-
-    private const val NOT_FOUND = 404
 
 }
