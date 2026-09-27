@@ -20,13 +20,14 @@
 
     <div class="sessions">
         {#each sessions as session (session.id)}
+            {@const icon = session.icon ?? UNKNOWN_SERVER_ICON}
             <div class="session" class:active={session.connected}>
-                <div class="image">
-                    <img class="server-icon" src={session.icon ?? UNKNOWN_SERVER_ICON} alt={session.server}>
-                    {#if session.country !== "Unknown"}
-                        <img class="flag" src="img/flags/{session.country.toLowerCase()}.svg" alt={session.country}>
-                    {/if}
-                </div>
+                <!-- The country the IP of the session was from -->
+                {#if session.country !== "Unknown"}
+                    <img class="image" src="img/flags/{session.country.toLowerCase()}.svg" alt={session.country}>
+                {:else}
+                    <img class="image" src={icon} alt={session.server}>
+                {/if}
 
                 <div class="name">
                     <img class="head" src={session.avatar} alt={session.username}>
@@ -42,6 +43,7 @@
                     {:else}
                         played {formatDuration(session.lastSeenAt - session.startedAt)} on
                     {/if}
+                    <img class="server-icon" src={icon} alt="">
                     <span class="server">{session.server}</span>
                 </div>
 
@@ -119,29 +121,11 @@
 
   .image {
     grid-area: a;
-    position: relative;
-
-    .server-icon {
-      display: block;
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background-color: var(--menu-base-68-color);
-    }
-
-    .flag {
-      position: absolute;
-      top: -2px;
-      right: -4px;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      box-shadow: 0 0 0 3px var(--menu-list-item-background-color);
-    }
-  }
-
-  .session.active .image .flag {
-    box-shadow: 0 0 0 3px var(--accent-color);
+    display: block;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .name {
@@ -165,8 +149,17 @@
   .played {
     grid-area: d;
     align-self: flex-start;
+    display: flex;
+    align-items: center;
+    column-gap: 6px;
     color: var(--menu-text-dimmed-color);
     font-size: 18px;
+
+    .server-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
 
     .server {
       color: var(--menu-text-color);
