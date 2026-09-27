@@ -322,40 +322,6 @@ fun GuiGraphicsExtractor.drawTriangle(
 )
 
 @Suppress("LongParameterList")
-inline fun GuiGraphicsExtractor.drawGlyphOnCurrentLayer(
-    textureSetup: TextureSetup,
-    x0: Float,
-    y0: Float,
-    x1: Float,
-    y1: Float,
-    u1: Float = 0f,
-    v1: Float = 0f,
-    u2: Float = 1f,
-    v2: Float = 1f,
-    argb: Int = -1,
-    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
-) {
-    this.guiRenderState.addGlyphToCurrentLayer(
-        TexQuadGuiElementRenderState(
-            x0,
-            y0,
-            x1,
-            y1,
-            u1,
-            v1,
-            u2,
-            v2,
-            argb,
-            pipeline,
-            textureSetup,
-            copyPosePooled(),
-            this.scissorStack.peek(),
-            null,
-        )
-    )
-}
-
-@Suppress("LongParameterList")
 inline fun GuiGraphicsExtractor.drawTexQuad(
     textureSetup: TextureSetup,
     x0: Float,

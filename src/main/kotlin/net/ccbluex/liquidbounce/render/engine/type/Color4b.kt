@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import java.awt.Color
 import java.lang.Math.fma
 import java.util.function.ToIntFunction
@@ -31,6 +32,7 @@ import net.minecraft.world.item.DyeColor
 import org.joml.Vector3f
 import org.joml.Vector4f
 
+@ValueClassCandidate
 @JvmRecord
 @AddonApi
 data class Color4b(val argb: Int) {

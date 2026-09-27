@@ -19,33 +19,43 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import it.unimi.dsi.fastutil.ints.IntList
 import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 interface ProcessedText {
     val chars: List<ProcessedChar>
 
-    /**
-     * Elements: start codepoint index, end codepoint index, ...
-     *
-     * Size should be even,
-     */
-    val underlines: IntList
-
-    /**
-     * Elements: start codepoint index, end codepoint index, ...
-     *
-     * Size should be even,
-     */
-    val strikeThroughs: IntList
-
     @JvmRecord
     data class ProcessedChar(
         val codepoint: Int,
-        val font: @FontStyle Int,
-        val obfuscated: Boolean,
-        val color: Color4b
-    )
+        val style: Int,
+        val color: Color4b,
+    ) {
+        /**
+         * The [java.awt.Font] value, which is all the glyph lookup accepts.
+         */
+        val font: @FontStyle Int get() = style and FONT_MASK
+
+        val obfuscated: Boolean get() = style and OBFUSCATED != 0
+
+        val underlined: Boolean get() = style and UNDERLINE != 0
+
+        val strikethrough: Boolean get() = style and STRIKETHROUGH != 0
+    }
+
+    companion object {
+        /**
+         * Bits 0 and 1 hold the [java.awt.Font] value (plain, bold, italic or both), which the glyph
+         * lookup uses as a style index.
+         */
+        const val FONT_MASK = 0b11
+
+        /**
+         * Decorations that follow the character instead of the text, so they are read back from it.
+         */
+        const val OBFUSCATED = 1 shl 2
+        const val UNDERLINE = 1 shl 3
+        const val STRIKETHROUGH = 1 shl 4
+    }
 
 }

@@ -20,8 +20,6 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import net.ccbluex.fastutil.asIntList
-import net.ccbluex.fastutil.intListOf
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -31,6 +29,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.Test
 import java.awt.Font
+import kotlin.test.assertContentEquals
 
 class MinecraftTextProcessorTest {
 
@@ -44,9 +43,9 @@ class MinecraftTextProcessorTest {
 
         val processed = MinecraftTextProcessor.process(text, Color4b(1, 2, 3, 4))
 
-        assertEquals(
-            intListOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC),
-            processed.chars.mapToIntArray { it.font }.asIntList(),
+        assertContentEquals(
+            intArrayOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC),
+            processed.chars.mapToIntArray { it.font },
         )
         assertEquals("pbix", processed.chars.joinToString("") { Character.toString(it.codepoint) })
     }
@@ -65,15 +64,15 @@ class MinecraftTextProcessorTest {
     }
 
     @Test
-    fun testProcessTracksUnderlineAndStrikethroughRanges() {
+    fun testProcessTracksUnderlineAndStrikethrough() {
         val text = Component.empty()
             .append("ab".asPlainText(Style.EMPTY.withUnderlined(true)))
             .append("cd".asPlainText(Style.EMPTY.withStrikethrough(true)))
 
         val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
 
-        assertEquals(intListOf(0, 2), processed.underlines)
-        assertEquals(intListOf(2, 4), processed.strikeThroughs)
+        assertContentEquals(listOf(true, true, false, false), processed.chars.map { it.underlined })
+        assertContentEquals(listOf(false, false, true, true), processed.chars.map { it.strikethrough })
     }
 
     @Test
@@ -95,10 +94,10 @@ class MinecraftTextProcessorTest {
 
         val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
 
-        assertEquals(
-            intListOf('a'.code, supplementaryCodepoint, 'b'.code),
-            processed.chars.mapToIntArray { it.codepoint }.asIntList()
+        assertContentEquals(
+            intArrayOf('a'.code, supplementaryCodepoint, 'b'.code),
+            processed.chars.mapToIntArray { it.codepoint }
         )
-        assertEquals(intListOf(0, 3), processed.underlines)
+        assertTrue(processed.chars.all { it.underlined })
     }
 }
