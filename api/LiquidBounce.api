@@ -992,7 +992,7 @@ public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendMa
 	public final fun registerBackend (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider;)V
 }
 
-public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider {
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider : net/ccbluex/liquidbounce/config/types/list/Tagged {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1001,6 +1001,8 @@ public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendPr
 	public final fun getId ()Ljava/lang/String;
 	public final fun getName ()Ljava/lang/String;
 	public final fun getSelectable ()Z
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
 }
 
 public final class net/ccbluex/liquidbounce/integration/backend/BrowserTexture : java/lang/Record {
