@@ -19,7 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import it.unimi.dsi.fastutil.io.FastByteArrayInputStream
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -27,8 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.randomUsername
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import org.ahocorasick.trie.Emit
 import org.ahocorasick.trie.Trie
-import java.nio.ByteBuffer
-import java.security.MessageDigest
+import org.apache.commons.codec.digest.DigestUtils
 import kotlin.random.Random
 
 /**
@@ -100,7 +100,7 @@ class NameProtectMappings {
             return
         }
 
-        val currentMapping = HashMap<String, MappingData>(otherPlayers.size + friendMappings.size)
+        val currentMapping = Object2ObjectOpenHashMap<String, MappingData>(otherPlayers.size + friendMappings.size)
 
         otherPlayers.subList(0, 200.coerceAtMost(otherPlayers.size)).forEach { playerName ->
             // Prevent DoS attacks
@@ -155,6 +155,8 @@ class NameProtectMappings {
         fun match(text: CharSequence): Replacements =
             matcher.parseText(text)
                 .mapToArray { it to replacements[it.keyword]!! }
+                // The substitution walks the emits in `Emit.start` order, which the library provides
+                // only as an artifact of `ignoreOverlaps`, so it is sorted here instead of assumed.
                 .apply { sortBy { it.first.start } }
                 .unmodifiable()
 
@@ -166,9 +168,9 @@ class NameProtectMappings {
 }
 
 private fun getEntropySourceFrom(playerName: String): Random {
-    val hash = MessageDigest.getInstance("MD5").digest(playerName.toByteArray())
+    val hash = DigestUtils.md5(playerName)
     // Parse the first 8 bytes to long value
-    val l = ByteBuffer.wrap(hash).long
+    val l = FastByteArrayInputStream(hash).readLong()
     return Random(l)
 }
 
