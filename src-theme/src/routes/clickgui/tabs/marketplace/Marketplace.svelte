@@ -9,7 +9,6 @@
     import Notice from "../../common/Notice.svelte";
     import ListRow from "../../common/ListRow.svelte";
     import ItemAction from "./ItemAction.svelte";
-    import Toast from "../../common/Toast.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
     import LoadDialog from "./loading/LoadDialog.svelte";
@@ -44,7 +43,6 @@
         configLine,
         dialog,
         itemBadges,
-        notifyInstalled,
         reports,
         reviews,
         typeName,
@@ -52,7 +50,6 @@
         UNKNOWN_SERVER,
         version
     } from "./marketplace";
-    import {notify} from "../../clickgui_store";
     import {compactNumber, errorMessage} from "../../../../util/utils";
     import {typing, visible} from "../../../../integration/util";
 
@@ -265,7 +262,6 @@
         const result = await attempt(() => reportMarketplaceConfig(config.id, works));
         if (result) {
             configs = configs.map(c => c.id === config.id ? {...c, works: result.works, fails: result.fails} : c);
-            notify(`Reported ${config.address} as ${works ? "working" : "broken"}`);
         }
     }
 
@@ -281,12 +277,8 @@
 
     function install(item: MarketplaceItem) {
         return itemAction(item, async () => {
-            notify(`Installing ${item.name}...`);
-            const result = await attempt(() => installMarketplaceItem(item.id));
-            if (result) {
-                notifyInstalled(result);
-                await reload();
-            }
+            await attempt(() => installMarketplaceItem(item.id));
+            await reload();
         });
     }
 
@@ -295,7 +287,6 @@
             const updated = await attempt(() => updateMarketplaceItem(item.id));
             if (updated) {
                 items = items.map(i => i.id === updated.id ? updated : i);
-                notify(`Updated ${item.name}.`);
             }
         });
     }
@@ -312,7 +303,6 @@
     }
 
     async function login() {
-        notify("Continue in your browser");
         await attempt(loginClientUser);
     }
 
@@ -473,7 +463,6 @@
     </div>
 
     <LoadDialog/>
-    <Toast/>
 </ScaledClickGuiContent>
 
 <style lang="scss">

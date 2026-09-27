@@ -20,7 +20,9 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
+import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -36,16 +38,26 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.command.commands.client.config.reportInstalled
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 
 private const val PAGE_SIZE = 20
 private const val HISTORY_SIZE = 10
+
+/**
+ * The messages of `.config`, which the tab tells the same way.
+ */
+private val configCommand = object : CmdI18n {
+    override val path = "config"
+}
 
 private suspend fun tagIds(names: Collection<String>): List<Int> {
     if (names.isEmpty()) {
@@ -181,17 +193,20 @@ private fun Route.getModules() = get("/modules") {
 private fun Route.postLoad() = post("/load") {
     data class LoadRequest(val modules: List<String>?)
 
-    val id = call.requireId()
-    val names = call.receive<LoadRequest>().modules
-    val modules = names.orEmpty().mapNotNull { ModuleManager[it] }
-    if (names != null && modules.isEmpty()) {
-        call.badRequest("None of these modules exist")
-    }
+    call.marketplaceAction {
+        val id = call.requireId()
+        val names = call.receive<LoadRequest>().modules
+        val modules = names.orEmpty().mapNotNull { ModuleManager[it] }
+        if (names != null && modules.isEmpty()) {
+            call.badRequest("None of these modules exist")
+        }
 
-    call.respondMarketplace {
         val (item, revisionId) = liveConfig(id, optionalSession())
-        InstallResult(ConfigTracker.load(item, revisionId, modules).installed.map { it.name })
+        val result = ConfigTracker.load(item, revisionId, modules)
+        tellPlayer(configCommand.t("load.loaded", variable(item.name)))
+        mc.execute { configCommand.reportInstalled(result) }
     }
+    call.respond(HttpStatusCode.NoContent)
 }
 
 /**
@@ -201,19 +216,21 @@ private fun Route.postLoad() = post("/load") {
 private fun Route.putReport() = put("/report") {
     data class ReportRequest(val works: Boolean?)
 
-    val id = call.requireId()
-    val works = call.receive<ReportRequest>().works
-    val session = call.requireSession()
-    call.respondMarketplace {
-        val (_, revisionId) = liveConfig(id, session)
+    val view = call.marketplaceAction {
+        val id = call.requireId()
+        val works = call.receive<ReportRequest>().works
+        val session = call.requireSession()
+        val (item, revisionId) = liveConfig(id, session)
         if (works == null) {
             MarketplaceApi.deleteConfigReport(session, id, revisionId)
         } else {
             val server = mc.currentServer?.ip?.dropPort()
             MarketplaceApi.putConfigReport(session, id, revisionId, works, LiquidBounce.clientVersion, server)
+            tellPlayer(configCommand.t("report.reported", variable(item.name)))
         }
         configView(MarketplaceApi.getMarketplaceItem(id, session))
     }
+    call.respond(view)
 }
 
 internal fun Route.marketplaceConfigRoutes() = route("/marketplace") {

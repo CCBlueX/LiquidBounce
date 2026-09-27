@@ -5,7 +5,6 @@
     import TextField from "../../../common/TextField.svelte";
     import {getMarketplaceConfigModules, loadMarketplaceConfig} from "../../../../../integration/rest";
     import {attempt, dialog, type DialogRequest} from "../marketplace";
-    import {notify} from "../../../clickgui_store";
 
     // The last config stays while the dialog fades out
     let config = $state.raw<{ id: number; address: string } | null>(null);
@@ -33,29 +32,19 @@
         available = [];
         pick = false;
         filter = "";
-        const fetched = await attempt(() => getMarketplaceConfigModules(id));
-        if (fetched) {
-            available = fetched;
-            modules = [...fetched];
-        } else {
-            dialog.set(null);
-        }
+        // Without them, the whole config still loads
+        available = await attempt(() => getMarketplaceConfigModules(id)) ?? [];
+        modules = [...available];
     }
 
     function toggle(module: string) {
         modules = modules.includes(module) ? modules.filter(m => m !== module) : [...modules, module];
     }
 
+    // The client tells the player what the load did
     async function load(): Promise<boolean> {
-        const target = config!!;
-        const result = await attempt(() => loadMarketplaceConfig(target.id, pick ? modules : null));
-        if (result) {
-            notify([
-                pick ? `Loaded ${modules.length} modules from ${target.address}.` : `Loaded ${target.address}.`,
-                result.installed.length > 0 ? `Installed ${result.installed.join(", ")}.` : ""
-            ].filter(Boolean).join(" "));
-        }
-        return !!result;
+        const id = config!!.id;
+        return await attempt(() => loadMarketplaceConfig(id, pick ? modules : null).then(() => true)) ?? false;
     }
 </script>
 

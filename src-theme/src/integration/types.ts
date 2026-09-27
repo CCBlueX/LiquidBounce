@@ -693,10 +693,6 @@ export interface MarketplaceItemDetail {
     }[];
 }
 
-export interface MarketplaceInstallResult {
-    installed: string[];
-}
-
 export interface MarketplaceInstalledItem {
     id: number;
     type: MarketplaceItemType;

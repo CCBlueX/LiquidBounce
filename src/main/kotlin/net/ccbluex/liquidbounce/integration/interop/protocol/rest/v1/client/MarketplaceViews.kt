@@ -149,8 +149,6 @@ internal data class ItemDetailView(
     val versions: List<VersionView>,
 )
 
-internal data class InstallResult(val installed: List<String>)
-
 internal data class InstalledItem(val id: Int, val type: MarketplaceItemType, val name: String)
 
 internal val MarketplaceItem.displayAddress get() = author?.let { "$it/$name" } ?: name
