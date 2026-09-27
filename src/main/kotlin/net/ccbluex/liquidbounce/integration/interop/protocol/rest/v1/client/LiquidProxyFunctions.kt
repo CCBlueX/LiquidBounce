@@ -112,8 +112,8 @@ private data class LiquidProxyState(
     /** Without an answer from LiquidProxy, the [notice] says why */
     val reachable: Boolean = true,
     val notice: Notice? = null,
-    val email: String? = null,
-    val subscription: SubscriptionInfo? = null,
+    /** `active`, `expired` or `unavailable`, `null` without a subscription */
+    val subscription: String? = null,
     val plans: List<ProxySubscriptionType> = emptyList(),
     val level: Int = LiquidProxy.SMART_LEVEL,
     val forwardAuthentication: Boolean = true,
@@ -123,24 +123,12 @@ private data class LiquidProxyState(
     val connected: String? = null,
 )
 
-private data class SubscriptionInfo(
-    val plan: String,
-    /** `active`, `expired` or `unavailable` */
-    val state: String,
-    val expiresAt: Long,
-    val autoRenew: Boolean,
-)
-
-private fun ProxySubscription.info() = SubscriptionInfo(
-    plan = LiquidProxy.plans.lastOrNull { it.level <= level }?.name ?: "LiquidProxy",
-    state = when {
+private val ProxySubscription.state
+    get() = when {
         status != 0 -> "unavailable"
         isActive -> "active"
         else -> "expired"
-    },
-    expiresAt = expiresAt.toEpochMilli(),
-    autoRenew = autoRenew,
-)
+    }
 
 /**
  * The notice for an account whose [subscription] can't be used, `null` when it can.
@@ -174,7 +162,11 @@ private fun subscriptionNotice(subscription: ProxySubscription?, email: String?)
  */
 private suspend fun ApplicationCall.respondState(refresh: Boolean = false) {
     if (!LiquidProxy.isLoggedIn) {
-        respond(interopGson.toJsonTree(LiquidProxyState(loggedIn = false)))
+        val notice = Notice(
+            translation("liquidbounce.liquidproxy.loggedOut").string,
+            translation("liquidbounce.liquidproxy.loggedOut.text").string
+        )
+        respond(interopGson.toJsonTree(LiquidProxyState(loggedIn = false, notice = notice)))
         return
     }
 
@@ -195,12 +187,10 @@ private suspend fun ApplicationCall.respondState(refresh: Boolean = false) {
         return
     }
 
-    val email = account.userInformation?.email
     respond(interopGson.toJsonTree(LiquidProxyState(
         loggedIn = true,
-        notice = subscriptionNotice(subscription, email),
-        email = email,
-        subscription = subscription?.info(),
+        notice = subscriptionNotice(subscription, account.userInformation?.email),
+        subscription = subscription?.state,
         plans = LiquidProxy.plans,
         level = LiquidProxy.effectiveLevel,
         forwardAuthentication = LiquidProxy.forwardAuthentication,
@@ -373,44 +363,6 @@ private fun Route.postNewIp() = post("/new-ip") {
     call.respond(HttpStatusCode.NoContent)
 }
 
-/**
- * A LiquidProxy connection written out for use outside the client.
- */
-private data class OutsideProxy(val host: String, val port: Int, val username: String, val password: String) {
-    val text get() = "$host:$port:$username:$password"
-}
-
-/**
- * The proxy LiquidProxy would connect with.
- */
-private suspend fun ApplicationCall.outsideProxy() = liquidProxy {
-    val subscription = LiquidProxy.subscription()?.takeIf { it.isActive }
-        ?: error(translation("liquidbounce.liquidproxy.error.inactive").string)
-    val locations = LiquidProxy.locations()
-    val location = LiquidProxy.connectedLocation
-        ?: locations.find { it.code == LiquidProxy.location }
-        ?: locations.first()
-    val proxy = LiquidProxy.proxy(location, subscription)
-    val credentials = checkNotNull(proxy.credentials)
-    OutsideProxy(proxy.host, proxy.port, credentials.username, credentials.password)
-}
-
-// GET /api/v1/client/liquidproxy/credentials
-private fun Route.getCredentials() = get("/credentials") {
-    call.respond(interopGson.toJsonTree(call.outsideProxy()))
-}
-
-// POST /api/v1/client/liquidproxy/credentials/clipboard
-private fun Route.postCredentialsClipboard() = post("/credentials/clipboard") {
-    val text = call.outsideProxy().text
-    val message = translation("liquidbounce.liquidproxy.copied").string
-    mc.execute {
-        mc.keyboardHandler.clipboard = text
-        notification("LiquidProxy", message, NotificationEvent.Severity.SUCCESS)
-    }
-    call.respond(HttpStatusCode.NoContent)
-}
-
 internal fun Route.liquidProxyRoutes() = route("/liquidproxy") {
     getState()
     getLocations()
@@ -420,6 +372,4 @@ internal fun Route.liquidProxyRoutes() = route("/liquidproxy") {
     postConnect()
     postDisconnect()
     postNewIp()
-    getCredentials()
-    postCredentialsClipboard()
 }

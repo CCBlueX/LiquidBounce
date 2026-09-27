@@ -21,13 +21,11 @@
     import ButtonContainer from "../../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../../common/buttons/IconTextButton.svelte";
     import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
+    import SingleSelect from "../../common/setting/select/SingleSelect.svelte";
     import CircleLoader from "../../common/CircleLoader.svelte";
     import LocationMap from "./LocationMap.svelte";
-    import PlanSelect from "./PlanSelect.svelte";
     import SessionHistory from "./SessionHistory.svelte";
-    import SubscriptionModal from "./SubscriptionModal.svelte";
     import LiquidProxyLogo from "./LiquidProxyLogo.svelte";
-    import Welcome from "./Welcome.svelte";
 
     const dispatch = createEventDispatcher<{ switchView: void }>();
 
@@ -37,9 +35,8 @@
     let now = Date.now();
 
     let loggingIn = false;
-    let subscriptionVisible = false;
 
-    $: subscribed = state?.subscription?.state === "active";
+    $: subscribed = state?.subscription === "active";
     // Also when a subscription shows up while the screen is open
     $: if (subscribed) {
         refreshSessions();
@@ -104,18 +101,22 @@
         await endLiquidProxySession(id);
         await refreshSessions();
     }
-</script>
 
-{#if state?.subscription}
-    <SubscriptionModal bind:visible={subscriptionVisible} subscription={state.subscription} email={state.email}/>
-{/if}
+    async function choosePlan(name: string) {
+        const plan = state?.plans.find(plan => plan.name === name);
+        if (plan) {
+            state = await setLiquidProxySettings({level: plan.level});
+        }
+    }
+</script>
 
 <div class="liquidproxy" transition:fly|global={{duration: 700, x: 1000}}>
     <div class="side">
         {#if state && subscribed}
             <div class="controls">
-                <PlanSelect plans={state.plans} level={state.level}
-                            on:change={async e => state = await setLiquidProxySettings({level: e.detail})}/>
+                <SingleSelect title="Type" options={state.plans.map(plan => plan.name)}
+                              value={state.plans.find(plan => plan.level === state?.level)?.name ?? ""}
+                              on:change={e => choosePlan(e.detail.value)}/>
                 <SwitchSetting title="Forward Microsoft Authentication" value={state.forwardAuthentication}
                                on:change={async () => state = await setLiquidProxySettings({
                                    forwardAuthentication: !state?.forwardAuthentication
@@ -124,7 +125,6 @@
         {/if}
 
         <LocationMap {locations} connected={state?.connected} focus={state?.location} interactive={subscribed}
-                     caption={subscribed ? null : "Global Coverage"}
                      on:connect={async e => state = await connectToLiquidProxy(e.detail)}
                      on:disconnect={async () => state = await disconnectFromLiquidProxy()}/>
     </div>
@@ -140,8 +140,6 @@
                 <div class="headline">{state.notice.title}</div>
                 <p>{state.notice.text}</p>
             </div>
-        {:else if !state.loggedIn}
-            <Welcome locationCount={locations.length} {loggingIn}/>
         {:else}
             <SessionHistory {sessions} {now} on:end={e => endSession(e.detail)}/>
         {/if}
@@ -155,25 +153,24 @@
         {:else if !state.reachable}
             <IconTextButton icon="icon-refresh.svg" title="Try Again" on:click={() => loadState(true)}/>
         {:else if !state.loggedIn}
-            <IconTextButton icon="liquidproxy/log-in.svg" title={loggingIn ? "Open Login Again" : "Login"}
+            <IconTextButton icon="icon-user.svg" title={loggingIn ? "Open Login Again" : "Login"}
                             on:click={loggingIn ? reopenLogin : login}/>
-            <IconTextButton icon="liquidproxy/tag.svg" title="View Plans" on:click={() => browse("PROXY_PLANS")}/>
+            <IconTextButton icon="icon-liquidbounce.net.svg" title="View Plans"
+                            on:click={() => browse("PROXY_PLANS")}/>
         {:else}
-            <IconTextButton icon="liquidproxy/log-out.svg" title="Logout" on:click={logout}/>
+            <IconTextButton icon="icon-exit.svg" title="Logout" on:click={logout}/>
             {#if subscribed}
                 <IconTextButton icon="icon-refresh.svg" title="Change IP on next join"
                                 on:click={requestLiquidProxyNewIp}/>
-                <IconTextButton icon="liquidproxy/credit-card.svg" title="Subscription Details"
-                                on:click={() => subscriptionVisible = true}/>
             {:else}
-                {#if state.subscription?.state === "unavailable"}
-                    <IconTextButton icon="liquidproxy/life-buoy.svg" title="Contact Support"
+                {#if state.subscription === "unavailable"}
+                    <IconTextButton icon="icon-liquidbounce.net.svg" title="Contact Support"
                                     on:click={() => browse("PROXY_SUPPORT")}/>
                 {:else if state.subscription}
-                    <IconTextButton icon="liquidproxy/credit-card.svg" title="Renew"
+                    <IconTextButton icon="icon-liquidbounce.net.svg" title="Renew"
                                     on:click={() => browse("PROXY_DASHBOARD")}/>
                 {:else}
-                    <IconTextButton icon="liquidproxy/tag.svg" title="View Plans"
+                    <IconTextButton icon="icon-liquidbounce.net.svg" title="View Plans"
                                     on:click={() => browse("PROXY_PLANS")}/>
                 {/if}
                 <IconTextButton icon="icon-refresh.svg" title="Check Again" on:click={() => loadState(true)}/>

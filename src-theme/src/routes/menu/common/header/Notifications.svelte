@@ -16,7 +16,6 @@
        notifications = [];
     });
 
-    // What the client tells the player, like the outcome of a LiquidProxy action
     listen("notification", (e: NotificationEvent) => {
         notification.set({title: e.title, message: e.message, error: e.severity === "ERROR"});
     });

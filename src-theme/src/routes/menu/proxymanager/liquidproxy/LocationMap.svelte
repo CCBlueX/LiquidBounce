@@ -5,14 +5,13 @@
     import type {Feature, FeatureCollection} from "geojson";
     import worldUrl from "world-atlas/countries-50m.json?url";
     import type {LiquidProxyLocation} from "../../../../integration/types";
+    import ToolTip from "../../common/ToolTip.svelte";
 
     export let locations: LiquidProxyLocation[] = [];
     export let connected: string | undefined = undefined;
     // Where the map opens when nothing is connected, e.g. the location chosen last
     export let focus: string | undefined = undefined;
     export let interactive = true;
-    // Shown in the corner when the map only shows off the locations
-    export let caption: string | null = null;
 
     const dispatch = createEventDispatcher<{ connect: string, disconnect: void }>();
 
@@ -33,7 +32,6 @@
     // Until the user pans or zooms, the map follows its size and the location it should show
     let moved = false;
 
-    let hovered: string | null = null;
     let drag: { pointerX: number, pointerY: number, x: number, y: number } | null = null;
 
     $: projection = geoMercator().scale(width / (2 * Math.PI)).translate([width / 2, height / 2]);
@@ -97,15 +95,21 @@
         return !location.maintenance && (!location.probed || location.latency !== undefined);
     }
 
-    function hint(location: LiquidProxyLocation): string | null {
+    // Reactive, so that it follows the connection
+    $: tooltip = (location: LiquidProxyLocation) => {
         if (location.maintenance) {
-            return "Under maintenance";
+            return `${location.label} · Under maintenance`;
         }
         if (location.probed && location.latency === undefined) {
-            return "Not reachable";
+            return `${location.label} · Not reachable`;
         }
-        return location.latency !== undefined ? `${location.latency} ms` : null;
-    }
+
+        let text = location.label;
+        if (interactive) {
+            text = location.code === connected ? `Disconnect from ${text}` : `Connect to ${text}`;
+        }
+        return location.latency !== undefined ? `${text} · ${location.latency} ms` : text;
+    };
 
     function handleLocationClick(location: LiquidProxyLocation) {
         if (!interactive || !isAvailable(location)) {
@@ -137,40 +141,18 @@
     {#each locations as location, index (location.code)}
         {@const position = positions.get(location.code)}
         {#if position}
-            {@const label = location.label}
-            {@const detail = hint(location)}
-            <button class="location"
+            <button class="location" aria-label={location.label}
                     class:connected={location.code === connected}
                     class:unavailable={!isAvailable(location)}
-                    class:hovered={hovered === location.code}
                     style="left: {position[0]}px; top: {position[1]}px; --pulse-delay: {index * 0.35}s;"
                     on:pointerdown|stopPropagation={() => moved = true}
-                    on:mouseenter={() => hovered = location.code}
-                    on:mouseleave={() => hovered = null}
                     on:click={() => handleLocationClick(location)}>
+                <ToolTip text={tooltip(location)}
+                         color={isAvailable(location) ? "var(--accent-color)" : "var(--tooltip-background-color)"}/>
                 <span class="dot"></span>
-                <span class="label">
-                    {#if !interactive || !isAvailable(location)}
-                        {label}
-                    {:else if location.code === connected}
-                        Disconnect from {label}
-                    {:else}
-                        Connect to {label}
-                    {/if}
-                    {#if detail}
-                        <span class="detail">{detail}</span>
-                    {/if}
-                </span>
             </button>
         {/if}
     {/each}
-
-    {#if caption}
-        <div class="caption">
-            <span class="title">{caption}</span>
-            <span class="detail">{locations.length} locations</span>
-        </div>
-    {/if}
 
     <!-- A connection stays visible, and can be ended, even when nothing else here can be used -->
     {#if interactive || connectedLocation}
@@ -178,7 +160,7 @@
             {#if connectedLocation}
                 <button class="pill connected" on:pointerdown|stopPropagation on:click={() => dispatch("disconnect")}>
                     Connected to {connectedLocation.label}
-                    <img src="img/menu/liquidproxy/power.svg" alt="disconnect">
+                    <img src="img/menu/icon-disconnect.svg" alt="disconnect">
                 </button>
             {:else}
                 <span class="pill disconnected">Not connected</span>
@@ -236,38 +218,11 @@
       transition: ease transform .2s;
     }
 
-    .label {
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 4px);
-      transform: translateX(-50%);
-      white-space: nowrap;
-      background-color: var(--accent-color);
-      color: var(--menu-text-color);
-      font-size: 15px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: ease opacity .2s;
-
-      .detail {
-        font-weight: 400;
-        opacity: 0.8;
-        margin-left: 6px;
-      }
-    }
-
-    &.hovered {
+    &:hover {
       z-index: 2;
 
       .dot {
         transform: scale(1.3);
-      }
-
-      .label {
-        opacity: 1;
       }
     }
 
@@ -283,10 +238,6 @@
         background-color: rgba(255, 255, 255, 0.15);
         box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.3);
       }
-
-      .label {
-        background-color: var(--menu-base-68-color);
-      }
     }
   }
 
@@ -301,29 +252,6 @@
     }
     70%, 100% {
       box-shadow: inset 0 0 0 5px var(--accent-color), 0 0 0 14px transparent;
-    }
-  }
-
-  .caption {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    display: flex;
-    flex-direction: column;
-    padding: 10px 16px;
-    border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.45);
-    pointer-events: none;
-
-    .title {
-      color: var(--menu-text-color);
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .detail {
-      color: var(--menu-text-dimmed-color);
-      font-size: 13px;
     }
   }
 

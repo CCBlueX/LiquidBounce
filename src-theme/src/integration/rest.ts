@@ -15,7 +15,6 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
-    LiquidProxyCredentials,
     LiquidProxyLocation,
     LiquidProxySession,
     LiquidProxyState,
@@ -706,20 +705,6 @@ export async function disconnectFromLiquidProxy(): Promise<LiquidProxyState> {
 
 export async function requestLiquidProxyNewIp() {
     await fetch(`${API_BASE}/client/liquidproxy/new-ip`, {
-        method: "POST"
-    });
-}
-
-export async function getLiquidProxyCredentials(): Promise<LiquidProxyCredentials | null> {
-    const response = await fetch(`${API_BASE}/client/liquidproxy/credentials`);
-    return response.ok ? await response.json() : null;
-}
-
-/**
- * Copies the proxy as `host:port:username:password`.
- */
-export async function copyLiquidProxyCredentials() {
-    await fetch(`${API_BASE}/client/liquidproxy/credentials/clipboard`, {
         method: "POST"
     });
 }

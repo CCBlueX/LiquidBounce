@@ -1,5 +1,3 @@
-import type {LiquidProxySubscription} from "../../../../integration/types";
-
 export function formatDuration(millis: number): string {
     const minutes = Math.round(millis / 60_000);
     if (minutes < 1) {
@@ -15,17 +13,3 @@ export function formatDuration(millis: number): string {
     return rest === 0 ? hoursText : `${hoursText} ${rest} min`;
 }
 
-export function formatDate(millis: number): string {
-    return new Date(millis).toLocaleDateString(undefined, {day: "numeric", month: "long", year: "numeric"});
-}
-
-export function subscriptionStatus(subscription: LiquidProxySubscription): string {
-    switch (subscription.state) {
-        case "active":
-            return "Active";
-        case "expired":
-            return "Expired";
-        default:
-            return "Unavailable";
-    }
-}

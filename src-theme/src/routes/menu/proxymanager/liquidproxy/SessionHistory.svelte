@@ -2,6 +2,8 @@
     import {createEventDispatcher} from "svelte";
     import type {LiquidProxySession} from "../../../../integration/types";
     import {REST_BASE} from "../../../../integration/host";
+    import MenuListItem from "../../common/menulist/MenuListItem.svelte";
+    import MenuListItemButton from "../../common/menulist/MenuListItemButton.svelte";
     import MenuListItemTag from "../../common/menulist/MenuListItemTag.svelte";
     import ToolTip from "../../common/ToolTip.svelte";
     import {formatDuration} from "./liquidproxy";
@@ -21,23 +23,16 @@
     <div class="sessions">
         {#each sessions as session (session.id)}
             {@const icon = session.icon ?? UNKNOWN_SERVER_ICON}
-            <div class="session" class:active={session.connected}>
-                <!-- The country the IP of the session was from -->
-                {#if session.country !== "Unknown"}
-                    <img class="image" src="img/flags/{session.country.toLowerCase()}.svg" alt={session.country}>
-                {:else}
-                    <img class="image" src={icon} alt={session.server}>
-                {/if}
-
-                <div class="name">
-                    <img class="head" src={session.avatar} alt={session.username}>
-                    <span>{session.username}</span>
+            <!-- The country the IP of the session was from -->
+            <MenuListItem title={session.username}
+                          image={session.country !== "Unknown" ? `img/flags/${session.country.toLowerCase()}.svg` : icon}>
+                <svelte:fragment slot="tag">
                     {#if session.type}
                         <MenuListItemTag text={session.type}/>
                     {/if}
-                </div>
+                </svelte:fragment>
 
-                <div class="played">
+                <div class="played" slot="subtitle">
                     {#if session.connected}
                         playing {formatDuration(now - session.startedAt)} on
                     {:else}
@@ -47,20 +42,18 @@
                     <span class="server">{session.server}</span>
                 </div>
 
-                <div class="action">
+                <svelte:fragment slot="always-visible">
                     {#if session.connected}
-                        <button on:click={() => dispatch("end", session.id)}>
-                            <ToolTip text="End session"/>
-                            <img src="img/menu/liquidproxy/power.svg" alt="end session">
-                        </button>
+                        <MenuListItemButton title="End session" icon="disconnect"
+                                            on:click={() => dispatch("end", session.id)}/>
                     {:else if session.error}
-                        <span>
+                        <span class="error">
                             <ToolTip text={session.error}/>
-                            <img src="img/menu/liquidproxy/triangle-alert.svg" alt="error">
+                            <img src="img/menu/icon-info.svg" alt="error">
                         </span>
                     {/if}
-                </div>
-            </div>
+                </svelte:fragment>
+            </MenuListItem>
         {:else}
             <div class="empty">Sessions you play through LiquidProxy show up here.</div>
         {/each}
@@ -89,71 +82,10 @@
     min-height: 0;
   }
 
-  .session {
-    display: grid;
-    grid-template-areas:
-        "a b c"
-        "a d c";
-    grid-template-columns: max-content 1fr max-content;
-    column-gap: 15px;
-    align-items: center;
-    background-color: var(--menu-list-item-background-color);
-    padding: 15px 25px;
-    border-radius: 5px;
-    transition: ease background-color .2s;
-
-    :global(.tag) {
-      background-color: var(--accent-color);
-    }
-
-    &.active {
-      background-color: var(--accent-color);
-
-      .played {
-        color: var(--menu-text-color);
-      }
-
-      :global(.tag) {
-        background-color: var(--menu-base-80-color);
-      }
-    }
-  }
-
-  .image {
-    grid-area: a;
-    display: block;
-    width: 68px;
-    height: 68px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-
-  .name {
-    grid-area: b;
-    align-self: flex-end;
-    display: flex;
-    align-items: center;
-    color: var(--menu-text-color);
-    font-size: 20px;
-    font-weight: 600;
-
-    .head {
-      width: 22px;
-      height: 22px;
-      margin-right: 8px;
-      image-rendering: pixelated;
-      border-radius: 3px;
-    }
-  }
-
   .played {
-    grid-area: d;
-    align-self: flex-start;
     display: flex;
     align-items: center;
     column-gap: 6px;
-    color: var(--menu-text-dimmed-color);
-    font-size: 18px;
 
     .server-icon {
       width: 20px;
@@ -166,23 +98,14 @@
     }
   }
 
-  .action {
-    grid-area: c;
-
-    button, span {
-      display: flex;
-      background: none;
-      border: none;
-      padding: 0;
-      position: relative;
-    }
-
-    button {
-      cursor: pointer;
-    }
+  .error {
+    position: relative;
+    display: flex;
+    margin-left: 15px;
 
     img {
       height: 27px;
+      width: 27px;
     }
   }
 

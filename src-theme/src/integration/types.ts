@@ -358,13 +358,6 @@ export interface LiquidProxyPlan {
     description?: string;
 }
 
-export interface LiquidProxySubscription {
-    plan: string;
-    state: "active" | "expired" | "unavailable";
-    expiresAt: number;
-    autoRenew: boolean;
-}
-
 export interface LiquidProxyState {
     loggedIn: boolean;
     reachable: boolean;
@@ -372,8 +365,7 @@ export interface LiquidProxyState {
         title: string;
         text: string;
     };
-    email?: string;
-    subscription?: LiquidProxySubscription;
+    subscription?: "active" | "expired" | "unavailable";
     plans: LiquidProxyPlan[];
     level: number;
     forwardAuthentication: boolean;
@@ -406,12 +398,6 @@ export interface LiquidProxySession {
     error?: string;
 }
 
-export interface LiquidProxyCredentials {
-    host: string;
-    port: number;
-    username: string;
-    password: string;
-}
 
 export interface Proxy {
     id: number;
