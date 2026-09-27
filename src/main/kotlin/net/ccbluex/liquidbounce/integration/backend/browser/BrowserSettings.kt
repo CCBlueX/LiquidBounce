@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.integration.backend.browser
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,6 +30,7 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendProvider
 import net.ccbluex.liquidbounce.integration.backend.isBrowserAccelerationDisabled
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -50,7 +53,19 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
     /**
      * Applies on the next start.
      */
-    var backendId by text("Backend", "")
+    lateinit var backendChoice: ChoiceListValue<Tagged>
+        private set
+
+    private object AskBackend : Tagged {
+        override val tag = "Ask"
+    }
+
+    /**
+     * Add-ons register their backends after this group is created, so the choice is built once they did.
+     */
+    internal fun createBackendChoice(backends: List<BrowserBackendProvider>) {
+        backendChoice = enumChoice("Backend", AskBackend, linkedSetOf<Tagged>(AskBackend).apply { addAll(backends) })
+    }
 
     /**
      * Uses GPU acceleration for rendering the browser.
