@@ -690,16 +690,21 @@ export async function endLiquidProxySession(id: string) {
     await liquidProxyRequest(`/sessions/${id}/end`, {method: "POST"});
 }
 
-export async function setLiquidProxySettings(settings: { level?: number, forwardAuthentication?: boolean }) {
-    await liquidProxyRequest("/settings", jsonBody("PUT", settings));
+export async function setLiquidProxySettings(
+    settings: { level?: number, forwardAuthentication?: boolean }
+): Promise<LiquidProxyState> {
+    const response = await liquidProxyRequest("/settings", jsonBody("PUT", settings));
+    return await response.json();
 }
 
-export async function connectToLiquidProxy(location: string) {
-    await liquidProxyRequest("/connect", jsonBody("POST", {location}));
+export async function connectToLiquidProxy(location: string): Promise<LiquidProxyState> {
+    const response = await liquidProxyRequest("/connect", jsonBody("POST", {location}));
+    return await response.json();
 }
 
-export async function disconnectFromLiquidProxy() {
-    await liquidProxyRequest("/disconnect", {method: "POST"});
+export async function disconnectFromLiquidProxy(): Promise<LiquidProxyState> {
+    const response = await liquidProxyRequest("/disconnect", {method: "POST"});
+    return await response.json();
 }
 
 export async function requestLiquidProxyNewIp(): Promise<{ username: string, alreadyRequested: boolean }> {

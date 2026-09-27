@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxySession
 import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxySubscription
+import net.ccbluex.liquidbounce.api.models.liquidproxy.ProxySubscriptionType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
@@ -60,7 +61,7 @@ private suspend inline fun <T> ApplicationCall.liquidProxy(block: () -> T): T = 
     block()
 } catch (e: IOException) {
     logger.error("LiquidProxy request failed", e)
-    val code = e.httpException?.code ?: serviceUnavailable("LiquidProxy is not reachable")
+    val code = e.httpException?.code ?: serviceUnavailable("Check your internet connection and try again.")
     if (code == HttpStatusCode.Unauthorized.value) {
         unauthorized("Your LiquidBounce login has expired. Log in again.")
     }
@@ -73,7 +74,7 @@ private data class LiquidProxyState(
     val loggedIn: Boolean,
     val email: String? = null,
     val subscription: SubscriptionInfo? = null,
-    val plans: List<PlanInfo> = emptyList(),
+    val plans: List<ProxySubscriptionType> = emptyList(),
     val level: Int = LiquidProxy.SMART_LEVEL,
     val forwardAuthentication: Boolean = true,
     /** The location chosen last */
@@ -81,8 +82,6 @@ private data class LiquidProxyState(
     /** The location the current proxy goes through */
     val connected: String? = null,
 )
-
-private data class PlanInfo(val level: Int, val name: String, val description: String?)
 
 private data class SubscriptionInfo(
     val plan: String,
@@ -103,16 +102,17 @@ private fun ProxySubscription.info() = SubscriptionInfo(
     autoRenew = autoRenew,
 )
 
-// GET /api/v1/client/liquidproxy
-private fun Route.getState() = get {
+/**
+ * Responds with the state, which every change answers with. [refresh] fetches the account and subscription again.
+ */
+private suspend fun ApplicationCall.respondState(refresh: Boolean = false) {
     if (!LiquidProxy.isLoggedIn) {
-        call.respond(interopGson.toJsonTree(LiquidProxyState(loggedIn = false)))
-        return@get
+        respond(interopGson.toJsonTree(LiquidProxyState(loggedIn = false)))
+        return
     }
 
-    val refresh = call.request.queryParameters["refresh"] == "true"
     val account = ClientAccountManager.clientAccount
-    val subscription = call.liquidProxy {
+    val subscription = liquidProxy {
         if (account.userInformation == null || refresh) {
             account.updateInfo()
         }
@@ -122,16 +122,21 @@ private fun Route.getState() = get {
         }
     }
 
-    call.respond(interopGson.toJsonTree(LiquidProxyState(
+    respond(interopGson.toJsonTree(LiquidProxyState(
         loggedIn = true,
         email = account.userInformation?.email,
         subscription = subscription?.info(),
-        plans = LiquidProxy.plans.map { PlanInfo(it.level, it.name, it.description) },
+        plans = LiquidProxy.plans,
         level = LiquidProxy.effectiveLevel,
         forwardAuthentication = LiquidProxy.forwardAuthentication,
         location = LiquidProxy.location.ifEmpty { null },
         connected = LiquidProxy.connectedLocation?.code,
     )))
+}
+
+// GET /api/v1/client/liquidproxy
+private fun Route.getState() = get {
+    call.respondState(refresh = call.request.queryParameters["refresh"] == "true")
 }
 
 private data class LocationInfo(
@@ -229,10 +234,8 @@ private fun Route.putSettings() = put("/settings") {
         }
         body.forwardAuthentication?.let { LiquidProxy.forwardAuthentication = it }
         ConfigSystem.store(LiquidProxy)
-
-        LiquidProxy.refreshConnection()
     }
-    call.respond(HttpStatusCode.NoContent)
+    call.respondState()
 }
 
 // POST /api/v1/client/liquidproxy/connect
@@ -241,13 +244,13 @@ private fun Route.postConnect() = post("/connect") {
 
     val body = call.receive<ConnectRequest>()
     call.liquidProxy { LiquidProxy.connect(body.location) }
-    call.respond(HttpStatusCode.NoContent)
+    call.respondState()
 }
 
 // POST /api/v1/client/liquidproxy/disconnect
 private fun Route.postDisconnect() = post("/disconnect") {
     LiquidProxy.disconnect()
-    call.respond(HttpStatusCode.NoContent)
+    call.respondState()
 }
 
 // POST /api/v1/client/liquidproxy/new-ip
@@ -260,34 +263,35 @@ private fun Route.postNewIp() = post("/new-ip") {
 }
 
 /**
- * The proxy LiquidProxy would connect with, for use outside the client.
+ * A LiquidProxy connection written out for use outside the client.
  */
-private suspend fun ApplicationCall.credentials() = liquidProxy {
+private data class OutsideProxy(val host: String, val port: Int, val username: String, val password: String) {
+    val text get() = "$host:$port:$username:$password"
+}
+
+/**
+ * The proxy LiquidProxy would connect with.
+ */
+private suspend fun ApplicationCall.outsideProxy() = liquidProxy {
     val subscription = LiquidProxy.subscription()?.takeIf { it.isActive }
         ?: error("You have no active LiquidProxy subscription")
     val locations = LiquidProxy.locations()
     val location = LiquidProxy.connectedLocation
         ?: locations.find { it.code == LiquidProxy.location }
         ?: locations.first()
-    LiquidProxy.proxy(location, subscription)
+    val proxy = LiquidProxy.proxy(location, subscription)
+    val credentials = checkNotNull(proxy.credentials)
+    OutsideProxy(proxy.host, proxy.port, credentials.username, credentials.password)
 }
 
 // GET /api/v1/client/liquidproxy/credentials
 private fun Route.getCredentials() = get("/credentials") {
-    data class CredentialsResponse(val host: String, val port: Int, val username: String, val password: String)
-
-    val proxy = call.credentials()
-    val credentials = proxy.credentials ?: call.badRequest("No credentials")
-    call.respond(interopGson.toJsonTree(
-        CredentialsResponse(proxy.host, proxy.port, credentials.username, credentials.password)
-    ))
+    call.respond(interopGson.toJsonTree(call.outsideProxy()))
 }
 
 // POST /api/v1/client/liquidproxy/credentials/clipboard
 private fun Route.postCredentialsClipboard() = post("/credentials/clipboard") {
-    val proxy = call.credentials()
-    val credentials = proxy.credentials ?: call.badRequest("No credentials")
-    val text = "${proxy.host}:${proxy.port}:${credentials.username}:${credentials.password}"
+    val text = call.outsideProxy().text
     mc.execute {
         mc.keyboardHandler.clipboard = text
     }

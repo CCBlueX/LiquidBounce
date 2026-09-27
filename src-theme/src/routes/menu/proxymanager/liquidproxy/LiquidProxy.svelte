@@ -48,6 +48,7 @@
     let subscriptionVisible = false;
 
     $: subscribed = state?.subscription?.state === "active";
+    $: notice = noticeOf(state, loadError);
     // Also when a subscription shows up while the screen is open
     $: if (subscribed) {
         refreshSessions();
@@ -57,7 +58,6 @@
 
     onMount(async () => {
         await Promise.all([loadState(true), loadLocations()]);
-        await refreshSessions();
 
         timers.push(
             setTimeout(loadLocations, PROBE_RESULT_DELAY_MS),
@@ -111,6 +111,34 @@
         }
     }
 
+    // What the main panel says instead of the sessions, when it can't show them
+    function noticeOf(state: LiquidProxyState | null, loadError: string | null) {
+        if (state === null) {
+            return loadError ? {title: "LiquidProxy is not reachable", text: loadError} : null;
+        }
+        const subscription = state.subscription;
+        if (!state.loggedIn || subscription?.state === "active") {
+            return null;
+        }
+
+        if (subscription?.state === "unavailable") {
+            return {
+                title: "Subscription unavailable",
+                text: "Your LiquidProxy subscription can't be used right now. Contact support if you think this is a mistake."
+            };
+        }
+        if (subscription) {
+            return {
+                title: "Subscription ended",
+                text: `Your LiquidProxy subscription ended on ${formatDate(subscription.expiresAt)}. Renew it to get back to playing.`
+            };
+        }
+        return {
+            title: "No subscription yet",
+            text: `${state.email ?? "Your account"} has no LiquidProxy subscription. Pick a plan on liquidproxy.net and it shows up here.`
+        };
+    }
+
     function label(code: string) {
         const location = locations.find(l => l.code === code);
         return location ? locationLabel(location, locations) : code;
@@ -121,7 +149,6 @@
         try {
             await loginClientUser();
             await loadState(true);
-            await refreshSessions();
             notify(state?.email ? `Logged in as ${state.email}` : "Logged in");
         } catch (e) {
             notifyError(e);
@@ -144,8 +171,7 @@
 
     async function connect(code: string) {
         try {
-            await connectToLiquidProxy(code);
-            await loadState();
+            state = await connectToLiquidProxy(code);
             notify(`Connected to ${label(code)}`);
         } catch (e) {
             notifyError(e);
@@ -154,27 +180,16 @@
 
     async function disconnect() {
         try {
-            await disconnectFromLiquidProxy();
-            await loadState();
+            state = await disconnectFromLiquidProxy();
             notify("Disconnected from LiquidProxy");
         } catch (e) {
             notifyError(e);
         }
     }
 
-    async function changeLevel(level: number) {
+    async function changeSettings(settings: { level?: number, forwardAuthentication?: boolean }) {
         try {
-            await setLiquidProxySettings({level});
-            await loadState();
-        } catch (e) {
-            notifyError(e);
-        }
-    }
-
-    async function changeForwardAuthentication(forwardAuthentication: boolean) {
-        try {
-            await setLiquidProxySettings({forwardAuthentication});
-            await loadState();
+            state = await setLiquidProxySettings(settings);
         } catch (e) {
             notifyError(e);
         }
@@ -210,9 +225,9 @@
     <div class="side">
         {#if state && subscribed}
             <div class="controls">
-                <PlanSelect plans={state.plans} level={state.level} on:change={e => changeLevel(e.detail)}/>
+                <PlanSelect plans={state.plans} level={state.level} on:change={e => changeSettings({level: e.detail})}/>
                 <SwitchSetting title="Forward Microsoft Authentication" value={state.forwardAuthentication}
-                               on:change={() => changeForwardAuthentication(!state?.forwardAuthentication)}/>
+                               on:change={() => changeSettings({forwardAuthentication: !state?.forwardAuthentication})}/>
             </div>
         {/if}
 
@@ -222,41 +237,18 @@
     </div>
 
     <div class="main">
-        {#if state === null}
+        {#if notice}
             <div class="panel">
-                {#if loadError}
-                    <LiquidProxyLogo/>
-                    <div class="headline">LiquidProxy is not reachable</div>
-                    <p>{loadError}</p>
-                {:else}
-                    <CircleLoader/>
-                {/if}
+                <LiquidProxyLogo/>
+                <div class="headline">{notice.title}</div>
+                <p>{notice.text}</p>
+            </div>
+        {:else if state === null}
+            <div class="panel">
+                <CircleLoader/>
             </div>
         {:else if !state.loggedIn}
             <Welcome locationCount={locations.length} {loggingIn}/>
-        {:else if !subscribed}
-            <div class="panel">
-                <LiquidProxyLogo/>
-                {#if state.subscription?.state === "unavailable"}
-                    <div class="headline">Subscription unavailable</div>
-                    <p>
-                        Your LiquidProxy subscription can't be used right now.
-                        Contact support if you think this is a mistake.
-                    </p>
-                {:else if state.subscription}
-                    <div class="headline">Subscription ended</div>
-                    <p>
-                        Your LiquidProxy subscription ended on {formatDate(state.subscription.expiresAt)}.
-                        Renew it to get back to playing.
-                    </p>
-                {:else}
-                    <div class="headline">No subscription yet</div>
-                    <p>
-                        {state.email ?? "Your account"} has no LiquidProxy subscription.
-                        Pick a plan on liquidproxy.net and it shows up here.
-                    </p>
-                {/if}
-            </div>
         {:else}
             <SessionHistory {sessions} {now} on:end={e => endSession(e.detail)}/>
         {/if}
