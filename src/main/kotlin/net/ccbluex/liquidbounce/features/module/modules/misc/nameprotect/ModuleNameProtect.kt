@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.fastutil.Pool
-import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,6 +31,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.text.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
+import net.ccbluex.liquidbounce.utils.text.codePointsToString
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
@@ -121,11 +120,6 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         )
     }
 
-    private val mappedCharListPool = Pool(
-        initializer = { ObjectArrayList(128) },
-        finalizer = ObjectArrayList<MappedCharacter>::clear,
-    ).synchronized()
-
     fun replace(original: String): String =
         when {
             !running -> original
@@ -171,27 +165,11 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         }
 
     /**
-     * The collected characters are indexed by code point, while the indices reported by
-     * [org.ahocorasick.trie.Emit] count UTF-16 code units. The two only diverge on text holding
-     * surrogate pairs, so indices are translated with [codePointIndex].
+     * Builds the plain text once for matching, then defers the substitution to [withReplacements], so
+     * a text without a match is returned as is instead of being copied character by character.
      */
     private fun uncachedWrap(original: FormattedCharSequence, useCache: Boolean): FormattedCharSequence {
-        val originalCharacters = mappedCharListPool.borrow()
-
-        val text = Pools.StringBuilder.use { builder ->
-            original.accept { _, style, codePoint ->
-                builder.appendCodePoint(codePoint)
-                originalCharacters += MappedCharacter(
-                    style,
-                    style.color?.bypassesNameProtection ?: false,
-                    codePoint
-                )
-
-                true
-            }
-
-            builder.toString()
-        }
+        val text = original.codePointsToString()
 
         val replacements = if (useCache) {
             replacementMappings.findReplacementsCached(text)
@@ -200,96 +178,14 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         }
 
         if (replacements.isEmpty()) {
-            mappedCharListPool.recycle(originalCharacters)
-
             return original
         }
 
-        val mappedCharacters = mappedCharListPool.borrow()
-
-        var currReplacementIndex = 0
-        var currentIndex = 0
-
-        while (currentIndex < originalCharacters.size) {
-            val replacement = replacements.getOrNull(currReplacementIndex)
-
-            val replacementStartIdx = replacement?.let { text.codePointIndex(it.first.start) }
-
-            if (replacementStartIdx == currentIndex) {
-                if (originalCharacters[replacementStartIdx].bypassesNameProtection) {
-                    currReplacementIndex++
-
-                    continue
-                }
-
-                val newName = replacement.second.newName
-
-                // Every character of the replacement shares one style
-                val style = originalCharacters[currentIndex].style.withColor(replacement.second.colorGetter().argb)
-
-                mappedCharacters.ensureCapacity(mappedCharacters.size + newName.length)
-                var nameIndex = 0
-                while (nameIndex < newName.length) {
-                    val codePoint = newName.codePointAt(nameIndex)
-                    mappedCharacters += MappedCharacter(style, false, codePoint)
-                    nameIndex += Character.charCount(codePoint)
-                }
-
-                currentIndex = text.codePointIndex(replacement.first.end + 1)
-                currReplacementIndex += 1
-            } else {
-                val maxCopyIdx = replacementStartIdx ?: originalCharacters.size
-
-                mappedCharacters.addAll(originalCharacters.subList(currentIndex, maxCopyIdx))
-
-                currentIndex = maxCopyIdx
-            }
-        }
-
-        mappedCharListPool.recycle(originalCharacters)
-
-        return WrappedOrderedText(mappedCharacters)
+        return original.withReplacements(replacements)
     }
 
-    private class MappedCharacter(
-        @JvmField val style: Style,
-        @JvmField val bypassesNameProtection: Boolean,
-        @JvmField val codePoint: Int,
-    )
-
-    private class WrappedOrderedText(@JvmField val mappedCharacters: ObjectArrayList<MappedCharacter>) :
-        FormattedCharSequence {
-        override fun accept(visitor: FormattedCharSink): Boolean {
-            var index = 0
-            for (element in mappedCharacters) {
-                if (!visitor.accept(index, element.style, element.codePoint)) {
-                    return false
-                }
-
-                index += Character.charCount(element.codePoint)
-            }
-
-            return true
-        }
-    }
 }
 
-/**
- * Translates a UTF-16 index into this string to the index of the code point list built from it.
- *
- * The two differ by the number of surrogate pairs that end at or before [charIndex], so text
- * without surrogate pairs maps onto itself.
- */
-internal fun String.codePointIndex(charIndex: Int): Int {
-    var cursor = 0
-    var pairs = 0
-    while (cursor < charIndex) {
-        val count = Character.charCount(codePointAt(cursor))
-        if (count == 2) pairs++
-        cursor += count
-    }
-    return charIndex - pairs
-}
 
 /**
  * Sanitizes texts which are sent to the client.
@@ -297,13 +193,110 @@ internal fun String.codePointIndex(charIndex: Int): Int {
  * 2. Applies [ModuleNameProtect] - if needed
  */
 fun Component.sanitizeForeignInput(): Component {
-    val degeneratedText = FormattedCharSequence { output ->
-        StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
-    }
+    val degeneratedText = this.asFormattedCharSequence()
 
     if (!ModuleNameProtect.running) {
         return degeneratedText.toText()
     }
 
     return ModuleNameProtect.wrap(degeneratedText).toText()
+}
+
+/**
+ * Returns a sequence that substitutes each match of [replacements] as it is accepted, without
+ * copying the characters or the styles of the receiver.
+ */
+internal fun FormattedCharSequence.withReplacements(replacements: Replacements): FormattedCharSequence =
+    ReplacedSequence(this, replacements)
+
+/**
+ * A [FormattedCharSequence] that substitutes the matches of [replacements] while it is accepted.
+ *
+ * The indices of [org.ahocorasick.trie.Emit] count UTF-16 code units of the plain text built from
+ * the receiver, which is not the index the sink is handed: that one restarts per style part and
+ * skips the legacy formatting codes, so positions are accumulated with `Character.charCount`.
+ *
+ * The instance is its own [FormattedCharSink], which keeps an acceptance free of allocations. The
+ * state lives in fields, so it must neither be accepted reentrantly nor from several threads.
+ */
+private class ReplacedSequence(
+    private val original: FormattedCharSequence,
+    private val replacements: Replacements,
+) : FormattedCharSequence, FormattedCharSink {
+
+    // Position in the original text, sharing the index space of the emits
+    private var sourceIndex = 0
+    // Position in the replaced text, which is the index the sink has to see
+    private var outputIndex = 0
+    private var replacementIndex = 0
+    // Last character of the match whose substitution was already emitted
+    private var substitutedUntil = -1
+    private lateinit var sink: FormattedCharSink
+
+    override fun accept(output: FormattedCharSink): Boolean {
+        sourceIndex = 0
+        outputIndex = 0
+        replacementIndex = 0
+        substitutedUntil = -1
+        sink = output
+
+        return original.accept(this)
+    }
+
+    override fun accept(index: Int, style: Style, codePoint: Int): Boolean {
+        val charCount = Character.charCount(codePoint)
+
+        if (sourceIndex <= substitutedUntil) {
+            // The substitution took this character's place
+            sourceIndex += charCount
+
+            return true
+        }
+
+        var replacement = replacements.getOrNull(replacementIndex)
+
+        // Drop the matches that end before this character
+        while (replacement != null && sourceIndex > replacement.first.end) {
+            replacementIndex++
+            replacement = replacements.getOrNull(replacementIndex)
+        }
+
+        if (replacement != null && sourceIndex == replacement.first.start &&
+            style.color?.bypassesNameProtection != true
+        ) {
+            substitutedUntil = replacement.first.end
+            replacementIndex++
+
+            // Every character of the substitution shares the style of the name it replaces
+            val replacedStyle = style.withColor(replacement.second.colorGetter().argb)
+            val newName = replacement.second.newName
+            var nameIndex = 0
+
+            while (nameIndex < newName.length) {
+                val nameCodePoint = newName.codePointAt(nameIndex)
+                val nameCharCount = Character.charCount(nameCodePoint)
+
+                if (!sink.accept(outputIndex, replacedStyle, nameCodePoint)) {
+                    return false
+                }
+
+                outputIndex += nameCharCount
+                nameIndex += nameCharCount
+            }
+
+            sourceIndex += charCount
+
+            return true
+        }
+
+        if (!sink.accept(outputIndex, style, codePoint)) {
+            return false
+        }
+
+        outputIndex += charCount
+        sourceIndex += charCount
+
+        return true
+    }
+
 }
