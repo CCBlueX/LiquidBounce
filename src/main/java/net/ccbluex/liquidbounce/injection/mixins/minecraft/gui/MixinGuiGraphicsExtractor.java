@@ -18,10 +18,12 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.additions.GuiGraphicsExtractorAddition;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -63,4 +65,20 @@ public abstract class MixinGuiGraphicsExtractor implements GuiGraphicsExtractorA
     public void liquidbounce$drawCooldownProgress(ItemStack stack, int x, int y) {
         itemCooldown(stack, x, y);
     }
+
+    /**
+     * Early reject of ZERO-size Scissor area.
+     *
+     * @see com.mojang.renderpearl.frontend.FrontendRenderPass#enableScissor(int, int, int, int)
+     */
+    @Inject(
+        method = "enableScissor",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack;push(Lnet/minecraft/client/gui/navigation/ScreenRectangle;)V")
+    )
+    private void earlyCrash(int x0, int y0, int x1, int y1, CallbackInfo ci, @Local(name = "rectangle") ScreenRectangle rectangle) {
+        if (rectangle.width() == 0 || rectangle.height() == 0) {
+            throw new IllegalArgumentException("scissor area should have positive width and height, actual: " + rectangle);
+        }
+    }
+
 }

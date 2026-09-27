@@ -48,6 +48,9 @@ import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix3x2fc
 import org.joml.Vector2f
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 private val LEFT_TOP = Vector2f()
 private val RIGHT_TOP = Vector2f()
@@ -77,6 +80,17 @@ private fun Matrix3x2fc.transformMaxBounds(
         (maxX - minX).ceilToInt(),
         (maxY - minY).ceilToInt(),
     )
+}
+
+val ScreenRectangle.isEmpty: Boolean
+    get() = width == 0 || height == 0
+
+@OptIn(ExperimentalContracts::class)
+inline fun ScreenRectangle.ifEmpty(defaultValue: () -> ScreenRectangle): ScreenRectangle {
+    contract {
+        callsInPlace(defaultValue, InvocationKind.AT_MOST_ONCE)
+    }
+    return if (isEmpty) defaultValue() else this
 }
 
 /**
