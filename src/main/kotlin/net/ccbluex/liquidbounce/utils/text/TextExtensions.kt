@@ -30,6 +30,9 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.FontDescription
+import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
@@ -37,6 +40,8 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -134,6 +139,16 @@ fun Collection<String>.joinToText(separator: Component): Component =
 fun Collection<Component>.joinToText(separator: Component): Component =
     joinToText(separator, transform = Function.identity())
 
+fun FormattedCharSequence.codePointsToString(): String = Pools.buildStringPooled {
+    accept(FormattedCharSink.appendTo(this))
+}
+
+companion fun FormattedCharSink.appendTo(builder: StringBuilder): FormattedCharSink =
+    FormattedCharSink { _, _, codePoint ->
+        builder.appendCodePoint(codePoint)
+        true
+    }
+
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
 
@@ -188,7 +203,19 @@ fun Component.mapComponent(
     }
 }
 
-fun Component.translated(): Component = mapComponent(contentMapper = ComponentContents::translated)
+fun Component.sanitizeForSerialization(): Component =
+    mapComponent(
+        contentMapper = ComponentContents::translated,
+        styleMapper = Style::stripNonSerializableFont,
+    )
+
+/**
+ * Replaces font descriptions that [ComponentSerialization] cannot encode with the default font.
+ *
+ * @see FontDescription.CODEC
+ */
+private fun Style.stripNonSerializableFont(): Style =
+    if (this.font is FontDescription.Resource) this else this.withFont(null)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
@@ -199,6 +226,10 @@ fun TranslatableContents.toTranslatedString(): String = buildString {
 
         Optional.empty<Nothing>()
     }
+}
+
+fun FormattedText.asFormattedCharSequence() = FormattedCharSequence { output ->
+    StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()

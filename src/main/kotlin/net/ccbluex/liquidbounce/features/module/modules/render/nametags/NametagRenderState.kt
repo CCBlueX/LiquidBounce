@@ -39,6 +39,13 @@ internal class NametagRenderState {
     @JvmField var scale: Float = 0F
 
     /**
+     * Distance to the camera, kept so that sorting does not recompute it for every comparison.
+     *
+     * @see ModuleNametags.collectAndSortNametagsToRender
+     */
+    @JvmField var distance: Float = 0F
+
+    /**
      * The text to render as nametag
      */
     @JvmField var text: Component = PlainText.EMPTY
@@ -50,9 +57,10 @@ internal class NametagRenderState {
      */
     @JvmField var screenPos: Vec3f? = null
 
-    fun update(entity: Entity, scale: Float) {
+    fun update(entity: Entity, scale: Float, distance: Float) {
         this.entity = entity
         this.scale = scale
+        this.distance = distance
         this.text = NametagTextFormatter.format(entity)
         this.equipments.update(entity)
     }
@@ -60,6 +68,7 @@ internal class NametagRenderState {
     fun reset() {
         this.entity = null
         this.scale = 0F
+        this.distance = 0F
         this.text = PlainText.EMPTY
         this.equipments.reset()
     }

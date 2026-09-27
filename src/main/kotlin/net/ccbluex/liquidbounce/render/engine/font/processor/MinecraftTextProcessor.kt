@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.network.chat.Component
@@ -32,17 +31,13 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
 
     @JvmField
     val TEXT_POOL = Pool(
-        initializer = { RecyclingProcessedText(ArrayList(), IntArrayList(), IntArrayList()) }
+        initializer = { RecyclingProcessedText(ArrayList()) }
     ) {
         it.chars.clear()
-        it.underlines.clear()
-        it.strikeThroughs.clear()
     }
 
     class RecyclingProcessedText(
         override val chars: ArrayList<ProcessedText.ProcessedChar>,
-        override val underlines: IntArrayList,
-        override val strikeThroughs: IntArrayList,
     ) : ProcessedText
 
     override fun process(
@@ -72,6 +67,11 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val color = style.color?.let { Color4b.fullAlpha(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
+        val flags = font or
+            (if (obfuscated) ProcessedText.OBFUSCATED else 0) or
+            (if (style.isUnderlined) ProcessedText.UNDERLINE else 0) or
+            (if (style.isStrikethrough) ProcessedText.STRIKETHROUGH else 0)
+
         val codepointCount = textAsString.codePointCount(0, textAsString.length)
         val start = result.chars.size
         result.chars.ensureCapacity(start + codepointCount)
@@ -82,19 +82,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
                 codepoint
             }
 
-            result.chars.add(ProcessedText.ProcessedChar(actualCodepoint, font, obfuscated, color))
-        }
-
-        val end = result.chars.size
-
-        if (style.isUnderlined) {
-            result.underlines.add(start)
-            result.underlines.add(end)
-        }
-
-        if (style.isStrikethrough) {
-            result.strikeThroughs.add(start)
-            result.strikeThroughs.add(end)
+            result.chars.add(ProcessedText.ProcessedChar(actualCodepoint, flags, color))
         }
 
         return Optional.empty()

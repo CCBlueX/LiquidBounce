@@ -263,6 +263,7 @@
   "liquidbounce.command.marketplace.search.query.description": "The search query.",
   "liquidbounce.command.marketplace.search.searching": "Searching marketplace items...",
   "liquidbounce.command.marketplace.subscribe.alreadySubscribed": "You are already subscribed to item #%s.",
+  "liquidbounce.command.marketplace.subscribe.dependencies": "Also installed what it needs: %s.",
   "liquidbounce.command.marketplace.subscribe.description": "Subscribe to a marketplace item to receive updates.",
   "liquidbounce.command.marketplace.subscribe.item.description": "The item to subscribe to: author/name, its name, share code or ID.",
   "liquidbounce.command.marketplace.subscribe.success": "Successfully subscribed to item #%s. Updates will be automatically downloaded.",

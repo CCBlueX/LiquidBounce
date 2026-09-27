@@ -48,7 +48,6 @@ import net.ccbluex.liquidbounce.utils.client.clickablePath
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.measureTimedValue
@@ -243,7 +242,7 @@ object CommandModels : CommandRegistrar {
 
             ModelManager.reload()
 
-            withContext(MinecraftDispatcher) {
+            withContext(Dispatchers.Main) {
                 models.setByString(name)
                 ModuleClickGui.sync()
             }

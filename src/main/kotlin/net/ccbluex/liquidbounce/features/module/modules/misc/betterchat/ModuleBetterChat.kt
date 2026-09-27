@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.openChat
+import net.ccbluex.liquidbounce.utils.text.appendTo
 import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.gui.screens.DeathScreen
 import net.minecraft.client.multiplayer.chat.GuiMessage
 import net.minecraft.util.FormattedCharSink
@@ -87,14 +87,11 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
         @JvmStatic
         fun copyMessage(parts: List<GuiMessage.Line>, button: Int) {
-            val content = Pools.buildStringPooled {
-                val visitor = FormattedCharSink { _, _, codePoint ->
-                    appendCodePoint(codePoint)
-                    true
-                }
+            val content = buildString {
+                val sink = FormattedCharSink.appendTo(this)
 
                 for (line in parts) {
-                    line.content().accept(visitor)
+                    line.content().accept(sink)
                 }
             }
 

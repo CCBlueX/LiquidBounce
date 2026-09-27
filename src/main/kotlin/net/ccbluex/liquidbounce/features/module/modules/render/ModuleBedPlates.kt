@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.core.BlockPos
@@ -156,7 +155,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
 
     @Suppress("unused")
     // Run on render thread because the scanner runs async
-    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
+    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Main) { event ->
         beds.clear()
         beds.ensureCapacity(event.bedStates.size)
         event.bedStates.mapTo(beds, ::BedStateRenderState)
