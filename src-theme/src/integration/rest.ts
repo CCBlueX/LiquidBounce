@@ -22,7 +22,6 @@ import type {
     MarketplaceConfigPage,
     MarketplaceConfigQuery,
     MarketplaceInstalledItem,
-    MarketplaceInstallResult,
     MarketplaceItem,
     MarketplaceItemDetail,
     MarketplaceItemType,
@@ -948,8 +947,8 @@ export async function getMarketplaceConfigModules(id: number): Promise<string[]>
     return await marketplaceRequest(`/configs/${id}/modules`);
 }
 
-export async function loadMarketplaceConfig(id: number, modules: string[] | null): Promise<MarketplaceInstallResult> {
-    return await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
+export async function loadMarketplaceConfig(id: number, modules: string[] | null) {
+    await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
 }
 
 export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceConfig> {
@@ -1006,8 +1005,8 @@ export async function getInstalledMarketplaceItems(): Promise<MarketplaceInstall
     return await marketplaceRequest("/items/installed");
 }
 
-export async function installMarketplaceItem(id: number): Promise<MarketplaceInstallResult> {
-    return await marketplaceRequest(`/items/${id}/install`, "POST");
+export async function installMarketplaceItem(id: number) {
+    await marketplaceRequest(`/items/${id}/install`, "POST");
 }
 
 export async function updateMarketplaceItem(id: number): Promise<MarketplaceItem> {

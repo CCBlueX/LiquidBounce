@@ -34,16 +34,30 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.features.marketplace.UpdateResult
 import net.ccbluex.liquidbounce.features.marketplace.installWithDependencies
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 
 private const val PAGE_SIZE = 20
 private const val REVISION_PAGE_SIZE = 50
+
+/**
+ * The messages of `.marketplace`, which the tab tells the same way.
+ */
+private val marketplaceCommand = object : CmdI18n {
+    override val path = "marketplace"
+}
 
 private fun Route.getItems() = get {
     val name = call.queryParameters["type"]
@@ -103,41 +117,69 @@ private suspend fun revisions(
     return revisions
 }
 
+/**
+ * Installs the item after what it needs, as `.marketplace subscribe` does.
+ */
 private fun Route.postInstall() = post("/install") {
-    val id = call.requireId()
-    call.respondMarketplace {
-        InstallResult(installWithDependencies(MarketplaceApi.getMarketplaceItem(id)).installed.map { it.name })
+    call.marketplaceAction {
+        val id = call.requireId()
+        val (installed, unavailable) = installWithDependencies(MarketplaceApi.getMarketplaceItem(id))
+        if (installed.none { it.id == id }) {
+            throw NoCompatibleRevisionException(unavailable.first())
+        }
+
+        tellPlayer(marketplaceCommand.t("subscribe.success", variable(id.toString())))
+        val needed = installed.filter { it.id != id }
+        if (needed.isNotEmpty()) {
+            val names = needed.joinToString(", ") { it.name }
+            mc.execute { chat(regular(marketplaceCommand.t("subscribe.dependencies", variable(names)))) }
+        }
     }
+    call.respond(HttpStatusCode.NoContent)
 }
 
 private fun Route.postUpdate() = post("/update") {
-    val id = call.requireId()
-    val subscribed = MarketplaceManager.getItem(id) ?: call.notFound(id.toString(), "Not installed")
-    when (val result = call.marketplace { MarketplaceManager.update(subscribed) }) {
-        is UpdateResult.Updated, is UpdateResult.NoUpdate ->
-            call.respondMarketplace { itemView(MarketplaceApi.getMarketplaceItem(id)) }
-        is UpdateResult.Incompatible -> call.badRequest(result.unavailable.text().string)
-        is UpdateResult.Failed -> throw marketplaceFailure(result.error as? Exception ?: Exception(result.error))
+    val view = call.marketplaceAction {
+        val id = call.requireId()
+        val subscribed = MarketplaceManager.getItem(id) ?: call.notFound(id.toString(), "Not installed")
+        when (val result = MarketplaceManager.update(subscribed)) {
+            is UpdateResult.Updated -> tellPlayer(
+                marketplaceCommand.t("update.success", variable(id.toString()), variable(result.revisionId.toString()))
+            )
+            is UpdateResult.NoUpdate -> tellPlayer(
+                marketplaceCommand.t("update.noUpdate", variable(id.toString())),
+                NotificationEvent.Severity.INFO
+            )
+            is UpdateResult.Incompatible -> call.badRequest(result.unavailable.text().string)
+            is UpdateResult.Failed -> throw marketplaceFailure(result.error as? Exception ?: Exception(result.error))
+        }
+        itemView(MarketplaceApi.getMarketplaceItem(id))
     }
+    call.respond(view)
 }
 
 private fun Route.postRemove() = post("/remove") {
-    val id = call.requireId()
-    if (!MarketplaceManager.isSubscribed(id)) {
-        call.notFound(id.toString(), "Not installed")
-    }
+    call.marketplaceAction {
+        val id = call.requireId()
+        if (!MarketplaceManager.isSubscribed(id)) {
+            call.notFound(id.toString(), "Not installed")
+        }
 
-    call.marketplace { MarketplaceManager.unsubscribe(id) }
+        MarketplaceManager.unsubscribe(id)
+        tellPlayer(marketplaceCommand.t("unsubscribe.success", variable(id.toString())))
+    }
     call.respond(HttpStatusCode.NoContent)
 }
 
 private fun Route.postApply() = post("/apply") {
-    val id = call.requireId()
-    val theme = ThemeManager.marketplaceThemes[id] ?: call.notFound(id.toString(), "Theme not loaded")
+    call.marketplaceAction {
+        val id = call.requireId()
+        val theme = ThemeManager.marketplaceThemes[id] ?: call.notFound(id.toString(), "Theme not loaded")
 
-    withContext(Dispatchers.Main) {
-        ThemeManager.theme = theme
-        ConfigSystem.store(ThemeManager)
+        withContext(Dispatchers.Main) {
+            ThemeManager.theme = theme
+            ConfigSystem.store(ThemeManager)
+        }
     }
     call.respond(HttpStatusCode.NoContent)
 }

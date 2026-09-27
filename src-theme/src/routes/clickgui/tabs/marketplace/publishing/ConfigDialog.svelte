@@ -16,7 +16,6 @@
     } from "../../../../../integration/rest";
     import type {ConfigTracker, MarketplaceConfigDetails} from "../../../../../integration/types";
     import {attempt, dialog, type DialogRequest} from "../marketplace";
-    import {notify} from "../../../clickgui_store";
 
     type Kind = "New" | "Overlay" | "Fork";
     type Request = Exclude<DialogRequest, { kind: "load" }>;
@@ -126,7 +125,6 @@
                 const {config} = request.detail;
                 const saved = await attempt(() => setMarketplaceConfigDetails(config.id, details()).then(() => true));
                 if (saved) {
-                    notify(`Saved ${name.trim()}`);
                     request.ondone();
                 }
                 return !!saved;
@@ -135,7 +133,6 @@
                 const result = await attempt(() => updateTrackedConfig(changelog.trim()));
                 if (result) {
                     changelog = "";
-                    notify(`Updated ${result.address}`);
                 }
                 return !!result;
             }
@@ -143,7 +140,6 @@
                 const {config} = request;
                 const deleted = await attempt(() => deleteMarketplaceConfig(config.id).then(() => true));
                 if (deleted) {
-                    notify(`Deleted ${config.address}`);
                     request.ondone();
                 }
                 return !!deleted;
@@ -152,10 +148,8 @@
         return false;
     }
 
-    async function copy(id: number, code: string) {
-        if (await attempt(() => copyMarketplaceShareCode(id))) {
-            notify(`Copied ${code}`);
-        }
+    async function copy(id: number) {
+        await attempt(() => copyMarketplaceShareCode(id));
     }
 </script>
 
@@ -164,7 +158,7 @@
         {@const result = request.published}
         <PillButton title="Open" onclick={() => { close(); onopen(result.id); }}/>
         {#if result.shareCode}
-            <PillButton title="Copy code" primary onclick={() => copy(result.id, result.shareCode ?? "")}/>
+            <PillButton title="Copy code" primary onclick={() => copy(result.id)}/>
         {:else}
             <PillButton title="Done" primary onclick={close}/>
         {/if}

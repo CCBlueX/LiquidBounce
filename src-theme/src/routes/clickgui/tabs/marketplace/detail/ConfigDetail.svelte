@@ -18,7 +18,6 @@
         UNKNOWN_SERVER,
         version
     } from "../marketplace";
-    import {notify} from "../../../clickgui_store";
     import {ago, compactNumber, date, errorMessage, present} from "../../../../../util/utils";
 
     let {id, loggedIn, tracker, onback, onopen}: {
@@ -72,10 +71,7 @@
     }
 
     async function copyShareCode() {
-        const code = await attempt(() => copyMarketplaceShareCode(id));
-        if (code) {
-            notify(`Copied ${code}`);
-        }
+        await attempt(() => copyMarketplaceShareCode(id));
     }
 
     function load() {

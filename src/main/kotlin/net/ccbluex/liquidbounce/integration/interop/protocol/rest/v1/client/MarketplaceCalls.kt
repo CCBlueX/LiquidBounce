@@ -27,19 +27,27 @@ import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.integration.interop.HttpStatusException
 import net.ccbluex.liquidbounce.integration.interop.unauthorized
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-// What the marketplace routes of the ClickGUI share: reaching the marketplace, the account and list queries.
+// What the marketplace routes of the ClickGUI share: reaching the marketplace, telling the player, the account and
+// list queries.
 
 /**
  * Runs [block] against the marketplace: an unreachable marketplace answers 503, a refused request
@@ -58,6 +66,29 @@ internal suspend inline fun <T> ApplicationCall.marketplace(block: () -> T): T =
  */
 internal suspend inline fun <reified T : Any> ApplicationCall.respondMarketplace(block: () -> T) =
     respond(marketplace(block))
+
+/**
+ * Runs the action [block] of the tab, as [marketplace] does. The tab shows no errors itself, so a failure is told to
+ * the player.
+ */
+internal suspend inline fun <T> ApplicationCall.marketplaceAction(block: () -> T): T = try {
+    marketplace(block)
+} catch (e: HttpStatusException) {
+    tellPlayer(Component.literal(e.body["reason"] ?: e.status.description), NotificationEvent.Severity.ERROR)
+    throw e
+}
+
+/**
+ * Tells the player how an action of the tab went, the way the commands do: in the chat, where it stays to be read,
+ * and in a notification, which shows over the ClickGUI.
+ */
+internal fun tellPlayer(
+    message: MutableComponent,
+    severity: NotificationEvent.Severity = NotificationEvent.Severity.SUCCESS
+) = mc.execute {
+    chat(if (severity == NotificationEvent.Severity.ERROR) markAsError(message) else regular(message))
+    notification("Marketplace", message, severity)
+}
 
 internal fun marketplaceFailure(e: Exception): HttpStatusException {
     val http = e.httpException

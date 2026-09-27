@@ -699,10 +699,6 @@ export interface MarketplaceItemDetail {
     }[];
 }
 
-export interface MarketplaceInstallResult {
-    installed: string[];
-}
-
 export interface ConfigTracker {
     state: ConfigTrackerState;
     id: number;

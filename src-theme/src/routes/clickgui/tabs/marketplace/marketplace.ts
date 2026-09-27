@@ -1,12 +1,10 @@
 import {writable} from "svelte/store";
 import {REST_BASE} from "../../../../integration/host";
-import {ago, errorMessage, present} from "../../../../util/utils";
-import {notify} from "../../clickgui_store";
+import {ago, present} from "../../../../util/utils";
 import type {
     ConfigTrackerState,
     MarketplaceConfig,
     MarketplaceConfigDetail,
-    MarketplaceInstallResult,
     MarketplaceItem,
     MarketplaceItemType,
     MarketplacePublished,
@@ -82,20 +80,13 @@ export type DialogRequest =
 
 export const dialog = writable<DialogRequest | null>(null);
 
-export function notifyInstalled(result: MarketplaceInstallResult) {
-    if (result.installed.length > 0) {
-        notify(`Installed ${result.installed.join(", ")}.`);
-    }
-}
-
 /**
- * Runs [action], telling the user when it fails.
+ * Runs [action], `undefined` when it fails. The client tells the player why an action failed.
  */
 export async function attempt<T>(action: () => Promise<T>): Promise<T | undefined> {
     try {
         return await action();
-    } catch (e) {
-        notify(errorMessage(e), true);
+    } catch {
         return undefined;
     }
 }

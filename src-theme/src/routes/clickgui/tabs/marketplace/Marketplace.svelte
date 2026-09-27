@@ -9,7 +9,6 @@
     import Notice from "../../common/Notice.svelte";
     import ListRow from "../../common/ListRow.svelte";
     import ItemAction from "./ItemAction.svelte";
-    import Toast from "../../common/Toast.svelte";
     import TrackerMenu from "./list/TrackerMenu.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
@@ -50,7 +49,6 @@
         configLine,
         dialog,
         itemBadges,
-        notifyInstalled,
         reports,
         reviews,
         trackingName,
@@ -59,7 +57,6 @@
         UNKNOWN_SERVER,
         version
     } from "./marketplace";
-    import {notify} from "../../clickgui_store";
     import {compactNumber, errorMessage} from "../../../../util/utils";
     import {typing, visible} from "../../../../integration/util";
 
@@ -283,20 +280,11 @@
         const result = await attempt(() => reportMarketplaceConfig(config.id, works));
         if (result) {
             configs = configs.map(c => c.id === config.id ? {...c, works: result.works, fails: result.fails} : c);
-            notify(`Reported ${config.address} as ${works ? "working" : "broken"}`);
         }
     }
 
     async function changeTracker(action: "revert" | "restore" | "detach") {
-        const result = await attempt(() => changeConfigTracker(action));
-        if (result) {
-            tracker = result;
-            notify({
-                revert: "Reverted your edits",
-                restore: "Restored your settings from before",
-                detach: "Detached, your settings stay"
-            }[action]);
-        }
+        tracker = await attempt(() => changeConfigTracker(action)) ?? tracker;
     }
 
     async function itemAction(item: MarketplaceItem, action: () => Promise<unknown>) {
@@ -311,12 +299,8 @@
 
     function install(item: MarketplaceItem) {
         return itemAction(item, async () => {
-            notify(`Installing ${item.name}...`);
-            const result = await attempt(() => installMarketplaceItem(item.id));
-            if (result) {
-                notifyInstalled(result);
-                await reload();
-            }
+            await attempt(() => installMarketplaceItem(item.id));
+            await reload();
         });
     }
 
@@ -325,7 +309,6 @@
             const updated = await attempt(() => updateMarketplaceItem(item.id));
             if (updated) {
                 items = items.map(i => i.id === updated.id ? updated : i);
-                notify(`Updated ${item.name}.`);
             }
         });
     }
@@ -342,7 +325,6 @@
     }
 
     async function login() {
-        notify("Continue in your browser");
         await attempt(loginClientUser);
     }
 
@@ -515,7 +497,6 @@
 
     <LoadDialog/>
     <ConfigDialog {tracker} user={user?.nickname ?? user?.name} tags={tagOptions} onopen={id => open("config", id)}/>
-    <Toast/>
 </ScaledClickGuiContent>
 
 <style lang="scss">

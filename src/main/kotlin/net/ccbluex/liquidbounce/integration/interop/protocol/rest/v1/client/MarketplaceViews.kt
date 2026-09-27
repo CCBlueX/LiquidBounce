@@ -155,8 +155,6 @@ internal data class ItemDetailView(
     val versions: List<VersionView>,
 )
 
-internal data class InstallResult(val installed: List<String>)
-
 internal data class TrackerView(
     val state: ConfigTracker.State,
     val id: Int,

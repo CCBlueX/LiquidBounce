@@ -24,14 +24,3 @@ export const snappingEnabled: Writable<boolean> = writable(true);
 export const gridSize: Writable<number> = writable(10);
 
 export const darken = writable(true);
-
-/**
- * The message the ClickGUI's toast shows.
- */
-export const toast = writable<{ message: string; error: boolean; id: number } | null>(null);
-
-let toasts = 0;
-
-export function notify(message: string, error = false) {
-    toast.set({message, error, id: ++toasts});
-}

@@ -16,7 +16,6 @@
     import {
         attempt,
         itemBadges,
-        notifyInstalled,
         reviews,
         typeName,
         UNKNOWN_PACK,
@@ -77,7 +76,7 @@
         {/if}
         {#if item}
             <ItemAction {item} {busy}
-                        oninstall={() => run(async () => notifyInstalled(await installMarketplaceItem(id)))}
+                        oninstall={() => run(() => installMarketplaceItem(id))}
                         onupdate={() => run(() => updateMarketplaceItem(id))}
                         onapply={() => run(() => applyMarketplaceTheme(id))}/>
         {/if}
