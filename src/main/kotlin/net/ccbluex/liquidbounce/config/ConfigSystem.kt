@@ -31,15 +31,11 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
-import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.io.Reader
 import java.io.Writer
-import kotlin.io.path.createTempDirectory
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
+import java.util.zip.ZipFile
 
 /**
  * A hierarchy config system
@@ -166,18 +162,14 @@ object ConfigSystem {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(zipFile.exists()) { "Backup file does not exist" }
 
-        // Store all configs to make sure they are up to date,
-        // before we overwrite some of them with the backup
-        storeAll()
-        // Extracting never overwrites a file, so the backup goes to an empty folder first
-        val extracted = createTempDirectory(rootFolder.toPath(), "restore")
-        try {
-            extractZip(zipFile, extracted)
-            extracted.listDirectoryEntries().forEach { it.atomicMoveTo(rootFolder.toPath().resolve(it.name)) }
-        } finally {
-            extracted.toFile().deleteRecursively()
+        // The backup holds the json files of the configs, which load straight from it
+        ZipFile(zipFile).use { zip ->
+            for (config in configs) {
+                val entry = zip.getEntry(config.jsonFile.name) ?: continue
+                deserializeValueGroup(config, zip.getInputStream(entry).bufferedReader())
+                store(config)
+            }
         }
-        loadAll()
     }
 
     /**
