@@ -3,7 +3,6 @@
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
     import {browse, copyLiquidProxyCredentials, getLiquidProxyCredentials} from "../../../../integration/rest";
     import type {LiquidProxyCredentials, LiquidProxySubscription} from "../../../../integration/types";
-    import {notification} from "../../common/header/notification_store";
     import {formatDate, subscriptionStatus} from "./liquidproxy";
 
     export let visible: boolean;
@@ -19,20 +18,7 @@
     }
 
     async function loadCredentials() {
-        try {
-            credentials = await getLiquidProxyCredentials();
-        } catch {
-            credentials = null;
-        }
-    }
-
-    async function copy() {
-        try {
-            await copyLiquidProxyCredentials();
-            notification.set({title: "LiquidProxy", message: "Copied the proxy", error: false});
-        } catch (e) {
-            notification.set({title: "LiquidProxy", message: (e as Error).message, error: true});
-        }
+        credentials = await getLiquidProxyCredentials();
     }
 </script>
 
@@ -63,7 +49,7 @@
                 <button on:click={() => revealed = !revealed}>
                     <img src="img/menu/icon-eye.svg" alt="show">
                 </button>
-                <button on:click={copy}>
+                <button on:click={copyLiquidProxyCredentials}>
                     <img src="img/menu/icon-clipboard.svg" alt="copy">
                 </button>
             </div>

@@ -367,6 +367,11 @@ export interface LiquidProxySubscription {
 
 export interface LiquidProxyState {
     loggedIn: boolean;
+    reachable: boolean;
+    notice?: {
+        title: string;
+        text: string;
+    };
     email?: string;
     subscription?: LiquidProxySubscription;
     plans: LiquidProxyPlan[];
@@ -378,7 +383,7 @@ export interface LiquidProxyState {
 
 export interface LiquidProxyLocation {
     code: string;
-    name: string;
+    label: string;
     countryCode: string;
     latitude?: number;
     longitude?: number;

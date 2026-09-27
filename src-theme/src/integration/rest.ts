@@ -652,76 +652,76 @@ export async function connectToProxy(id: number) {
     });
 }
 
-async function liquidProxyRequest(path: string, init?: RequestInit): Promise<Response> {
-    const response = await fetch(`${API_BASE}/client/liquidproxy${path}`, init);
-    if (!response.ok) {
-        const reason = await response.json().then(body => body.reason).catch(() => null);
-        throw new Error(reason ?? `${response.status} ${response.statusText}`);
-    }
-    return response;
-}
-
-function jsonBody(method: string, body: unknown): RequestInit {
-    return {
-        method,
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-    };
-}
-
 export async function getLiquidProxyState(refresh = false): Promise<LiquidProxyState> {
-    const response = await liquidProxyRequest(refresh ? "?refresh=true" : "");
+    const response = await fetch(`${API_BASE}/client/liquidproxy${refresh ? "?refresh=true" : ""}`);
     return await response.json();
 }
 
 export async function getLiquidProxyLocations(): Promise<LiquidProxyLocation[]> {
-    const response = await liquidProxyRequest("/locations");
-    return await response.json();
+    const response = await fetch(`${API_BASE}/client/liquidproxy/locations`);
+    return response.ok ? await response.json() : [];
 }
 
-export async function getLiquidProxySessions(): Promise<LiquidProxySession[]> {
-    const response = await liquidProxyRequest("/sessions");
-    return await response.json();
+export async function getLiquidProxySessions(): Promise<LiquidProxySession[] | null> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/sessions`);
+    return response.ok ? await response.json() : null;
 }
 
 export async function endLiquidProxySession(id: string) {
-    await liquidProxyRequest(`/sessions/${id}/end`, {method: "POST"});
+    await fetch(`${API_BASE}/client/liquidproxy/sessions/${id}/end`, {
+        method: "POST"
+    });
 }
 
 export async function setLiquidProxySettings(
     settings: { level?: number, forwardAuthentication?: boolean }
 ): Promise<LiquidProxyState> {
-    const response = await liquidProxyRequest("/settings", jsonBody("PUT", settings));
+    const response = await fetch(`${API_BASE}/client/liquidproxy/settings`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
     return await response.json();
 }
 
 export async function connectToLiquidProxy(location: string): Promise<LiquidProxyState> {
-    const response = await liquidProxyRequest("/connect", jsonBody("POST", {location}));
+    const response = await fetch(`${API_BASE}/client/liquidproxy/connect`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({location})
+    });
     return await response.json();
 }
 
 export async function disconnectFromLiquidProxy(): Promise<LiquidProxyState> {
-    const response = await liquidProxyRequest("/disconnect", {method: "POST"});
+    const response = await fetch(`${API_BASE}/client/liquidproxy/disconnect`, {
+        method: "POST"
+    });
     return await response.json();
 }
 
-export async function requestLiquidProxyNewIp(): Promise<{ username: string, alreadyRequested: boolean }> {
-    const response = await liquidProxyRequest("/new-ip", {method: "POST"});
-    return await response.json();
+export async function requestLiquidProxyNewIp() {
+    await fetch(`${API_BASE}/client/liquidproxy/new-ip`, {
+        method: "POST"
+    });
 }
 
-export async function getLiquidProxyCredentials(): Promise<LiquidProxyCredentials> {
-    const response = await liquidProxyRequest("/credentials");
-    return await response.json();
+export async function getLiquidProxyCredentials(): Promise<LiquidProxyCredentials | null> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/credentials`);
+    return response.ok ? await response.json() : null;
 }
 
 /**
  * Copies the proxy as `host:port:username:password`.
  */
 export async function copyLiquidProxyCredentials() {
-    await liquidProxyRequest("/credentials/clipboard", {method: "POST"});
+    await fetch(`${API_BASE}/client/liquidproxy/credentials/clipboard`, {
+        method: "POST"
+    });
 }
 
 export async function getGameWindow(): Promise<GameWindow> {
@@ -932,19 +932,13 @@ export async function getClientUser(): Promise<ClientUser | null> {
     return data;
 }
 
-/**
- * Opens the LiquidBounce login in the browser and resolves once it is done there.
- */
 export async function loginClientUser() {
-    const response = await fetch(`${API_BASE}/client/user/login`, {
+    await fetch(`${API_BASE}/client/user/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         }
     });
-    if (!response.ok) {
-        throw new Error("The login did not finish");
-    }
 }
 
 export async function logoutClientUser() {

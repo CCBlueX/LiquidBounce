@@ -22,24 +22,16 @@
     import IconTextButton from "../../common/buttons/IconTextButton.svelte";
     import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
     import CircleLoader from "../../common/CircleLoader.svelte";
-    import {notification} from "../../common/header/notification_store";
     import LocationMap from "./LocationMap.svelte";
     import PlanSelect from "./PlanSelect.svelte";
     import SessionHistory from "./SessionHistory.svelte";
     import SubscriptionModal from "./SubscriptionModal.svelte";
-    import {formatDate, locationLabel} from "./liquidproxy";
     import LiquidProxyLogo from "./LiquidProxyLogo.svelte";
     import Welcome from "./Welcome.svelte";
-
-    const SESSION_REFRESH_MS = 10_000;
-    const LOCATION_REFRESH_MS = 30_000;
-    // The client measures the ping to each location when asked for them; this picks up the results
-    const PROBE_RESULT_DELAY_MS = 2_500;
 
     const dispatch = createEventDispatcher<{ switchView: void }>();
 
     let state: LiquidProxyState | null = null;
-    let loadError: string | null = null;
     let locations: LiquidProxyLocation[] = [];
     let sessions: LiquidProxySession[] = [];
     let now = Date.now();
@@ -48,7 +40,6 @@
     let subscriptionVisible = false;
 
     $: subscribed = state?.subscription?.state === "active";
-    $: notice = noticeOf(state, loadError);
     // Also when a subscription shows up while the screen is open
     $: if (subscribed) {
         refreshSessions();
@@ -60,12 +51,13 @@
         await Promise.all([loadState(true), loadLocations()]);
 
         timers.push(
-            setTimeout(loadLocations, PROBE_RESULT_DELAY_MS),
-            setInterval(loadLocations, LOCATION_REFRESH_MS),
+            // The client measures the ping to each location when asked for them; this picks up the results
+            setTimeout(loadLocations, 2_500),
+            setInterval(loadLocations, 30_000),
             setInterval(() => {
                 now = Date.now();
                 refreshSessions();
-            }, SESSION_REFRESH_MS)
+            }, 10_000)
         );
     });
 
@@ -74,74 +66,17 @@
     listen("userLoggedIn", () => loadState(true));
     listen("userLoggedOut", () => loadState());
 
-    function notify(message: string, error = false) {
-        notification.set({title: "LiquidProxy", message, error});
-    }
-
-    function notifyError(e: unknown) {
-        notify((e as Error).message, true);
-    }
-
     async function loadState(refresh = false) {
-        try {
-            state = await getLiquidProxyState(refresh);
-            loadError = null;
-        } catch (e) {
-            loadError = (e as Error).message;
-        }
+        state = await getLiquidProxyState(refresh);
     }
 
     async function loadLocations() {
-        try {
-            locations = await getLiquidProxyLocations();
-        } catch {
-            // The map stays empty; the state shows what went wrong
-        }
+        locations = await getLiquidProxyLocations();
     }
 
     async function refreshSessions() {
-        if (!subscribed) {
-            sessions = [];
-            return;
-        }
-        try {
-            sessions = await getLiquidProxySessions();
-        } catch {
-            // Keep the last list rather than flashing an empty one
-        }
-    }
-
-    // What the main panel says instead of the sessions, when it can't show them
-    function noticeOf(state: LiquidProxyState | null, loadError: string | null) {
-        if (state === null) {
-            return loadError ? {title: "LiquidProxy is not reachable", text: loadError} : null;
-        }
-        const subscription = state.subscription;
-        if (!state.loggedIn || subscription?.state === "active") {
-            return null;
-        }
-
-        if (subscription?.state === "unavailable") {
-            return {
-                title: "Subscription unavailable",
-                text: "Your LiquidProxy subscription can't be used right now. Contact support if you think this is a mistake."
-            };
-        }
-        if (subscription) {
-            return {
-                title: "Subscription ended",
-                text: `Your LiquidProxy subscription ended on ${formatDate(subscription.expiresAt)}. Renew it to get back to playing.`
-            };
-        }
-        return {
-            title: "No subscription yet",
-            text: `${state.email ?? "Your account"} has no LiquidProxy subscription. Pick a plan on liquidproxy.net and it shows up here.`
-        };
-    }
-
-    function label(code: string) {
-        const location = locations.find(l => l.code === code);
-        return location ? locationLabel(location, locations) : code;
+        // Keeps the last list when the client can't get a new one, rather than flashing an empty one
+        sessions = subscribed ? await getLiquidProxySessions() ?? sessions : [];
     }
 
     async function login() {
@@ -149,9 +84,6 @@
         try {
             await loginClientUser();
             await loadState(true);
-            notify(state?.email ? `Logged in as ${state.email}` : "Logged in");
-        } catch (e) {
-            notifyError(e);
         } finally {
             loggingIn = false;
         }
@@ -159,61 +91,18 @@
 
     // The client opens the pending login again and answers once it is done, which login() already waits for
     function reopenLogin() {
-        loginClientUser().catch(() => {});
+        loginClientUser();
     }
 
     async function logout() {
         await logoutClientUser();
         await loadState();
         sessions = [];
-        notify("Logged out");
-    }
-
-    async function connect(code: string) {
-        try {
-            state = await connectToLiquidProxy(code);
-            notify(`Connected to ${label(code)}`);
-        } catch (e) {
-            notifyError(e);
-        }
-    }
-
-    async function disconnect() {
-        try {
-            state = await disconnectFromLiquidProxy();
-            notify("Disconnected from LiquidProxy");
-        } catch (e) {
-            notifyError(e);
-        }
-    }
-
-    async function changeSettings(settings: { level?: number, forwardAuthentication?: boolean }) {
-        try {
-            state = await setLiquidProxySettings(settings);
-        } catch (e) {
-            notifyError(e);
-        }
-    }
-
-    async function changeIp() {
-        try {
-            const {username, alreadyRequested} = await requestLiquidProxyNewIp();
-            notify(alreadyRequested
-                ? `${username} already gets a new IP on the next join`
-                : `${username} gets a new IP on the next join`);
-        } catch (e) {
-            notifyError(e);
-        }
     }
 
     async function endSession(id: string) {
-        try {
-            await endLiquidProxySession(id);
-            notify("Session ended");
-            await refreshSessions();
-        } catch (e) {
-            notifyError(e);
-        }
+        await endLiquidProxySession(id);
+        await refreshSessions();
     }
 </script>
 
@@ -225,27 +114,31 @@
     <div class="side">
         {#if state && subscribed}
             <div class="controls">
-                <PlanSelect plans={state.plans} level={state.level} on:change={e => changeSettings({level: e.detail})}/>
+                <PlanSelect plans={state.plans} level={state.level}
+                            on:change={async e => state = await setLiquidProxySettings({level: e.detail})}/>
                 <SwitchSetting title="Forward Microsoft Authentication" value={state.forwardAuthentication}
-                               on:change={() => changeSettings({forwardAuthentication: !state?.forwardAuthentication})}/>
+                               on:change={async () => state = await setLiquidProxySettings({
+                                   forwardAuthentication: !state?.forwardAuthentication
+                               })}/>
             </div>
         {/if}
 
         <LocationMap {locations} connected={state?.connected} focus={state?.location} interactive={subscribed}
                      caption={subscribed ? null : "Global Coverage"}
-                     on:connect={e => connect(e.detail)} on:disconnect={disconnect}/>
+                     on:connect={async e => state = await connectToLiquidProxy(e.detail)}
+                     on:disconnect={async () => state = await disconnectFromLiquidProxy()}/>
     </div>
 
     <div class="main">
-        {#if notice}
-            <div class="panel">
-                <LiquidProxyLogo/>
-                <div class="headline">{notice.title}</div>
-                <p>{notice.text}</p>
-            </div>
-        {:else if state === null}
+        {#if state === null}
             <div class="panel">
                 <CircleLoader/>
+            </div>
+        {:else if state.notice}
+            <div class="panel">
+                <LiquidProxyLogo/>
+                <div class="headline">{state.notice.title}</div>
+                <p>{state.notice.text}</p>
             </div>
         {:else if !state.loggedIn}
             <Welcome locationCount={locations.length} {loggingIn}/>
@@ -258,8 +151,9 @@
 <BottomButtonWrapper>
     <ButtonContainer>
         {#if state === null}
-            <IconTextButton icon="icon-refresh.svg" title="Try Again" disabled={!loadError}
-                            on:click={() => loadState(true)}/>
+            <!-- Loading -->
+        {:else if !state.reachable}
+            <IconTextButton icon="icon-refresh.svg" title="Try Again" on:click={() => loadState(true)}/>
         {:else if !state.loggedIn}
             <IconTextButton icon="liquidproxy/log-in.svg" title={loggingIn ? "Open Login Again" : "Login"}
                             on:click={loggingIn ? reopenLogin : login}/>
@@ -267,7 +161,8 @@
         {:else}
             <IconTextButton icon="liquidproxy/log-out.svg" title="Logout" on:click={logout}/>
             {#if subscribed}
-                <IconTextButton icon="icon-refresh.svg" title="Change IP on next join" on:click={changeIp}/>
+                <IconTextButton icon="icon-refresh.svg" title="Change IP on next join"
+                                on:click={requestLiquidProxyNewIp}/>
                 <IconTextButton icon="liquidproxy/credit-card.svg" title="Subscription Details"
                                 on:click={() => subscriptionVisible = true}/>
             {:else}

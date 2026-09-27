@@ -5,7 +5,6 @@
     import type {Feature, FeatureCollection} from "geojson";
     import worldUrl from "world-atlas/countries-50m.json?url";
     import type {LiquidProxyLocation} from "../../../../integration/types";
-    import {locationLabel} from "./liquidproxy";
 
     export let locations: LiquidProxyLocation[] = [];
     export let connected: string | undefined = undefined;
@@ -138,7 +137,7 @@
     {#each locations as location, index (location.code)}
         {@const position = positions.get(location.code)}
         {#if position}
-            {@const label = locationLabel(location, locations)}
+            {@const label = location.label}
             {@const detail = hint(location)}
             <button class="location"
                     class:connected={location.code === connected}
@@ -178,7 +177,7 @@
         <div class="status">
             {#if connectedLocation}
                 <button class="pill connected" on:pointerdown|stopPropagation on:click={() => dispatch("disconnect")}>
-                    Connected to {locationLabel(connectedLocation, locations)}
+                    Connected to {connectedLocation.label}
                     <img src="img/menu/liquidproxy/power.svg" alt="disconnect">
                 </button>
             {:else}

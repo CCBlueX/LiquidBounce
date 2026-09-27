@@ -1,13 +1,4 @@
-import type {LiquidProxyLocation, LiquidProxySubscription} from "../../../../integration/types";
-
-/**
- * The country of a location, or its city where the country has more than one.
- */
-export function locationLabel(location: LiquidProxyLocation, locations: LiquidProxyLocation[]): string {
-    const [country, city] = location.name.split(" - ");
-    const shared = locations.filter(l => l.countryCode === location.countryCode).length > 1;
-    return shared && city ? city : country;
-}
+import type {LiquidProxySubscription} from "../../../../integration/types";
 
 export function formatDuration(millis: number): string {
     const minutes = Math.round(millis / 60_000);

@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
+import net.ccbluex.liquidbounce.lang.translation
 
 /**
  * LiquidProxy, set up from the LiquidBounce account it is bought with.
@@ -75,7 +76,8 @@ internal object LiquidProxy : Config("liquidProxy"), EventListener {
     val isLoggedIn
         get() = account != null
 
-    private suspend fun session(): OAuthSession = account?.takeSession() ?: error("Not logged in")
+    private suspend fun session(): OAuthSession =
+        account?.takeSession() ?: error(translation("liquidbounce.liquidproxy.error.notLoggedIn").string)
 
     /**
      * The subscription of the logged-in account, or null without one.
@@ -118,9 +120,10 @@ internal object LiquidProxy : Config("liquidProxy"), EventListener {
         }
 
     suspend fun connect(code: String) {
-        val location = locations().find { it.code == code } ?: error("Unknown location")
-        val subscription = subscription() ?: error("You have no LiquidProxy subscription")
-        check(subscription.isActive) { "Your LiquidProxy subscription is not active" }
+        val location = locations().find { it.code == code }
+            ?: error(translation("liquidbounce.liquidproxy.error.unknownLocation").string)
+        val subscription = subscription()?.takeIf { it.isActive }
+            ?: error(translation("liquidbounce.liquidproxy.error.inactive").string)
 
         this.location = code
         ConfigSystem.store(this)

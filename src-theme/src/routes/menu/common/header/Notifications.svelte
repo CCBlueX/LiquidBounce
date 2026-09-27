@@ -2,6 +2,8 @@
     import {fly} from "svelte/transition";
     import {notification, type TNotification} from "./notification_store";
     import {onMount} from "svelte";
+    import {listen} from "../../../../integration/ws";
+    import type {NotificationEvent} from "../../../../integration/events";
 
     interface NotificationWithId {
         notification: TNotification;
@@ -12,6 +14,11 @@
 
     onMount(() => {
        notifications = [];
+    });
+
+    // What the client tells the player, like the outcome of a LiquidProxy action
+    listen("notification", (e: NotificationEvent) => {
+        notification.set({title: e.title, message: e.message, error: e.severity === "ERROR"});
     });
 
     notification.subscribe((v) => {
