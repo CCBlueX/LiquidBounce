@@ -6,32 +6,39 @@
     import {typing} from "../../../integration/util";
 
     /**
-     * [onconfirm] runs for the [confirm] button, and the dialog closes when it resolves to true.
+     * [onconfirm] runs for the confirm button, and the dialog closes when it resolves to true. [footer]
+     * replaces both buttons.
      */
     let {
         open,
         title,
         width = 560,
         confirm,
+        cancel = "Cancel",
+        danger = false,
         disabled = false,
         onconfirm,
         onclose,
-        children
+        children,
+        footer
     }: {
         open: boolean;
         title: string;
         width?: number;
-        confirm: string;
+        confirm?: string;
+        cancel?: string;
+        danger?: boolean;
         disabled?: boolean;
-        onconfirm: () => Promise<boolean>;
+        onconfirm?: () => Promise<boolean>;
         onclose: () => void;
         children: Snippet;
+        footer?: Snippet;
     } = $props();
 
     let busy = $state(false);
 
     async function run() {
-        if (busy) {
+        if (busy || !onconfirm) {
             return;
         }
 
@@ -54,10 +61,17 @@
             <div class="content">
                 {@render children()}
             </div>
-            <div class="footer">
-                <PillButton title="Cancel" onclick={onclose}/>
-                <PillButton title={confirm} primary disabled={disabled || busy} onclick={run}/>
-            </div>
+            {#if footer || confirm}
+                <div class="footer">
+                    {#if footer}
+                        {@render footer()}
+                    {:else}
+                        <PillButton title={cancel} onclick={onclose}/>
+                        <PillButton title={confirm ?? ""} primary={!danger} {danger} disabled={disabled || busy}
+                                    onclick={run}/>
+                    {/if}
+                </div>
+            {/if}
         </div>
     </div>
 {/if}

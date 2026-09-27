@@ -7,6 +7,7 @@ import type {
     ClientInfo,
     ClientUpdate,
     ClientUser,
+    ConfigTracker,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
@@ -17,6 +18,7 @@ import type {
     HudComponentCatalogEntry,
     MarketplaceConfig,
     MarketplaceConfigDetail,
+    MarketplaceConfigDetails,
     MarketplaceConfigPage,
     MarketplaceConfigQuery,
     MarketplaceInstalledItem,
@@ -24,6 +26,7 @@ import type {
     MarketplaceItemDetail,
     MarketplaceItemType,
     MarketplacePage,
+    MarketplacePublished,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -950,6 +953,37 @@ export async function loadMarketplaceConfig(id: number, modules: string[] | null
 
 export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceConfig> {
     return await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
+}
+
+export async function copyMarketplaceShareCode(id: number) {
+    await marketplaceRequest(`/configs/${id}/share-code`, "POST");
+}
+
+export async function setMarketplaceConfigDetails(id: number, details: MarketplaceConfigDetails) {
+    await marketplaceRequest(`/configs/${id}`, "PATCH", details);
+}
+
+export async function deleteMarketplaceConfig(id: number) {
+    await marketplaceRequest(`/configs/${id}`, "DELETE");
+}
+
+export async function getConfigTracker(): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker");
+}
+
+export async function changeConfigTracker(action: "revert" | "restore" | "detach"): Promise<ConfigTracker> {
+    return await marketplaceRequest(`/tracker/${action}`, "POST");
+}
+
+export async function publishMarketplaceConfig(
+    kind: "New" | "Overlay" | "Fork",
+    details: MarketplaceConfigDetails
+): Promise<MarketplacePublished> {
+    return await marketplaceRequest("/tracker/publish", "POST", {kind, ...details});
+}
+
+export async function updateTrackedConfig(changelog: string): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker/update", "POST", {changelog});
 }
 
 export async function getMarketplaceItems(
