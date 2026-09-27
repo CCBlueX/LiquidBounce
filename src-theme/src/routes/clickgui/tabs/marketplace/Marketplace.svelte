@@ -38,7 +38,6 @@
     import {listen} from "../../../../integration/ws";
     import {setItem} from "../../../../integration/persistent_storage";
     import {
-        attempt,
         configBadges,
         configLine,
         dialog,
@@ -113,21 +112,21 @@
     }
 
     async function refreshServer() {
-        currentServer = (await attempt(getCurrentServer))?.rootDomain;
+        currentServer = (await getCurrentServer().catch(() => null))?.rootDomain;
     }
 
     // With OnlyFeatured, AutoConfig loads nothing on a server that has no featured config
     async function refreshAutoConfig() {
-        const [module, settings] = await attempt(() => Promise.all([
+        const [module, settings] = await Promise.all([
             getModule("AutoConfig"),
             getModuleSettings("AutoConfig")
-        ])) ?? [];
+        ]).catch(() => []);
         autoConfigOnlyFeatured = !!module?.enabled
             && !!settings?.value.some(setting => setting.name === "OnlyFeatured" && setting.value === true);
     }
 
     async function refreshUser() {
-        loggedIn = (await attempt(getClientUser) ?? null) !== null;
+        loggedIn = (await getClientUser().catch(() => null)) !== null;
     }
 
     async function fetchPage(page: number) {
@@ -173,7 +172,7 @@
 
             if (e instanceof MarketplaceError && e.status === 503) {
                 offline = true;
-                installed = await attempt(getInstalledMarketplaceItems) ?? [];
+                installed = await getInstalledMarketplaceItems().catch(() => []);
             } else {
                 error = errorMessage(e);
             }
@@ -195,7 +194,7 @@
 
         const id = request;
         loading = true;
-        const response = await attempt(() => fetchPage(pagination!!.current + 1));
+        const response = await fetchPage(pagination!!.current + 1).catch(() => null);
         loading = false;
         if (!response || id !== request) {
             return;
@@ -259,7 +258,7 @@
     }
 
     async function report(config: MarketplaceConfig, works: boolean) {
-        const result = await attempt(() => reportMarketplaceConfig(config.id, works));
+        const result = await reportMarketplaceConfig(config.id, works).catch(() => null);
         if (result) {
             configs = configs.map(c => c.id === config.id ? {...c, works: result.works, fails: result.fails} : c);
         }
@@ -277,14 +276,14 @@
 
     function install(item: MarketplaceItem) {
         return itemAction(item, async () => {
-            await attempt(() => installMarketplaceItem(item.id));
+            await installMarketplaceItem(item.id).catch(() => null);
             await reload();
         });
     }
 
     function update(item: MarketplaceItem) {
         return itemAction(item, async () => {
-            const updated = await attempt(() => updateMarketplaceItem(item.id));
+            const updated = await updateMarketplaceItem(item.id).catch(() => null);
             if (updated) {
                 items = items.map(i => i.id === updated.id ? updated : i);
             }
@@ -293,17 +292,17 @@
 
     function remove(item: MarketplaceItem) {
         return itemAction(item, async () => {
-            await attempt(() => removeMarketplaceItem(item.id));
+            await removeMarketplaceItem(item.id).catch(() => null);
             await reload();
         });
     }
 
     function apply(item: MarketplaceItem) {
-        return itemAction(item, () => attempt(() => applyMarketplaceTheme(item.id)));
+        return itemAction(item, () => applyMarketplaceTheme(item.id).catch(() => null));
     }
 
     async function login() {
-        await attempt(loginClientUser);
+        await loginClientUser().catch(() => null);
     }
 
     function open(kind: "config" | "item", id: number) {

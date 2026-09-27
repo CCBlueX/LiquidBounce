@@ -8,7 +8,6 @@
     import {getMarketplaceConfig, reportMarketplaceConfig} from "../../../../../integration/rest";
     import type {MarketplaceConfigDetail} from "../../../../../integration/types";
     import {
-        attempt,
         configBadges,
         dialog,
         reports,
@@ -60,7 +59,7 @@
         }
 
         const next = detail.report === works ? null : works;
-        if (await attempt(() => reportMarketplaceConfig(id, next))) {
+        if (await reportMarketplaceConfig(id, next).catch(() => null)) {
             await refresh();
         }
     }

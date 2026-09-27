@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.commands.client.config.reportInstalled
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
@@ -45,7 +46,10 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 
@@ -193,7 +197,7 @@ private fun Route.getModules() = get("/modules") {
 private fun Route.postLoad() = post("/load") {
     data class LoadRequest(val modules: List<String>?)
 
-    call.marketplaceAction {
+    call.marketplace {
         val id = call.requireId()
         val names = call.receive<LoadRequest>().modules
         val modules = names.orEmpty().mapNotNull { ModuleManager[it] }
@@ -203,8 +207,12 @@ private fun Route.postLoad() = post("/load") {
 
         val (item, revisionId) = liveConfig(id, optionalSession())
         val result = ConfigTracker.load(item, revisionId, modules)
-        tellPlayer(configCommand.t("load.loaded", variable(item.name)))
-        mc.execute { configCommand.reportInstalled(result) }
+        val message = configCommand.t("load.loaded", variable(item.name))
+        mc.execute {
+            chat(regular(message))
+            notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
+            configCommand.reportInstalled(result)
+        }
     }
     call.respond(HttpStatusCode.NoContent)
 }
@@ -216,7 +224,7 @@ private fun Route.postLoad() = post("/load") {
 private fun Route.putReport() = put("/report") {
     data class ReportRequest(val works: Boolean?)
 
-    val view = call.marketplaceAction {
+    val view = call.marketplace {
         val id = call.requireId()
         val works = call.receive<ReportRequest>().works
         val session = call.requireSession()
@@ -226,7 +234,11 @@ private fun Route.putReport() = put("/report") {
         } else {
             val server = mc.currentServer?.ip?.dropPort()
             MarketplaceApi.putConfigReport(session, id, revisionId, works, LiquidBounce.clientVersion, server)
-            tellPlayer(configCommand.t("report.reported", variable(item.name)))
+            val message = configCommand.t("report.reported", variable(item.name))
+            mc.execute {
+                chat(regular(message))
+                notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
+            }
         }
         configView(MarketplaceApi.getMarketplaceItem(id, session))
     }

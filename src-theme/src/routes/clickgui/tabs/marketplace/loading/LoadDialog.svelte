@@ -4,7 +4,7 @@
     import Chip from "../../../common/Chip.svelte";
     import TextField from "../../../common/TextField.svelte";
     import {getMarketplaceConfigModules, loadMarketplaceConfig} from "../../../../../integration/rest";
-    import {attempt, dialog, type DialogRequest} from "../marketplace";
+    import {dialog, type DialogRequest} from "../marketplace";
 
     // The last config stays while the dialog fades out
     let config = $state.raw<{ id: number; address: string } | null>(null);
@@ -33,7 +33,7 @@
         pick = false;
         filter = "";
         // Without them, the whole config still loads
-        available = await attempt(() => getMarketplaceConfigModules(id)) ?? [];
+        available = await getMarketplaceConfigModules(id).catch(() => []);
         modules = [...available];
     }
 
@@ -43,8 +43,7 @@
 
     // The client tells the player what the load did
     async function load(): Promise<boolean> {
-        const id = config!!.id;
-        return await attempt(() => loadMarketplaceConfig(id, pick ? modules : null).then(() => true)) ?? false;
+        return await loadMarketplaceConfig(config!!.id, pick ? modules : null).then(() => true, () => false);
     }
 </script>
 

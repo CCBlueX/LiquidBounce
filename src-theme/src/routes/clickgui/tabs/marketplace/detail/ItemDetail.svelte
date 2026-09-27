@@ -14,7 +14,6 @@
     } from "../../../../../integration/rest";
     import type {MarketplaceItemDetail} from "../../../../../integration/types";
     import {
-        attempt,
         itemBadges,
         reviews,
         typeName,
@@ -59,7 +58,7 @@
         }
 
         busy = true;
-        await attempt(action);
+        await action().catch(() => null);
         await refresh();
         busy = false;
     }
