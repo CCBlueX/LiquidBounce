@@ -34,11 +34,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.world.entity.LivingEntity
@@ -105,7 +105,7 @@ object CombatController : EventListener {
     var styleOverride: CombatStyle? = null
 
     val style
-        get() = styleOverride ?: if (isOlderThanOrEqual1_8 && CombatModels.available(CombatStyle.LEGACY)) {
+        get() = styleOverride ?: if (!player.hasCooldown && CombatModels.available(CombatStyle.LEGACY)) {
             CombatStyle.LEGACY
         } else {
             CombatStyle.COOLDOWN
