@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.api.services.auth
 
+import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_BASE_URL
 import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.models.auth.TokenResponse
 
@@ -46,3 +48,7 @@ object AuthenticationApi : BaseApi(AUTH_BASE_URL) {
         "client_id=$clientId&refresh_token=$refreshToken&grant_type=refresh_token".asForm()
     )
 }
+
+val HttpException.isInvalidGrant: Boolean
+    get() = runCatching { JsonParser.parseString(content).asJsonObject["error"]?.asString }
+        .getOrNull() == "invalid_grant"
