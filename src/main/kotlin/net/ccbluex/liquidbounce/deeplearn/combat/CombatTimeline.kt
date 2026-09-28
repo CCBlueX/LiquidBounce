@@ -44,34 +44,38 @@ enum class CombatStyle(val id: String) { LEGACY("legacy"), COOLDOWN("cooldown") 
 @Suppress("TooManyFunctions")
 @UnstableAddonApi
 class CombatTrack(val ticks: Int) {
-    val x = IntArray(ticks)
-    val y = IntArray(ticks)
-    val z = IntArray(ticks)
-    val yaw = IntArray(ticks)
-    val pitch = IntArray(ticks)
-    val state = ShortArray(ticks)
-    val events = ShortArray(ticks)
-    val probes = ShortArray(ticks)
-    val hurtTime = ByteArray(ticks)
-    val health = UByteArray(ticks)
-    val attackDelay = UByteArray(ticks)
-    val attackStrength = UByteArray(ticks)
-    val item = ByteArray(ticks)
-    val width = UByteArray(ticks)
-    val height = UByteArray(ticks)
-    val eyeHeight = UByteArray(ticks)
-    val input = ByteArray(ticks)
-    val clicks = ByteArray(ticks)
-    val nearestOther = UByteArray(ticks)
+    // Columns are stored in declaration order
+    private val ints = ArrayList<IntArray>()
+    private val shorts = ArrayList<ShortArray>()
+    private val bytes = ArrayList<ByteArray>()
+    val intColumns: List<IntArray> get() = ints
+    val shortColumns: List<ShortArray> get() = shorts
+    val byteColumns: List<ByteArray> get() = bytes
 
-    val intColumns get() = arrayOf(x, y, z, yaw, pitch)
-    val shortColumns get() = arrayOf(state, events, probes)
-    val byteColumns
-        get() = arrayOf(
-            hurtTime, health.asByteArray(), attackDelay.asByteArray(), attackStrength.asByteArray(), item,
-            width.asByteArray(), height.asByteArray(), eyeHeight.asByteArray(), input, clicks,
-            nearestOther.asByteArray(),
-        )
+    val x = ints()
+    val y = ints()
+    val z = ints()
+    val yaw = ints()
+    val pitch = ints()
+    val state = shorts()
+    val events = shorts()
+    val probes = shorts()
+    val hurtTime = bytes()
+    val health = ubytes()
+    val attackDelay = ubytes()
+    val attackStrength = ubytes()
+    val item = bytes()
+    val width = ubytes()
+    val height = ubytes()
+    val eyeHeight = ubytes()
+    val input = bytes()
+    val clicks = bytes()
+    val nearestOther = ubytes()
+
+    private fun ints() = IntArray(ticks).also(ints::add)
+    private fun shorts() = ShortArray(ticks).also(shorts::add)
+    private fun bytes() = ByteArray(ticks).also(bytes::add)
+    private fun ubytes() = UByteArray(ticks).also { bytes += it.asByteArray() }
 
     fun has(tick: Int, flag: Int) = state[tick].toInt() and flag != 0
 
