@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
 import net.ccbluex.liquidbounce.api.services.user.UserApi
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.env
 import java.util.UUID
 
@@ -59,6 +60,8 @@ data class ClientAccount(
 
     suspend fun renew() = withContext(Dispatchers.IO) {
         session = OAuthClient.renewToken(session ?: error("No session"))
+        // Renewing spends the refresh token, and LiquidLauncher signs in from the same file.
+        ClientAccountManager.saveToDisk()
     }
 
     companion object {

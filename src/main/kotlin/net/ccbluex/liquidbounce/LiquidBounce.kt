@@ -32,6 +32,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.api.core.ApiConfig
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
@@ -96,6 +97,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
+import java.net.HttpURLConnection
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
@@ -357,12 +359,15 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount.renew()
                     }.onFailure {
                         logger.error("Failed to renew client account token.", it)
-                        ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
+
+                        // Signing out signs LiquidLauncher out as well, so only once the refresh token is refused.
+                        if (it.httpException?.code == HttpURLConnection.HTTP_BAD_REQUEST) {
+                            ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
+                            ConfigSystem.store(ClientAccountManager)
+                        }
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
                     }
-
-                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }
