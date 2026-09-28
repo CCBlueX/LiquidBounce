@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.LocalPlayer
@@ -277,7 +278,7 @@ object CombatSampler {
 
     private fun health(entity: LivingEntity): Int {
         val maxHealth = entity.maxHealth
-        val health = entity.health
+        val health = entity.getActualHealth()
         return if (maxHealth > 0f && health.isFinite()) {
             (health / maxHealth * 254f).roundToInt().coerceIn(0, 254)
         } else {
