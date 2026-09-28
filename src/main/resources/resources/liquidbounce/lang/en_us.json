@@ -623,7 +623,7 @@
   "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
   "liquidbounce.module.killAura.messages.aiNotReady": "AI aiming is not available (%s), aiming with %s.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.description": "Aims like the players the model learned from.",
-  "liquidbounce.module.killAura.rotations.angleSmooth.ai.model.description": "Default learned from players in free-for-all fights, and where attacks have no cooldown from 1.8 fights. Juggle also keeps aiming at opponents who knock you up. Expert learned only from players who land most of their hits. Duels also learned from duels.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.model.description": "Every model aims for cooldown and 1.8 combat alike and follows how you move. Default learned from players in free-for-all fights and 1.8 duels. Juggle also keeps aiming at opponents who knock you up. Expert learned only from players who land most of their hits. Duels also learned from 1.9 duels.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.randomness.description": "How much of the model's variation to keep. 0 always aims the same way.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.prediction.description": "Sees a moving opponent this many ticks ahead, making up for the reaction time learned from players.",
   "liquidbounce.module.killAura.rotations.angleSmooth.ai.speed.description": "Scales the model's turn speed. 1.0 turns like the recordings.",

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import com.google.gson.JsonObject
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.model.InputSchema
@@ -30,84 +29,56 @@ import net.ccbluex.liquidbounce.deeplearn.model.ModelSlot
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import java.util.WeakHashMap
 
+/** The combat part of a model's metadata: the largest turn per tick and whether its aim passed validation. */
 @UnstableAddonApi
-class CombatHeads(val aim: Boolean, val attacks: Boolean, val movement: Boolean) {
-    val any get() = aim || attacks || movement
-    val description get() = names.joinToString(", ")
-    val names get() = listOfNotNull("aim".takeIf { aim }, "attacks".takeIf { attacks }, "movement".takeIf { movement })
-
-    fun covers(other: CombatHeads) =
-        (aim || !other.aim) && (attacks || !other.attacks) && (movement || !other.movement)
-
-    companion object {
-        fun of(names: Collection<String>) = CombatHeads("aim" in names, "attacks" in names, "movement" in names)
-    }
-}
-
-/** The combat part of a model's metadata: the largest turn per tick and the heads that passed validation. */
-@UnstableAddonApi
-class CombatModelInfo(val turnCap: Float, val heads: CombatHeads) {
+class CombatModelInfo(val turnCap: Float, val aim: Boolean) {
     companion object {
         fun of(metadata: JsonObject): CombatModelInfo {
             val turnCap = metadata["turnCap"]?.let(ModelFile::float)
-            val heads = metadata["heads"]?.takeIf { turnCap != null && it.isJsonArray }?.asJsonArray
-                ?.map { it.asString }.orEmpty()
-            return CombatModelInfo(turnCap ?: 0f, CombatHeads.of(heads))
+            val aim = turnCap != null && metadata["heads"]?.takeIf { it.isJsonArray }?.asJsonArray
+                ?.any { it.asString == "aim" } == true
+            return CombatModelInfo(turnCap ?: 0f, aim)
         }
     }
 }
 
-/**
- * The models bundled with the client, as the user picks them. A choice has a file for each of its [styles]; the
- * style follows the server, so where a choice has none, that style's first choice plays instead.
- */
+/** The rotation models bundled with the client, each trained on cooldown and 1.8 combat alike. */
 @UnstableAddonApi
-enum class BundledCombatModel(override val tag: String, val id: String, val styles: Set<CombatStyle>) : Tagged {
-    DEFAULT("Default", "default", setOf(CombatStyle.COOLDOWN, CombatStyle.LEGACY)),
-    JUGGLE("Juggle", "juggle", setOf(CombatStyle.COOLDOWN)),
-    EXPERT("Expert", "expert", setOf(CombatStyle.COOLDOWN)),
-    DUELS("Duels", "duels", setOf(CombatStyle.COOLDOWN)),
+enum class BundledCombatModel(override val tag: String, val id: String) : Tagged {
+    DEFAULT("Default", "default"),
+    JUGGLE("Juggle", "juggle"),
+    EXPERT("Expert", "expert"),
+    DUELS("Duels", "duels"),
 }
 
-/** The combat task's model slots, one per [CombatStyle]. */
+/** The combat task's model slot: rotations, whatever the server's combat style. */
 @UnstableAddonApi
 object CombatModels {
     const val TASK = "combat"
     val INPUT = InputSchema(TASK, CombatFeatures.VERSION, CombatFeatures.SIZE)
+    val SLOT = ModelSlot(TASK, "rotation", INPUT, CombatOutputs.SIZE, BundledCombatModel.entries.map { it.id })
 
-    private val slots = enumMapOf<CombatStyle, ModelSlot> { style ->
-        val bundled = BundledCombatModel.entries.filter { style in it.styles }.map { it.id }
-        ModelSlot(TASK, style.id, INPUT, CombatOutputs.SIZE, bundled)
-    }
-
-    /** Plays [model] in every style that bundles it, and each other style's first choice. */
-    fun choose(model: BundledCombatModel) {
-        for (slot in slots.values) {
-            val name = model.id.takeIf { it in slot.bundled } ?: slot.bundled.firstOrNull() ?: continue
-            ModelRegistry.choose(slot, name)
-        }
-    }
     private val info = WeakHashMap<ModelFile, CombatModelInfo>()
 
-    fun slot(style: CombatStyle) = slots.getValue(style)
+    fun choose(model: BundledCombatModel) = ModelRegistry.choose(SLOT, model.id)
 
-    fun available(style: CombatStyle) = ModelRegistry.active(slot(style)) != null && !ModelRegistry.failed(slot(style))
+    fun available() = ModelRegistry.active(SLOT)?.takeIf { !ModelRegistry.failed(SLOT) }?.let { info(it).aim } == true
 
     fun info(file: ModelFile) = synchronized(info) { info.getOrPut(file) { CombatModelInfo.of(file.metadata) } }
 
-    fun <T> withActive(style: CombatStyle, block: (LoadedModel, CombatModelInfo) -> T): T? =
-        ModelRegistry.use(slot(style)) { model -> block(model, info(model.file)) }
+    fun <T> withActive(block: (LoadedModel, CombatModelInfo) -> T): T? =
+        ModelRegistry.use(SLOT) { model -> block(model, info(model.file)) }
 
-    fun describe(style: CombatStyle): String {
+    fun describe(): String {
         if (!DeepLearningEngine.isInitialized) {
             return "Engine unavailable"
         }
-        val slot = slot(style)
-        val file = ModelRegistry.active(slot) ?: return "No model for ${style.id} combat"
-        val name = if (ModelRegistry.installed(slot) === file) file.name else ModelRegistry.chosen(slot)
-        if (ModelRegistry.failed(slot)) {
-            return "$name: failed, see the log"
+        val file = ModelRegistry.active(SLOT) ?: return "No model"
+        val name = if (ModelRegistry.installed(SLOT) === file) file.name else ModelRegistry.chosen(SLOT)
+        return when {
+            ModelRegistry.failed(SLOT) -> "$name: failed, see the log"
+            !info(file).aim -> "$name: aim not validated"
+            else -> "$name: ready"
         }
-        return "$name: ${info(file).heads.description.ifEmpty { "nothing validated" }}"
     }
 }

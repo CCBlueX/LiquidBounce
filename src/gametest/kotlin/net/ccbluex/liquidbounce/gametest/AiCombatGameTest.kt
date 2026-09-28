@@ -97,7 +97,7 @@ class AiCombatGameTest : FabricClientGameTest {
                 }
                 context.waitTick()
                 context.client { client ->
-                    if (CombatController.lastDecision?.takeIf { it.heads.aim } != null) {
+                    if (CombatController.lastDecision != null) {
                         decisions++
                     }
                     val yaw = RotationManager.currentRotation?.yaw ?: client.player!!.yRot

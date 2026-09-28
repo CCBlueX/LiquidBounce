@@ -27,36 +27,22 @@ import kotlin.test.assertTrue
 
 class CombatModelsTest {
     @Test
-    fun `every bundled cooldown model fits its slot and validated every head`() {
-        for ((name, info) in bundled(CombatStyle.COOLDOWN)) {
-            assertTrue(info.heads.aim && info.heads.attacks && info.heads.movement, "$name: ${info.heads.description}")
-        }
-    }
-
-    @Test
-    fun `the bundled legacy default validated aim and attacks`() {
-        val (name, info) = bundled(CombatStyle.LEGACY).single()
-        assertEquals(BundledCombatModel.DEFAULT.id, name)
-        assertTrue(info.heads.aim && info.heads.attacks, info.heads.description)
-    }
-
-    @Test
-    fun `a choice without a legacy model plays the legacy default`() {
-        CombatModels.choose(BundledCombatModel.JUGGLE)
-        assertEquals(BundledCombatModel.JUGGLE.id, ModelRegistry.chosen(CombatModels.slot(CombatStyle.COOLDOWN)))
-        assertEquals(BundledCombatModel.DEFAULT.id, ModelRegistry.chosen(CombatModels.slot(CombatStyle.LEGACY)))
-        CombatModels.choose(BundledCombatModel.DEFAULT)
-    }
-
-    private fun bundled(style: CombatStyle): List<Pair<String, CombatModelInfo>> {
-        val slot = CombatModels.slot(style)
-        return slot.bundled.map { name ->
+    fun `every bundled model fits the rotation slot and validated its aim`() {
+        val slot = CombatModels.SLOT
+        for (name in slot.bundled) {
             val file = assertNotNull(javaClass.getResourceAsStream(slot.resource(name)), name).use(ModelFile::read)
             assertTrue(slot.accepts(file), name)
             assertEquals(CombatOutputs.NETWORK.hidden, file.network.hidden, name)
             val info = CombatModels.info(file)
+            assertTrue(info.aim, name)
             assertTrue(info.turnCap in 10f..60f, "$name: ${info.turnCap}")
-            name to info
         }
+    }
+
+    @Test
+    fun `a choice plays its own model`() {
+        CombatModels.choose(BundledCombatModel.JUGGLE)
+        assertEquals(BundledCombatModel.JUGGLE.id, ModelRegistry.chosen(CombatModels.SLOT))
+        CombatModels.choose(BundledCombatModel.DEFAULT)
     }
 }

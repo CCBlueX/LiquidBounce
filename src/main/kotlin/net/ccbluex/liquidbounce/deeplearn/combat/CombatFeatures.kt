@@ -32,16 +32,17 @@ import kotlin.math.sqrt
 
 @UnstableAddonApi
 object CombatFeatures {
-    const val VERSION = 3
+    const val VERSION = 4
     const val HISTORY = 10
     const val EVENT_HISTORY = 40
     const val LIVE_WINDOW = EVENT_HISTORY + 1
-    const val CURRENT = 36
+    const val CURRENT = 39
     const val PER_TICK = 7
     const val SIZE = CURRENT + HISTORY * PER_TICK
     const val TURN_SCALE = 30f
     private const val DEFAULT_ATTACK_DELAY = 12.5f
     private const val REACH_LIMIT = 8.0
+    private const val KEY_DISTURBANCE = 6
 
     /**
      * Writes the policy input for [tick]. Only ticks up to [tick] are read, from [timeline], the
@@ -113,7 +114,25 @@ object CombatFeatures {
             min(ticksSince(tick) { self.has(it, CombatTrack.ON_GROUND) }, 20) / 20f,
             ((sinceReset - delay) / 10f).coerceIn(-1.5f, 1.5f),
             CombatSkill.input(timeline),
+            *keys(self, tick),
         ).also { check(it.size == CURRENT) }
+    }
+
+    /**
+     * The movement keys that brought us to [tick]: forward, left and whether they are known. Recordings of others
+     * only have keys inferred from their movement, which knockback, damage and water hide, so ours are hidden
+     * there too.
+     */
+    private fun keys(self: CombatTrack, tick: Int): FloatArray {
+        val input = self.input[tick].toInt() and 0xFF
+        val pushed = (tick - KEY_DISTURBANCE..tick).any {
+            it >= 0 && (self.hasEvent(it, CombatTrack.KNOCKBACK) || self.hasEvent(it, CombatTrack.HURT))
+        }
+        if (input == CombatTrack.UNKNOWN || pushed || self.has(tick - 1, CombatTrack.IN_WATER)) {
+            return floatArrayOf(0f, 0f, 0f)
+        }
+        fun axis(positive: Int, negative: Int) = flag(input and positive != 0) - flag(input and negative != 0)
+        return floatArrayOf(axis(CombatTrack.FORWARD, CombatTrack.BACK), axis(CombatTrack.LEFT, CombatTrack.RIGHT), 1f)
     }
 
     private fun history(

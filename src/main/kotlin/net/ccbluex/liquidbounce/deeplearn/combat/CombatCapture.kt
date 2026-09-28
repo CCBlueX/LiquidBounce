@@ -70,6 +70,7 @@ import net.minecraft.world.entity.EntityEvent
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Input
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
@@ -226,6 +227,12 @@ object CombatPackets : EventListener {
 object CombatSampler {
     private const val PROBE_DISTANCE = 0.6
     private const val NEAR_SWING = 4.0
+
+    fun keys(input: Input) = listOf(
+        input.forward() to CombatTrack.FORWARD, input.backward() to CombatTrack.BACK,
+        input.left() to CombatTrack.LEFT, input.right() to CombatTrack.RIGHT, input.jump() to CombatTrack.JUMP,
+        input.shift() to CombatTrack.SNEAK, input.sprint() to CombatTrack.SPRINT,
+    ).fold(0) { keys, (pressed, bit) -> if (pressed) keys or bit else keys }
 
     fun frame(entity: LivingEntity): CombatFrame {
         val local = entity is LocalPlayer

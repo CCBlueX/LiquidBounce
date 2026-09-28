@@ -71,22 +71,21 @@ class AiAngleSmooth(
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Rotation {
-        val live = (rotationTarget.entity as? LivingEntity)?.let { entity ->
+        val decision = (rotationTarget.entity as? LivingEntity)?.let { entity ->
             CombatController.decide(entity, currentRotation)
         }
-        if (live == null || !live.heads.aim) {
-            val style = CombatController.style
+        if (decision == null) {
             // Without a decision the history may just be filling up, which is only worth a message if it never ends
-            if (live != null || !DeepLearningEngine.isInitialized || !CombatModels.available(style)) {
-                notify(CombatModels.describe(style))
+            if (!DeepLearningEngine.isInitialized || !CombatModels.available()) {
+                notify(CombatModels.describe())
             }
             fellBack = true
             return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
         notified = null
         fellBack = false
-        val yaw = (live.decision.yaw * speed).coerceIn(-maxTurn, maxTurn)
-        val pitch = (live.decision.pitch * speed).coerceIn(-maxTurn, maxTurn)
+        val yaw = (decision.yaw * speed).coerceIn(-maxTurn, maxTurn)
+        val pitch = (decision.pitch * speed).coerceIn(-maxTurn, maxTurn)
         lastSpeed = max(abs(yaw), abs(pitch)).coerceAtLeast(1f)
         val rotation = Rotation(currentRotation.yaw + yaw, (currentRotation.pitch + pitch).coerceIn(-90f, 90f))
         return assist.activeMode.process(rotationTarget, rotation, targetRotation)

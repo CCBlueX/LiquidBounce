@@ -45,17 +45,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.world.entity.LivingEntity
 import kotlin.random.Random
 
-@UnstableAddonApi
-class CombatLiveDecision(
-    val decision: CombatDecision,
-    val forward: Int,
-    val strafe: Int,
-    val jump: Boolean,
-    val sprint: Boolean,
-    val referenceYaw: Float,
-    val heads: CombatHeads,
-)
-
 /**
  * Keeps the last ticks of our own fight in the same raw form as recordings, so live inference
  * sees exactly the features the model was trained on.
@@ -65,8 +54,9 @@ object CombatController : EventListener {
     private const val WINDOW = CombatFeatures.LIVE_WINDOW
     private const val MAX_GAP = 20
     private const val WARM_DISTANCE = 8f
-    private val FORWARD_KEYS = arrayOf("back", null, "forward")
-    private val STRAFE_KEYS = arrayOf("right", null, "left")
+    private val KEY_NAMES = listOf(CombatTrack.FORWARD to "forward", CombatTrack.BACK to "back",
+        CombatTrack.LEFT to "left", CombatTrack.RIGHT to "right", CombatTrack.JUMP to "jump",
+        CombatTrack.SNEAK to "sneak", CombatTrack.SPRINT to "sprint")
 
     private class History {
         val self = ArrayDeque<CombatFrame>()
@@ -97,7 +87,7 @@ object CombatController : EventListener {
     private var targetId = Int.MIN_VALUE
     private var lastTick = Int.MIN_VALUE
     private var attacked = false
-    private var cached: CombatLiveDecision? = null
+    private var cached: CombatDecision? = null
     private var lastTarget: LivingEntity? = null
     private var gapTicks = 0
 
@@ -109,11 +99,7 @@ object CombatController : EventListener {
     val active get() = ModuleKillAura.running && KillAuraRotationsValueGroup.usesAiRotations
 
     val style
-        get() = styleOverride ?: if (!player.hasCooldown && CombatModels.available(CombatStyle.LEGACY)) {
-            CombatStyle.LEGACY
-        } else {
-            CombatStyle.COOLDOWN
-        }
+        get() = styleOverride ?: if (player.hasCooldown) CombatStyle.COOLDOWN else CombatStyle.LEGACY
 
     val lastDecision get() = cached
     val lastDecisionTick get() = lastTick
@@ -133,7 +119,7 @@ object CombatController : EventListener {
      * The decision for this tick, computed once from the state before any rotation or attack of
      * this tick. [view] is the rotation the server last received from us.
      */
-    fun decide(target: LivingEntity, view: Rotation): CombatLiveDecision? {
+    fun decide(target: LivingEntity, view: Rotation): CombatDecision? {
         if (mc.gui.screen() != null || player.isDeadOrDying || player.isSpectator || !target.isAlive) {
             reset()
             return null
@@ -200,15 +186,9 @@ object CombatController : EventListener {
             val kept = warm.get(candidate.id)?.takeIf { it.lastTick == tick - 1 }
                 ?: History().also { warm.put(candidate.id, it) }
             val other = CombatSampler.frame(candidate)
-            kept.add(own, other, CombatSelfContext.capture(world, own, other, nearby, clicks = swung(own)), tick)
+            kept.add(own, other, CombatSelfContext.capture(world, own, other, nearby, keys(), swung(own)), tick)
         }
     }
-
-    /**
-     * The decision made at the start of this tick, for handlers that run while the player moves. The player's
-     * tick counter has moved on by then, so calling [decide] there would capture next tick's frame too early.
-     */
-    fun current(target: LivingEntity) = cached?.takeIf { target.id == targetId && lastTick == player.tickCount - 1 }
 
     fun reset() {
         history = History()
@@ -224,31 +204,30 @@ object CombatController : EventListener {
 
     private fun swung(own: CombatFrame) = if (own.events and CombatTrack.SWING != 0) 1 else 0
 
+    /** The keys of the movement that brought us here; this tick's are read only after the rotation is decided. */
+    private fun keys() = CombatSampler.keys(player.input.keyPresses)
+
     private fun capture(target: LivingEntity, view: Rotation) {
         val own = own(view)
         val other = CombatSampler.frame(target)
-        val context = CombatSelfContext.capture(world, own, other, CombatSampler.nearbyPlayers(),
-            clicks = if (attacked) 1 else swung(own))
+        val context = CombatSelfContext.capture(world, own, other, CombatSampler.nearbyPlayers(), keys(),
+            if (attacked) 1 else swung(own))
         history.add(own, other, context, player.tickCount)
         attacked = false
     }
 
     /** What the model saw and decided this tick, for ModuleDebug. */
-    private fun debug(target: LivingEntity, view: Rotation, live: CombatLiveDecision?) {
+    private fun debug(target: LivingEntity, view: Rotation, decision: CombatDecision?) {
         debugParameter("Target") {
             "%s, %.1f blocks, hurt %d".format(target.scoreboardName, target.distanceTo(player), target.hurtTime)
         }
         debugParameter("History") { "${self.size} ticks" }
-        val decision = live?.decision
         debugParameter("Turn") {
             decision?.let { "%.1f yaw, %.1f pitch%s".format(it.yaw, it.pitch, if (it.clamped) ", clamped" else "") }
         }
-        debugParameter("Attack") { decision?.attack }
         debugParameter("Keys") {
-            live?.let {
-                listOfNotNull(FORWARD_KEYS[it.forward], STRAFE_KEYS[it.strafe], "jump".takeIf { _ -> it.jump },
-                    "sprint".takeIf { _ -> it.sprint }).joinToString(" ").ifEmpty { "none" }
-            }
+            val keys = contexts.lastOrNull()?.input ?: 0
+            KEY_NAMES.filter { (bit, _) -> keys and bit != 0 }.joinToString(" ") { it.second }.ifEmpty { "none" }
         }
         val eyes = player.eyePosition
         debugGeometry("View") { DebuggedLineSegment(eyes, eyes.add(view.directionVector.scale(4.0)), Color4b.RED) }
@@ -260,7 +239,7 @@ object CombatController : EventListener {
         }
     }
 
-    private fun predict(): CombatLiveDecision? {
+    private fun predict(): CombatDecision? {
         if (self.size <= CombatFeatures.HISTORY) {
             return null
         }
@@ -272,12 +251,13 @@ object CombatController : EventListener {
         val last = timeline.ticks - 1
         CombatFeatures.write(timeline, CombatPerception(timeline, 0).lead(lead), CombatView.recorded(timeline),
             CombatFeatures.recordedAttacks(timeline), last, input)
-        return CombatModels.withActive(style) { model, info ->
-            val output = model.predict(input)
-            val decision = CombatOutputs.decide(output.values, output.clamped, randomness, info.turnCap, Random.Default)
-            val (forward, strafe) = CombatOutputs.movement(output.values, Random.Default)
-            CombatLiveDecision(decision, forward, strafe, CombatOutputs.jump(output.values, Random.Default),
-                CombatOutputs.sprint(output.values, forward, Random.Default), self.last().yaw, info.heads)
+        return CombatModels.withActive { model, info ->
+            if (info.aim) {
+                val output = model.predict(input)
+                CombatOutputs.decide(output.values, output.clamped, randomness, info.turnCap, Random.Default)
+            } else {
+                null
+            }
         }
     }
 

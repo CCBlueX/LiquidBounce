@@ -73,6 +73,7 @@ class CombatFeaturesTest {
                     track.events[future] = random.nextInt(0, Short.MAX_VALUE.toInt()).toShort()
                     track.state[future] = random.nextInt(0, Short.MAX_VALUE.toInt()).toShort()
                     track.clicks[future] = 1
+                    track.input[future] = random.nextInt(0, 128).toByte()
                 }
             }
             // An update tick keeps interpolated history causal, so only the values after it may differ.
@@ -114,6 +115,18 @@ class CombatFeaturesTest {
         assertTrue(abs(turned.aimYaw + 20f) < 1e-3f, "${turned.aimYaw}")
         assertTrue(turned.hitboxAngle in 10f..20f, "${turned.hitboxAngle}")
         assertTrue(abs(turned.distance - 2.7) < 0.05, "${turned.distance}")
+    }
+
+    @Test
+    fun `keys come from the input column and hide while we are pushed`() {
+        val keys = CombatFeatures.CURRENT - 3
+        val timeline = fight(ticks = 40, source = CombatSource.FIRST_PERSON) { tick -> knockback = tick == 30 }
+        timeline.self.input.fill((CombatTrack.FORWARD or CombatTrack.RIGHT).toByte())
+        fun keysAt(tick: Int) = features(timeline, tick).copyOfRange(keys, keys + 3)
+        assertContentEquals(floatArrayOf(1f, -1f, 1f), keysAt(20))
+        assertContentEquals(floatArrayOf(0f, 0f, 0f), keysAt(33))
+        timeline.self.input[20] = CombatTrack.UNKNOWN.toByte()
+        assertContentEquals(floatArrayOf(0f, 0f, 0f), keysAt(20))
     }
 
     private fun features(timeline: CombatTimeline, tick: Int) = FloatArray(CombatFeatures.SIZE).also {
