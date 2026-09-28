@@ -19,6 +19,10 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import okio.BufferedSink
+import okio.buffer
+import okio.gzip
+import okio.sink
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
@@ -65,6 +69,23 @@ fun Path.atomicMoveTo(target: Path): Path {
         replaceExisting(target, first)
     } catch (first: java.nio.file.FileAlreadyExistsException) {
         replaceExisting(target, first)
+    }
+}
+
+/**
+ * Writes this file through a temporary one and [atomicMoveTo], so a crash never leaves half a file behind.
+ */
+@Throws(IOException::class)
+fun Path.atomicWrite(compressed: Boolean = false, write: (BufferedSink) -> Unit) {
+    val parent = toAbsolutePath().parent
+    Files.createDirectories(parent)
+    val temporary = Files.createTempFile(parent, fileName.toString(), ".tmp")
+    try {
+        val sink = temporary.sink()
+        (if (compressed) sink.gzip() else sink).buffer().use(write)
+        temporary.atomicMoveTo(this)
+    } finally {
+        Files.deleteIfExists(temporary)
     }
 }
 

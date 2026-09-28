@@ -20,8 +20,8 @@
 
 package net.ccbluex.liquidbounce.deeplearn.combat
 
-import net.ccbluex.liquidbounce.deeplearn.model.atomicWrite
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.Source
@@ -180,7 +180,7 @@ object CombatTimelineFiles {
     private const val MAX_TIMELINES = 100_000
 
     fun write(path: Path, timelines: Collection<CombatTimeline>) {
-        atomicWrite(path, compressed = true) { output ->
+        path.atomicWrite(compressed = true) { output ->
             output.writeInt(MAGIC)
             output.writeShort(VERSION)
             output.writeInt(timelines.size)

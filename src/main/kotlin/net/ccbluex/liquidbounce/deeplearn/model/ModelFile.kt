@@ -26,11 +26,7 @@ import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
-import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
-import okio.BufferedSink
-import okio.buffer
-import okio.gzip
-import okio.sink
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
@@ -64,7 +60,7 @@ class ModelFile(
         require(normalization.mean.size == input.size) { "Normalization does not match the input" }
     }
 
-    fun write(path: Path) = atomicWrite(path) { it.write(bytes()) }
+    fun write(path: Path) = path.atomicWrite { it.write(bytes()) }
 
     fun bytes(): ByteArray {
         val bytes = FastByteArrayOutputStream()
@@ -173,19 +169,5 @@ class ModelFile(
             require(bytes.size <= limit) { "Model entry too large" }
             return bytes
         }
-    }
-}
-
-/** Writes through a temporary file, so a crash never leaves half a file behind. */
-@UnstableAddonApi
-fun atomicWrite(path: Path, compressed: Boolean = false, write: (BufferedSink) -> Unit) {
-    Files.createDirectories(path.toAbsolutePath().parent)
-    val temporary = Files.createTempFile(path.toAbsolutePath().parent, path.fileName.toString(), ".tmp")
-    try {
-        val sink = temporary.sink()
-        (if (compressed) sink.gzip() else sink).buffer().use(write)
-        temporary.atomicMoveTo(path)
-    } finally {
-        Files.deleteIfExists(temporary)
     }
 }
