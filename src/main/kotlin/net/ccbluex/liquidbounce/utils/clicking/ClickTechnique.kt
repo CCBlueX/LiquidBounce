@@ -21,7 +21,15 @@ package net.ccbluex.liquidbounce.utils.clicking
 import it.unimi.dsi.fastutil.longs.LongList
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingModels
+import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingStyle
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import java.util.Random
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
+import kotlin.random.asKotlinRandom
 
 /** How a [Clicker] spaces its presses, with the rate [ClickPlan] plans at. */
 abstract class ClickTechnique(name: String) : Mode(name), ClickTiming {
@@ -34,6 +42,38 @@ class HumanClickTechnique(override val parent: ModeValueGroup<*>, maxCps: Int) :
 
     override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random) =
         timing.nextInterval(recent, comboMs, cps, random)
+}
+
+/**
+ * The rhythm of a clicking model, without a CPS of its own. Without the engine or the model it clicks like
+ * [HumanClickTechnique] around the model's mean rate and says so once.
+ */
+class ModelClickTechnique(
+    override val parent: ModeValueGroup<*>,
+    private val style: ClickingStyle,
+    name: String,
+) : ClickTechnique(name) {
+    private val fallback = HumanClickTiming()
+    private var notified: String? = null
+
+    override val cps: IntRange
+        get() = ClickingModels.meanInterval(style)?.let { (1000f / it).roundToInt() }?.let { it - 1..it + 1 }
+            ?: 11..14
+
+    override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random): Long {
+        val interval = ClickingModels.nextInterval(style, recent.map { it.toFloat() }, comboMs.toFloat(),
+            random.asKotlinRandom())
+        if (interval != null) {
+            notified = null
+            return interval.roundToLong()
+        }
+        val status = ClickingModels.describe(style)
+        if (notified != status) {
+            notified = status
+            chat(markAsError(translation("liquidbounce.clicker.messages.modelNotReady", name, status, cps)))
+        }
+        return fallback.nextInterval(recent, comboMs, cps, random)
+    }
 }
 
 /**

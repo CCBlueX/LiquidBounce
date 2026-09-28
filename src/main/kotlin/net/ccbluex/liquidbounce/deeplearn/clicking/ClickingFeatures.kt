@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.deeplearn.clicking
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import kotlin.math.ln
 import kotlin.math.min
-import kotlin.random.Random
 
 /**
  * The model input: the last [HISTORY] gaps between presses as log milliseconds, how much of that history exists
@@ -42,31 +41,5 @@ object ClickingFeatures {
         }
         into[HISTORY] = min(intervals.size, HISTORY) / HISTORY.toFloat()
         into[HISTORY + 1] = burstMs / 1000f
-    }
-}
-
-/** One burst of presses in the model's own tempo; [next] draws the gap to the following press in ms. */
-@UnstableAddonApi
-class ClickingRhythm(private val predict: (FloatArray) -> FloatArray?) {
-    private val intervals = ArrayDeque<Float>()
-    private val input = FloatArray(ClickingFeatures.SIZE)
-
-    var burstMs = 0f
-        private set
-
-    fun next(random: Random): Float? {
-        ClickingFeatures.write(intervals, burstMs, input)
-        val interval = ClickingOutputs.sample(predict(input) ?: return null, random)
-        intervals.addLast(interval)
-        if (intervals.size > ClickingFeatures.HISTORY) {
-            intervals.removeFirst()
-        }
-        burstMs += interval
-        return interval
-    }
-
-    fun reset() {
-        intervals.clear()
-        burstMs = 0f
     }
 }

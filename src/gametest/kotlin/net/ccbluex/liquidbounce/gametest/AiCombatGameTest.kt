@@ -48,8 +48,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Fights a scripted opponent that circles the player with KillAura's AI aiming on, using the bundled
- * model, so the whole path from packets to decisions to rotations and attacks runs in a real client.
+ * Fights a scripted opponent that circles the player with KillAura's AI aiming and Butterfly clicking on, using the
+ * bundled models, so the whole path from packets to decisions to rotations and attacks runs in a real client.
  */
 class AiCombatGameTest : FabricClientGameTest {
     private val logger = LogManager.getLogger("AiCombatGameTest")
@@ -68,6 +68,7 @@ class AiCombatGameTest : FabricClientGameTest {
             context.client {
                 ModuleManager.filter { it.enabled && it !== ModuleHud }.forEach { it.enabled = false }
                 KillAuraRotationsValueGroup.get().first { it.name == "AngleSmooth" }.setByString("AI")
+                ModuleKillAura.clicker.get().first { it.name == "Technique" }.setByString("Butterfly")
             }
             fight(context)
         }

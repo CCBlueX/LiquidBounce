@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.deeplearn.clicking
 
 import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.model.InputSchema
 import net.ccbluex.liquidbounce.deeplearn.model.ModelFile
 import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.deeplearn.model.ModelSlot
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
+import kotlin.random.Random
 
 @UnstableAddonApi
 enum class ClickingStyle(val id: String, val model: String) {
@@ -39,6 +41,8 @@ object ClickingModels {
 
     private const val DEFAULT_INTERVAL = 100f
 
+    private val input = FloatArray(ClickingFeatures.SIZE)
+
     private val slots = enumMapOf<ClickingStyle, ModelSlot> {
         ModelSlot(TASK, it.id, INPUT, ClickingOutputs.BINS, listOf(it.model))
     }
@@ -50,6 +54,16 @@ object ClickingModels {
 
     fun meanInterval(style: ClickingStyle) = ModelRegistry.active(slot(style))?.let(::meanInterval)
 
-    fun rhythm(style: ClickingStyle) =
-        ClickingRhythm { input -> ModelRegistry.use(slot(style)) { model -> model.predict(input).values } }
+    /** The gap in ms after [intervals] (ms, oldest first) [burstMs] into a burst, or null without a working model. */
+    fun nextInterval(style: ClickingStyle, intervals: List<Float>, burstMs: Float, random: Random): Float? {
+        ClickingFeatures.write(intervals, burstMs, input)
+        val output = ModelRegistry.use(slot(style)) { model -> model.predict(input).values } ?: return null
+        return ClickingOutputs.sample(output, random)
+    }
+
+    fun describe(style: ClickingStyle) = when {
+        !DeepLearningEngine.isInitialized -> "Engine unavailable"
+        ModelRegistry.failed(slot(style)) -> "failed, see the log"
+        else -> "No model"
+    }
 }

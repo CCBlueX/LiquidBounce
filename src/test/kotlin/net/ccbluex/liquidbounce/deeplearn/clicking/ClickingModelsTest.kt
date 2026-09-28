@@ -23,6 +23,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ClickingModelsTest {
@@ -45,18 +46,5 @@ class ClickingModelsTest {
             val output = FloatArray(ClickingOutputs.BINS) { if (it == bin) 50f else 0f }
             assertEquals(bin, ClickingOutputs.bin(ClickingOutputs.sample(output, random)))
         }
-    }
-
-    @Test
-    fun `the rhythm feeds its own gaps back`() {
-        val inputs = ArrayList<FloatArray>()
-        val rhythm = ClickingRhythm { input ->
-            inputs += input.copyOf()
-            FloatArray(ClickingOutputs.BINS)
-        }
-        val gaps = List(12) { assertNotNull(rhythm.next(Random(it))) }
-        assertEquals(gaps.sum(), rhythm.burstMs, 1e-3f)
-        assertEquals(1f, inputs.last()[ClickingFeatures.HISTORY])
-        assertEquals(kotlin.math.ln(gaps[gaps.size - 2]), inputs.last()[ClickingFeatures.HISTORY - 1], 1e-5f)
     }
 }

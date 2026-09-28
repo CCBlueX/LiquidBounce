@@ -1,4 +1,5 @@
 {
+  "liquidbounce.clicker.messages.modelNotReady": "The %s click model is not available (%s), clicking like Human at %s CPS.",
   "liquidbounce.command.addon.description": "Allows you to inspect installed add-ons.",
   "liquidbounce.command.addon.info.about": "Description: %s",
   "liquidbounce.command.addon.info.authors": "Authors: %s",

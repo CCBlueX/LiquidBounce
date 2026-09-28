@@ -22,6 +22,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingStyle
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
@@ -62,7 +63,12 @@ open class Clicker<T>(
     }
 
     private val technique = modes(this, "Technique") {
-        arrayOf<ClickTechnique>(HumanClickTechnique(it, maxCps), ConstantClickTechnique(it, maxCps))
+        arrayOf(
+            HumanClickTechnique(it, maxCps),
+            ConstantClickTechnique(it, maxCps),
+            ModelClickTechnique(it, ClickingStyle.BUTTERFLY, "Butterfly"),
+            ModelClickTechnique(it, ClickingStyle.JITTER, "Jitter"),
+        )
     }
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
@@ -203,10 +209,14 @@ internal fun migrateClickTechnique(clicker: JsonObject) {
     technique.addProperty("active", if (old == "Constant") old else "Human")
     technique.add("value", JsonArray())
     technique.add("choices", JsonObject().apply {
-        for (name in arrayOf("Human", "Constant")) {
+        for (name in arrayOf("Human", "Constant", "Butterfly", "Jitter")) {
             add(name, JsonObject().apply {
                 addProperty("name", name)
-                add("value", JsonArray().apply { cps?.let { add(it.deepCopy()) } })
+                add("value", JsonArray().apply {
+                    if (name == "Human" || name == "Constant") {
+                        cps?.let { add(it.deepCopy()) }
+                    }
+                })
             })
         }
     })
