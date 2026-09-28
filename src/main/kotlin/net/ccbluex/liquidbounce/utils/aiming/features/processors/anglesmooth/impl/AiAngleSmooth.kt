@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.NoneAngleSmooth
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.world.entity.LivingEntity
@@ -45,6 +46,14 @@ class AiAngleSmooth(
     private val maxTurn by float("MaxTurn", 60f, 10f..180f)
     private val randomness by float("Randomness", 0.5f, 0f..1f)
     private val prediction by int("Prediction", 2, 0..4, "ticks")
+    private val assist = modes(this, "Assist") {
+        arrayOf(
+            NoneAngleSmooth(it),
+            InterpolationAngleSmooth(it, 2..5, 2..5, 95..100),
+            LinearAngleSmooth(it, horizontalTurnSpeed = 5f..5f, verticalTurnSpeed = 5f..5f),
+        )
+    }
+
     private var lastSpeed = 1f
     private var fellBack = true
     private var notified: String? = null
@@ -73,7 +82,8 @@ class AiAngleSmooth(
         val yaw = (live.decision.yaw * speed).coerceIn(-maxTurn, maxTurn)
         val pitch = (live.decision.pitch * speed).coerceIn(-maxTurn, maxTurn)
         lastSpeed = max(abs(yaw), abs(pitch)).coerceAtLeast(1f)
-        return Rotation(currentRotation.yaw + yaw, (currentRotation.pitch + pitch).coerceIn(-90f, 90f))
+        val rotation = Rotation(currentRotation.yaw + yaw, (currentRotation.pitch + pitch).coerceIn(-90f, 90f))
+        return assist.activeMode.process(rotationTarget, rotation, targetRotation)
     }
 
     override fun calculateTicks(currentRotation: Rotation, targetRotation: Rotation): Int {
