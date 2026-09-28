@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
-import net.ccbluex.liquidbounce.utils.text.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
 import net.ccbluex.liquidbounce.utils.text.codePointsToString
@@ -192,15 +191,14 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
  * 1. Degenerates legacy formatting into new formatting [StringDecomposer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
-fun Component.sanitizeForeignInput(): Component {
-    val degeneratedText = this.asFormattedCharSequence()
+fun Component.sanitizeForeignInput(): FormattedCharSequence =
+    ModuleNameProtect.wrap(this.asFormattedCharSequence())
 
-    if (!ModuleNameProtect.running) {
-        return degeneratedText.toText()
-    }
-
-    return ModuleNameProtect.wrap(degeneratedText).toText()
-}
+/**
+ * Applies [ModuleNameProtect] - if needed
+ */
+inline fun FormattedCharSequence.sanitizeForeignInput(): FormattedCharSequence =
+    ModuleNameProtect.wrap(this)
 
 /**
  * Returns a sequence that substitutes each match of [replacements] as it is accepted, without

@@ -61,19 +61,24 @@ inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Component] from the receiver.
+ * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
+inline fun String.asPlainText(style: Style = Style.EMPTY): Component = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
+inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
+
+/**
+ * Returns an immutable [Component] from the receiver with [style].
+ */
+inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
 inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(formatting)
 
@@ -90,6 +95,13 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+inline operator fun FormattedCharSequence.plus(other: FormattedCharSequence) =
+    FormattedCharSequence.fromPair(this, other)
+
+inline fun Array<out FormattedCharSequence>.composite() = FormattedCharSequence.composite(this.asList())
+
+inline fun List<FormattedCharSequence>.composite() = FormattedCharSequence.composite(this)
 
 @OptIn(ExperimentalContracts::class)
 inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {

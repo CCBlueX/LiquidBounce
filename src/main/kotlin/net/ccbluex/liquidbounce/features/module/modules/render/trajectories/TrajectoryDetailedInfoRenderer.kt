@@ -23,16 +23,17 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.features.module.modules.render.TimeUnit
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.world.phys.Vec3
 
 object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
@@ -95,13 +96,13 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 pose().scale(scale)
 
                 val texts = buildList {
-                    add(timeUnit.format(result.positions.size).asPlainText())
+                    add(timeUnit.format(result.positions.size).withFormat())
                     if (distance && result.positions.isNotEmpty()) {
-                        add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".asPlainText())
+                        add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".withFormat())
                     }
                     val displayOwner = renderer.displayOwner
                     if (ownerName && displayOwner != null && displayOwner !== player) {
-                        add(textOf("Owner: ".asPlainText(), displayOwner.displayName))
+                        add("Owner: ".withFormat() + displayOwner.displayName.sanitizeForeignInput())
                     }
                 }
 
@@ -116,9 +117,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 var y = 0F
 
                 for (text in texts) {
-                    val processedText = fontRenderer.process(text, color)
-
-                    fontRenderer.draw(processedText) {
+                    fontRenderer.draw(text) {
+                        this.color = TrajectoryDetailedInfoRenderer.color
                         this.y = y
                         horizontalAnchor = HorizontalAnchor.CENTER
                         shadow = true

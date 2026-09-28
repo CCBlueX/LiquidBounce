@@ -24,17 +24,18 @@ import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.submitTextAlwaysOnTop
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.plus
-import net.ccbluex.liquidbounce.utils.text.textOf
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.ccbluex.liquidbounce.utils.world.EntityLookup.Companion.EntityLookup
 import net.ccbluex.liquidbounce.utils.world.filterTo
 import net.minecraft.client.gui.Font
 import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.LightCoordsUtil
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityTypes
@@ -76,20 +77,19 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
-                var text = timeUnit.format(tnt.fuse).asPlainText(Style.EMPTY + color)
+                var formattedText = timeUnit.format(tnt.fuse).withFormat(Style.EMPTY + color)
 
                 if (ownerName) {
                     tnt.owner?.name?.let {
-                        text = textOf(
-                            text,
-                            " (".asPlainText(),
-                            it,
-                            ")".asPlainText(),
+                        formattedText = FormattedCharSequence.composite(
+                            formattedText,
+                            " (".withFormat(),
+                            it.sanitizeForeignInput(),
+                            ")".withFormat(),
                         )
                     }
                 }
 
-                val formattedText = text.visualOrderText
                 val font = mc.font
 
                 val camera = event.camera

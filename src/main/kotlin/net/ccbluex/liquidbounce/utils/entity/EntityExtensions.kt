@@ -90,6 +90,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.EntityCollisionContext
 import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.PlayerTeam
 import java.lang.Math.fma
 import kotlin.math.acos
 import kotlin.math.cos
@@ -190,6 +191,12 @@ val ClientInput.initial: Input
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
+
+/**
+ * @see Entity.getDisplayName
+ */
+val Entity.simpleDisplayName
+    get() = this.team?.getFormattedName(this.name) ?: this.name
 
 val InteractionHand.opposite: InteractionHand
     get() = if (this === InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND

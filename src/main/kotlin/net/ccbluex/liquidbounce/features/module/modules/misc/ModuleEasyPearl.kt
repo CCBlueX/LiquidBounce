@@ -51,8 +51,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.item.Items
@@ -202,7 +202,7 @@ object ModuleEasyPearl :
         val screenPos = WorldToScreen.calculateScreenPos(
             pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
         ) ?: return@handler
-        val distanceText = "${player.position().distanceTo(pos).toFixed(1)}m".asPlainText()
+        val distanceText = "${player.position().distanceTo(pos).toFixed(1)}m".withFormat()
         val fontRenderer = fontRenderer
 
         with(event.context) {
@@ -210,7 +210,8 @@ object ModuleEasyPearl :
             pose().translate(screenPos.x, screenPos.y)
             pose().scale(fontRenderer.scaleToVanillaFont)
 
-            fontRenderer.draw(fontRenderer.process(distanceText, targetColor(pos))) {
+            fontRenderer.draw(distanceText) {
+                this.color = targetColor(pos)
                 horizontalAnchor = HorizontalAnchor.CENTER
                 verticalAnchor = VerticalAnchor.MIDDLE
                 shadow = true

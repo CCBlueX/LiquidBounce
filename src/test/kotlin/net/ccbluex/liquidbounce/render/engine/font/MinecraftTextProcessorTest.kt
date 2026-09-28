@@ -17,21 +17,34 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine.font.processor
+package net.ccbluex.liquidbounce.render.engine.font
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.mapToIntArray
+import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.ProcessedChar
+import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
 import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.Test
 import java.awt.Font
-import kotlin.test.assertContentEquals
 
 class MinecraftTextProcessorTest {
+
+    private fun process(text: Component, defaultColor: Color4b) =
+        MinecraftTextProcessor.process(text.asFormattedCharSequence(), defaultColor)
+
+    private fun RecyclingProcessedText.pack(): List<ProcessedChar> {
+        val chars = ArrayList<ProcessedChar>(this.chars.size)
+        forEach { chars += it }
+
+        return chars
+    }
 
     @Test
     fun testProcessMapsFontStyles() {
@@ -41,13 +54,13 @@ class MinecraftTextProcessorTest {
             .append("i".asPlainText(Style.EMPTY.withItalic(true)))
             .append("x".asPlainText(Style.EMPTY.withBold(true).withItalic(true)))
 
-        val processed = MinecraftTextProcessor.process(text, Color4b(1, 2, 3, 4))
+        val chars = process(text, Color4b(1, 2, 3, 4)).pack()
 
         assertContentEquals(
             intArrayOf(Font.PLAIN, Font.BOLD, Font.ITALIC, Font.BOLD or Font.ITALIC),
-            processed.chars.mapToIntArray { it.font },
+            chars.mapToIntArray { it.font },
         )
-        assertEquals("pbix", processed.chars.joinToString("") { Character.toString(it.codepoint) })
+        assertEquals("pbix", chars.joinToString("") { Character.toString(it.codepoint) })
     }
 
     @Test
@@ -57,10 +70,25 @@ class MinecraftTextProcessorTest {
             .append("a".asPlainText())
             .append("b".asPlainText(Style.EMPTY.withColor(0x336699)))
 
-        val processed = MinecraftTextProcessor.process(text, defaultColor)
+        val chars = process(text, defaultColor).pack()
 
-        assertEquals(defaultColor, processed.chars[0].color)
-        assertEquals(Color4b.fullAlpha(0x336699), processed.chars[1].color)
+        assertEquals(defaultColor.argb, chars[0].color)
+        assertEquals(Color4b.fullAlpha(0x336699).argb, chars[1].color)
+    }
+
+    /**
+     * Legacy formatting codes are what [net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput]
+     * degenerates, so a `§`-colored string has to end up styled like its styled counterpart.
+     */
+    @Test
+    fun testProcessDegeneratesLegacyFormatting() {
+        val legacy = process("§cred".asPlainText(), Color4b.WHITE).pack().map { it.color }
+        val styled = process(
+            "red".asPlainText(Style.EMPTY.applyFormat(ChatFormatting.RED)),
+            Color4b.WHITE,
+        ).pack().map { it.color }
+
+        assertContentEquals(styled, legacy)
     }
 
     @Test
@@ -69,21 +97,20 @@ class MinecraftTextProcessorTest {
             .append("ab".asPlainText(Style.EMPTY.withUnderlined(true)))
             .append("cd".asPlainText(Style.EMPTY.withStrikethrough(true)))
 
-        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
+        val chars = process(text, Color4b.WHITE).pack()
 
-        assertContentEquals(listOf(true, true, false, false), processed.chars.map { it.underlined })
-        assertContentEquals(listOf(false, false, true, true), processed.chars.map { it.strikethrough })
+        assertContentEquals(listOf(true, true, false, false), chars.map { it.underlined })
+        assertContentEquals(listOf(false, false, true, true), chars.map { it.strikethrough })
     }
 
     @Test
     fun testProcessUsesObfuscationCharsetWhenRequested() {
         val text = "abcd".asPlainText(Style.EMPTY.withObfuscated(true))
-        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
-        val randomCodepoints = IntOpenHashSet(TextProcessor.RANDOM_CHARS)
+        val chars = process(text, Color4b.WHITE).pack()
 
-        assertEquals(4, processed.chars.size)
-        assertTrue(processed.chars.all { it.obfuscated })
-        assertTrue(processed.chars.all { it.codepoint in randomCodepoints })
+        assertEquals(4, chars.size)
+        assertTrue(chars.all { it.obfuscated })
+        assertTrue(chars.all { it.codepoint.toByte() in MinecraftTextProcessor.RANDOM_CHARS })
     }
 
     @Test
@@ -92,12 +119,12 @@ class MinecraftTextProcessorTest {
         val text = "a${Character.toString(supplementaryCodepoint)}b"
             .asPlainText(Style.EMPTY.withUnderlined(true))
 
-        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
+        val chars = process(text, Color4b.WHITE).pack()
 
         assertContentEquals(
             intArrayOf('a'.code, supplementaryCodepoint, 'b'.code),
-            processed.chars.mapToIntArray { it.codepoint }
+            chars.mapToIntArray { it.codepoint }
         )
-        assertTrue(processed.chars.all { it.underlined })
+        assertTrue(chars.all { it.underlined })
     }
 }
