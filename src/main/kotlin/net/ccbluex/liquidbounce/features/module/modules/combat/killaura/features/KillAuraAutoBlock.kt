@@ -399,7 +399,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
      */
     private fun interactWithFacing(rotation: Rotation, blockHand: InteractionHand): Boolean {
         val entityHitResult =
-            findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
+            findEntityInCrosshair(range.interactionRange.toDouble(), rotation = rotation, predicate = {
                 when (raycast) {
                     TRACE_NONE -> false
                     TRACE_ONLYENEMY -> it.shouldBeAttacked()

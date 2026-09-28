@@ -120,7 +120,7 @@ object ModuleMiddleClickAction : ClientModule(
         val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation
 
-            val entity = (findEntityInCrosshair(pickUpRange.toDouble(), rotation) { it is Player }
+            val entity = (findEntityInCrosshair(pickUpRange.toDouble(), rotation = rotation) { it is Player }
                 ?: return@handler).entity as Player
 
             val entityHitResult = isLookingAtEntity(

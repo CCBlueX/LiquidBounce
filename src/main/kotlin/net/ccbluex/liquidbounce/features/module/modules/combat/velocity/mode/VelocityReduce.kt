@@ -185,7 +185,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             } else {
                 ModuleKillAura.range.interactionRange.toDouble()
             }),
-            RotationManager.currentRotation ?: player.rotation
+            rotation = RotationManager.currentRotation ?: player.rotation
         ) { !it.isRemoved && it.shouldBeAttacked() }?.entity
 
         if (lagTicks == -1) {

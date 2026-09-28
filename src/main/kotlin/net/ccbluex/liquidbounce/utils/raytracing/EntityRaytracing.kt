@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.raytracing
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySelector
@@ -29,6 +30,7 @@ import java.util.function.Predicate
 
 fun Entity.findEntityInCrosshair(
     range: Double,
+    throughWallsRange: Double = range,
     rotation: Rotation,
     predicate: Predicate<Entity>? = null,
 ): EntityHitResult? {
@@ -38,7 +40,7 @@ fun Entity.findEntityInCrosshair(
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
     val box = boundingBox.expandTowards(rotationVec.scale(range)).inflate(1.0, 1.0, 1.0)
 
-    val hitResult = ProjectileUtil.getEntityHitResult(
+    val entityHitResult = ProjectileUtil.getEntityHitResult(
         this,
         cameraVec,
         vec3d3,
@@ -47,14 +49,28 @@ fun Entity.findEntityInCrosshair(
         range.sq()
     )
 
-    return hitResult
+    return entityHitResult?.takeIf { hitResult ->
+        val distanceSqr = cameraVec.distanceToSqr(hitResult.location)
+
+        distanceSqr <= throughWallsRange.sq() ||
+            distanceSqr <= range.sq() && hasLineOfSight(cameraVec, hitResult.location, this)
+    }
 }
 
 fun findEntityInCrosshair(
     range: Double,
+    throughWallsRange: Double = range,
     rotation: Rotation,
     predicate: Predicate<Entity>? = null,
-): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, rotation, predicate)
+): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, throughWallsRange, rotation, predicate)
+
+fun entitySelector(selected: Entity) = Predicate<Entity> { entity ->
+    entity === selected
+}
+
+fun attackableSelector() = Predicate<Entity> { entity ->
+    entity.shouldBeAttacked()
+}
 
 /**
  * Ray-traces from the current camera entity and returns a hit result when the traced entity equals [toEntity].
@@ -67,9 +83,7 @@ fun isLookingAtEntity(
     toEntity: Entity,
     range: Double,
     rotation: Rotation,
-) = findEntityInCrosshair(range, rotation) { entity ->
-    !entity.isSpectator && entity.isPickable && entity == toEntity
-}
+) = findEntityInCrosshair(range, range, rotation, entitySelector(toEntity))
 
 /**
  * Ray-traces from [fromEntity] and validates whether [toEntity] is hit with the given [rotation].
@@ -86,17 +100,4 @@ fun isLookingAtEntity(
     rotation: Rotation,
     range: Double,
     throughWallsRange: Double,
-): EntityHitResult? {
-    val cameraVec = fromEntity.eyePosition
-    val entityHitResult = fromEntity.findEntityInCrosshair(range, rotation) { entity ->
-        entity === toEntity
-    } ?: return null
-
-    val distance = cameraVec.distanceToSqr(entityHitResult.location)
-
-    // Either within through-walls range, or within normal range and has line of sight
-    return entityHitResult.takeIf {
-        distance <= throughWallsRange.sq()
-            || distance <= range.sq() && hasLineOfSight(cameraVec, entityHitResult.location, fromEntity)
-    }
-}
+) = fromEntity.findEntityInCrosshair(range, throughWallsRange, rotation, entitySelector(toEntity))
