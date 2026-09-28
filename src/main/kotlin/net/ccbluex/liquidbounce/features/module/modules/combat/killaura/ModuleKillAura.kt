@@ -92,6 +92,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val rotations = tree(KillAuraRotationsValueGroup)
     private val pointTracker = tree(PointTracker(this))
 
+    init {
+        tree(KillAuraAi)
+    }
+
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
@@ -120,7 +124,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
         })
         tree(KillAuraFailSwing)
-        tree(KillAuraAi)
         tree(KillAuraFightBot)
         tree(KillAuraRangeIndicator)
     }
