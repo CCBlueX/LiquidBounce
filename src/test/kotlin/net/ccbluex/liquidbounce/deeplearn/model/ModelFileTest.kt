@@ -83,11 +83,11 @@ class ModelFileTest {
 
     @Test
     fun `slots only accept models for their task, input and outputs`() {
-        val slot = ModelSlot("test", "default", InputSchema("test", 1, SIZE), 2)
+        val slot = ModelSlot("test", "default", InputSchema("test", 1, SIZE), 2, emptyList())
         assertTrue(slot.accepts(model()))
-        assertFalse(ModelSlot("test", "other", InputSchema("test", 1, SIZE), 2).accepts(model()))
-        assertFalse(ModelSlot("test", "default", InputSchema("test", 2, SIZE), 2).accepts(model()))
-        assertFalse(ModelSlot("test", "default", InputSchema("test", 1, SIZE), 3).accepts(model()))
+        assertFalse(ModelSlot("test", "other", InputSchema("test", 1, SIZE), 2, emptyList()).accepts(model()))
+        assertFalse(ModelSlot("test", "default", InputSchema("test", 2, SIZE), 2, emptyList()).accepts(model()))
+        assertFalse(ModelSlot("test", "default", InputSchema("test", 1, SIZE), 3, emptyList()).accepts(model()))
     }
 
     private fun model(

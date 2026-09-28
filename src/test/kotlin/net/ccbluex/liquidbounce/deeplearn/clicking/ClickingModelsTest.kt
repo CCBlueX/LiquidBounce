@@ -30,7 +30,8 @@ class ClickingModelsTest {
     fun `every style has a bundled model that fits its slot`() {
         for (style in ClickingStyle.entries) {
             val slot = ClickingModels.slot(style)
-            val file = assertNotNull(javaClass.getResourceAsStream(slot.resource), style.id).use(ModelFile::read)
+            val resource = javaClass.getResourceAsStream(slot.resource(style.model))
+            val file = assertNotNull(resource, style.id).use(ModelFile::read)
             assertTrue(slot.accepts(file), style.id)
             assertEquals(ClickingOutputs.NETWORK.hidden, file.network.hidden)
             assertTrue(ClickingModels.meanInterval(file) in 50f..200f, "${ClickingModels.meanInterval(file)}")

@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.deeplearn.model.ModelSlot
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 
 @UnstableAddonApi
-enum class ClickingStyle(val id: String) {
-    BUTTERFLY("butterfly"),
-    JITTER("jitterclick"),
+enum class ClickingStyle(val id: String, val model: String) {
+    BUTTERFLY("butterfly", "butterfly-1"),
+    JITTER("jitterclick", "jitterclick-1"),
 }
 
 /** The clicking task's slots, one per [ClickingStyle]. */
@@ -39,7 +39,9 @@ object ClickingModels {
 
     private const val DEFAULT_INTERVAL = 100f
 
-    private val slots = enumMapOf<ClickingStyle, ModelSlot> { ModelSlot(TASK, it.id, INPUT, ClickingOutputs.BINS) }
+    private val slots = enumMapOf<ClickingStyle, ModelSlot> {
+        ModelSlot(TASK, it.id, INPUT, ClickingOutputs.BINS, listOf(it.model))
+    }
 
     fun slot(style: ClickingStyle) = slots.getValue(style)
 

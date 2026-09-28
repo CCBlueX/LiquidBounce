@@ -22,23 +22,24 @@ import net.ccbluex.liquidbounce.deeplearn.model.ModelFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CombatModelsTest {
     @Test
-    fun `the bundled model fits its slot and validated aim and attacks`() {
+    fun `every bundled model fits its slot and validated every head`() {
         val slot = CombatModels.slot(CombatStyle.COOLDOWN)
-        val file = assertNotNull(javaClass.getResourceAsStream(slot.resource)).use(ModelFile::read)
-        assertTrue(slot.accepts(file))
-        assertEquals(CombatOutputs.NETWORK.hidden, file.network.hidden)
-        val info = CombatModels.info(file)
-        assertTrue(info.heads.aim && info.heads.attacks, info.heads.description)
-        assertTrue(info.turnCap in 10f..60f, "${info.turnCap}")
+        for (name in slot.bundled) {
+            val file = assertNotNull(javaClass.getResourceAsStream(slot.resource(name)), name).use(ModelFile::read)
+            assertTrue(slot.accepts(file), name)
+            assertEquals(CombatOutputs.NETWORK.hidden, file.network.hidden, name)
+            val info = CombatModels.info(file)
+            assertTrue(info.heads.aim && info.heads.attacks && info.heads.movement, "$name: ${info.heads.description}")
+            assertTrue(info.turnCap in 10f..60f, "$name: ${info.turnCap}")
+        }
     }
 
     @Test
     fun `legacy combat has no bundled model`() {
-        assertNull(javaClass.getResourceAsStream(CombatModels.slot(CombatStyle.LEGACY).resource))
+        assertTrue(CombatModels.slot(CombatStyle.LEGACY).bundled.isEmpty())
     }
 }

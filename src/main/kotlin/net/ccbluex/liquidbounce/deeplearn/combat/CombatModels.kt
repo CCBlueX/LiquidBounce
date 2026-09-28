@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.deeplearn.combat
 
 import com.google.gson.JsonObject
 import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.model.InputSchema
 import net.ccbluex.liquidbounce.deeplearn.model.LoadedModel
@@ -56,13 +57,35 @@ class CombatModelInfo(val turnCap: Float, val heads: CombatHeads) {
     }
 }
 
+/** The cooldown models bundled with the client, all with aim, attacks and movement validated. */
+@UnstableAddonApi
+enum class BundledCombatModel(override val tag: String) : Tagged {
+    SKILL_SEED1("skill-seed1"),
+    JUGGLE0("juggle0"),
+    JUGGLE1("juggle1"),
+    JUGGLE2("juggle2"),
+    ALL_1540("all-1540"),
+    AUTO_1236("auto-1236"),
+    AUTO_1252("auto-1252"),
+    EXPERT55("expert55"),
+    FROZENPIKA1("frozenpika1"),
+    FROZENPIKA_NOFIX1("frozenpika-nofix1"),
+    NOEU("noeu"),
+}
+
 /** The combat task's model slots, one per [CombatStyle]. */
 @UnstableAddonApi
 object CombatModels {
     const val TASK = "combat"
     val INPUT = InputSchema(TASK, CombatFeatures.VERSION, CombatFeatures.SIZE)
 
-    private val slots = enumMapOf<CombatStyle, ModelSlot> { ModelSlot(TASK, it.id, INPUT, CombatOutputs.SIZE) }
+    private val slots = enumMapOf<CombatStyle, ModelSlot> { style ->
+        val bundled = when (style) {
+            CombatStyle.LEGACY -> emptyList()
+            CombatStyle.COOLDOWN -> BundledCombatModel.entries.map { it.tag }
+        }
+        ModelSlot(TASK, style.id, INPUT, CombatOutputs.SIZE, bundled)
+    }
     private val info = WeakHashMap<ModelFile, CombatModelInfo>()
 
     fun slot(style: CombatStyle) = slots.getValue(style)
@@ -80,7 +103,7 @@ object CombatModels {
         }
         val slot = slot(style)
         val file = ModelRegistry.active(slot) ?: return "No model for ${style.id} combat"
-        val name = if (ModelRegistry.installed(slot) === file) file.name else "Default"
+        val name = if (ModelRegistry.installed(slot) === file) file.name else ModelRegistry.chosen(slot)
         if (ModelRegistry.failed(slot)) {
             return "$name: failed, see the log"
         }

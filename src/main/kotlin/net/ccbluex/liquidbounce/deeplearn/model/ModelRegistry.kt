@@ -24,11 +24,21 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.Collections
 import java.util.IdentityHashMap
 
-/** Where a task looks for its model; files trained for other inputs or outputs do not fit. */
+/**
+ * Where a task looks for its model; files trained for other inputs or outputs do not fit. [bundled] names the
+ * models shipped with the client, the first being the default.
+ */
 @UnstableAddonApi
-class ModelSlot(val task: String, val variant: String, val input: InputSchema, val outputs: Int) {
+class ModelSlot(
+    val task: String,
+    val variant: String,
+    val input: InputSchema,
+    val outputs: Int,
+    val bundled: List<String>,
+) {
     val id get() = "$task/$variant"
-    val resource get() = "/resources/liquidbounce/deeplearning/$task/$variant.${ModelFile.EXTENSION}"
+
+    fun resource(name: String) = "/resources/liquidbounce/deeplearning/$task/$variant/$name.${ModelFile.EXTENSION}"
 
     fun accepts(file: ModelFile) = file.task == task && file.variant == variant &&
         file.input.schema == input.schema && file.input.version == input.version &&
@@ -38,21 +48,35 @@ class ModelSlot(val task: String, val variant: String, val input: InputSchema, v
 }
 
 /**
- * The model each slot uses: one an add-on installed at runtime, otherwise the one bundled with the
- * client. Installs are not saved; whoever installs a model does so again after a restart. A model that
+ * The model each slot uses: one an add-on installed at runtime, otherwise the [chosen] one bundled with
+ * the client. Installs are not saved; whoever installs a model does so again after a restart. A model that
  * fails to load or to predict is logged once and skipped until it is installed again.
  */
+@Suppress("TooManyFunctions")
 @UnstableAddonApi
 object ModelRegistry {
     private val installed = HashMap<String, ModelFile>()
+    private val chosen = HashMap<String, String>()
     private val bundled = HashMap<String, ModelFile?>()
     private val loaded = HashMap<String, LoadedModel>()
     private val failed = Collections.newSetFromMap(IdentityHashMap<ModelFile, Boolean>())
     private val lock = Any()
 
-    fun active(slot: ModelSlot): ModelFile? = synchronized(lock) { installed[slot.id] ?: bundled(slot) }
+    fun active(slot: ModelSlot): ModelFile? = synchronized(lock) {
+        installed[slot.id] ?: chosen(slot)?.let { bundled(slot, it) }
+    }
 
     fun installed(slot: ModelSlot): ModelFile? = synchronized(lock) { installed[slot.id] }
+
+    /** The bundled model the slot uses while nothing is installed. */
+    fun chosen(slot: ModelSlot): String? = synchronized(lock) { chosen[slot.id] ?: slot.bundled.firstOrNull() }
+
+    fun choose(slot: ModelSlot, name: String) {
+        require(name in slot.bundled) { "$name is not bundled for $slot" }
+        synchronized(lock) {
+            chosen[slot.id] = name
+        }
+    }
 
     fun failed(slot: ModelSlot): Boolean = synchronized(lock) { active(slot)?.let { it in failed } == true }
 
@@ -100,9 +124,9 @@ object ModelRegistry {
         logger.error(message, throwable)
     }
 
-    private fun bundled(slot: ModelSlot): ModelFile? = bundled.getOrPut(slot.id) {
-        runCatching { javaClass.getResourceAsStream(slot.resource)?.use(ModelFile::read) }
-            .onFailure { logger.error("Failed to read the bundled model for $slot", it) }
+    private fun bundled(slot: ModelSlot, name: String): ModelFile? = bundled.getOrPut(slot.resource(name)) {
+        runCatching { javaClass.getResourceAsStream(slot.resource(name))?.use(ModelFile::read) }
+            .onFailure { logger.error("Failed to read the bundled model $name for $slot", it) }
             .getOrNull()
             ?.takeIf { file -> slot.accepts(file).also { if (!it) logger.error("Bundled model does not fit $slot") } }
     }

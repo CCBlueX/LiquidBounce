@@ -19,7 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatStyle
+import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -100,6 +104,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
     private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
+
+    @Suppress("unused")
+    private val aiModel by enumChoice("AIModel", BundledCombatModel.SKILL_SEED1).onChanged {
+        ModelRegistry.choose(CombatModels.slot(CombatStyle.COOLDOWN), it.tag)
+    }
 
     // Inventory Handling
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
