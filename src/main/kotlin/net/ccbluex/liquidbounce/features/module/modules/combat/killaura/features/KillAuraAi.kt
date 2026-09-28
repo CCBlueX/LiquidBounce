@@ -36,7 +36,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * What the model decides for KillAura's movement, shared by FightBot and TargetStrafe.
+ * What the model decides for KillAura's movement in FightBot.
  */
 @UnstableAddonApi
 object KillAuraAi {
@@ -100,13 +100,6 @@ object KillAuraAi {
      */
     private fun resprint(target: LivingEntity) = target.distanceTo(player) <= RESPRINT_DISTANCE &&
         KillAuraClicker.willClickAt(1) && !ModuleKillAura.shouldBlockSprinting
-
-    /** The side the model strafes to, -1 for left and 1 for right, or 0 while it walks straight. */
-    fun side(live: CombatLiveDecision) = when (live.strafe) {
-        2 -> -1
-        0 -> 1
-        else -> 0
-    }
 
     /**
      * Blocking or eating is part of the fight the model learned, so it keeps moving the way players do; water,
