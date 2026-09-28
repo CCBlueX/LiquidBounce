@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.failedHits
@@ -91,10 +90,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     // Rotation
     private val rotations = tree(KillAuraRotationsValueGroup)
     private val pointTracker = tree(PointTracker(this))
-
-    init {
-        tree(KillAuraAi)
-    }
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 

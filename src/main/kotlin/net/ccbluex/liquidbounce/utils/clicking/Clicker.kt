@@ -53,14 +53,13 @@ open class Clicker<T>(
     maxCps: Int = 30,
     name: String = "Clicker",
     simulateAttackKeyDown: Boolean = false,
-    techniques: Set<ClickTechnique> = ClickTechnique.SCHEDULED,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
         private const val TICKS_AHEAD = 20
     }
 
-    val technique by enumChoice("Technique", ClickTechnique.HUMAN, techniques)
+    private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
     private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
@@ -88,8 +87,7 @@ open class Clicker<T>(
 
     private val plan = ClickPlan({ recent, comboMs, cps, random ->
         when (technique) {
-            // AI clicks are not planned, see [click]
-            ClickTechnique.HUMAN, ClickTechnique.AI -> human
+            ClickTechnique.HUMAN -> human
             ClickTechnique.CONSTANT -> ConstantClickTiming
         }.nextInterval(recent, comboMs, cps, random)
     }).apply {
@@ -119,7 +117,7 @@ open class Clicker<T>(
     /**
      * Presses consumed by the tick [tick] ticks from now.
      */
-    open fun getClickAmount(tick: Int = 0) = plan.clicksAt(tick)
+    fun getClickAmount(tick: Int = 0) = plan.clicksAt(tick)
 
     init {
         if (simulateAttackKeyDown && keyBinding == mc.options.keyAttack) {
@@ -148,20 +146,13 @@ open class Clicker<T>(
         debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
-        val gate = { passesMissCooldown && itemCooldown?.isCooldownPassed() != false }
-        val press = {
+        val clicks = plan.consume({ passesMissCooldown && itemCooldown?.isCooldownPassed() != false }) {
             block().also { success ->
                 if (success) {
                     itemCooldown?.newCooldown()
                     ticksSinceLastClick = 0
                 }
             }
-        }
-        val clicks = if (technique in ClickTechnique.SCHEDULED) {
-            plan.consume(gate, press)
-        } else {
-            // Decided for this tick only by [getClickAmount]
-            (0 until getClickAmount()).count { gate() && press() }
         }
 
         this.clickAmount = (this.clickAmount ?: 0) + clicks

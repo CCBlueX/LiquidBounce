@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.im
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
+import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -42,6 +43,10 @@ class AiAngleSmooth(
     parent: ModeValueGroup<*>,
     private val fallback: AngleSmooth,
 ) : AngleSmooth("AI", parent, listOf("Minarai")) {
+    @Suppress("unused")
+    private val model by enumChoice("Model", BundledCombatModel.DEFAULT).onChanged { CombatModels.choose(it) }
+    private val randomness by float("Randomness", 0.5f, 0f..1f).onChanged { CombatController.randomness = it }
+    private val prediction by int("Prediction", 2, 0..4, "ticks").onChanged { CombatController.lead = it }
     private val speed by float("Speed", 1f, 0.5f..1.5f)
     private val maxTurn by float("MaxTurn", 60f, 10f..180f)
     private val assist = modes(this, "Assist") {
@@ -55,6 +60,11 @@ class AiAngleSmooth(
     private var lastSpeed = 1f
     private var fellBack = true
     private var notified: String? = null
+
+    init {
+        CombatController.randomness = randomness
+        CombatController.lead = prediction
+    }
 
     override fun process(
         rotationTarget: RotationTarget,

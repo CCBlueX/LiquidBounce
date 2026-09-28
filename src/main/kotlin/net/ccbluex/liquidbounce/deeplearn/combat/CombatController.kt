@@ -27,7 +27,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedLineSegment
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -104,6 +105,9 @@ object CombatController : EventListener {
     var lead = 0
     var styleOverride: CombatStyle? = null
 
+    /** Whether KillAura aims with the model. */
+    val active get() = ModuleKillAura.running && KillAuraRotationsValueGroup.usesAiRotations
+
     val style
         get() = styleOverride ?: if (!player.hasCooldown && CombatModels.available(CombatStyle.LEGACY)) {
             CombatStyle.LEGACY
@@ -178,7 +182,7 @@ object CombatController : EventListener {
 
     @Suppress("unused")
     private val warmHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
-        if (!KillAuraAi.active || mc.gui.screen() != null || player.isDeadOrDying || player.isSpectator) {
+        if (!active || mc.gui.screen() != null || player.isDeadOrDying || player.isSpectator) {
             warm.clear()
             return@handler
         }

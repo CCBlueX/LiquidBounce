@@ -48,7 +48,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Fights a scripted opponent that circles the player with KillAura's AI aiming and clicking on, using the bundled
+ * Fights a scripted opponent that circles the player with KillAura's AI aiming on, using the bundled
  * model, so the whole path from packets to decisions to rotations and attacks runs in a real client.
  */
 class AiCombatGameTest : FabricClientGameTest {
@@ -68,7 +68,6 @@ class AiCombatGameTest : FabricClientGameTest {
             context.client {
                 ModuleManager.filter { it.enabled && it !== ModuleHud }.forEach { it.enabled = false }
                 KillAuraRotationsValueGroup.get().first { it.name == "AngleSmooth" }.setByString("AI")
-                ModuleKillAura.clicker.get().first { it.name == "Technique" }.setByString("AI")
             }
             fight(context)
         }
@@ -97,7 +96,7 @@ class AiCombatGameTest : FabricClientGameTest {
                 }
                 context.waitTick()
                 context.client { client ->
-                    if (CombatController.lastDecision?.takeIf { it.heads.aim && it.heads.attacks } != null) {
+                    if (CombatController.lastDecision?.takeIf { it.heads.aim } != null) {
                         decisions++
                     }
                     val yaw = RotationManager.currentRotation?.yaw ?: client.player!!.yRot
@@ -113,9 +112,9 @@ class AiCombatGameTest : FabricClientGameTest {
             }
         }
         logger.info("Fight: decisions={} travel={} attacks={}", decisions, travel, attacks.count)
-        check(decisions > 0) { "The bundled model made no decision with aim and attacks" }
+        check(decisions > 0) { "The bundled model made no aim decision" }
         check(travel > 20f) { "AI aiming barely moved: $travel degrees" }
-        check(attacks.count > 0) { "AI clicking never attacked" }
+        check(attacks.count > 0) { "KillAura never attacked" }
         logger.info("PASS: AI aiming followed the opponent and attacked")
     }
 

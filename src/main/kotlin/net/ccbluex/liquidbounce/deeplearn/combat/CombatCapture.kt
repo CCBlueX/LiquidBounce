@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
@@ -135,7 +134,7 @@ object CombatPackets : EventListener {
     private val moves = Int2IntOpenHashMap()
     private val consumers = CopyOnWriteArraySet<EventListener>()
 
-    override val running get() = KillAuraAi.active || consumers.any { it.running }
+    override val running get() = CombatController.active || consumers.any { it.running }
 
     /** Keeps capturing while [consumer] runs, for frames sampled outside of KillAura. */
     fun capture(consumer: EventListener) {
