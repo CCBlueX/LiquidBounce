@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontFace
@@ -29,14 +28,13 @@ import net.ccbluex.liquidbounce.render.copyPosePooled
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
-import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
-import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
+import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.element.TextRunGuiElementRenderState
 import net.ccbluex.liquidbounce.render.setColor
-import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.network.chat.Component
+import net.minecraft.util.ARGB
+import net.minecraft.util.FormattedCharSequence
 import java.awt.Font
 
 @Suppress("TooManyFunctions")
@@ -55,7 +53,7 @@ class FontRenderer(
     val font: FontFace,
     val glyphManager: FontGlyphPageManager,
     override val size: Float = DEFAULT_FONT_SIZE
-) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
+) : AbstractFontRenderer() {
 
     /**
      * Glyphs of the text currently being drawn, refilled by [resolveGlyphs].
@@ -79,31 +77,28 @@ class FontRenderer(
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
-    override fun process(text: Component, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
-        return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
-    }
-
     context(ctx: GuiGraphicsExtractor)
     override fun draw(
-        text: MinecraftTextProcessor.RecyclingProcessedText,
+        text: FormattedCharSequence,
         parameters: DrawParameters,
     ): Float = commonDraw(text, parameters)
 
     context(ctx: WorldRenderEnvironment)
     override fun draw(
-        text: MinecraftTextProcessor.RecyclingProcessedText,
+        text: FormattedCharSequence,
         parameters: DrawParameters,
     ): Float = commonDraw(text, parameters)
 
     @Suppress("CognitiveComplexMethod")
     context(ctx: Any)
     private fun commonDraw(
-        text: MinecraftTextProcessor.RecyclingProcessedText,
+        text: FormattedCharSequence,
         parameters: DrawParameters,
     ): Float {
-        val glyphs = resolveGlyphs(text)
+        val processed = MinecraftTextProcessor.process(text, parameters.color)
+        val glyphs = resolveGlyphs(processed)
         val scale = parameters.scale
-        val width = getStringWidth(text, glyphs, parameters.shadow)
+        val width = getStringWidth(processed, glyphs, parameters.shadow)
 
         val x = parameters.horizontalAnchor?.anchorToDrawX(
             x = parameters.x,
@@ -121,7 +116,7 @@ class FontRenderer(
 
         if (parameters.shadow) {
             drawInternal(
-                text,
+                processed,
                 glyphs,
                 posX = x + 2.0f * scale,
                 posY = y + 2.0f * scale,
@@ -131,9 +126,9 @@ class FontRenderer(
             )
         }
 
-        drawInternal(text, glyphs, x, y, if (z.isNaN()) z else z + 0.001f, scale, overrideColor = null)
+        drawInternal(processed, glyphs, x, y, if (z.isNaN()) z else z + 0.001f, scale, overrideColor = null)
 
-        MinecraftTextProcessor.TEXT_POOL.recycle(text)
+        MinecraftTextProcessor.TEXT_POOL.recycle(processed)
 
         return width
     }
@@ -146,7 +141,7 @@ class FontRenderer(
     @Suppress("CognitiveComplexMethod")
     context(ctx: Any)
     private fun drawInternal(
-        text: ProcessedText,
+        text: RecyclingProcessedText,
         glyphs: List<GlyphDescriptor>,
         posX: Float,
         posY: Float,
@@ -158,13 +153,14 @@ class FontRenderer(
             return
         }
 
+        val overrideArgb = overrideColor?.argb
         var x = posX
         var y = posY + this.ascent * scale
 
         // Decorations belong to the characters now, so a run lasts as long as the characters keep
-        // sharing their style and colour.
-        var runStyle = 0
-        var runColor: Color4b? = null
+        // sharing their style and colour. No style is negative, so the first character starts a run.
+        var runStyle = -1
+        var runColor = 0
         var underlineStartX: Float = Float.NaN
         var strikeThroughStartX: Float = Float.NaN
 
@@ -195,18 +191,18 @@ class FontRenderer(
             current.addQuad(quad, argb)
         }
 
-        text.chars.forEachIndexed { charIdx, processedChar ->
+        text.forEachIndexed { charIdx, processedChar ->
             val glyph = glyphs[charIdx]
             val style = processedChar.style
-            val charColor = overrideColor ?: processedChar.color
+            val charColor = overrideArgb ?: processedChar.color
 
             // A new run ends the previous one at this character's left edge.
             if (style != runStyle || charColor != runColor) {
                 if (!underlineStartX.isNaN()) {
-                    drawLine(underlineStartX, x, y, posZ, scale, runColor!!, false)
+                    drawLine(underlineStartX, x, y, posZ, scale, runColor, false)
                 }
                 if (!strikeThroughStartX.isNaN()) {
-                    drawLine(strikeThroughStartX, x, y, posZ, scale, runColor!!, true)
+                    drawLine(strikeThroughStartX, x, y, posZ, scale, runColor, true)
                 }
 
                 runStyle = style
@@ -216,11 +212,11 @@ class FontRenderer(
             }
 
             // We don't need to render whitespaces.
-            if (!charColor.isTransparent && resolveQuad(glyph, x, y, scale)) {
+            if (ARGB.alpha(charColor) != 0 && resolveQuad(glyph, x, y, scale)) {
                 if (posZ.isNaN()) {
-                    appendQuad(glyph, charColor.argb)
+                    appendQuad(glyph, charColor)
                 } else {
-                    submitQuadMesh(glyph, posZ, charColor.argb)
+                    submitQuadMesh(glyph, posZ, charColor)
                 }
             }
 
@@ -232,23 +228,30 @@ class FontRenderer(
         }
 
         if (!underlineStartX.isNaN()) {
-            drawLine(underlineStartX, x, y, posZ, scale, runColor!!, false)
+            drawLine(underlineStartX, x, y, posZ, scale, runColor, false)
         }
 
         if (!strikeThroughStartX.isNaN()) {
-            drawLine(strikeThroughStartX, x, y, posZ, scale, runColor!!, true)
+            drawLine(strikeThroughStartX, x, y, posZ, scale, runColor, true)
         }
 
         flushRun()
     }
 
     override fun getStringWidth(
-        text: ProcessedText,
+        text: FormattedCharSequence,
         shadow: Boolean
-    ): Float = getStringWidth(text, resolveGlyphs(text), shadow)
+    ): Float {
+        val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
+        val width = getStringWidth(processed, resolveGlyphs(processed), shadow)
+
+        MinecraftTextProcessor.TEXT_POOL.recycle(processed)
+
+        return width
+    }
 
     private fun getStringWidth(
-        text: ProcessedText,
+        text: RecyclingProcessedText,
         glyphs: List<GlyphDescriptor>,
         shadow: Boolean,
     ): Float {
@@ -260,7 +263,7 @@ class FontRenderer(
 
         val fallbackLayoutInfo = this.glyphManager.getFallbackGlyph(this.font).renderInfo.layoutInfo
 
-        text.chars.forEachIndexed { index, processedChar ->
+        text.forEachIndexed { index, processedChar ->
             val layoutInfo =
                 if (!processedChar.obfuscated) glyphs[index].renderInfo.layoutInfo else fallbackLayoutInfo
 
@@ -282,7 +285,7 @@ class FontRenderer(
      *
      * The returned list is reused, so it is only valid until the next call.
      */
-    private fun resolveGlyphs(text: ProcessedText): ObjectArrayList<GlyphDescriptor> {
+    private fun resolveGlyphs(text: RecyclingProcessedText): ObjectArrayList<GlyphDescriptor> {
         val glyphs = this.resolvedGlyphs
 
         glyphs.clear()
@@ -290,7 +293,7 @@ class FontRenderer(
 
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
-        for (processedChar in text.chars) {
+        text.forEach { processedChar ->
             val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.codepoint)
 
             glyphs.add(glyph ?: fallbackGlyph)
@@ -306,7 +309,7 @@ class FontRenderer(
         y: Float,
         z: Float,
         scale: Float,
-        color: Color4b,
+        argb: Int,
         through: Boolean
     ) {
         val lineWidth = if (through) {
@@ -316,15 +319,15 @@ class FontRenderer(
         }.coerceAtLeast(0f)
         val lineY = y + if (through) strikethroughOffset * scale else underlineOffset * scale
         if (z.isNaN()) {
-            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, lineY, lineWidth, color)
+            (ctx as GuiGraphicsExtractor).drawHorizontalLine(x0, x1, lineY, lineWidth, Color4b(argb))
         } else {
             (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->
                 val y0 = lineY
                 val y1 = lineY + lineWidth
-                addVertex(matrix, x0, y0, z).setColor(color)
-                addVertex(matrix, x0, y1, z).setColor(color)
-                addVertex(matrix, x1, y1, z).setColor(color)
-                addVertex(matrix, x1, y0, z).setColor(color)
+                addVertex(matrix, x0, y0, z).setColor(argb)
+                addVertex(matrix, x0, y1, z).setColor(argb)
+                addVertex(matrix, x1, y1, z).setColor(argb)
+                addVertex(matrix, x1, y0, z).setColor(argb)
             }
         }
     }

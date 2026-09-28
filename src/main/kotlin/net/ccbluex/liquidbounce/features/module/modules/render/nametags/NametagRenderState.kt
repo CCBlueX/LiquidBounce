@@ -26,8 +26,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.utils.text.PlainText
-import net.minecraft.network.chat.Component
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityEquipment
 import net.minecraft.world.entity.EquipmentSlot
@@ -50,7 +49,7 @@ internal class NametagRenderState {
     /**
      * The text to render as nametag
      */
-    @JvmField var text: Component = PlainText.EMPTY
+    @JvmField var text: FormattedCharSequence = FormattedCharSequence.EMPTY
 
     @JvmField val equipments = Equipments()
 
@@ -71,7 +70,7 @@ internal class NametagRenderState {
         this.entity = null
         this.scale = 0F
         this.distance = 0F
-        this.text = PlainText.EMPTY
+        this.text = FormattedCharSequence.EMPTY
         this.equipments.reset()
     }
 

@@ -24,12 +24,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.plus
-import net.ccbluex.liquidbounce.utils.text.textOf
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
 import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -123,14 +122,14 @@ interface EventListener : DebuggedOwner {
         }
     }
 
-    override val debugDisplayName: Component
+    override val debugDisplayName: FormattedCharSequence
         get() {
             val parentPart = this.parent()?.debugDisplayName
             val selfPart =
-                this.javaClass.simpleName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.ITALIC)
+                this.javaClass.simpleName.withFormat(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.ITALIC)
 
             return if (parentPart != null) {
-                textOf(parentPart, "$".asPlainText(ChatFormatting.GRAY), selfPart)
+                FormattedCharSequence.composite(parentPart, "$".withFormat(ChatFormatting.GRAY), selfPart)
             } else {
                 selfPart
             }

@@ -22,18 +22,18 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.render.drawRoundedRect
-import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.collection.LruCache
 import net.ccbluex.liquidbounce.utils.kotlin.mapString
-import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.core.Holder
 import net.minecraft.tags.EnchantmentTags
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.item.enchantment.EnchantmentHelper
@@ -140,7 +140,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
 
     @JvmRecord
     private data class EnchantCell(
-        val processedText: MinecraftTextProcessor.RecyclingProcessedText,
+        val text: FormattedCharSequence,
         val textWidth: Float,
         val isCurse: Boolean
     )
@@ -191,7 +191,6 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
             .mapToArray { info -> createCell(info, isEllipsis = false) }
 
         if (hasMoreEnchantments && cells.isNotEmpty()) {
-            MinecraftTextProcessor.TEXT_POOL.recycle(cells.last().processedText)
             cells[cells.lastIndex] = createCell(null, true)
         }
 
@@ -203,7 +202,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
         isEllipsis: Boolean,
     ): EnchantCell {
         val text = if (isEllipsis) {
-            "...".asPlainText(ChatFormatting.GRAY)
+            "...".withFormat(ChatFormatting.GRAY)
         } else {
             requireNotNull(info)
             val textColor = when {
@@ -213,14 +212,12 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
                 info.level == 2 -> ChatFormatting.GREEN
                 else -> ChatFormatting.WHITE
             }
-            "${info.displayName}${info.level}".asPlainText(textColor)
+            "${info.displayName}${info.level}".withFormat(textColor)
         }
 
-        val processedText = ModuleNametags.fontRenderer.process(text)
-        val textWidth = ModuleNametags.fontRenderer.getStringWidth(processedText, false)
         return EnchantCell(
-            processedText,
-            textWidth,
+            text,
+            ModuleNametags.fontRenderer.getStringWidth(text, false),
             !isEllipsis && info?.isCurse == true
         )
     }
@@ -246,7 +243,7 @@ internal object NametagEnchantmentRenderer : ToggleableValueGroup(ModuleNametags
             fillColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL,
         )
 
-        ModuleNametags.fontRenderer.draw(cell.processedText) {
+        ModuleNametags.fontRenderer.draw(cell.text) {
             this.x = centerX - textWidth * 0.5f
             this.y = y + LABEL_PADDING_Y
             shadow = true

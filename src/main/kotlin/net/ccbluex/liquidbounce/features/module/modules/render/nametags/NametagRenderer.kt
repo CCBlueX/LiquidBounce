@@ -52,8 +52,8 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     pose().translate(posX, posY)
     pose().scale(scale, scale)
 
-    val processedText = fontRenderer.process(nametag.text)
-    val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
+    val text = nametag.text
+    val textWidth = fontRenderer.getStringWidth(text, shadow = true)
 
     // Make the model view matrix center the text when rendering
     pose().translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
@@ -76,7 +76,7 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     )
 
     // Text
-    fontRenderer.draw(processedText) {
+    fontRenderer.draw(text) {
         shadow = true
     }
 
