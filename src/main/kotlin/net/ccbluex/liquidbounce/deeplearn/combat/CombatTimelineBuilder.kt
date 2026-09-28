@@ -86,12 +86,11 @@ class CombatTimelineBuilder(
     }
 
     /**
-     * 1.8 servers, also when they translate for newer clients, only show that someone was hurt, never by whom,
-     * so a hurt right after the opponent swung within reach is theirs.
+     * Servers translated by ViaVersion only show that someone was hurt, never by whom, so a hurt right after the
+     * opponent swung within reach is theirs. Every server is read this way, so recordings and live play agree.
      */
     private fun hurtBySwing(frames: List<CombatFrame>, opponents: List<CombatFrame>, tick: Int): Boolean {
-        val frame = frames[tick]
-        if (frame.damageCause >= 0 || frame.events and CombatTrack.HURT == 0) {
+        if (frames[tick].events and CombatTrack.HURT == 0) {
             return false
         }
         return (maxOf(0, tick - SWING_TICKS)..tick).any {
@@ -118,7 +117,7 @@ class CombatTimelineBuilder(
             track.yaw[tick] = yaw
             track.pitch[tick] = (frame.pitch * CombatTrack.ANGLE_UNITS).roundToInt()
             var events = frame.events
-            if (frame.damageCause == opponents[tick].entityId || hurtBySwing(frames, opponents, tick)) {
+            if (hurtBySwing(frames, opponents, tick)) {
                 events = events or CombatTrack.HURT_BY_OPPONENT
             }
             track.events[tick] = events.toShort()
@@ -153,7 +152,7 @@ class CombatTimelineBuilder(
     private fun size(blocks: Float) = (blocks * CombatTrack.SIZE_UNITS).roundToInt().coerceIn(0, 254).toUByte()
 
     private companion object {
-        const val SWING_TICKS = 2
+        const val SWING_TICKS = 3
         const val SWING_REACH = 4.5
     }
 }

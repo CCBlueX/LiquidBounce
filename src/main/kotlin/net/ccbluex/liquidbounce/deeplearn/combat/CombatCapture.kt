@@ -98,7 +98,6 @@ class CombatFrame(
     val pitch: Float,
     val state: Int,
     val events: Int,
-    val damageCause: Int,
     val hurtTime: Int,
     val health: Int,
     val attackDelay: Int,
@@ -117,7 +116,7 @@ class CombatFrame(
         )
 
     fun copy(yaw: Float = this.yaw, pitch: Float = this.pitch, events: Int = this.events) = CombatFrame(
-        entityId, position, yaw, pitch, state, events, damageCause, hurtTime, health, attackDelay, attackStrength, item,
+        entityId, position, yaw, pitch, state, events, hurtTime, health, attackDelay, attackStrength, item,
         width, height, eyeHeight,
     )
 
@@ -243,7 +242,6 @@ object CombatSampler {
             pitch = interpolation?.xRot() ?: entity.xRot,
             state = state(entity, local),
             events = events,
-            damageCause = if (hurt) entity.lastDamageSource?.entity?.id ?: -1 else -1,
             hurtTime = entity.hurtTime.coerceIn(0, 10),
             health = health(entity),
             attackDelay = attackDelay(entity),
