@@ -129,7 +129,11 @@ interface EventListener : DebuggedOwner {
                 this.javaClass.simpleName.withFormat(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.ITALIC)
 
             return if (parentPart != null) {
-                FormattedCharSequence.composite(parentPart, "$".withFormat(ChatFormatting.GRAY), selfPart)
+                FormattedCharSequence.composite(
+                    parentPart,
+                    FormattedCharSequence.codepoint('$'.code, Style.EMPTY + ChatFormatting.GRAY),
+                    selfPart,
+                )
             } else {
                 selfPart
             }
