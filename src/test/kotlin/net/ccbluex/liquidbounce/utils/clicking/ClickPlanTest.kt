@@ -114,6 +114,15 @@ class ClickPlanTest {
     }
 
     @Test
+    fun `a new timing replans the presses after this tick`() {
+        val plan = ClickPlan({ _, _, _, _ -> 50L }).apply { maxPerTick = 1 }
+        plan.run(20)
+        plan.timing = ClickTiming { _, _, _, _ -> 200L }
+        val consumed = plan.run(40)
+        assertTrue(consumed.drop(2).sum() <= 11, "${consumed.sum()} presses after slowing the timing down")
+    }
+
+    @Test
     fun `constant clicks at the top of the range, evenly`() {
         val plan = ClickPlan(ConstantClickTiming, Random(1L)).apply { cps = 10..20 }
         val consumed = plan.run(20 * 60)

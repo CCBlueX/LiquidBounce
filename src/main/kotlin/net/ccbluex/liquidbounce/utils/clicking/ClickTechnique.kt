@@ -18,13 +18,30 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import net.ccbluex.liquidbounce.config.types.list.Tagged
+import it.unimi.dsi.fastutil.longs.LongList
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import java.util.Random
 
-enum class ClickTechnique(override val tag: String) : Tagged {
-    HUMAN("Human"),
+/** How a [Clicker] spaces its presses, with the rate [ClickPlan] plans at. */
+abstract class ClickTechnique(name: String) : Mode(name), ClickTiming {
+    abstract val cps: IntRange
+}
 
-    /**
-     * Evenly spaced at the top of the CPS range, for anticheats that only look at the time since the last attack.
-     */
-    CONSTANT("Constant"),
+class HumanClickTechnique(override val parent: ModeValueGroup<*>, maxCps: Int) : ClickTechnique("Human") {
+    override val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
+    private val timing = HumanClickTiming()
+
+    override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random) =
+        timing.nextInterval(recent, comboMs, cps, random)
+}
+
+/**
+ * Evenly spaced at the top of the CPS range, for anticheats that only look at the time since the last attack.
+ */
+class ConstantClickTechnique(override val parent: ModeValueGroup<*>, maxCps: Int) : ClickTechnique("Constant") {
+    override val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
+
+    override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random) =
+        ConstantClickTiming.nextInterval(recent, comboMs, cps, random)
 }

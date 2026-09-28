@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
@@ -59,8 +61,9 @@ open class Clicker<T>(
         private const val TICKS_AHEAD = 20
     }
 
-    private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
-    private val cps by intRange("CPS", 11..14, 1..maxCps, "clicks")
+    private val technique = modes(this, "Technique") {
+        arrayOf<ClickTechnique>(HumanClickTechnique(it, maxCps), ConstantClickTechnique(it, maxCps))
+    }
     private val maxPerTick by int("MaxPerTick", 2, 1..5, "clicks")
 
     init {
@@ -83,14 +86,7 @@ open class Clicker<T>(
     private val passesMissCooldown
         get() = !(missCooldown?.get() == true && mc.missTime > 0)
 
-    private val human = HumanClickTiming()
-
-    private val plan = ClickPlan({ recent, comboMs, cps, random ->
-        when (technique) {
-            ClickTechnique.HUMAN -> human
-            ClickTechnique.CONSTANT -> ConstantClickTiming
-        }.nextInterval(recent, comboMs, cps, random)
-    }).apply {
+    private val plan = ClickPlan(technique.activeMode).apply {
         // Once, on the tick the cooldown fills up; one that is always ready would otherwise click every tick
         enforced = { tick ->
             val cooldown = itemCooldown
@@ -181,11 +177,37 @@ open class Clicker<T>(
         ticksSinceLastClick++
         clickAmount = null
 
-        plan.cps = cps
+        plan.timing = technique.activeMode
+        plan.cps = technique.activeMode.cps
         plan.maxPerTick = maxPerTick
         plan.tick(Util.getMillis())
     }
 
     override fun parent() = parent
 
+    override fun prepareDeserialize(jsonObject: JsonObject) = migrateClickTechnique(jsonObject)
+
+}
+
+/**
+ * Configs from before the techniques had their own CPS store Technique as a plain name next to one CPS range,
+ * which becomes the CPS of every technique that has one.
+ */
+internal fun migrateClickTechnique(clicker: JsonObject) {
+    val values = clicker["value"]?.takeIf { it.isJsonArray }?.asJsonArray?.map { it.asJsonObject } ?: return
+    val technique = values.firstOrNull { it["name"]?.asString == "Technique" } ?: return
+    val old = technique["value"]?.takeIf { it.isJsonPrimitive }?.asString ?: return
+    val cps = values.firstOrNull { it["name"]?.asString == "CPS" }
+
+    technique.remove("value")
+    technique.addProperty("active", if (old == "Constant") old else "Human")
+    technique.add("value", JsonArray())
+    technique.add("choices", JsonObject().apply {
+        for (name in arrayOf("Human", "Constant")) {
+            add(name, JsonObject().apply {
+                addProperty("name", name)
+                add("value", JsonArray().apply { cps?.let { add(it.deepCopy()) } })
+            })
+        }
+    })
 }
