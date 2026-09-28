@@ -24,16 +24,17 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonPrimitive
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
-import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
+import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
+import okio.BufferedSink
+import okio.buffer
+import okio.gzip
+import okio.sink
 import java.io.InputStream
-import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.time.LocalDateTime
-import java.util.zip.GZIPOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -66,12 +67,12 @@ class ModelFile(
     fun write(path: Path) = atomicWrite(path) { it.write(bytes()) }
 
     fun bytes(): ByteArray {
-        val bytes = ByteArrayOutputStream()
+        val bytes = FastByteArrayOutputStream()
         ZipOutputStream(bytes).use { zip ->
             zip.entry(DESCRIPTION, GSON.toJson(description()).toByteArray())
             zip.entry(PARAMETERS, parameters)
         }
-        return bytes.toByteArray()
+        return bytes.array.copyOf(bytes.length)
     }
 
     private fun description() = JsonObject().apply {
@@ -177,17 +178,13 @@ class ModelFile(
 
 /** Writes through a temporary file, so a crash never leaves half a file behind. */
 @UnstableAddonApi
-fun atomicWrite(path: Path, compressed: Boolean = false, write: (DataOutputStream) -> Unit) {
+fun atomicWrite(path: Path, compressed: Boolean = false, write: (BufferedSink) -> Unit) {
     Files.createDirectories(path.toAbsolutePath().parent)
     val temporary = Files.createTempFile(path.toAbsolutePath().parent, path.fileName.toString(), ".tmp")
     try {
-        val stream = Files.newOutputStream(temporary).buffered()
-        DataOutputStream(if (compressed) GZIPOutputStream(stream) else stream).use(write)
-        try {
-            Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING)
-        }
+        val sink = temporary.sink()
+        (if (compressed) sink.gzip() else sink).buffer().use(write)
+        temporary.atomicMoveTo(path)
     } finally {
         Files.deleteIfExists(temporary)
     }

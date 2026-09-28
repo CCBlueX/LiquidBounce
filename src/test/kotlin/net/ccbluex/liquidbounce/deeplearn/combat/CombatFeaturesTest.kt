@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import kotlin.math.abs
@@ -161,11 +163,11 @@ class CombatFeaturesTest {
     private fun place(track: CombatTrack, index: Int, x: Double, z: Double, builder: TickBuilder) {
         track.x[index] = (x * CombatTrack.POSITION_UNITS).roundToInt()
         track.z[index] = (z * CombatTrack.POSITION_UNITS).roundToInt()
-        track.width[index] = 19
-        track.height[index] = 58
-        track.eyeHeight[index] = 52
-        track.attackDelay[index] = 125
-        track.nearestOther[index] = -1
+        track.width[index] = 19u
+        track.height[index] = 58u
+        track.eyeHeight[index] = 52u
+        track.attackDelay[index] = 125u
+        track.nearestOther[index] = CombatTrack.UNKNOWN.toUByte()
         var state = CombatTrack.LINE_OF_SIGHT
         if (builder.onGround) state = state or CombatTrack.ON_GROUND
         if (builder.sprint) state = state or CombatTrack.SPRINTING

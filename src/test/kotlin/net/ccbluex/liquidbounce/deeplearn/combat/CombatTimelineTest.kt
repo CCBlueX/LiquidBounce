@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import org.junit.jupiter.api.io.TempDir
@@ -120,11 +122,11 @@ class CombatTimelineTest {
         track.z[tick] = (tick * 0.05 * CombatTrack.POSITION_UNITS).roundToInt()
         track.state[tick] = (if (airborne) 0 else CombatTrack.ON_GROUND or CombatTrack.SPRINTING).toShort()
         track.probes[tick] = 0xFFFF.toShort()
-        track.width[tick] = 19
-        track.height[tick] = 58
-        track.eyeHeight[tick] = 52
+        track.width[tick] = 19u
+        track.height[tick] = 58u
+        track.eyeHeight[tick] = 52u
         track.input[tick] = (tick % 16).toByte()
-        track.nearestOther[tick] = -1
+        track.nearestOther[tick] = CombatTrack.UNKNOWN.toUByte()
     }
 
     private fun fight(track: CombatTrack, tick: Int, update: Boolean, observed: Boolean) {
@@ -132,9 +134,9 @@ class CombatTimelineTest {
         val updates = CombatTrack.ROTATION_UPDATE or CombatTrack.POSITION_UPDATE
         track.events[tick] = ((if (update) updates else 0) or (if (swing) CombatTrack.SWING else 0)).toShort()
         track.hurtTime[tick] = (10 - tick % 10).toByte()
-        track.health[tick] = (254 - tick / 10).coerceAtLeast(0).toByte()
-        track.attackDelay[tick] = 125
-        track.attackStrength[tick] = if (observed) -1 else (tick % 13 * 8).toByte()
+        track.health[tick] = (254 - tick / 10).coerceAtLeast(0).toUByte()
+        track.attackDelay[tick] = 125u
+        track.attackStrength[tick] = if (observed) CombatTrack.UNKNOWN.toUByte() else (tick % 13 * 8).toUByte()
         track.item[tick] = CombatItem.SWORD.ordinal.toByte()
         track.clicks[tick] = if (!observed && swing) 1 else 0
     }

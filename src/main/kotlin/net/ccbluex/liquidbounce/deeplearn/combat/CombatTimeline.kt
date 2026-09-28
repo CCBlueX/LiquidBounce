@@ -16,16 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import net.ccbluex.liquidbounce.deeplearn.model.atomicWrite
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
-import java.io.DataInputStream
-import java.io.DataOutputStream
+import okio.BufferedSink
+import okio.BufferedSource
+import okio.Source
+import okio.buffer
+import okio.gzip
+import okio.source
 import java.io.InputStream
-import java.nio.file.Files
 import java.nio.file.Path
-import java.util.zip.GZIPInputStream
 
 @UnstableAddonApi
 enum class CombatSource { FIRST_PERSON, OBSERVED, OBSERVED_VS_LOCAL }
@@ -49,22 +53,24 @@ class CombatTrack(val ticks: Int) {
     val events = ShortArray(ticks)
     val probes = ShortArray(ticks)
     val hurtTime = ByteArray(ticks)
-    val health = ByteArray(ticks)
-    val attackDelay = ByteArray(ticks)
-    val attackStrength = ByteArray(ticks)
+    val health = UByteArray(ticks)
+    val attackDelay = UByteArray(ticks)
+    val attackStrength = UByteArray(ticks)
     val item = ByteArray(ticks)
-    val width = ByteArray(ticks)
-    val height = ByteArray(ticks)
-    val eyeHeight = ByteArray(ticks)
+    val width = UByteArray(ticks)
+    val height = UByteArray(ticks)
+    val eyeHeight = UByteArray(ticks)
     val input = ByteArray(ticks)
     val clicks = ByteArray(ticks)
-    val nearestOther = ByteArray(ticks)
+    val nearestOther = UByteArray(ticks)
 
     val intColumns get() = arrayOf(x, y, z, yaw, pitch)
     val shortColumns get() = arrayOf(state, events, probes)
     val byteColumns
         get() = arrayOf(
-            hurtTime, health, attackDelay, attackStrength, item, width, height, eyeHeight, input, clicks, nearestOther
+            hurtTime, health.asByteArray(), attackDelay.asByteArray(), attackStrength.asByteArray(), item,
+            width.asByteArray(), height.asByteArray(), eyeHeight.asByteArray(), input, clicks,
+            nearestOther.asByteArray(),
         )
 
     fun has(tick: Int, flag: Int) = state[tick].toInt() and flag != 0
@@ -76,21 +82,21 @@ class CombatTrack(val ticks: Int) {
     fun positionZ(tick: Int) = z[tick] / POSITION_UNITS
     fun yawDegrees(tick: Int) = yaw[tick] / ANGLE_UNITS
     fun pitchDegrees(tick: Int) = pitch[tick] / ANGLE_UNITS
-    fun widthBlocks(tick: Int) = unsigned(width, tick) / SIZE_UNITS
-    fun heightBlocks(tick: Int) = unsigned(height, tick) / SIZE_UNITS
-    fun eyeHeightBlocks(tick: Int) = unsigned(eyeHeight, tick) / SIZE_UNITS
+    fun widthBlocks(tick: Int) = width[tick].toInt() / SIZE_UNITS
+    fun heightBlocks(tick: Int) = height[tick].toInt() / SIZE_UNITS
+    fun eyeHeightBlocks(tick: Int) = eyeHeight[tick].toInt() / SIZE_UNITS
 
     /** Health relative to maximum health, or `null` when the server hides it. */
-    fun healthRatio(tick: Int) = unsigned(health, tick).takeIf { it != UNKNOWN }?.let { it / 254f }
+    fun healthRatio(tick: Int) = health[tick].toInt().takeIf { it != UNKNOWN }?.let { it / 254f }
 
     /** Ticks between full-strength attacks, or `null` if unknown. */
-    fun attackDelayTicks(tick: Int) = unsigned(attackDelay, tick).takeIf { it != UNKNOWN }?.let { it / 10f }
+    fun attackDelayTicks(tick: Int) = attackDelay[tick].toInt().takeIf { it != UNKNOWN }?.let { it / 10f }
 
     /** Attack strength in 0..1, or `null` if unknown. */
-    fun attackStrengthScale(tick: Int) = unsigned(attackStrength, tick).takeIf { it != UNKNOWN }?.let { it / 100f }
+    fun attackStrengthScale(tick: Int) = attackStrength[tick].toInt().takeIf { it != UNKNOWN }?.let { it / 100f }
 
     /** Distance to the closest living entity other than the opponent, or `null` if none is near. */
-    fun nearestOtherBlocks(tick: Int) = unsigned(nearestOther, tick).takeIf { it != UNKNOWN }?.let { it / 16f }
+    fun nearestOtherBlocks(tick: Int) = nearestOther[tick].toInt().takeIf { it != UNKNOWN }?.let { it / 16f }
 
     fun safeDirection(tick: Int, direction: Int) = probes[tick].toInt() and (1 shl Math.floorMod(direction, 16)) != 0
 
@@ -133,8 +139,6 @@ class CombatTrack(val ticks: Int) {
         const val JUMP = 1 shl 4
         const val SNEAK = 1 shl 5
         const val SPRINT = 1 shl 6
-
-        private fun unsigned(values: ByteArray, tick: Int) = values[tick].toInt() and 0xFF
     }
 }
 
@@ -184,18 +188,19 @@ object CombatTimelineFiles {
         }
     }
 
-    fun read(path: Path): List<CombatTimeline> = Files.newInputStream(path).use(::read)
+    fun read(path: Path): List<CombatTimeline> = path.source().use(::read)
 
-    fun read(stream: InputStream): List<CombatTimeline> =
-        DataInputStream(GZIPInputStream(stream).buffered()).let { input ->
-            require(input.readInt() == MAGIC) { "Not a combat timeline" }
-            require(input.readShort().toInt() == VERSION) { "Unsupported combat timeline version" }
-            val count = input.readInt()
-            require(count in 0..MAX_TIMELINES)
-            List(count) { input.readTimeline() }
-        }
+    fun read(stream: InputStream): List<CombatTimeline> = read(stream.source())
 
-    private fun DataOutputStream.writeTimeline(timeline: CombatTimeline) {
+    private fun read(source: Source): List<CombatTimeline> = source.gzip().buffer().let { input ->
+        require(input.readInt() == MAGIC) { "Not a combat timeline" }
+        require(input.readShort().toInt() == VERSION) { "Unsupported combat timeline version" }
+        val count = input.readInt()
+        require(count in 0..MAX_TIMELINES)
+        List(count) { input.readTimeline() }
+    }
+
+    private fun BufferedSink.writeTimeline(timeline: CombatTimeline) {
         writeLong(timeline.id)
         writeByte(timeline.source.ordinal)
         writeByte(timeline.style.ordinal)
@@ -209,7 +214,7 @@ object CombatTimelineFiles {
         writeTrack(timeline.target)
     }
 
-    private fun DataInputStream.readTimeline(): CombatTimeline {
+    private fun BufferedSource.readTimeline(): CombatTimeline {
         val id = readLong()
         val source = CombatSource.entries[readUnsignedByte()]
         val style = CombatStyle.entries[readUnsignedByte()]
@@ -224,7 +229,7 @@ object CombatTimelineFiles {
             readTrack(ticks), readTrack(ticks))
     }
 
-    private fun DataOutputStream.writeTrack(track: CombatTrack) {
+    private fun BufferedSink.writeTrack(track: CombatTrack) {
         for (column in track.intColumns) {
             var previous = 0
             for (value in column) {
@@ -240,7 +245,7 @@ object CombatTimelineFiles {
         }
     }
 
-    private fun DataInputStream.readTrack(ticks: Int) = CombatTrack(ticks).also { track ->
+    private fun BufferedSource.readTrack(ticks: Int) = CombatTrack(ticks).also { track ->
         for (column in track.intColumns) {
             var previous = 0
             for (index in column.indices) {
@@ -258,7 +263,7 @@ object CombatTimelineFiles {
         }
     }
 
-    private fun DataOutputStream.writeVarInt(value: Int) {
+    private fun BufferedSink.writeVarInt(value: Int) {
         var zigzag = (value shl 1) xor (value shr 31)
         while (zigzag and 0x7F.inv() != 0) {
             writeByte(zigzag and 0x7F or 0x80)
@@ -267,7 +272,7 @@ object CombatTimelineFiles {
         writeByte(zigzag)
     }
 
-    private fun DataInputStream.readVarInt(): Int {
+    private fun BufferedSource.readVarInt(): Int {
         var result = 0
         var shift = 0
         while (true) {
@@ -281,4 +286,6 @@ object CombatTimelineFiles {
         }
         return (result ushr 1) xor -(result and 1)
     }
+
+    private fun BufferedSource.readUnsignedByte() = readByte().toInt() and 0xFF
 }

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import com.google.gson.JsonObject
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.model.InputSchema
 import net.ccbluex.liquidbounce.deeplearn.model.LoadedModel
@@ -61,7 +62,7 @@ object CombatModels {
     const val TASK = "combat"
     val INPUT = InputSchema(TASK, CombatFeatures.VERSION, CombatFeatures.SIZE)
 
-    private val slots = CombatStyle.entries.associateWith { ModelSlot(TASK, it.id, INPUT, CombatOutputs.SIZE) }
+    private val slots = enumMapOf<CombatStyle, ModelSlot> { ModelSlot(TASK, it.id, INPUT, CombatOutputs.SIZE) }
     private val info = WeakHashMap<ModelFile, CombatModelInfo>()
 
     fun slot(style: CombatStyle) = slots.getValue(style)

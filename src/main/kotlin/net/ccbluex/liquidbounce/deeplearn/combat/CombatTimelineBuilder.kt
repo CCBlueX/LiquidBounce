@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package net.ccbluex.liquidbounce.deeplearn.combat
 
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
@@ -121,9 +123,9 @@ class CombatTimelineBuilder(
             }
             track.events[tick] = events.toShort()
             track.hurtTime[tick] = frame.hurtTime.toByte()
-            track.health[tick] = frame.health.toByte()
-            track.attackDelay[tick] = frame.attackDelay.toByte()
-            track.attackStrength[tick] = frame.attackStrength.toByte()
+            track.health[tick] = frame.health.toUByte()
+            track.attackDelay[tick] = frame.attackDelay.toUByte()
+            track.attackStrength[tick] = frame.attackStrength.toUByte()
             track.item[tick] = frame.item.ordinal.toByte()
             track.width[tick] = size(frame.width)
             track.height[tick] = size(frame.height)
@@ -138,17 +140,17 @@ class CombatTimelineBuilder(
                     state = state or CombatTrack.OTHERS_SWING_NEAR
                 }
                 track.probes[tick] = context.probes.toShort()
-                track.nearestOther[tick] = context.nearestOther.toByte()
+                track.nearestOther[tick] = context.nearestOther.toUByte()
                 track.input[tick] = context.input.toByte()
                 track.clicks[tick] = context.clicks.toByte()
             } else {
-                track.nearestOther[tick] = CombatTrack.UNKNOWN.toByte()
+                track.nearestOther[tick] = CombatTrack.UNKNOWN.toUByte()
             }
             track.state[tick] = state.toShort()
         }
     }
 
-    private fun size(blocks: Float) = (blocks * CombatTrack.SIZE_UNITS).roundToInt().coerceIn(0, 254).toByte()
+    private fun size(blocks: Float) = (blocks * CombatTrack.SIZE_UNITS).roundToInt().coerceIn(0, 254).toUByte()
 
     private companion object {
         const val SWING_TICKS = 2

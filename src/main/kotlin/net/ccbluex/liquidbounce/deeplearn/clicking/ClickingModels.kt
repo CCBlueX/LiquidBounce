@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.clicking
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.deeplearn.model.InputSchema
 import net.ccbluex.liquidbounce.deeplearn.model.ModelFile
 import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
@@ -38,7 +39,7 @@ object ClickingModels {
 
     private const val DEFAULT_INTERVAL = 100f
 
-    private val slots = ClickingStyle.entries.associateWith { ModelSlot(TASK, it.id, INPUT, ClickingOutputs.BINS) }
+    private val slots = enumMapOf<ClickingStyle, ModelSlot> { ModelSlot(TASK, it.id, INPUT, ClickingOutputs.BINS) }
 
     fun slot(style: ClickingStyle) = slots.getValue(style)
 
