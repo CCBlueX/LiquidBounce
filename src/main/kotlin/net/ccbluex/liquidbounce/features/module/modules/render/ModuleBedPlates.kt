@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.addAll
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.core.BlockPos
@@ -156,7 +155,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
 
     @Suppress("unused")
     // Run on render thread because the scanner runs async
-    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
+    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Main) { event ->
         beds.clear()
         beds.ensureCapacity(event.bedStates.size)
         event.bedStates.mapTo(beds, ::BedStateRenderState)
@@ -200,7 +199,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 Color4b.TRANSPARENT
             }
 
-            event.context.drawItemStackList(itemStacksForRender)
+            ItemStackListRenderState(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
                 .centerX(screenPos.x)
@@ -248,7 +247,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                             )
                         }
                     }
-                }.draw(preventOverlap)
+                }.draw(event.context, preventOverlap)
 
             i++
         }

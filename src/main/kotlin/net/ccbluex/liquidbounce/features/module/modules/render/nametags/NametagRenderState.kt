@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawItemEnchantments
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.SingleItemStackRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.utils.text.PlainText
-import net.minecraft.network.chat.Component
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityEquipment
 import net.minecraft.world.entity.EquipmentSlot
@@ -39,9 +40,16 @@ internal class NametagRenderState {
     @JvmField var scale: Float = 0F
 
     /**
+     * Distance to the camera, kept so that sorting does not recompute it for every comparison.
+     *
+     * @see ModuleNametags.collectAndSortNametagsToRender
+     */
+    @JvmField var distance: Float = 0F
+
+    /**
      * The text to render as nametag
      */
-    @JvmField var text: Component = PlainText.EMPTY
+    @JvmField var text: FormattedCharSequence = FormattedCharSequence.EMPTY
 
     @JvmField val equipments = Equipments()
 
@@ -50,9 +58,10 @@ internal class NametagRenderState {
      */
     @JvmField var screenPos: Vec3f? = null
 
-    fun update(entity: Entity, scale: Float) {
+    fun update(entity: Entity, scale: Float, distance: Float) {
         this.entity = entity
         this.scale = scale
+        this.distance = distance
         this.text = NametagTextFormatter.format(entity)
         this.equipments.update(entity)
     }
@@ -60,7 +69,8 @@ internal class NametagRenderState {
     fun reset() {
         this.entity = null
         this.scale = 0F
-        this.text = PlainText.EMPTY
+        this.distance = 0F
+        this.text = FormattedCharSequence.EMPTY
         this.equipments.reset()
     }
 
@@ -73,7 +83,7 @@ internal class NametagRenderState {
         return screenPos
     }
 
-    class Equipments {
+    inner class Equipments {
         /**
          * The order of equipment slots
          */
@@ -103,43 +113,49 @@ internal class NametagRenderState {
             this.highlightStackRef = null
         }
 
-        @JvmField
-        val stacksView: List<ItemStack> = object : AbstractList<ItemStack>(), RandomAccess {
+        private val stacksView = object : AbstractList<ItemStack>(), RandomAccess {
             override val size get() = slotOrder.size
             override fun get(index: Int) = equipment[slotOrder[index]]
         }
-    }
 
-    @JvmField
-    val equipmentStackRenderer = SingleItemStackRenderer { font, index, stack, x, y ->
-        val delegation = if (NametagEquipment.showInfo) {
-            if (entity === player) {
-                SingleItemStackRenderer.All
-            } else {
-                SingleItemStackRenderer.ForOtherPlayer
+        /**
+         * Drawn list of [stacksView], reused by every frame: each draw binds it to the current
+         * extractor and sets the position and scale again.
+         */
+        @JvmField
+        val equipmentList = ItemStackListRenderState(stacksView)
+            .rectBackground(Color4b.TRANSPARENT)
+            .itemStackRenderer { font, index, stack, x, y ->
+                val delegation = if (NametagEquipment.showInfo) {
+                    if (entity === player) {
+                        SingleItemStackRenderer.All
+                    } else {
+                        SingleItemStackRenderer.ForOtherPlayer
+                    }
+                } else {
+                    SingleItemStackRenderer.OnlyItem
+                }
+
+                with(delegation) {
+                    drawItemStack(
+                        font = font,
+                        index = index,
+                        stack = stack,
+                        x = x,
+                        y = y,
+                    )
+                }
+
+                if (highlightStackRef === stack) {
+                    NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
+                }
+
+                drawItemEnchantments(
+                    stack = stack,
+                    x = x.toFloat(),
+                    y = y.toFloat(),
+                )
             }
-        } else {
-            SingleItemStackRenderer.OnlyItem
-        }
-
-        with(delegation) {
-            drawItemStack(
-                font = font,
-                index = index,
-                stack = stack,
-                x = x,
-                y = y,
-            )
-        }
-
-        if (equipments.highlightStackRef === stack) {
-            NametagEquipment.HighlightItemInUse.draw(x.toFloat(), y.toFloat())
-        }
-
-        drawItemEnchantments(
-            stack = stack,
-            x = x.toFloat(),
-            y = y.toFloat(),
-        )
     }
+
 }

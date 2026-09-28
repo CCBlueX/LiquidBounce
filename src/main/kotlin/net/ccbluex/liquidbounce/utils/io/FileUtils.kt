@@ -23,41 +23,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArraySet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.io.RandomAccessFile
 import javax.imageio.ImageIO
 import okio.Buffer
 import okio.BufferedSource
 import java.awt.Font
 import java.io.File
 import java.io.InputStream
-
-/**
- * Skips the current line in the file.
- *
- * @return The number of bytes skipped.
- */
-@Throws(IOException::class)
-fun RandomAccessFile.skipLine(): Long {
-    var read = 0L
-    var eol = false
-
-    while (!eol) {
-        when (read()) {
-            -1, '\n'.code -> eol = true
-            '\r'.code -> {
-                eol = true
-                val cur = filePointer
-                if ((read()) != '\n'.code) {
-                    seek(cur)
-                }
-            }
-
-            else -> read++
-        }
-    }
-
-    return read
-}
 
 @Suppress("ThrowsCount")
 @Throws(IOException::class, IllegalArgumentException::class)

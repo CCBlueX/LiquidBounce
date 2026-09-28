@@ -30,7 +30,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.text.translated
+import net.ccbluex.liquidbounce.utils.text.sanitizeForSerialization
 import net.minecraft.core.RegistryAccess
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.network.chat.Component
@@ -74,12 +74,11 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
         @JvmField
         val DATA_COMPONENT_PATCH = CodecBasedAdapter(DataComponentPatch.CODEC)
 
-        @JvmField
-        val COMPONENT = CodecBasedAdapter(ComponentSerialization.CODEC)
+        private val COMPONENT = CodecBasedAdapter(ComponentSerialization.CODEC)
 
         @JvmField
-        val TRANSLATED_COMPONENT = JsonSerializer<Component> { src, t, ctx ->
-            src?.translated()?.let { COMPONENT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
+        val SANITIZED_COMPONENT = JsonSerializer<Component> { src, t, ctx ->
+            src?.sanitizeForSerialization()?.let { COMPONENT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
         }
     }
 

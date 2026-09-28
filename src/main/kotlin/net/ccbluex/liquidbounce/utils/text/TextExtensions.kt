@@ -30,6 +30,9 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.FontDescription
+import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
@@ -37,6 +40,8 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -56,19 +61,24 @@ inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Component] from the receiver.
+ * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
+inline fun String.asPlainText(style: Style = Style.EMPTY): Component = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
+inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
+
+/**
+ * Returns an immutable [Component] from the receiver with [style].
+ */
+inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
 inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(formatting)
 
@@ -85,6 +95,13 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+inline operator fun FormattedCharSequence.plus(other: FormattedCharSequence) =
+    FormattedCharSequence.fromPair(this, other)
+
+inline fun Array<out FormattedCharSequence>.composite() = FormattedCharSequence.composite(this.asList())
+
+inline fun List<FormattedCharSequence>.composite() = FormattedCharSequence.composite(this)
 
 @OptIn(ExperimentalContracts::class)
 inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {
@@ -133,6 +150,16 @@ fun Collection<String>.joinToText(separator: Component): Component =
  */
 fun Collection<Component>.joinToText(separator: Component): Component =
     joinToText(separator, transform = Function.identity())
+
+fun FormattedCharSequence.codePointsToString(): String = Pools.buildStringPooled {
+    accept(FormattedCharSink.appendTo(this))
+}
+
+companion fun FormattedCharSink.appendTo(builder: StringBuilder): FormattedCharSink =
+    FormattedCharSink { _, _, codePoint ->
+        builder.appendCodePoint(codePoint)
+        true
+    }
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
@@ -188,7 +215,19 @@ fun Component.mapComponent(
     }
 }
 
-fun Component.translated(): Component = mapComponent(contentMapper = ComponentContents::translated)
+fun Component.sanitizeForSerialization(): Component =
+    mapComponent(
+        contentMapper = ComponentContents::translated,
+        styleMapper = Style::stripNonSerializableFont,
+    )
+
+/**
+ * Replaces font descriptions that [ComponentSerialization] cannot encode with the default font.
+ *
+ * @see FontDescription.CODEC
+ */
+private fun Style.stripNonSerializableFont(): Style =
+    if (this.font is FontDescription.Resource) this else this.withFont(null)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
@@ -199,6 +238,10 @@ fun TranslatableContents.toTranslatedString(): String = buildString {
 
         Optional.empty<Nothing>()
     }
+}
+
+fun FormattedText.asFormattedCharSequence() = FormattedCharSequence { output ->
+    StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()

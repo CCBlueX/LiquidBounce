@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import kotlin.random.Random
 
 internal object ReportHelperAutoReport : ToggleableValueGroup(ModuleReportHelper, "AutoReport", false) {
@@ -68,7 +67,7 @@ internal object ReportHelperAutoReport : ToggleableValueGroup(ModuleReportHelper
     }
 
     @Suppress("unused")
-    private val sessionHandler = suspendHandler<SessionEvent>(Dispatchers.Minecraft) {
+    private val sessionHandler = suspendHandler<SessionEvent>(Dispatchers.Main) {
         reported.clear()
     }
 

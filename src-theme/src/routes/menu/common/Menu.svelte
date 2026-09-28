@@ -31,7 +31,9 @@
     padding: 50px;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    // Not sized in vh, which not every browser scales with zoom
+    position: fixed;
+    inset: 0;
   }
 
   .menu-wrapper {
@@ -44,35 +46,30 @@
   @media screen and (max-width: 1366px) {
     .menu {
       zoom: 0.8;
-      height: 125vh;
     }
   }
 
   @media screen and (max-width: 1200px) {
     .menu {
       zoom: 0.5;
-      height: 200vh;
     }
   }
 
   @media screen and (max-height: 1100px) {
     .menu {
       zoom: 0.8;
-      height: 125vh;
     }
   }
 
   @media screen and (max-height: 700px) {
     .menu {
       zoom: 0.5;
-      height: 200vh;
     }
   }
 
   @media screen and (max-height: 540px) {
     .menu {
       zoom: 0.4;
-      height: 250vh;
     }
   }
 </style>

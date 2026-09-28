@@ -95,7 +95,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
     }
 
-    final override fun chunkUpdate(chunk: LevelChunk) {
+    override fun chunkUpdate(chunk: LevelChunk) {
         // NOP
     }
 
