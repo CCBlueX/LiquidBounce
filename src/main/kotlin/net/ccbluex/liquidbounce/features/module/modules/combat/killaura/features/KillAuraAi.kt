@@ -18,8 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatLiveDecision
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatStyle
+import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker
@@ -36,14 +41,26 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * What the model decides for KillAura's movement in FightBot.
+ * The model KillAura's AI aims, clicks and moves with, and what it decides for FightBot's movement.
  */
 @UnstableAddonApi
-object KillAuraAi {
+object KillAuraAi : ValueGroup("AI") {
     private const val STEER_DISTANCE = 4f
     private const val FIGHT_DISTANCE = 6f
     private const val STEP_DISTANCE = 0.8
     private const val RESPRINT_DISTANCE = 3.5f
+
+    @Suppress("unused")
+    private val model by enumChoice("Model", BundledCombatModel.DEFAULT).onChanged {
+        ModelRegistry.choose(CombatModels.slot(CombatStyle.COOLDOWN), it.id)
+    }
+    private val randomness by float("Randomness", 0.5f, 0f..1f).onChanged { CombatController.randomness = it }
+    private val prediction by int("Prediction", 2, 0..4, "ticks").onChanged { CombatController.lead = it }
+
+    init {
+        CombatController.randomness = randomness
+        CombatController.lead = prediction
+    }
 
     /** Whether KillAura fights with the model in any way. */
     val active

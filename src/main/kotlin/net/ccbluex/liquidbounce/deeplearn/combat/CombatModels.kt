@@ -59,18 +59,11 @@ class CombatModelInfo(val turnCap: Float, val heads: CombatHeads) {
 
 /** The cooldown models bundled with the client, all with aim, attacks and movement validated. */
 @UnstableAddonApi
-enum class BundledCombatModel(override val tag: String) : Tagged {
-    SKILL_SEED1("skill-seed1"),
-    JUGGLE0("juggle0"),
-    JUGGLE1("juggle1"),
-    JUGGLE2("juggle2"),
-    ALL_1540("all-1540"),
-    AUTO_1236("auto-1236"),
-    AUTO_1252("auto-1252"),
-    EXPERT55("expert55"),
-    FROZENPIKA1("frozenpika1"),
-    FROZENPIKA_NOFIX1("frozenpika-nofix1"),
-    NOEU("noeu"),
+enum class BundledCombatModel(override val tag: String, val id: String) : Tagged {
+    DEFAULT("Default", "default"),
+    JUGGLE("Juggle", "juggle"),
+    EXPERT("Expert", "expert"),
+    DUELS("Duels", "duels"),
 }
 
 /** The combat task's model slots, one per [CombatStyle]. */
@@ -82,7 +75,7 @@ object CombatModels {
     private val slots = enumMapOf<CombatStyle, ModelSlot> { style ->
         val bundled = when (style) {
             CombatStyle.LEGACY -> emptyList()
-            CombatStyle.COOLDOWN -> BundledCombatModel.entries.map { it.tag }
+            CombatStyle.COOLDOWN -> BundledCombatModel.entries.map { it.id }
         }
         ModelSlot(TASK, style.id, INPUT, CombatOutputs.SIZE, bundled)
     }

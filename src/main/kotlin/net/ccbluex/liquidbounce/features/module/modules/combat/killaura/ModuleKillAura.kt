@@ -19,11 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
-import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
-import net.ccbluex.liquidbounce.deeplearn.combat.CombatStyle
-import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -43,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.dealWithFakeSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.failedHits
@@ -105,11 +102,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
 
-    @Suppress("unused")
-    private val aiModel by enumChoice("AIModel", BundledCombatModel.SKILL_SEED1).onChanged {
-        ModelRegistry.choose(CombatModels.slot(CombatStyle.COOLDOWN), it.tag)
-    }
-
     // Inventory Handling
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
@@ -128,6 +120,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
         })
         tree(KillAuraFailSwing)
+        tree(KillAuraAi)
         tree(KillAuraFightBot)
         tree(KillAuraRangeIndicator)
     }

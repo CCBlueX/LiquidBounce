@@ -44,8 +44,6 @@ class AiAngleSmooth(
 ) : AngleSmooth("AI", parent, listOf("Minarai")) {
     private val speed by float("Speed", 1f, 0.5f..1.5f)
     private val maxTurn by float("MaxTurn", 60f, 10f..180f)
-    private val randomness by float("Randomness", 0.5f, 0f..1f)
-    private val prediction by int("Prediction", 2, 0..4, "ticks")
     private val assist = modes(this, "Assist") {
         arrayOf(
             NoneAngleSmooth(it),
@@ -64,8 +62,6 @@ class AiAngleSmooth(
         targetRotation: Rotation
     ): Rotation {
         val live = (rotationTarget.entity as? LivingEntity)?.let { entity ->
-            CombatController.randomness = randomness
-            CombatController.lead = prediction
             CombatController.decide(entity, currentRotation)
         }
         if (live == null || !live.heads.aim) {
