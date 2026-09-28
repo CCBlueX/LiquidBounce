@@ -60,7 +60,7 @@ class ItemStackListRenderState(
      * Only [GuiOverlapRearranger] needs the box. States that are not queued for rearrangement are
      * positioned by [centerX] and [centerY] alone, thus this stays empty for them.
      */
-    override var bounds: BoundingBox2f = BoundingBox2f(0F, 0F, 0F, 0F)
+    override var bounds: BoundingBox2f = BoundingBox2f.EMPTY
 
     @JvmOverloads
     fun title(title: Component?, color: Color4b = this.titleColor): ItemStackListRenderState = apply {
