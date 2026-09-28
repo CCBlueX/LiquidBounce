@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.addon
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.loader.api.ModContainer
@@ -68,7 +69,7 @@ class AddonMetadata(private val container: ModContainer) {
     private fun contact(key: String): String? = meta.contact.get(key).orElse(null)
 
     private companion object {
-        const val CUSTOM_NAMESPACE = "liquidbounce"
+        const val CUSTOM_NAMESPACE = LiquidBounce.CLIENT_NAME_LOWER
         const val CUSTOM_COLOR = "color"
     }
 

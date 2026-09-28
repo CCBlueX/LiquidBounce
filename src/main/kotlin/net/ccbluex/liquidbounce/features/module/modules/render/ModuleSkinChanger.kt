@@ -135,7 +135,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
         abstract suspend fun uploadSkin()
 
         object Online : Mode("Online") {
-            private val username = text("Username", "LiquidBounce")
+            private val username = text("Username", LiquidBounce.CLIENT_NAME)
 
             init {
                 username.asStateFlow().debounceUntilInGame { username ->

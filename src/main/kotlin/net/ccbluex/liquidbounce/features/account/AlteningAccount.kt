@@ -24,6 +24,7 @@ import com.mojang.authlib.Environment
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.thealtening.api.TheAltening
 import com.thealtening.api.TheAlteningException
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.gson.util.int
 import net.ccbluex.liquidbounce.config.gson.util.string
 import java.net.Proxy
@@ -64,7 +65,7 @@ class AlteningAccount(var accountToken: String) : MinecraftAccount(AccountServic
     }
 
     override fun refresh() {
-        val session = YggdrasilUserAuthentication(ALTENING_AUTH).authenticate(accountToken, "LiquidBounce")
+        val session = YggdrasilUserAuthentication(ALTENING_AUTH).authenticate(accountToken, LiquidBounce.CLIENT_NAME)
 
         accessToken = session.accessToken
         username = session.profile.name

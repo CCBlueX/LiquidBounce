@@ -34,6 +34,7 @@ import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.webSocket
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME_LOWER
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthPlugin
@@ -50,6 +51,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.BindException
 import java.net.ServerSocket
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -145,8 +147,8 @@ object ClientInteropServer {
                     staticFiles("/marketplace", MarketplaceManager.marketplaceRoot)
 
                     singlePageApplication {
-                        applicationRoute = "/${Theme.Origin.RESOURCE.tag}/${LiquidBounce.CLIENT_NAME.lowercase()}"
-                        filesPath = "resources/liquidbounce/themes/${LiquidBounce.CLIENT_NAME.lowercase()}"
+                        applicationRoute = "/${Theme.Origin.RESOURCE.tag}/${CLIENT_NAME_LOWER}"
+                        filesPath = "resources/${CLIENT_NAME_LOWER}/themes/${CLIENT_NAME_LOWER}"
                         useResources = true
                     }
                 }
@@ -163,7 +165,7 @@ object ClientInteropServer {
 
             attempt++
             logger.error("Failed to bind to port $port. Falling back to random port.")
-            startServer((15001..17000).random(), authCode)
+            startServer(Random.nextInt(15001, 17001), authCode)
         } catch (exception: Exception) {
             ErrorHandler.fatal(exception, additionalMessage = "Start interop server")
         }

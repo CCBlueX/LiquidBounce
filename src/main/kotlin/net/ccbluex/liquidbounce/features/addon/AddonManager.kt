@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.addon
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.event.EventManager
@@ -36,7 +37,7 @@ import kotlin.io.path.isRegularFile
 
 object AddonManager {
 
-    private const val ENTRYPOINT = "liquidbounce"
+    private const val ENTRYPOINT = LiquidBounce.CLIENT_NAME_LOWER
 
     /**
      * Comma-separated add-on ids to skip, or `all`.
@@ -45,9 +46,8 @@ object AddonManager {
 
     private val logger = clientLogger("AddonManager")
 
-    private val loadedAddons = mutableListOf<LiquidBounceAddon>()
-
-    val addons: List<LiquidBounceAddon> get() = loadedAddons
+    val addons: List<LiquidBounceAddon>
+        field = mutableListOf<LiquidBounceAddon>()
 
     private val pendingRestarts = LinkedHashMap<Int, String>()
 
@@ -57,10 +57,10 @@ object AddonManager {
 
     internal val restartRequiredItems: Set<Int> get() = pendingRestarts.keys.toSet()
 
-    operator fun get(id: String): LiquidBounceAddon? = loadedAddons.find { it.id.equals(id, true) }
+    operator fun get(id: String): LiquidBounceAddon? = addons.find { it.id.equals(id, true) }
 
     fun discover() {
-        if (loadedAddons.isNotEmpty()) {
+        if (addons.isNotEmpty()) {
             return
         }
 
@@ -95,14 +95,14 @@ object AddonManager {
                 }
             }
 
-            loadedAddons += addon
+            addons += addon
         }
 
         // Stable order, so a name clash always fails the same add-on.
-        loadedAddons.sortBy { it.id }
+        addons.sortBy { it.id }
 
-        if (loadedAddons.isNotEmpty()) {
-            logger.info("Discovered ${loadedAddons.size} add-on(s): ${loadedAddons.joinToString { it.id }}")
+        if (addons.isNotEmpty()) {
+            logger.info("Discovered ${addons.size} add-on(s): ${addons.joinToString { it.id }}")
         }
     }
 
@@ -137,7 +137,7 @@ object AddonManager {
         rollbackOnFailure: Boolean = true,
         action: (LiquidBounceAddon) -> Unit,
     ) {
-        for (addon in loadedAddons) {
+        for (addon in addons) {
             if (addon.state == AddonState.DISABLED || addon.state == AddonState.ERRORED) {
                 continue
             }

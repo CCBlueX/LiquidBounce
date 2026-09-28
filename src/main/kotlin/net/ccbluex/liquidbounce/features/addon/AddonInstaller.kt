@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.addon
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
@@ -60,7 +61,7 @@ object AddonInstaller {
 
     internal val minecraft by lazy { versionOf("minecraft") }
 
-    internal val liquidbounce by lazy { versionOf("liquidbounce") }
+    internal val liquidbounce by lazy { versionOf(LiquidBounce.CLIENT_NAME_LOWER) }
 
     private fun versionOf(modId: String) =
         FabricLoader.getInstance().getModContainer(modId).orElseThrow().metadata.version.friendlyString

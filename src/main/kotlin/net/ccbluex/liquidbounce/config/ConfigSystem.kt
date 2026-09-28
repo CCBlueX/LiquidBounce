@@ -43,7 +43,7 @@ import java.util.zip.ZipFile
 @Suppress("TooManyFunctions")
 object ConfigSystem {
 
-    const val KEY_PREFIX = "liquidbounce"
+    const val KEY_PREFIX = LiquidBounce.CLIENT_NAME_LOWER
 
     private val logger = clientLogger("ConfigSystem")
 

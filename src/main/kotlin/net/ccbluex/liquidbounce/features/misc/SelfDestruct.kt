@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.misc
 
 import com.mojang.blaze3d.platform.IconSet
 import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
@@ -55,7 +56,7 @@ object SelfDestruct {
         mc.schedule(::restoreVanilla)
 
         if (modMenuPresent) {
-            for (id in arrayOf("liquidbounce", "mcef")) {
+            for (id in arrayOf(LiquidBounce.CLIENT_NAME_LOWER, "mcef")) {
                 ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
             }
         }
@@ -105,7 +106,7 @@ object SelfDestruct {
         }
 
         val idsToWipe = buildSet {
-            add("liquidbounce")
+            add(LiquidBounce.CLIENT_NAME_LOWER)
             AddonManager.addons.forEach { add(it.id) }
         }
 

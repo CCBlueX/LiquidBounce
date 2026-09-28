@@ -19,15 +19,15 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.resources.Identifier
 import java.util.Locale
 
 /**
- * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
+ * Creates an [net.minecraft.resources.Identifier] starts with [LiquidBounce.CLIENT_NAME_LOWER].
  */
 internal fun clientIdentifier(path: String): Identifier =
-    Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    Identifier.fromNamespaceAndPath(LiquidBounce.CLIENT_NAME_LOWER, path)
 
 /**
  * Converts an [Identifier] to a human-readable name without localization.

@@ -162,5 +162,5 @@ object OAuthClient : EventListener {
             </div>
         </body>
         </html>
-    """
+    """.trimIndent()
 }

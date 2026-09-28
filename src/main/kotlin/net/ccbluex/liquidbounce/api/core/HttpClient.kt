@@ -129,7 +129,7 @@ object HttpClient {
             try {
                 val file = File(
                     System.getProperty("java.io.tmpdir"),
-                    "${LiquidBounce.CLIENT_NAME.lowercase(Locale.ROOT)}_http_cache",
+                    "${LiquidBounce.CLIENT_NAME_LOWER}_http_cache",
                 )
                 file.mkdirs()
                 cache(Cache(file, 128L shl 20))

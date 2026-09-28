@@ -394,6 +394,7 @@ kotlin {
         jvmToolchain(libs.versions.jdk.get().toInt())
         freeCompilerArgs.add("-Xcollection-literals")
         freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
+        freeCompilerArgs.add("-Xintrinsic-const-evaluation")
     }
 
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.

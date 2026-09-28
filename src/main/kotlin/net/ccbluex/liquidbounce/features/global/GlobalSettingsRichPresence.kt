@@ -280,7 +280,7 @@ object GlobalSettingsRichPresence : ToggleableValueGroup(
         override val tag: String,
         val assetValue: String?,
     ) : Tagged {
-        LOGO("Logo", "liquidbounce"),
+        LOGO("Logo", LiquidBounce.CLIENT_NAME_LOWER),
     }
 
 }

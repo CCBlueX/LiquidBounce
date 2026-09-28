@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -47,7 +48,7 @@ import java.io.File
 // Chat formatting
 private val clientPrefix: Component = "".asText()
     .withStyle(ChatFormatting.RESET, ChatFormatting.GRAY)
-    .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
+    .append(gradientText(LiquidBounce.CLIENT_NAME, Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(" ▸ ".asText().withStyle(ChatFormatting.RESET, ChatFormatting.GRAY))
 
 @AddonApi
