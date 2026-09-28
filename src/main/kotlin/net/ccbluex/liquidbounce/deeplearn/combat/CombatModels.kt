@@ -57,13 +57,16 @@ class CombatModelInfo(val turnCap: Float, val heads: CombatHeads) {
     }
 }
 
-/** The cooldown models bundled with the client, all with aim, attacks and movement validated. */
+/**
+ * The models bundled with the client, as the user picks them. A choice has a file for each of its [styles]; the
+ * style follows the server, so where a choice has none, that style's first choice plays instead.
+ */
 @UnstableAddonApi
-enum class BundledCombatModel(override val tag: String, val id: String) : Tagged {
-    DEFAULT("Default", "default"),
-    JUGGLE("Juggle", "juggle"),
-    EXPERT("Expert", "expert"),
-    DUELS("Duels", "duels"),
+enum class BundledCombatModel(override val tag: String, val id: String, val styles: Set<CombatStyle>) : Tagged {
+    DEFAULT("Default", "default", setOf(CombatStyle.COOLDOWN, CombatStyle.LEGACY)),
+    JUGGLE("Juggle", "juggle", setOf(CombatStyle.COOLDOWN)),
+    EXPERT("Expert", "expert", setOf(CombatStyle.COOLDOWN)),
+    DUELS("Duels", "duels", setOf(CombatStyle.COOLDOWN)),
 }
 
 /** The combat task's model slots, one per [CombatStyle]. */
@@ -73,11 +76,16 @@ object CombatModels {
     val INPUT = InputSchema(TASK, CombatFeatures.VERSION, CombatFeatures.SIZE)
 
     private val slots = enumMapOf<CombatStyle, ModelSlot> { style ->
-        val bundled = when (style) {
-            CombatStyle.LEGACY -> emptyList()
-            CombatStyle.COOLDOWN -> BundledCombatModel.entries.map { it.id }
-        }
+        val bundled = BundledCombatModel.entries.filter { style in it.styles }.map { it.id }
         ModelSlot(TASK, style.id, INPUT, CombatOutputs.SIZE, bundled)
+    }
+
+    /** Plays [model] in every style that bundles it, and each other style's first choice. */
+    fun choose(model: BundledCombatModel) {
+        for (slot in slots.values) {
+            val name = model.id.takeIf { it in slot.bundled } ?: slot.bundled.firstOrNull() ?: continue
+            ModelRegistry.choose(slot, name)
+        }
     }
     private val info = WeakHashMap<ModelFile, CombatModelInfo>()
 

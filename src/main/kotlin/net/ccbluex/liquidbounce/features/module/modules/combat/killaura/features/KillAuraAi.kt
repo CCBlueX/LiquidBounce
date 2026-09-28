@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatLiveDecision
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
-import net.ccbluex.liquidbounce.deeplearn.combat.CombatStyle
-import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker
@@ -52,7 +50,7 @@ object KillAuraAi : ValueGroup("AI") {
 
     @Suppress("unused")
     private val model by enumChoice("Model", BundledCombatModel.DEFAULT).onChanged {
-        ModelRegistry.choose(CombatModels.slot(CombatStyle.COOLDOWN), it.id)
+        CombatModels.choose(it)
     }
     private val randomness by float("Randomness", 0.5f, 0f..1f).onChanged { CombatController.randomness = it }
     private val prediction by int("Prediction", 2, 0..4, "ticks").onChanged { CombatController.lead = it }
