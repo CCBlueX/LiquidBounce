@@ -57,30 +57,22 @@ object ItemStackListRenderer : EventListener {
     private val overlapRearranger = GuiOverlapRearranger()
 
     @JvmStatic
-    @JvmName("create")
-    fun GuiGraphicsExtractor.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderState {
-        return ItemStackListRenderState(this, stacks)
-    }
-
-    @JvmStatic
-    @JvmName("create")
-    fun GuiGraphicsExtractor.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderState =
-        drawItemStackList(stacks.asList())
-
-    @JvmStatic
     fun Block.createItemStackForRendering(count: Int): ItemStack {
         return ItemStack(block2Item.getOrDefault(this, this.asItem()), count)
     }
 
-    internal fun draw(state: ItemStackListRenderState, rearrange: Boolean) {
+    fun draw(graphics: GuiGraphicsExtractor, state: ItemStackListRenderState, rearrange: Boolean) {
         if (state.stacks.isEmpty() && state.title == null) return
 
         if (!rearrange) {
-            drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+            with(graphics) {
+                drawNow(state, state.centerX, state.centerY)
+            }
             return
         }
 
-        planned += state.copy()
+        state.updateBounds()
+        planned += state
     }
 
     private fun fillBackground(
@@ -113,16 +105,16 @@ object ItemStackListRenderer : EventListener {
     }
 
     @Suppress("CognitiveComplexMethod")
+    context(graphics: GuiGraphicsExtractor)
     private fun drawNow(
         state: ItemStackListRenderState,
         centerX: Float,
         centerY: Float,
     ) {
-        val guiGraphics = state.guiGraphics
         val size = if (state.useTexture) ITEM_STACK_SLOT_SIZE else ITEM_STACK_ITEM_SIZE
         val dimensions = ItemStackListLayout.measureContent(state)
 
-        guiGraphics.pose().withPush {
+        graphics.pose().withPush {
             val width = dimensions.width
             val height = dimensions.height
 
@@ -132,7 +124,7 @@ object ItemStackListRenderer : EventListener {
 
             if (!state.useTexture) {
                 fillBackground(
-                    guiGraphics = guiGraphics,
+                    guiGraphics = graphics,
                     width = width,
                     height = height,
                     color = state.backgroundColor,
@@ -142,27 +134,27 @@ object ItemStackListRenderer : EventListener {
             }
 
             state.title?.let { title ->
-                guiGraphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor)
+                graphics.centeredText(textRenderer, title, width / 2, 0, state.titleColor.argb)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
 
-            for ((i, stack) in state.stacks.withIndex()) {
+            state.stacks.forEachIndexed { i, stack ->
                 val leftX = i % state.rowLength * size
                 val topY = i / state.rowLength * size
                 if (state.useTexture) {
-                    drawSlotTexture(guiGraphics, leftX, topY)
+                    drawSlotTexture(graphics, leftX, topY)
                 }
 
                 val diff = if (state.useTexture) (ITEM_STACK_SLOT_SIZE - ITEM_STACK_ITEM_SIZE) / 2 else 0
                 with(state.itemStackRenderer) {
-                    guiGraphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+                    graphics.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
                 }
             }
         }
     }
 
     @Suppress("unused")
-    private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) { _ ->
+    private val overlayRenderHandler = handler<OverlayRenderEvent>(READ_FINAL_STATE) {
         if (planned.isEmpty()) return@handler
 
         try {
@@ -170,8 +162,10 @@ object ItemStackListRenderer : EventListener {
                 overlapRearranger.rearrange(planned)
             }
 
-            planned.forEach { state ->
-                drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+            with(it.context) {
+                planned.forEach { state ->
+                    drawNow(state, state.bounds.xCenter, state.bounds.yCenter)
+                }
             }
         } finally {
             planned.clear()

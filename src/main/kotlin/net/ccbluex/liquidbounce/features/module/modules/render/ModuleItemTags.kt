@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
@@ -202,13 +202,13 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
             val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
 
-            event.context.drawItemStackList(result.stacks)
+            ItemStackListRenderState(result.stacks)
                 .centerX(renderPos.x)
                 .centerY(renderPos.y)
                 .rectBackground(backgroundColor)
                 .scale(result.scale)
                 .rowLength(rowLength)
-                .draw(preventOverlap)
+                .draw(event.context, preventOverlap)
 
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
@@ -218,14 +218,14 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
                         return@forEach
                     }
 
-                    event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
+                    ItemStackListRenderState((if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks).asList())
                         .title(stack.hoverName.takeIf { Shulker.showTitle })
                         .centerX(renderPos.x)
                         .centerY(renderPos.y)
                         .rectBackground(backgroundColor)
                         .scale(result.scale)
                         .rowLength(rowLength)
-                        .draw(preventOverlap)
+                        .draw(event.context, preventOverlap)
                 }
             }
         }

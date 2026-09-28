@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
@@ -199,7 +199,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                 Color4b.TRANSPARENT
             }
 
-            event.context.drawItemStackList(itemStacksForRender)
+            ItemStackListRenderState(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
                 .centerX(screenPos.x)
@@ -247,7 +247,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
                             )
                         }
                     }
-                }.draw(preventOverlap)
+                }.draw(event.context, preventOverlap)
 
             i++
         }

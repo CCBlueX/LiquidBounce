@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -184,12 +184,12 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
             renderY += mouseY
         }
 
-        drawItemStackList(stacks)
+        ItemStackListRenderState(stacks)
             .centerX(renderX)
             .centerY(renderY)
             .scale(ContainerItemView.scale)
             .textureBackground()
-            .draw()
+            .draw(this)
 
         return true
     }
