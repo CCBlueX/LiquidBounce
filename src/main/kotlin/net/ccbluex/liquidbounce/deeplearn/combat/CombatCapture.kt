@@ -49,6 +49,8 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAi
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -258,8 +260,8 @@ object CombatSampler {
     }
 
     /** Players within 16 blocks of us, which is as far as nearby fighters are measured. */
-    fun nearbyPlayers(): List<CombatFrame> = mc.level?.players().orEmpty()
-        .filter { it !== mc.player && mc.player?.let { player -> it.distanceToSqr(player) < 256.0 } == true }
+    fun nearbyPlayers(): List<CombatFrame> = world.players()
+        .filter { it !== player && it.distanceToSqr(player) < 256.0 }
         .map(::frame)
 
     private fun state(entity: LivingEntity, local: Boolean) = listOf(
