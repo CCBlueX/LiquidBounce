@@ -44,7 +44,7 @@ public abstract class MixinSodiumBlockRenderer {
     private void wrapXRayTransparentBackground(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin,
             Operation<Void> original) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             original.call(model, state, pos, origin);
             return;
         }
@@ -57,7 +57,7 @@ public abstract class MixinSodiumBlockRenderer {
     private void injectXRaySkipHiddenBlocks(BlockStateModel model, BlockState state, BlockPos pos, BlockPos origin,
             CallbackInfo ci) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             return;
         }
 

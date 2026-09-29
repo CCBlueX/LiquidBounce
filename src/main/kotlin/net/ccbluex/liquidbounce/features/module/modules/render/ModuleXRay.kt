@@ -121,6 +121,7 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * Command: [CommandXRay]
  */
+@Suppress("TooManyFunctions")
 object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     // Lighting of blocks through walls
@@ -331,6 +332,24 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
         blocks.clear()
         blocks.addAll(defaultBlocks)
     }
+
+    /**
+     * Carries whether [renderActive] is true through a section build. Bound by the meshing mixins
+     * (`MixinChunkBuilderMeshingTask`, `MixinSectionCompiler`) around the whole build.
+     */
+    @JvmField
+    val RENDER_ACTIVE: ScopedValue<Boolean> = ScopedValue.newInstance()
+
+    /**
+     * Whether XRay applies to the block meshed right now on this thread.
+     *
+     * The render pipeline asks this once per face and once per block, while [running] walks the
+     * listener parents every time, so a build captures the answer once in [RENDER_ACTIVE] and reads
+     * it back here. Outside of a build it is [running] itself, which keeps the immediate block
+     * rendering path working.
+     */
+    @JvmStatic
+    fun renderActive(): Boolean = if (RENDER_ACTIVE.isBound()) RENDER_ACTIVE.get() else running
 
     override fun onEnabled() {
         mc.levelExtractor.allChanged()
