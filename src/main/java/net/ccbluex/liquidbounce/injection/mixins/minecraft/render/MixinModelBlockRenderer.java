@@ -55,13 +55,7 @@ public abstract class MixinModelBlockRenderer {
     private void wrapXRayTransparentBackground(BlockQuadOutput output, float x, float y, float z,
             BlockAndTintGetter level, BlockPos pos, BlockState state, BlockStateModel model, long seed,
             Operation<Void> original) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!ModuleXRay.renderActive()) {
-            original.call(output, x, y, z, level, pos, state, model, seed);
-            return;
-        }
-
-        XRayBlockRenderContext.renderTransparentBackground(module.transparentBackgroundAlpha(state),
+        XRayBlockRenderContext.renderIfActive(ModuleXRay.renderActive(), state,
             () -> original.call(output, x, y, z, level, pos, state, model, seed));
     }
 
