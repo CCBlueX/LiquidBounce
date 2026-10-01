@@ -48,6 +48,7 @@ var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser
     ?: false
 val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
     "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
+val isBrowserSkipped get() = isBrowserDisabled || browserBackend == "none"
 
 object BrowserBackendManager : EventListener {
 
