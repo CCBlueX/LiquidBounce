@@ -44,7 +44,7 @@ import java.util.function.UnaryOperator
 import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = UnaryOperator<T>
-typealias ValueChangedListener<T> = Consumer<T>
+typealias ValueChangedListener<T> = Consumer<in T>
 
 /**
  * Order by name of [Value] (ignoreCase)
@@ -77,11 +77,11 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val listeners: MutableList<ValueListener<T>> = ObjectArrayList()
+    private val listeners = ObjectArrayList<ValueListener<T>>()
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners: MutableList<ValueChangedListener<T>> = ObjectArrayList()
+    private val changedListeners = ObjectArrayList<ValueChangedListener<T>>()
 
     @Exclude
     @ProtocolExclude

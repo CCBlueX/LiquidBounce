@@ -33,8 +33,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 public abstract class MixinChunkBuilderMeshingTask {
 
     /**
-     * Captures XRay's state for the whole section build, so the per face and per block checks of the
-     * block renderer below read it instead of resolving it again.
+     * Captures XRay's state for the whole build; the fallback reads and the light data site resolve it once.
      * <p>
      * The descriptor is spelled out because the class also carries the synthetic bridge
      * {@code execute(ChunkBuildContext, CancellationToken)BuilderTaskOutput} of the covariant
