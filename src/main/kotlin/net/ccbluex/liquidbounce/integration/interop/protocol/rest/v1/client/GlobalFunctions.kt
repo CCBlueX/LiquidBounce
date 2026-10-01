@@ -28,6 +28,7 @@ import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.global.GlobalManager
+import org.apache.commons.io.input.CharSequenceReader
 
 // GET /api/v1/client/global
 private fun Route.getGlobalConfig() = get {
@@ -36,7 +37,7 @@ private fun Route.getGlobalConfig() = get {
 
 // PUT /api/v1/client/global
 private fun Route.putGlobalConfig() = put {
-    ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText().reader())
+    ConfigSystem.deserializeValueGroup(GlobalManager, CharSequenceReader(call.receiveText()))
     ConfigSystem.store(GlobalManager)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }

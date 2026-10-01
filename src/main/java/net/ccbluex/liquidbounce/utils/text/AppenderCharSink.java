@@ -26,12 +26,13 @@ import net.minecraft.util.FormattedCharSink;
 
 public record AppenderCharSink(StringBuilder builder) implements FormattedCharSink {
 
-    private static final Pool<AppenderCharSink> POOL = Pool.create(AppenderCharSink::new, AppenderCharSink::clear);
+    private static final Pool<AppenderCharSink> POOL = Pool.create(AppenderCharSink::new, AppenderCharSink::clear).sync();
 
     public static String codePointsToString(final FormattedCharSequence input) {
-        var sink = POOL.borrow();
+        AppenderCharSink sink;
+        sink = POOL.borrow();
         input.accept(sink);
-        var str = sink.builder.toString();
+        String str = sink.builder.toString();
         POOL.recycle(sink);
         return str;
     }

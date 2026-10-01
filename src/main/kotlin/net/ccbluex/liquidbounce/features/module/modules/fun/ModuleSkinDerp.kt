@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.entity.player.PlayerModelPart
+import java.util.EnumSet
 import kotlin.random.Random
 
 /**
@@ -40,7 +41,7 @@ object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun onEnabled() {
-        prevModelParts = mc.options.modelParts.toSet()
+        prevModelParts = EnumSet.copyOf(mc.options.modelParts)
     }
 
     override fun onDisabled() {

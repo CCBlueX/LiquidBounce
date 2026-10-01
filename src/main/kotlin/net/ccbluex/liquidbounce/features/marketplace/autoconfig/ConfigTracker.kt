@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
 import com.google.gson.JsonObject
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -54,9 +55,9 @@ import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.io.input.CharSequenceReader
 import java.io.File
-import java.io.StringWriter
-import java.security.MessageDigest
 
 /**
  * Tracks the marketplace config the client runs.
@@ -211,7 +212,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * the backup.
      */
     suspend fun loadExternal(source: String, modules: Collection<ValueGroup> = emptyList()) {
-        val config = publicGson.newJsonReader(source.reader()).use { it.parseTree().asJsonObject }
+        val config = publicGson.newJsonReader(CharSequenceReader(source)).use { it.parseTree().asJsonObject }
 
         withContext(Dispatchers.Main) {
             apply(listOf(config), modules)
@@ -461,7 +462,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         subset: Subset?
     ): MarketplaceItemRevision {
         val settings = withContext(Dispatchers.Main) {
-            StringWriter().also { writer ->
+            val buffer = FastByteArrayOutputStream()
+            buffer.writer().use { writer ->
                 if (subset == null) {
                     AutoConfig.serializeAutoConfig(writer)
                 } else {
@@ -471,7 +473,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
                         includeSpoofers = subset.spoofers
                     )
                 }
-            }.toString()
+            }
+            buffer.toByteArray()
         }
 
         val revision = MarketplaceApi.createMarketplaceItemRevision(
@@ -484,7 +487,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             includesBinds = false
         )
 
-        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.writeText(settings)
+        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.writeBytes(settings)
         return revision
     }
 
@@ -556,19 +559,15 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * A hash per module and one for the spoofers. Export metadata such as date and server
      * would make every snapshot differ, so it stays out.
      */
-    private fun snapshot(): Map<String, String> {
-        val hashes = linkedMapOf<String, String>()
+    private fun snapshot(): Map<String, String> = buildMap {
         ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
             .asJsonObject["value"].asJsonArray.forEach { module ->
-                hashes[module.asJsonObject["name"].asString] = sha256(module.toString())
+                this[module.asJsonObject["name"].asString] = sha256(module.toString())
             }
-        hashes[SPOOFERS] = sha256(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
-        return hashes
+        this[SPOOFERS] = sha256(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
     }
 
-    private fun sha256(text: String) = MessageDigest.getInstance("SHA-256")
-        .digest(text.toByteArray())
-        .joinToString("") { "%02x".format(it) }
+    private fun sha256(text: String) = DigestUtils.sha256Hex(text)
 
     private fun encodeHashes(hashes: Map<String, String>) = publicGson.toJson(hashes)
 
