@@ -40,7 +40,6 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
-import net.minecraft.util.FormattedCharSink
 import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.function.Function
@@ -151,15 +150,8 @@ fun Collection<String>.joinToText(separator: Component): Component =
 fun Collection<Component>.joinToText(separator: Component): Component =
     joinToText(separator, transform = Function.identity())
 
-fun FormattedCharSequence.codePointsToString(): String = Pools.buildStringPooled {
-    accept(FormattedCharSink.appendTo(this))
-}
-
-companion fun FormattedCharSink.appendTo(builder: StringBuilder): FormattedCharSink =
-    FormattedCharSink { _, _, codePoint ->
-        builder.appendCodePoint(codePoint)
-        true
-    }
+inline fun FormattedCharSequence.codePointsToString(): String =
+    AppenderCharSink.codePointsToString(this)
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
