@@ -64,7 +64,7 @@ public abstract class MixinPacketWrapper {
         /*
           Handles old protocol version of {@link ServerboundContainerClickPacket} (containerId = 0)
 
-           https://github.com/ViaVersion/ViaFabricPlus/blob/8f96c699edc97db8a3fc58c1533e8cf41dd46aaf/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/v1_21_4/MixinMultiPlayerGameMode.java#L91-L92
+          https://github.com/ViaVersion/ViaFabricPlus/blob/8f96c699edc97db8a3fc58c1533e8cf41dd46aaf/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/v1_21_4/MixinMultiPlayerGameMode.java#L91-L92
          */
         if (packetType == ServerboundPackets1_16_2.CONTAINER_CLICK && this.get(Types.BYTE, 0) == 0
             || packetType == ServerboundPackets1_21_4.CONTAINER_CLICK && this.get(Types.VAR_INT, 0) == 0) {

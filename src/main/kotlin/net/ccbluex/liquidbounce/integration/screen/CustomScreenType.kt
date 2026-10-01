@@ -134,7 +134,7 @@ enum class CustomScreenType(
     ),
 
     VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
-        recognizer = { it.isViaFabricPlusProtocolSelectionScreen },
+        recognizer = { it::class.java.name == "com.viaversion.viafabricplus.screen.impl.ViaFabricPlusScreen" },
         open = ::openVfpProtocolSelection
     ),
 
@@ -151,12 +151,3 @@ enum class CustomScreenType(
     }
 
 }
-
-private val vfpProtocolSelectionScreenClass: Class<*>? by lazy {
-    runCatching {
-        Class.forName("com.viaversion.viafabricplus.screen.impl.protocol.AbstractProtocolSelectionScreen")
-    }.getOrNull()
-}
-
-private val Screen.isViaFabricPlusProtocolSelectionScreen: Boolean
-    get() = vfpProtocolSelectionScreenClass?.isInstance(this) == true
