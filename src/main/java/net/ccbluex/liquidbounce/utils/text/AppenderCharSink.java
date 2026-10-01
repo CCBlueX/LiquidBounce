@@ -29,10 +29,9 @@ public record AppenderCharSink(StringBuilder builder) implements FormattedCharSi
     private static final Pool<AppenderCharSink> POOL = Pool.create(AppenderCharSink::new, AppenderCharSink::clear).sync();
 
     public static String codePointsToString(final FormattedCharSequence input) {
-        AppenderCharSink sink;
-        sink = POOL.borrow();
+        var sink = POOL.borrow();
         input.accept(sink);
-        String str = sink.builder.toString();
+        var str = sink.builder.toString();
         POOL.recycle(sink);
         return str;
     }
