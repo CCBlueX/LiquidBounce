@@ -51,16 +51,27 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * - Timer speed
  * - Optimize for criticals
  * - Avoid edge bump
+ * - Ground Speed
  *
  */
 class SpeedCustom(parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
+
+    private class GroundSpeed(parent: EventListener?) : ToggleableValueGroup(parent,
+        "GroundSpeed", false) {
+
+        @Suppress("unused")
+        private val groundSpeedHandler = handler<PlayerJumpEvent> { event ->
+            if (!mc.options.keyJump.isDown) {
+                event.cancelEvent()
+            }
+        }
+    }
 
     private class HorizontalModification(parent: EventListener?) : ToggleableValueGroup(parent,
         "HorizontalModification", true) {
 
         private val horizontalAcceleration by float("HorizontalAcceleration", 0f, -0.1f..0.2f)
         private val horizontalJumpOffModifier by float("HorizontalJumpOff", 0f, -0.5f..1f)
-
         /**
          * Allows for a delayed boost to be applied when the player jumps off the ground
          */
@@ -183,6 +194,7 @@ class SpeedCustom(parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
     init {
         tree(HorizontalModification(this))
         tree(VerticalModification(this))
+        tree(GroundSpeed(this))
     }
 
     private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
