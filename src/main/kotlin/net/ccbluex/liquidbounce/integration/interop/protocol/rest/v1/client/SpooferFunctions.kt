@@ -28,6 +28,7 @@ import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import org.apache.commons.io.input.CharSequenceReader
 
 // GET /api/v1/client/spoofer
 private fun Route.getSpooferConfig() = get {
@@ -37,7 +38,7 @@ private fun Route.getSpooferConfig() = get {
 
 // PUT /api/v1/client/spoofer
 private fun Route.putSpooferConfig() = put {
-    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
+    ConfigSystem.deserializeValueGroup(SpooferManager, CharSequenceReader(call.receiveText()))
     ConfigSystem.store(SpooferManager)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }

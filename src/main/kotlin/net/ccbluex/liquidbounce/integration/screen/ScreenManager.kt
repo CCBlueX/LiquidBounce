@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
@@ -332,6 +333,10 @@ object ScreenManager : EventListener {
     private fun handleCurrentScreen(screen: Screen?): Boolean {
         // We check against mc.gui.screen(), not screen, because somehow this works.
         if (mc.gui.screen() is TaskProgressScreen) {
+            return false
+        }
+
+        if (screen is BrowserSelectionScreen || mc.gui.screen() is BrowserSelectionScreen) {
             return false
         }
 

@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
@@ -248,7 +247,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     internal suspend fun reload() {
         // Reload the item type's manager on the render thread.
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             type.reload()
         }
     }

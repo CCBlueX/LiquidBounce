@@ -16,6 +16,9 @@
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import HudEditor from "./tabs/hud_editor/HudEditor.svelte";
     import {isTextEntry} from "../../util/utils";
+    import {persistentDataLoaded, setItem} from "../../integration/persistent_storage";
+
+    const TAB_KEY = "clickgui.tab";
 
     const tabs = [
         {title: "ClickGUI", content: ClickGui},
@@ -24,12 +27,29 @@
     ];
 
     let activeTab = $state(0);
+    let tabRestored = false;
     let minecraftScaleFactor = $state(2);
     let clickGuiScaleFactor = $state(1);
 
     $effect(() => {
         $scaleFactor = minecraftScaleFactor * clickGuiScaleFactor;
     });
+
+    $effect(() => {
+        const title = tabs[activeTab].title;
+        if (tabRestored) {
+            setItem(TAB_KEY, title);
+        }
+    });
+
+    async function restoreTab() {
+        await persistentDataLoaded;
+        const stored = tabs.findIndex(tab => tab.title === localStorage.getItem(TAB_KEY));
+        if (stored >= 0) {
+            activeTab = stored;
+        }
+        tabRestored = true;
+    }
 
     /**
      * The client has to know whether the user is typing, otherwise key presses
@@ -65,6 +85,7 @@
 
     onMount(async () => {
         await setHudEditorSelected(false);
+        restoreTab();
 
         $os = (await getClientInfo()).os;
 

@@ -40,7 +40,7 @@ object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun onEnabled() {
-        prevModelParts = mc.options.modelParts.toSet()
+        prevModelParts = HashSet(mc.options.modelParts)
     }
 
     override fun onDisabled() {
