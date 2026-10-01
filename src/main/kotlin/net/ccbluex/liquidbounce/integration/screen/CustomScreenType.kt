@@ -134,7 +134,7 @@ enum class CustomScreenType(
     ),
 
     VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
-        recognizer = { it::class.java.name == "de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen" },
+        recognizer = { it::class.java.name == "com.viaversion.viafabricplus.screen.impl.ViaFabricPlusScreen" },
         open = ::openVfpProtocolSelection
     ),
 
