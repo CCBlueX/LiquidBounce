@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -38,8 +39,8 @@ import java.util.EnumMap
  * Outcome of a single [MarketplaceManager.update] call.
  */
 sealed interface UpdateResult {
-    /** The item was (re-)installed to revision [revisionId]. */
-    data class Updated(val item: SubscribedItem, val revisionId: Int) : UpdateResult
+    /** The item was (re-)installed to [revision]. */
+    data class Updated(val item: SubscribedItem, val revision: MarketplaceItemRevision) : UpdateResult
 
     /** The item is already on its newest revision that fits. */
     data class NoUpdate(val item: SubscribedItem) : UpdateResult
@@ -148,7 +149,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         task?.getOrCreateFileTask(item.id.toString())?.isCompleted = true
         logger.info("Updated item ${item.id} (${item.type}) to revision $revisionId")
 
-        UpdateResult.Updated(item, revisionId)
+        UpdateResult.Updated(item, compatible.revision)
     }
 
     private fun incompatible(item: SubscribedItem, unavailable: Unavailable): UpdateResult {

@@ -101,11 +101,10 @@ object ConfigInfoCommand {
             }
             field(regular(t("info.dependencies", variable(names))))
         }
-        item.forkedFromItemId?.let { source ->
-            field(
-                regular(t("info.forkedFrom", variable(source.toString())))
-                    .onClick(ClickEvent.SuggestCommand("${CommandManager.GlobalSettings.prefix}config info $source"))
-            )
+        val source = item.forkedFromItemId?.let { runCatching { MarketplaceApi.getMarketplaceItem(it) }.getOrNull() }
+        source?.let {
+            val command = "${CommandManager.GlobalSettings.prefix}config info ${quoted(it.address)}"
+            field(regular(t("info.forkedFrom", variable(it.address))).onClick(ClickEvent.SuggestCommand(command)))
         }
         if (item.includesBinds == true) {
             field(warning(t("info.binds")))
