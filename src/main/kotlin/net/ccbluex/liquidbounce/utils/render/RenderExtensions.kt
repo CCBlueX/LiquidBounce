@@ -39,8 +39,6 @@ import com.mojang.renderpearl.api.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -50,6 +48,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
 import net.minecraft.util.ARGB
+import net.minecraft.util.Util
 import okio.BufferedSource
 import okio.buffer
 import okio.source
@@ -223,7 +222,7 @@ fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     this.toNativeImage().thenAcceptAsync({ nativeImage ->
         nativeImage.writeToFile(file)
         nativeImage.close()
-    }, Dispatchers.IO.asExecutor())
+    }, Util.ioPool())
 
 private fun GpuBufferSlice.readNativeImageRGBA(
     width: Int,
