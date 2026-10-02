@@ -370,6 +370,7 @@
   "liquidbounce.module.holeESP.description": "Kristal PvP için güvenli noktaları tespit eder ve gösterir.",
   "liquidbounce.module.holeFiller.description": "Kristal PvP için güvenli noktaları otomatik olarak doldurur.",
   "liquidbounce.module.hud.description": "Oyun içinde çeşitli kullanışlı araçlarla bir kaplama gösterir.",
+  "liquidbounce.module.interceptElytra.description": "Elytra ile süzülen oyunculara rüzgar yükü atarak onları havada durdurur.",
   "liquidbounce.module.inventoryCleaner.description": "Envanterinizi otomatik olarak düzenler ve gereksiz eşyaları atar.",
   "liquidbounce.module.inventoryMove.description": "Envanter açıkken yürümenizi sağlar.",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "Artık gecikmiyorsunuz ve ekranınız kapatıldı.",
