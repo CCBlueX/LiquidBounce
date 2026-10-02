@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.item.Items
 
 /**
@@ -47,7 +48,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     }
 
     private object HorizontalBoost : ToggleableValueGroup(this, "HorizontalBoost", true) {
-        val pitch by float("Pitch", 70f, 0f..90f)
+        val pitch by floatRange("Pitch", 70f..70f, 0f..90f)
         val boostKey by key("Key", InputConstants.KEY_LCONTROL)
     }
 
@@ -62,7 +63,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      * 7 ticks is the perfect time to use a wind charge before hitting the ground,
      * and drastically boosts us higher.
      */
-    const val PREDICTION_TICKS = 7
+    private const val PREDICTION_TICKS = 7
 
     @Suppress("unused")
     private val autoWindChargeHandler = tickHandler {
@@ -79,11 +80,11 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         val isHorizontalBoost = HorizontalBoost.enabled && HorizontalBoost.boostKey.isPressed
         val directionYaw = player.getMovementDirectionOfInput() - 180f
         val directionPitch = when {
-            isHorizontalBoost -> HorizontalBoost.pitch
+            isHorizontalBoost -> HorizontalBoost.pitch.random()
             else -> 90f
         }
 
-        var rotation = Rotation(directionYaw, 80f)
+        val rotation = Rotation(directionYaw, directionPitch)
 
         if (Rotate.enabled) {
             fun isRotationSufficient(): Boolean {
