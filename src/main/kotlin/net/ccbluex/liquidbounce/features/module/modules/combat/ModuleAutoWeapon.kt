@@ -267,9 +267,21 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     /**
-     * The item with the highest Knockback level, in any hotbar slot.
+     * The [preferredWeapon] with the highest Knockback level, for [Priorities.KNOCKBACK]. It may be an
+     * item without the enchantment - that priority still wants a preferred weapon in hand.
      */
     private fun getBestKnockbackItem(): ItemStack? {
+        return Slots.Hotbar.stacks
+            .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
+            .maxByOrNull { itemStack ->
+                itemStack.getEnchantment(Enchantments.KNOCKBACK)
+            }
+    }
+
+    /**
+     * The item with the highest Knockback level in any hotbar slot, or null when nothing carries it.
+     */
+    private fun getStrongestKnockbackItem(): ItemStack? {
         return Slots.Hotbar.stacks
             .filter { !it.isEmpty && it.getEnchantment(Enchantments.KNOCKBACK) > 0 }
             .maxByOrNull { itemStack ->
@@ -307,7 +319,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
         // A Knockback weapon pushes a target standing next to the void over its edge
         if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
-            val voidKnockbackItem = getBestKnockbackItem()
+            val voidKnockbackItem = getStrongestKnockbackItem()
             if (voidKnockbackItem != null) {
                 return weaponFacets
                     .firstOrNull { it.itemStack === voidKnockbackItem }
