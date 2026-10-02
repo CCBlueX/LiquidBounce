@@ -128,7 +128,7 @@ internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
  * What of the [installables] is left out, running [install] for each missing one: the inactive ones, the ones
  * [install] gives a reason for, and what needs any of those, with its reason.
  */
-private suspend fun leftOut(
+internal suspend fun leftOut(
     installables: Collection<Installable>,
     install: suspend (MarketplaceItem) -> Unavailable?
 ): List<LeftOut> {

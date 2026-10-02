@@ -37,7 +37,9 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.util.obj
 import net.ccbluex.liquidbounce.config.gson.util.parseTree
+import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -205,6 +207,24 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             installed.any { it.installNeedsRestart },
             unavailable
         )
+    }
+
+    /**
+     * The modules loading [revisionId] of [item] sets, to restrict a load to. Only the revisions it applies are
+     * downloaded, to the cache [load] reads them from.
+     */
+    internal suspend fun modulesToLoad(item: MarketplaceItem, revisionId: Int): List<String> {
+        val steps = dependenciesOf(item.id).configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
+        return steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
+    }
+
+    /**
+     * The modules [revisionId] of [itemId] sets.
+     */
+    internal suspend fun modules(itemId: Int, revisionId: Int): List<String> {
+        val config = readConfig(revisionFile(itemId, revisionId))
+        val modules = if (config.string("name") == "modules") config else config.obj("modules")
+        return modules?.get("value")?.asJsonArray?.map { it.asJsonObject["name"].asString }.orEmpty()
     }
 
     /**

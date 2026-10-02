@@ -134,6 +134,8 @@ object AddonManager {
         pendingRestarts.remove(itemId)
     }
 
+    internal fun isRestartRequired(itemId: Int) = itemId in pendingRestarts
+
     private inline fun forEachEnabled(
         phase: String,
         rollbackOnFailure: Boolean = true,

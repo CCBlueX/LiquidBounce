@@ -1,4 +1,5 @@
 import type {GroupedModules, Module} from "./types"
+import {setTyping} from "./rest";
 
 export const delay = (millis: number) => new Promise(resolve => setTimeout(resolve, millis));
 
@@ -66,5 +67,56 @@ export function portal(node: HTMLElement) {
 
     return {
         destroy: () => node.remove()
+    };
+}
+
+/**
+ * Keeps key presses in the text inputs below [node] from reaching the game.
+ */
+export function typing(node: HTMLElement) {
+    let focused = false;
+    const update = (target: EventTarget | null) => {
+        const next = target instanceof HTMLInputElement && target.type !== "checkbox" && node.contains(target);
+        if (next !== focused) {
+            focused = next;
+            setTyping(next);
+        }
+    };
+    const focus = (e: FocusEvent) => update(e.target);
+    const blur = (e: FocusEvent) => update(e.relatedTarget);
+
+    node.addEventListener("focusin", focus);
+    node.addEventListener("focusout", blur);
+
+    return {
+        destroy() {
+            node.removeEventListener("focusin", focus);
+            node.removeEventListener("focusout", blur);
+            // Chromium does not blur an input that leaves the page.
+            if (focused) {
+                setTyping(false);
+            }
+        }
+    };
+}
+
+/**
+ * Calls [onVisible] whenever [node] scrolls into view.
+ */
+export function visible(node: HTMLElement, onVisible: () => void) {
+    const observer = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting)) {
+            onVisible();
+        }
+    });
+    observer.observe(node);
+
+    return {
+        update(next: () => void) {
+            onVisible = next;
+        },
+        destroy() {
+            observer.disconnect();
+        }
     };
 }

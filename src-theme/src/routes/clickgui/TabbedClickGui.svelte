@@ -15,6 +15,7 @@
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import HudEditor from "./tabs/hud_editor/HudEditor.svelte";
+    import Marketplace from "./tabs/marketplace/Marketplace.svelte";
     import {persistentDataLoaded, setItem} from "../../integration/persistent_storage";
 
     const TAB_KEY = "clickgui.tab";
@@ -22,6 +23,7 @@
     const tabs = [
         {title: "ClickGUI", content: ClickGui},
         {title: "HUD Editor", content: HudEditor},
+        {title: "Marketplace", content: Marketplace},
         {title: "Settings", content: GlobalSettings},
     ];
 
