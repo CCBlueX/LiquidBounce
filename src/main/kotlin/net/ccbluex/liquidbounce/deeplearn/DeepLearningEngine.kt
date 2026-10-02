@@ -63,8 +63,6 @@ object DeepLearningEngine {
         System.setProperty("DJL_DEFAULT_ENGINE", "PyTorch")
         // Enforce CPU pytorch flavor (CUDA often conflicts with NVIDIA CUDA and is too large for our use case)
         System.setProperty("PYTORCH_FLAVOR", "cpu")
-
-        ModelManager
     }
 
     @JvmStatic

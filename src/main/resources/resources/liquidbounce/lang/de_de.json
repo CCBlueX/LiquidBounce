@@ -586,8 +586,6 @@
   "liquidbounce.module.xRay.description": "Rendert nur ausgewählte Blöcke.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Deaktiviert die Authlib-Yggdrasil-Signaturprüfung; behebt möglicherweise fehlende Skins auf manchen Servern.",
   "liquidbounce.module.zoom.description": "Ermöglicht dir, alles in deiner Welt kleiner oder größer erscheinen zu lassen.",
-  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "Daher wird auf %s angle smoothing zurückgegriffen.",
   "liquidbounce.tooltip.clickToCopy": "Klicke zum Kopieren",
-  "liquidbounce.unsupportedDeepLearning": "❌ Die KI-Engine wurde nicht initialisiert. Dein System wird möglicherweise nicht unterstützt.",
   "modmenu.descriptionTranslation.liquidbounce": "Ein kostenloser Cheat für Minecraft"
 }

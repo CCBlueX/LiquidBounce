@@ -18,10 +18,8 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.model
 
-import ai.djl.nn.Blocks
 import ai.djl.nn.SequentialBlock
 import ai.djl.nn.core.Linear
-import ai.djl.nn.norm.BatchNorm
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 
 /** A fully connected network: [hidden] layers of the given widths, each followed by [activation]. */
@@ -43,15 +41,6 @@ class NetworkSpec(val hidden: List<Int>, val outputs: Int, val activation: Activ
         TANH("tanh") {
             override fun addTo(block: SequentialBlock) {
                 block.add(ai.djl.nn.Activation.tanhBlock())
-            }
-        },
-
-        /** The layout of the models from before [ModelFile]. */
-        BATCH_NORM_RELU("batchnorm-relu") {
-            override fun addTo(block: SequentialBlock) {
-                block.add(Blocks.batchFlattenBlock())
-                block.add(BatchNorm.builder().build())
-                block.add(ai.djl.nn.Activation.reluBlock())
             }
         };
 

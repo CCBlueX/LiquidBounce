@@ -631,6 +631,13 @@
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick cannot be enabled in single player.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies around you.",
   "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.description": "Aims like the players the model learned from.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.model.description": "Every model aims for cooldown and 1.8 combat alike and follows how you move. Default learned from players in free-for-all fights and 1.8 duels. Juggle also keeps aiming at opponents who knock you up. Expert learned only from players who land most of their hits. Duels also learned from 1.9 duels.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.randomness.description": "How much of the model's variation to keep. 0 always aims the same way.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.prediction.description": "Sees a moving opponent this many ticks ahead, making up for the reaction time learned from players.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.speed.description": "Scales the model's turn speed. 1.0 turns like the recordings.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.maxTurn.description": "Largest turn per tick.",
+  "liquidbounce.module.killAura.rotations.angleSmooth.ai.assist.description": "Pulls the model's aim further onto the target with a math-based smoother.",
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
   "liquidbounce.module.liquidFiller.description": "Places blocks inside of liquid source blocks within range of you.",
   "liquidbounce.module.liquidFiller.value.placeOrder.description": "Controls the order in which liquid source blocks are queued for placing.",
@@ -804,8 +811,7 @@
   "liquidbounce.module.xRay.description": "Only renders selected blocks.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.zoom.description": "Allows you to make everything in your world appear smaller or bigger.",
-  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "Therefore falling back to %s angle smoothing.",
+  "liquidbounce.rotationSystem.angleSmooth.ai.notReady": "AI aiming is not available (%s), aiming with %s.",
   "liquidbounce.tooltip.clickToCopy": "Click to copy",
-  "liquidbounce.unsupportedDeepLearning": "The AI engine has not been initialized. Your system might not be supported.",
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client for Minecraft."
 }

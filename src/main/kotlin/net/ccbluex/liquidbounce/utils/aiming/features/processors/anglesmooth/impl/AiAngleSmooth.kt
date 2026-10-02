@@ -18,150 +18,137 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
-import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
-import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.deeplearn.combat.BundledCombatModel
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatController
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatDecision
+import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
+import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
+import net.ccbluex.liquidbounce.deeplearn.model.ModelStatus
+import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.NoneAngleSmooth
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.lastPos
-import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.phys.Vec3
-import kotlin.time.DurationUnit
-import kotlin.time.measureTimedValue
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.max
 
+/**
+ * Aims the way the model decides. [fallback] aims whenever it does not: without a model, while the fight
+ * history fills up, and on the way back to the camera.
+ */
 class AiAngleSmooth(
     parent: ModeValueGroup<*>,
-    val fallback: AngleSmooth
+    private val fallback: AngleSmooth,
 ) : AngleSmooth("AI", parent, listOf("Minarai")) {
+    @UnstableAddonApi
+    val model by enumChoice("Model", BundledCombatModel.DEFAULT)
 
-    private val choices = modes<TwoDimensionalRegressionModel>("Model", 0) { local ->
-        models.onChanged {
-            runCatching {
-                val activeModelName = local.activeMode.tag
-                local.modes = models.modes
-                val nextModelName = local.modes.firstOrNull { model -> model.tag == activeModelName }
-                    ?.tag ?: models.activeMode.tag
-                local.setByString(nextModelName)
-            }.onFailure { error ->
-                logger.error("Failed to sync AI model selection after model reload.", error)
-            }
-        }
+    @UnstableAddonApi
+    val randomness by float("Randomness", 0.5f, 0f..1f)
 
-        models.modes.toTypedArray()
-    }
+    @UnstableAddonApi
+    val prediction by int("Prediction", 2, 0..4, "ticks")
 
-    private class OutputMultiplier : ValueGroup("OutputMultiplier") {
-        val yawMultiplier by float("Yaw", 1.5f, 0.5f..2f)
-        val pitchMultiplier by float("Pitch", 1f, 0.5f..2f)
-    }
-
-    private val correctionMode = modes(this, "Correction") {
+    private val speed by float("Speed", 1f, 0.5f..1.5f)
+    private val maxTurn by float("MaxTurn", 60f, 10f..180f)
+    private val assist = modes(this, "Assist") {
         arrayOf(
-            /**
-             * Works best with the model, as it allows for the most natural movement.
-             */
+            NoneAngleSmooth(it),
             InterpolationAngleSmooth(it, 2..5, 2..5, 95..100),
-            /**
-             * Not recommended to use this one, as it completely eliminates any acceleration
-             * effects from the model.
-             */
-            LinearAngleSmooth(it,
-                horizontalTurnSpeed = 5f..5f,
-                verticalTurnSpeed = 5f..5f
-            ),
-            NoneAngleSmooth(it)
+            LinearAngleSmooth(it, horizontalTurnSpeed = 5f..5f, verticalTurnSpeed = 5f..5f),
         )
     }
 
-    private val outputMultiplier = tree(OutputMultiplier())
+    @UnstableAddonApi
+    val controller = CombatController(this)
 
-    companion object {
-        private const val UNSUPPORTED_NOTIFICATION_TIME = 5000L
-        private val notificationChronometer = Chronometer()
-    }
+    private var lastSpeed = 1f
+    private var fellBack = true
+    private var notified: ModelStatus? = null
 
     override fun process(
         rotationTarget: RotationTarget,
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Rotation {
-        if (!DeepLearningEngine.isInitialized) {
-            if (notificationChronometer.hasElapsed(UNSUPPORTED_NOTIFICATION_TIME)) {
-                chat(markAsError(translation("liquidbounce.unsupportedDeepLearning")))
-                chat(markAsError(translation(
-                    "liquidbounce.rotationSystem.angleSmooth.ai.fallback",
-                    fallback.name
-                )))
-                notificationChronometer.reset()
-            }
-
+        val target = rotationTarget.entity as? LivingEntity
+        val decision = target?.let { controller.decide(it, model, randomness, prediction) }
+        debug(target, currentRotation, decision)
+        if (decision == null) {
+            // Without a decision the history may just be filling up, which is only worth a message if it never ends
+            ModelRegistry.status(CombatModels.SLOT, model.id).takeIf { it != ModelStatus.READY }?.let(::notify)
+            fellBack = true
             return fallback.process(rotationTarget, currentRotation, targetRotation)
         }
-
-        val entity = rotationTarget.entity as? LivingEntity
-        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
-        val totalDelta = currentRotation.rotationDeltaTo(targetRotation)
-
-        ModuleDebug.debugParameter(this, "DeltaYaw", totalDelta.deltaYaw)
-        ModuleDebug.debugParameter(this, "DeltaPitch", totalDelta.deltaPitch)
-
-        val input = CombatSample(
-            currentVector = currentRotation.directionVector,
-            previousVector = prevRotation.directionVector,
-            targetVector = targetRotation.directionVector,
-
-            playerDiff = player.position().subtract(player.lastPos),
-            targetDiff = entity?.let { entity.position().subtract(entity.lastPos) } ?: Vec3.ZERO,
-
-            distance = entity?.let { player.squaredBoxedDistanceTo(entity).toFloat() } ?: 3f,
-        )
-
-        val (output, time) = runCatching {
-            measureTimedValue {
-                choices.activeMode.predict(input.asInput)
-            }
-        }.getOrElse {
-            return fallback.process(rotationTarget, currentRotation, targetRotation)
-        }
-        if (output.size < 2 || !output[0].isFinite() || !output[1].isFinite()) {
-            return fallback.process(rotationTarget, currentRotation, targetRotation)
-        }
-        ModuleDebug.debugParameter(this, "Output [0]", output[0])
-        ModuleDebug.debugParameter(this, "Output [1]", output[1])
-        ModuleDebug.debugParameter(this, "Time", "${time.toString(DurationUnit.MILLISECONDS, 2)} ms")
-
-        val modelOutput = Rotation(
-            currentRotation.yaw + output[0] * outputMultiplier.yawMultiplier,
-            currentRotation.pitch + output[1] * outputMultiplier.pitchMultiplier
-        )
-
-        return correctionMode.activeMode.process(
-            rotationTarget,
-            modelOutput,
-            targetRotation
-        )
+        notified = null
+        fellBack = false
+        val yaw = (decision.yaw * speed).coerceIn(-maxTurn, maxTurn)
+        val pitch = (decision.pitch * speed).coerceIn(-maxTurn, maxTurn)
+        lastSpeed = max(abs(yaw), abs(pitch)).coerceAtLeast(1f)
+        val rotation = Rotation(currentRotation.yaw + yaw, (currentRotation.pitch + pitch).coerceIn(-90f, 90f))
+        return assist.activeMode.process(rotationTarget, rotation, targetRotation)
     }
 
-    override fun calculateTicks(
-        currentRotation: Rotation,
-        targetRotation: Rotation
-    ): Int {
-        // TODO: Implement correctly
-        return correctionMode.activeMode.calculateTicks(currentRotation, targetRotation)
+    override fun calculateTicks(currentRotation: Rotation, targetRotation: Rotation): Int {
+        if (fellBack) {
+            return fallback.calculateTicks(currentRotation, targetRotation)
+        }
+        val delta = currentRotation.rotationDeltaTo(targetRotation)
+        return ceil(max(abs(delta.deltaYaw), abs(delta.deltaPitch)) / lastSpeed).toInt().coerceAtLeast(1)
     }
 
+    override fun prepareDeserialize(jsonObject: JsonObject) = migrateAiAngleSmooth(jsonObject)
+
+    private fun notify(status: ModelStatus) {
+        if (notified != status) {
+            notified = status
+            chat(markAsError(translation("liquidbounce.rotationSystem.angleSmooth.ai.notReady", status.text(),
+                fallback.name)))
+        }
+    }
+
+    private fun debug(target: LivingEntity?, view: Rotation, decision: CombatDecision?) {
+        debugParameter("Target") {
+            target?.let { "%s, %.1f blocks, hurt %d".format(it.scoreboardName, it.distanceTo(player), it.hurtTime) }
+        }
+        debugParameter("History") {
+            controller.lastStep?.takeIf { it.tick == player.tickCount }?.let { "${it.history} ticks" }
+        }
+        debugParameter("Turn") {
+            decision?.let { "%.1f yaw, %.1f pitch%s".format(it.yaw, it.pitch, if (it.clamped) ", clamped" else "") }
+        }
+        val eyes = player.eyePosition
+        debugGeometry("View") { DebuggedLineSegment(eyes, eyes.add(view.directionVector.scale(4.0)), Color4b.RED) }
+        debugGeometry("Decision") {
+            decision?.let {
+                val next = Rotation(view.yaw + it.yaw, view.pitch + it.pitch)
+                DebuggedLineSegment(eyes, eyes.add(next.directionVector.scale(4.0)), Color4b.GREEN)
+            }
+        }
+    }
+}
+
+/**
+ * Before the rotation models, AI chose between the old models in a mode group and called Assist Correction. Their
+ * choice becomes the default model.
+ */
+internal fun migrateAiAngleSmooth(ai: JsonObject) {
+    val values = ai["value"]?.takeIf { it.isJsonArray }?.asJsonArray?.asList() ?: return
+    fun named(name: String) = values.firstOrNull { (it as? JsonObject)?.get("name")?.asString == name } as JsonObject?
+
+    named("Model")?.takeIf { it.has("choices") }?.let(values::remove)
+    if (named("Assist") == null) {
+        named("Correction")?.addProperty("name", "Assist")
+    }
 }
