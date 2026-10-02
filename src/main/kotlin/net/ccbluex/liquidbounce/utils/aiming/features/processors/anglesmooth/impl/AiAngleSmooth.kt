@@ -43,13 +43,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.time.DurationUnit
 import kotlin.time.measureTimedValue
 
-/**
- * Record using
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder]
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder]
- * and then train a model - after that you will be able to use it with
- * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth].
- */
 class AiAngleSmooth(
     parent: ModeValueGroup<*>,
     val fallback: AngleSmooth
@@ -122,7 +115,6 @@ class AiAngleSmooth(
         val entity = rotationTarget.entity as? LivingEntity
         val prevRotation = RotationManager.previousRotation ?: player.lastRotation
         val totalDelta = currentRotation.rotationDeltaTo(targetRotation)
-        val velocityDelta = prevRotation.rotationDeltaTo(currentRotation)
 
         ModuleDebug.debugParameter(this, "DeltaYaw", totalDelta.deltaYaw)
         ModuleDebug.debugParameter(this, "DeltaPitch", totalDelta.deltaPitch)
@@ -131,14 +123,11 @@ class AiAngleSmooth(
             currentVector = currentRotation.directionVector,
             previousVector = prevRotation.directionVector,
             targetVector = targetRotation.directionVector,
-            velocityDelta = velocityDelta.toVec2f(),
 
             playerDiff = player.position().subtract(player.lastPos),
             targetDiff = entity?.let { entity.position().subtract(entity.lastPos) } ?: Vec3.ZERO,
 
-            hurtTime = entity?.let {entity.hurtTime } ?: 10,
             distance = entity?.let { player.squaredBoxedDistanceTo(entity).toFloat() } ?: 3f,
-            age = 0
         )
 
         val (output, time) = runCatching {

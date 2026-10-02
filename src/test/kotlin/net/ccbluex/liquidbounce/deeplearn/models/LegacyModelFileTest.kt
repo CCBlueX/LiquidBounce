@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.models
 
-import org.junit.jupiter.api.io.TempDir
-import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -28,9 +25,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 
 class LegacyModelFileTest {
-    @TempDir
-    lateinit var directory: Path
-
     @Test
     fun `the bundled models read without the engine`() {
         for (name in listOf("19kc8kp", "21kc11kp")) {
@@ -41,14 +35,6 @@ class LegacyModelFileTest {
             assertEquals(LegacyModelFile.NETWORK, file.network)
             assertContentEquals(bytes.copyOfRange(HEADER, bytes.size), file.parameters)
         }
-    }
-
-    @Test
-    fun `a model folder loads the parameters saved last`() {
-        for (name in listOf("tf-0000.params", "tf-0002.params", "tf-0010.params", "notes.txt")) {
-            Files.createFile(directory.resolve(name))
-        }
-        assertEquals(directory.resolve("tf-0010.params"), LegacyModelFile.latest(directory))
     }
 
     @Test

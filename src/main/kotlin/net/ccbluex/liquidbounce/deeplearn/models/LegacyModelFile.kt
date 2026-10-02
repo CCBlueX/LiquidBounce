@@ -26,25 +26,13 @@ import net.ccbluex.liquidbounce.deeplearn.model.ModelFile
 import net.ccbluex.liquidbounce.deeplearn.model.NetworkSpec
 import java.io.DataInputStream
 import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
- * The models from before [ModelFile], in DJL's own parameter files: `19kc8kp.params` and `21kc11kp.params` bundled,
- * more in the models folder. Read without the engine, they predict through [LoadedModel] like any other.
+ * The models from before [ModelFile], `19kc8kp.params` and `21kc11kp.params`, in DJL's own parameter files. Read
+ * without the engine, they predict through [LoadedModel] like any other.
  */
 object LegacyModelFile {
     val NETWORK = NetworkSpec(listOf(128, 64, 32), 2, NetworkSpec.Activation.BATCH_NORM_RELU)
-
-    private val FILE_NAME = Regex("""tf(?:-(\d+))?\.params""")
-
-    /** The parameters DJL saved last into [folder]. */
-    fun latest(folder: Path): Path = Files.list(folder).use { files ->
-        files.toList().mapNotNull { path -> FILE_NAME.matchEntire(path.fileName.toString())?.let { path to it } }
-            .maxByOrNull { (_, match) -> match.groupValues[1].toIntOrNull() ?: -1 }?.first
-    } ?: error("No model parameters in $folder")
-
-    fun read(path: Path, name: String): ModelFile = Files.newInputStream(path).use { read(it, name) }
 
     // "DJL@", version, model name, data type, input names and shapes, properties, then the block's parameters
     fun read(stream: InputStream, name: String): ModelFile {

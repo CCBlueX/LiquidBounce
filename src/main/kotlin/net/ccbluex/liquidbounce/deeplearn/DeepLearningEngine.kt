@@ -52,10 +52,6 @@ object DeepLearningEngine {
         mkdirs()
     }
 
-    val modelsFolder = deepLearningFolder.resolve("models").apply {
-        mkdirs()
-    }
-
     init {
         System.setProperty("DJL_CACHE_DIR", djlCacheFolder.absolutePath)
         System.setProperty("ENGINE_CACHE_DIR", enginesCacheFolder.absolutePath)

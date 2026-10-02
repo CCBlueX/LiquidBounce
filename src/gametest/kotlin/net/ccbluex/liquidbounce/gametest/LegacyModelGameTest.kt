@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.deeplearn.model.LoadedModel
 import net.ccbluex.liquidbounce.deeplearn.models.LegacyModelFile
-import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -72,31 +71,6 @@ class LegacyModelGameTest : FabricClientGameTest {
             }
         }
         logger.info("PASS: the old models predict bit for bit as before")
-        context.onClient { improve(inputs.first(), random) }
-    }
-
-    /** What `.models improve` does with recorded samples. */
-    private fun improve(input: FloatArray, random: Random) {
-        val name = "LegacyModelGameTest"
-        val folder = DeepLearningEngine.modelsFolder.resolve(name)
-        try {
-            val before = TwoDimensionalRegressionModel(name, ModelManager.models).use { candidate ->
-                candidate.load("19KC8KP")
-                val before = candidate.predict(input)
-                candidate.train(FloatArray(SAMPLES * 6) { random.nextFloat() },
-                    FloatArray(SAMPLES * 2) { random.nextFloat() })
-                candidate.save()
-                before
-            }
-            val after = TwoDimensionalRegressionModel(name, ModelManager.models).use { saved ->
-                saved.load()
-                saved.predict(input)
-            }
-            check(after.all(Float::isFinite) && !after.contentEquals(before)) { "Training changed nothing: $after" }
-        } finally {
-            folder.deleteRecursively()
-        }
-        logger.info("PASS: an improved model saves and loads again")
     }
 
     /** The network the old models were trained in, as the client built it before [LegacyModelFile]. */
@@ -112,6 +86,5 @@ class LegacyModelGameTest : FabricClientGameTest {
 
     private companion object {
         const val INPUTS = 2000
-        const val SAMPLES = 64
     }
 }
