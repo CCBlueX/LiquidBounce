@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.model
 
-import ai.djl.nn.Activation.reluBlock
 import ai.djl.nn.Activation.tanhBlock
 import ai.djl.nn.Block
 import ai.djl.nn.SequentialBlock
@@ -41,8 +40,7 @@ class NetworkSpec(val hidden: List<Int>, val outputs: Int, val activation: Activ
     }
 
     enum class Activation(val id: String, val block: () -> Block) {
-        TANH("tanh", ::tanhBlock),
-        RELU("relu", ::reluBlock);
+        TANH("tanh", ::tanhBlock);
 
         companion object {
             fun of(id: String) = requireNotNull(entries.firstOrNull { it.id == id }) { "Unsupported activation $id" }

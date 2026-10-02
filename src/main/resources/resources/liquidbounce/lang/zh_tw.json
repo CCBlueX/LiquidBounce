@@ -736,8 +736,6 @@
   "liquidbounce.module.xRay.description": "僅渲染選定的方塊。",
   "liquidbounce.module.yggdrasilSignatureFix.description": "停用 Authlib Yggdrasil 簽章檢查，可能修復某些伺服器的皮膚顯示問題。",
   "liquidbounce.module.zoom.description": "允許你以更大或更小的視角看世界上的一切。",
-  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "因此會回退到 %s 角度平滑。",
   "liquidbounce.tooltip.clickToCopy": "點擊複製",
-  "liquidbounce.unsupportedDeepLearning": "深度學習引擎尚未初始化。您的系統可能不受支援。",
   "modmenu.descriptionTranslation.liquidbounce": "一個基於mixin注入的免費Minecraft作弊客戶端。"
 }

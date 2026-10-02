@@ -742,8 +742,6 @@
   "liquidbounce.module.xRay.description": "仅渲染选定的方块。",
   "liquidbounce.module.yggdrasilSignatureFix.description": "取消Authlib Yggdrasil验证，可能解决部分服务器无法显示玩家皮肤的问题。",
   "liquidbounce.module.zoom.description": "允许你以更大或更小的视角看世界上的一切。",
-  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "因此会回退到 %s 角度平滑。",
   "liquidbounce.tooltip.clickToCopy": "点击复制",
-  "liquidbounce.unsupportedDeepLearning": "深度学习引擎尚未初始化。您的系统可能不受支持。",
   "modmenu.descriptionTranslation.liquidbounce": "一个基于mixin注入的免费Minecraft作弊客户端。"
 }

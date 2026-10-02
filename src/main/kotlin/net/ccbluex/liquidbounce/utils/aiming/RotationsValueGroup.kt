@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.FailRotationProcessor
@@ -64,6 +65,13 @@ open class RotationsValueGroup(
     private val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
 
+    @UnstableAddonApi
+    val aiAngleSmooth: AiAngleSmooth?
+        get() = angleSmooth.modes.firstNotNullOfOrNull { it as? AiAngleSmooth }
+
+    internal val usesAiRotations: Boolean
+        get() = angleSmooth.activeMode is AiAngleSmooth
+
     @AddonApi
     fun toRotationTarget(
         rotation: Rotation,
@@ -75,8 +83,8 @@ open class RotationsValueGroup(
         entity,
         listOfNotNull(
             angleSmooth.activeMode,
-            fail?.takeIf { it.running },
-            shortStop?.takeIf { it.running }
+            fail?.takeIf { it.running && !usesAiRotations },
+            shortStop?.takeIf { it.running && !usesAiRotations }
         ),
         ticksUntilReset,
         resetThreshold,

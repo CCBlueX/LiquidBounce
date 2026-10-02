@@ -582,8 +582,6 @@
   "liquidbounce.module.xRay.description": "Отрисовывает только выбранные блоки.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Отключает проверку подписи Authlib Yggdrasil; может исправить отсутствующие скины на некоторых серверах.",
   "liquidbounce.module.zoom.description": "Позволяет сделать всё в мире больше или меньше.",
-  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "используется сглаживание углов: %s.",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
-  "liquidbounce.unsupportedDeepLearning": "Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается.",
   "modmenu.descriptionTranslation.liquidbounce": "Бесплатный чит-клиент основанный на миксинах."
 }
