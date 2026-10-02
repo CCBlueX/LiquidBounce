@@ -268,6 +268,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucke
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
@@ -700,6 +701,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleLiquidPlace,
             ModuleProjectilePuncher,
             ModuleScaffold,
+            ModuleClutch,
             ModuleTimer,
             ModuleNuker,
             ModuleExtinguish,
