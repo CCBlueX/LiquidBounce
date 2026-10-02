@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelOutboundHandlerAdapter
+import io.netty.channel.ChannelPromise
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
@@ -31,6 +34,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.network.Connection
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.SocketAddress
 
 /**
  * Proxy Manager
@@ -116,7 +122,7 @@ object ProxyManager : Config("proxy"), EventListener {
         // Only add the proxy handler if it's not already in the pipeline. If there is already a proxy handler,
         // it is likely from [ProxyValidator] and we don't want to override it.
         if (pipeline.get("proxy") == null) {
-            pipeline.addFirst("proxy", currentProxy?.handler() ?: return@handler)
+            pipeline.addFirst(ProxyUnlessLocal(currentProxy ?: return@handler))
         }
     }
 
@@ -136,3 +142,27 @@ object ProxyManager : Config("proxy"), EventListener {
     }
 
 }
+
+private class ProxyUnlessLocal(private val proxy: Proxy) : ChannelOutboundHandlerAdapter() {
+
+    override fun connect(
+        ctx: ChannelHandlerContext,
+        remoteAddress: SocketAddress,
+        localAddress: SocketAddress?,
+        promise: ChannelPromise
+    ) {
+        val pipeline = ctx.pipeline()
+        if (!remoteAddress.isLocal) {
+            pipeline.addBefore(ctx.name(), "proxy", proxy.handler())
+        }
+        pipeline.remove(this)
+        ctx.connect(remoteAddress, localAddress, promise)
+    }
+
+}
+
+private val SocketAddress.isLocal
+    get() = this is InetSocketAddress && address?.isLocal == true
+
+private val InetAddress.isLocal
+    get() = isLoopbackAddress || isAnyLocalAddress || isSiteLocalAddress || isLinkLocalAddress
