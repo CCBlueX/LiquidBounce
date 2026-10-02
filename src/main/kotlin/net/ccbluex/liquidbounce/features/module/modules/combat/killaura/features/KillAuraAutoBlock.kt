@@ -136,9 +136,6 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         tree(OnlyWhenInDanger)
     }
 
-    val onlyWhenInDanger
-        get() = OnlyWhenInDanger.enabled
-
     /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
     private val assumeShield by boolean("AssumeShield", false)
 

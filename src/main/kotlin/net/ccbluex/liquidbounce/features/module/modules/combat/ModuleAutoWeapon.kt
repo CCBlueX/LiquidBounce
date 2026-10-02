@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -157,15 +156,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val canMaceSmash
         get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
-    private val voidCheckCache = Int2BooleanOpenHashMap()
-    private var voidCheckCacheTick = -1
-
     /**
-     * Distances (in blocks, away from the target along the knockback direction) at which we sample
-     * the landing zone. Knockback throws the target roughly 3+ blocks, so we start right behind its
-     * hitbox and walk outward.
+     * Distances (in blocks, away from the target along the knockback direction) at which we check
+     * that the landing zone is void. Knockback throws the target roughly 3+ blocks, so the samples
+     * sit right behind its hitbox.
      */
-    private val voidCheckDistances = doubleArrayOf(1.0, 1.5, 2.0, 2.75, 3.5)
+    private val voidCheckDistances = doubleArrayOf(1.0, 1.5)
 
     /**
      * Yaw offsets (in radians) for the rays we cast away from the target. Knockback has spread and
@@ -174,12 +170,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      */
     private val voidRayAngles = doubleArrayOf(0.0, 0.30, -0.30)
 
-    /**
-     * How many of the *nearest* samples along a ray must all be void for that ray to count as a
-     * push-into-void. Requiring the closest samples (not just any) avoids false positives from a
-     * far-away pit beyond solid ground the target would actually land on.
-     */
-    private const val VOID_NEAR_SAMPLES = 2
     private const val DIRECTION_EPSILON = 1.0E-4
 
     @Suppress("unused")
@@ -230,24 +220,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             return false
         }
 
-        return isNearVoid(target, direction.normalize())
-    }
-
-    private fun isNearVoid(target: LivingEntity, direction: Vec3): Boolean {
-        val tick = player.tickCount
-        if (voidCheckCacheTick != tick) {
-            voidCheckCache.clear()
-            voidCheckCacheTick = tick
-        }
-
-        val targetId = target.id
-        if (voidCheckCache.containsKey(targetId)) {
-            return voidCheckCache.get(targetId)
-        }
-
-        val result = isNearVoidInDirection(target, direction)
-        voidCheckCache.put(targetId, result)
-        return result
+        return isNearVoidInDirection(target, direction.normalize())
     }
 
     private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
@@ -270,53 +243,15 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     /**
-     * A ray counts as a push-into-void when its [VOID_NEAR_SAMPLES] closest samples are all over the
-     * void. Requiring the nearest contiguous samples (rather than any) prevents firing when the
-     * target stands on solid ground that merely has a distant pit beyond it.
+     * A ray counts as a push-into-void when every sample along it is over the void. The samples sit
+     * right behind the target's hitbox, so any ground the target would land on fails the ray early.
      */
     private fun isVoidAlongRay(target: LivingEntity, dirX: Double, dirZ: Double): Boolean {
         val voidLevel = player.level().minY.toDouble()
-
-        for (i in voidCheckDistances.indices) {
-            val distance = voidCheckDistances[i]
+        return voidCheckDistances.all { distance ->
             val check = Vec3(target.x + dirX * distance, target.y, target.z + dirZ * distance)
-
-            val isVoid = target.wouldFallIntoVoid(check, voidLevel)
-            if (i < VOID_NEAR_SAMPLES) {
-                // All of the nearest samples must be void.
-                if (!isVoid) {
-                    return false
-                }
-            } else if (isVoid) {
-                // Past the near zone any additional void sample only reinforces the verdict.
-                return true
-            }
+            target.wouldFallIntoVoid(check, voidLevel)
         }
-
-        // The near samples were all void (and there were no farther samples to contradict it).
-        return true
-    }
-
-    private fun findKnockbackSlot(): HotbarItemSlot? {
-        var bestSlot: HotbarItemSlot? = null
-        var bestLevel = 0
-
-        for (slot in Slots.Hotbar) {
-            val knockbackLevel = slot.itemStack.getEnchantment(Enchantments.KNOCKBACK)
-            if (knockbackLevel <= 0) {
-                continue
-            }
-
-            val current = bestSlot
-            if (current == null || knockbackLevel > bestLevel) {
-                bestLevel = knockbackLevel
-                bestSlot = slot
-            } else if (knockbackLevel == bestLevel && HotbarItemSlot.PREFER_NEARBY.compare(slot, current) < 0) {
-                bestSlot = slot
-            }
-        }
-
-        return bestSlot
     }
 
     private fun getBestDamageItem(): ItemStack? {
@@ -346,56 +281,57 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
         // Blocking is not limited to shields: wherever the BlocksAttacks component exists, any item can block.
         val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
-            KillAuraAutoBlock.running && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
-        val voidKnockbackSlot = if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
-            findKnockbackSlot()
-        } else {
-            null
+            KillAuraAutoBlock.running && KillAuraAutoBlock.isInDanger
+
+        val weaponFacets = Slots.Hotbar
+            .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
+
+        val requiredType = when {
+            // A mace's smash attack cannot be blocked by a shield
+            requiresMace -> WeaponType.MACE
+            // An axe will stun the target if it is blocking with a shield
+            requiresShield -> WeaponType.AXE
+            // Favor a sword so AutoBlock can block with it when only blocking on danger
+            requiresBlockingSword -> WeaponType.SWORD
+            else -> null
+        }
+        if (requiredType != null) {
+            return weaponFacets
+                .filter { requiredType.test(it.itemStack) }
+                .maxOrNull()
+                ?.itemSlot as HotbarItemSlot?
         }
 
-        val bestSlot = Slots.Hotbar
-            .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
+        // A Knockback weapon pushes a target standing next to the void over its edge
+        if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
+            val voidKnockbackItem = getBestKnockbackItem()?.takeIf { it.getEnchantment(Enchantments.KNOCKBACK) > 0 }
+            if (voidKnockbackItem != null) {
+                return weaponFacets
+                    .firstOrNull { it.itemStack == voidKnockbackItem }
+                    ?.itemSlot as HotbarItemSlot?
+            }
+        }
+
+        return weaponFacets
             .filter { itemFacet ->
                 val itemStack = itemFacet.itemStack
 
                 when {
-                    // A mace's smash attack cannot be blocked by a shield
-                    requiresMace -> WeaponType.MACE.test(itemStack)
-
-                    // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> WeaponType.AXE.test(itemStack)
-
-                    // Favor a sword so AutoBlock can block with it when only blocking on danger
-                    requiresBlockingSword -> WeaponType.SWORD.test(itemStack)
-
-                    // Push the target over the edge with the strongest Knockback enchantment we carry
-                    voidKnockbackSlot != null -> itemFacet.itemSlot == voidKnockbackSlot
+                    // All items
+                    priorityChoice == Priorities.KNOCKBACK -> itemStack == getBestKnockbackItem()
 
                     // All items
-                    priorityChoice == Priorities.KNOCKBACK -> {
-                        val bestKnockbackItem = getBestKnockbackItem()
-                        itemStack == bestKnockbackItem
-                    }
+                    priorityChoice == Priorities.DAMAGE -> itemStack == getBestDamageItem()
 
                     // All items
-                    priorityChoice == Priorities.DAMAGE -> {
-                        val bestDamageItem = getBestDamageItem()
-                        itemStack == bestDamageItem
-                    }
-
-                    // All items
-                    priorityChoice == Priorities.ATTACK_SPEED -> {
-                        val bestSpeedItem = getBestAttackSpeedItem()
-                        itemStack == bestSpeedItem
-                    }
+                    priorityChoice == Priorities.ATTACK_SPEED -> itemStack == getBestAttackSpeedItem()
 
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.matchesAny(itemStack)
                 }
             }
             .maxOrNull()
-
-        return bestSlot?.itemSlot as HotbarItemSlot?
+            ?.itemSlot as HotbarItemSlot?
     }
 
     /**
