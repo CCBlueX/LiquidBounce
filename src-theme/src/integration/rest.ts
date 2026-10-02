@@ -15,6 +15,9 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    LiquidProxyLocation,
+    LiquidProxySession,
+    LiquidProxyState,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -645,6 +648,64 @@ export async function connectToProxy(id: number) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    });
+}
+
+export async function getLiquidProxyState(refresh = false): Promise<LiquidProxyState> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy${refresh ? "?refresh=true" : ""}`);
+    return await response.json();
+}
+
+export async function getLiquidProxyLocations(): Promise<LiquidProxyLocation[]> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/locations`);
+    return response.ok ? await response.json() : [];
+}
+
+export async function getLiquidProxySessions(): Promise<LiquidProxySession[] | null> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/sessions`);
+    return response.ok ? await response.json() : null;
+}
+
+export async function endLiquidProxySession(id: string) {
+    await fetch(`${API_BASE}/client/liquidproxy/sessions/${id}/end`, {
+        method: "POST"
+    });
+}
+
+export async function setLiquidProxySettings(
+    settings: { level?: number, forwardAuthentication?: boolean }
+): Promise<LiquidProxyState> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/settings`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(settings)
+    });
+    return await response.json();
+}
+
+export async function connectToLiquidProxy(location: string): Promise<LiquidProxyState> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/connect`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({location})
+    });
+    return await response.json();
+}
+
+export async function disconnectFromLiquidProxy(): Promise<LiquidProxyState> {
+    const response = await fetch(`${API_BASE}/client/liquidproxy/disconnect`, {
+        method: "POST"
+    });
+    return await response.json();
+}
+
+export async function requestLiquidProxyNewIp() {
+    await fetch(`${API_BASE}/client/liquidproxy/new-ip`, {
+        method: "POST"
     });
 }
 

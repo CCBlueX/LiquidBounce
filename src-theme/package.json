@@ -12,7 +12,10 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tsconfig/svelte": "^5.0.8",
+    "@types/d3-geo": "^3.1.1",
     "@types/dateformat": "^5.0.3",
+    "@types/geojson": "^7946.0.16",
+    "@types/topojson-client": "^3.1.5",
     "sass": "^1.100.0",
     "svelte": "^5.33.9",
     "svelte-check": "^4.6.0",
@@ -26,8 +29,11 @@
     "chart.js": "^4.5.0",
     "chartjs-plugin-dragdata": "^2.3.1",
     "country-code-lookup": "^0.1.2",
+    "d3-geo": "^3.1.1",
     "dateformat": "^5.0.3",
     "nouislider": "^15.7.1",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   }
 }
