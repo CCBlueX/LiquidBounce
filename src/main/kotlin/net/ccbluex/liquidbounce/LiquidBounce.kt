@@ -94,6 +94,7 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
@@ -276,6 +277,7 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         BlinkManager
+        LocalPlayerFallDamageTracker
         PositionPacketSeparator
         InteractionTracker
         CombatManager
