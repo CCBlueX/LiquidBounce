@@ -316,6 +316,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Невозможно загрузить конфигурацию",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Перезагрузка прошла успешно",
   "liquidbounce.module.autoTool.description": "Автоматически выбирает лучший инструмент для ломания блока.",
+  "liquidbounce.module.autoTpa.description": "Автоматически принимает запросы на телепортацию",
   "liquidbounce.module.autoTrap.description": "Автоматически поджигает цели вокруг вас.",
   "liquidbounce.module.autoWalk.description": "Автоматически заставляет вас идти в том направлении, куда вы смотрите.",
   "liquidbounce.module.autoWeapon.description": "Автоматически выбирает лучшее оружие в вашем арсенале.",
