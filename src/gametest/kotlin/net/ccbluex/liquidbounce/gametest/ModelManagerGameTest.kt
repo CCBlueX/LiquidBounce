@@ -20,15 +20,12 @@ package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.ModelManager
-import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import org.apache.logging.log4j.LogManager
-import kotlin.random.Random
 
 /**
- * The bundled models predict through the AI angle smooth's model choices, and one trained in the client saves and
- * loads again.
+ * The bundled models predict through the AI angle smooth's model choices.
  */
 class ModelManagerGameTest : FabricClientGameTest {
     private val logger = LogManager.getLogger("ModelManagerGameTest")
@@ -44,35 +41,5 @@ class ModelManagerGameTest : FabricClientGameTest {
             }
         }
         logger.info("PASS: the bundled models predict")
-        context.onClient { improve(input) }
-    }
-
-    /** What `.models improve` does with recorded samples. */
-    private fun improve(input: FloatArray) {
-        val name = "ModelManagerGameTest"
-        val random = Random(1)
-        val folder = DeepLearningEngine.modelsFolder.resolve(name)
-        try {
-            val before = TwoDimensionalRegressionModel(name, ModelManager.models).use { candidate ->
-                candidate.load("19KC8KP")
-                val before = candidate.predict(input)
-                candidate.train(FloatArray(SAMPLES * 6) { random.nextFloat() * 20f },
-                    FloatArray(SAMPLES * 2) { random.nextFloat() })
-                candidate.save()
-                before
-            }
-            val after = TwoDimensionalRegressionModel(name, ModelManager.models).use { saved ->
-                saved.load()
-                saved.predict(input)
-            }
-            check(after.all(Float::isFinite) && !after.contentEquals(before)) { "Training changed nothing" }
-        } finally {
-            folder.deleteRecursively()
-        }
-        logger.info("PASS: an improved model saves and loads again")
-    }
-
-    private companion object {
-        const val SAMPLES = 64
     }
 }

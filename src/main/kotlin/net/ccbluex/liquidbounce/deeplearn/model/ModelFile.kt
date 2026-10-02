@@ -18,21 +18,14 @@
  */
 package net.ccbluex.liquidbounce.deeplearn.model
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.google.gson.JsonPrimitive
-import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.LocalDateTime
-import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 
 /** What a model reads: a named feature [schema] at a [version], [size] values per decision. */
 @UnstableAddonApi
@@ -59,45 +52,6 @@ class ModelFile(
         require(normalization.mean.size == input.size) { "Normalization does not match the input" }
     }
 
-    fun write(path: Path) {
-        Files.createDirectories(path.toAbsolutePath().parent)
-        Files.write(path, bytes())
-    }
-
-    fun bytes(): ByteArray {
-        val bytes = FastByteArrayOutputStream()
-        ZipOutputStream(bytes).use { zip ->
-            zip.entry(DESCRIPTION, GSON.toJson(description()).toByteArray())
-            zip.entry(PARAMETERS, parameters)
-        }
-        return bytes.array.copyOf(bytes.length)
-    }
-
-    private fun description() = JsonObject().apply {
-        addProperty("format", FORMAT)
-        addProperty("task", task)
-        addProperty("variant", variant)
-        addProperty("name", name)
-        add("input", JsonObject().apply {
-            addProperty("schema", input.schema)
-            addProperty("version", input.version)
-            addProperty("size", input.size)
-        })
-        add("network", JsonObject().apply {
-            addProperty("type", "mlp")
-            add("hidden", JsonArray().apply { network.hidden.forEach(::add) })
-            addProperty("activation", network.activation.id)
-            addProperty("outputs", network.outputs)
-        })
-        addProperty("provenance", provenance)
-        add("metadata", metadata)
-        add("normalization", JsonObject().apply {
-            add("limit", float(normalization.limit))
-            add("mean", floats(normalization.mean))
-            add("scale", floats(normalization.scale))
-        })
-    }
-
     companion object {
         const val EXTENSION = "lbmodel"
         const val FORMAT = 1
@@ -105,10 +59,6 @@ class ModelFile(
         const val PARAMETERS = "parameters.bin"
         private const val MAX_DESCRIPTION = 1 shl 20
         private const val MAX_PARAMETERS = 16 shl 20
-        private val GSON = GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create()
-
-        // Zip entries otherwise carry the write time, so the same model would never give the same bytes
-        private val ENTRY_TIME = LocalDateTime.of(1980, 1, 1, 0, 0)
 
         fun read(path: Path): ModelFile = Files.newInputStream(path).use(::read)
 
@@ -149,22 +99,11 @@ class ModelFile(
             )
         }
 
-        /** Finite floats as numbers, the rest as strings, which JSON has no number for. */
-        private fun float(value: Float): JsonPrimitive =
-            if (value.isFinite()) JsonPrimitive(value) else JsonPrimitive(value.toString())
-
+        /** Non-finite floats are strings, which JSON has no number for. */
         internal fun float(element: JsonElement): Float = element.asString.toFloat()
-
-        private fun floats(values: FloatArray) = JsonArray(values.size).apply { values.forEach { add(float(it)) } }
 
         private fun floats(element: JsonElement): FloatArray =
             element.asJsonArray.let { array -> FloatArray(array.size()) { float(array[it]) } }
-
-        private fun ZipOutputStream.entry(name: String, content: ByteArray) {
-            putNextEntry(ZipEntry(name).apply { setTimeLocal(ENTRY_TIME) })
-            write(content)
-            closeEntry()
-        }
 
         private fun ZipInputStream.readLimited(limit: Int): ByteArray {
             val bytes = readNBytes(limit + 1)
