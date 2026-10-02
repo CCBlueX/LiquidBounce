@@ -18,12 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import net.ccbluex.liquidbounce.test.zip
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
-import java.io.InputStream
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -38,21 +36,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ZipExtensionsTest {
-
-    /** Builds a zip in memory; a `null` content marks a directory entry (name must end with `/`). */
-    private fun zip(vararg entries: Pair<String, String?>): InputStream {
-        val buffer = okio.Buffer()
-        ZipArchiveOutputStream(buffer.outputStream()).use { aos ->
-            for ((name, content) in entries) {
-                aos.putArchiveEntry(ZipArchiveEntry(name))
-                if (content != null) {
-                    aos.writeUtf8(content)
-                }
-                aos.closeArchiveEntry()
-            }
-        }
-        return buffer.inputStream()
-    }
 
     private inline fun withTempDir(block: (Path) -> Unit) {
         val dir = createTempDirectory("zip-extract-test")

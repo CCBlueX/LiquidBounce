@@ -16,11 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.deeplearn.models
+package net.ccbluex.liquidbounce.features.addon
 
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-
-class TwoDimensionalRegressionModel(
-    name: String,
-    parent: ModeValueGroup<*>
-) : ModelWrapper(name, parent)
+/**
+ * Marks client internals that first-party add-ons use and that change together with the client, unlike
+ * [AddonApi]. `checkKotlinAbi` leaves them out.
+ */
+@RequiresOptIn(
+    message = "Client internals for first-party add-ons released together with the client.",
+    level = RequiresOptIn.Level.ERROR,
+)
+@Target(
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.TYPEALIAS,
+)
+@Retention(AnnotationRetention.BINARY)
+annotation class UnstableAddonApi
