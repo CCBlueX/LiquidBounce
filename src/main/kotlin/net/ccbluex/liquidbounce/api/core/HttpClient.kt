@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
 import okhttp3.Cache
 import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.Dispatcher
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -57,7 +56,6 @@ import java.io.InputStream
 import java.io.Reader
 import java.net.HttpURLConnection
 import java.util.Locale
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -214,26 +212,9 @@ object HttpClient {
         request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
     }
 
-    // For Java and JS
+    /** For Java and JS. Cancelling the returned future also cancels the HTTP call. */
     @JvmStatic
-    fun Call.sendAsync(): CompletableFuture<Response> {
-        val future = CompletableFuture<Response>().exceptionally { throwable ->
-            if (throwable is CancellationException) this.cancel()
-            throw throwable
-        }
-        this.enqueue(
-            object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    if (!future.complete(response)) response.close()
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    future.completeExceptionally(e)
-                }
-            }
-        )
-        return future
-    }
+    fun Call.sendAsync(): CompletableFuture<Response> = enqueueAsFuture()
 
 }
 
