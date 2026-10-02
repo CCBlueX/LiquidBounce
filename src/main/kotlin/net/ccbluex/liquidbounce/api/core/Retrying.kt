@@ -62,10 +62,14 @@ inline fun <T : Any> CoroutineScope.retrying(
                 attempt++
                 val value = producer()
                 stateFlow.value = RetryingJob.State.Success(value, attempt)
-                break
+                return@launch
+            } catch (e: CancellationException) {
+                throw e
             } catch (t: Throwable) {
                 logger.warn("Failed to get $name, attempt $attempt/$maxRetries", t)
                 stateFlow.value = RetryingJob.State.Loading(t, attempt)
+            }
+            if (attempt < maxRetries) {
                 delay(interval)
             }
         }
