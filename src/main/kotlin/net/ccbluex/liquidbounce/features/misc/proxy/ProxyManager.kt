@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
+import com.google.common.net.InetAddresses
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOutboundHandlerAdapter
 import io.netty.channel.ChannelPromise
@@ -37,6 +38,8 @@ import net.minecraft.network.Connection
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketAddress
+import java.net.URL
+import java.net.URLConnection
 
 /**
  * Proxy Manager
@@ -57,6 +60,18 @@ object ProxyManager : Config("proxy"), EventListener {
      */
     val currentProxy
         get() = proxy.takeIf { proxy -> proxy.host.isNotBlank() && proxy.port > 0 }
+
+    /**
+     * The current proxy, if resource pack downloads go through it as well
+     */
+    val resourcePackProxy
+        get() = currentProxy?.takeIf { proxy -> proxy.proxyResourcePacks }
+
+    /**
+     * The current proxy, if it resolves server addresses as well
+     */
+    val dnsProxy
+        get() = currentProxy?.takeIf { proxy -> proxy.proxyDns }
 
     private val clientConnections = mutableListOf<Connection>()
 
@@ -103,6 +118,19 @@ object ProxyManager : Config("proxy"), EventListener {
             EventManager.callEvent(ProxyCheckResultEvent(proxy, error = it.message ?: "Unknown error"))
         }
     )
+
+    /**
+     * Opens a resource pack download through [resourcePackProxy], or returns null to leave it to vanilla
+     */
+    @JvmStatic
+    fun openResourcePackConnection(url: URL): URLConnection? {
+        val proxy = resourcePackProxy ?: return null
+        if (url.host.isLocalHost) {
+            return null
+        }
+
+        return OkHttpUrlConnection(url, proxy.httpClient())
+    }
 
     /**
      * Adds a SOCKS5 netty proxy handler to the pipeline when a proxy is set
@@ -163,6 +191,10 @@ private class ProxyUnlessLocal(private val proxy: Proxy) : ChannelOutboundHandle
 
 private val SocketAddress.isLocal
     get() = this is InetSocketAddress && address?.isLocal == true
+
+private val String.isLocalHost
+    get() = equals("localhost", ignoreCase = true) ||
+        InetAddresses.isUriInetAddress(this) && InetAddresses.forUriString(this).isLocal
 
 private val InetAddress.isLocal
     get() = isLoopbackAddress || isAnyLocalAddress || isSiteLocalAddress || isLinkLocalAddress

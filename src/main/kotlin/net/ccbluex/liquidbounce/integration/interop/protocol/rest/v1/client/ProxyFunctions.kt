@@ -94,9 +94,12 @@ private fun Route.postAddProxy() = post {
         val username: String,
         val password: String,
         val type: Proxy.Type,
-        val forwardAuthentication: Boolean
+        val forwardAuthentication: Boolean,
+        val proxyResourcePacks: Boolean,
+        val proxyDns: Boolean
     )
-    val (host, port, username, password, type, forwardAuthentication) = call.receive<ProxyRequest>()
+    val (host, port, username, password, type, forwardAuthentication, proxyResourcePacks, proxyDns) =
+        call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
         call.forbidden("No host")
@@ -106,7 +109,10 @@ private fun Route.postAddProxy() = post {
         call.forbidden("Illegal port")
     }
 
-    ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication))
+    ProxyManager.validateProxy(Proxy(
+        host, port, Proxy.credentials(username, password), type, forwardAuthentication,
+        proxyResourcePacks, proxyDns
+    ))
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
@@ -148,9 +154,12 @@ private fun Route.postEditProxy() = post("/edit") {
         val type: Proxy.Type,
         val username: String,
         val password: String,
-        val forwardAuthentication: Boolean
+        val forwardAuthentication: Boolean,
+        val proxyResourcePacks: Boolean,
+        val proxyDns: Boolean
     )
-    val (id, host, port, type, username, password, forwardAuthentication) = call.receive<ProxyRequest>()
+    val (id, host, port, type, username, password, forwardAuthentication, proxyResourcePacks, proxyDns) =
+        call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
         call.forbidden("No host")
@@ -160,7 +169,10 @@ private fun Route.postEditProxy() = post("/edit") {
         call.forbidden("Illegal port")
     }
 
-    val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
+    val proxy = Proxy(
+        host, port, Proxy.credentials(username, password), type, forwardAuthentication,
+        proxyResourcePacks, proxyDns
+    )
     ProxyManager.validateProxy(proxy, index = id)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
