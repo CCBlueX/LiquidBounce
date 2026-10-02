@@ -111,7 +111,7 @@ public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValu
 	protected final fun choices (Ljava/lang/String;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public static synthetic fun choices$default (Lnet/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getEnabled ()Z
 	public final fun getEnabledValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
@@ -277,7 +277,7 @@ public abstract interface class net/ccbluex/liquidbounce/event/EventListener : n
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -291,7 +291,7 @@ public final class net/ccbluex/liquidbounce/event/EventListener$DefaultImpls {
 	public static fun after (Lnet/ccbluex/liquidbounce/event/EventListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public static fun children (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/util/List;
 	public static fun every (Lnet/ccbluex/liquidbounce/event/EventListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public static fun getDebugDisplayName (Lnet/ccbluex/liquidbounce/event/EventListener;)Lnet/minecraft/network/chat/Component;
+	public static fun getDebugDisplayName (Lnet/ccbluex/liquidbounce/event/EventListener;)Lnet/minecraft/util/FormattedCharSequence;
 	public static fun getDebugOwnerId (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/lang/String;
 	public static fun getRunning (Lnet/ccbluex/liquidbounce/event/EventListener;)Z
 	public static fun on (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -609,7 +609,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun getAuthors ()Ljava/util/List;
 	public fun getCategories ()Ljava/util/List;
 	public final fun getColor ()Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public final fun getDescription ()Ljava/lang/String;
 	public fun getDisplayName ()Ljava/lang/String;
@@ -633,6 +633,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public fun onStopping ()V
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public final fun registerBrowserBackend (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider;)V
 	public final fun registerCategory (Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;)Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
 	public final fun registerCommand (Lnet/ccbluex/liquidbounce/features/command/CommandRegistrar;)V
 	public final fun registerCommandNodes (Ljava/util/Collection;)V
@@ -640,6 +641,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerMarketplaceHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public final fun registerQuickFix (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public fun toString ()Ljava/lang/String;
 	public fun unregister ()V
 	public final fun unregisterModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
@@ -828,7 +830,7 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun getBind ()Lnet/ccbluex/liquidbounce/utils/input/InputBind;
 	public final fun getBindValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun getCategory ()Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public final fun getDisableActivation ()Z
 	public final fun getDisableOnQuit ()Z
@@ -949,20 +951,90 @@ public final class net/ccbluex/liquidbounce/features/module/modules/render/Modul
 	public final fun updateStandaloneScreen ()Z
 }
 
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags {
+	public static final field Companion Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags$Companion;
+	public static final field UNSUPPORTED Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;
+	public fun <init> (ZZ)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;ZZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun isBeta ()Z
+	public final fun isSupported ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
+	public abstract fun createBrowser (Ljava/lang/String;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserSettings;SZLnet/ccbluex/liquidbounce/integration/backend/input/InputAcceptor;)Lnet/ccbluex/liquidbounce/integration/backend/browser/Browser;
+	public static synthetic fun createBrowser$default (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackend;Ljava/lang/String;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserSettings;SZLnet/ccbluex/liquidbounce/integration/backend/input/InputAcceptor;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/integration/backend/browser/Browser;
+	public abstract fun getAccelerationFlags ()Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;
+	public abstract fun getBrowsers ()Ljava/util/List;
+	public abstract fun getSupportsIncognito ()Z
+	public abstract fun isInitialized ()Z
+	public abstract fun makeDependenciesAvailable (Lnet/ccbluex/liquidbounce/integration/task/TaskManager;Lkotlin/jvm/functions/Function0;)V
+	public abstract fun setAccelerationFlags (Lnet/ccbluex/liquidbounce/integration/backend/BrowserAccelerationFlags;)V
+	public abstract fun start ()V
+	public abstract fun stop ()V
+	public abstract fun update ()V
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackend$DefaultImpls {
+	public static synthetic fun createBrowser$default (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackend;Ljava/lang/String;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserSettings;SZLnet/ccbluex/liquidbounce/integration/backend/input/InputAcceptor;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/integration/backend/browser/Browser;
+}
+
 public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun registerBackend (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider;)V
 }
 
-public final class net/ccbluex/liquidbounce/integration/backend/backends/cef/CefBrowserBackend : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
-	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendManagerKt {
+	public static final fun isBrowserAccelerationDisabled ()Z
+	public static final fun isBrowserSkipped ()Z
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider : net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCreate ()Lkotlin/jvm/functions/Function0;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSelectable ()Z
+	public fun getTag ()Ljava/lang/String;
+	public fun getTagAliases ()Ljava/util/List;
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserTexture : java/lang/Record {
+	public fun <init> (Lnet/minecraft/client/gui/render/TextureSetup;IIZFFFF)V
+	public synthetic fun <init> (Lnet/minecraft/client/gui/render/TextureSetup;IIZFFFFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bgra ()Z
+	public final fun component1 ()Lnet/minecraft/client/gui/render/TextureSetup;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Z
+	public final fun component5 ()F
+	public final fun component6 ()F
+	public final fun component7 ()F
+	public final fun component8 ()F
+	public final fun copy (Lnet/minecraft/client/gui/render/TextureSetup;IIZFFFF)Lnet/ccbluex/liquidbounce/integration/backend/BrowserTexture;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/integration/backend/BrowserTexture;Lnet/minecraft/client/gui/render/TextureSetup;IIZFFFFILjava/lang/Object;)Lnet/ccbluex/liquidbounce/integration/backend/BrowserTexture;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun height ()I
+	public final fun textureSetup ()Lnet/minecraft/client/gui/render/TextureSetup;
+	public fun toString ()Ljava/lang/String;
+	public final fun u1 ()F
+	public final fun u2 ()F
+	public final fun v1 ()F
+	public final fun v2 ()F
+	public final fun width ()I
 }
 
 public final class net/ccbluex/liquidbounce/integration/backend/backends/external/ExternalSystemBrowserBackend : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
@@ -973,6 +1045,33 @@ public final class net/ccbluex/liquidbounce/integration/backend/backends/externa
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public abstract interface class net/ccbluex/liquidbounce/integration/backend/browser/Browser : java/lang/AutoCloseable {
+	public abstract fun forceReload ()V
+	public abstract fun getPriority ()S
+	public abstract fun getState ()Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserState;
+	public abstract fun getTexture ()Lnet/ccbluex/liquidbounce/integration/backend/BrowserTexture;
+	public abstract fun getUrl ()Ljava/lang/String;
+	public abstract fun getViewport ()Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;
+	public abstract fun getVisible ()Z
+	public abstract fun goBack ()V
+	public abstract fun goForward ()V
+	public abstract fun invalidate ()V
+	public abstract fun isIncognito ()Z
+	public abstract fun isInitialized ()Z
+	public abstract fun reload ()V
+	public abstract fun setPriority (S)V
+	public abstract fun setUrl (Ljava/lang/String;)V
+	public abstract fun setViewport (Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;)V
+	public abstract fun setVisible (Z)V
+	public abstract fun toString ()Ljava/lang/String;
+	public abstract fun update (II)V
+	public static synthetic fun update$default (Lnet/ccbluex/liquidbounce/integration/backend/browser/Browser;IIILjava/lang/Object;)V
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/browser/Browser$DefaultImpls {
+	public static synthetic fun update$default (Lnet/ccbluex/liquidbounce/integration/backend/browser/Browser;IIILjava/lang/Object;)V
+}
+
 public final class net/ccbluex/liquidbounce/integration/backend/browser/BrowserRenderer : java/lang/AutoCloseable, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -981,12 +1080,62 @@ public final class net/ccbluex/liquidbounce/integration/backend/browser/BrowserR
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public class net/ccbluex/liquidbounce/integration/backend/browser/BrowserSettings : net/ccbluex/liquidbounce/config/types/group/ValueGroup {
+	public fun <init> (ILjava/lang/Runnable;)V
+	public synthetic fun <init> (ILjava/lang/Runnable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCurrentFps ()I
+	public final fun getFps ()Lnet/ccbluex/liquidbounce/config/types/Value;
+}
+
+public abstract class net/ccbluex/liquidbounce/integration/backend/browser/BrowserState {
+	public final fun isCompleted ()Z
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport : java/lang/Record {
+	public fun <init> (IIIIZ)V
+	public synthetic fun <init> (IIIIZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()Z
+	public final fun copy (IIIIZ)Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;IIIIZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun fullScreen ()Z
+	public static final fun fullscreen ()Lnet/ccbluex/liquidbounce/integration/backend/browser/BrowserViewport;
+	public final fun getScaledDimensions (F)Lorg/joml/Vector2ic;
+	public final fun getZoomLevel (F)D
+	public fun hashCode ()I
+	public final fun height ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun transform (DD)Lorg/joml/Vector2dc;
+	public final fun transformMouse (DDF)Lorg/joml/Vector2ic;
+	public final fun width ()I
+	public final fun x ()I
+	public final fun y ()I
+}
+
 public final class net/ccbluex/liquidbounce/integration/backend/browser/GlobalBrowserSettings : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public abstract interface class net/ccbluex/liquidbounce/integration/backend/input/InputAcceptor {
+	public abstract fun acceptsInput ()Z
+}
+
+public abstract interface class net/ccbluex/liquidbounce/integration/backend/input/InputHandler {
+	public abstract fun charTyped (I)V
+	public abstract fun keyPressed (III)V
+	public abstract fun keyReleased (III)V
+	public abstract fun mouseClicked (DDI)V
+	public abstract fun mouseMoved (DD)V
+	public abstract fun mouseReleased (DDI)V
+	public abstract fun mouseScrolled (DDD)V
 }
 
 public final class net/ccbluex/liquidbounce/integration/backend/input/InputListener : java/lang/AutoCloseable, net/ccbluex/liquidbounce/event/EventListener {
@@ -1095,11 +1244,9 @@ public final class net/ccbluex/liquidbounce/lang/LanguageKt {
 
 public abstract class net/ccbluex/liquidbounce/render/AbstractFontRenderer {
 	public fun <init> ()V
-	public final fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;)F
-	public abstract fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
 	public final fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;)F
-	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;)F
-	public abstract fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
+	public final fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/util/FormattedCharSequence;Lkotlin/jvm/functions/Function1;)F
+	public abstract fun draw (Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/util/FormattedCharSequence;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FF)F
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;)F
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;Z)F
@@ -1107,24 +1254,22 @@ public abstract class net/ccbluex/liquidbounce/render/AbstractFontRenderer {
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;)F
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;)F
 	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;)F
-	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public final fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/util/FormattedCharSequence;Lkotlin/jvm/functions/Function1;)F
+	public abstract fun draw (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/util/FormattedCharSequence;Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer$DrawParameters;)F
 	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
-	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/WorldRenderEnvironment;Lnet/minecraft/util/FormattedCharSequence;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
 	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;FFLnet/ccbluex/liquidbounce/render/engine/type/Color4b;ZFLnet/ccbluex/liquidbounce/render/engine/font/HorizontalAnchor;Lnet/ccbluex/liquidbounce/render/engine/font/VerticalAnchor;ILjava/lang/Object;)F
 	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/network/chat/Component;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
+	public static synthetic fun draw$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/minecraft/util/FormattedCharSequence;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)F
 	public abstract fun getHeight ()F
 	public final fun getScaleToVanillaFont ()F
 	public abstract fun getSize ()F
-	public abstract fun getStringWidth (Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;Z)F
 	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;)F
 	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;F)F
 	public final fun getStringWidth (Lnet/minecraft/network/chat/Component;FZ)F
-	public static synthetic fun getStringWidth$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;ZILjava/lang/Object;)F
+	public abstract fun getStringWidth (Lnet/minecraft/util/FormattedCharSequence;Z)F
 	public static synthetic fun getStringWidth$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/network/chat/Component;FZILjava/lang/Object;)F
-	public final fun process (Ljava/lang/String;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
-	public abstract fun process (Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
-	public static synthetic fun process$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Ljava/lang/String;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
-	public static synthetic fun process$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/network/chat/Component;Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/render/engine/font/processor/ProcessedText;
+	public static synthetic fun getStringWidth$default (Lnet/ccbluex/liquidbounce/render/AbstractFontRenderer;Lnet/minecraft/util/FormattedCharSequence;ZILjava/lang/Object;)F
 }
 
 public final class net/ccbluex/liquidbounce/render/FontManager {
@@ -1569,7 +1714,7 @@ public final class net/ccbluex/liquidbounce/utils/client/SilentHotbar : net/ccbl
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun getClientsideSlot ()I
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public final fun getServersideSlot ()I
@@ -1590,7 +1735,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/network/chat/Component;
+	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public final fun getTimerSpeed ()F
@@ -1602,6 +1747,39 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;I)V
 	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;IILjava/lang/Object;)V
 	public fun unregister ()V
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/Instructions {
+	public fun <init> (ZLkotlin/jvm/functions/Function1;)V
+	public final fun getShowStepIndex ()Z
+	public final fun getSteps ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/QuickFix {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/Map;
+	public final fun getTestError ()Lkotlin/jvm/functions/Function1;
+	public final fun getWhatToDo ()Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;
+	public final fun getWhatYouNeed ()Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/QuickFixes {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/client/error/QuickFixes;
+	public final fun getBROWSER_FAILED_TO_LOAD_UI ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getBROWSER_IS_NOT_RESPONDING ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getCLASS_NOT_FOUND ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getEntries ()Ljava/util/List;
+	public final fun register (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun unregister (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Z
+}
+
+public class net/ccbluex/liquidbounce/utils/client/error/errors/ClientError : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getNeedToReport ()Z
 }
 
 public final class net/ccbluex/liquidbounce/utils/combat/CombatExtensionsKt {
@@ -1933,6 +2111,14 @@ public final class net/ccbluex/liquidbounce/utils/movement/DirectionalInput {
 
 public final class net/ccbluex/liquidbounce/utils/movement/MovementUtilsKt {
 	public static final fun stopXZVelocity (Lnet/minecraft/client/player/LocalPlayer;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/network/LocalPlayerFallDamageTracker : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
 public final class net/ccbluex/liquidbounce/utils/network/NetworkUtilsKt {

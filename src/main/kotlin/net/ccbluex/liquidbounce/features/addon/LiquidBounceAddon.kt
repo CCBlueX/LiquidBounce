@@ -40,7 +40,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendProvider
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.fabricmc.loader.api.ModContainer
 
 @AddonApi
@@ -94,6 +98,8 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     internal val registeredModes = mutableListOf<Pair<ModeValueGroup<*>, Mode>>()
     internal val registeredConfigs = mutableListOf<Config>()
     internal val registeredItemHandlers = mutableListOf<Pair<MarketplaceItemType, MarketplaceItemHandler>>()
+    internal val registeredBrowserBackends = mutableListOf<BrowserBackendProvider>()
+    internal val registeredQuickFixes = mutableListOf<QuickFix>()
 
     /**
      * Registered for all add-ons before any [onInitialize] runs.
@@ -184,6 +190,23 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     fun registerMarketplaceHandler(type: MarketplaceItemType, handler: MarketplaceItemHandler) {
         MarketplaceManager.registerHandler(type, handler)
         registeredItemHandlers += type to handler
+    }
+
+    /**
+     * Offers a browser backend the player can choose when the client starts.
+     */
+    fun registerBrowserBackend(provider: BrowserBackendProvider) {
+        BrowserBackendManager.registerBackend(provider)
+        registeredBrowserBackends += provider
+    }
+
+    /**
+     * Offers [quickFix] on the fatal error screen for the errors it matches.
+     */
+    fun registerQuickFix(quickFix: QuickFix): QuickFix {
+        QuickFixes.register(quickFix)
+        registeredQuickFixes += quickFix
+        return quickFix
     }
 
     @JvmOverloads

@@ -19,11 +19,14 @@
 
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
 /**
  * Determines if acceleration is supported on the current system.
  * Is In Beta is a flag to prevent it from being used by default on a supported
  * but not tested system.
  */
+@AddonApi
 data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
     companion object {
         @JvmField

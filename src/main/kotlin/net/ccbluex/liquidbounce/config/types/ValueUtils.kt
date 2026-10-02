@@ -27,13 +27,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.client.renderer.texture.DynamicTexture
 import kotlin.properties.ReadOnlyProperty
@@ -70,7 +69,7 @@ fun <V> FileValue.toTextureProperty(
 
             try {
                 val nativeImage = file.readNativeImage()
-                withContext(Dispatchers.Minecraft) {
+                withContext(Dispatchers.Main) {
                     texture.value = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
                 }
             } catch (e: Exception) {

@@ -26,7 +26,13 @@ data class SurroundingBlock(
     val count: Int,
     val layer: Int,
 ) : Comparable<SurroundingBlock> {
-    override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
-        this, other,
-        { it.layer }, { -it.count }, { -it.block.defaultDestroyTime() }, { it.block.descriptionId })
+    override fun compareTo(other: SurroundingBlock): Int = comparator.compare(this, other)
+
+    companion object {
+        private val comparator: Comparator<SurroundingBlock> =
+            Comparator.comparingInt<SurroundingBlock> { it.layer }
+                .thenComparingInt { -it.count }
+                .thenComparingDouble { -it.block.defaultDestroyTime().toDouble() }
+                .thenComparing { it.block.descriptionId }
+    }
 }

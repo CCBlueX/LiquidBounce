@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
 import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.texture.DynamicTexture
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -38,11 +39,6 @@ import kotlin.concurrent.write
  * Size of the texture atlas in chunks (size x size)
  */
 private const val ATLAS_SIZE: Int = 64
-
-/**
- * If we need to upload more than this amount of chunks, we upload the whole texture
- */
-private const val FULL_UPLOAD_THRESHOLD: Int = 15
 
 private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 
@@ -143,11 +139,10 @@ class MinimapTextureAtlasManager {
                 return this.texture.textureSetup
             }
 
-            val dirtyChunks = this.dirtyAtlasPositions.size
-
-            when {
-                !this.allocated || dirtyChunks >= FULL_UPLOAD_THRESHOLD -> uploadFullTexture()
-                else -> uploadOnlyDirtyPositions()
+            if (!this.allocated) {
+                uploadFullTexture()
+            } else {
+                uploadDirtyBounds()
             }
         }
 
@@ -164,15 +159,38 @@ class MinimapTextureAtlasManager {
         this.allocated = true
     }
 
-    private fun uploadOnlyDirtyPositions() {
-        for (dirtyAtlasPosition in this.dirtyAtlasPositions) {
-            this.texture.uploadRect(
-                mipLevel = 0,
-                x = dirtyAtlasPosition.baseXOnAtlas,
-                y = dirtyAtlasPosition.baseYOnAtlas,
-                width = 16, height = 16,
-            )
+    /**
+     * One write covering every dirty cell: the per-call driver cost of a texture write dominates its size.
+     */
+    private fun uploadDirtyBounds() {
+        val bounds = dirtyBoundsOf(this.dirtyAtlasPositions)
+
+        this.texture.uploadRect(
+            mipLevel = 0,
+            x = bounds.x,
+            y = bounds.y,
+            width = bounds.width,
+            height = bounds.height,
+        )
+    }
+
+    /**
+     * Pixel rectangle covering every cell in [positions]; requires a non-empty collection.
+     */
+    private fun dirtyBoundsOf(positions: Iterable<AtlasPosition>): Rect2i {
+        var minX = Int.MAX_VALUE
+        var minY = Int.MAX_VALUE
+        var maxX = Int.MIN_VALUE
+        var maxY = Int.MIN_VALUE
+
+        for (position in positions) {
+            minX = minOf(minX, position.baseXOnAtlas)
+            minY = minOf(minY, position.baseYOnAtlas)
+            maxX = maxOf(maxX, position.baseXOnAtlas)
+            maxY = maxOf(maxY, position.baseYOnAtlas)
         }
+
+        return Rect2i(minX, minY, maxX - minX + 16, maxY - minY + 16)
     }
 
     @JvmRecord

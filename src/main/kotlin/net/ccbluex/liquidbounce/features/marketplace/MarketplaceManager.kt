@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.marketplace
 
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -29,8 +30,8 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 import java.util.EnumMap
 
@@ -38,8 +39,8 @@ import java.util.EnumMap
  * Outcome of a single [MarketplaceManager.update] call.
  */
 sealed interface UpdateResult {
-    /** The item was (re-)installed to revision [revisionId]. */
-    data class Updated(val item: SubscribedItem, val revisionId: Int) : UpdateResult
+    /** The item was (re-)installed to [revision]. */
+    data class Updated(val item: SubscribedItem, val revision: MarketplaceItemRevision) : UpdateResult
 
     /** The item is already on its newest revision that fits. */
     data class NoUpdate(val item: SubscribedItem) : UpdateResult
@@ -148,7 +149,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         task?.getOrCreateFileTask(item.id.toString())?.isCompleted = true
         logger.info("Updated item ${item.id} (${item.type}) to revision $revisionId")
 
-        UpdateResult.Updated(item, revisionId)
+        UpdateResult.Updated(item, compatible.revision)
     }
 
     private fun incompatible(item: SubscribedItem, unavailable: Unavailable): UpdateResult {
@@ -212,7 +213,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         ConfigSystem.store(this)
 
         // Reload the item type's manager. Also reached from Ktor workers, hence the render thread.
-        withContext(MinecraftDispatcher) {
+        withContext(Dispatchers.Main) {
             item.type.reload()
         }
     }

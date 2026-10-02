@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -67,7 +66,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
         private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
-        private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
+        internal val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
         private enum class ObjectiveType(override val tag: String) : Tagged {
@@ -95,10 +94,6 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
         }
 
         fun isWeaponSelected(): Boolean = weapon.matchesAny(player.mainHandItem)
-
-        fun isCriticalHit(entity: Entity): Boolean {
-            return criticalsSelectionMode.isCriticalHit(entity)
-        }
 
         suspend fun encounterItemUse(): Boolean {
             return when (onItemUse) {
@@ -215,7 +210,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
-                if (!isCriticalHit(crosshairTarget.entity)) {
+                if (!criticalsSelectionMode.isCriticalHit()) {
                     return@run
                 }
             }
