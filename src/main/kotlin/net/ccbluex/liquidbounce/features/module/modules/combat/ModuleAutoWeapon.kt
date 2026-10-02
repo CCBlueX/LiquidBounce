@@ -87,7 +87,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     /**
      * Favor a sword when KillAura AutoBlock only blocks on danger and we are currently in danger,
-     * so there is a blockable item in hand. Applies wherever item blocking exists (1.8 and 1.21.5+).
+     * so there is a blockable item in hand. Applies wherever [isBlocksAttacksExisting] lets items block.
      */
     private val preferBlockingSword by boolean("PreferBlockingSword", true)
 
@@ -344,7 +344,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
         // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
-        // Sword blocking is not a 1.8-only feature: it also applies on 1.21.5+ where any item can block.
+        // Blocking is not limited to shields: wherever the BlocksAttacks component exists, any item can block.
         val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
             KillAuraAutoBlock.running && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
         val voidKnockbackSlot = if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
