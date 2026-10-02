@@ -158,8 +158,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     /**
      * Distances (in blocks, away from the target along the knockback direction) at which we check
-     * that the landing zone is void. Knockback throws the target roughly 3+ blocks, so the samples
-     * sit right behind its hitbox.
+     * that the landing zone is void. Even the weakest knockback slides the target about two blocks
+     * (0.4 power, ground friction 0.6*0.91), so a hole this close is always reached.
      */
     private val voidCheckDistances = doubleArrayOf(1.0, 1.5)
 
@@ -243,12 +243,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     /**
-     * A ray counts as a push-into-void when every sample along it is over the void. The samples sit
-     * right behind the target's hitbox, so any ground the target would land on fails the ray early.
+     * A ray counts as a push-into-void when any sample along it is over the void: the target slides
+     * at least as far as [voidCheckDistances] reaches, so it would drop in before it stops.
      */
     private fun isVoidAlongRay(target: LivingEntity, dirX: Double, dirZ: Double): Boolean {
         val voidLevel = player.level().minY.toDouble()
-        return voidCheckDistances.all { distance ->
+        return voidCheckDistances.any { distance ->
             val check = Vec3(target.x + dirX * distance, target.y, target.z + dirZ * distance)
             target.wouldFallIntoVoid(check, voidLevel)
         }
@@ -266,9 +266,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             .maxByOrNull { it.attackSpeed }
     }
 
+    /**
+     * The item with the highest Knockback level, in any hotbar slot.
+     */
     private fun getBestKnockbackItem(): ItemStack? {
         return Slots.Hotbar.stacks
-            .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
+            .filter { !it.isEmpty && it.getEnchantment(Enchantments.KNOCKBACK) > 0 }
             .maxByOrNull { itemStack ->
                 itemStack.getEnchantment(Enchantments.KNOCKBACK)
             }
@@ -304,10 +307,10 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
         // A Knockback weapon pushes a target standing next to the void over its edge
         if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
-            val voidKnockbackItem = getBestKnockbackItem()?.takeIf { it.getEnchantment(Enchantments.KNOCKBACK) > 0 }
+            val voidKnockbackItem = getBestKnockbackItem()
             if (voidKnockbackItem != null) {
                 return weaponFacets
-                    .firstOrNull { it.itemStack == voidKnockbackItem }
+                    .firstOrNull { it.itemStack === voidKnockbackItem }
                     ?.itemSlot as HotbarItemSlot?
             }
         }
@@ -318,13 +321,13 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
                 when {
                     // All items
-                    priorityChoice == Priorities.KNOCKBACK -> itemStack == getBestKnockbackItem()
+                    priorityChoice == Priorities.KNOCKBACK -> itemStack === getBestKnockbackItem()
 
                     // All items
-                    priorityChoice == Priorities.DAMAGE -> itemStack == getBestDamageItem()
+                    priorityChoice == Priorities.DAMAGE -> itemStack === getBestDamageItem()
 
                     // All items
-                    priorityChoice == Priorities.ATTACK_SPEED -> itemStack == getBestAttackSpeedItem()
+                    priorityChoice == Priorities.ATTACK_SPEED -> itemStack === getBestAttackSpeedItem()
 
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.matchesAny(itemStack)
