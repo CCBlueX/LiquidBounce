@@ -24,61 +24,69 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
-import org.joml.Vector2fc
 
-data class ItemStackListRenderState internal constructor(
-    internal val guiGraphics: GuiGraphicsExtractor,
-    internal val stacks: List<ItemStack>,
-    internal val title: Component? = null,
-    internal val titleColor: Int = 0xffffffff.toInt(),
-    internal val centerX: Float = 0F,
-    internal val centerY: Float = 0F,
-    internal val scale: Float = 1.0F,
-    internal val rowLength: Int = 9,
-    internal val backgroundColor: Color4b = Color4b.DEFAULT_BG_COLOR,
-    internal val backgroundOutlineColor: Color4b = Color4b.TRANSPARENT,
-    internal val backgroundMargin: Float = 2.0F,
-    internal val useTexture: Boolean = false,
-    internal val itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer =
-        ItemStackListRenderer.SingleItemStackRenderer.All,
+/**
+ * Describes an item stack list that [ItemStackListRenderer] draws. The setters mutate this state and
+ * return it, so a list is configured by chaining them and finishing with [draw].
+ */
+class ItemStackListRenderState(
+    @JvmField val stacks: List<ItemStack>,
 ) : GuiRearrangeable {
 
-    override var bounds: BoundingBox2f = ItemStackListLayout.computeBounds(this)
+    @JvmField var title: Component? = null
 
-    init {
-        require(rowLength > 0) { "Row length must be greater than zero." }
-        require(scale > 0F) { "Scale must be greater than zero." }
-        require(backgroundMargin >= 0F) { "Background margin must not be negative." }
-    }
+    @JvmField var titleColor: Color4b = Color4b.WHITE
+
+    @JvmField var centerX: Float = 0F
+
+    @JvmField var centerY: Float = 0F
+
+    @JvmField var scale: Float = 1.0F
+
+    @JvmField var rowLength: Int = 9
+
+    @JvmField var backgroundColor: Color4b = Color4b.DEFAULT_BG_COLOR
+
+    @JvmField var backgroundOutlineColor: Color4b = Color4b.TRANSPARENT
+
+    @JvmField var backgroundMargin: Float = 2.0F
+
+    @JvmField var useTexture: Boolean = false
+
+    @JvmField var itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer =
+        ItemStackListRenderer.SingleItemStackRenderer.All
+
+    /**
+     * Only [GuiOverlapRearranger] needs the box. States that are not queued for rearrangement are
+     * positioned by [centerX] and [centerY] alone, thus this stays empty for them.
+     */
+    override var bounds: BoundingBox2f = BoundingBox2f.EMPTY
 
     @JvmOverloads
-    fun title(title: Component?, color: Int = this.titleColor): ItemStackListRenderState {
-        return copy(title = title, titleColor = color)
+    fun title(title: Component?, color: Color4b = this.titleColor): ItemStackListRenderState = apply {
+        this.title = title
+        this.titleColor = color
     }
 
-    fun centerX(centerX: Float): ItemStackListRenderState {
-        return copy(centerX = centerX)
+    fun centerX(centerX: Float): ItemStackListRenderState = apply {
+        this.centerX = centerX
     }
 
-    fun centerY(centerY: Float): ItemStackListRenderState {
-        return copy(centerY = centerY)
-    }
-
-    fun center(center: Vector2fc): ItemStackListRenderState {
-        return copy(centerX = center.x(), centerY = center.y())
+    fun centerY(centerY: Float): ItemStackListRenderState = apply {
+        this.centerY = centerY
     }
 
     /**
      * @param rowLength The maximum count of stack which can be placed in one row.
      */
-    fun rowLength(rowLength: Int): ItemStackListRenderState {
+    fun rowLength(rowLength: Int): ItemStackListRenderState = apply {
         require(rowLength > 0) { "Row length must be greater than zero." }
-        return copy(rowLength = rowLength)
+        this.rowLength = rowLength
     }
 
-    fun scale(scale: Float): ItemStackListRenderState {
+    fun scale(scale: Float): ItemStackListRenderState = apply {
         require(scale > 0F) { "Scale must be greater than zero." }
-        return copy(scale = scale)
+        this.scale = scale
     }
 
     @JvmOverloads
@@ -86,23 +94,19 @@ data class ItemStackListRenderState internal constructor(
         color: Color4b,
         outlineColor: Color4b = Color4b.TRANSPARENT,
         margin: Float = this.backgroundMargin,
-    ): ItemStackListRenderState {
+    ): ItemStackListRenderState = apply {
         require(margin >= 0F) { "Background margin must not be negative." }
-        return copy(
-            backgroundColor = color,
-            backgroundOutlineColor = outlineColor,
-            backgroundMargin = margin,
-            useTexture = false,
-        )
+        backgroundColor = color
+        backgroundOutlineColor = outlineColor
+        backgroundMargin = margin
+        useTexture = false
     }
 
-    fun textureBackground(): ItemStackListRenderState {
-        return copy(
-            useTexture = true,
-            backgroundColor = Color4b.TRANSPARENT,
-            backgroundOutlineColor = Color4b.TRANSPARENT,
-            backgroundMargin = 0F,
-        )
+    fun textureBackground(): ItemStackListRenderState = apply {
+        useTexture = true
+        backgroundColor = Color4b.TRANSPARENT
+        backgroundOutlineColor = Color4b.TRANSPARENT
+        backgroundMargin = 0F
     }
 
     fun background(choice: ItemStackListRenderer.BackgroundMode): ItemStackListRenderState =
@@ -115,12 +119,18 @@ data class ItemStackListRenderState internal constructor(
             is ItemStackListRenderer.BackgroundMode.Texture -> textureBackground()
         }
 
-    fun itemStackRenderer(itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer): ItemStackListRenderState {
-        return copy(itemStackRenderer = itemStackRenderer)
+    fun itemStackRenderer(
+        itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer,
+    ): ItemStackListRenderState = apply {
+        this.itemStackRenderer = itemStackRenderer
+    }
+
+    internal fun updateBounds() {
+        bounds = ItemStackListLayout.computeBounds(this)
     }
 
     @JvmOverloads
-    fun draw(rearrange: Boolean = false) {
-        ItemStackListRenderer.draw(this, rearrange)
+    fun draw(graphics: GuiGraphicsExtractor, rearrange: Boolean = false) {
+        ItemStackListRenderer.draw(graphics, this, rearrange)
     }
 }

@@ -43,12 +43,12 @@ object Pools {
     @JvmField
     val MutableBlockPos: Pool<BlockPos.MutableBlockPos> = Pool(
         initializer = BlockPos::MutableBlockPos,
-    ) { it.set(0, 0, 0) }.synchronized()
+    ) { it.set(0, 0, 0) }.sync()
 
     @JvmField
     val StringBuilder: Pool<StringBuilder> = Pool(
         initializer = { StringBuilder(128) },
-    ) { it.setLength(0) }.synchronized()
+    ) { it.setLength(0) }.sync()
 
     /**
      * Use [Pools.StringBuilder] to build [String].

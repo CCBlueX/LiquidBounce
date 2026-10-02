@@ -24,7 +24,7 @@ import com.viaversion.viaversion.protocols.v1_21_2to1_21_4.Protocol1_21_2To1_21_
 import com.viaversion.viaversion.protocols.v1_21to1_21_2.packet.ServerboundPackets1_21_2
 
 /**
- * https://github.com/ViaVersion/ViaFabricPlus/blob/1957a175e4a4bff50860c0b3359d5219624fe434/src/main/java/com/viaversion/viafabricplus/features/world/item_picking/ItemPick1_21_3.java#L123
+ * https://github.com/ViaVersion/ViaFabricPlus/blob/8f96c699edc97db8a3fc58c1533e8cf41dd46aaf/src/main/java/com/viaversion/viafabricplus/features/v1_21_2/ItemPick1_21_3.java#L123-L125
  */
 data class PickFromInventoryPacket(val slot: Int): LegacyPacket {
 

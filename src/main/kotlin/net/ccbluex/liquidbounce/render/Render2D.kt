@@ -48,6 +48,9 @@ import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix3x2fc
 import org.joml.Vector2f
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 private val LEFT_TOP = Vector2f()
 private val RIGHT_TOP = Vector2f()
@@ -77,6 +80,17 @@ private fun Matrix3x2fc.transformMaxBounds(
         (maxX - minX).ceilToInt(),
         (maxY - minY).ceilToInt(),
     )
+}
+
+val ScreenRectangle.isEmpty: Boolean
+    get() = width == 0 || height == 0
+
+@OptIn(ExperimentalContracts::class)
+inline fun ScreenRectangle.ifEmpty(defaultValue: () -> ScreenRectangle): ScreenRectangle {
+    contract {
+        callsInPlace(defaultValue, InvocationKind.AT_MOST_ONCE)
+    }
+    return if (isEmpty) defaultValue() else this
 }
 
 /**
@@ -320,40 +334,6 @@ fun GuiGraphicsExtractor.drawTriangle(
     p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
     fillColor, outlineColor,
 )
-
-@Suppress("LongParameterList")
-inline fun GuiGraphicsExtractor.drawGlyphOnCurrentLayer(
-    textureSetup: TextureSetup,
-    x0: Float,
-    y0: Float,
-    x1: Float,
-    y1: Float,
-    u1: Float = 0f,
-    v1: Float = 0f,
-    u2: Float = 1f,
-    v2: Float = 1f,
-    argb: Int = -1,
-    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
-) {
-    this.guiRenderState.addGlyphToCurrentLayer(
-        TexQuadGuiElementRenderState(
-            x0,
-            y0,
-            x1,
-            y1,
-            u1,
-            v1,
-            u2,
-            v2,
-            argb,
-            pipeline,
-            textureSetup,
-            copyPosePooled(),
-            this.scissorStack.peek(),
-            null,
-        )
-    )
-}
 
 @Suppress("LongParameterList")
 inline fun GuiGraphicsExtractor.drawTexQuad(

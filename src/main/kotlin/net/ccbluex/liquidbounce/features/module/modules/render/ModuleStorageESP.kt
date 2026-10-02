@@ -78,6 +78,7 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShelfBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.VoxelShape
 import java.awt.Color
@@ -459,11 +460,25 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     private object StorageScanner : AbstractBlockLocationTracker.State2BlockPos<ChestType>() {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        /**
+         * The client creates every block entity right away when the chunk packet arrives
+         * ([net.minecraft.world.level.chunk.LevelChunk.replaceWithPacketData]), so the map is complete.
+         *
+         * @see net.minecraft.client.renderer.chunk.SectionCopy
+         */
+        override fun chunkUpdate(chunk: LevelChunk) {
+            for ((pos, blockEntity) in chunk.blockEntities) {
+                blockEntity.categorize()?.let { track(pos, it) }
+            }
+        }
+
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             if (!state.hasBlockEntity()) return null
 
-            val chunk = mc.level?.getChunk(pos) ?: return null
-            return chunk.getBlockEntity(pos)?.categorize()
+            return mc.level?.getBlockEntity(pos).categorize()
         }
 
         override fun onUpdated() {

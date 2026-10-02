@@ -45,4 +45,12 @@ data class BedState(
 
         map.map { SurroundingBlock(block = it.key, count = it.value.leftInt(), layer = it.value.rightInt()) }
     },
-)
+) {
+    fun surrounding(compact: Boolean): List<SurroundingBlock> {
+        return if (compact) {
+            compactSurroundingBlocks
+        } else {
+            surroundingBlocks
+        }
+    }
+}

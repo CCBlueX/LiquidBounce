@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
  * The browser interface which is used to create tabs and manage the browser backend.
  * Due to different possible browser backends, this interface is used to abstract the browser backend.
  */
+@AddonApi
 interface BrowserBackend {
 
     val isInitialized: Boolean

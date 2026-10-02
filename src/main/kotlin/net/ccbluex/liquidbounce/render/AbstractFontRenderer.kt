@@ -19,24 +19,26 @@
 package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.horizontalAnchor
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.scale
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.shadow
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.verticalAnchor
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.x
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.y
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer.DrawParameters.z
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
-import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
+import net.minecraft.util.FormattedCharSequence
 
+/**
+ * Draws text with minecraft font markup.
+ *
+ * The [FormattedCharSequence] overloads are the primitives and draw the sequence as it is: no
+ * [sanitizeForeignInput], so text that came from a server has to be sanitized by the caller. The
+ * [Component] overloads do it for you, at the price of an extra pass per call (flatten the component,
+ * match the protected names) - pass a sequence once the text is settled, or when it is measured before
+ * it is drawn, to pay that only once.
+ */
 @AddonApi
-abstract class AbstractFontRenderer<T : ProcessedText> {
+abstract class AbstractFontRenderer {
 
     abstract val size: Float
     abstract val height: Float
@@ -48,34 +50,44 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         get() = mc.font.lineHeight.toFloat() / this.height
 
     /**
-     * Draws a string with minecraft font markup on GUI with [GuiGraphicsExtractor].
+     * Draws text with minecraft font markup on GUI with [GuiGraphicsExtractor].
      *
      * @return The unscaled width of [text]
      */
     context(ctx: GuiGraphicsExtractor)
-    abstract fun draw(text: T, parameters: DrawParameters): Float
+    abstract fun draw(text: FormattedCharSequence, parameters: DrawParameters): Float
 
+    /**
+     * Draws [text] as it is - unlike the [Component] overloads, it is not sanitized.
+     */
     context(ctx: GuiGraphicsExtractor)
-    inline fun draw(text: T, parameters: DrawParameters.() -> Unit = {}): Float {
+    inline fun draw(text: FormattedCharSequence, parameters: DrawParameters.() -> Unit = {}): Float {
         DrawParameters.reset2D()
         parameters(DrawParameters)
         return draw(text, DrawParameters)
     }
 
+    /**
+     * Draws a [Component], degenerating its legacy formatting and applying [sanitizeForeignInput] first.
+     * Pass a [FormattedCharSequence] when the text is already prepared.
+     */
     context(ctx: GuiGraphicsExtractor)
     inline fun draw(text: Component, parameters: DrawParameters.() -> Unit = {}): Float =
-        draw(process(text), parameters)
+        draw(text.sanitizeForeignInput(), parameters)
 
     /**
-     * Draws a string with minecraft font markup on GUI with [WorldRenderEnvironment].
+     * Draws text with minecraft font markup on GUI with [WorldRenderEnvironment].
      *
      * @return The unscaled width of [text]
      */
     context(ctx: WorldRenderEnvironment)
-    abstract fun draw(text: T, parameters: DrawParameters): Float
+    abstract fun draw(text: FormattedCharSequence, parameters: DrawParameters): Float
 
+    /**
+     * Draws [text] as it is - unlike the [Component] overloads, it is not sanitized.
+     */
     context(ctx: WorldRenderEnvironment)
-    inline fun draw(text: T, parameters: DrawParameters.() -> Unit = {}): Float {
+    inline fun draw(text: FormattedCharSequence, parameters: DrawParameters.() -> Unit = {}): Float {
         DrawParameters.reset3D()
         parameters(DrawParameters)
         return draw(text, DrawParameters)
@@ -83,15 +95,13 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
 
     context(ctx: WorldRenderEnvironment)
     inline fun draw(text: Component, parameters: DrawParameters.() -> Unit = {}): Float =
-        draw(process(text), parameters)
+        draw(text.sanitizeForeignInput(), parameters)
 
-    /**
-     * @param defaultColor The color of the font when no minecraft-markup applies
-     */
     /**
      * Draws [text] on the GUI at [x]/[y] in GUI pixels; [scale] 1 is this font's own size, the default
      * matches vanilla's. For Kotlin the context overloads with [DrawParameters] do the same.
      *
+     * @param color The color of the font when no minecraft-markup applies
      * @return the width drawn
      */
     @JvmOverloads
@@ -105,17 +115,15 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         scale: Float = scaleToVanillaFont,
         horizontalAnchor: HorizontalAnchor? = null,
         verticalAnchor: VerticalAnchor? = null,
-    ): Float {
-        val processed = process(text, color)
-        return with(ctx) {
-            draw(processed) {
-                this.x = x
-                this.y = y
-                this.shadow = shadow
-                this.scale = scale
-                this.horizontalAnchor = horizontalAnchor
-                this.verticalAnchor = verticalAnchor
-            }
+    ): Float = with(ctx) {
+        draw(text) {
+            this.x = x
+            this.y = y
+            this.color = color
+            this.shadow = shadow
+            this.scale = scale
+            this.horizontalAnchor = horizontalAnchor
+            this.verticalAnchor = verticalAnchor
         }
     }
 
@@ -124,21 +132,13 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
      */
     @JvmOverloads
     fun getStringWidth(text: Component, scale: Float = scaleToVanillaFont, shadow: Boolean = false): Float =
-        getStringWidth(process(text), shadow) * scale
-
-    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T =
-        process(text.asPlainText(), defaultColor)
-
-    /**
-     * @param defaultColor The color of the font when no minecraft-markup applies
-     */
-    abstract fun process(text: Component, defaultColor: Color4b = Color4b.WHITE): T
+        getStringWidth(text.sanitizeForeignInput(), shadow) * scale
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
      */
     abstract fun getStringWidth(
-        text: ProcessedText,
+        text: FormattedCharSequence,
         shadow: Boolean = false
     ): Float
 
@@ -150,6 +150,7 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
      * @param verticalAnchor Vertical anchor of the text, null -> [VerticalAnchor.TOP]
      * @param scale Render scale applied to width and height
      * @param shadow Draw shadow of text
+     * @param color The color of the characters that carry no color of their own
      */
     object DrawParameters {
         @JvmField
@@ -173,6 +174,9 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         @JvmField
         var shadow: Boolean = false
 
+        @JvmField
+        var color: Color4b = Color4b.WHITE
+
         @JvmStatic
         fun reset2D() {
             x = 0f
@@ -182,6 +186,7 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
             verticalAnchor = null
             scale = 1f
             shadow = false
+            color = Color4b.WHITE
         }
 
         @JvmStatic
@@ -193,6 +198,7 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
             verticalAnchor = null
             scale = 1f
             shadow = false
+            color = Color4b.WHITE
         }
     }
 
