@@ -641,6 +641,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerMarketplaceHandler (Lnet/ccbluex/liquidbounce/api/models/marketplace/MarketplaceItemType;Lnet/ccbluex/liquidbounce/features/marketplace/MarketplaceItemHandler;)V
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
+	public final fun registerQuickFix (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public fun toString ()Ljava/lang/String;
 	public fun unregister ()V
 	public final fun unregisterModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
@@ -990,6 +991,11 @@ public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendMa
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun registerBackend (Lnet/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider;)V
+}
+
+public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendManagerKt {
+	public static final fun isBrowserAccelerationDisabled ()Z
+	public static final fun isBrowserSkipped ()Z
 }
 
 public final class net/ccbluex/liquidbounce/integration/backend/BrowserBackendProvider : net/ccbluex/liquidbounce/config/types/list/Tagged {
@@ -1749,6 +1755,43 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;I)V
 	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;IILjava/lang/Object;)V
 	public fun unregister ()V
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/Instructions {
+	public fun <init> (ZLkotlin/jvm/functions/Function1;)V
+	public final fun getShowStepIndex ()Z
+	public final fun getSteps ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/QuickFix {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/Map;
+	public final fun getTestError ()Lkotlin/jvm/functions/Function1;
+	public final fun getWhatToDo ()Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;
+	public final fun getWhatYouNeed ()Lnet/ccbluex/liquidbounce/utils/client/error/Instructions;
+}
+
+public final class net/ccbluex/liquidbounce/utils/client/error/QuickFixes {
+	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/client/error/QuickFixes;
+	public final fun getBROWSER_FAILED_TO_LOAD_UI ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getBROWSER_IS_NOT_RESPONDING ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getCLASS_NOT_FOUND ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getD3D11_UNSATISFIED_LINK ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getDOWNLOAD_JCEF_FAILED ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getEntries ()Ljava/util/List;
+	public final fun getJCEF_ISNT_COMPATIBLE_WITH_THAT_SYSTEM ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun getJCEF_UNSATISFIED_LINK ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun register (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun unregister (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Z
+}
+
+public class net/ccbluex/liquidbounce/utils/client/error/errors/ClientError : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getNeedToReport ()Z
 }
 
 public final class net/ccbluex/liquidbounce/utils/combat/CombatExtensionsKt {

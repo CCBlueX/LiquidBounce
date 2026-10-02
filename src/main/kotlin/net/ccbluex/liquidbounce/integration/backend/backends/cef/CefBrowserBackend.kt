@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFAccelerationSupport
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
@@ -112,7 +112,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                     }.onFailure {
                         ErrorHandler.fatal(
                             error = it,
-                            quickFix = QuickFix.DOWNLOAD_JCEF_FAILED,
+                            quickFix = QuickFixes.DOWNLOAD_JCEF_FAILED,
                             additionalMessage = "Downloading jcef"
                         )
                     }
