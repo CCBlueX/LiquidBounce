@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.fabricmc.loader.api.FabricLoader
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
@@ -201,6 +202,11 @@ object AddonManager {
             step("browser backend ${provider.id}") { BrowserBackendManager.unregisterBackend(provider) }
         }
         addon.registeredBrowserBackends.clear()
+
+        addon.registeredQuickFixes.forEach { quickFix ->
+            step("quick fix ${quickFix.description}") { QuickFixes.unregister(quickFix) }
+        }
+        addon.registeredQuickFixes.clear()
 
         step("event hooks") { addon.unregister() }
 

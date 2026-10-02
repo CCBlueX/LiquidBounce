@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -115,7 +115,7 @@ object ScreenManager : EventListener {
             } == null) {
             ErrorHandler.fatal(
                 error = IllegalStateException("Timed out waiting for integration browser to initialize."),
-                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+                quickFix = QuickFixes.BROWSER_IS_NOT_RESPONDING
             )
         }
     }
@@ -145,11 +145,11 @@ object ScreenManager : EventListener {
                     "Failed to initialize integration browser. " +
                         "(code='${state.errorCode}', text='${state.errorText}', url='${state.failedUrl}')"
                 ),
-                quickFix = QuickFix.BROWSER_FAILED_TO_LOAD_UI
+                quickFix = QuickFixes.BROWSER_FAILED_TO_LOAD_UI
             )
             else -> ErrorHandler.fatal(
                 error = IllegalStateException("Invalid browser state past wait"),
-                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+                quickFix = QuickFixes.BROWSER_IS_NOT_RESPONDING
             )
         }
     }
