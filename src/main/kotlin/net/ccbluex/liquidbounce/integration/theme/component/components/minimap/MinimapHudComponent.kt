@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.ifEmpty
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.math.ceilToInt
@@ -201,7 +202,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         val mapRotation = if (!fixedDirection) -(playerRotation.yaw + 180.0F).toRadians() else 0F
 
         with(event.context) {
-            val bounds = getBounds(boundingBox)
+            val bounds = getBounds(boundingBox).ifEmpty { return@with }
             scissorStack.withPush(bounds) {
                 pose().withPush {
                     translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import it.unimi.dsi.fastutil.longs.LongArrayList
+import it.unimi.dsi.fastutil.longs.LongList
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
@@ -34,11 +34,12 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.io.skipLine
+import net.ccbluex.liquidbounce.utils.io.readUtf8LineAt
+import net.ccbluex.liquidbounce.utils.io.scanLineStarts
 import net.ccbluex.liquidbounce.utils.kotlin.mapString
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import org.apache.commons.lang3.RandomStringUtils
-import java.io.RandomAccessFile
+import java.util.function.UnaryOperator
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -89,36 +90,49 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
             private val coroutineName = CoroutineName("SpammerFileSourceReader")
 
             private val source by file("Source", supportedExtensions = setOf("txt")).onChanged {
-                if (!it.isFile) return@onChanged
-
-                ioScope.launch(coroutineName) {
-                    val newIndices = LongArrayList()
-                    newIndices.add(0L)
-                    RandomAccessFile(it, "r").use { raf ->
-                        while (raf.skipLine() != 0L) {
-                            newIndices.add(raf.filePointer)
-                        }
-                    }
-                    lineIndex = newIndices
-                }
+                ioScope.launch(coroutineName) { reload() }
             }
 
             private val linear = atomic(0)
+
+            /**
+             * Line start offsets of the source file, along with the metadata of the file they were scanned from.
+             */
+            private class LineIndex(val starts: LongList, val size: Long, val lastModified: Long)
+
             @Volatile
-            private var lineIndex = longListOf()
+            private var lineIndex = LineIndex(longListOf(), 0L, 0L)
 
             override fun nextMessage(): String {
-                val lineIndex = lineIndex
-                require(lineIndex.isNotEmpty()) { "File is empty or not selected" }
+                val index = currentIndex()
+                require(index.starts.isNotEmpty()) { "File is empty or not selected" }
 
-                val index = when (pattern) {
-                    SpammerPattern.RANDOM -> lineIndex.getLong(Random.nextInt(lineIndex.size))
-                    SpammerPattern.LINEAR -> lineIndex.getLong(linear.getAndIncrement() % lineIndex.size)
+                val offset = when (pattern) {
+                    SpammerPattern.RANDOM -> index.starts.getLong(Random.nextInt(index.starts.size))
+                    SpammerPattern.LINEAR -> index.starts.getLong(linear.getAndIncrement() % index.starts.size)
                 }
-                return RandomAccessFile(source, "r").use { raf ->
-                    raf.seek(index)
-                    raf.readLine()
+                return readUtf8LineAt(source.absoluteFile.toPath(), offset)
+            }
+
+            /** @return the line offsets, rescanned once the file on disk was modified or replaced. */
+            private fun currentIndex(): LineIndex {
+                val file = source.absoluteFile
+                val cached = lineIndex
+                val lastModified = file.lastModified()
+                if (cached.lastModified == lastModified && cached.size == file.length()) {
+                    return cached
                 }
+
+                return LineIndex(scanLineStarts(file.toPath()), file.length(), lastModified).also { lineIndex = it }
+            }
+
+            private fun reload() {
+                val file = source.absoluteFile
+                if (!file.isFile) {
+                    return
+                }
+
+                lineIndex = LineIndex(scanLineStarts(file.toPath()), file.length(), file.lastModified())
             }
         }
     }
@@ -204,10 +218,8 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         return newString.toString()
     }
 
-    enum class MessageConverterMode(override val tag: String, val convert: (String) -> String) : Tagged {
-        NO_CONVERTER("None", { text ->
-            text
-        }),
+    enum class MessageConverterMode(override val tag: String, private val convert: UnaryOperator<String>) : Tagged {
+        NO_CONVERTER("None", UnaryOperator.identity()),
         LEET_CONVERTER("Leet", { text ->
             text.mapString { char ->
                 when (char) {
@@ -236,7 +248,9 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
                     }
                 }
             }
-        }),
+        });
+
+        fun convert(text: String): String = convert.apply(text)
     }
 
     enum class SpammerPattern(override val tag: String) : Tagged {

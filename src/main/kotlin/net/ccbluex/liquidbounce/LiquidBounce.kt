@@ -23,15 +23,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.internal.isMissing
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.api.core.ApiConfig
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
+import net.ccbluex.liquidbounce.api.services.auth.isInvalidGrant
 import net.ccbluex.liquidbounce.api.services.client.ClientUpdate
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -63,6 +67,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -89,8 +94,8 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
+import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -197,6 +202,7 @@ object LiquidBounce : EventListener {
      *
      * The thread should be the main render thread.
      */
+    @OptIn(InternalCoroutinesApi::class)
     private fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
@@ -209,6 +215,7 @@ object LiquidBounce : EventListener {
 
         // Ensure we are on the render thread
         RenderSystem.assertOnRenderThread()
+        check(!Dispatchers.Main.isMissing())
 
         // Initialize managers and features
         Client
@@ -271,6 +278,7 @@ object LiquidBounce : EventListener {
         RotationManager
         BlinkManager
         LocalPlayerFallDamageTracker
+        PositionPacketSeparator
         InteractionTracker
         CombatManager
         FriendManager
@@ -355,12 +363,13 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount.renew()
                     }.onFailure {
                         logger.error("Failed to renew client account token.", it)
-                        ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
+                        if (it.httpException?.isInvalidGrant == true) {
+                            ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
+                            ConfigSystem.store(ClientAccountManager)
+                        }
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
                     }
-
-                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }
@@ -394,6 +403,9 @@ object LiquidBounce : EventListener {
 
         BlurEffectRenderer
         ScreenManager
+
+        // Holds the chosen browser backend
+        ConfigSystem.load(GlobalManager)
 
         taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,
@@ -494,7 +506,7 @@ object LiquidBounce : EventListener {
                 // Run resource reloader directly as fallback
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
-                    renderThreadDispatcher = Dispatchers.Minecraft,
+                    renderThreadDispatcher = Dispatchers.Main,
                 ).thenCompose {
                     ThemeManager.reloader.reload()
                 }
@@ -507,6 +519,15 @@ object LiquidBounce : EventListener {
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent>(priority = FIRST_PRIORITY) { event ->
         val taskManager = taskManager ?: return@handler
+
+        val selection = BrowserBackendManager.pendingSelection
+        if (selection != null && !selection.isCompleted) {
+            if (event.screen !is BrowserSelectionScreen) {
+                event.cancelEvent()
+                mc.gui.setScreen(BrowserSelectionScreen(BrowserBackendManager.selectableBackends, selection))
+            }
+            return@handler
+        }
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()

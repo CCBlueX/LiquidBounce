@@ -20,9 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.util.Util
@@ -33,11 +31,6 @@ import kotlin.reflect.KProperty
 inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KProperty<*>): T = get()
 
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
-
-@JvmField
-val MinecraftDispatcher = mc.asCoroutineDispatcher()
-
-inline val Dispatchers.Minecraft get() = MinecraftDispatcher
 
 suspend inline fun Array<out Job>.joinAll() = forEach { it.join() }
 

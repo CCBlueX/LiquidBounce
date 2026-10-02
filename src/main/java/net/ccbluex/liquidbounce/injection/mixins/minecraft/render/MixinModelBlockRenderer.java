@@ -55,13 +55,7 @@ public abstract class MixinModelBlockRenderer {
     private void wrapXRayTransparentBackground(BlockQuadOutput output, float x, float y, float z,
             BlockAndTintGetter level, BlockPos pos, BlockState state, BlockStateModel model, long seed,
             Operation<Void> original) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
-            original.call(output, x, y, z, level, pos, state, model, seed);
-            return;
-        }
-
-        XRayBlockRenderContext.renderTransparentBackground(module.transparentBackgroundAlpha(state),
+        XRayBlockRenderContext.renderIfActive(ModuleXRay.renderActive(), state,
             () -> original.call(output, x, y, z, level, pos, state, model, seed));
     }
 
@@ -70,7 +64,7 @@ public abstract class MixinModelBlockRenderer {
             List<BlockStateModelPart> parts, BlockAndTintGetter level, BlockState state, BlockPos pos,
             CallbackInfo ci) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             return;
         }
 
@@ -82,7 +76,7 @@ public abstract class MixinModelBlockRenderer {
     @ModifyExpressionValue(method = "tesselateBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/block/ModelBlockRenderer;ambientOcclusion:Z", opcode = Opcodes.GETFIELD))
     private static boolean injectXRayFullBright(boolean original) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.getFullBright()) {
+        if (!ModuleXRay.renderActive() || !module.getFullBright()) {
             return original;
         }
 
@@ -93,7 +87,7 @@ public abstract class MixinModelBlockRenderer {
     private static boolean injectXRayTransparentBackgroundForceTranslucent(boolean original, boolean cutoutLeaves,
             BlockState state) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.shouldRenderTransparentBackground(state)) {
+        if (!ModuleXRay.renderActive() || !module.shouldRenderTransparentBackground(state)) {
             return original;
         }
 
@@ -104,7 +98,7 @@ public abstract class MixinModelBlockRenderer {
     private boolean injectXRayDrawSide(boolean original, BlockAndTintGetter level, BlockState state, Direction direction,
             BlockPos neighborPos) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             return original;
         }
 

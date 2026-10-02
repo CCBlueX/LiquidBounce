@@ -63,7 +63,7 @@ class ErrorHandler private constructor(
             needToReport: Boolean = true,
             additionalMessage: String? = null,
         ): Nothing {
-            val finalQuickFix = quickFix ?: QuickFix.entries.firstOrNull { it.testError(error) }
+            val finalQuickFix = quickFix ?: QuickFixes.entries.firstOrNull { it.testError(error) }
             val finalNeedToReport = if (error is ClientError) {
                 error.needToReport
             } else {
