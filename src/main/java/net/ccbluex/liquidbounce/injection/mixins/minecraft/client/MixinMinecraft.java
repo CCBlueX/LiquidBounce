@@ -41,8 +41,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInte
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
 import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
@@ -201,19 +199,7 @@ public abstract class MixinMinecraft {
             titleBuilder.append(SharedConstants.getCurrentVersion().name());
         }
 
-        // For debugging purposes, will be removed until we have a stable release
-        var backend = BrowserBackendManager.INSTANCE.getBackend();
-        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
-            var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
-
-            if (accelerated != null && accelerated.get()) {
-                titleBuilder.append(" | Accelerated Paint is ON");
-                // Hotkey only works when not in-game
-                if (this.level == null && this.player == null) {
-                    titleBuilder.append(" [Hotkey: F12]");
-                }
-            }
-        }
+        EventManager.INSTANCE.callEvent(new WindowTitleEvent(titleBuilder));
 
         ClientPacketListener clientPlayNetworkHandler = this.getConnection();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isConnected()) {
