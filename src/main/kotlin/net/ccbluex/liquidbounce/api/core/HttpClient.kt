@@ -31,8 +31,6 @@ import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.ccbluex.liquidbounce.mcef.MCEF
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -140,9 +138,7 @@ object HttpClient {
         .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .proxy(java.net.Proxy.NO_PROXY)
-        .build().also {
-            MCEF.INSTANCE.settings.okHttpClient = it
-        }
+        .build()
 
     /**
      * This interceptor rejects all non-2xx responses

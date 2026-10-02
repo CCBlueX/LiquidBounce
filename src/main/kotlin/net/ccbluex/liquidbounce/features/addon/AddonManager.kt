@@ -40,7 +40,7 @@ object AddonManager {
     private const val ENTRYPOINT = "liquidbounce"
 
     /**
-     * Comma-separated add-on ids to skip, or `all`.
+     * Comma-separated add-on ids to skip, or `all` for every add-on but the ones LiquidBounce comes with.
      */
     private const val DISABLE_PROPERTY = "liquidbounce.disableAddons"
 
@@ -83,8 +83,9 @@ object AddonManager {
                 .getOrNull() ?: continue
 
             addon.container = container
+            val isBundled = container.containingMod.map { it.metadata.id == ENTRYPOINT }.orElse(false)
 
-            if (disableAll || disabled.any { it.equals(id, true) }) {
+            if (disableAll && !isBundled || disabled.any { it.equals(id, true) }) {
                 addon.state = AddonState.DISABLED
                 logger.info("Skipping add-on '$id' ($DISABLE_PROPERTY)")
             } else {

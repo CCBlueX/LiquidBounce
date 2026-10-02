@@ -26,13 +26,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient.request
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap

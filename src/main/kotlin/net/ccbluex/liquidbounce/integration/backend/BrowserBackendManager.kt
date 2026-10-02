@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSystemBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
@@ -60,8 +59,6 @@ object BrowserBackendManager : EventListener {
         get() = backend?.isInitialized ?: false
     var backend: BrowserBackend? = null
 
-    private const val DEFAULT_BACKEND = "cef"
-
     private val providers = linkedMapOf<String, BrowserBackendProvider>()
 
     val selectableBackends: List<BrowserBackendProvider>
@@ -73,12 +70,8 @@ object BrowserBackendManager : EventListener {
     var pendingSelection: CompletableDeferred<BrowserBackendProvider>? = null
         private set
 
+    // Chromium comes from the bundled CEF add-on
     init {
-        registerBackend(BrowserBackendProvider(
-            DEFAULT_BACKEND,
-            "Chromium",
-            "The browser LiquidBounce comes with (Chromium)."
-        ) { CefBrowserBackend() })
         registerBackend(BrowserBackendProvider(
             "external",
             "System browser",
@@ -119,6 +112,12 @@ object BrowserBackendManager : EventListener {
             return
         }
 
+        if (browserBackend == null && selectableBackends.isEmpty()) {
+            logger.warn("No browser backend is available.")
+            isBrowserDisabled = true
+            return
+        }
+
         val provider = chosenBackend()
         if (provider != null) {
             use(provider, taskManager)
@@ -150,8 +149,8 @@ object BrowserBackendManager : EventListener {
         }
 
         val selectable = selectableBackends
-        if (selectable.size <= 1) {
-            return selectable.firstOrNull() ?: providers.getValue(DEFAULT_BACKEND)
+        if (selectable.size == 1) {
+            return selectable.single()
         }
 
         val shiftHeld = InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) ||
