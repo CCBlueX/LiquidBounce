@@ -19,14 +19,8 @@
 package net.ccbluex.liquidbounce.deeplearn.models
 
 import ai.djl.Model
-import ai.djl.inference.Predictor
 import ai.djl.ndarray.NDManager
 import ai.djl.ndarray.types.Shape
-import ai.djl.nn.Activation
-import ai.djl.nn.Blocks
-import ai.djl.nn.SequentialBlock
-import ai.djl.nn.core.Linear
-import ai.djl.nn.norm.BatchNorm
 import ai.djl.training.DefaultTrainingConfig
 import ai.djl.training.EasyTrain
 import ai.djl.training.dataset.ArrayDataset
@@ -35,51 +29,46 @@ import ai.djl.training.listener.LoggingTrainingListener
 import ai.djl.training.loss.Loss
 import ai.djl.training.optimizer.Adam
 import ai.djl.training.tracker.Tracker
-import ai.djl.translate.TranslateException
-import ai.djl.translate.Translator
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
+import net.ccbluex.liquidbounce.deeplearn.model.LoadedModel
+import net.ccbluex.liquidbounce.deeplearn.model.ModelFile
+import java.io.ByteArrayInputStream
 import java.io.Closeable
-import java.io.InputStream
-import java.nio.file.Path
+import java.io.DataInputStream
 import java.util.Locale
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32
 
-abstract class ModelWrapper<I, O>(
+/**
+ * A model in the [LegacyModelFile] layout: predicts through [LoadedModel], trains with DJL from the parameters it
+ * was loaded with.
+ */
+abstract class ModelWrapper(
     name: String,
-    val translator: Translator<I, O>,
-    val outputs: Long,
     override val parent: ModeValueGroup<*>
 ) : Mode(name), Closeable {
 
-    private val lazyModel = lazy {
-        Model.newInstance(name).apply {
-            block = createMlpBlock(outputs)
-        }
-    }
-    private val model: Model by lazyModel
-    private val lazyPredictor = lazy { model.newPredictor(translator) }
-    private val predictor: Predictor<I, O> by lazyPredictor
-    private val lock = ReentrantReadWriteLock()
+    private var file: ModelFile? = null
+    private var loaded: LoadedModel? = null
+    private var trained: Model? = null
+    private val lock = Any()
 
     @Volatile
     private var closed = false
 
-    @Throws(TranslateException::class)
-    fun predict(input: I): O {
+    fun predict(input: FloatArray): FloatArray {
         require(DeepLearningEngine.isInitialized) { "DeepLearningEngine is not initialized" }
 
-        return lock.read {
+        return synchronized(lock) {
             check(!closed) { "Model '$name' is closed" }
-            predictor.predict(input)
+            val model = loaded ?: LoadedModel(checkNotNull(file) { "Model '$name' is not loaded" })
+                .also { loaded = it }
+            model.predict(input).values
         }
     }
 
@@ -89,14 +78,23 @@ abstract class ModelWrapper<I, O>(
         require(features.isNotEmpty()) { "Features and labels must not be empty" }
         require(labels.isNotEmpty()) { "Features and labels must not be empty" }
 
-        val outputSize = Math.toIntExact(outputs)
+        val outputSize = LegacyModelFile.NETWORK.outputs
         require(labels.size % outputSize == 0) { "Labels must contain $outputSize values per sample" }
         val sampleCount = labels.size / outputSize
         require(features.size % sampleCount == 0) { "Features must have the same sample count as labels" }
         val inputSize = features.size / sampleCount
 
-        lock.write {
+        synchronized(lock) {
             check(!closed) { "Model '$name' is closed" }
+            val model = Model.newInstance(name).apply { block = LegacyModelFile.NETWORK.block() }
+            trained?.close()
+            trained = model
+            file?.let { file ->
+                DataInputStream(ByteArrayInputStream(file.parameters)).use {
+                    model.block.loadParameters(model.ndManager, it)
+                }
+            }
+
             val trainingConfig = DefaultTrainingConfig(Loss.l2Loss())
                 .optInitializer(XavierInitializer(), "weight")
                 .optOptimizer(
@@ -110,7 +108,7 @@ abstract class ModelWrapper<I, O>(
                 NDManager.newBaseManager().use { manager ->
                     val trainingSet = ArrayDataset.Builder()
                         .setData(manager.create(features, Shape(sampleCount.toLong(), inputSize.toLong())))
-                        .optLabels(manager.create(labels, Shape(sampleCount.toLong(), outputs)))
+                        .optLabels(manager.create(labels, Shape(sampleCount.toLong(), outputSize.toLong())))
                         .setSampling(BATCH_SIZE, true)
                         .build()
                     trainer.initialize(Shape(BATCH_SIZE.toLong(), inputSize.toLong()))
@@ -121,39 +119,27 @@ abstract class ModelWrapper<I, O>(
         }
     }
 
-    fun load(stream: InputStream) {
-        lock.write {
-            check(!closed) { "Model '$name' is closed" }
-            model.load(stream)
-        }
-    }
-
-    fun load(path: Path) {
-        lock.write {
-            check(!closed) { "Model '$name' is closed" }
-            model.load(path, "tf")
-        }
-    }
-
     fun load(name: String = this.name) {
         val folder = modelsFolder.resolve(name)
-
-        if (folder.exists()) {
-            load(folder.toPath())
+        val file = if (folder.exists()) {
+            LegacyModelFile.read(LegacyModelFile.latest(folder.toPath()), name)
         } else {
             val lowercaseName = name.lowercase(Locale.ENGLISH)
             javaClass.getResourceAsStream("/resources/liquidbounce/models/${lowercaseName}.params")!!.use { stream ->
-                load(stream)
+                LegacyModelFile.read(stream, name)
             }
+        }
+
+        synchronized(lock) {
+            check(!closed) { "Model '$name' is closed" }
+            this.file = file
+            loaded?.close()
+            loaded = null
         }
     }
 
-    fun save(path: Path) {
-        model.save(path, "tf")
-    }
-
     fun save(name: String = this.name) {
-        save(modelsFolder.resolve(name).toPath())
+        checkNotNull(trained) { "Model '$name' is not trained" }.save(modelsFolder.resolve(name).toPath(), "tf")
     }
 
     fun delete() {
@@ -169,48 +155,15 @@ abstract class ModelWrapper<I, O>(
     }
 
     override fun close() {
-        lock.write {
+        synchronized(lock) {
             if (closed) {
                 return
             }
             closed = true
 
-            if (lazyPredictor.isInitialized()) {
-                predictor.close()
-            }
-            if (lazyModel.isInitialized()) {
-                model.close()
-            }
+            loaded?.close()
+            trained?.close()
         }
     }
 
 }
-
-/**
- * Create a block for the model. This is a simple Multi-Layer Perceptron (MLP) model.
- */
-private fun createMlpBlock(outputs: Long) = SequentialBlock()
-    .add(Linear.builder()
-        .setUnits(128)
-        .build())
-    .add(Blocks.batchFlattenBlock())
-    .add(BatchNorm.builder().build())
-    .add(Activation.reluBlock())
-
-    .add(Linear.builder()
-        .setUnits(64)
-        .build())
-    .add(Blocks.batchFlattenBlock())
-    .add(BatchNorm.builder().build())
-    .add(Activation.reluBlock())
-
-    .add(Linear.builder()
-        .setUnits(32)
-        .build())
-    .add(Blocks.batchFlattenBlock())
-    .add(BatchNorm.builder().build())
-    .add(Activation.reluBlock())
-
-    .add(Linear.builder()
-        .setUnits(outputs)
-        .build())
