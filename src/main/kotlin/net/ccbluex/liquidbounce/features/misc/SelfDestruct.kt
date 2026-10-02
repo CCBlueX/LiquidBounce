@@ -47,6 +47,12 @@ object SelfDestruct {
 
     var isDestructed = false
 
+    private val clientModIds: Set<String>
+        get() = buildSet {
+            add("liquidbounce")
+            AddonManager.addons.forEach { add(it.id) }
+        }
+
     /**
      * Attempt to destruct the client
      */
@@ -55,7 +61,7 @@ object SelfDestruct {
         mc.schedule(::restoreVanilla)
 
         if (modMenuPresent) {
-            for (id in arrayOf("liquidbounce", "mcef")) {
+            for (id in clientModIds) {
                 ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
             }
         }
@@ -104,10 +110,7 @@ object SelfDestruct {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        val idsToWipe = buildSet {
-            add("liquidbounce")
-            AddonManager.addons.forEach { add(it.id) }
-        }
+        val idsToWipe = clientModIds
 
         FabricLoaderImpl.INSTANCE.allMods.filter {
             it.metadata.id in idsToWipe

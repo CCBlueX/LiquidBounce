@@ -40,7 +40,7 @@ object CommandClientIntegrationSubcommand {
         literal("integration") {
             literal("reset") {
                 exec {
-                    chat(regular("Resetting client JCEF browser..."))
+                    chat(regular("Resetting client browser..."))
                     ScreenManager.update()
                     1
                 }

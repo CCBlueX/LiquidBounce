@@ -1037,14 +1037,6 @@ public final class net/ccbluex/liquidbounce/integration/backend/BrowserTexture :
 	public final fun width ()I
 }
 
-public final class net/ccbluex/liquidbounce/integration/backend/backends/cef/CefBrowserBackend : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
-	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
-	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
-}
-
 public final class net/ccbluex/liquidbounce/integration/backend/backends/external/ExternalSystemBrowserBackend : net/ccbluex/liquidbounce/event/EventListener, net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -1778,11 +1770,7 @@ public final class net/ccbluex/liquidbounce/utils/client/error/QuickFixes {
 	public final fun getBROWSER_FAILED_TO_LOAD_UI ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public final fun getBROWSER_IS_NOT_RESPONDING ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public final fun getCLASS_NOT_FOUND ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
-	public final fun getD3D11_UNSATISFIED_LINK ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
-	public final fun getDOWNLOAD_JCEF_FAILED ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public final fun getEntries ()Ljava/util/List;
-	public final fun getJCEF_ISNT_COMPATIBLE_WITH_THAT_SYSTEM ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
-	public final fun getJCEF_UNSATISFIED_LINK ()Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public final fun register (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
 	public final fun unregister (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Z
 }

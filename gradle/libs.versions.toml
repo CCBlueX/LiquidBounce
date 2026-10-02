@@ -12,8 +12,8 @@ fabric-loader = "0.19.5"
 fabric-loaderMin = "0.18.4"
 fabric-api = "0.160.5+26.3"
 
-# mcef
-mcef = "3.5.0-26.3-SNAPSHOT"
+# https://github.com/CCBlueX/LiquidBounce-Addon-CEF
+liquidbounce-cef = "1.0.0+26.3-SNAPSHOT"
 
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
@@ -82,7 +82,7 @@ thealtening = { group = "com.thealtening.api", name = "api", version.ref = "thea
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
-mcef = { group = "net.ccbluex", name = "mcef", version.ref = "mcef" }
+liquidbounce-cef = { group = "net.ccbluex", name = "liquidbounce-cef", version.ref = "liquidbounce-cef" }
 semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }

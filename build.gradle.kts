@@ -158,9 +158,10 @@ dependencies {
     // LWJGL EGL
     jij(libs.lwjgl.egl)
 
-    // JCEF Support
-    api(libs.mcef)
-    include(libs.mcef)
+    // Chromium, through the bundled CEF add-on. It depends on the client, so it stays out of the published POM and
+    // brings nothing along.
+    include(libs.liquidbounce.cef)
+    localRuntime(libs.liquidbounce.cef) { isTransitive = false }
 
 
     // Ktor Server

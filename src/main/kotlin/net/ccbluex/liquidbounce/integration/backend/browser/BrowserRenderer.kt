@@ -117,9 +117,9 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         height: Float
     ) {
         val pipeline = if (texture.bgra) {
-            ClientRenderPipelines.JCEF.BGRA_BLURRED_TEXTURE
+            ClientRenderPipelines.BROWSER.BgraTexture
         } else {
-            ClientRenderPipelines.JCEF.BLURRED_TEXTURE
+            ClientRenderPipelines.BROWSER.Texture
         }
 
         context.drawTexQuad(

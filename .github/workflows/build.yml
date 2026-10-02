@@ -255,11 +255,11 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Install EGL
-        # MCEF loads it to pick the browser's rendering, and the game renders through it below
+        # The CEF add-on loads it to pick the browser's rendering, and the game renders through it below
         run: sudo apt-get update && sudo apt-get install -y libegl1 libegl-mesa0
       - name: Library versions
         id: libraries
-        run: echo "key=$(grep -E '^(mcef|djl) *=' gradle/libs.versions.toml | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+        run: echo "key=$(grep -E '^(liquidbounce-cef|djl) *=' gradle/libs.versions.toml | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - name: Cache JCEF and the deep learning engine
         uses: actions/cache@v5
         with:
