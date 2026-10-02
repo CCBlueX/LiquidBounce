@@ -32,12 +32,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
-import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -56,7 +55,6 @@ import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
-import kotlin.math.floor
 import kotlin.math.sin
 
 /**
@@ -182,7 +180,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      * far-away pit beyond solid ground the target would actually land on.
      */
     private const val VOID_NEAR_SAMPLES = 2
-    private const val VOID_MIN_Y = -64
     private const val DIRECTION_EPSILON = 1.0E-4
 
     @Suppress("unused")
@@ -254,8 +251,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
-        val targetY = floor(target.boundingBox.minY).toInt()
-
         // Fan out several rays away from the target. If any single ray drops straight into the void
         // over its nearest samples, knockback there sends the target off the edge — so prioritize it.
         // This catches narrow strips/ledges that a single-ray majority vote would miss.
@@ -266,7 +261,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             val dirX = direction.x * cos - direction.z * sin
             val dirZ = direction.x * sin + direction.z * cos
 
-            if (isVoidAlongRay(targetY, target.x, target.z, dirX, dirZ)) {
+            if (isVoidAlongRay(target, dirX, dirZ)) {
                 return true
             }
         }
@@ -279,13 +274,14 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      * void. Requiring the nearest contiguous samples (rather than any) prevents firing when the
      * target stands on solid ground that merely has a distant pit beyond it.
      */
-    private fun isVoidAlongRay(targetY: Int, originX: Double, originZ: Double, dirX: Double, dirZ: Double): Boolean {
+    private fun isVoidAlongRay(target: LivingEntity, dirX: Double, dirZ: Double): Boolean {
+        val voidLevel = player.level().minY.toDouble()
+
         for (i in voidCheckDistances.indices) {
             val distance = voidCheckDistances[i]
-            val checkX = originX + dirX * distance
-            val checkZ = originZ + dirZ * distance
+            val check = Vec3(target.x + dirX * distance, target.y, target.z + dirZ * distance)
 
-            val isVoid = isNearVoidAt(targetY, checkX, checkZ)
+            val isVoid = target.wouldFallIntoVoid(check, voidLevel)
             if (i < VOID_NEAR_SAMPLES) {
                 // All of the nearest samples must be void.
                 if (!isVoid) {
@@ -298,25 +294,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         }
 
         // The near samples were all void (and there were no farther samples to contradict it).
-        return true
-    }
-
-    private fun isNearVoidAt(
-        targetY: Int,
-        checkX: Double,
-        checkZ: Double,
-    ): Boolean {
-        val blockX = floor(checkX).toInt()
-        val blockZ = floor(checkZ).toInt()
-        val pos = BlockPos.MutableBlockPos()
-
-        for (y in targetY downTo VOID_MIN_Y) {
-            // A column counts as void only when no block below has a collision shape to stand on.
-            if (!pos.set(blockX, y, blockZ).collisionShape.isEmpty) {
-                return false
-            }
-        }
-
         return true
     }
 
@@ -361,6 +338,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
                 itemStack.getEnchantment(Enchantments.KNOCKBACK)
             }
     }
+
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
@@ -368,7 +346,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
         // Sword blocking is not a 1.8-only feature: it also applies on 1.21.5+ where any item can block.
         val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
-            KillAuraAutoBlock.enabled && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
+            KillAuraAutoBlock.running && KillAuraAutoBlock.onlyWhenInDanger && KillAuraAutoBlock.isInDanger
         val voidKnockbackSlot = if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
             findKnockbackSlot()
         } else {
