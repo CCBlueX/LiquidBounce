@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.integration.backend.backends.external
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -42,7 +41,6 @@ class ExternalSystemBrowserBackend : BrowserBackend, EventListener {
 
     override val isInitialized = true
     override var browsers = mutableListOf<ExternalSystemBrowser>()
-    override var accelerationFlags = BrowserAccelerationFlags.UNSUPPORTED
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {

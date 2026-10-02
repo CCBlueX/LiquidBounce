@@ -46,6 +46,11 @@ val jij = configurations.create("jij")
 
 jij.excludeProvidedLibs()
 
+// The bundled CEF add-on is a snapshot; a restored Gradle cache would otherwise keep one up to a day old
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor(0, "seconds")
+}
+
 allprojects {
     repositories {
         mavenCentral()
