@@ -13,7 +13,7 @@ fabric-loaderMin = "0.18.4"
 fabric-api = "0.160.5+26.3"
 
 # https://github.com/CCBlueX/LiquidBounce-Addon-CEF
-liquidbounce-cef = "1.0.0+26.3-SNAPSHOT"
+liquidbounce-cef = "1.0.0+26.3"
 
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
