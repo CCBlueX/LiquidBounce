@@ -1,4 +1,5 @@
 {
+  "liquidbounce.clicker.messages.modelNotReady": "The %s click model is not available (%s), clicking like Human at %s CPS.",
   "liquidbounce.command.addon.description": "Allows you to inspect installed add-ons.",
   "liquidbounce.command.addon.info.about": "Description: %s",
   "liquidbounce.command.addon.info.authors": "Authors: %s",
@@ -408,6 +409,10 @@
   "liquidbounce.commandManager.notAFriend": "\"%s\" is not on your friend list.",
   "liquidbounce.commandManager.notIngame": "This command can only be used in-game.",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
+  "liquidbounce.deeplearning.status.engineUnavailable": "engine unavailable",
+  "liquidbounce.deeplearning.status.failed": "failed, see the log",
+  "liquidbounce.deeplearning.status.missing": "no model",
+  "liquidbounce.deeplearning.status.ready": "ready",
   "liquidbounce.fileDialog.mode.openDirectory": "Select Folder",
   "liquidbounce.fileDialog.mode.openFile": "Open File",
   "liquidbounce.fileDialog.mode.saveFile": "Save File As",
