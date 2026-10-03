@@ -105,7 +105,9 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
      * into the projection matrix.
      */
     fun applyFractionalFov(vanillaFov: Float): Float {
-        if (!inGame) {
+        // Same guard as [getFov]: while it hands out the vanilla fov, there is no fraction of ours to add
+        // back, and rescaling would keep the offset the integer base dropped alive forever.
+        if (!inGame || (!running && disableAnimationFinished)) {
             return vanillaFov
         }
 
