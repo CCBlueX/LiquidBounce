@@ -195,6 +195,18 @@ public abstract class MixinCamera {
         return result;
     }
 
+    /**
+     * <pre>
+     *     return this.modifyFovBasedOnDeathOrFluid(partialTicks, fov);
+     * </pre>
+     *
+     * The base fov above is an {@code int}, so the zoom would end in whole degrees. Re-add the fraction.
+     */
+    @ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
+    private float smoothZoomFov(float original) {
+        return ModuleZoom.INSTANCE.applyFractionalFov(original);
+    }
+
     @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
     private float injectShit(float original) {
         var screen = ModuleDroneControl.INSTANCE.getScreen();

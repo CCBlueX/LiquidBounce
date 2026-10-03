@@ -70,8 +70,10 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
     private var disableAnimationFinished = true
 
     override fun onEnabled() {
+        // Continue from the fov that is currently on screen: the disabling animation may still be running,
+        // so starting over from the default fov would snap the view instead of transitioning smoothly.
+        previousFov = getFov(false, getDefaultFov())
         targetFov = zoom
-        previousFov = getDefaultFov()
         reset()
     }
 
@@ -88,16 +90,32 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
             return original
         }
 
-        val factor = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
-            1f
-        } else {
-            (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
-        }
+        val factor = progress()
         if (!enabled && factor == 1f) {
             disableAnimationFinished = true
         }
 
         return Mth.lerpInt(transition.transform(factor), previousFov, targetFov)
+    }
+
+    /**
+     * The fov of the client is built on an [Int] base fov, so a transition can only move in whole degrees:
+     * a curve which comes to rest slowly, like [Easing.EXPONENTIAL_OUT], then spends its tail standing
+     * still and dropping one degree at a time. This puts the fraction, the integer base cannot carry, back
+     * into the projection matrix.
+     */
+    fun applyFractionalFov(vanillaFov: Float): Float {
+        if (!inGame) {
+            return vanillaFov
+        }
+
+        val eased = transition.transform(progress())
+        val whole = Mth.lerpInt(eased, previousFov, targetFov)
+        if (whole == 0) {
+            return vanillaFov
+        }
+
+        return vanillaFov * (Mth.lerp(eased, previousFov.toFloat(), targetFov.toFloat()) / whole)
     }
 
     private fun getDefaultFov(): Int {
@@ -108,6 +126,12 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
     private fun reset() {
         chronometer.reset()
         scaledDifference = durationFactor.toDouble() * abs(targetFov - previousFov)
+    }
+
+    private fun progress(): Float = if (scaledDifference <= 0.0 || !scaledDifference.isFinite()) {
+        1f
+    } else {
+        (chronometer.elapsed / scaledDifference).toFloat().coerceIn(0F, 1F)
     }
 
 }
