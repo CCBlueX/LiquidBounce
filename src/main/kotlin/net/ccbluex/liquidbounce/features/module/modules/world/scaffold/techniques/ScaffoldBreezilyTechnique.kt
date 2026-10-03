@@ -68,7 +68,7 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bestStack,
-            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
+            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose)
         )
 
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
