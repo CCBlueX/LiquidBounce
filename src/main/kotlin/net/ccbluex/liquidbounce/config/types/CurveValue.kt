@@ -38,6 +38,9 @@ class CurveValue(
     Vector2f::class.java
 ) {
 
+    @Exclude
+    private val defaultPoints: List<Vector2f> = value.map { Vector2f(it) }
+
     @JvmRecord
     data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>) {
         companion object {
