@@ -113,6 +113,7 @@ loom.runs.named("clientGameTest") {
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
+    systemProperties.put("ai.djl.pytorch.num_threads", "1")
 }
 
 tasks.named("runClientGameTest") {
@@ -395,6 +396,7 @@ kotlin {
         jvmToolchain(libs.versions.jdk.get().toInt())
         freeCompilerArgs.add("-Xcollection-literals")
         freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
+        optIn.add("net.ccbluex.liquidbounce.features.addon.UnstableAddonApi")
     }
 
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
@@ -403,6 +405,9 @@ kotlin {
         filters {
             include {
                 annotatedWith.add("net.ccbluex.liquidbounce.features.addon.AddonApi")
+            }
+            exclude {
+                annotatedWith.add("net.ccbluex.liquidbounce.features.addon.UnstableAddonApi")
             }
         }
     }
