@@ -22,7 +22,8 @@ import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction
 import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
 
 /**
- * Finds the minimum between min and max.
+ * Finds the minimum of a unimodal function between [from] and [to].
+ * Stops at [minDelta] or when floating-point precision prevents further bisection.
  */
 fun findFunctionMinimumByBisect(
     from: Double,
@@ -38,10 +39,13 @@ fun findFunctionMinimumByBisect(
     var upperBound = to
 
     while (upperBound - lowerBound > minDelta) {
-        val mid = (lowerBound + upperBound) * 0.5
+        val mid = bisectMidpoint(lowerBound, upperBound)
+        if (mid == lowerBound || mid == upperBound) {
+            break
+        }
 
-        val leftValue = function.get((lowerBound + mid) * 0.5)
-        val rightValue = function.get((mid + upperBound) * 0.5)
+        val leftValue = function.get(bisectMidpoint(lowerBound, mid))
+        val rightValue = function.get(bisectMidpoint(mid, upperBound))
 
         if (leftValue < rightValue) {
             upperBound = mid
@@ -50,8 +54,13 @@ fun findFunctionMinimumByBisect(
         }
     }
 
-    val x = (lowerBound + upperBound) * 0.5
+    val x = bisectMidpoint(lowerBound, upperBound)
     val y = function.get(x)
 
     return DoubleDoublePair.of(x, y)
+}
+
+private fun bisectMidpoint(from: Double, to: Double): Double {
+    val width = to - from
+    return if (width.isFinite()) from + width * 0.5 else from * 0.5 + to * 0.5
 }
