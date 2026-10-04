@@ -95,19 +95,12 @@ class TaskManager(private val scope: CoroutineScope) {
     }
 
     /**
-     * Cancels a task and all descendant jobs, then finishes their progress tracking.
+     * Cancels a task and finishes its progress tracking.
      */
     fun cancel(taskName: String) {
         val task = tasks[taskName] ?: return
-        cancelJobs(task)
-        complete(task)
-    }
-
-    private fun cancelJobs(task: Task) {
-        for (subTask in task.subTasks.values) {
-            cancelJobs(subTask)
-        }
         task.job?.cancel()
+        complete(task)
     }
 
     /**

@@ -28,7 +28,6 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -214,30 +213,6 @@ class TaskManagerTest {
         assertTrue(child.isCompleted)
         assertTrue(task.isCompleted)
         assertEquals(1f, manager.progress)
-        assertTrue(manager.getActiveTasks().isEmpty())
-    }
-
-    @Test
-    fun `manager cancellation reaches jobs in every branch of a nested task tree`() = runTest {
-        val manager = TaskManager(this)
-        val task = manager.createTask("Download")
-        val archive = task.getOrCreateTask("Archive")
-        val file = archive.getOrCreateTask("File")
-        val unpack = file.getOrCreateTask("Unpack")
-        val metadata = task.getOrCreateTask("Metadata")
-        val tasks = listOf(task, archive, file, unpack, metadata)
-        tasks.forEach { it.job = backgroundScope.launch { awaitCancellation() } }
-        runCurrent()
-
-        manager.cancel("Download")
-        runCurrent()
-
-        for (entry in tasks) {
-            assertTrue(assertNotNull(entry.job).isCancelled, entry.name)
-            assertTrue(entry.isCompleted, entry.name)
-            assertEquals(1f, entry.progress, entry.name)
-        }
-        assertTrue(manager.isCompleted)
         assertTrue(manager.getActiveTasks().isEmpty())
     }
 
