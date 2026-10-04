@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.io.FastByteArrayInputStream
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import okio.buffer
 import okio.source
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import javax.imageio.ImageIO
 import kotlin.test.assertContentEquals
@@ -47,9 +47,9 @@ class RenderExtensionsTest {
 
     private fun imageBytes(format: String): ByteArray {
         val image = BufferedImage(2, 3, BufferedImage.TYPE_INT_RGB)
-        return ByteArrayOutputStream().use { output ->
+        return FastByteArrayOutputStream().use { output ->
             check(ImageIO.write(image, format, output))
-            output.toByteArray()
+            output.array.copyOf(output.length)
         }
     }
 
