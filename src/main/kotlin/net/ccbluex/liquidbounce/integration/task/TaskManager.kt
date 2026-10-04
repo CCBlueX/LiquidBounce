@@ -62,10 +62,12 @@ class TaskManager(private val scope: CoroutineScope) {
     ): Task {
         val task = createTask(taskName)
         val job = scope.launch {
+            // The action can start before launch returns, e.g. with an unconfined dispatcher.
             task.job = coroutineContext[Job]
             task.progress = 0f
             action(task)
         }
+        // Also expose the Job when the coroutine is cancelled before its body starts.
         task.job = job
         // Also runs on failure or cancellation, including cancellation before the action starts.
         job.invokeOnCompletion { complete(task) }

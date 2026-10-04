@@ -22,11 +22,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -38,6 +41,29 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskManagerTest {
+
+    @Test
+    fun `an action that starts immediately can cancel its own tracked job`() = runTest {
+        val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
+        try {
+            val manager = TaskManager(scope)
+            var actionJob: Job? = null
+            var trackedJob: Job? = null
+            val task = manager.launch("Download") { task ->
+                actionJob = currentCoroutineContext()[Job]
+                trackedJob = task.job
+                manager.cancel(task.name)
+                awaitCancellation()
+            }
+
+            assertSame(assertNotNull(actionJob), trackedJob)
+            assertTrue(assertNotNull(task.job).isCancelled)
+            assertTrue(task.isCompleted)
+            assertTrue(manager.getActiveTasks().isEmpty())
+        } finally {
+            scope.cancel()
+        }
+    }
 
     @Test
     fun `successful jobs finish their tracked task and subtasks`() = runTest {
