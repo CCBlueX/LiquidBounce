@@ -22,8 +22,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
+import java.util.concurrent.Executor
 import java.util.function.IntPredicate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
@@ -31,128 +31,150 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class TickUntilCallbackTest {
+class CoroutineTickerTest {
 
     private fun assertFailure(expected: Throwable, actual: Throwable?) {
         // Coroutine debug mode may copy an exception to add its suspension stack, retaining the original as cause.
         assertTrue(actual === expected || actual?.cause === expected, "The original failure was not delivered")
     }
 
-    // Drive the actual callback with a real cancellable continuation, without a Minecraft tick loop.
-    private fun CoroutineScope.waiter(stopAt: IntPredicate): Pair<Deferred<Result<Int>>, TickUntilCallback> {
-        lateinit var callback: TickUntilCallback
-        val result = async(start = CoroutineStart.UNDISPATCHED) {
-            runCatching {
-                suspendCancellableCoroutine<Int> { continuation ->
-                    callback = TickUntilCallback(continuation, stopAt)
-                }
-            }
+    private fun ticker(): Ticker = CoroutineTickerImpl(Executor { it.run() })
+
+    private fun CoroutineScope.waiter(ticker: Ticker, stopAt: IntPredicate): Deferred<Result<Int>> =
+        async(start = CoroutineStart.UNDISPATCHED) {
+            runCatching { ticker.tickUntil(stopAt) }
         }
-        return result to callback
-    }
 
     @Test
     fun `predicate failures complete the waiter with the original exception`() = runTest {
+        val ticker = ticker()
         val failure = IllegalArgumentException("predicate failed")
-        val (result, callback) = waiter { throw failure }
+        val result = waiter(ticker) { throw failure }
 
-        assertTrue(callback.asBoolean)
+        ticker.tick()
 
         assertFailure(failure, result.await().exceptionOrNull())
     }
 
     @Test
     fun `predicate failures after earlier ticks do not leave the waiter suspended`() = runTest {
+        val ticker = ticker()
         val failure = IllegalStateException("second tick failed")
         val ticks = mutableListOf<Int>()
-        val (result, callback) = waiter {
+        val result = waiter(ticker) {
             ticks += it
             if (it == 2) throw failure
             false
         }
 
-        assertFalse(callback.asBoolean)
-        assertTrue(callback.asBoolean)
+        ticker.tick()
+        assertFalse(result.isCompleted)
+        ticker.tick()
 
         assertFailure(failure, result.await().exceptionOrNull())
         assertEquals(listOf(1, 2), ticks)
     }
 
     @Test
-    fun `a failed predicate is never called again`() = runTest {
+    fun `a failed predicate is removed from the ticker`() = runTest {
+        val ticker = ticker()
         var calls = 0
-        val (result, callback) = waiter {
+        val result = waiter(ticker) {
             calls++
             error("failed")
         }
 
-        assertTrue(callback.asBoolean)
+        ticker.tick()
         result.await()
-        assertTrue(callback.asBoolean)
+        ticker.tick()
         assertEquals(1, calls)
     }
 
     @Test
     fun `cancellation thrown by the predicate reaches the waiter`() = runTest {
+        val ticker = ticker()
         val failure = CancellationException("predicate cancelled")
-        val (result, callback) = waiter { throw failure }
+        val result = waiter(ticker) { throw failure }
 
-        assertTrue(callback.asBoolean)
+        ticker.tick()
 
         assertFailure(failure, result.await().exceptionOrNull())
     }
 
     @Test
     fun `successful predicates report the elapsed ticks once`() = runTest {
+        val ticker = ticker()
         var calls = 0
-        val (result, callback) = waiter {
+        val result = waiter(ticker) {
             calls++
             it >= 3
         }
 
-        assertFalse(callback.asBoolean)
-        assertFalse(callback.asBoolean)
-        assertTrue(callback.asBoolean)
+        ticker.tick()
+        ticker.tick()
+        assertFalse(result.isCompleted)
+        ticker.tick()
 
         assertEquals(3, result.await().getOrThrow())
-        assertTrue(callback.asBoolean)
+        ticker.tick()
         assertEquals(3, calls)
     }
 
     @Test
     fun `cancelled waiters are removed without evaluating the predicate`() = runTest {
+        val ticker = ticker()
         var calls = 0
-        val (result, callback) = waiter {
+        val result = waiter(ticker) {
             calls++
             false
         }
 
         result.cancel()
+        ticker.tick()
+        ticker.tick()
 
-        assertTrue(callback.asBoolean)
         assertEquals(0, calls)
     }
 
     @Test
     fun `predicate errors run the waiting coroutines cleanup`() = runTest {
-        lateinit var callback: TickUntilCallback
+        val ticker = ticker()
         var cleanedUp = false
         val failure = IllegalStateException("failed")
         val result = async(start = CoroutineStart.UNDISPATCHED) {
             runCatching {
                 try {
-                    suspendCancellableCoroutine<Int> { continuation ->
-                        callback = TickUntilCallback(continuation) { throw failure }
-                    }
+                    ticker.tickUntil { throw failure }
                 } finally {
                     cleanedUp = true
                 }
             }
         }
 
-        assertTrue(callback.asBoolean)
+        ticker.tick()
 
         assertFailure(failure, result.await().exceptionOrNull())
         assertTrue(cleanedUp)
+    }
+
+    @Test
+    fun `tasks registered during a tick start on the next tick`() {
+        val ticker = ticker()
+        val calls = mutableListOf<String>()
+        ticker.register {
+            calls += "first"
+            ticker.register {
+                calls += "second"
+                true
+            }
+            true
+        }
+
+        ticker.tick()
+        assertEquals(listOf("first"), calls)
+        ticker.tick()
+        assertEquals(listOf("first", "second"), calls)
+        ticker.tick()
+        assertEquals(listOf("first", "second"), calls)
     }
 }

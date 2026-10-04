@@ -25,24 +25,63 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
+import java.util.concurrent.Executor
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-object CoroutineTicker {
+/** A queue of callbacks advanced once per tick. */
+interface Ticker {
+
+    /**
+     * Registers a task to be ticked.
+     *
+     * @param task The callback to be run from next tick. It will be removed once returns true.
+     */
+    fun register(task: BooleanSupplier)
+
+    fun tick()
+}
+
+internal class CoroutineTickerImpl(private val executor: Executor) : Ticker {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
-
-    // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
-    private var minecraftTickDepth = 0
 
     // Running callbacks
     private val runningList = ReferenceArrayList<BooleanSupplier>()
 
     // Next tick callbacks
     private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+    override fun register(task: BooleanSupplier) {
+        executor.execute { pendingList.add(task) }
+    }
+
+    override fun tick() {
+        runningList.addAll(pendingList)
+        pendingList.clear()
+        runningList.removeIf(Predicate {
+            try {
+                it.asBoolean
+            } catch (e: ReportedException) {
+                throw e
+            } catch (e: Throwable) {
+                logger.error("Unhandled exception thrown by callback", e)
+                false
+            }
+        })
+    }
+}
+
+object CoroutineTicker : Ticker {
+
+    private val logger = LoggerFactory.getLogger("$CLIENT_NAME/CoroutineTicker")
+    private val ticker = CoroutineTickerImpl(Executor { mc.execute(it) })
+
+    // Tracks nested Minecraft.tick() calls. Only the outermost tick may advance coroutine waiters.
+    private var minecraftTickDepth = 0
 
     fun beginMinecraftTick() {
         minecraftTickDepth++
@@ -58,36 +97,18 @@ object CoroutineTicker {
         minecraftTickDepth--
     }
 
-    /**
-     * Registers a task to be ticked.
-     *
-     * @param task The callback to be run from next tick. It will be removed once returns true.
-     */
-    fun register(task: BooleanSupplier) {
-        mc.execute { pendingList.add(task) }
-    }
+    override fun register(task: BooleanSupplier) = ticker.register(task)
 
     /**
      * We want it to run before everything else, this is because we want to tick the existing tasks before
      * new ones are added and might be ticked in the same tick
      */
-    fun tick() {
+    override fun tick() {
         if (minecraftTickDepth > 1) {
             return
         }
 
-        runningList.addAll(pendingList)
-        pendingList.clear()
-        runningList.removeIf(Predicate {
-            try {
-                it.asBoolean
-            } catch (e: ReportedException) {
-                throw e
-            } catch (e: Throwable) {
-                logger.error("Unhandled exception thrown by callback", e)
-                false
-            }
-        })
+        ticker.tick()
     }
 
 }
@@ -109,11 +130,13 @@ object CoroutineTicker {
  */
 suspend fun tickUntil(
     stopAt: IntPredicate,
-): Int = suspendCancellableCoroutine { continuation ->
-    CoroutineTicker.register(TickUntilCallback(continuation, stopAt))
+): Int = CoroutineTicker.tickUntil(stopAt)
+
+internal suspend fun Ticker.tickUntil(stopAt: IntPredicate): Int = suspendCancellableCoroutine { continuation ->
+    register(TickUntilCallback(continuation, stopAt))
 }
 
-internal class TickUntilCallback(
+private class TickUntilCallback(
     private val continuation: CancellableContinuation<Int>,
     private val stopAt: IntPredicate,
 ) : BooleanSupplier {
