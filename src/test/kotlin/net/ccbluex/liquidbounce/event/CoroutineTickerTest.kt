@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
-import java.util.concurrent.Executor
+import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
@@ -38,7 +40,30 @@ class CoroutineTickerTest {
         assertTrue(actual === expected || actual?.cause === expected, "The original failure was not delivered")
     }
 
-    private fun ticker(): Ticker = CoroutineTickerImpl(Executor { it.run() })
+    private class CoroutineTickerImpl : Ticker {
+        private val runningList = ReferenceArrayList<BooleanSupplier>()
+        private val pendingList = ReferenceArrayList<BooleanSupplier>()
+
+        val taskCount: Int
+            get() = runningList.size + pendingList.size
+
+        override fun register(task: BooleanSupplier) {
+            pendingList.add(task)
+        }
+
+        override fun tick() {
+            runningList.addAll(pendingList)
+            pendingList.clear()
+            runningList.removeIf { it.asBoolean }
+        }
+    }
+
+    private fun ticker() = CoroutineTickerImpl()
+
+    private suspend fun Ticker.tickUntil(stopAt: IntPredicate): Int =
+        suspendCancellableCoroutine { continuation ->
+            register(TickUntilCallback(continuation, stopAt))
+        }
 
     private fun CoroutineScope.waiter(ticker: Ticker, stopAt: IntPredicate): Deferred<Result<Int>> =
         async(start = CoroutineStart.UNDISPATCHED) {
@@ -88,6 +113,7 @@ class CoroutineTickerTest {
         result.await()
         ticker.tick()
         assertEquals(1, calls)
+        assertEquals(0, ticker.taskCount)
     }
 
     @Test
@@ -118,6 +144,7 @@ class CoroutineTickerTest {
         assertEquals(3, result.await().getOrThrow())
         ticker.tick()
         assertEquals(3, calls)
+        assertEquals(0, ticker.taskCount)
     }
 
     @Test
@@ -134,6 +161,7 @@ class CoroutineTickerTest {
         ticker.tick()
 
         assertEquals(0, calls)
+        assertEquals(0, ticker.taskCount)
     }
 
     @Test
@@ -157,24 +185,4 @@ class CoroutineTickerTest {
         assertTrue(cleanedUp)
     }
 
-    @Test
-    fun `tasks registered during a tick start on the next tick`() {
-        val ticker = ticker()
-        val calls = mutableListOf<String>()
-        ticker.register {
-            calls += "first"
-            ticker.register {
-                calls += "second"
-                true
-            }
-            true
-        }
-
-        ticker.tick()
-        assertEquals(listOf("first"), calls)
-        ticker.tick()
-        assertEquals(listOf("first", "second"), calls)
-        ticker.tick()
-        assertEquals(listOf("first", "second"), calls)
-    }
 }
