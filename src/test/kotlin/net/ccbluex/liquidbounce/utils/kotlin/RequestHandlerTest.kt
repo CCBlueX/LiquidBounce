@@ -91,4 +91,91 @@ class RequestHandlerTest {
         requestHandler.tick()
         assertNull(requestHandler.getActiveRequestValue())
     }
+    @Test
+    fun `reusing a request retains its relative lifetime`() {
+        val handler = RequestHandler<String>()
+        val request = RequestHandler.Request(2, 0, MODULE_1, "active")
+        handler.tick(10)
+        handler.request(request)
+        assertEquals(2, request.expiresIn)
+        handler.tick()
+        handler.request(request)
+        handler.tick()
+        assertEquals("active", handler.getActiveRequestValue())
+        handler.tick()
+        assertNull(handler.getActiveRequestValue())
+    }
+
+    @Test
+    fun `the same request can be submitted to handlers with different clocks`() {
+        val first = RequestHandler<String>()
+        val second = RequestHandler<String>()
+        val request = RequestHandler.Request(2, 0, MODULE_1, "active")
+        first.tick(10)
+        second.tick(100)
+        first.request(request)
+        second.request(request)
+
+        first.tick(2)
+        second.tick(2)
+
+        assertNull(first.getActiveRequestValue())
+        assertNull(second.getActiveRequestValue())
+        assertEquals(2, request.expiresIn)
+    }
+
+    @Test
+    fun `queued deadlines are independent of later request edits`() {
+        val handler = RequestHandler<String>()
+        val request = RequestHandler.Request(2, 0, MODULE_1, "active")
+        handler.request(request)
+        request.expiresIn = 100
+        handler.tick(2)
+
+        assertNull(handler.getActiveRequestValue())
+        handler.request(request)
+        handler.tick(99)
+        assertEquals("active", handler.getActiveRequestValue())
+        handler.tick()
+        assertNull(handler.getActiveRequestValue())
+    }
+
+    @Test
+    fun `a long request lifetime does not overflow its deadline`() {
+        val handler = RequestHandler<String>()
+        handler.tick(100)
+        handler.request(RequestHandler.Request(Int.MAX_VALUE, 0, MODULE_1, "active"))
+
+        assertEquals("active", handler.getActiveRequestValue())
+        handler.tick(Int.MAX_VALUE - 1)
+        assertEquals("active", handler.getActiveRequestValue())
+        handler.tick()
+        assertNull(handler.getActiveRequestValue())
+    }
+
+    @Test
+    fun `short requests still expire when the clock crosses Int MAX VALUE`() {
+        val handler = RequestHandler<String>()
+        handler.tick(Int.MAX_VALUE - 1)
+        handler.request(RequestHandler.Request(3, 0, MODULE_1, "active"))
+
+        handler.tick(2)
+        assertEquals("active", handler.getActiveRequestValue())
+        handler.tick()
+        assertNull(handler.getActiveRequestValue())
+    }
+
+    @Test
+    fun `clearing the handler does not change a reusable request lifetime`() {
+        val handler = RequestHandler<String>()
+        val request = RequestHandler.Request(2, 0, MODULE_1, "active")
+        handler.tick(100)
+        handler.request(request)
+        handler.clear()
+        handler.request(request)
+        handler.tick(2)
+
+        assertNull(handler.getActiveRequestValue())
+    }
+
 }

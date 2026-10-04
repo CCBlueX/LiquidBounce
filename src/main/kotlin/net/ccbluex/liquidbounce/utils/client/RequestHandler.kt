@@ -26,9 +26,11 @@ import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
 
-    private var currentTick = 0
+    private var currentTick = 0L
 
-    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, comparingInt { it.priority.inv() })
+    private class ActiveRequest<T>(val request: Request<T>, val expiresAt: Long)
+
+    private val activeRequests = PriorityBlockingQueue<ActiveRequest<T>>(11, comparingInt { it.request.priority.inv() })
 
     fun tick(deltaTime: Int = 1) {
         currentTick += deltaTime
@@ -36,14 +38,13 @@ class RequestHandler<T> {
 
     fun clear() {
         activeRequests.clear()
-        currentTick = 0
+        currentTick = 0L
     }
 
     fun request(request: Request<T>) {
         // we remove all requests provided by module on new request
-        activeRequests.removeIf { it.provider === request.provider }
-        request.expiresIn += currentTick
-        activeRequests.add(request)
+        activeRequests.removeIf { it.request.provider === request.provider }
+        activeRequests.add(ActiveRequest(request, currentTick + request.expiresIn))
     }
 
     fun getActiveRequestValue(): T? {
@@ -51,13 +52,13 @@ class RequestHandler<T> {
 
         if (mc()?.isSameThread != false) {
             // we remove all outdated requests here
-            while (top.expiresIn <= currentTick || !top.provider.running) {
+            while (top.expiresAt <= currentTick || !top.request.provider.running) {
                 activeRequests.remove()
                 top = activeRequests.peek() ?: return null
             }
         }
 
-        return top.value
+        return top.request.value
     }
 
     /**
