@@ -59,7 +59,7 @@ internal object FontCharacterSet {
     val commonHanCodepoints: IntArray by lazy(LazyThreadSafetyMode.PUBLICATION) {
         val text = requireNotNull(FontCharacterSet::class.java.getResourceAsStream(COMMON_HAN_RESOURCE)) {
             "Missing common Han character resource $COMMON_HAN_RESOURCE"
-        }.use { it.readText() }
+        }.use { it.readText().trim() }
 
         val codepoints = text.codePoints().toArray()
         require(codepoints.size == COMMON_HAN_COUNT) {
