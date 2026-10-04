@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.utils.text
 
 import com.google.common.base.CaseFormat
+import com.google.common.net.HostAndPort
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -259,8 +260,13 @@ fun String.capitalize(): String = replaceFirstChar {
 
 fun String.toLowerCamelCase(): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, this)
 
+/** Removes a server port and IPv6 brackets without resolving the host. Invalid addresses are left intact. */
 fun String.dropPort(): String {
-    return this.substringBefore(':')
+    return try {
+        HostAndPort.fromString(this).host
+    } catch (_: IllegalArgumentException) {
+        this
+    }
 }
 
 private val IP_REGEX = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
@@ -279,7 +285,7 @@ private val IP_REGEX = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
 fun String.rootDomain(): String {
     var domain = this.trim().lowercase()
 
-    if (domain.matches(IP_REGEX)) {
+    if (':' in domain || domain.matches(IP_REGEX)) {
         // IP address
         return domain
     }

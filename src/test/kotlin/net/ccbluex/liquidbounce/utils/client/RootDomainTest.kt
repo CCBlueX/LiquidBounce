@@ -63,4 +63,42 @@ class RootDomainTest {
         assertEquals("127.0.0.1", domain.dropPort().rootDomain())
     }
 
+    @Test
+    fun `removes ports without truncating IPv6 hosts`() {
+        val addresses = mapOf(
+            "play.example.net:25565" to "play.example.net",
+            "192.0.2.1:25565" to "192.0.2.1",
+            "[2001:db8::1]:25565" to "2001:db8::1",
+            "[2001:db8::1]" to "2001:db8::1",
+            "2001:db8::1" to "2001:db8::1",
+            "::1" to "::1",
+            "[::ffff:192.0.2.1]:25565" to "::ffff:192.0.2.1",
+            "[fe80::1%eth0]:25565" to "fe80::1%eth0",
+            "localhost" to "localhost",
+        )
+        for ((address, host) in addresses) {
+            assertEquals(host, address.dropPort(), address)
+        }
+    }
+
+    @Test
+    fun `root domain preserves IPv6 including embedded IPv4 addresses`() {
+        val addresses = mapOf(
+            "[2001:DB8::1]:25565" to "2001:db8::1",
+            "[::ffff:192.0.2.1]:25565" to "::ffff:192.0.2.1",
+            "::1" to "::1",
+        )
+        for ((address, host) in addresses) {
+            assertEquals(host, address.dropPort().rootDomain(), address)
+            assertEquals(host, host.rootDomain(), host)
+        }
+    }
+
+    @Test
+    fun `malformed server addresses are left intact`() {
+        for (address in listOf("[2001:db8::1", "example.net:not-a-port", "example.net:65536")) {
+            assertEquals(address, address.dropPort(), address)
+        }
+    }
+
 }
