@@ -92,6 +92,36 @@ class OkHttpUrlConnectionTest {
     }
 
     @Test
+    fun `disconnect closes unread error bodies`() {
+        for (status in listOf(404, 410, 503)) {
+            val body = TrackingBody("unread error")
+            val connection = connection(status, "Failed", body)
+            try {
+                assertFailsWith<IOException> { connection.inputStream }
+                assertFalse(body.closed)
+            } finally {
+                connection.disconnect()
+            }
+            assertTrue(body.closed)
+        }
+    }
+
+    @Test
+    fun `HTTP2 errors remain readable when the response message is empty`() {
+        val body = TrackingBody("error")
+        val connection = connection(503, "", body, Protocol.HTTP_2)
+        try {
+            val failure = assertFailsWith<IOException> { connection.inputStream }
+            assertEquals("", connection.responseMessage)
+            assertTrue(failure.message!!.contains("503"))
+            assertEquals("error", connection.errorStream!!.bufferedReader().use { it.readText() })
+        } finally {
+            connection.disconnect()
+        }
+        assertTrue(body.closed)
+    }
+
+    @Test
     fun `asking for an error stream does not initiate a request`() {
         var calls = 0
         val client = OkHttpClient.Builder().addInterceptor { chain ->
@@ -114,9 +144,14 @@ class OkHttpUrlConnectionTest {
         }
     }
 
-    private fun connection(status: Int, message: String, body: ResponseBody): OkHttpUrlConnection {
+    private fun connection(
+        status: Int,
+        message: String,
+        body: ResponseBody,
+        protocol: Protocol = Protocol.HTTP_1_1,
+    ): OkHttpUrlConnection {
         val client = OkHttpClient.Builder().addInterceptor { chain ->
-            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1)
+            Response.Builder().request(chain.request()).protocol(protocol)
                 .code(status).message(message).header("Content-Type", "application/zip").body(body).build()
         }.build()
         return OkHttpUrlConnection(URL("https://example.invalid/pack.zip"), client)
