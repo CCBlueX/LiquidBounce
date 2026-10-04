@@ -22,15 +22,14 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.sqrt
-import kotlin.math.tan
 
 /**
  * Closed-form interception math for wind charges.
  *
- * A wind charge flies in a straight line at constant speed — no gravity, no drag, even in water —
- * and inherits the thrower's velocity at spawn. See
- * [net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge] and
- * [net.minecraft.world.entity.projectile.Projectile.shootFromRotation].
+ * A wind charge flies in a straight line at constant speed — `accelerationPower` is 0.0 and
+ * `getInertia()`/`getLiquidInertia()` are 1.0, so `applyInertia()` is the identity on land and in
+ * water, and `tick()` applies no gravity — and adds the thrower's `getKnownMovement()` at spawn,
+ * with the Y component forced to 0 when `onGround()` (`Projectile.shootFromRotation`).
  *
  * Requiring the projectile to hit a linearly moving target at time t gives the condition
  * `|Δ + w·t| = 1.5·t`, which squares to the quadratic
@@ -42,22 +41,16 @@ object InterceptElytraSolver {
     /**
      * Launch speed of a wind charge in blocks per tick.
      *
+     * Hard accuracy ceiling: the server adds `random.triangle(0, 0.0172275 * uncertainty)`
+     * per axis to the normalized aim direction (`Projectile.getMovementToShoot`) with uncertainty
+     * 1.0 for hand-thrown charges (`WindChargeItem.use`; thrown power equals
+     * `PROJECTILE_SHOOT_POWER` = 1.5). Worst case ~1.7° combined (~0.6 blocks at 20 blocks);
+     * transverse RMS ~0.57° (~0.20 blocks at 20, from Var = spread²/6 per axis — see
+     * `RandomSource#triangle`). No solver precision can beat that spread.
+     *
      * @see net.minecraft.world.item.WindChargeItem#PROJECTILE_SHOOT_POWER
      */
     const val WIND_CHARGE_SPEED: Double = 1.5
-
-    /**
-     * Explosion knockback multiplier of the player wind charge.
-     *
-     * @see net.minecraft.world.level.SimpleExplosionDamageCalculator
-     */
-    const val KNOCKBACK_MULTIPLIER: Double = 1.22
-
-    /** Explosion radius of the wind charge in blocks. */
-    const val EXPLOSION_RADIUS: Double = 1.2
-
-    /** Normalizes the knockback falloff distance (radius * 2). */
-    const val KNOCKBACK_DISTANCE_DIVISOR: Double = EXPLOSION_RADIUS * 2.0
 
     /** Shortest flight time considered solvable, in ticks. */
     const val MIN_FLIGHT_TICKS: Double = 0.5
@@ -66,7 +59,6 @@ object InterceptElytraSolver {
     const val MIN_SOLUTION_NORM: Double = 1e-3
 
     private const val EPSILON = 1e-9
-    private const val DEG_TO_RAD = Math.PI / 180.0
 
     /** Aim direction and flight time of an interception shot. */
     data class WindChargeSolution(
@@ -78,14 +70,17 @@ object InterceptElytraSolver {
      * Computes the aim direction that hits a linearly moving target with a wind charge.
      *
      * @param eye spawn position of the projectile (the thrower's eye position).
-     * @param ownVelocity the thrower's velocity at spawn; the Y component is ignored when grounded.
+     * @param ownVelocity the thrower's velocity at spawn, inherited in full by the projectile
+     * (the caller must zero the Y component when grounded, mirroring `Projectile.shootFromRotation`).
      * @param targetPos the target position at time zero.
      * @param targetVelocity the target's linear velocity, in blocks per tick.
      * @param maxFlightTicks upper bound for the predicted flight time; beyond it prediction is unreliable.
-     * @param verticalOffsetDegrees shifts the aim point vertically before solving. A positive offset
-     * aims above the target, placing the explosion above its eyes so the radial knockback pushes it down.
-     * @return the shot solution, or null when no interception exists — e.g. the target escapes faster
-     * than the projectile, the target sits at the eye, or any input is non-finite.
+     * @return the shot solution, or null when no interception exists within the window — e.g. the
+     * target outruns the projectile (no positive root; a firework-boosted glider converges to
+     * ~1.7 b/t against the charge's 1.5 b/t, see FireworkRocketEntity), the target is at
+     * (within ~3e-5 blocks of) the eye, the root falls outside `MIN_FLIGHT_TICKS..maxFlightTicks`,
+     * the degenerate linear case does not close (`B >= 0`), or any of the four vector inputs is
+     * non-finite.
      */
     fun solveWindChargeIntercept(
         eye: Vec3,
@@ -93,17 +88,15 @@ object InterceptElytraSolver {
         targetPos: Vec3,
         targetVelocity: Vec3,
         maxFlightTicks: Double,
-        verticalOffsetDegrees: Float = 0f,
     ): WindChargeSolution? {
         if (!eye.isFinite() || !ownVelocity.isFinite() || !targetPos.isFinite() || !targetVelocity.isFinite()) {
             return null
         }
 
-        val aimPoint = applyVerticalOffset(eye, targetPos, verticalOffsetDegrees)
-        val delta = aimPoint.subtract(eye)
+        val delta = targetPos.subtract(eye)
         val constantTerm = delta.lengthSqr()
 
-        // Nothing to aim at from zero distance.
+        // Treat near-zero distance (below ~3e-5 blocks) as no solution.
         if (constantTerm < EPSILON) {
             return null
         }
@@ -118,7 +111,8 @@ object InterceptElytraSolver {
         // Aim direction, unit by construction since |Δ + w·t| = 1.5·t at the root.
         val direction = delta.add(relativeVelocity.scale(flightTicks)).scale(1.0 / (WIND_CHARGE_SPEED * flightTicks))
 
-        // Numerical safety: discard degenerate solutions and predictions outside the flight window.
+        // Validity window: discard sub-minimum times, predictions past maxFlightTicks,
+        // and non-unit directions.
         val solvable = flightTicks in MIN_FLIGHT_TICKS..maxFlightTicks &&
             abs(direction.length() - 1.0) <= MIN_SOLUTION_NORM
 
@@ -132,8 +126,9 @@ object InterceptElytraSolver {
     /**
      * Smallest positive root of A·t² + B·t + C = 0 for the flight-time problem.
      *
-     * When |A| ≈ 0 the target closes at exactly the projectile speed and the equation degenerates
-     * to the linear case B·t + C = 0.
+     * When |A| is near zero the relative speed equals the projectile speed and the equation
+     * degenerates to the linear case B·t + C = 0, solvable iff the target is closing (B < 0,
+     * since C = |Δ|² > 0).
      */
     private fun solveFlightTime(a: Double, b: Double, c: Double): Double? {
         if (abs(a) <= EPSILON) {
@@ -162,62 +157,14 @@ object InterceptElytraSolver {
     }
 
     /**
-     * Shifts an aim point vertically by an angle around an origin, keeping the distance constant.
-     *
-     * Positive offsets raise the point; a wind charge exploding there pushes the target downward.
-     */
-    fun applyVerticalOffset(origin: Vec3, target: Vec3, offsetDegrees: Float): Vec3 {
-        if (offsetDegrees == 0f) {
-            return target
-        }
-
-        val distance = target.subtract(origin).length()
-        return target.add(0.0, distance * tan(offsetDegrees.toDouble() * DEG_TO_RAD), 0.0)
-    }
-
-    /**
      * Linear extrapolation of a glider's position.
      *
-     * The elytra velocity re-aligns toward the look direction by ~10% per tick, so the linear
-     * approximation stays accurate for short flight horizons.
+     * This is an approximation: gliders can steer away from their current velocity (vanilla blends
+     * horizontal velocity toward the look direction by 0.1 per tick — see
+     * LivingEntity#updateFallFlyingMovement), so the linear model only holds for short horizons.
      */
     fun predictGliderLinear(targetPos: Vec3, targetVelocity: Vec3, ticks: Double, multiplier: Double = 1.0): Vec3 =
         targetPos.add(targetVelocity.scale(ticks * multiplier))
-
-    /**
-     * Predicts the knockback a wind charge explosion applies, mirroring the server-side formula.
-     *
-     * @param explosionCenter the center of the wind burst.
-     * @param entityEyePosition the affected entity's eye position.
-     * @param exposure line-of-sight exposure factor in 0..1 (1.0 in open air).
-     * @param knockbackResistance the entity's explosion knockback resistance attribute (0..1).
-     * @param knockbackMultiplier the explosion's knockback multiplier; pass 0 for creative flyers.
-     * @return the added velocity in blocks per tick, or [Vec3.ZERO] when out of range or degenerate.
-     *
-     * @see net.minecraft.world.level.ServerExplosion
-     */
-    fun predictKnockback(
-        explosionCenter: Vec3,
-        entityEyePosition: Vec3,
-        exposure: Double,
-        knockbackResistance: Double = 0.0,
-        knockbackMultiplier: Double = KNOCKBACK_MULTIPLIER,
-    ): Vec3 {
-        val offset = entityEyePosition.subtract(explosionCenter)
-        val distance = offset.length()
-
-        if (distance < EPSILON) {
-            return Vec3.ZERO
-        }
-
-        val normalizedDistance = distance / KNOCKBACK_DISTANCE_DIVISOR
-        if (normalizedDistance >= 1.0) {
-            return Vec3.ZERO
-        }
-
-        val power = (1.0 - normalizedDistance) * exposure * knockbackMultiplier * (1.0 - knockbackResistance)
-        return offset.scale(power / distance)
-    }
 
     /** Estimated flight time in ticks for a straight-line distance in blocks. */
     fun estimateFlightTicks(distance: Double): Double = distance / WIND_CHARGE_SPEED

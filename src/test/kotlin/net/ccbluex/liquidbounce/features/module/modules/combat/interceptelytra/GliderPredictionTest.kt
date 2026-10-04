@@ -36,7 +36,7 @@ class GliderPredictionTest {
     }
 
     @Test
-    fun `linear extrapolation scales with ticks and multiplier`() {
+    fun `linear extrapolation evaluates velocity scaled by ticks times multiplier`() {
         val ticks = 4.0
         val multiplier = 2.0
 
@@ -46,6 +46,14 @@ class GliderPredictionTest {
         assertEquals(expected.x, predicted.x, 1e-9)
         assertEquals(expected.y, predicted.y, 1e-9)
         assertEquals(expected.z, predicted.z, 1e-9)
+
+        // Scaling is linear: doubling the horizon doubles the displacement from base.
+        val displacement = predicted.subtract(base)
+        val doubled = predictGliderLinear(base, velocity, ticks * 2.0, multiplier).subtract(base)
+
+        assertEquals(displacement.scale(2.0).x, doubled.x, 1e-9)
+        assertEquals(displacement.scale(2.0).y, doubled.y, 1e-9)
+        assertEquals(displacement.scale(2.0).z, doubled.z, 1e-9)
     }
 
     @Test

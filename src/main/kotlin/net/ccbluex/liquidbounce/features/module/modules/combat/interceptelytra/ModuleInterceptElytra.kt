@@ -19,16 +19,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.interceptelytra
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.lastPos
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -51,52 +55,82 @@ import net.minecraft.world.phys.Vec3
  *
  * Detects gliding players, predicts their trajectory and throws a wind charge at the computed
  * interception point. The explosion's radial knockback (multiplier 1.22, ~2.4 block falloff) breaks
- * the glider's flight path; a direct hit additionally deals 1.0 damage. Creative/spectator players are
- * ignored — they are immune to the knockback. Teammates and friends (as configured in Teams/FriendManager)
- * are also excluded.
+ * the glider's flight path; a direct hit additionally attempts 1.0 damage server-side. Spectators
+ * are excluded client-side (wind charge explosions never damage anyone, and ability-driven flyers
+ * get zero knockback — see SimpleExplosionDamageCalculator). No abilities check is needed: other
+ * players' abilities are never synced to the client (see ClientboundPlayerAbilitiesPacket,
+ * which carries no entity id), and ability-flyers cannot glide (see Player#canGlide). Teammates
+ * (while Teams is enabled and matches) and friends (unless Friends is a global Combat target) are
+ * also excluded. Blast Protection adds +0.15 explosion knockback resistance per level and piece
+ * (see blast_protection.json); a full level-IV set takes zero knockback, and enchantments are not
+ * synced to the client, so such targets cannot be distinguished beforehand.
  *
  * @see InterceptElytraSolver
  */
 object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.COMBAT) {
 
     private const val MILLISECONDS_PER_TICK = 50
-    private const val MAX_VERIFICATION_TICKS = 300
-    private const val VERIFY_TOLERANCE_SQ = 4.0 // 2 blocks, covers sampling step + hitbox radius
+    // ~1.06 blocks: half the 1.5/t sampling step (0.75) plus the 0.3125 charge box; squared in use.
+    private const val VERIFY_TOLERANCE_SQ = 1.2
 
-    private val range by float("Range", 32f, 10f..64f)
+    // Eye-to-hitbox distance (nearest box point), in blocks.
+    private val range by float("Range", 32f, 10f..64f, "blocks")
     private val requireGliding by boolean("RequireGliding", true)
-    private val minimumTargetSpeed by float("MinimumTargetSpeed", 0.2f, 0f..5f)
+    // Horizontal (XZ) speed only; vertical dive speed is ignored.
+    private val minimumTargetSpeed by float("MinimumTargetSpeed", 0.2f, 0f..5f, "blocks/tick")
+    // INTERCEPT_POINT falls back to DIRECT when unsolvable (target outruns the projectile).
     private val aimMode by enumChoice("AimMode", AimMode.INTERCEPT_POINT)
+    // Only applies to DIRECT aim (and the INTERCEPT_POINT fallback); ignored when closed-form solves.
     private val predictionMode by enumChoice("PredictionMode", PredictionMode.LINEAR)
+    // Only used with LINEAR prediction (DIRECT mode, including the INTERCEPT_POINT fallback).
     private val predictionMultiplier by floatRange("PredictionMultiplier", 1.8f..2.0f, 0.5f..3f)
-    private val aimVerticalOffset by float("AimVerticalOffset", 0f, -10f..10f)
-    private val maxFlightTicks by int("MaxFlightTicks", 30, 10..60)
-    private val cooldown by intRange("Cooldown", 8..12, 1..50, "ticks")
+    // Caps the INTERCEPT_POINT solver and the VerifyHit sim; DIRECT aim is uncapped.
+    private val maxFlightTicks by int("MaxFlightTicks", 30, 10..60, "ticks")
+    // Wall-clock approx (ticks x 50 ms); diverges from game ticks under lag. Vanilla also enforces
+    // a fixed 10-tick item cooldown (Items.useCooldown(0.5F)) — anything below it is inert.
+    private val cooldown by intRange("Cooldown", 10..12, 10..50, "ticks")
+    // 0 = restore immediately; raise if the server ignores the silent swap.
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..20, "ticks")
-    private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
+    private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f, "°")
     private val considerInventory by boolean("ConsiderInventory", true)
+    // Leads the target anchor by the tracking interval (2 ticks for players, EntityTypes.PLAYER)
+    // plus half the round-trip time, so the solver sees where the target is, not its last report.
+    private val lagCompensation by boolean("LagCompensation", true)
     private val requireLineOfSight by boolean("RequireLineOfSight", true)
     private val verifyHit by boolean("VerifyHit", false)
     private val rotations = tree(RotationsValueGroup(this))
 
     private val chronometer = Chronometer()
 
+    // Rolled once per engagement so the aim point does not wobble between ticks.
+    private var engagedTarget: LivingEntity? = null
+    private var engagedMultiplier: Float = 1.0f
+
     private val cooldownReached: Boolean
         get() = chronometer.hasElapsed((cooldown.random() * MILLISECONDS_PER_TICK).toLong())
 
     @Suppress("unused")
-    private val interceptHandler = tickHandler {
+    private val interceptHandler = handler<GameTickEvent> {
         if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpen)) {
-            return@tickHandler
+            return@handler
         }
 
-        val target = selectBestGlider() ?: return@tickHandler
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@tickHandler
+        val target = selectBestGlider() ?: run {
+            engagedTarget = null
+            return@handler
+        }
+
+        if (target !== engagedTarget) {
+            engagedTarget = target
+            engagedMultiplier = predictionMultiplier.random()
+        }
+
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@handler
 
         val aim = calculateAim(target)
 
-        if (verifyHit && !passesVerification(target, aim.rotation, aim.flightTicks)) {
-            return@tickHandler
+        if (verifyHit && !passesVerification(aim)) {
+            return@handler
         }
 
         RotationManager.setRotationTarget(
@@ -109,6 +143,16 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
             useHotbarSlotOrOffhand(slot, slotResetDelay.random(), aim.rotation.yaw, aim.rotation.pitch)
             chronometer.reset()
         }
+    }
+
+    override fun onEnabled() {
+        // Otherwise the first eligible tick after enabling would shoot instantly.
+        chronometer.reset()
+    }
+
+    override fun onDisabled() {
+        engagedTarget = null
+        engagedMultiplier = 1.0f
     }
 
     /**
@@ -124,7 +168,7 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
 
             val distanceSq = glider.squaredBoxedDistanceTo(player)
             // Line of sight is checked last, only for candidates inside range that beat the best
-            // so far, to avoid raycasts for entities that can never win.
+            // so far, to avoid line-of-sight checks for entities that can never win.
             if (distanceSq <= range.sq() && distanceSq < bestDistanceSq && hasLineOfSight(glider)) {
                 bestDistanceSq = distanceSq
                 bestTarget = glider
@@ -134,7 +178,7 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
         return bestTarget
     }
 
-    /** Casts to a gliding player that can be knocked out of the air, or null when not targetable. */
+    /** Casts to a player that can be knocked out of the air, or null when not targetable. */
     private fun asTargetableGlider(entity: Entity): LivingEntity? {
         val glider = entity as? Player ?: return null
         val hasSpeed = glider.deltaMovement.horizontalDistance() >= minimumTargetSpeed
@@ -142,28 +186,43 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
         return glider.takeIf { candidate ->
             candidate !== player &&
                 candidate.isAlive &&
+                !candidate.isSpectator &&
                 (!requireGliding || candidate.isFallFlying) &&
-                !candidate.abilities.instabuild && // creative/spectator players are immune to knockback
-                candidate.shouldBeAttacked() && // respect friend list and team settings
+                candidate.shouldBeAttacked() && // honors the friend list and Teams tagging when those apply
                 hasSpeed
         }
     }
 
+    /** Eye-to-eye block clip with 128-block cutoff (see LivingEntity#hasLineOfSight). */
     private fun hasLineOfSight(glider: LivingEntity): Boolean =
         !requireLineOfSight || player.hasLineOfSight(glider)
 
-    /** Rotation plus the flight time used for prediction. */
-    private data class Aim(val rotation: Rotation, val flightTicks: Double)
+    /** Rotation, flight time and the predicted impact point the aim was computed for. */
+    private data class Aim(val rotation: Rotation, val flightTicks: Double, val predictedImpact: Vec3)
 
     private fun calculateAim(target: LivingEntity): Aim {
         val eye = player.eyePosition
-        // Vanilla zeroes the thrower's vertical velocity when grounded (shootFromRotation).
+        // Vanilla adds the thrower's getKnownMovement() (Projectile#shootFromRotation), which is
+        // declared on Entity and fed by ServerGamePacketListenerImpl#handlePlayerKnownMovement
+        // (zeroed by handleClientTickEnd when no movement arrived — never goes stale). Mirrored
+        // here from recent displacement (position - lastPos) rather than the friction-scaled
+        // deltaMovement. Y is zeroed when grounded.
+        val knownMovement = player.position().subtract(player.lastPos)
         val ownVelocity = Vec3(
-            player.deltaMovement.x,
-            if (player.onGround()) 0.0 else player.deltaMovement.y,
-            player.deltaMovement.z,
+            knownMovement.x,
+            if (player.onGround()) 0.0 else knownMovement.y,
+            knownMovement.z,
         )
-        val targetPosition = target.getEyePosition()
+        // Lag compensation: lead the anchor so the solve runs on the target's live position.
+        // No-op in singleplayer, where the integrated server shares the world state.
+        val lagTicks = if (lagCompensation && !mc.hasSingleplayerServer()) {
+            2.0 + player.ping / 100.0
+        } else {
+            0.0
+        }
+        // While gliding, the pose eye height (0.4) sits 0.1 above the center of the 0.6-block
+        // hitbox (see Avatar#FALL_FLYING) — aiming at the eye ≈ aiming at center of mass.
+        val targetPosition = target.getEyePosition().add(target.deltaMovement.scale(lagTicks))
 
         return when (aimMode) {
             AimMode.INTERCEPT_POINT -> {
@@ -173,11 +232,15 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
                     targetPosition,
                     target.deltaMovement,
                     maxFlightTicks.toDouble(),
-                    aimVerticalOffset,
                 )
 
                 if (solution != null) {
-                    Aim(solution.rotation, solution.flightTicks)
+                    val predictedImpact = InterceptElytraSolver.predictGliderLinear(
+                        targetPosition,
+                        target.deltaMovement,
+                        solution.flightTicks,
+                    )
+                    Aim(solution.rotation, solution.flightTicks, predictedImpact)
                 } else {
                     directAim(eye, target, targetPosition)
                 }
@@ -195,43 +258,48 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
                 targetPosition,
                 target.deltaMovement,
                 flightTicks,
-                predictionMultiplier.random().toDouble(),
+                engagedMultiplier.toDouble(),
             )
 
             PredictionMode.SIMULATED -> PositionExtrapolation.getBestForEntity(target).getPositionInTicks(flightTicks)
         }
 
-        val aimPoint = InterceptElytraSolver.applyVerticalOffset(eye, predicted, aimVerticalOffset)
-        return Aim(Rotation.lookingAt(aimPoint, eye), flightTicks)
+        return Aim(Rotation.lookingAt(predicted, eye), flightTicks, predicted)
     }
 
     /**
      * Validates the shot by simulating the wind charge trajectory and checking it reaches the
-     * predicted impact point. Bounded to [MAX_VERIFICATION_TICKS] ticks, hence constant cost.
+     * predicted impact point the aim was computed for. Bounded by the maximum flight time, hence
+     * bounded tick count (per-step cost still scales with nearby entities).
      *
      * The simulation world is static — entity hitboxes never move — while the aim leads the target,
      * so the trajectory is compared against the target's predicted position instead of an entity
      * reference.
      */
-    private fun passesVerification(target: LivingEntity, rotation: Rotation, flightTicks: Double): Boolean {
-        val predictedImpact = InterceptElytraSolver.predictGliderLinear(
-            target.getEyePosition(),
-            target.deltaMovement,
-            flightTicks,
-        )
-
+    private fun passesVerification(aim: Aim): Boolean {
+        // Note: the shared trajectory renderer inherits the owner's deltaMovement while the
+        // solver above uses the position-based known movement; the residual is absorbed by the
+        // tolerance below and the whole check stays opt-in.
         val result = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             player,
             TrajectoryInfo.WIND_CHARGE,
             TrajectoryType.WindCharge,
-            rotation,
-        ).runSimulation(MAX_VERIFICATION_TICKS)
+            aim.rotation,
+        ).runSimulation(maxFlightTicks + 1)
 
-        // The projectile samples one point per tick (1.5 blocks apart); tolerance covers the
-        // sampling step and the 1.0-block projectile hitbox.
-        return result.positions.any { it.distanceToSqr(predictedImpact) <= VERIFY_TOLERANCE_SQ }
+        // The simulation advances in ~1.5-block steps per tick plus inherited thrower velocity;
+        // the tolerance (~1.06 blocks) covers that granularity plus the 0.3125-block wind charge
+        // (see EntityTypes.WIND_CHARGE). This is a coarse geometric filter, not a vanilla hit test:
+        // vanilla resolves the charge against the target's box, not a point.
+        // Best for short flights: the residual against the solver's known movement grows
+        // with flight time.
+        return result.positions.any { it.distanceToSqr(aim.predictedImpact) <= VERIFY_TOLERANCE_SQ }
     }
 
+    /**
+     * [INTERCEPT_POINT] solves the closed-form interception and falls back to [DIRECT] when no
+     * solution exists — e.g. the target outruns the wind charge within [maxFlightTicks].
+     */
     private enum class AimMode(override val tag: String) : Tagged {
         INTERCEPT_POINT("InterceptPoint"),
         DIRECT("Direct"),
