@@ -20,13 +20,98 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.platform.NativeImage
+import okio.buffer
+import okio.source
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import javax.imageio.ImageIO
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.test.Test
 import java.awt.image.BufferedImage
 
 class RenderExtensionsTest {
+
+    private class TrackedInput(bytes: ByteArray) : ByteArrayInputStream(bytes) {
+        var closes = 0
+            private set
+
+        override fun close() {
+            closes++
+            super.close()
+        }
+    }
+
+    private fun imageBytes(format: String): ByteArray {
+        val image = BufferedImage(2, 3, BufferedImage.TYPE_INT_RGB)
+        return ByteArrayOutputStream().use { output ->
+            check(ImageIO.write(image, format, output))
+            output.toByteArray()
+        }
+    }
+
+    @Test
+    fun `JPEG decoding closes the original source after conversion`() {
+        val input = TrackedInput(imageBytes("jpeg"))
+
+        input.source().buffer().readNativeImage().use { image ->
+            assertEquals(2, image.width)
+            assertEquals(3, image.height)
+        }
+
+        assertEquals(1, input.closes)
+    }
+
+    @Test
+    fun `PNG decoding closes the original source`() {
+        val input = TrackedInput(imageBytes("png"))
+
+        input.source().buffer().readNativeImage().use { image ->
+            assertEquals(2, image.width)
+            assertEquals(3, image.height)
+        }
+
+        assertEquals(1, input.closes)
+    }
+
+    @Test
+    fun `unsupported image formats close the source`() {
+        val input = TrackedInput("not an image".toByteArray())
+
+        assertFailsWith<IllegalArgumentException> { input.source().buffer().readNativeImage() }
+
+        assertEquals(1, input.closes)
+    }
+
+    @Test
+    fun `short image inputs close the source`() {
+        val input = TrackedInput(byteArrayOf(0x01, 0x02))
+
+        assertFailsWith<IllegalArgumentException> { input.source().buffer().readNativeImage() }
+
+        assertEquals(1, input.closes)
+    }
+
+    @Test
+    fun `invalid JPEG data closes the source when conversion fails`() {
+        val input = TrackedInput(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0x00))
+
+        assertFailsWith<IOException> { input.source().buffer().readNativeImage() }
+
+        assertEquals(1, input.closes)
+    }
+
+    @Test
+    fun `invalid PNG data closes the source when native decoding fails`() {
+        val input = TrackedInput(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))
+
+        assertFailsWith<IOException> { input.source().buffer().readNativeImage() }
+
+        assertEquals(1, input.closes)
+    }
 
     @Test
     fun testCopyIntArgbSubImageToNativeImage() {
