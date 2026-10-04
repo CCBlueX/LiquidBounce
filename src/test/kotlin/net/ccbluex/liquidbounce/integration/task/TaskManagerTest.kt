@@ -28,6 +28,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -214,6 +215,51 @@ class TaskManagerTest {
         assertTrue(task.isCompleted)
         assertEquals(1f, manager.progress)
         assertTrue(manager.getActiveTasks().isEmpty())
+    }
+
+    @Test
+    fun `manager cancellation reaches jobs in every branch of a nested task tree`() = runTest {
+        val manager = TaskManager(this)
+        val task = manager.createTask("Download")
+        val archive = task.getOrCreateTask("Archive")
+        val file = archive.getOrCreateTask("File")
+        val unpack = file.getOrCreateTask("Unpack")
+        val metadata = task.getOrCreateTask("Metadata")
+        val tasks = listOf(task, archive, file, unpack, metadata)
+        tasks.forEach { it.job = backgroundScope.launch { awaitCancellation() } }
+        runCurrent()
+
+        manager.cancel("Download")
+        runCurrent()
+
+        for (entry in tasks) {
+            assertTrue(assertNotNull(entry.job).isCancelled, entry.name)
+            assertTrue(entry.isCompleted, entry.name)
+            assertEquals(1f, entry.progress, entry.name)
+        }
+        assertTrue(manager.isCompleted)
+        assertTrue(manager.getActiveTasks().isEmpty())
+    }
+
+    @Test
+    fun `cancelling a task without a job completes all nested manual progress`() = runTest {
+        val manager = TaskManager(this)
+        val task = manager.createTask("Download")
+        val archive = task.getOrCreateTask("Archive")
+        val file = archive.getOrCreateTask("File")
+        file.progress = 0.25f
+        val unrelated = manager.createTask("Other")
+
+        manager.cancel("Missing")
+        assertFalse(task.isCompleted)
+        manager.cancel("Download")
+
+        assertTrue(file.isCompleted)
+        assertTrue(archive.isCompleted)
+        assertTrue(task.isCompleted)
+        assertEquals(1f, task.progress)
+        assertFalse(unrelated.isCompleted)
+        assertEquals(listOf(unrelated), manager.getActiveTasks())
     }
 
 }
