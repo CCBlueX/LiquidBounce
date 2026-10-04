@@ -35,6 +35,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import java.util.Comparator.comparing
+import java.util.Comparator.comparingDouble
 import java.util.Comparator.comparingInt
 
 /**
@@ -125,7 +126,7 @@ class ArmorComparator(
     private val expectedDamage: Float,
     private val armorKitParametersForSlot: ArmorKitParameters,
     private val durabilityThreshold : Int = Int.MIN_VALUE,
-    private val mode: ArmorComparatorMode = ArmorComparatorMode.SMART,
+    mode: ArmorComparatorMode = ArmorComparatorMode.SMART,
     private val considerProjectileProtection: Boolean = true
 ) : Comparator<ArmorPiece> {
     companion object {
@@ -159,6 +160,14 @@ class ArmorComparator(
         private const val PROTECTION_EPF_MODIFIER = 0.75f
         private const val PROJECTILE_PROTECTION_EPF_MODIFIER = 1.5f
         private const val EPF_REDUCTION_PER_POINT = 0.04f
+
+        private val SHARED_COMPARATOR = ComparatorChain(
+            comparing({ it.itemSlot.itemStack }, OTHER_ENCHANTMENT_ESTIMATOR),
+            comparingInt { it.itemSlot.itemStack.getEnchantmentCount() },
+            comparingInt { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
+            comparing(ArmorPiece::isAlreadyEquipped),
+            comparing(ArmorPiece::isReachableByHand),
+        )
     }
 
     // Both modes rank by damage reduction: the piece which prevents more damage has to compare as greater,
@@ -174,12 +183,8 @@ class ArmorComparator(
 
     private fun smartComparator() = ComparatorChain(
         comparing { it.itemSlot.itemStack.durability > durabilityThreshold },
-        compareBy { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
-        comparing({ it.itemSlot.itemStack }, OTHER_ENCHANTMENT_ESTIMATOR),
-        comparingInt { it.itemSlot.itemStack.getEnchantmentCount() },
-        comparingInt { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
-        comparing(ArmorPiece::isAlreadyEquipped),
-        comparing(ArmorPiece::isReachableByHand),
+        comparingDouble { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3).toDouble() },
+        SHARED_COMPARATOR,
     )
 
     /**
@@ -189,13 +194,9 @@ class ArmorComparator(
      */
     private fun rawDefenseComparator() = ComparatorChain(
         comparing { it.itemSlot.itemStack.durability > durabilityThreshold },
-        compareBy { getLegacyDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(4) },
+        comparingDouble { getLegacyDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(4).toDouble() },
         comparingInt { it.itemSlot.itemStack.getEnchantment(Enchantments.PROTECTION) },
-        comparing({ it.itemSlot.itemStack }, OTHER_ENCHANTMENT_ESTIMATOR),
-        comparingInt { it.itemSlot.itemStack.getEnchantmentCount() },
-        comparingInt { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
-        comparing(ArmorPiece::isAlreadyEquipped),
-        comparing(ArmorPiece::isReachableByHand),
+        SHARED_COMPARATOR,
     )
 
     /**
@@ -212,7 +213,7 @@ class ArmorComparator(
      */
     fun getLegacyDamageReduction(itemStack: ItemStack): Float {
         val parameters = this.armorKitParametersForSlot.getParametersForSlot(itemStack.equipmentSlot!!)
-        val totalArmorPoints = parameters.defensePoints + itemStack.armorValue!!.toFloat()
+        val totalArmorPoints = parameters.defensePoints + itemStack.armorValue.toFloat()
 
         val armorReduction = (totalArmorPoints * LEGACY_REDUCTION_PER_POINT).coerceAtMost(LEGACY_REDUCTION_CAP)
 
@@ -253,8 +254,8 @@ class ArmorComparator(
 
         val damageFactor = getDamageFactor(
             damage = expectedDamage,
-            defensePoints = parameters.defensePoints + itemStack.armorValue!!.toFloat(),
-            toughness = parameters.toughness + itemStack.armorToughness!!.toFloat()
+            defensePoints = parameters.defensePoints + itemStack.armorValue.toFloat(),
+            toughness = parameters.toughness + itemStack.armorToughness.toFloat()
         ) * (1 - DAMAGE_REDUCTION_ESTIMATOR.estimateValue(itemStack))
 
         // getDamageFactor returns the damage that is taken, so invert it into the damage that is prevented.
