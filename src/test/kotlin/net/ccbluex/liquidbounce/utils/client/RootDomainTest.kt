@@ -87,6 +87,8 @@ class RootDomainTest {
             "[2001:DB8::1]:25565" to "2001:db8::1",
             "[::ffff:192.0.2.1]:25565" to "::ffff:192.0.2.1",
             "::1" to "::1",
+            "[fe80::1%eth0]:25565" to "fe80::1%eth0",
+            "[fe80::1%eth0.100]:25565" to "fe80::1%eth0.100",
         )
         for ((address, host) in addresses) {
             assertEquals(host, address.dropPort().rootDomain(), address)
@@ -96,9 +98,24 @@ class RootDomainTest {
 
     @Test
     fun `malformed server addresses are left intact`() {
-        for (address in listOf("[2001:db8::1", "example.net:not-a-port", "example.net:65536")) {
+        val addresses = listOf(
+            "[2001:db8::1",
+            "example.net:not-a-port",
+            "example.net:65536",
+            "example.net: 25565",
+            "example.net:25565 ",
+            "example.net:25565suffix",
+            "[2001:db8::1]:25565suffix",
+        )
+        for (address in addresses) {
             assertEquals(address, address.dropPort(), address)
         }
+    }
+
+    @Test
+    fun `a hostname with a port does not take the IPv6 branch`() {
+        assertEquals("example.net:25565", "play.example.net:25565".rootDomain())
+        assertEquals("example.net", "play.example.net:25565".dropPort().rootDomain())
     }
 
 }
