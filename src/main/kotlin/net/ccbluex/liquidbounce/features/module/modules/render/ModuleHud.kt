@@ -71,6 +71,11 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     private val isHudHidden: Boolean
         get() = mc.gui.hud.isHidden
 
+    /**
+     * [isHudHidden] as of the last visibility update. Together with [tickHandler] this turns the
+     * vanilla HUD toggle - which fires no event - into a change the overlay reacts to, without
+     * evaluating the browser every tick.
+     */
     private var lastHudHidden = false
 
     var hudEditorSelected = false
@@ -92,6 +97,11 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
             screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
 
     private fun updateOverlayVisibility(screen: Screen?) {
+        // Visibility is always derived from the live state, so record it here: every path (screen
+        // changes, disconnects, re-enabling, HUD editor) then keeps the tick change detection in
+        // sync instead of relying on a single caller to do so.
+        lastHudHidden = isHudHidden
+
         if (!enabled || !isVisible) {
             overlay.close()
             return
@@ -131,7 +141,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     val isBlurEffectActive
-        get() = Blur.enabled && !(mc.gui.hud.isHidden && mc.gui.screen() == null)
+        get() = Blur.enabled && !(isHudHidden && mc.gui.screen() == null)
 
     val themes = tree(ValueGroup("Themes"))
 
@@ -175,13 +185,12 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     /**
      * The vanilla HUD toggle is not reported through [ScreenEvent] - it is only processed while no
      * screen is open - so the overlay follows that state on tick. Reacting to the change alone
-     * avoids re-opening a browser that could not be opened (yet).
+     * avoids re-opening a browser that could not be opened (yet);
+     * [updateOverlayVisibility] records the state it evaluated.
      */
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        val hudHidden = isHudHidden
-        if (hudHidden != lastHudHidden) {
-            lastHudHidden = hudHidden
+        if (isHudHidden != lastHudHidden) {
             updateOverlayVisibility(mc.gui.screen())
         }
     }
