@@ -70,6 +70,9 @@ public abstract class MixinCamera {
     public abstract void setPosition(Vec3 pos);
 
     @Shadow
+    public abstract boolean isPanoramicMode();
+
+    @Shadow
     private @Nullable Entity entity;
 
     @Shadow
@@ -197,6 +200,10 @@ public abstract class MixinCamera {
 
     /**
      * <pre>
+     *     if (this.isPanoramicMode) {
+     *         return 90.0F;
+     *     }
+     *     ...
      *     return this.modifyFovBasedOnDeathOrFluid(partialTicks, fov);
      * </pre>
      *
@@ -204,6 +211,11 @@ public abstract class MixinCamera {
      */
     @ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
     private float smoothZoomFov(float original) {
+        // The early return never reads the hooked fov, so its constant fov carries no fraction of ours.
+        if (this.isPanoramicMode()) {
+            return original;
+        }
+
         return ModuleZoom.INSTANCE.applyFractionalFov(original);
     }
 

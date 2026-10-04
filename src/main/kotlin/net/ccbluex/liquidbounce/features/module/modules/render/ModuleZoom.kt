@@ -64,6 +64,9 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
     private val durationFactor by float("DurationFactor", 2f, 0f..10f, "x")
 
     private val chronometer = Chronometer()
+    // TODO: Whole degrees only, so re-anchoring a transition (scroll wheel, re-enabling) snaps the displayed
+    //  fov back to this integer base and can jump by up to one degree. Holding the displayed fov as a float
+    //  would remove that last step.
     private var targetFov = 0
     private var previousFov = 0
     private var scaledDifference = 0.0
