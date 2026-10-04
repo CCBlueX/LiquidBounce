@@ -72,6 +72,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
     fun unsubscribe(subscriber: EventListener) {
         registry.remove(subscriber)
+        onUpdate.removeIf { (listener, _) -> listener === subscriber }
         if (registry.isEmpty()) {
             entities.clear()
             update()
