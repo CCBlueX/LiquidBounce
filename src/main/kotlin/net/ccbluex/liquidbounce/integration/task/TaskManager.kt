@@ -61,14 +61,14 @@ class TaskManager(private val scope: CoroutineScope) {
         action: suspend (Task) -> T
     ): Task {
         val task = createTask(taskName)
-        scope.launch {
+        val job = scope.launch {
             task.job = coroutineContext[Job]
             task.progress = 0f
-
-            val result = action(task)
-            complete(taskName)
-            result
+            action(task)
         }
+        task.job = job
+        // Also runs on failure or cancellation, including cancellation before the action starts.
+        job.invokeOnCompletion { complete(task) }
         return task
     }
 
@@ -80,15 +80,16 @@ class TaskManager(private val scope: CoroutineScope) {
             return
         }
 
-        tasks[taskName]?.let { task ->
-            for (subTask in task.subTasks.values) {
-                subTask.progress = 1.0f
-                subTask.isCompleted = true
-            }
+        tasks[taskName]?.let(::complete)
+    }
 
-            task.progress = 1.0f
-            task.isCompleted = true
+    private fun complete(task: Task) {
+        for (subTask in task.subTasks.values) {
+            complete(subTask)
         }
+
+        task.progress = 1.0f
+        task.isCompleted = true
     }
 
     /**
