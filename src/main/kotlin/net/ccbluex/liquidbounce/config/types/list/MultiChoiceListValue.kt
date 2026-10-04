@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
 import java.util.SequencedSet
+import java.util.SortedSet
+import java.util.TreeSet
 
 class MultiChoiceListValue<T : Tagged>(
     name: String,
@@ -80,8 +82,20 @@ class MultiChoiceListValue<T : Tagged>(
     @Exclude @ProtocolExclude
     private val choiceByName = choices.makeLookupTable()
 
+    @Exclude @ProtocolExclude
+    private val defaultSelection = copyActive()
+
+    override fun restore() {
+        val defaults = copyActive(defaultSelection)
+        if (isOrderSensitive && defaults.toList() != get().toList()) {
+            set(defaults) { inner = it }
+        } else {
+            set(defaults)
+        }
+    }
+
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val active = get()
+        val active = copyActive()
         active.clear()
 
         when (element) {
@@ -93,11 +107,15 @@ class MultiChoiceListValue<T : Tagged>(
             active.addAll(choices)
         }
 
-        set(active) { /** Trigger listener callbacks */ }
+        set(active) { inner = it }
     }
 
     private fun MutableSet<T>.tryToEnable(name: String) {
         choiceByName[name]?.let { add(it) }
+    }
+
+    private fun copyActive(active: MutableSet<T> = get()): MutableSet<T> {
+        return if (active is SortedSet<T>) TreeSet(active) else LinkedHashSet(active)
     }
 
     fun toggle(value: T): Boolean {
@@ -105,7 +123,7 @@ class MultiChoiceListValue<T : Tagged>(
             "Provided value is not in the choices: $value"
         }
 
-        val current = get()
+        val current = copyActive()
 
         val isActive = value in current
 
@@ -120,9 +138,9 @@ class MultiChoiceListValue<T : Tagged>(
         }
 
         // Trigger listeners
-        set(current) { }
+        set(current) { inner = it }
 
-        return !isActive
+        return value in get()
     }
 
     operator fun contains(choice: T) = get().contains(choice)
