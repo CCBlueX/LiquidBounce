@@ -129,4 +129,79 @@ class RenderedEntitiesTest {
         assertEquals(0, calls)
     }
 
+    @Test
+    fun `callbacks can unsubscribe themselves without skipping another listener`() {
+        var firstCalls = 0
+        var secondCalls = 0
+        RenderedEntities.subscribe(first)
+        RenderedEntities.subscribe(second)
+        with(first) {
+            RenderedEntities.onUpdated {
+                firstCalls++
+                RenderedEntities.unsubscribe(first)
+            }
+            RenderedEntities.onUpdated { firstCalls++ }
+        }
+        with(second) { RenderedEntities.onUpdated { secondCalls++ } }
+
+        EventManager.callEvent(WorldChangeEvent(null))
+
+        assertEquals(1, firstCalls)
+        assertEquals(1, secondCalls)
+        assertTrue(RenderedEntities.running)
+        EventManager.callEvent(WorldChangeEvent(null))
+        assertEquals(1, firstCalls)
+        assertEquals(2, secondCalls)
+    }
+
+    @Test
+    fun `callbacks can unsubscribe another listener before its turn`() {
+        var firstCalls = 0
+        var secondCalls = 0
+        RenderedEntities.subscribe(first)
+        RenderedEntities.subscribe(second)
+        with(first) {
+            RenderedEntities.onUpdated {
+                firstCalls++
+                RenderedEntities.unsubscribe(second)
+            }
+        }
+        with(second) {
+            RenderedEntities.onUpdated { secondCalls++ }
+            RenderedEntities.onUpdated { secondCalls++ }
+        }
+
+        repeat(2) { EventManager.callEvent(WorldChangeEvent(null)) }
+
+        assertEquals(2, firstCalls)
+        assertEquals(0, secondCalls)
+    }
+
+    @Test
+    fun `resubscribing during an update defers the replacement callback until the next update`() {
+        var replaced = false
+        var secondCalls = 0
+        // Reusing the Runnable produces equal pairs, but each registration is distinct.
+        val callback = Runnable { secondCalls++ }
+        RenderedEntities.subscribe(first)
+        RenderedEntities.subscribe(second)
+        with(first) {
+            RenderedEntities.onUpdated {
+                if (!replaced) {
+                    replaced = true
+                    RenderedEntities.unsubscribe(second)
+                    RenderedEntities.subscribe(second)
+                    with(second) { RenderedEntities.onUpdated(callback) }
+                }
+            }
+        }
+        with(second) { RenderedEntities.onUpdated(callback) }
+
+        EventManager.callEvent(WorldChangeEvent(null))
+
+        assertEquals(0, secondCalls)
+        EventManager.callEvent(WorldChangeEvent(null))
+        assertEquals(1, secondCalls)
+    }
+
 }
