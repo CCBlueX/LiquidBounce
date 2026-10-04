@@ -20,9 +20,12 @@
 package net.ccbluex.liquidbounce.utils.text
 
 import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class AppenderCharSinkTest {
@@ -57,6 +60,23 @@ class AppenderCharSinkTest {
 
         assertEquals("Vanilla joined", first)
         assertEquals("a\uD83D\uDE00", second)
+    }
+
+    @Test
+    fun `recycles and clears the sink when a sequence throws`() {
+        lateinit var borrowed: AppenderCharSink
+        val failure = IllegalStateException("sequence failed")
+        val sequence = FormattedCharSequence { output ->
+            borrowed = output as AppenderCharSink
+            output.accept(0, Style.EMPTY, 'x'.code)
+            throw failure
+        }
+
+        assertSame(failure, assertFailsWith<IllegalStateException> {
+            AppenderCharSink.codePointsToString(sequence)
+        })
+        assertEquals(0, borrowed.builder().length)
+        assertEquals("next", AppenderCharSink.codePointsToString("next".withFormat()))
     }
 
 }
