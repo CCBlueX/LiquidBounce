@@ -61,21 +61,13 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         get() = inGame
 
     /**
-     * Whether the player toggled the vanilla HUD off (F1).
-     *
-     * A hidden HUD means vanilla never runs its hotbar/decorations pass, so the in-game overlay
-     * render event the web HUD is drawn with does not fire either. Open screens would then fall
-     * back to the screen render event and paint the HUD on top of them - the HUD would come back
-     * although it is supposed to stay hidden.
+     * Whether the player toggled the vanilla HUD off (F1): vanilla then skips its whole HUD pass, so the
+     * overlay render event the web HUD is drawn with never fires and open screens would paint it instead.
      */
     private val isHudHidden: Boolean
         get() = mc.gui.hud.isHidden
 
-    /**
-     * [isHudHidden] as of the last visibility update. Together with [tickHandler] this turns the
-     * vanilla HUD toggle - which fires no event - into a change the overlay reacts to, without
-     * evaluating the browser every tick.
-     */
+    /** [isHudHidden] as of the last visibility evaluation, so the tick handler only reacts to changes. */
     private var lastHudHidden = false
 
     var hudEditorSelected = false
@@ -97,9 +89,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
             screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
 
     private fun updateOverlayVisibility(screen: Screen?) {
-        // Visibility is always derived from the live state, so record it here: every path (screen
-        // changes, disconnects, re-enabling, HUD editor) then keeps the tick change detection in
-        // sync instead of relying on a single caller to do so.
         lastHudHidden = isHudHidden
 
         if (!enabled || !isVisible) {
@@ -183,10 +172,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     /**
-     * The vanilla HUD toggle is not reported through [ScreenEvent] - it is only processed while no
-     * screen is open - so the overlay follows that state on tick. Reacting to the change alone
-     * avoids re-opening a browser that could not be opened (yet);
-     * [updateOverlayVisibility] records the state it evaluated.
+     * The toggle fires no event and is only processed while no screen is open, so follow it on tick.
      */
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
