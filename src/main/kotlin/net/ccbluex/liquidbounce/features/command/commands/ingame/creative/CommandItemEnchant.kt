@@ -42,7 +42,6 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
-import kotlin.math.min
 
 /**
  * ItemEnchant Command
@@ -123,7 +122,7 @@ object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
         val itemStack = getItemOrThrow()
 
         // An omitted level and the `max` keyword both resolve to the enchantment's maximum
-        enchantAnyLevel(itemStack, enchantmentHolder, level?.resolve { enchantmentHolder.value().maxLevel }
+        itemStack.enchant(enchantmentHolder, level?.resolve { enchantmentHolder.value().maxLevel }
             ?: enchantmentHolder.value().maxLevel)
 
         sendItemPacket(itemStack)
@@ -142,7 +141,7 @@ object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
         creativeOrThrow()
         val itemStack = getItemOrThrow()
 
-        enchantAll(itemStack, onlyAcceptable, level?.resolve { Int.MAX_VALUE })
+        enchantAll(itemStack, onlyAcceptable, (level as? EnchantLevel.Explicit)?.level)
 
         sendItemPacket(itemStack)
         chat(
@@ -176,19 +175,6 @@ object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
         return itemStack
     }
 
-    private fun enchantAnyLevel(item: ItemStack, enchantment: Holder<Enchantment>, level: Int) {
-        if (level <= 255) {
-            item.enchant(enchantment, level)
-        } else {
-            var next = level
-
-            while (next > 255) {
-                item.enchant(enchantment, min(next, 255))
-                next -= 255
-            }
-        }
-    }
-
     /**
      * Enchants every enchantment: [level] is the resolved explicit level, or `null` to
      * use each enchantment's own maximum (the legacy behavior of the `max` keyword).
@@ -199,7 +185,7 @@ object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
                 return@forEach
             }
 
-            enchantAnyLevel(item, enchantment, level ?: enchantment.value().maxLevel)
+            item.enchant(enchantment, level ?: enchantment.value().maxLevel)
         }
     }
 
