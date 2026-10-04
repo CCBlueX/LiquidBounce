@@ -22,6 +22,8 @@ import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -52,11 +54,25 @@ internal class OkHttpUrlConnection(url: URL, private val client: OkHttpClient) :
         return response!!
     }
 
-    override fun getInputStream(): InputStream = response().body.byteStream()
+    override fun getInputStream(): InputStream {
+        val response = response()
+        if (response.code == HTTP_NOT_FOUND || response.code == HTTP_GONE) {
+            throw FileNotFoundException(url.toString())
+        }
+        if (response.code >= HTTP_BAD_REQUEST) {
+            throw IOException("Server returned HTTP response code: ${response.code} for URL: $url")
+        }
+        return response.body.byteStream()
+    }
+
+    override fun getErrorStream(): InputStream? =
+        response?.takeIf { it.code >= HTTP_BAD_REQUEST }?.body?.byteStream()
 
     override fun getContentLengthLong() = response().body.contentLength()
 
     override fun getResponseCode() = response().code
+
+    override fun getResponseMessage() = response().message
 
     override fun getHeaderField(name: String): String? = response().header(name)
 
