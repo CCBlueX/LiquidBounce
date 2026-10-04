@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.EnchantLevel
 import net.ccbluex.liquidbounce.features.command.arguments.EnchantLevelArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.render
-import net.ccbluex.liquidbounce.features.command.arguments.resolve
 import net.ccbluex.liquidbounce.features.command.arguments.resourceArgument
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -122,7 +121,7 @@ object CommandItemEnchant : MinecraftShortcuts, CommandRegistrar {
         val itemStack = getItemOrThrow()
 
         // An omitted level and the `max` keyword both resolve to the enchantment's maximum
-        itemStack.enchant(enchantmentHolder, level?.resolve { enchantmentHolder.value().maxLevel }
+        itemStack.enchant(enchantmentHolder, (level as? EnchantLevel.Explicit)?.level
             ?: enchantmentHolder.value().maxLevel)
 
         sendItemPacket(itemStack)
