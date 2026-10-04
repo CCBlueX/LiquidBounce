@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.platform.NativeImage
+import it.unimi.dsi.fastutil.io.FastByteArrayInputStream
 import okio.buffer
 import okio.source
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import javax.imageio.ImageIO
@@ -35,7 +35,7 @@ import java.awt.image.BufferedImage
 
 class RenderExtensionsTest {
 
-    private class TrackedInput(bytes: ByteArray) : ByteArrayInputStream(bytes) {
+    private class TrackedInput(bytes: ByteArray) : FastByteArrayInputStream(bytes) {
         var closes = 0
             private set
 
