@@ -93,6 +93,7 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
@@ -194,7 +195,7 @@ object LiquidBounce : EventListener {
      */
     @JvmStatic
     fun resourceToString(path: String): String =
-        resource(path).use { it.bufferedReader().readText() }
+        resource(path).use { it.readText() }
 
     /**
      * Initializes the client, called when

@@ -16,25 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.io
 
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import java.io.InputStream
+import java.nio.charset.Charset
 
-/**
- * Find resource
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resource(path: String): InputStream {
-    class Empty
-    return Empty::class.java.getResourceAsStream(path) ?: throw IllegalArgumentException("Resource $path not found")
+@JvmOverloads
+fun InputStream.readText(charset: Charset = Charsets.UTF_8): String {
+    val out = FastByteArrayOutputStream()
+    this.transferTo(out)
+    return out.toString(charset)
 }
-
-/**
- * Converts resource to string
- *
- * @param path The *absolute* resource path
- * @throws IllegalArgumentException If the path is invalid
- */
-fun resourceToString(path: String) = resource(path).use { it.readText() }

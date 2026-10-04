@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
+import net.ccbluex.liquidbounce.utils.io.readText
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -48,7 +49,7 @@ class OkHttpUrlConnectionTest {
             assertEquals(4L, connection.contentLengthLong)
             assertEquals("application/zip", connection.getHeaderField("Content-Type"))
             assertNull(connection.errorStream)
-            assertEquals("pack", connection.inputStream.bufferedReader().use { it.readText() })
+            assertEquals("pack", connection.inputStream.use { it.readText() })
         } finally {
             connection.disconnect()
         }
@@ -57,7 +58,7 @@ class OkHttpUrlConnectionTest {
 
     @Test
     fun `not found and gone throw FileNotFoundException while preserving the error body`() {
-        for (status in listOf(404, 410)) {
+        for (status in intArrayOf(404, 410)) {
             val body = TrackingBody("missing pack")
             val connection = connection(status, "Missing", body)
             try {
@@ -65,7 +66,7 @@ class OkHttpUrlConnectionTest {
                 assertEquals("https://example.invalid/pack.zip", failure.message)
                 assertEquals(status, connection.responseCode)
                 assertFalse(body.closed)
-                assertEquals("missing pack", connection.errorStream!!.bufferedReader().use { it.readText() })
+                assertEquals("missing pack", connection.errorStream!!.use { it.readText() })
             } finally {
                 connection.disconnect()
             }
@@ -75,7 +76,7 @@ class OkHttpUrlConnectionTest {
 
     @Test
     fun `other HTTP errors fail the download instead of exposing an error page as a pack`() {
-        for (status in listOf(400, 403, 429, 500, 503)) {
+        for (status in intArrayOf(400, 403, 429, 500, 503)) {
             val body = TrackingBody("error page")
             val connection = connection(status, "Failed", body)
             try {
@@ -93,7 +94,7 @@ class OkHttpUrlConnectionTest {
 
     @Test
     fun `disconnect closes unread error bodies`() {
-        for (status in listOf(404, 410, 503)) {
+        for (status in intArrayOf(404, 410, 503)) {
             val body = TrackingBody("unread error")
             val connection = connection(status, "Failed", body)
             try {
@@ -114,7 +115,7 @@ class OkHttpUrlConnectionTest {
             val failure = assertFailsWith<IOException> { connection.inputStream }
             assertEquals("", connection.responseMessage)
             assertTrue(failure.message!!.contains("503"))
-            assertEquals("error", connection.errorStream!!.bufferedReader().use { it.readText() })
+            assertEquals("error", connection.errorStream!!.use { it.readText() })
         } finally {
             connection.disconnect()
         }
@@ -136,7 +137,7 @@ class OkHttpUrlConnectionTest {
             assertNull(connection.errorStream)
             assertEquals(0, calls)
             assertEquals(500, connection.responseCode)
-            assertEquals("error", connection.errorStream!!.bufferedReader().use { it.readText() })
+            assertEquals("error", connection.errorStream!!.use { it.readText() })
             assertEquals("Failed", connection.responseMessage)
             assertEquals(1, calls)
         } finally {
