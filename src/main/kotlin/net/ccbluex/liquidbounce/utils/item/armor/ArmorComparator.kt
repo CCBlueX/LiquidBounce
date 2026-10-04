@@ -161,6 +161,8 @@ class ArmorComparator(
         private const val EPF_REDUCTION_PER_POINT = 0.04f
     }
 
+    // Both modes rank by damage reduction: the piece which prevents more damage has to compare as greater,
+    // as that is the one the armor evaluation picks with maxWithOrNull.
     private val comparator = when (mode) {
         ArmorComparatorMode.SMART -> smartComparator()
         ArmorComparatorMode.RAW_DEFENSE -> rawDefenseComparator()
@@ -172,7 +174,7 @@ class ArmorComparator(
 
     private fun smartComparator() = ComparatorChain(
         comparing { it.itemSlot.itemStack.durability > durabilityThreshold },
-        compareByDescending { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
+        compareBy { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         comparing({ it.itemSlot.itemStack }, OTHER_ENCHANTMENT_ESTIMATOR),
         comparingInt { it.itemSlot.itemStack.getEnchantmentCount() },
         comparingInt { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
@@ -187,7 +189,6 @@ class ArmorComparator(
      */
     private fun rawDefenseComparator() = ComparatorChain(
         comparing { it.itemSlot.itemStack.durability > durabilityThreshold },
-        // maxWithOrNull picks the greatest element, so higher reduction must compare as greater (ascending).
         compareBy { getLegacyDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(4) },
         comparingInt { it.itemSlot.itemStack.getEnchantment(Enchantments.PROTECTION) },
         comparing({ it.itemSlot.itemStack }, OTHER_ENCHANTMENT_ESTIMATOR),
@@ -243,14 +244,21 @@ class ArmorComparator(
         return Math.floor(((6 + level * level) * modifier / 3.0)).toInt()
     }
 
+    /**
+     * Damage reduction of a piece (together with the rest of the kit) under the modern damage model: the
+     * complement of the damage the piece leaves over. Higher is better, like [getLegacyDamageReduction].
+     */
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
         val parameters = this.armorKitParametersForSlot.getParametersForSlot(itemStack.equipmentSlot!!)
 
-        return getDamageFactor(
+        val damageFactor = getDamageFactor(
             damage = expectedDamage,
             defensePoints = parameters.defensePoints + itemStack.armorValue!!.toFloat(),
             toughness = parameters.toughness + itemStack.armorToughness!!.toFloat()
         ) * (1 - DAMAGE_REDUCTION_ESTIMATOR.estimateValue(itemStack))
+
+        // getDamageFactor returns the damage that is taken, so invert it into the damage that is prevented.
+        return 1f - damageFactor
     }
 
     /**
