@@ -25,7 +25,7 @@ import java.nio.charset.Charset
 
 @JvmOverloads
 fun InputStream.readText(charset: Charset = Charsets.UTF_8): String {
-    val out = FastByteArrayOutputStream()
+    val out = FastByteArrayOutputStream(maxOf(available(), FastByteArrayOutputStream.DEFAULT_INITIAL_CAPACITY))
     this.transferTo(out)
     return out.toString(charset)
 }
