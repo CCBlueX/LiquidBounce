@@ -21,13 +21,14 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
+import java.util.Comparator.comparingInt
 import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
 
     private var currentTick = 0
 
-    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, compareBy { -it.priority })
+    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, comparingInt { it.priority.inv() })
 
     fun tick(deltaTime: Int = 1) {
         currentTick += deltaTime

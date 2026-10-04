@@ -18,19 +18,31 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
+import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
+import kotlin.jvm.optionals.getOrNull
 
 class EnchantmentValueEstimator(
     private vararg val weightedEnchantments: WeightedEnchantment,
 ) : Comparator<ItemStack> {
 
+    /**
+     * @see net.minecraft.world.item.enchantment.EnchantmentHelper.getItemEnchantmentLevel
+     */
     fun estimateValue(itemStack: ItemStack): Float {
+        val enchantments = itemStack[DataComponents.ENCHANTMENTS]
+        if (enchantments == null || enchantments.isEmpty) return 0f
+
+        val registry = Registries.ENCHANTMENT.getOrNull() ?: return 0f
+
         var sum = 0.0f
 
         for (it in this.weightedEnchantments) {
-            sum += itemStack.getEnchantment(it.enchantment) * it.factor
+            sum += enchantments.getLevel(registry[it.enchantment].getOrNull() ?: continue) * it.factor
         }
 
         return sum
@@ -39,5 +51,6 @@ class EnchantmentValueEstimator(
     override fun compare(o1: ItemStack, o2: ItemStack): Int =
         this.estimateValue(o1).compareTo(this.estimateValue(o2))
 
-    class WeightedEnchantment(val enchantment: ResourceKey<Enchantment>, val factor: Float)
+    @ValueClassCandidate
+    class WeightedEnchantment(@JvmField val enchantment: ResourceKey<Enchantment>, @JvmField val factor: Float)
 }
