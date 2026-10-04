@@ -44,9 +44,8 @@ class ExpiringList<E> private constructor(
     private val tickHandler = owner.handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         tick++
 
-        while (list.isNotEmpty() && list.first().expiration <= tick) {
-            list.removeFirst()
-        }
+        // Lifetimes may change between insertions, so deadlines need not follow insertion order.
+        list.removeAll { it.expiration <= tick }
     }
 
     fun clear() = list.clear()
