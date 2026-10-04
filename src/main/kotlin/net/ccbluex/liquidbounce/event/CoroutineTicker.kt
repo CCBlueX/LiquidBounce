@@ -29,6 +29,7 @@ import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
 import java.util.function.Predicate
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 object CoroutineTicker {
 
@@ -101,6 +102,8 @@ object CoroutineTicker {
  * - `tickUntil { true }` --> `1`
  * - `tickUntil { it >= 2 }` --> `2`
  *
+ * Exceptions thrown by [stopAt] are delivered to the waiting coroutine.
+ *
  * @param stopAt the callback of elapsed ticks. Will be called on game tick.
  * @return the times of [stopAt] to be executed (equals to elapsed ticks)
  */
@@ -110,22 +113,29 @@ suspend fun tickUntil(
     CoroutineTicker.register(TickUntilCallback(continuation, stopAt))
 }
 
-private class TickUntilCallback(
+internal class TickUntilCallback(
     private val continuation: CancellableContinuation<Int>,
     private val stopAt: IntPredicate,
 ) : BooleanSupplier {
     private var elapsedTicks = 0
 
-    override fun getAsBoolean(): Boolean =
-        when {
-            !continuation.isActive -> true
-            stopAt.test(++elapsedTicks) -> {
-                continuation.resume(elapsedTicks)
-                true
-            }
-
-            else -> false
+    override fun getAsBoolean(): Boolean {
+        if (!continuation.isActive) {
+            return true
         }
+
+        val finished = try {
+            stopAt.test(++elapsedTicks)
+        } catch (e: Throwable) {
+            continuation.resumeWithException(e)
+            return true
+        }
+
+        if (finished) {
+            continuation.resume(elapsedTicks)
+        }
+        return finished
+    }
 
     override fun toString(): String =
         "TickUntilCallback(elapsedTicks=$elapsedTicks, continuation=$continuation, stopAt=$stopAt)"
