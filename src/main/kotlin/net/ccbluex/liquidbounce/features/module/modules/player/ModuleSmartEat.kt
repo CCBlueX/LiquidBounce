@@ -70,7 +70,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
         private val comparator = ComparatorChain<Pair<HotbarItemSlot, FoodEstimationData>>(
             // If there is an indication for a special item, we should use it. Items with lower health threshold
             // are preferred since their usage is probably more urgent.
-            comparingInt { -it.second.healthThreshold },
+            comparingInt { it.second.healthThreshold.inv() },
             comparingInt { it.second.restoredHunger },
             // Use the closest slot
             comparing({ it.first }, HotbarItemSlot.PREFER_NEARBY),

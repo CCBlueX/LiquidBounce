@@ -28,7 +28,7 @@ class RequestHandler<T> {
 
     private var currentTick = 0
 
-    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, comparingInt { -it.priority })
+    private val activeRequests = PriorityBlockingQueue<Request<T>>(11, comparingInt { it.priority.inv() })
 
     fun tick(deltaTime: Int = 1) {
         currentTick += deltaTime
