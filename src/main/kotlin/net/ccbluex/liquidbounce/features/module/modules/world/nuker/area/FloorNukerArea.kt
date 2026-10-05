@@ -84,7 +84,7 @@ object FloorNukerArea : NukerArea("Floor") {
 
                         if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
                             add(pos.immutable() to state)
-                            limit?.also { count -> if (size > count) return@apply }
+                            limit?.also { limit -> if (size >= limit) return@apply }
                         }
                     }
                 }
