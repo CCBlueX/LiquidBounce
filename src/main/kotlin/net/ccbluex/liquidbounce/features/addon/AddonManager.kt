@@ -27,8 +27,10 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.fabricmc.loader.api.FabricLoader
 import kotlin.io.path.inputStream
 import kotlin.io.path.isRegularFile
@@ -38,7 +40,7 @@ object AddonManager {
     private const val ENTRYPOINT = "liquidbounce"
 
     /**
-     * Comma-separated add-on ids to skip, or `all`.
+     * Comma-separated add-on ids to skip, or `all` for every add-on but the ones LiquidBounce comes with.
      */
     private const val DISABLE_PROPERTY = "liquidbounce.disableAddons"
 
@@ -81,8 +83,9 @@ object AddonManager {
                 .getOrNull() ?: continue
 
             addon.container = container
+            val isBundled = container.containingMod.map { it.metadata.id == ENTRYPOINT }.orElse(false)
 
-            if (disableAll || disabled.any { it.equals(id, true) }) {
+            if (disableAll && !isBundled || disabled.any { it.equals(id, true) }) {
                 addon.state = AddonState.DISABLED
                 logger.info("Skipping add-on '$id' ($DISABLE_PROPERTY)")
             } else {
@@ -195,6 +198,16 @@ object AddonManager {
             step("marketplace handler for $type") { MarketplaceManager.unregisterHandler(type, handler) }
         }
         addon.registeredItemHandlers.clear()
+
+        addon.registeredBrowserBackends.forEach { provider ->
+            step("browser backend ${provider.id}") { BrowserBackendManager.unregisterBackend(provider) }
+        }
+        addon.registeredBrowserBackends.clear()
+
+        addon.registeredQuickFixes.forEach { quickFix ->
+            step("quick fix ${quickFix.description}") { QuickFixes.unregister(quickFix) }
+        }
+        addon.registeredQuickFixes.clear()
 
         step("event hooks") { addon.unregister() }
 

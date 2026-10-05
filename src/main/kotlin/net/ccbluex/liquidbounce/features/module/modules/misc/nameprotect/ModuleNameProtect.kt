@@ -18,10 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.fastutil.LfuCache
-import net.ccbluex.fastutil.Pool
-import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,15 +29,14 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
-import net.ccbluex.liquidbounce.utils.text.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
+import net.ccbluex.liquidbounce.utils.text.codePointsToString
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.FormattedCharSink
 import net.minecraft.util.StringDecomposer
-
-private const val DEFAULT_CACHE_SIZE = 512
 
 /**
  * NameProtect module
@@ -124,27 +119,14 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         )
     }
 
-    private val stringMappingCache =
-        LfuCache<String, String>(DEFAULT_CACHE_SIZE)
-    private val orderedTextMappingCache =
-        LfuCache<FormattedCharSequence, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
-            mappedCharListPool.recycle(v.mappedCharacters)
-        }
-    private val mappedCharListPool = Pool(
-        initializer = { ObjectArrayList(128) },
-        finalizer = ObjectArrayList<MappedCharacter>::clear,
-    ).synchronized()
-
     fun replace(original: String): String =
         when {
             !running -> original
-            mc.isSameThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
-            else -> uncachedReplace(original)
+            mc.isSameThread -> applyReplacements(original, replacementMappings.findReplacementsCached(original))
+            else -> applyReplacements(original, replacementMappings.findReplacements(original))
         }
 
-    private fun uncachedReplace(original: String): String {
-        val replacements = replacementMappings.findReplacements(original)
-
+    private fun applyReplacements(original: String, replacements: Replacements): String {
         if (replacements.isEmpty()) {
             return original
         }
@@ -177,112 +159,142 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     fun wrap(original: FormattedCharSequence): FormattedCharSequence =
         when {
             !running -> original
-            mc.isSameThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
-            else -> uncachedWrap(original)
+            mc.isSameThread -> uncachedWrap(original, useCache = true)
+            else -> uncachedWrap(original, useCache = false)
         }
 
     /**
-     * Wraps an [FormattedCharSequence] to apply name protection.
+     * Builds the plain text once for matching, then defers the substitution to [withReplacements], so
+     * a text without a match is returned as is instead of being copied character by character.
      */
-    private fun uncachedWrap(original: FormattedCharSequence): WrappedOrderedText {
-        val mappedCharacters = mappedCharListPool.borrow()
+    private fun uncachedWrap(original: FormattedCharSequence, useCache: Boolean): FormattedCharSequence {
+        val text = original.codePointsToString()
 
-        val originalCharacters = mappedCharListPool.borrow()
-
-        original.accept { _, style, codePoint ->
-            originalCharacters += MappedCharacter(
-                style,
-                style.color?.bypassesNameProtection ?: false,
-                codePoint
-            )
-
-            true
+        val replacements = if (useCache) {
+            replacementMappings.findReplacementsCached(text)
+        } else {
+            replacementMappings.findReplacements(text)
         }
 
-        val replacements = Pools.StringBuilder.use {
-            it.ensureCapacity(originalCharacters.size)
-            for (c in originalCharacters) {
-                it.appendCodePoint(c.codePoint)
-            }
-            replacementMappings.findReplacements(it)
+        if (replacements.isEmpty()) {
+            return original
         }
 
-        var currReplacementIndex = 0
-        var currentIndex = 0
-
-        while (currentIndex < originalCharacters.size) {
-            val replacement = replacements.getOrNull(currReplacementIndex)
-
-            val replacementStartIdx = replacement?.first?.start
-
-            if (replacementStartIdx == currentIndex) {
-                if (originalCharacters[replacementStartIdx].bypassesNameProtection) {
-                    currReplacementIndex++
-
-                    continue
-                }
-
-                val color = replacement.second.colorGetter()
-
-                mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
-                replacement.second.newName.mapTo(mappedCharacters) { ch ->
-                    MappedCharacter(
-                        originalCharacters[currentIndex].style.withColor(color.argb),
-                        false,
-                        ch.code
-                    )
-                }
-
-                currentIndex = replacement.first.end + 1
-                currReplacementIndex += 1
-            } else {
-                val maxCopyIdx = replacementStartIdx ?: originalCharacters.size
-
-                mappedCharacters.addAll(originalCharacters.subList(currentIndex, maxCopyIdx))
-
-                currentIndex = maxCopyIdx
-            }
-        }
-
-        mappedCharListPool.recycle(originalCharacters)
-
-        return WrappedOrderedText(mappedCharacters)
+        return original.withReplacements(replacements)
     }
 
-    private class MappedCharacter(
-        @JvmField val style: Style,
-        @JvmField val bypassesNameProtection: Boolean,
-        @JvmField val codePoint: Int,
-    )
-
-    private class WrappedOrderedText(@JvmField val mappedCharacters: ObjectArrayList<MappedCharacter>) :
-        FormattedCharSequence {
-        override fun accept(visitor: FormattedCharSink): Boolean {
-            for (index in 0 until mappedCharacters.size) {
-                val char = mappedCharacters[index] as MappedCharacter
-                if (!visitor.accept(index, char.style, char.codePoint)) {
-                    return false
-                }
-            }
-
-            return true
-        }
-    }
 }
+
 
 /**
  * Sanitizes texts which are sent to the client.
  * 1. Degenerates legacy formatting into new formatting [StringDecomposer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
-fun Component.sanitizeForeignInput(): Component {
-    val degeneratedText = FormattedCharSequence { output ->
-        StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
+fun Component.sanitizeForeignInput(): FormattedCharSequence =
+    ModuleNameProtect.wrap(this.asFormattedCharSequence())
+
+/**
+ * Applies [ModuleNameProtect] - if needed
+ */
+inline fun FormattedCharSequence.sanitizeForeignInput(): FormattedCharSequence =
+    ModuleNameProtect.wrap(this)
+
+/**
+ * Returns a sequence that substitutes each match of [replacements] as it is accepted, without
+ * copying the characters or the styles of the receiver.
+ */
+internal fun FormattedCharSequence.withReplacements(replacements: Replacements): FormattedCharSequence =
+    ReplacedSequence(this, replacements)
+
+/**
+ * A [FormattedCharSequence] that substitutes the matches of [replacements] while it is accepted.
+ *
+ * The indices of [org.ahocorasick.trie.Emit] count UTF-16 code units of the plain text built from
+ * the receiver, which is not the index the sink is handed: that one restarts per style part and
+ * skips the legacy formatting codes, so positions are accumulated with `Character.charCount`.
+ *
+ * The instance is its own [FormattedCharSink], which keeps an acceptance free of allocations. The
+ * state lives in fields, so it must neither be accepted reentrantly nor from several threads.
+ */
+private class ReplacedSequence(
+    private val original: FormattedCharSequence,
+    private val replacements: Replacements,
+) : FormattedCharSequence, FormattedCharSink {
+
+    // Position in the original text, sharing the index space of the emits
+    private var sourceIndex = 0
+    // Position in the replaced text, which is the index the sink has to see
+    private var outputIndex = 0
+    private var replacementIndex = 0
+    // Last character of the match whose substitution was already emitted
+    private var substitutedUntil = -1
+    private lateinit var sink: FormattedCharSink
+
+    override fun accept(output: FormattedCharSink): Boolean {
+        sourceIndex = 0
+        outputIndex = 0
+        replacementIndex = 0
+        substitutedUntil = -1
+        sink = output
+
+        return original.accept(this)
     }
 
-    if (!ModuleNameProtect.running) {
-        return degeneratedText.toText()
+    override fun accept(index: Int, style: Style, codePoint: Int): Boolean {
+        val charCount = Character.charCount(codePoint)
+
+        if (sourceIndex <= substitutedUntil) {
+            // The substitution took this character's place
+            sourceIndex += charCount
+
+            return true
+        }
+
+        var replacement = replacements.getOrNull(replacementIndex)
+
+        // Drop the matches that end before this character
+        while (replacement != null && sourceIndex > replacement.first.end) {
+            replacementIndex++
+            replacement = replacements.getOrNull(replacementIndex)
+        }
+
+        if (replacement != null && sourceIndex == replacement.first.start &&
+            style.color?.bypassesNameProtection != true
+        ) {
+            substitutedUntil = replacement.first.end
+            replacementIndex++
+
+            // Every character of the substitution shares the style of the name it replaces
+            val replacedStyle = style.withColor(replacement.second.colorGetter().argb)
+            val newName = replacement.second.newName
+            var nameIndex = 0
+
+            while (nameIndex < newName.length) {
+                val nameCodePoint = newName.codePointAt(nameIndex)
+                val nameCharCount = Character.charCount(nameCodePoint)
+
+                if (!sink.accept(outputIndex, replacedStyle, nameCodePoint)) {
+                    return false
+                }
+
+                outputIndex += nameCharCount
+                nameIndex += nameCharCount
+            }
+
+            sourceIndex += charCount
+
+            return true
+        }
+
+        if (!sink.accept(outputIndex, style, codePoint)) {
+            return false
+        }
+
+        outputIndex += charCount
+        sourceIndex += charCount
+
+        return true
     }
 
-    return ModuleNameProtect.wrap(degeneratedText).toText()
 }

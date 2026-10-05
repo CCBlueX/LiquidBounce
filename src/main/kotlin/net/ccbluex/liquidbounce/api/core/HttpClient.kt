@@ -31,17 +31,13 @@ import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.ccbluex.liquidbounce.mcef.MCEF
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.minecraft.ReportedException
 import okhttp3.Cache
 import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.Dispatcher
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -58,14 +54,14 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.net.HttpURLConnection
 import java.util.Locale
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 val renderScope = CoroutineScope(
-    Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
+    Dispatchers.Main + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
         if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
         }
@@ -140,9 +136,7 @@ object HttpClient {
         .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .proxy(java.net.Proxy.NO_PROXY)
-        .build().also {
-            MCEF.INSTANCE.settings.okHttpClient = it
-        }
+        .build()
 
     /**
      * This interceptor rejects all non-2xx responses
@@ -218,26 +212,9 @@ object HttpClient {
         request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
     }
 
-    // For Java and JS
+    /** For Java and JS. Cancelling the returned future also cancels the HTTP call. */
     @JvmStatic
-    fun Call.sendAsync(): CompletableFuture<Response> {
-        val future = CompletableFuture<Response>().exceptionally { throwable ->
-            if (throwable is CancellationException) this.cancel()
-            throw throwable
-        }
-        this.enqueue(
-            object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    if (!future.complete(response)) response.close()
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    future.completeExceptionally(e)
-                }
-            }
-        )
-        return future
-    }
+    fun Call.sendAsync(): CompletableFuture<Response> = enqueueAsFuture()
 
 }
 
@@ -292,3 +269,21 @@ fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
 
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
     : Exception("${method.name} $url failed with code $code: $content")
+
+/**
+ * The [HttpException] behind this. OkHttp hands one thrown by an interceptor of an async call on
+ * wrapped in an [IOException].
+ */
+val Throwable.httpException: HttpException?
+    get() = this as? HttpException
+        ?: cause as? HttpException
+        ?: suppressed.firstNotNullOfOrNull { it as? HttpException }
+
+/**
+ * [block]'s result, `null` when the server answers 404.
+ */
+internal inline fun <T> orNotFound(block: () -> T): T? = try {
+    block()
+} catch (e: Exception) {
+    if (e.httpException?.code == HttpURLConnection.HTTP_NOT_FOUND) null else throw e
+}

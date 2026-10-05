@@ -21,10 +21,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.ccbluex.liquidbounce.features.misc.proxy.ProxyDns;
 import net.minecraft.client.multiplayer.resolver.AddressCheck;
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.client.multiplayer.resolver.ServerAddressResolver;
 import net.minecraft.client.multiplayer.resolver.ServerNameResolver;
+import net.minecraft.client.multiplayer.resolver.ServerRedirectHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -32,7 +35,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
- * Patches out Mojang's server blacklist
+ * Patches out Mojang's server blacklist and lets {@link ProxyDns} take over lookups
  *
  * @see AddressCheck
  */
@@ -60,6 +63,12 @@ public abstract class MixinServerNameResolver {
         target = "Ljava/util/Optional;filter(Ljava/util/function/Predicate;)Ljava/util/Optional;", remap = false))
     private Optional<?> isAllowedC(Optional<?> instance, Predicate<?> predicate, Operation<Optional<?>> original) {
         return instance;
+    }
+
+    @WrapOperation(method = "<clinit>", at = @At(value = "NEW", target = "(Lnet/minecraft/client/multiplayer/resolver/ServerAddressResolver;Lnet/minecraft/client/multiplayer/resolver/ServerRedirectHandler;Lnet/minecraft/client/multiplayer/resolver/AddressCheck;)Lnet/minecraft/client/multiplayer/resolver/ServerNameResolver;"))
+    private static ServerNameResolver hookProxyDns(ServerAddressResolver resolver, ServerRedirectHandler redirectHandler,
+                                                   AddressCheck addressCheck, Operation<ServerNameResolver> original) {
+        return original.call(ProxyDns.resolver(resolver), ProxyDns.redirectHandler(redirectHandler), addressCheck);
     }
 
 }

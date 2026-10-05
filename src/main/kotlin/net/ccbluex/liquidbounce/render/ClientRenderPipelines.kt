@@ -44,11 +44,6 @@ object ClientRenderPipelines {
 
     private val renderPipelines = Object2ObjectOpenHashMap<Identifier, RenderPipeline>()
 
-    /**
-     * Blend mode for JCEF compatible blending.
-     */
-    private val JCEF_COMPATIBLE_BLEND = BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA
-
     internal inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
@@ -115,48 +110,18 @@ object ClientRenderPipelines {
         withPrimitiveTopology(mode)
     }
 
-    object JCEF {
+    // Browsers paint with premultiplied alpha
+    object BROWSER {
         @JvmField
-        val SMOOTH_TEXTURE = newPipeline("jcef/smooth_texture") {
+        val Texture = newPipeline("browser/texture") {
             withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
-            withDepthStencilState(optional())
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
         }
 
         @JvmField
-        val BLURRED_TEXTURE = newPipeline("jcef/blurred_texture") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        @JvmField
-        val BGRA_TEXTURE = newPipeline("jcef/bgra_texture") {
+        val BgraTexture = newPipeline("browser/bgra_texture") {
             bgraPosTexColorQuads()
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        @JvmField
-        val BGRA_BLURRED_TEXTURE = newPipeline("jcef/bgra_blurred_texture") {
-            bgraPosTexColorQuads()
-            withColorTargetState(ColorTargetState(JCEF_COMPATIBLE_BLEND))
-        }
-
-        /**
-         * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-         */
-        @JvmField
-        val Blit = newPipeline("jcef_blit") {
-            screenQuadSnippet()
-            withFragmentShader("core/blit_screen")
-            withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-            withColorTargetState(
-                ColorTargetState(
-                    optional(JCEF_COMPATIBLE_BLEND),
-                    GpuFormat.RGBA8_UNORM,
-                    ColorTargetState.WRITE_COLOR,
-                )
-            )
-            withDepthStencilState(optional())
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
         }
     }
 
@@ -200,6 +165,13 @@ object ClientRenderPipelines {
         private val TrianglesNoCull = newPipeline("gui/triangles_no_cull") {
             guiPosColorSnippet(PrimitiveTopology.TRIANGLES)
             withCull(false)
+        }
+
+        @JvmField
+        val SmoothTexture = newPipeline("gui/smooth_texture") {
+            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+            withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+            withDepthStencilState(optional())
         }
 
         @JvmField
@@ -535,6 +507,24 @@ object ClientRenderPipelines {
         withDepthStencilState(optional())
     }
 
+    /**
+     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+     */
+    @JvmField
+    val GuiBlurBlit = newPipeline("blur_blit") {
+        screenQuadSnippet()
+        withFragmentShader("core/blit_screen")
+        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
+        withColorTargetState(
+            ColorTargetState(
+                optional(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA),
+                GpuFormat.RGBA8_UNORM,
+                ColorTargetState.WRITE_COLOR,
+            )
+        )
+        withDepthStencilState(optional())
+    }
+
     @JvmField
     val Blend = newPipeline("blend") {
         withVertexShader(ClientShaders.Vertex.PlainPosTex)
@@ -552,7 +542,7 @@ object ClientRenderPipelines {
      * Precompile
      */
     fun precompile() {
-        JCEF
+        BROWSER
         GUI
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->

@@ -21,10 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 
 /**
  * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
@@ -47,8 +46,6 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     }
 
     private var limitUntilJump = 0
-    private var isFallDamage = false
-
     private var hitsUntilJump = JumpByReceivedHits.hitsUntilJump.random()
     private var ticksUntilJump = JumpByDelay.ticksUntilJump.random()
 
@@ -56,7 +53,7 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
         if (player.hurtTime != 9 || !player.onGround() || !player.isSprinting ||
-            isFallDamage || !isCooldownOver() || !chance.asBoolean)
+            LocalPlayerFallDamageTracker.isCurrentFallDamage || !isCooldownOver() || !chance.asBoolean)
         {
             updateLimit()
             return@handler
@@ -67,26 +64,6 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
         hitsUntilJump = JumpByReceivedHits.hitsUntilJump.random()
         ticksUntilJump = JumpByDelay.ticksUntilJump.random()
-    }
-
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-            val velocityX = packet.movement.x
-            val velocityY = packet.movement.y
-            val velocityZ = packet.movement.z
-
-            // Check if the player is taking fall damage
-            // We set this on every packet, because if the player gets hit afterward,
-            // we will know that from the velocity.
-            isFallDamage = velocityX == 0.0 && velocityZ == 0.0 && velocityY < 0
-            ModuleDebug.debugParameter(this, "VelocityX", velocityX)
-            ModuleDebug.debugParameter(this, "VelocityY", velocityY)
-            ModuleDebug.debugParameter(this, "VelocityZ", velocityZ)
-            ModuleDebug.debugParameter(this, "IsFallDamage", isFallDamage)
-        }
     }
 
     private fun isCooldownOver(): Boolean {

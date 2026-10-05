@@ -17,11 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client.error.errors
+package net.ccbluex.liquidbounce.utils.io
 
-class JcefIsntCompatible : ClientError(
-    message = "JCEF Isn't compatible",
-    needToReport = false
-) {
-    fun readResolve(): Any = JcefIsntCompatible()
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.Charset
+
+@JvmOverloads
+fun InputStream.readText(charset: Charset = Charsets.UTF_8): String {
+    val out = FastByteArrayOutputStream(maxOf(available(), FastByteArrayOutputStream.DEFAULT_INITIAL_CAPACITY))
+    this.transferTo(out)
+    return out.toString(charset)
 }

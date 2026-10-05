@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.net.URLEncoder
@@ -198,14 +199,15 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     suspend fun createMarketplaceItemRevision(
         session: OAuthSession,
         id: Int,
-        file: File,
+        fileName: String,
+        content: RequestBody,
         version: String,
         changelog: String? = null,
         dependencies: String? = null,
         includesBinds: Boolean? = null
     ): MarketplaceItemRevision {
         val multipartBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart("file", file.name, file.asRequestBody(HttpClient.MediaTypes.OCTET_STREAM))
+            .addFormDataPart("file", fileName, content)
             .addFormDataPart("version", version)
 
         changelog?.let { multipartBuilder.addFormDataPart("changelog", it) }

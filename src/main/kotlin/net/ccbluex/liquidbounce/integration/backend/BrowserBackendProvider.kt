@@ -16,17 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.integration.backend
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
 /**
- * Determines if acceleration is supported on the current system.
- * Is In Beta is a flag to prevent it from being used by default on a supported
- * but not tested system.
+ * A browser engine to render the client's pages with.
+ *
+ * @param id Matches `LB_BROWSER_BACKEND` and the saved choice.
+ * @param selectable False to offer it only through `LB_BROWSER_BACKEND`.
  */
-data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
-    companion object {
-        @JvmField
-        val UNSUPPORTED = BrowserAccelerationFlags(isSupported = false, isBeta = false)
-    }
+@AddonApi
+class BrowserBackendProvider @JvmOverloads constructor(
+    val id: String,
+    val name: String,
+    val description: String,
+    val selectable: Boolean = true,
+    val create: () -> BrowserBackend,
+) : Tagged {
+    override val tag get() = name
+
+    // Saved choices from before it was a choice hold the id
+    override val tagAliases get() = if (id.equals(name, ignoreCase = true)) emptyList() else listOf(id)
 }

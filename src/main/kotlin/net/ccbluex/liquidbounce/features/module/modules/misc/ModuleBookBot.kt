@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
@@ -32,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.io.CodePointReader
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
@@ -41,11 +41,9 @@ import net.minecraft.server.network.Filterable
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.WrittenBookContent
-import okio.buffer
-import okio.source
 import java.util.Optional
 import java.util.PrimitiveIterator
-import java.util.Random
+import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.IntStream
 
 /**
@@ -80,7 +78,7 @@ private const val MAX_LINE_WIDTH: Float = 114f
 object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    internal val generationMode = choices(
+    private val generationMode = choices(
         "Mode",
         GenerationMode.Random,
         arrayOf(GenerationMode.Random, GenerationMode.File)
@@ -124,9 +122,10 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
         if (!isCandidate(player.mainHandItem)) {
             event.schedule(
                 inventoryConstraints, InventoryAction.Click.performSwap(
-                from = book,
-                to = HotbarItemSlot(player.inventory.selectedSlot),
-            ))
+                    from = book,
+                    to = HotbarItemSlot(player.inventory.selectedSlot),
+                )
+            )
         }
 
         if (chronometer.hasElapsed((delay * 1000L).toLong())) {
@@ -164,11 +163,11 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
 
         val bookBuilder = BookBuilder()
         val generator = generationMode.activeMode.generate()
-            .filter { it.toChar() != '\r' }
-            .iterator()
-
-        bookBuilder.buildBookContent(generator) {
-            mc.font.splitter.widthProvider.getWidth(it, Style.EMPTY)
+        generator.use { stream ->
+            val chars = stream.filter { it.toChar() != '\r' }.iterator()
+            bookBuilder.buildBookContent(chars) { charCode ->
+                mc.font.splitter.widthProvider.getWidth(charCode, Style.EMPTY)
+            }
         }
         bookBuilder.writeBook()
 
@@ -273,69 +272,49 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
             )
         }
     }
-}
 
-internal sealed class GenerationMode(
-    name: String,
-) : Mode(name) {
-    override val parent: ModeValueGroup<*> get() = ModuleBookBot.generationMode
+    private sealed class GenerationMode(
+        name: String,
+    ) : Mode(name) {
+        override val parent: ModeValueGroup<*> get() = ModuleBookBot.generationMode
 
-    internal val random = Random()
+        val pages by int("Pages", 50, 0..100)
 
-    val pages by int("Pages", 50, 0..100)
+        abstract fun generate(): IntStream
 
-    abstract fun generate(): IntStream
+        object Random : GenerationMode("Random") {
+            private val asciiOnly by boolean("AsciiOnly", false)
+            private val allowSpace by boolean("AllowSpace", true)
 
-    object Random : GenerationMode("Random") {
-        private val asciiOnly by boolean("AsciiOnly", false)
-        private val allowSpace by boolean("AllowSpace", true)
+            @Suppress("MaxLineLength")
+            /**
+             * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
+             * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
+             * @author arlomcwalter (on Meteor Client)
+             */
+            override fun generate(): IntStream {
+                val origin = if (asciiOnly) 0x21 else 0x0800
+                val bound = if (asciiOnly) 0x7E else 0x10FFFF
 
-        @Suppress("MaxLineLength")
-        /**
-         * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L201-L209">code section</a>
-         * @contributor sqlerrorthing (<a href="https://github.com/CCBlueX/LiquidBounce/pull/5076">pull request</a>)
-         * @author arlomcwalter (on Meteor Client)
-         */
-        override fun generate(): IntStream {
-            val origin = if (asciiOnly) 0x21 else 0x0800
-            val bound = if (asciiOnly) 0x7E else 0x10FFFF
-
-            return random
-                .ints(origin, bound)
-                .filter { allowSpace || !Character.isWhitespace(it) }
-        }
-    }
-
-    object File : GenerationMode("File") {
-        private const val MAX_CODE_POINTS: Long = 64 * 1024 * 1024
-        private val cyclic by boolean("Cyclic", true)
-        private val source = file("Source", supportedExtensions = setOf("txt"))
-
-        /**
-         * @author sqlerrorthing, MukjepScarlet
-         */
-        override fun generate(): IntStream {
-            val file = source.absoluteFile.takeIf {
-                it.exists() && it.isFile && it.canRead() && it.length() != 0L
-            } ?: return IntStream.empty()
-
-            // UTF-8 averaged 3 bytes -> 1 code point
-            val codePoints = IntArrayList(minOf(MAX_CODE_POINTS, file.length()).toInt() / 3)
-            file.source().buffer().use {
-                while (!it.exhausted() && codePoints.size < MAX_CODE_POINTS) {
-                    codePoints.add(it.readUtf8CodePoint())
-                }
+                return ThreadLocalRandom.current()
+                    .ints(origin, bound)
+                    .filter { allowSpace || !Character.isWhitespace(it) }
             }
+        }
 
-            return if (cyclic && codePoints.isNotEmpty()) {
-                var index = 0
-                IntStream.generate {
-                    val value = codePoints.getInt(index)
-                    index = (index + 1) % codePoints.size
-                    value
-                }
-            } else {
-                codePoints.intStream()
+        object File : GenerationMode("File") {
+            private val cyclic by boolean("Cyclic", true)
+            private val source = file("Source", supportedExtensions = setOf("txt"))
+
+            /**
+             * @author sqlerrorthing, MukjepScarlet
+             */
+            override fun generate(): IntStream {
+                val file = source.absoluteFile.takeIf {
+                    it.exists() && it.isFile && it.canRead() && it.length() != 0L
+                } ?: return IntStream.empty()
+
+                return CodePointReader(file.toPath(), cyclic).stream()
             }
         }
     }

@@ -135,7 +135,12 @@ class DynamicAtlasAllocator(
 
             val parentsParent = parent.parent
 
-            return if (parentsParent == null) parent else updateParentAllocationStatusRecursively(parentsParent)
+            // A live sibling stops coalescing, but this subtree is still completely free.
+            return if (parentsParent == null) {
+                parent
+            } else {
+                updateParentAllocationStatusRecursively(parentsParent) ?: parent
+            }
         } else {
             return null
         }

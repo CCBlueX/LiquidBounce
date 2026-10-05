@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -90,7 +91,10 @@ object ThemeManager : Config("theme") {
     val isThemeExternal: Boolean
         get() = theme?.origin?.external == true
 
-    private val takesInputHandler = InputAcceptor { mc.gui.screen() != null && mc.gui.screen() !is ChatScreen }
+    private val takesInputHandler = InputAcceptor {
+        val screen = mc.gui.screen()
+        screen != null && screen !is ChatScreen && screen !is CustomStandaloneMinecraftScreen
+    }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->

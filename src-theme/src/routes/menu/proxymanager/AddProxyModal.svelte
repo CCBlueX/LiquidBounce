@@ -23,6 +23,8 @@
     let username = "";
     let password = "";
     let forwardAuthentication = false;
+    let proxyResourcePacks = false;
+    let proxyDns = false;
     let loading = false;
 
     function validateInput(requiresAuthentication: boolean, host: string, username: string, password: string): boolean {
@@ -42,7 +44,7 @@
         const [host, port] = hostPort.split(":");
 
         loading = true;
-        await addProxyRest(host, parseInt(port), username, password, proxyType, forwardAuthentication);
+        await addProxyRest(host, parseInt(port), username, password, proxyType, forwardAuthentication, proxyResourcePacks, proxyDns);
     }
 
     listen("proxyCheckResult", () => {
@@ -58,6 +60,8 @@
         username = "";
         password = "";
         forwardAuthentication = false;
+        proxyResourcePacks = false;
+        proxyDns = false;
     }
 </script>
 
@@ -70,6 +74,8 @@
         <IconTextInput title="Password" icon="lock" type="password" bind:value={password}/>
     {/if}
     <SwitchSetting title="Forward Microsoft Authentication" bind:value={forwardAuthentication}/>
+    <SwitchSetting title="Proxy Resource Packs" bind:value={proxyResourcePacks}/>
+    <SwitchSetting title="Proxy DNS" bind:value={proxyDns}/>
     <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy} listenForEnter={true} {loading}/>
     <ButtonSetting title="Get Proxy" on:click={() => browse("PROXY_WEBSITE")} secondary={true}/>
 </Modal>

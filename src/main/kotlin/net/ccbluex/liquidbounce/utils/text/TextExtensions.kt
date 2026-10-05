@@ -21,6 +21,8 @@
 package net.ccbluex.liquidbounce.utils.text
 
 import com.google.common.base.CaseFormat
+import com.google.common.net.HostAndPort
+import com.google.common.net.InetAddresses
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -30,6 +32,9 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.FontDescription
+import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
@@ -37,6 +42,7 @@ import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.StringDecomposer
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -56,19 +62,24 @@ inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Component] from the receiver.
+ * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
+inline fun String.asPlainText(style: Style = Style.EMPTY): Component = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [style].
  */
-inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
+inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
+
+/**
+ * Returns an immutable [Component] from the receiver with [style].
+ */
+inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
 inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(formatting)
 
@@ -85,6 +96,13 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+inline operator fun FormattedCharSequence.plus(other: FormattedCharSequence) =
+    FormattedCharSequence.fromPair(this, other)
+
+inline fun Array<out FormattedCharSequence>.composite() = FormattedCharSequence.composite(this.asList())
+
+inline fun List<FormattedCharSequence>.composite() = FormattedCharSequence.composite(this)
 
 @OptIn(ExperimentalContracts::class)
 inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {
@@ -133,6 +151,9 @@ fun Collection<String>.joinToText(separator: Component): Component =
  */
 fun Collection<Component>.joinToText(separator: Component): Component =
     joinToText(separator, transform = Function.identity())
+
+inline fun FormattedCharSequence.codePointsToString(): String =
+    AppenderCharSink.codePointsToString(this)
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
@@ -188,7 +209,19 @@ fun Component.mapComponent(
     }
 }
 
-fun Component.translated(): Component = mapComponent(contentMapper = ComponentContents::translated)
+fun Component.sanitizeForSerialization(): Component =
+    mapComponent(
+        contentMapper = ComponentContents::translated,
+        styleMapper = Style::stripNonSerializableFont,
+    )
+
+/**
+ * Replaces font descriptions that [ComponentSerialization] cannot encode with the default font.
+ *
+ * @see FontDescription.CODEC
+ */
+private fun Style.stripNonSerializableFont(): Style =
+    if (this.font is FontDescription.Resource) this else this.withFont(null)
 
 fun ComponentContents.translated(): ComponentContents =
     (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
@@ -199,6 +232,10 @@ fun TranslatableContents.toTranslatedString(): String = buildString {
 
         Optional.empty<Nothing>()
     }
+}
+
+fun FormattedText.asFormattedCharSequence() = FormattedCharSequence { output ->
+    StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
@@ -224,8 +261,14 @@ fun String.capitalize(): String = replaceFirstChar {
 
 fun String.toLowerCamelCase(): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, this)
 
+/** Removes a server port and IPv6 brackets without resolving the host. Invalid addresses are left intact. */
 fun String.dropPort(): String {
-    return this.substringBefore(':')
+    return try {
+        // Bracketless IPv6 is accepted as a host without a port.
+        HostAndPort.fromString(this).host
+    } catch (_: IllegalArgumentException) {
+        this
+    }
 }
 
 private val IP_REGEX = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
@@ -244,7 +287,8 @@ private val IP_REGEX = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
 fun String.rootDomain(): String {
     var domain = this.trim().lowercase()
 
-    if (domain.matches(IP_REGEX)) {
+    val ipv6 = ':' in domain && InetAddresses.isInetAddress(domain.removeSurrounding("[", "]").substringBefore('%'))
+    if (ipv6 || domain.matches(IP_REGEX)) {
         // IP address
         return domain
     }

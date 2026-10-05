@@ -16,36 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.api.services.auth
 
-package net.ccbluex.liquidbounce.render.engine.font.processor
+import net.ccbluex.liquidbounce.api.core.HttpException
+import net.ccbluex.liquidbounce.api.core.HttpMethod
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
-import it.unimi.dsi.fastutil.ints.IntList
-import net.ccbluex.liquidbounce.render.engine.font.FontStyle
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+class InvalidGrantTest {
 
-interface ProcessedText {
-    val chars: List<ProcessedChar>
+    private fun refused(code: Int, content: String) =
+        HttpException(HttpMethod.POST, "https://auth.liquidbounce.net/application/o/token/", code, content)
 
-    /**
-     * Elements: start codepoint index, end codepoint index, ...
-     *
-     * Size should be even,
-     */
-    val underlines: IntList
-
-    /**
-     * Elements: start codepoint index, end codepoint index, ...
-     *
-     * Size should be even,
-     */
-    val strikeThroughs: IntList
-
-    @JvmRecord
-    data class ProcessedChar(
-        val codepoint: Int,
-        val font: @FontStyle Int,
-        val obfuscated: Boolean,
-        val color: Color4b
-    )
+    @Test
+    fun `only a refused grant counts`() {
+        assertTrue(refused(400, """{"error": "invalid_grant"}""").isInvalidGrant)
+        assertFalse(refused(400, """{"error": "invalid_request"}""").isInvalidGrant)
+        assertFalse(refused(502, "<html>Bad Gateway</html>").isInvalidGrant)
+    }
 
 }

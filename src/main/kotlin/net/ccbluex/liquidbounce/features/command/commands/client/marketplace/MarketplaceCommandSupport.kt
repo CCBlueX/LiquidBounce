@@ -33,6 +33,13 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.utils.client.variable
 
 /**
+ * `author/name` of the top items.
+ */
+internal val marketplaceItemSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
+    MarketplaceItems.index.map { quoted(it.address) }
+}
+
+/**
  * `author/name` of the top items one is not subscribed to yet.
  */
 internal val subscribableSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
@@ -40,24 +47,17 @@ internal val subscribableSuggestions: SuggestionProvider<ClientCommandSource> = 
 }
 
 /**
- * `author/name` of the subscribed items. The name while the author is unknown, and the id where either is shared.
+ * `author/name` of the subscribed items, the name while the author is unknown.
  */
 internal val subscribedSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
     suggestSubscribed(MarketplaceManager.subscribedItems)
 }
 
-internal fun suggestSubscribed(items: Collection<SubscribedItem>): List<String> {
-    fun Collection<String>.repeated() = groupingBy { it.lowercase() }.eachCount().filterValues { it > 1 }.keys
+internal val SubscribedItem.address: String
+    get() = author?.let { "$it/$name" } ?: name
 
-    val sharedNames = items.map { it.name }.repeated()
-    val addresses = items.map { item ->
-        item.author?.let { "$it/${item.name}" } ?: item.name.takeIf { it.lowercase() !in sharedNames }
-    }
-    val sharedAddresses = addresses.filterNotNull().repeated()
-    return items.zip(addresses) { item, address ->
-        if (address == null || address.lowercase() in sharedAddresses) item.id.toString() else quoted(address)
-    }
-}
+internal fun suggestSubscribed(items: Collection<SubscribedItem>): List<String> =
+    items.map { it.address }.distinctBy { it.lowercase() }.map(::quoted)
 
 internal suspend fun CmdI18n.marketplaceItem(input: String): MarketplaceItem =
     single(input, MarketplaceItems.find(input))

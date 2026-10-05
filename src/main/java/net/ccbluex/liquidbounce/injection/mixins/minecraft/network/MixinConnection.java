@@ -18,7 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelPipeline;
+import io.netty.resolver.NoopAddressResolverGroup;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
@@ -37,6 +43,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 @Mixin(Connection.class)
 public abstract class MixinConnection {
@@ -106,6 +115,22 @@ public abstract class MixinConnection {
             final PipelineEvent event = new PipelineEvent(pipeline, local);
             EventManager.INSTANCE.callEvent(event);
         }
+    }
+
+    /**
+     * Vanilla connects to {@link InetSocketAddress#getAddress()}, which is null for an address left to the proxy
+     * to resolve.
+     */
+    @WrapOperation(method = "connect(Ljava/net/InetSocketAddress;Lnet/minecraft/server/network/EventLoopGroupHolder;Lnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;",
+        at = @At(value = "INVOKE", target = "Lio/netty/bootstrap/Bootstrap;connect(Ljava/net/InetAddress;I)Lio/netty/channel/ChannelFuture;", remap = false))
+    private static ChannelFuture hookUnresolvedConnect(Bootstrap bootstrap, InetAddress host, int port,
+                                                       Operation<ChannelFuture> original,
+                                                       @Local(argsOnly = true) InetSocketAddress address) {
+        if (address.isUnresolved()) {
+            return bootstrap.resolver(NoopAddressResolverGroup.INSTANCE).connect(address);
+        }
+
+        return original.call(bootstrap, host, port);
     }
 
 }
