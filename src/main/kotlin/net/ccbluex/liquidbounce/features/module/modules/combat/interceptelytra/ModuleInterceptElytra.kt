@@ -70,7 +70,8 @@ import net.minecraft.world.phys.Vec3
 object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.COMBAT) {
 
     private const val MILLISECONDS_PER_TICK = 50
-    // ~1.06 blocks: half the 1.5/t sampling step (0.75) plus the 0.3125 charge box; squared in use.
+    // ~1.1 blocks of tolerance (sqrt(1.2)): half the 1.5/t sampling step (0.75) plus the
+    // 0.3125 charge box; squared in use.
     private const val VERIFY_TOLERANCE_SQ = 1.2
 
     // Eye-to-hitbox distance (nearest box point), in blocks.
@@ -288,11 +289,13 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
         ).runSimulation(maxFlightTicks + 1)
 
         // The simulation advances in ~1.5-block steps per tick plus inherited thrower velocity;
-        // the tolerance (~1.06 blocks) covers that granularity plus the 0.3125-block wind charge
+        // the tolerance (~1.1 blocks) covers that granularity plus the 0.3125-block wind charge
         // (see EntityTypes.WIND_CHARGE). This is a coarse geometric filter, not a vanilla hit test:
         // vanilla resolves the charge against the target's box, not a point.
         // Best for short flights: the residual against the solver's known movement grows
-        // with flight time.
+        // with flight time. Note that vanilla adds server-side aim jitter (~1.7 degrees worst
+        // case, see InterceptElytraSolver.WIND_CHARGE_SPEED), which this deterministic
+        // simulation does not model — a pass here is necessary but not sufficient.
         return result.positions.any { it.distanceToSqr(aim.predictedImpact) <= VERIFY_TOLERANCE_SQ }
     }
 
