@@ -27,7 +27,6 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.LazyThreadSafetyMode.NONE
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -59,13 +58,11 @@ class AlignedFace(from: Vec3, to: Vec3) {
     val center: Vec3
         get() = from.lerp(to, 0.5)
 
-    val dimensions: Vec3 by lazy(NONE) {
-        Vec3(
-            this.to.x - this.from.x,
-            this.to.y - this.from.y,
-            this.to.z - this.from.z,
-        )
-    }
+    val dimensions: Vec3 = Vec3(
+        this.to.x - this.from.x,
+        this.to.y - this.from.y,
+        this.to.z - this.from.z,
+    )
 
     fun requireNonEmpty(): AlignedFace? =
         takeUnless { Mth.equal(area, 0.0) }
@@ -101,9 +98,9 @@ class AlignedFace(from: Vec3, to: Vec3) {
         // An axis-aligned face has exactly one constant axis; spread the two sample proportions over
         // the two variable axes.
         return when {
-            Mth.equal(dims.x, 0.0) -> Vec3(from.x, from.y + dims.y * a, from.z + dims.z * b)
-            Mth.equal(dims.y, 0.0) -> Vec3(from.x + dims.x * a, from.y, from.z + dims.z * b)
-            Mth.equal(dims.z, 0.0) -> Vec3(from.x + dims.x * a, from.y + dims.y * b, from.z)
+            dims.x == 0.0 -> Vec3(from.x, from.y + dims.y * a, from.z + dims.z * b)
+            dims.y == 0.0 -> Vec3(from.x + dims.x * a, from.y, from.z + dims.z * b)
+            dims.z == 0.0 -> Vec3(from.x + dims.x * a, from.y + dims.y * b, from.z)
             else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
         }
     }
@@ -173,14 +170,18 @@ class AlignedFace(from: Vec3, to: Vec3) {
         }
     }
 
+    /**
+     * The two in-plane axes of this face. An aligned face is constant on exactly one axis, so its constant axis is
+     * exactly zero — the same exactness the factory and the transformations of this class maintain.
+     */
     private fun getDirectionVectors(): Pair<Vec3, Vec3> {
         val dims = dimensions
 
         return when {
-            Mth.equal(dims.x, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(0.0, 0.0, dims.z)
-            Mth.equal(dims.y, 0.0) -> Vec3(dims.x, 0.0, 0.0) to Vec3(0.0, 0.0, dims.z)
-            Mth.equal(dims.z, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
-            else -> error("Face must be axis aligned for this function to work. dimensions=$dimensions")
+            dims.x == 0.0 -> Vec3(0.0, dims.y, 0.0) to Vec3(0.0, 0.0, dims.z)
+            dims.y == 0.0 -> Vec3(dims.x, 0.0, 0.0) to Vec3(0.0, 0.0, dims.z)
+            dims.z == 0.0 -> Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
+            else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
         }
     }
 
