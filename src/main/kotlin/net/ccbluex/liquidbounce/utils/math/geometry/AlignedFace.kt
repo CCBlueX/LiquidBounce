@@ -27,7 +27,6 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.LazyThreadSafetyMode.NONE
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -59,13 +58,11 @@ class AlignedFace(from: Vec3, to: Vec3) {
     val center: Vec3
         get() = from.lerp(to, 0.5)
 
-    val dimensions: Vec3 by lazy(NONE) {
-        Vec3(
-            this.to.x - this.from.x,
-            this.to.y - this.from.y,
-            this.to.z - this.from.z,
-        )
-    }
+    val dimensions: Vec3 = Vec3(
+        this.to.x - this.from.x,
+        this.to.y - this.from.y,
+        this.to.z - this.from.z,
+    )
 
     fun requireNonEmpty(): AlignedFace? =
         takeUnless { Mth.equal(area, 0.0) }
@@ -180,7 +177,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
             Mth.equal(dims.x, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(0.0, 0.0, dims.z)
             Mth.equal(dims.y, 0.0) -> Vec3(dims.x, 0.0, 0.0) to Vec3(0.0, 0.0, dims.z)
             Mth.equal(dims.z, 0.0) -> Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
-            else -> error("Face must be axis aligned for this function to work. dimensions=$dimensions")
+            else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
         }
     }
 

@@ -22,10 +22,13 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.test.assertVec3Equals
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
+import net.ccbluex.liquidbounce.utils.math.vertices
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -216,6 +219,73 @@ class LineTest {
             "Expected solver distance $newDistance to match sampled minimum $sampledMinimum",
         )
     }
+
+    @Test
+    fun `nearest point to box is not further than a dense scan on random geometries`() {
+        val random = Random(20260101)
+
+        repeat(40) {
+            val box = AABB(
+                random.nextDouble(-2.0, 2.0), random.nextDouble(-2.0, 2.0), random.nextDouble(-2.0, 2.0),
+                random.nextDouble(2.0, 4.0), random.nextDouble(2.0, 4.0), random.nextDouble(2.0, 4.0),
+            )
+            val anchor = random.nextDouble(-4.0, 4.0).let { x ->
+                Vec3(x, random.nextDouble(-4.0, 4.0), random.nextDouble(-4.0, 4.0))
+            }
+            val direction = random.nextDouble(-1.0, 1.0).let { dx ->
+                Vec3(dx, random.nextDouble(-1.0, 1.0), random.nextDouble(-1.0, 1.0))
+            }
+            if (direction.lengthSqr() < 1e-4) {
+                return@repeat
+            }
+
+            val geometry = when (random.nextInt(3)) {
+                0 -> Line(anchor, direction)
+                1 -> Ray(anchor, direction)
+                else -> LineSegment(anchor, anchor.fma(random.nextDouble(0.1, 2.0), direction))
+            }
+
+            val nearest = geometry.getNearestPointTo(box)
+            val pointOnBox = box.getNearestPoint(nearest.point)
+
+            assertPointOnGeometry(geometry, nearest.point)
+            assertEquals(pointOnBox.distanceToSqr(nearest.point), nearest.distanceSquared, 1e-9)
+
+            // The minimum lies in between the smallest and the largest parameter of the box vertices, and the
+            // distance is convex in the parameter, so the scan brackets it within the step size.
+            val vertexParameters = box.vertices.map { vertex -> geometry.parameterFor(vertex) }
+            val scanStart = maxOf(vertexParameters.min(), geometry.domainStart)
+            val scanEnd = minOf(vertexParameters.max(), geometry.domainEnd)
+            if (scanStart > scanEnd) {
+                return@repeat
+            }
+
+            val step = (scanEnd - scanStart) / 2000.0
+            var scannedMinimum = Double.POSITIVE_INFINITY
+            for (index in 0..2000) {
+                val parameter = scanStart + step * index
+                scannedMinimum = minOf(scannedMinimum, box.distanceToSqr(geometry.pointAt(parameter)))
+            }
+
+            assertTrue(
+                nearest.distanceSquared <= scannedMinimum + 1e-5,
+                "Expected ${nearest.distanceSquared} to match the scanned minimum $scannedMinimum of $geometry",
+            )
+            assertTrue(
+                geometry.parameterFor(nearest.point) in (geometry.domainStart - 1e-9)..(geometry.domainEnd + 1e-9),
+                "Expected ${nearest.point} to be inside the parameter domain of $geometry",
+            )
+        }
+    }
+
+    /**
+     * Parameter bounds of the geometry, mirroring the parameter domains of the implementations.
+     */
+    private val LinearGeometry3.domainStart: Double
+        get() = if (this is Line) Double.NEGATIVE_INFINITY else 0.0
+
+    private val LinearGeometry3.domainEnd: Double
+        get() = if (this is LineSegment) 1.0 else Double.POSITIVE_INFINITY
 
     @Test
     fun `invalid geometry inputs are rejected`() {
