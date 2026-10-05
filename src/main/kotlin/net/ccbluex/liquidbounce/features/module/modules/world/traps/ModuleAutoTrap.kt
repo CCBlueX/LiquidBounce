@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTra
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -94,10 +95,13 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         val enemies = targetTracker.targets()
         TrapPlayerSimulation.runSimulations(enemies)
 
-        val newPlan = webTrapPlanner.plan(enemies) ?: ignitionTrapPlanner.plan(enemies)
-        if (newPlan != null) {
-            currentPlan = newPlan
-        }
+        val newPlan = (if (webTrapPlanner.enabled) webTrapPlanner.plan(enemies) else null)
+            ?: (if (ignitionTrapPlanner.enabled) ignitionTrapPlanner.plan(enemies) else null)
+
+        // Planning may fail for a tick while its data is not conclusive yet, so keep the previous plan
+        // as long as it is still worth pursuing.
+        currentPlan = newPlan ?: currentPlan?.takeIf { it.isStillRelevant() }
+
         currentPlan?.let { intent ->
             val blockChangeInfo = intent.blockChangeInfo
             if (blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
@@ -166,6 +170,20 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         } finally {
             timeout = false
         }
+    }
+
+    /**
+     * Whether an already made plan still describes a pending action: its target has to be tracked still
+     * and the block it intends to fill has to be free. A fulfilled or abandoned plan must not keep
+     * requesting rotations.
+     */
+    private fun BlockChangeIntent<*>.isStillRelevant(): Boolean {
+        if (targetTracker.target == null) {
+            return false
+        }
+
+        val placement = blockChangeInfo as? BlockChangeInfo.PlaceBlock ?: return false
+        return placement.blockPlacementTarget.placedBlock.state?.canBeReplaced() == true
     }
 
     private fun shouldWaitForTiming(plan: BlockChangeIntent<*>): Boolean {
