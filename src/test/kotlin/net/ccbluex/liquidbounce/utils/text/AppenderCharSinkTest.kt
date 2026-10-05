@@ -78,5 +78,4 @@ class AppenderCharSinkTest {
         assertEquals(0, borrowed.builder().length)
         assertEquals("next", AppenderCharSink.codePointsToString("next".withFormat()))
     }
-
 }
