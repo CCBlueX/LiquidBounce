@@ -215,7 +215,6 @@ sealed interface LinearGeometry3 {
     /**
      * Returns the nearest point on this geometry to [box].
      */
-    @Suppress("LongMethod")
     fun getNearestPointTo(box: AABB): NearestPointResult {
         val position = anchor
         val directionVector = direction
@@ -228,51 +227,9 @@ sealed interface LinearGeometry3 {
         val dz = directionVector.z
 
         val domain = parameterDomain()
-
-        // Parameters where the geometry crosses a face plane of the box, plus the parameters appended below that
-        // minimize the distance inside each interval in between. Six crossings, two domain boundaries and one
-        // candidate per interval fit without growing the buffer.
-        val candidates = DoubleArray(20)
-        var candidateCount = 0
-
-        if (!Mth.equal(dx, 0.0)) {
-            candidateCount = candidates.addCandidate((box.minX - px) / dx, candidateCount, domain)
-            candidateCount = candidates.addCandidate((box.maxX - px) / dx, candidateCount, domain)
-        }
-        if (!Mth.equal(dy, 0.0)) {
-            candidateCount = candidates.addCandidate((box.minY - py) / dy, candidateCount, domain)
-            candidateCount = candidates.addCandidate((box.maxY - py) / dy, candidateCount, domain)
-        }
-        if (!Mth.equal(dz, 0.0)) {
-            candidateCount = candidates.addCandidate((box.minZ - pz) / dz, candidateCount, domain)
-            candidateCount = candidates.addCandidate((box.maxZ - pz) / dz, candidateCount, domain)
-        }
-
-        if (domain.lowerBound.isFinite()) {
-            candidateCount = candidates.addCandidate(domain.lowerBound, candidateCount, domain)
-        }
-        if (domain.upperBound.isFinite()) {
-            candidateCount = candidates.addCandidate(domain.upperBound, candidateCount, domain)
-        }
-
-        candidateCount = sortAndUnique(candidates, candidateCount)
-
-        // The squared distance to the box is a quadratic in between the crossings, so the parameter minimizing it
-        // is solved for instead of being sampled.
-        val markerCount = candidateCount
-        var intervalStart = domain.lowerBound
-
-        for (index in 0 until markerCount) {
-            val marker = candidates[index]
-            candidateCount = candidates.addIntervalCandidate(
-                intervalStart, marker, candidateCount, box, domain, position, directionVector,
-            )
-            intervalStart = marker
-        }
-
-        candidateCount = candidates.addIntervalCandidate(
-            intervalStart, domain.upperBound, candidateCount, box, domain, position, directionVector,
-        )
+        val candidates = DoubleArray(MAX_CANDIDATE_COUNT)
+        val markerCount = candidates.collectMarkers(box, domain, position, directionVector)
+        val candidateCount = candidates.addIntervalCandidates(markerCount, box, domain, position, directionVector)
 
         var bestParameter = Double.NaN
         var bestDistance = Double.POSITIVE_INFINITY
@@ -390,6 +347,12 @@ private const val GEOMETRY_PARAMETER_EPSILON = 1e-9
  */
 private const val PARALLEL_SINE_SQUARED_EPSILON = 1e-9
 
+/**
+ * Two plane crossings per axis, the two finite domain boundaries and one interval candidate for every marker
+ * plus the trailing interval.
+ */
+private const val MAX_CANDIDATE_COUNT = 2 * 3 + 2 + (2 * 3 + 2 + 1)
+
 private class BoxIntersectionInterval(
     @JvmField val enter: Double,
     @JvmField val exit: Double,
@@ -470,6 +433,41 @@ private fun DoubleArray.addCandidate(parameter: Double, count: Int, domain: Para
 }
 
 /**
+ * Collects the parameters at which the geometry crosses a face plane of [box] together with the finite boundaries
+ * of [domain], sorted and deduplicated.
+ *
+ * @return the number of markers written to this buffer
+ */
+private fun DoubleArray.collectMarkers(
+    box: AABB,
+    domain: ParameterDomain,
+    position: Vec3,
+    direction: Vec3,
+): Int {
+    var count = 0
+
+    for (axis in Direction.Axis.VALUES) {
+        val directionCoordinate = direction[axis]
+
+        if (Mth.equal(directionCoordinate, 0.0)) {
+            continue
+        }
+
+        count = addCandidate((box.min(axis) - position[axis]) / directionCoordinate, count, domain)
+        count = addCandidate((box.max(axis) - position[axis]) / directionCoordinate, count, domain)
+    }
+
+    if (domain.lowerBound.isFinite()) {
+        count = addCandidate(domain.lowerBound, count, domain)
+    }
+    if (domain.upperBound.isFinite()) {
+        count = addCandidate(domain.upperBound, count, domain)
+    }
+
+    return sortAndUnique(this, count)
+}
+
+/**
  * Appends the parameter inside ([start], [end]) that minimizes the squared distance to [box].
  *
  * The set of box faces the geometry is outside of is constant in between two consecutive crossings, which makes
@@ -523,6 +521,31 @@ private fun DoubleArray.addIntervalCandidate(
 
     this[count] = parameter
     return count + 1
+}
+
+/**
+ * Appends the parameter minimizing the squared distance to [box] inside every interval in between the [markerCount]
+ * markers already collected in this buffer.
+ *
+ * @return the number of candidates collected so far
+ */
+private fun DoubleArray.addIntervalCandidates(
+    markerCount: Int,
+    box: AABB,
+    domain: ParameterDomain,
+    position: Vec3,
+    direction: Vec3,
+): Int {
+    var count = markerCount
+    var intervalStart = domain.lowerBound
+
+    for (index in 0 until markerCount) {
+        val marker = this[index]
+        count = addIntervalCandidate(intervalStart, marker, count, box, domain, position, direction)
+        intervalStart = marker
+    }
+
+    return addIntervalCandidate(intervalStart, domain.upperBound, count, box, domain, position, direction)
 }
 
 private fun sortAndUnique(values: DoubleArray, size: Int): Int {
