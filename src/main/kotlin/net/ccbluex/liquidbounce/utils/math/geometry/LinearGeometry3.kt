@@ -166,7 +166,10 @@ sealed interface LinearGeometry3 {
             }
         }
 
-        if (abs(determinant) > GEOMETRY_PARAMETER_EPSILON) {
+        // `determinant` is (|firstDirection| * |secondDirection| * sin(angle))², so it has to be compared against a
+        // share of `a * c` — against an absolute epsilon every sufficiently short pair counts as parallel and the
+        // unconstrained minimum would be skipped.
+        if (determinant > PARALLEL_SINE_SQUARED_EPSILON * a * c) {
             val unconstrainedFirst = (b * e - c * d) / determinant
             val unconstrainedSecond = (a * e - b * d) / determinant
             addCandidate(unconstrainedFirst, unconstrainedSecond)
@@ -381,6 +384,11 @@ sealed interface LinearGeometry3 {
 }
 
 private const val GEOMETRY_PARAMETER_EPSILON = 1e-9
+
+/**
+ * Squared sine of the angle below which two directions are treated as parallel.
+ */
+private const val PARALLEL_SINE_SQUARED_EPSILON = 1e-9
 
 private class BoxIntersectionInterval(
     @JvmField val enter: Double,

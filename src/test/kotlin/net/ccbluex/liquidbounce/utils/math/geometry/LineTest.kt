@@ -221,6 +221,25 @@ class LineTest {
     }
 
     @Test
+    fun `segment segment nearest points are exact for segments shorter than the parallel threshold`() {
+        // Both closest points lie inside their segment, so the pair cannot be found by only checking the endpoints.
+        val first = LineSegment(
+            start = Vec3(-0.002, 0.0, 0.0),
+            end = Vec3(0.002, 0.0, 0.0),
+        )
+        val second = LineSegment(
+            start = Vec3(0.0, -0.002, 0.004),
+            end = Vec3(0.0, 0.002, 0.004),
+        )
+
+        val (nearestOnFirst, nearestOnSecond) = first.getNearestPointsTo(second)!!
+
+        assertVec3Equals(Vec3(0.0, 0.0, 0.0), nearestOnFirst, 1e-12)
+        assertVec3Equals(Vec3(0.0, 0.0, 0.004), nearestOnSecond, 1e-12)
+        assertEquals(1.6e-5, nearestOnFirst.distanceToSqr(nearestOnSecond), 1e-15)
+    }
+
+    @Test
     fun `nearest point to box is not further than a dense scan on random geometries`() {
         val random = Random(20260101)
 
