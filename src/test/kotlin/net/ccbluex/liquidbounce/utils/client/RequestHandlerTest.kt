@@ -16,10 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.BeforeTest
@@ -91,6 +90,7 @@ class RequestHandlerTest {
         requestHandler.tick()
         assertNull(requestHandler.getActiveRequestValue())
     }
+
     @Test
     fun `reusing a request retains its relative lifetime`() {
         val handler = RequestHandler<String>()
@@ -122,22 +122,6 @@ class RequestHandlerTest {
         assertNull(first.getActiveRequestValue())
         assertNull(second.getActiveRequestValue())
         assertEquals(2, request.expiresIn)
-    }
-
-    @Test
-    fun `queued deadlines are independent of later request edits`() {
-        val handler = RequestHandler<String>()
-        val request = RequestHandler.Request(2, 0, MODULE_1, "active")
-        handler.request(request)
-        request.expiresIn = 100
-        handler.tick(2)
-
-        assertNull(handler.getActiveRequestValue())
-        handler.request(request)
-        handler.tick(99)
-        assertEquals("active", handler.getActiveRequestValue())
-        handler.tick()
-        assertNull(handler.getActiveRequestValue())
     }
 
     @Test
@@ -177,5 +161,4 @@ class RequestHandlerTest {
 
         assertNull(handler.getActiveRequestValue())
     }
-
 }

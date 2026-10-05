@@ -71,6 +71,6 @@ class RequestHandler<T> {
      * @param provider module which requested value
      */
     class Request<T>(
-        var expiresIn: Int, val priority: Int, val provider: EventListener, val value: T
+        val expiresIn: Int, val priority: Int, val provider: EventListener, val value: T
     )
 }
