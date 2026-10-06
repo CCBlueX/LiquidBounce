@@ -85,6 +85,7 @@
     "minecraft.gui.MixinGuiRenderStateLayer",
     "minecraft.gui.MixinHud",
     "minecraft.gui.MixinHudAccessor",
+    "minecraft.gui.MixinKeyBindsScreen",
     "minecraft.gui.MixinLoadingOverlay",
     "minecraft.gui.MixinLocatorBar",
     "minecraft.gui.MixinPlayerTabOverlay",

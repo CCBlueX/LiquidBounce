@@ -17,21 +17,27 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.ccbluex.liquidbounce.utils.input.WindowsShiftCompatibility;
+import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
+import net.minecraft.client.input.KeyEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(InputConstants.class)
-public abstract class MixinInputConstants {
+@Mixin(KeyBindsScreen.class)
+public abstract class MixinKeyBindsScreen {
+
     /**
      * TODO(26.4): remove this after 26.4-snapshot-2
      */
-    @ModifyReturnValue(method = "isKeyDown", at = @At("RETURN"))
-    private static boolean recoveredRightShift(boolean original, int scanCode) {
-        return original || scanCode == InputConstants.KEY_RSHIFT && WindowsShiftCompatibility.isPressed();
+    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;setKey(Lcom/mojang/blaze3d/platform/InputConstants$Key;)V", ordinal = 1), cancellable = true)
+    private static void fix(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
+        if (InputConstants.getKey(event).equals(InputConstants.UNKNOWN)) {
+            cir.setReturnValue(true);
+        }
     }
+
 }

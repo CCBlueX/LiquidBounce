@@ -29,6 +29,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * TODO(26.4): remove this after 26.4-snapshot-2
+ */
 // Recover the raw scan code before Minecraft copies the native event into a KeyEvent.
 @Mixin(SDLEventHandler.class)
 public abstract class MixinSDLEventHandler {

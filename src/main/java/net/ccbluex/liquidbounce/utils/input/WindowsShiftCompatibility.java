@@ -28,7 +28,10 @@ import org.lwjgl.sdl.SDL_KeyboardEvent;
 import org.lwjgl.sdl.SDL_Event;
 import org.slf4j.LoggerFactory;
 
-/** Backports SDL's Windows E0 36 right Shift mapping (MC-311424). */
+/**
+ * TODO(26.4): remove this after 26.4-snapshot-2
+ * Backports SDL's Windows E0 36 right Shift mapping (MC-311424).
+ */
 public final class WindowsShiftCompatibility {
     private static boolean recoveredShiftDown;
     private static int recoveredWindow;

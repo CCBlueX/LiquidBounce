@@ -32,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * TODO(26.4): remove this after 26.4-snapshot-2
+ */
 class WindowsShiftCompatibilityTest {
     private static final int WINDOW = 42;
 
