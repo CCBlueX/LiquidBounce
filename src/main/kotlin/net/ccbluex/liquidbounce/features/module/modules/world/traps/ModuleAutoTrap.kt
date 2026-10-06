@@ -173,9 +173,9 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     }
 
     /**
-     * Whether an already made plan still describes a pending action: its target has to be tracked still
-     * and the block it intends to fill has to be free. A fulfilled or abandoned plan must not keep
-     * requesting rotations.
+     * Whether an already made plan still describes a pending action: the target it was made for has to be
+     * tracked still (see [TargetTracker.target]) and the block it intends to fill has to be free. A fulfilled
+     * or abandoned plan must not keep requesting rotations.
      */
     private fun BlockChangeIntent<*>.isStillRelevant(): Boolean {
         if (targetTracker.target == null) {

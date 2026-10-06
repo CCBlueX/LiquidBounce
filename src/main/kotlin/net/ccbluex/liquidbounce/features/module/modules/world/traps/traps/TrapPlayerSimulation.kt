@@ -94,8 +94,8 @@ object TrapPlayerSimulation {
 
         val lastEntry = simulationCache.last()
 
-        // Standing and walking targets are on the ground already, the candidate search extrapolates
-        // their movement on its own.
+        // A grounded target is trapped where it stands; where it walks from here is covered by the planner's
+        // offset search, which extrapolates the target's velocity.
         if (lastEntry.onGround && !isTargetLocked) {
             return lastEntry.currPos
         }
