@@ -31,6 +31,9 @@ import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.EnumMap
@@ -114,17 +117,20 @@ object MarketplaceManager : Config("marketplace"), EventListener {
      * item yields exactly one [UpdateResult] (including [UpdateResult.Failed]), so the
      * caller can report successes and failures separately.
      */
-    suspend fun updateAll(task: Task? = null): List<UpdateResult> =
+    suspend fun updateAll(task: Task? = null): List<UpdateResult> = coroutineScope {
         subscribedItems.toTypedArray().map { item ->
-            try {
-                update(item, task)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.error("Failed to update item ${item.id}", e)
-                UpdateResult.Failed(item, e)
+            async {
+                try {
+                    update(item, task)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.error("Failed to update item ${item.id}", e)
+                    UpdateResult.Failed(item, e)
+                }
             }
-        }
+        }.awaitAll()
+    }
 
     /**
      * Installs the newest revision of [item] that fits this game, returning what happened.
