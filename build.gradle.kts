@@ -23,6 +23,7 @@ import groovy.json.JsonOutput
 import java.time.Duration
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.dokka.gradle.workers.ProcessIsolation
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
@@ -39,6 +40,11 @@ base {
     archivesName = project.property("archives_base_name") as String
     version = project.property("mod_version") as String
     group = project.property("maven_group") as String
+}
+
+dokka {
+    // Dokka Generator runs in its own worker process, so org.gradle.jvmargs does not apply here.
+    (dokkaGeneratorIsolation.get() as ProcessIsolation).maxHeapSize = "4g"
 }
 
 /** Includes dependency recursively in the JAR file */
