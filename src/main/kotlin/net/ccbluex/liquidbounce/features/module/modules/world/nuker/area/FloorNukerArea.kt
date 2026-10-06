@@ -72,23 +72,22 @@ object FloorNukerArea : NukerArea("Floor") {
         start.set(xRange.first, 0, zRange.first)
         end.set(xRange.last, 0, zRange.last)
 
-        return mutableListOf<Pair<BlockPos, BlockState>>()
-            .apply {
-                // Check if [topToBottom] is enabled, if so reverse the range
-                for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
-                    start.y = y
-                    end.y = y
+        return buildList {
+            // Check if [topToBottom] is enabled, if so reverse the range
+            for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
+                start.y = y
+                end.y = y
 
-                    for (pos in (start..end).iterate()) {
-                        val state = pos.state ?: continue
+                for (pos in (start..end).iterate()) {
+                    val state = pos.state ?: continue
 
-                        if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
-                            add(pos.immutable() to state)
-                            limit?.also { limit -> if (size >= limit) return@apply }
-                        }
+                    if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
+                        add(pos.immutable() to state)
+                        limit?.also { limit -> if (size >= limit) return@buildList }
                     }
                 }
             }
+        }
     }
 
 }
