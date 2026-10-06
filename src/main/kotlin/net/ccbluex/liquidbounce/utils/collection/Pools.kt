@@ -57,8 +57,10 @@ object Pools {
         builderAction: StringBuilder.() -> Unit,
     ): String {
         val sb = StringBuilder.borrow()
-        sb.builderAction()
-        return sb.toString().also {
+        try {
+            sb.builderAction()
+            return sb.toString()
+        } finally {
             StringBuilder.recycle(sb)
         }
     }
@@ -70,9 +72,12 @@ object Pools {
         capacity: Int,
         builderAction: StringBuilder.() -> Unit,
     ): String {
-        val sb = StringBuilder.borrow().apply { ensureCapacity(capacity) }
-        sb.builderAction()
-        return sb.toString().also {
+        val sb = StringBuilder.borrow()
+        try {
+            sb.ensureCapacity(capacity)
+            sb.builderAction()
+            return sb.toString()
+        } finally {
             StringBuilder.recycle(sb)
         }
     }

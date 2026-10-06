@@ -28,9 +28,19 @@ import com.google.gson.stream.JsonWriter
 import java.lang.reflect.ParameterizedType
 import java.util.Optional
 
+/**
+ * A raw `Optional` carries no element type, so its values are read and written through
+ * Gson's generic JSON representation: objects become maps, arrays become lists and numbers
+ * become doubles.
+ */
 class OptionalAdapter<T : Any> private constructor(private val adapter: TypeAdapter<T>) : TypeAdapter<Optional<T>>() {
     override fun write(sink: JsonWriter, value: Optional<T>?) {
-        adapter.write(sink, value?.orElse(null))
+        val element = value?.orElse(null)
+        if (element == null) {
+            sink.nullValue()
+        } else {
+            adapter.write(sink, element)
+        }
     }
 
     override fun read(source: JsonReader): Optional<T>? {
@@ -48,8 +58,7 @@ class OptionalAdapter<T : Any> private constructor(private val adapter: TypeAdap
             if (type.getRawType() != Optional::class.java) {
                 return null
             }
-            val parameterizedType = type.type as ParameterizedType
-            val actualType = parameterizedType.actualTypeArguments[0]
+            val actualType = (type.type as? ParameterizedType)?.actualTypeArguments?.get(0) ?: Any::class.java
             val adapter = gson.getAdapter(TypeToken.get(actualType))
             @Suppress("UNCHECKED_CAST")
             return OptionalAdapter(adapter) as TypeAdapter<T>

@@ -22,12 +22,15 @@ package net.ccbluex.liquidbounce.api.core
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlin.test.assertIs
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -349,6 +352,78 @@ class RetryingTest {
         // Verify result
         assertIs<RetryingJob.State.Cancelled>(finalState)
         assertNull(retryingJob.getNow())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `awaiting a lazy producer starts it and shares its result`() = runTest {
+        var attempts = 0
+        val job = retrying(interval = 0.milliseconds, start = CoroutineStart.LAZY) {
+            attempts++
+            "result"
+        }
+        assertEquals(0, attempts)
+        assertNull(job.getNow())
+        val first = async { job.getFinalState() }
+        val second = async { job.getFinalState() }
+
+        try {
+            runCurrent()
+            assertTrue(first.isCompleted, "Awaiting must start the lazy producer")
+            assertTrue(second.isCompleted)
+            assertEquals(1, attempts)
+            val result = assertIs<RetryingJob.State.Success<String>>(first.await())
+            assertEquals("result", result.value)
+            assertSame(result, second.await())
+            assertSame(result, job.getFinalState())
+        } finally {
+            first.cancel()
+            second.cancel()
+            job.producerJob.cancel()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `a lazy producer can exhaust its retries while awaited`() = runTest {
+        var attempts = 0
+        val job = retrying(interval = 10.milliseconds, maxRetries = 2, start = CoroutineStart.LAZY) {
+            attempts++
+            throw TestException("failure")
+        }
+        val result = async { job.getFinalState() }
+        try {
+            testScheduler.advanceUntilIdle()
+            assertTrue(result.isCompleted)
+            assertIs<RetryingJob.State.Stopped>(result.await())
+            assertEquals(2, attempts)
+        } finally {
+            result.cancel()
+            job.producerJob.cancel()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `cancelling one waiter does not cancel the shared producer`() = runTest {
+        val job = retrying(interval = 0.milliseconds, start = CoroutineStart.LAZY) {
+            delay(100)
+            "result"
+        }
+        val first = async { job.getFinalState() }
+        val second = async { job.getFinalState() }
+        try {
+            runCurrent()
+            first.cancel()
+            assertFalse(job.producerJob.isCancelled)
+            testScheduler.advanceUntilIdle()
+            assertTrue(second.isCompleted)
+            assertEquals("result", assertIs<RetryingJob.State.Success<String>>(second.await()).value)
+        } finally {
+            first.cancel()
+            second.cancel()
+            job.producerJob.cancel()
+        }
     }
 
 }

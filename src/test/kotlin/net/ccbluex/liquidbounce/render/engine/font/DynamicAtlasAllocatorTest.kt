@@ -30,6 +30,76 @@ import kotlin.test.Test
 import java.awt.Dimension
 
 class DynamicAtlasAllocatorTest {
+    @Test
+    fun `freeing a subtree coalesces it while its sibling remains allocated`() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 8), 8, Dimension(4, 4))
+        val occupied = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        val small = List(4) { assertNotNull(allocator.allocate(Dimension(4, 4))) }
+
+        small.forEach(allocator::free)
+
+        val reclaimed = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        assertEquals(8, reclaimed.pos.x)
+        assertEquals(0, reclaimed.pos.y)
+        assertTrue(occupied.internalSlice.isAllocated)
+        assertTrue(allocator.availableSlices.isEmpty())
+        allocator.free(occupied)
+        allocator.free(reclaimed)
+        assertEquals(1, allocator.availableSlices.size)
+        assertEquals(16, allocator.availableSlices.single().width)
+    }
+
+    @Test
+    fun `coalescing removes descendant slices before reallocating their parent`() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 8), 8, Dimension(4, 4))
+        val occupied = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        val small = List(4) { assertNotNull(allocator.allocate(Dimension(4, 4))) }
+        val subtree = assertNotNull(small.first().internalSlice.parent)
+
+        small.asReversed().forEach(allocator::free)
+
+        assertEquals(setOf(subtree), allocator.availableSlices.toSet())
+        assertTrue(subtree.children.isEmpty())
+        assertFalse(subtree.isAllocated)
+        small.forEach { assertNull(it.internalSlice.parent) }
+        val reclaimed = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        assertNull(allocator.allocate(Dimension(4, 4)))
+        allocator.free(reclaimed)
+        allocator.free(occupied)
+    }
+
+    @Test
+    fun `partially free subtree retains its live allocations`() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 8), 8, Dimension(4, 4))
+        val occupied = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        val small = List(4) { assertNotNull(allocator.allocate(Dimension(4, 4))) }
+
+        small.take(3).forEach(allocator::free)
+
+        assertNull(allocator.allocate(Dimension(8, 8)))
+        assertTrue(small.last().internalSlice.isAllocated)
+        allocator.free(small.last())
+        val reclaimed = assertNotNull(allocator.allocate(Dimension(8, 8)))
+        allocator.free(reclaimed)
+        allocator.free(occupied)
+    }
+
+    @Test
+    fun `repeated partial coalescing does not exhaust atlas space`() {
+        val allocator = DynamicAtlasAllocator(Dimension(16, 8), 8, Dimension(4, 4))
+        val occupied = assertNotNull(allocator.allocate(Dimension(8, 8)))
+
+        repeat(20) {
+            val small = List(4) { assertNotNull(allocator.allocate(Dimension(4, 4))) }
+            small.forEach(allocator::free)
+            val reclaimed = assertNotNull(allocator.allocate(Dimension(8, 8)))
+            allocator.free(reclaimed)
+        }
+
+        allocator.free(occupied)
+        assertEquals(1, allocator.availableSlices.size)
+    }
+
     fun validateTree(allocator: DynamicAtlasAllocator, slice: AtlasSlice) {
         for (child in slice.children) {
             assertSame(slice, child.parent)

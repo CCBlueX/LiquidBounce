@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -255,7 +256,7 @@ object ModuleStrongholdFinder : ClientModule(
                 withPositionRelativeToCamera {
                     for ((start, angleDeg) in measurements) {
                         val direction = Vec3.directionFromRotation(0f, angleDeg)
-                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
+                        val end = start.fma(RAY_RENDER_LENGTH, direction)
 
                         drawLine(
                             start,

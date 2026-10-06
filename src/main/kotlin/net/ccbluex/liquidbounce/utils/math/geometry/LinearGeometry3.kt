@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.distanceToSqr
 import net.ccbluex.liquidbounce.utils.math.dot
@@ -28,7 +27,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
-import java.util.function.DoubleConsumer
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -168,7 +166,10 @@ sealed interface LinearGeometry3 {
             }
         }
 
-        if (abs(determinant) > GEOMETRY_PARAMETER_EPSILON) {
+        // `determinant` is (|firstDirection| * |secondDirection| * sin(angle))², so it has to be compared against a
+        // share of `a * c` — against an absolute epsilon every sufficiently short pair counts as parallel and the
+        // unconstrained minimum would be skipped.
+        if (determinant > PARALLEL_SINE_SQUARED_EPSILON * a * c) {
             val unconstrainedFirst = (b * e - c * d) / determinant
             val unconstrainedSecond = (a * e - b * d) / determinant
             addCandidate(unconstrainedFirst, unconstrainedSecond)
@@ -214,7 +215,6 @@ sealed interface LinearGeometry3 {
     /**
      * Returns the nearest point on this geometry to [box].
      */
-    @Suppress("CognitiveComplexMethod")
     fun getNearestPointTo(box: AABB): NearestPointResult {
         val position = anchor
         val directionVector = direction
@@ -226,77 +226,25 @@ sealed interface LinearGeometry3 {
         val dy = directionVector.y
         val dz = directionVector.z
 
-        val breakpoints = DoubleArrayList(6)
-
-        if (!Mth.equal(dx, 0.0)) {
-            breakpoints.addFinite((box.minX - px) / dx)
-            breakpoints.addFinite((box.maxX - px) / dx)
-        }
-        if (!Mth.equal(dy, 0.0)) {
-            breakpoints.addFinite((box.minY - py) / dy)
-            breakpoints.addFinite((box.maxY - py) / dy)
-        }
-        if (!Mth.equal(dz, 0.0)) {
-            breakpoints.addFinite((box.minZ - pz) / dz)
-            breakpoints.addFinite((box.maxZ - pz) / dz)
-        }
-
-        breakpoints.sortAndUnique()
-
         val domain = parameterDomain()
+        val candidates = DoubleArray(MAX_CANDIDATE_COUNT)
+        val markerCount = candidates.collectMarkers(box, domain, position, directionVector)
+        val candidateCount = candidates.addIntervalCandidates(markerCount, box, domain, position, directionVector)
+
         var bestParameter = Double.NaN
         var bestDistance = Double.POSITIVE_INFINITY
 
-        fun evaluate(parameterCandidate: Double) {
-            val parameter = domain.normalize(parameterCandidate)
+        for (index in 0 until candidateCount) {
+            val parameter = domain.normalize(candidates[index])
             if (parameter.isNaN()) {
-                return
+                continue
             }
-            val x = px + dx * parameter
-            val y = py + dy * parameter
-            val z = pz + dz * parameter
-            val distance = box.distanceToSqr(x, y, z)
 
+            val distance = box.distanceToSqr(px.fma(dx, parameter), py.fma(dy, parameter), pz.fma(dz, parameter))
             if (bestParameter.isNaN() || distance < bestDistance - GEOMETRY_PARAMETER_EPSILON) {
                 bestParameter = parameter
                 bestDistance = distance
             }
-        }
-
-        domain.forEachFiniteBoundary(::evaluate)
-        for (index in 0 until breakpoints.size) {
-            evaluate(breakpoints.getDouble(index))
-        }
-
-        val markers = DoubleArrayList(8)
-
-        fun addMarker(parameter: Double) {
-            if (parameter < domain.lowerBound - GEOMETRY_PARAMETER_EPSILON ||
-                parameter > domain.upperBound + GEOMETRY_PARAMETER_EPSILON
-            ) {
-                return
-            }
-
-            markers.add(parameter)
-        }
-
-        for (index in 0 until breakpoints.size) {
-            addMarker(breakpoints.getDouble(index))
-        }
-        domain.forEachFiniteBoundary(::addMarker)
-
-        markers.sortAndUnique()
-
-        var intervalStart = domain.lowerBound
-        for (index in 0 until markers.size) {
-            val marker = markers.getDouble(index)
-            evaluateInterval(box, domain, intervalStart, marker, position, directionVector, ::evaluate)
-            intervalStart = marker
-        }
-        evaluateInterval(box, domain, intervalStart, domain.upperBound, position, directionVector, ::evaluate)
-
-        if (bestParameter.isNaN()) {
-            evaluate(0.0)
         }
 
         check(!bestParameter.isNaN()) {
@@ -390,53 +338,20 @@ sealed interface LinearGeometry3 {
 
         return domain.normalize(firstParameter)
     }
-
-    private fun evaluateInterval(
-        box: AABB,
-        domain: ParameterDomain,
-        start: Double,
-        end: Double,
-        position: Vec3,
-        direction: Vec3,
-        evaluate: DoubleConsumer,
-    ) {
-        val intervalStart = max(start, domain.lowerBound)
-        val intervalEnd = min(end, domain.upperBound)
-        val sample = sampleOpenInterval(intervalStart, intervalEnd)
-        if (sample.isNaN()) return
-
-        val samplePoint = position.fma(sample, direction)
-
-        var quadraticA = 0.0
-        var quadraticB = 0.0
-
-        for (axis in Direction.Axis.VALUES) {
-            val sampleCoordinate = samplePoint[axis]
-            val directionCoordinate = direction[axis]
-            val positionCoordinate = position[axis]
-
-            if (sampleCoordinate < box.min(axis)) {
-                quadraticA += directionCoordinate * directionCoordinate
-                quadraticB += directionCoordinate * (positionCoordinate - box.min(axis))
-            } else if (sampleCoordinate > box.max(axis)) {
-                quadraticA += directionCoordinate * directionCoordinate
-                quadraticB += directionCoordinate * (positionCoordinate - box.max(axis))
-            }
-        }
-
-        if (abs(quadraticA) <= GEOMETRY_PARAMETER_EPSILON) {
-            evaluate.accept(sample)
-            return
-        }
-
-        val root = -quadraticB / quadraticA
-        if (root.inOpenInterval(intervalStart, intervalEnd)) {
-            evaluate.accept(root)
-        }
-    }
 }
 
 private const val GEOMETRY_PARAMETER_EPSILON = 1e-9
+
+/**
+ * Squared sine of the angle below which two directions are treated as parallel.
+ */
+private const val PARALLEL_SINE_SQUARED_EPSILON = 1e-9
+
+/**
+ * Two plane crossings per axis, the two finite domain boundaries and one interval candidate for every marker
+ * plus the trailing interval.
+ */
+private const val MAX_CANDIDATE_COUNT = 2 * 3 + 2 + (2 * 3 + 2 + 1)
 
 private class BoxIntersectionInterval(
     @JvmField val enter: Double,
@@ -496,10 +411,141 @@ internal fun requireValidDirection(direction: Vec3) {
     }
 }
 
-private fun DoubleArrayList.addFinite(k: Double) = k.isFinite() && add(k)
+/**
+ * Appends [parameter] to this candidate buffer if it lies inside [domain], accepting the same
+ * [GEOMETRY_PARAMETER_EPSILON] of slack as [ParameterDomain.normalize].
+ *
+ * @return the number of candidates collected so far
+ */
+private fun DoubleArray.addCandidate(parameter: Double, count: Int, domain: ParameterDomain): Int {
+    if (!parameter.isFinite()) {
+        return count
+    }
 
-private fun DoubleArrayList.sortAndUnique() {
-    this.size(sortAndUnique(this.elements(), this.size))
+    if (parameter < domain.lowerBound - GEOMETRY_PARAMETER_EPSILON ||
+        parameter > domain.upperBound + GEOMETRY_PARAMETER_EPSILON
+    ) {
+        return count
+    }
+
+    this[count] = parameter
+    return count + 1
+}
+
+/**
+ * Collects the parameters at which the geometry crosses a face plane of [box] together with the finite boundaries
+ * of [domain], sorted and deduplicated.
+ *
+ * @return the number of markers written to this buffer
+ */
+private fun DoubleArray.collectMarkers(
+    box: AABB,
+    domain: ParameterDomain,
+    position: Vec3,
+    direction: Vec3,
+): Int {
+    var count = 0
+
+    for (axis in Direction.Axis.VALUES) {
+        val directionCoordinate = direction[axis]
+
+        if (Mth.equal(directionCoordinate, 0.0)) {
+            continue
+        }
+
+        count = addCandidate((box.min(axis) - position[axis]) / directionCoordinate, count, domain)
+        count = addCandidate((box.max(axis) - position[axis]) / directionCoordinate, count, domain)
+    }
+
+    if (domain.lowerBound.isFinite()) {
+        count = addCandidate(domain.lowerBound, count, domain)
+    }
+    if (domain.upperBound.isFinite()) {
+        count = addCandidate(domain.upperBound, count, domain)
+    }
+
+    return sortAndUnique(this, count)
+}
+
+/**
+ * Appends the parameter inside ([start], [end]) that minimizes the squared distance to [box].
+ *
+ * The set of box faces the geometry is outside of is constant in between two consecutive crossings, which makes
+ * the squared distance a quadratic there and its minimum solvable in closed form.
+ *
+ * @return the number of candidates collected so far
+ */
+private fun DoubleArray.addIntervalCandidate(
+    start: Double,
+    end: Double,
+    count: Int,
+    box: AABB,
+    domain: ParameterDomain,
+    position: Vec3,
+    direction: Vec3,
+): Int {
+    val intervalStart = max(start, domain.lowerBound)
+    val intervalEnd = min(end, domain.upperBound)
+    val sample = sampleOpenInterval(intervalStart, intervalEnd)
+    if (sample.isNaN()) {
+        return count
+    }
+
+    var quadraticA = 0.0
+    var quadraticB = 0.0
+
+    for (axis in Direction.Axis.VALUES) {
+        val sampleCoordinate = position[axis] + direction[axis] * sample
+        val directionCoordinate = direction[axis]
+        val positionCoordinate = position[axis]
+
+        if (sampleCoordinate < box.min(axis)) {
+            quadraticA += directionCoordinate * directionCoordinate
+            quadraticB += directionCoordinate * (positionCoordinate - box.min(axis))
+        } else if (sampleCoordinate > box.max(axis)) {
+            quadraticA += directionCoordinate * directionCoordinate
+            quadraticB += directionCoordinate * (positionCoordinate - box.max(axis))
+        }
+    }
+
+    val parameter = if (abs(quadraticA) <= GEOMETRY_PARAMETER_EPSILON) {
+        sample
+    } else {
+        val root = -quadraticB / quadraticA
+        if (!root.inOpenInterval(intervalStart, intervalEnd)) {
+            return count
+        }
+
+        root
+    }
+
+    this[count] = parameter
+    return count + 1
+}
+
+/**
+ * Appends the parameter minimizing the squared distance to [box] inside every interval in between the [markerCount]
+ * markers already collected in this buffer.
+ *
+ * @return the number of candidates collected so far
+ */
+private fun DoubleArray.addIntervalCandidates(
+    markerCount: Int,
+    box: AABB,
+    domain: ParameterDomain,
+    position: Vec3,
+    direction: Vec3,
+): Int {
+    var count = markerCount
+    var intervalStart = domain.lowerBound
+
+    for (index in 0 until markerCount) {
+        val marker = this[index]
+        count = addIntervalCandidate(intervalStart, marker, count, box, domain, position, direction)
+        intervalStart = marker
+    }
+
+    return addIntervalCandidate(intervalStart, domain.upperBound, count, box, domain, position, direction)
 }
 
 private fun sortAndUnique(values: DoubleArray, size: Int): Int {

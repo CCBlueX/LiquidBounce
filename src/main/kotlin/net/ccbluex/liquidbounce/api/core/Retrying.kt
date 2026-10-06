@@ -101,6 +101,8 @@ data class RetryingJob<T : Any>(
     }
 
     suspend fun getFinalState(): State.Final<T> {
+        // Like Job.join(), awaiting the result must start a lazy producer.
+        producerJob.start()
         return stateFlow.first { it is State.Final } as State.Final<T>
     }
 

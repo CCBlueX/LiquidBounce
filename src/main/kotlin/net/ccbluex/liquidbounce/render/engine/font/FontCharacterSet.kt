@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.FontFace
+import net.ccbluex.liquidbounce.utils.io.readText
 import java.awt.Font
 
 internal object FontCharacterSet {
@@ -58,7 +59,7 @@ internal object FontCharacterSet {
     val commonHanCodepoints: IntArray by lazy(LazyThreadSafetyMode.PUBLICATION) {
         val text = requireNotNull(FontCharacterSet::class.java.getResourceAsStream(COMMON_HAN_RESOURCE)) {
             "Missing common Han character resource $COMMON_HAN_RESOURCE"
-        }.bufferedReader(Charsets.UTF_8).use { it.readText().trim() }
+        }.use { it.readText().trim() }
 
         val codepoints = text.codePoints().toArray()
         require(codepoints.size == COMMON_HAN_COUNT) {
