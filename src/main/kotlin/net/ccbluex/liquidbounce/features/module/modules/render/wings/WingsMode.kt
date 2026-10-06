@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -94,7 +95,7 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 val entityScale = entity.attributes.getValue(Attributes.SCALE).toFloat()
                 val behind = (WingsPosition.behindScale.toDouble() + equipmentOffset) * entityScale
-                val pos = entity.getPosition(event.partialTicks).subtract(look.scale(behind))
+                val pos = entity.getPosition(event.partialTicks).fma(-behind, look)
 
                 withPositionRelativeToCamera(pos.add(
                     0.0,

@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.HeldItemTrajectoryResolver
 import net.minecraft.client.player.AbstractClientPlayer
@@ -188,7 +189,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
                 val predictedPos = if (entity is AbstractClientPlayer && simulatedPos != null) {
                     simulatedPos.getSnapshotAt(i).pos
                 } else {
-                    entity.position().add(entity.deltaMovement.scale(i.toDouble()))
+                    entity.position().fma(i.toDouble(), entity.deltaMovement)
                 }
 
                 val entityBox = entity.boundingBox

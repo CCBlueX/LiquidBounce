@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.text.codePointsToString
@@ -335,8 +336,8 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = line.position.subtract(normalizedDirection.scale(100.0))
-            this.to = line.position.add(normalizedDirection.scale(100.0))
+            this.from = line.position.fma(-100.0, normalizedDirection)
+            this.to = line.position.fma(100.0, normalizedDirection)
         }
 
         context(env: WorldRenderEnvironment)

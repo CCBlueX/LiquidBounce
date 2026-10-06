@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isGlider
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.BlockItem
@@ -111,7 +112,7 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
             val distance = CustomRange.range.get().toDouble()
             val playerEye = player.eyePosition
             val direction = hitResult.location.subtract(playerEye).normalize()
-            val targetPos = playerEye.add(direction.scale(distance))
+            val targetPos = playerEye.fma(distance, direction)
 
             val newHitResult = BlockHitResult(
                 targetPos,
