@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
@@ -31,15 +31,11 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
     open val category: ItemCategory
         get() = ItemType.NONE.defaultCategory
 
-    open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
+    open val providedItemFunctions: List<ProvidedFunction>
         get() = emptyList()
 
     val isInHotbar: Boolean
         get() = this.itemSlot.slotType == ItemSlot.Type.HOTBAR || this.itemSlot.slotType == ItemSlot.Type.OFFHAND
-
-    open fun isSignificantlyBetter(other: ItemFacet): Boolean {
-        return false
-    }
 
     /**
      * Should this item be kept, even if it is not allocated to any slot?
@@ -61,10 +57,18 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
         protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.hashCode()
         }
+
         @JvmField
         protected val PREFER_BETTER_DURABILITY: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.durability
         }
+
+        @JvmField
+        protected val DEFAULT_TIE_BREAK: Comparator<ItemFacet> = PREFER_ITEMS_IN_HOTBAR then STABILIZE_COMPARISON
     }
 
+    /**
+     * @param amount The amount of the function this item gives.
+     */
+    data class ProvidedFunction(val type: ItemFunction, val amount: Int)
 }

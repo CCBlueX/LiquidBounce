@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
@@ -61,8 +62,7 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 },
                 VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_BETTER_DURABILITY,
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
 
         // TODO: compare multi tool item

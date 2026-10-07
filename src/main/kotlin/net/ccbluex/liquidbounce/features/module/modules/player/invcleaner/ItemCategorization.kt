@@ -99,18 +99,12 @@ enum class ItemType(
      * - Specialization (see above): 10 per level
      */
     val allocationPriority: Priority = Priority.NORMAL,
-    /**
-     * The user maybe wants to filter the items by a specific type, but they don't always want all versions of the item.
-     * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
-     * If that function is already served, we can just ignore it.
-     */
-    val providedFunction: ItemFunction? = null
 ) {
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
-    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
-    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
-    SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
-    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+    SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
+    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
+    SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
+    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),

@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Reference2IntMap
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectIntArrayMapOf
 import net.ccbluex.fastutil.referenceIntArrayMapOf
@@ -222,12 +220,12 @@ object ModuleInventoryCleaner : ClientModule(
             val constraints = mutableListOf<ItemConstraintInfo>()
 
             if (facet.providedItemFunctions.isEmpty()) {
-                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
+                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Int.MAX_VALUE
                 val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
 
                 val info = ItemConstraintInfo(
                     group = ItemCategoryConstraintGroup(
-                        desiredAmount..Integer.MAX_VALUE,
+                        desiredAmount..Int.MAX_VALUE,
                         10,
                         facet.category
                     ),
@@ -239,7 +237,7 @@ object ModuleInventoryCleaner : ClientModule(
                 for ((function, amountAdded) in facet.providedItemFunctions) {
                     val info = ItemConstraintInfo(
                         group = ItemFunctionCategoryConstraintGroup(
-                            desiredValuePerFunction.getOrDefault(function, 1)..Integer.MAX_VALUE,
+                            desiredValuePerFunction.getOrDefault(function, 1)..Int.MAX_VALUE,
                             10,
                             function
                         ),
