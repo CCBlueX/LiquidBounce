@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemNumberConstraintEnforcer.SatisfactionStatus
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
 
@@ -47,6 +48,13 @@ class CleanupPlanGenerator(
 
         // Consider all slots that may not be touched at all as useful.
         usefulItems.addAll(template.restrictions.getSlotsWithAtLeast(RestrictionType.FORBID_TAMPERING))
+
+        // Items the categorizer cannot classify are kept: nothing is known about their value.
+        for ((slot, facets) in allItemFacets.groupBy { it.itemSlot }) {
+            if (facets.all { it is PrimitiveItemFacet }) {
+                usefulItems.add(slot)
+            }
+        }
 
         val swaps = generateSwaps(itemDispenserRack, usefulItems)
 
