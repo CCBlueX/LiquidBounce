@@ -175,7 +175,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
         val comparator: Comparator<in BlockPos>
     ) : Tagged {
         CLOSEST("Closest", comparingDouble { it.distToCenterSqr(player.position()) }),
-        FURTHEST("Furthest", comparingDouble { -it.distToCenterSqr(player.position()) }),
+        FURTHEST("Furthest", CLOSEST.comparator.reversed()),
         HIGHEST("Highest", Vec3i.BY_Y_DESC),
         LOWEST("Lowest", Vec3i.BY_Y)
     }
