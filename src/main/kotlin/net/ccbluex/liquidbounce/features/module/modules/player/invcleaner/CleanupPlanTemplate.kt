@@ -63,7 +63,7 @@ class CleanupPlanTemplate(
 
     data class SlotContentPreference(
         val itemType: GenericItemType,
-        val subtypes: Set<Any> = setOf(Unit),
+        val subtypes: Set<ItemSubtype> = setOf(ItemSubtype.None),
     )
 
     /**

@@ -60,7 +60,10 @@ class WishOrganizerTest {
 
     @Test
     fun `fulfils the wish for a specific item before a category wish`() {
-        val specificItem = SlotContentPreference(GenericItemType.ANY_ITEM, setOf(Items.DIAMOND_SWORD))
+        val specificItem = SlotContentPreference(
+            GenericItemType.ANY_ITEM,
+            setOf(ItemSubtype.SpecificItem(Items.DIAMOND_SWORD))
+        )
         val category = SlotContentPreference(GenericItemType.SWORD)
 
         val organizer = WishOrganizer(

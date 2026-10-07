@@ -74,17 +74,49 @@ import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.material.LavaFluid
-import net.minecraft.world.level.material.WaterFluid
+import net.minecraft.world.level.material.Fluid
 
 /**
  * Describes what an item is, and is used as the key when facets are grouped by category as well as when a slot asks
  * for something.
- *
- * The subtype holds the distinction within a type (tool type, armor slot, specific item, ...). Facets that share a
- * category are compared with each other, so they have to be mutually comparable.
  */
-data class ItemCategory(val type: GenericItemType, val subtype: Any = Unit)
+data class ItemCategory(val type: GenericItemType, val subtype: ItemSubtype = ItemSubtype.None)
+
+/**
+ * The distinction within a [GenericItemType]. Facets that share a category are compared with each other, so they have
+ * to be mutually comparable.
+ */
+sealed interface ItemSubtype {
+    /**
+     * The type alone describes the item.
+     */
+    data object None : ItemSubtype
+
+    /**
+     * One exact item.
+     */
+    data class SpecificItem(val item: Item) : ItemSubtype
+
+    /**
+     * The tool types an item serves, as a bitmask of the masks of [MiningToolItemFacet].
+     */
+    data class ToolTypes(val mask: Int) : ItemSubtype
+
+    /**
+     * One armor slot, identified by the entity slot id of the [ArmorPiece].
+     */
+    data class ArmorSlot(val entitySlotId: Int) : ItemSubtype
+
+    /**
+     * The fluid a bucket holds.
+     */
+    data class BucketFluid(val fluid: Fluid) : ItemSubtype
+
+    /**
+     * The milk bucket, which does not hold a fluid.
+     */
+    data object MilkBucket : ItemSubtype
+}
 
 enum class GenericItemType(
     val oneIsSufficient: Boolean,
@@ -201,7 +233,10 @@ class ItemCategorization(
         return buildList {
             val item = slot.itemStack.item
 
-            this += PrimitiveItemFacet(slot, ItemCategory(GenericItemType.ANY_ITEM, item))
+            this += PrimitiveItemFacet(
+                slot,
+                ItemCategory(GenericItemType.ANY_ITEM, ItemSubtype.SpecificItem(item))
+            )
             // Everything could be a weapon (i.e. a stick with Knockback II should be preferred over a stick)
             WeaponItemFacet.createIfUsefulAsWeapon(slot)?.let { this += it }
 
@@ -245,16 +280,15 @@ class ItemCategorization(
                 item is EggItem || item is SnowballItem || item is WindChargeItem -> {
                     add(ThrowableItemFacet(slot))
                 }
-                item == Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, 2)))
-                item is BucketItem -> {
-                    val subtype = when (item.content) {
-                        is WaterFluid -> 0
-                        is LavaFluid -> 1
-                        else -> item.content.javaClass.hashCode()
-                    }
-
-                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, subtype)))
-                }
+                item == Items.MILK_BUCKET -> add(
+                    PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, ItemSubtype.MilkBucket))
+                )
+                item is BucketItem -> add(
+                    PrimitiveItemFacet(
+                        slot,
+                        ItemCategory(GenericItemType.BUCKET, ItemSubtype.BucketFluid(item.content))
+                    )
+                )
                 item is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.PEARL)))
                 item == Items.GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))

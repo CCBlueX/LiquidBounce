@@ -34,6 +34,8 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.Fluids
 
 /**
  * InventoryManager module
@@ -63,6 +65,9 @@ object ModuleInventoryCleaner : ClientModule(
     private val maxMilkBuckets by int("MaximumMilkBuckets", 2, 0..16)
 
     private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
+
+    private fun bucketCategory(fluid: Fluid) =
+        ItemCategory(GenericItemType.BUCKET, ItemSubtype.BucketFluid(fluid))
 
     val cleanupTemplateFromSettings: CleanupPlanTemplate
         get() {
@@ -116,9 +121,9 @@ object ModuleInventoryCleaner : ClientModule(
                     listOf(ItemCategory(GenericItemType.BLOCK)) to maxBlocks,
                     listOf(ItemCategory(GenericItemType.ARROW)) to maxArrows,
                     listOf(ItemCategory(GenericItemType.THROWABLE)) to maxThrowables,
-                    listOf(ItemCategory(GenericItemType.BUCKET, 0)) to maxWaterBuckets,
-                    listOf(ItemCategory(GenericItemType.BUCKET, 1)) to maxLavaBuckets,
-                    listOf(ItemCategory(GenericItemType.BUCKET, 2)) to maxMilkBuckets,
+                    listOf(bucketCategory(Fluids.WATER)) to maxWaterBuckets,
+                    listOf(bucketCategory(Fluids.LAVA)) to maxLavaBuckets,
+                    listOf(ItemCategory(GenericItemType.BUCKET, ItemSubtype.MilkBucket)) to maxMilkBuckets,
                 ),
             )
 

@@ -25,6 +25,7 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSubtype
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -62,7 +63,7 @@ sealed class FrontendSlotPreference {
 
             val contentPreference = CleanupPlanTemplate.SlotContentPreference(
                 itemType = GenericItemType.ANY_ITEM,
-                subtypes = setOf(item)
+                subtypes = setOf(ItemSubtype.SpecificItem(item))
             )
 
             return ConvertedSlotPreference(contentPreference)
@@ -98,7 +99,7 @@ sealed class FrontendSlotPreference {
             AXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.MASK_AXE)
+                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_AXE))
                 )
             ),
 
@@ -106,7 +107,7 @@ sealed class FrontendSlotPreference {
             HOE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.MASK_HOE)
+                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_HOE))
                 )
             ),
 
@@ -114,7 +115,7 @@ sealed class FrontendSlotPreference {
             SHOVEL_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.MASK_SHOVEL)
+                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_SHOVEL))
                 )
             ),
 
@@ -122,7 +123,7 @@ sealed class FrontendSlotPreference {
             PICKAXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.MASK_PICKAXE)
+                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_PICKAXE))
                 )
             ),
 
