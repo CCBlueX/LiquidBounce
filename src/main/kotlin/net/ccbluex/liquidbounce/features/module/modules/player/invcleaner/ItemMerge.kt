@@ -68,19 +68,21 @@ object ItemMerge {
 
         var itemsToRemove = maxStackSize - itemToDoubleclick.count
 
-        // Remove all small stacks that have been removed by last merge
+        // Simulate how smaller stacks are consumed by the target stack after the double-click.
+        // We mutate the temporary counts so recursive calls operate on the post-merge state.
         while (itemsToRemove > 0 && stacks.isNotEmpty()) {
             val stack = stacks.first()
 
             val count = stack.count
+            val transferredItems = count.coerceAtMost(itemsToRemove)
 
-            if (count < itemsToRemove) {
+            if (count <= itemsToRemove) {
                 stacks.removeFirst()
             } else {
-                stack.count -= itemsToRemove
+                stack.count -= transferredItems
             }
 
-            itemsToRemove -= stack.count
+            itemsToRemove -= transferredItems
         }
 
         mergeStacks(itemsToDoubleclick, stacks, maxStackSize)
