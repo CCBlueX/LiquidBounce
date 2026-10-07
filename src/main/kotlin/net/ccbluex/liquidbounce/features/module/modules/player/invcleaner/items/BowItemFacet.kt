@@ -43,8 +43,7 @@ class BowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private val COMPARATOR =
             ComparatorChain<BowItemFacet>(
                 VALUE_ESTIMATOR.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

@@ -36,8 +36,7 @@ class RodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private val COMPARATOR =
             ComparatorChain<RodItemFacet>(
                 VALUE_ESTIMATOR.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

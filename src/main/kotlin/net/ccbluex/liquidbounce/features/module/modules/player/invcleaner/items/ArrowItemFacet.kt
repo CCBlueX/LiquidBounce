@@ -31,8 +31,7 @@ class ArrowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private val COMPARATOR =
             ComparatorChain<ArrowItemFacet>(
                 PreferStackSize.PREFER_FEWER.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.world.item.ItemInstance
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import java.util.Comparator.comparing
@@ -70,7 +72,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 DEFAULT_TIE_BREAK,
             )
 
-        private fun estimateDamage(stack: ItemStack): Double {
+        private fun estimateDamage(stack: ItemInstance): Double {
             // Already contains damage enchantments like sharpness
             val attackDamage = stack.attackDamage
             val attackSpeed = stack.attackSpeed
@@ -107,7 +109,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * Decides if this item is better than fighting with nothing.
          */
         private fun isBetterThanNothing(stack: ItemStack): Boolean {
-            val baseDamage = estimateDamage(ItemStack(Items.STICK, 1))
+            val baseDamage = estimateDamage(ItemStackTemplate(Items.STICK, 1))
             val itemDamage = estimateDamage(stack)
 
             return itemDamage > baseDamage || SECONDARY_VALUE_ESTIMATOR.estimateValue(stack) > 0.0F

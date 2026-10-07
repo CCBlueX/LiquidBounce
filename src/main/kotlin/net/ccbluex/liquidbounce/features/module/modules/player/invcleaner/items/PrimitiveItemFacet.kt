@@ -32,8 +32,7 @@ class PrimitiveItemFacet(itemSlot: ItemSlot, override val category: ItemCategory
             ComparatorChain<PrimitiveItemFacet>(
                 Comparator.comparingInt { it.worth },
                 PreferStackSize.PREFER_FEWER.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

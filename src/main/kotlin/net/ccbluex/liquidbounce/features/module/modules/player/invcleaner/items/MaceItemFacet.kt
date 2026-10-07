@@ -66,8 +66,7 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
                 comparing { it.itemStack.item is MaceItem },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
 
         /** Copied (and partially refactored) from [MaceItem.getAttackDamageBonus] **/

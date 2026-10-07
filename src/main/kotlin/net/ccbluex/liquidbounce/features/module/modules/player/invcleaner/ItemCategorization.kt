@@ -91,13 +91,13 @@ enum class GenericItemType(
      * ## Used values
      * - Specialization (see above): 10 per level
      */
-    val allocationPriority: Priority = Priority.NORMAL
+    val allocationPriority: Priority = Priority.NORMAL,
 ) {
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
+    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3),
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
-    WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
