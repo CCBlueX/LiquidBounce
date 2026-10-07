@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.minecraft.world.item.Item
 
 class CleanupPlanTemplate(
     /**
@@ -35,6 +36,10 @@ class CleanupPlanTemplate(
      * See [CleanupPlanRestrictions]
      */
     val restrictions: CleanupPlanRestrictions,
+    /**
+     * Items that are never part of the plan, therefore they end up as trash.
+     */
+    val itemBlacklist: Set<Item> = emptySet(),
 ) {
 
     class CleanupPlanSlotContent(

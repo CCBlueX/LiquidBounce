@@ -28,10 +28,12 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanTemplate,
-    private val availableItems: List<ItemSlot>,
+    availableItems: List<ItemSlot>,
 ) {
     private val wishOrganizer = WishOrganizer(this.template)
     private val constraintEnforcer = ItemNumberConstraintEnforcer(template)
+
+    private val availableItems = availableItems.filterNot { it.itemStack.item in template.itemBlacklist }
 
     val plan: InventoryCleanupPlan
 

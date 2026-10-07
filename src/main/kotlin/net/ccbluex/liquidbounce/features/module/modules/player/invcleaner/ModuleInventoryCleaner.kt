@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanSlotContent
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
@@ -50,6 +50,19 @@ object ModuleInventoryCleaner : ClientModule(
 
     @Suppress("unused")
     private val inventoryPresets by inventoryPreset()
+
+    /**
+     * Limits that are only applied for the categories the preset does not configure.
+     */
+    private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
+    private val maxArrows by int("MaximumArrows", 128, 0..2500)
+    private val maxThrowables by int("MaximumThrowables", 64, 0..600)
+    private val maxFoods by int("MaximumFoodPoints", 200, 0..2000)
+    private val maxWaterBuckets by int("MaximumWaterBuckets", 2, 0..16)
+    private val maxLavaBuckets by int("MaximumLavaBuckets", 2, 0..16)
+    private val maxMilkBuckets by int("MaximumMilkBuckets", 2, 0..16)
+
+    private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
 
     val cleanupTemplateFromSettings: CleanupPlanTemplate
         get() {
@@ -83,7 +96,7 @@ object ModuleInventoryCleaner : ClientModule(
                 currentRestrictionMap[HotbarItemSlot.OFFHAND] = RestrictionType.FORBID_REPLACING
             }
 
-            val desiredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->
+            val configuredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->
                 val converted = rule.items
                     .mapNotNull { item -> item.toBackendRepresentation().contentPreference }
                     .flatMap { preference ->
@@ -94,15 +107,23 @@ object ModuleInventoryCleaner : ClientModule(
             }
 
             val constraintProvider = AmountItemAmountConstraintProvider(
-                desiredValuePerFunction = hashMapOf(),
-                desiredItemsInSpecificCategories = desiredItemCounts
+                fallbackAmountPerFunction = mapOf(ItemFunction.FOOD to maxFoods),
+                configuredItemsInSpecificCategories = configuredItemCounts,
+                fallbackItemsInSpecificCategories = listOf(
+                    listOf(ItemCategory(GenericItemType.BLOCK)) to maxBlocks,
+                    listOf(ItemCategory(GenericItemType.ARROW)) to maxArrows,
+                    listOf(ItemCategory(GenericItemType.THROWABLE)) to maxThrowables,
+                    listOf(ItemCategory(GenericItemType.BUCKET, 0)) to maxWaterBuckets,
+                    listOf(ItemCategory(GenericItemType.BUCKET, 1)) to maxLavaBuckets,
+                    listOf(ItemCategory(GenericItemType.BUCKET, 2)) to maxMilkBuckets,
+                ),
             )
-
 
             return CleanupPlanTemplate(
                 slotTargets,
                 itemAmountConstraintProvider = constraintProvider,
-                restrictions = CleanupPlanRestrictions(currentRestrictionMap)
+                restrictions = CleanupPlanRestrictions(currentRestrictionMap),
+                itemBlacklist = itemsBlackList,
             )
         }
 
@@ -176,96 +197,4 @@ object ModuleInventoryCleaner : ClientModule(
         return true
     }
 
-    private class AmountItemAmountConstraintProvider(
-        val desiredValuePerFunction: Map<ItemFunction, Int>,
-        /**
-         * Contains information about specific item groups constraints like `[snowball, egg] -> 32`.
-         * In that example, the inventory cleaner would not start throwing out items until at least 32 items of
-         * snowballs or eggs are in the inventory.
-         */
-        desiredItemsInSpecificCategories: List<Pair<List<ItemCategory>, Int>>
-    ) : ItemAmountConstraintProvider {
-        /**
-         * Contains all specific item groups in which an item is.
-         *
-         * For these rules: `[egg, snowball] -> 32, [egg, carrot] -> 64`, this list would look like this:
-         * - `egg` -> `[0, 1]`
-         * - `snowball` -> `[0]`
-         * - `carrot` -> `[1]`
-         */
-        private val itemSpecificGroupMap: Map<ItemCategory, List<SpecificItemGroup>> = run {
-            desiredItemsInSpecificCategories
-                .flatMapIndexed { idx, (items, desiredAmount) ->
-                    val group = SpecificItemGroup(id = idx, desiredAmount = desiredAmount, priority = idx)
-
-                    items.map { it to group }
-                }
-                .groupBy { it.first }
-                .mapValues { list -> list.value.map { it.second } }
-        }
-
-        override fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
-            val constraints = ArrayList<ItemConstraintInfo>()
-
-            for (group in this.itemSpecificGroupMap.getOrDefault(facet.category, emptyList())) {
-                val info = ItemConstraintInfo(
-                    group = SpecificItemGroupConstraintGroup(
-                        acceptableRange = group.desiredAmount..Integer.MAX_VALUE,
-                        priority = group.priority,
-                        groupId = group.id
-                    ),
-                    amountAddedByItem = facet.itemStack.count,
-                    default = false
-                )
-
-                constraints.add(info)
-            }
-
-            for ((function, amountAdded) in facet.providedItemFunctions) {
-                val configuredDesiredAmount = desiredValuePerFunction[function]
-
-                val (default, desiredAmount) = if (configuredDesiredAmount != null) {
-                    false to configuredDesiredAmount
-                } else {
-                    true to 1
-                }
-
-                val info = ItemConstraintInfo(
-                    group = ItemFunctionCategoryConstraintGroup(
-                        desiredAmount..Integer.MAX_VALUE,
-                        1000,
-                        function
-                    ),
-                    amountAddedByItem = amountAdded,
-                    default = default
-                )
-
-                constraints.add(info)
-            }
-
-            if (facet.providedItemFunctions.isEmpty() && facet.category.type != GenericItemType.ANY_ITEM) {
-                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
-
-                val info = ItemConstraintInfo(
-                    group = ItemCategoryConstraintGroup(
-                        defaultDesiredAmount..Integer.MAX_VALUE,
-                        1000,
-                        facet.category
-                    ),
-                    amountAddedByItem = facet.itemStack.count,
-                    default = true
-                )
-
-                constraints.add(info)
-            }
-
-            return constraints
-        }
-
-        override fun getAllocationPriority(itemGroup: ItemCategory): Int {
-            return -(this.itemSpecificGroupMap[itemGroup]?.maxBy { it.priority }?.priority ?: 0)
-        }
-
-        private class SpecificItemGroup(val id: Int, val desiredAmount: Int, val priority: Int)
-    }
 }
