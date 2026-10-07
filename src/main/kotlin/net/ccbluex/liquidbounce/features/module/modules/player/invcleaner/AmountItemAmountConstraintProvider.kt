@@ -77,7 +77,7 @@ class AmountItemAmountConstraintProvider(
         assignments.groupBy({ it.first }, { it.second })
     }
 
-    override fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
+    override fun getConstraints(facet: ItemFacet): List<ItemConstraintInfo> {
         val constraints = ArrayList<ItemConstraintInfo>()
 
         val specificGroups = this.itemSpecificGroupMap[facet.category]
@@ -134,7 +134,8 @@ class AmountItemAmountConstraintProvider(
     }
 
     override fun getAllocationPriority(itemGroup: ItemCategory): Int {
-        return -(this.itemSpecificGroupMap[itemGroup]?.maxBy { it.priority }?.priority ?: 0)
+        // Categories without a rule are processed last, so the groups the user cares about are counted first.
+        return this.itemSpecificGroupMap[itemGroup]?.minOf { it.priority } ?: Int.MAX_VALUE
     }
 
     private class SpecificItemGroup(

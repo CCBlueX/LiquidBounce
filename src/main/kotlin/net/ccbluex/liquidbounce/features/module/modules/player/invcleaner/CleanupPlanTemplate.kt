@@ -59,7 +59,6 @@ class CleanupPlanTemplate(
          * 4. If no eggs and snowballs are available either, the apples would be filled in.
          */
         val slotContentPreferences: List<SlotContentPreference>,
-        val priority: Int,
     )
 
     data class SlotContentPreference(

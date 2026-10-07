@@ -36,8 +36,7 @@ class ItemNumberConstraintEnforcer(private val template: CleanupPlanTemplate) {
      */
     fun getSatisfactionStatus(item: ItemFacet): SatisfactionStatus {
         val constraints = this.template.itemAmountConstraintProvider.getApplyingConstraints(item)
-
-        constraints.sortBy { it.group.priority }
+            .sortedBy { it.group.priority }
 
         for (constraintInfo in constraints) {
             val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)

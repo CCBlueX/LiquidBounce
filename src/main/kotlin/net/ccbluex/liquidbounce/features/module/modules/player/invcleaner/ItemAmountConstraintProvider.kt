@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 
 interface ItemAmountConstraintProvider {
-    fun getConstraints(item: ItemFacet): ArrayList<ItemConstraintInfo>
+    fun getConstraints(item: ItemFacet): List<ItemConstraintInfo>
 
     /**
-     * Returns the priority of the given item category.
-     * Categories with values are processed first.
+     * Returns the allocation priority of the given item category. Lower values are processed first, and categories
+     * that have no rule at all are processed last.
      *
      * This is useful when it comes to finding the minimal number of items required to fulfill the constraints.
      * For example, if the constraints were `egg -> 64, egg, snowball -> 32`, it would be important to process the eggs
@@ -39,13 +39,13 @@ interface ItemAmountConstraintProvider {
      *
      * See [ItemConstraintInfo.default] for further information on that.
      */
-    fun getApplyingConstraints(item: ItemFacet): ArrayList<ItemConstraintInfo> {
+    fun getApplyingConstraints(item: ItemFacet): List<ItemConstraintInfo> {
         val constraints = getConstraints(item)
 
-        if (constraints.any { !it.default }) {
-            constraints.removeIf { it.default }
+        return if (constraints.any { !it.default }) {
+            constraints.filterNot { it.default }
+        } else {
+            constraints
         }
-
-        return constraints
     }
 }

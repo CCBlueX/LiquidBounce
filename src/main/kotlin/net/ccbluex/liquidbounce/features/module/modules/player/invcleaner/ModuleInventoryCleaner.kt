@@ -81,11 +81,11 @@ object ModuleInventoryCleaner : ClientModule(
                         representation.contentPreference
                     }
 
-                    slot to CleanupPlanSlotContent(wishes, 0)
+                    slot to CleanupPlanSlotContent(wishes)
                 }
                 .toTypedArray()
 
-            val slotTargets = hashMapOf<ItemSlot, CleanupPlanSlotContent>(pairs = mapped)
+            val slotTargets = linkedMapOf<ItemSlot, CleanupPlanSlotContent>(*mapped)
 
 
             // Disallow tampering with armor slots since auto armor already handles them

@@ -33,14 +33,13 @@ class WishOrganizer(template: CleanupPlanTemplate) {
          * Decides which wish should come first. If wishA > wishB, wishA should be fulfilled first.
          */
         private val wishComparator = ComparatorChain<OrganizedWish>(
-            compareByDescending { it.slotPriority },
-            compareByDescending { it.indexInSlot },
-            // Fill in specific items first.
-            // The user expects this behavior.
+            // The first wish of a slot is the one the user prefers.
+            compareBy { it.indexInSlot },
+            // Fill in specific items first. The user expects this behavior.
             // For example, if there is a slot for golden apples and a slot for food, the user expects the
             // golden apple slot to contain golden apples and not the food slot.
-            compareBy { it.wish.itemType == GenericItemType.ANY_ITEM },
-            compareBy { it.wish.itemType.allocationPriority },
+            compareByDescending { it.wish.itemType == GenericItemType.ANY_ITEM },
+            compareByDescending { it.wish.itemType.allocationPriority },
         )
     }
 
@@ -55,7 +54,6 @@ class WishOrganizer(template: CleanupPlanTemplate) {
                 organizedWishes.add(
                     OrganizedWish(
                         id = id,
-                        slotPriority = content.priority,
                         indexInSlot = wishIndexInSlot,
                         targetSlot = slot,
                         wish = wish
@@ -65,7 +63,7 @@ class WishOrganizer(template: CleanupPlanTemplate) {
         }
 
         // Sort the wishes so that the wishes, which should be fulfilled first, are first.
-        organizedWishes.sortWith(wishComparator.reversed())
+        organizedWishes.sortWith(wishComparator)
 
         wishIdMap.forEach { (wish, itemGroupId) ->
             for (subtype in wish.subtypes) {
@@ -81,7 +79,6 @@ class WishOrganizer(template: CleanupPlanTemplate) {
     data class OrganizedWish(
         val id: WishItemGroupId,
         val targetSlot: ItemSlot,
-        val slotPriority: Int,
         val indexInSlot: Int,
         val wish: CleanupPlanTemplate.SlotContentPreference
     )
