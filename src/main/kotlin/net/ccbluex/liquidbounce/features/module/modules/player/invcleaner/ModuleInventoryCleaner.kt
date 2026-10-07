@@ -81,7 +81,10 @@ object ModuleInventoryCleaner : ClientModule(
                         representation.contentPreference
                     }
 
-                    slot to CleanupPlanSlotContent(wishes)
+                    // Servers up to 1.15.2 cannot swap the off-hand slot, so it is never filled in there.
+                    val targetable = slot != HotbarItemSlot.OFFHAND || HotbarItemSlot.OFFHAND.canBeSwapTarget
+
+                    slot to CleanupPlanSlotContent(if (targetable) wishes else emptyList())
                 }
                 .toTypedArray()
 
