@@ -108,56 +108,73 @@ object ModuleInventoryCleaner : ClientModule(
 
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
-        val cleanupPlan = CleanupPlanGenerator(
-            cleanupTemplateFromSettings,
-            findNonEmptySlotsInInventory()
-        ).plan
+        val currentInventorySlots = findNonEmptySlotsInInventory()
+        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots).plan
 
-        // Step 1: Move items to the correct slots
-        for (hotbarSwap in cleanupPlan.swaps) {
-            check(hotbarSwap.to is HotbarItemSlot) { "Cannot swap to non-hotbar-slot" }
-
-            event.schedule(
-                inventoryConstraints,
-                InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
-            )
-
-            // todo: run when successful or do not care?
-            cleanupPlan.remapSlots(
-                hashMapOf(
-                    Pair(hotbarSwap.from, hotbarSwap.to),
-                    Pair(hotbarSwap.to, hotbarSwap.from),
-                )
-            )
-        }
-
-        // Step 2: Merge stacks
-        val stacksToMerge = ItemMerge.findStacksToMerge(cleanupPlan)
-        for (slot in stacksToMerge) {
-            event.schedule(
-                inventoryConstraints,
-                InventoryAction.Click.performPickup(null, slot),
-                InventoryAction.Click.performPickupAll(null, slot),
-                InventoryAction.Click.performPickup(null, slot),
-            )
-        }
-
-        // It is important that we call findItemSlotsInInventory() here again, because the inventory has changed.
-        val itemsToThrowOut = findItemsToThrowOut(cleanupPlan, findNonEmptySlotsInInventory())
-
-        for (slot in itemsToThrowOut) {
-            event.schedule(
-                inventoryConstraints,
-                InventoryAction.Click.performThrow(screen = null, slot),
-                Priority.NOT_IMPORTANT
-            )
+        // Process inventory actions in priority order
+        when {
+            // Step 1: Move items to the correct slots
+            processHotbarSwaps(event, cleanupPlan) -> return@handler
+            // Step 2: Merge stackable items to optimize space
+            processStackMerging(event, cleanupPlan) -> return@handler
+            // Step 3: Remove unwanted items (lowest priority)
+            processItemDisposal(event, cleanupPlan, currentInventorySlots) -> return@handler
         }
     }
 
-    fun findItemsToThrowOut(
+    /**
+     * Handles swapping items to correct hotbar positions
+     * @return true if a swap was scheduled, false otherwise
+     */
+    private fun processHotbarSwaps(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
+        val hotbarSwap = cleanupPlan.swaps.firstOrNull() ?: return false
+
+        require(hotbarSwap.to is HotbarItemSlot) {
+            "Invalid swap target: ${hotbarSwap.to}. Only hotbar slots are supported."
+        }
+
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
+        )
+
+        return true
+    }
+
+    /**
+     * Handles merging stackable items to optimize inventory space
+     * @return true if a merge was scheduled, false otherwise
+     */
+    private fun processStackMerging(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
+        val slotToMerge = ItemMerge.findStacksToMerge(cleanupPlan).firstOrNull() ?: return false
+
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performMergeStack(slot = slotToMerge),
+        )
+
+        return true
+    }
+
+    /**
+     * Handles disposal of unwanted items
+     * @return true if an item was scheduled for disposal, false otherwise
+     */
+    private fun processItemDisposal(
+        event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        itemsInInv: List<ItemSlot>,
-    ) = itemsInInv.filter { it !in cleanupPlan.usefulItems }
+        currentInventorySlots: List<ItemSlot>,
+    ): Boolean {
+        val itemToThrow = cleanupPlan.findItemsToThrowOut(currentInventorySlots).firstOrNull() ?: return false
+
+        event.schedule(
+            inventoryConstraints,
+            InventoryAction.Click.performThrow(screen = null, itemToThrow),
+            Priority.NOT_IMPORTANT
+        )
+
+        return true
+    }
 
     private class AmountItemAmountConstraintProvider(
         val desiredValuePerFunction: Map<ItemFunction, Int>,
