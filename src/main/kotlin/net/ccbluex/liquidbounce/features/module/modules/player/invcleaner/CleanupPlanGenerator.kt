@@ -52,6 +52,9 @@ class CleanupPlanGenerator(
 
         findOtherUsefulItems(usefulItems, allItemFacets)
 
+        // Items that must survive the cleanup even if no slot asks for them (god axes, armor for future kits).
+        allItemFacets.filter(ItemFacet::shouldKeep).forEach { usefulItems.add(it.itemSlot) }
+
         this.plan = InventoryCleanupPlan(
             usefulItems = usefulItems,
             swaps = swaps,
