@@ -79,8 +79,8 @@ object ModuleTeleport : ClientModule(
         if (indicatedTeleport == null) {
             chat(warning(message("useCommand")))
 
-            // Disables module on next render tick
-            mc.execute {
+            // Has to be queued: the enabled value is not committed until onEnabled returned.
+            mc.schedule {
                 this.enabled = false
             }
         }
@@ -89,6 +89,10 @@ object ModuleTeleport : ClientModule(
     override fun onDisabled() {
         indicatedTeleport = null
         teleportsToWait = 0
+
+        if (withDisabler) {
+            ModuleDisabler.enabled = false
+        }
     }
 
     fun indicateTeleport(x: Double = player.x, y: Double = player.y, z: Double = player.z) {

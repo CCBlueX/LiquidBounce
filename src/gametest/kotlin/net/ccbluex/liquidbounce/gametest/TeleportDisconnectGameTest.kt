@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
@@ -64,6 +65,18 @@ class TeleportDisconnectGameTest : FabricClientGameTest {
                 context.waitFor({ client ->
                     !ModuleTeleport.enabled && client.player?.let { it.x == 12.0 && it.z == 12.0 } == true
                 }, 200)
+
+                // Discarding the request also releases the disabler it armed.
+                context.onClient {
+                    ModuleDisabler.enabled = false
+                    ModuleTeleport.settings.getValue("WithDisablerOnWait").setByString("true")
+                    ModuleTeleport.settings.getValue("FunctionAfterTeleports").setByString("1")
+                    ModuleTeleport.indicateTeleport(x = 13.0, z = 13.0)
+                    check(ModuleDisabler.enabled) { "A single wait teleport did not arm the disabler" }
+
+                    ModuleTeleport.enabled = false
+                    check(!ModuleDisabler.enabled) { "The armed disabler survived the discarded request" }
+                }
             }
         } finally {
             context.onClient {
