@@ -65,9 +65,8 @@ import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
+import java.util.Comparator.comparingDouble
 import kotlin.math.hypot
-
-private const val RAY_RENDER_LENGTH = 2048.0
 
 /**
  * Stronghold finder module.
@@ -83,6 +82,8 @@ object ModuleStrongholdFinder : ClientModule(
     ModuleCategories.WORLD,
     aliases = listOf("Triangulation")
 ) {
+
+    private const val RAY_RENDER_LENGTH = 2048.0
 
     private val sigma by float("Sigma", 0.03f, 0.005f..0.20f, "°").onChanged {
         onEstimatorSettingsChanged()
@@ -385,7 +386,7 @@ object ModuleStrongholdFinder : ClientModule(
                     && it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) <= maxSpawnDistanceSqr
             }
             .minWithOrNull(
-                compareBy<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
+                comparingDouble<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
                     .thenComparingInt { nowTick - it.tick }
             ) ?: return
 

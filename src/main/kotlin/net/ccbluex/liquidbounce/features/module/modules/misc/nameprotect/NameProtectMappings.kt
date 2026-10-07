@@ -151,13 +151,14 @@ class NameProtectMappings {
      */
     private class ReplacementInstructions(val matcher: Trie, val replacements: Map<String, MappingData>) {
         private val cache = LfuCache<CharSequence, Replacements>(REPLACEMENT_CACHE_SIZE)
+        private val order = Comparator.comparingInt<Pair<Emit, *>> { it.first.start }
 
         fun match(text: CharSequence): Replacements =
             matcher.parseText(text)
                 .mapToArray { it to replacements[it.keyword]!! }
                 // The substitution walks the emits in `Emit.start` order, which the library provides
                 // only as an artifact of `ignoreOverlaps`, so it is sorted here instead of assumed.
-                .apply { sortBy { it.first.start } }
+                .apply { sortWith(order) }
                 .unmodifiable()
 
         fun matchCached(text: CharSequence): Replacements = cache.getOrPut(text) { match(text) }
