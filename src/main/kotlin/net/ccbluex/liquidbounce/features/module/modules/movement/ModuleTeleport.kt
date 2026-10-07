@@ -47,7 +47,12 @@ import kotlin.math.floor
  *
  * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
  */
-object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, aliases = listOf("tp")) {
+object ModuleTeleport : ClientModule(
+    "Teleport",
+    ModuleCategories.EXPLOIT,
+    aliases = listOf("tp"),
+    disableOnQuit = true,
+) {
 
     private val allFull by boolean("AllFullPacket", false)
     private val paperExploit by boolean("PaperBypass", false)

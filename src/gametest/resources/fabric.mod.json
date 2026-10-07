@@ -10,6 +10,7 @@
       "net.ccbluex.liquidbounce.gametest.MarketplaceCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.LocalConfigTrackingGameTest",
       "net.ccbluex.liquidbounce.gametest.FallDamageTrackerGameTest",
+      "net.ccbluex.liquidbounce.gametest.TeleportDisconnectGameTest",
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest"
     ]
   },
