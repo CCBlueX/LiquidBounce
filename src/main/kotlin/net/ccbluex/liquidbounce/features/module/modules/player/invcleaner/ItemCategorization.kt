@@ -77,6 +77,13 @@ import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
 
+/**
+ * Describes what an item is, and is used as the key when facets are grouped by category as well as when a slot asks
+ * for something.
+ *
+ * The subtype holds the distinction within a type (tool type, armor slot, specific item, ...). Facets that share a
+ * category are compared with each other, so they have to be mutually comparable.
+ */
 data class ItemCategory(val type: GenericItemType, val subtype: Any = Unit)
 
 enum class GenericItemType(

@@ -37,6 +37,11 @@ class PrimitiveItemFacet(itemSlot: ItemSlot, override val category: ItemCategory
     }
 
     override fun compareTo(other: ItemFacet): Int {
-        return COMPARATOR.compare(this, other as PrimitiveItemFacet)
+        // Facets of the same category are compared with each other, and this category is not exclusive to this class.
+        if (other !is PrimitiveItemFacet) {
+            return super.compareTo(other)
+        }
+
+        return COMPARATOR.compare(this, other)
     }
 }

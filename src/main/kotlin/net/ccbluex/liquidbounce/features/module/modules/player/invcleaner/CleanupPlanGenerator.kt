@@ -89,10 +89,8 @@ class CleanupPlanGenerator(
 
                         usefulItems.add(facet.itemSlot)
                     }
-                    SatisfactionStatus.SATISFIED -> {}
-                    SatisfactionStatus.OVERSATURATED -> {
-                        throw IllegalArgumentException("Oversaturated behavior is currently not implemented.")
-                    }
+                    // TODO: keep oversaturated items out of the wish dispenser as well.
+                    SatisfactionStatus.SATISFIED, SatisfactionStatus.OVERSATURATED -> {}
                 }
             }
         }

@@ -24,6 +24,6 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 /**
  * Axe with sharpness level >= 100
  */
-class GodAxeFacet(slot: ItemSlot) : ItemFacet(slot) {
+class GodAxeFacet(slot: ItemSlot) : WeaponItemFacet(slot) {
     override fun shouldKeep(): Boolean = true
 }
