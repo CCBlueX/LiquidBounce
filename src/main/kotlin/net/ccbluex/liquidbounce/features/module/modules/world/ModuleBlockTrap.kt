@@ -34,10 +34,14 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
+import net.ccbluex.liquidbounce.utils.math.BY_Y
+import net.ccbluex.liquidbounce.utils.math.BY_Y_DESC
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
+import java.util.Comparator.comparingDouble
 import kotlin.math.max
 import kotlin.math.min
 
@@ -168,12 +172,12 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
     @Suppress("unused")
     private enum class PlacePriority(
         override val tag: String,
-        val comparator: Comparator<BlockPos>
+        val comparator: Comparator<in BlockPos>
     ) : Tagged {
-        CLOSEST("Closest", compareBy { it.distToCenterSqr(player.position()) }),
-        FURTHEST("Furthest", compareByDescending { it.distToCenterSqr(player.position()) }),
-        HIGHEST("Highest", compareByDescending { it.y }),
-        LOWEST("Lowest", compareBy { it.y })
+        CLOSEST("Closest", comparingDouble { it.distToCenterSqr(player.position()) }),
+        FURTHEST("Furthest", comparingDouble { -it.distToCenterSqr(player.position()) }),
+        HIGHEST("Highest", Vec3i.BY_Y_DESC),
+        LOWEST("Lowest", Vec3i.BY_Y)
     }
 
     private enum class PlaceAt(

@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
+import java.util.Comparator.comparing
+import java.util.Comparator.comparingDouble
 import kotlin.math.ceil
 import kotlin.math.pow
-
 
 /**
  * Specialization of weapon type. Used in order to allow the user to specify that they want a mace and not an axe
@@ -60,8 +60,8 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
 
         private val COMPARATOR =
             ComparatorChain<MaceItemFacet>(
-                Comparator.comparingDouble(this::estimateDamage),
-                compareByCondition { it.itemStack.item is MaceItem },
+                comparingDouble(this::estimateDamage),
+                comparing { it.itemStack.item is MaceItem },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,

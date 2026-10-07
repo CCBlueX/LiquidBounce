@@ -40,9 +40,12 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
+import net.ccbluex.liquidbounce.utils.math.BY_Y
+import net.ccbluex.liquidbounce.utils.math.BY_Y_DESC
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.util.Mth
 import kotlin.random.Random
@@ -53,8 +56,6 @@ import kotlin.random.Random
  * Builds blocks to cover yourself.
  */
 object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOnQuit = true) {
-
-    private val compareByY = Comparator.comparingInt<BlockPos>(BlockPos::getY)
 
     private val blockPlacer = tree(BlockPlacer("Placer", this, Priority.NORMAL, ::slotFinder))
     private val disableOn by multiEnumChoice("DisableOn", enumSetAllOf<DisableOn>())
@@ -99,16 +100,15 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         BottomTop("BottomTop") {
             override fun positions(): Array<BlockPos> {
                 val array = Normal.positions()
-                array.sortWith(compareByY)
+                array.sortWith(Vec3i.BY_Y)
                 return array
             }
         },
 
         TopBottom("TopBottom") {
-            private val comparator = compareByY.reversed()
             override fun positions(): Array<BlockPos> {
                 val array = Normal.positions()
-                array.sortWith(comparator)
+                array.sortWith(Vec3i.BY_Y_DESC)
                 return array
             }
         };

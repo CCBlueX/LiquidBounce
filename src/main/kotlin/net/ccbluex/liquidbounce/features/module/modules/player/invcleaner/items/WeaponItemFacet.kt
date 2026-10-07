@@ -30,8 +30,9 @@ import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.world.item.enchantment.Enchantments
+import java.util.Comparator.comparing
+import java.util.Comparator.comparingDouble
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -59,9 +60,9 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                Comparator.comparingDouble(::estimateDamage),
+                comparingDouble(::estimateDamage),
                 SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
-                compareByCondition { it.itemStack.isSword },
+                comparing { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
                 PREFER_ITEMS_IN_HOTBAR,

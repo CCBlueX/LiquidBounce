@@ -55,7 +55,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
         }
 
         @JvmField
-        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareBy(ItemFacet::isInHotbar)
+        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = Comparator.comparing { it.isInHotbar }
 
         @JvmField
         protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {

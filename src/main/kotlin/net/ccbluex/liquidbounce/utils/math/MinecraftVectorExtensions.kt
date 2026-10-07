@@ -64,6 +64,10 @@ object BlockPosAsLongComparator : LongComparator {
     }
 }
 
+companion val Vec3i.BY_Y: Comparator<Vec3i> = Comparator { p0, p1 -> p0.y compareTo p1.y }
+
+companion val Vec3i.BY_Y_DESC: Comparator<Vec3i> = Vec3i.BY_Y.reversed()
+
 inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 
 inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
