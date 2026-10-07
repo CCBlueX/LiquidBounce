@@ -39,30 +39,38 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
 
     override fun enabled() {
         phase = Phase.BUILD
-        portal = getPortal()
+        val portal = getPortal()
+        this.portal = portal
         if (portal == null) {
             chat(markAsError(ModuleAutoBuild.message("noPosition")), ModuleAutoBuild)
-            ModuleAutoBuild.enabled = false
+            // The enabled value is committed after onEnabled returns, so defer the disable.
+            mc.schedule {
+                if (parent.activeMode === this && this.portal == null) {
+                    ModuleAutoBuild.enabled = false
+                }
+            }
+            return
         }
-        placer.update(portal!!.frameBlocks.filter { it.stateOrEmpty.block !== Blocks.OBSIDIAN })
-        placer.support.blockedPositions.addAll(portal!!.enclosedBlocks)
+        placer.update(portal.frameBlocks.filter { it.stateOrEmpty.block !== Blocks.OBSIDIAN })
+        placer.support.blockedPositions.addAll(portal.enclosedBlocks)
     }
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
+        val portal = portal ?: return@handler
         if (!placer.isDone()) {
             return@handler
         }
 
         if (phase == Phase.BUILD) {
-            val blocks = portal!!.confirmPlacements()
+            val blocks = portal.confirmPlacements()
             if (blocks.isNotEmpty()) {
                 placer.update(blocks)
                 return@handler
             }
 
             phase = Phase.IGNITE
-            placer.addToQueue(portal!!.ignitePos)
+            placer.addToQueue(portal.ignitePos)
         } else if (phase == Phase.IGNITE) {
             ModuleAutoBuild.enabled = false
         }
