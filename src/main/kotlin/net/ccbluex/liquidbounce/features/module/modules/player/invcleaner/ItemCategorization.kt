@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization.Companion.diamondArmorPieces
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
@@ -55,7 +56,6 @@ import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
@@ -69,24 +69,6 @@ import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.enchantment.Enchantments
-
-val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareBy(ItemFacet::isInHotbar)
-val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.hashCode()
-}
-
-val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.maxDamage - it.itemStack.damageValue
-}
-
-val PREFER_ENCHANTABLE: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0
-}
-
-val DEFAULT_TIE_BREAK: Array<Comparator<ItemFacet>> = arrayOf(
-    PREFER_ITEMS_IN_HOTBAR,
-    STABILIZE_COMPARISON,
-)
 
 data class ItemCategory(val type: GenericItemType, val subtype: Any = Unit)
 
@@ -148,11 +130,11 @@ class ItemCategorization(
          * We expect to be full armor to be diamond armor.
          */
         @JvmStatic
-        private val diamondArmorPieces = mapOf(
-            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
-            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
-            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
-            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        private val diamondArmorPieces = enumMapOf(
+            EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET, constructArmorPiece(Items.DIAMOND_BOOTS, 3),
         )
 
         /**
@@ -194,72 +176,64 @@ class ItemCategorization(
      * - (DIAMOND_AXE, 1) => `[Axe(DIAMOND_AXE, 1), Tool(DIAMOND_AXE, 1)]`
      */
     @Suppress("CyclomaticComplexMethod", "LongMethod")
-    fun getItemFacets(slot: ItemSlot): Array<ItemFacet> {
+    fun getItemFacets(slot: ItemSlot): List<ItemFacet> {
         if (slot.itemStack.isEmpty) {
-            return emptyArray()
+            return emptyList()
         }
 
-        val item = slot.itemStack.item
+        return buildList {
+            val item = slot.itemStack.item
 
-        val specificItemFacets: Array<ItemFacet> = when {
-            // Treat animal armor as a normal item
-            slot.itemStack.isPlayerArmor -> arrayOf(ArmorItemFacet(slot, this.futureArmorToKeep, this.armorComparator))
-            slot.itemStack.isSword -> arrayOf(SwordItemFacet(slot))
-            item is BowItem -> arrayOf(BowItemFacet(slot))
-            item is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
-            item is ArrowItem -> arrayOf(ArrowItemFacet(slot))
-            item is FishingRodItem -> arrayOf(RodItemFacet(slot))
-            item is ShieldItem -> arrayOf(ShieldItemFacet(slot))
-            slot.itemStack.isSpear -> arrayOf(SpearItemFacet(slot))
-            item is MaceItem -> arrayOf(MaceItemFacet(slot))
-            slot.itemStack.isAxe -> {
-                val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
-                when {
-                    sharpnessLevel >= 100 -> arrayOf(GodAxeFacet(slot))
-                    sharpnessLevel >= 5 -> arrayOf(SharpAxeFacet(slot))
-                    else -> arrayOf(MiningToolItemFacet(slot))
-                }
-            }
-            slot.itemStack.isMiningTool -> arrayOf(MiningToolItemFacet(slot))
-            item is BlockItem -> {
-                val isUsableBlock = (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
-                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack))
-
-                if (isUsableBlock) {
-                    arrayOf(BlockItemFacet(slot))
-                } else {
-                    emptyArray()
-                }
-            }
-            item is PotionItem -> {
-                val areAllEffectsGood =
-                    slot.itemStack.getPotionEffects()
-                        .all { it.effect in PotionItemFacet.GOOD_STATUS_EFFECTS }
-
-                if (areAllEffectsGood) {
-                    arrayOf(PotionItemFacet(slot))
-                } else {
-                    emptyArray()
-                }
-            }
-            item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> {
-                arrayOf(ThrowableItemFacet(slot))
-            }
-            else -> {
-                if (slot.itemStack.isFood) {
-                    arrayOf(FoodItemFacet(slot))
-                } else {
-                    emptyArray()
-                }
-            }
-        }
-
-        val commonFacets = listOfNotNull(
-            PrimitiveItemFacet(slot, ItemCategory(GenericItemType.ANY_ITEM, item)),
+            this += PrimitiveItemFacet(slot, ItemCategory(GenericItemType.ANY_ITEM, item))
             // Everything could be a weapon (i.e. a stick with Knockback II should be preferred over a stick)
-            WeaponItemFacet.createIfUsefulAsWeapon(slot)
-        )
+            WeaponItemFacet.createIfUsefulAsWeapon(slot)?.let { this += it }
 
-        return specificItemFacets + commonFacets
+            when {
+                // Treat animal armor as a normal item
+                slot.itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
+                slot.itemStack.isSword -> add(SwordItemFacet(slot))
+                item is BowItem -> add(BowItemFacet(slot))
+                item is CrossbowItem -> add(CrossbowItemFacet(slot))
+                item is ArrowItem -> add(ArrowItemFacet(slot))
+                item is FishingRodItem -> add(RodItemFacet(slot))
+                item is ShieldItem -> add(ShieldItemFacet(slot))
+                slot.itemStack.isSpear -> add(SpearItemFacet(slot))
+                item is MaceItem -> add(MaceItemFacet(slot))
+                slot.itemStack.isAxe -> {
+                    val sharpnessLevel = slot.itemStack.getEnchantment(Enchantments.SHARPNESS)
+                    when {
+                        sharpnessLevel >= 100 -> add(GodAxeFacet(slot))
+                        sharpnessLevel >= 5 -> add(SharpAxeFacet(slot))
+                        else -> add(MiningToolItemFacet(slot))
+                    }
+                }
+                slot.itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
+                item is BlockItem -> {
+                    val isUsableBlock = (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
+                        && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack))
+
+                    if (isUsableBlock) {
+                        add(BlockItemFacet(slot))
+                    }
+                }
+                item is PotionItem -> {
+                    val areAllEffectsGood =
+                        slot.itemStack.getPotionEffects()
+                            .all { it.effect in PotionItemFacet.GOOD_STATUS_EFFECTS }
+
+                    if (areAllEffectsGood) {
+                        add(PotionItemFacet(slot))
+                    }
+                }
+                item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> {
+                    add(ThrowableItemFacet(slot))
+                }
+                else -> {
+                    if (slot.itemStack.isFood) {
+                        add(FoodItemFacet(slot))
+                    }
+                }
+            }
+        }
     }
 }

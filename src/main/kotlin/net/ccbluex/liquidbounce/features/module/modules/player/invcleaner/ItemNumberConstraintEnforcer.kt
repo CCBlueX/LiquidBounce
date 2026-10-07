@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 
 /**
@@ -27,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
  * - Decides whether an item is useful or not.
  */
 class ItemNumberConstraintEnforcer(private val template: CleanupPlanTemplate) {
-    private val currentLimit = HashMap<ItemNumberContraintGroup, Int>()
+    private val currentLimit = Object2IntOpenHashMap<ItemNumberContraintGroup>()
 
     /**
      * Decides whether the given item facet is useful.
@@ -39,7 +40,7 @@ class ItemNumberConstraintEnforcer(private val template: CleanupPlanTemplate) {
         constraints.sortBy { it.group.priority }
 
         for (constraintInfo in constraints) {
-            val currentCount = this.currentLimit[constraintInfo.group] ?: 0
+            val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
 
             if (currentCount > constraintInfo.group.acceptableRange.last) {
                 return SatisfactionStatus.OVERSATURATED

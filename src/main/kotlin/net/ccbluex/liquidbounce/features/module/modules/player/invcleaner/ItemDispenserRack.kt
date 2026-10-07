@@ -27,13 +27,13 @@ class ItemDispenserRack(wishOrganizer: WishOrganizer, itemFacets: List<ItemFacet
     private val alreadyDispensedItemSlots = HashSet<ItemSlot>()
 
     init {
-        val wishGroupAvailableFacetMap = HashMap<WishOrganizer.WishItemGroupId, ArrayList<ItemFacet>>()
+        val wishGroupAvailableFacetMap = HashMap<WishOrganizer.WishItemGroupId, ArrayDeque<ItemFacet>>()
 
         for (facet in itemFacets) {
             val wishGroupsForFacet = wishOrganizer.itemCategoryWishGroupMap[facet.category] ?: continue
 
             for (id in wishGroupsForFacet) {
-                wishGroupAvailableFacetMap.computeIfAbsent(id) { ArrayList() }.add(facet)
+                wishGroupAvailableFacetMap.computeIfAbsent(id) { ArrayDeque() }.add(facet)
             }
         }
 
@@ -44,12 +44,10 @@ class ItemDispenserRack(wishOrganizer: WishOrganizer, itemFacets: List<ItemFacet
 
     fun nextItemForGroup(id: WishOrganizer.WishItemGroupId) = this.dispensersForType[id]?.nextItem()
 
-    private inner class ItemDispenser(itemList: List<ItemFacet>) {
-        private val itemListIterable: Iterator<ItemFacet> = itemList.iterator()
-
+    private inner class ItemDispenser(private val itemList: ArrayDeque<ItemFacet>) {
         fun nextItem(): ItemFacet? {
-            while (this.itemListIterable.hasNext()) {
-                val currentItem = this.itemListIterable.next()
+            while (this.itemList.isNotEmpty()) {
+                val currentItem = this.itemList.removeFirst()
 
                 // Check if this item slot has already been dispensed.
                 // This is possible as an item might appear in multiple dispensers.

@@ -19,11 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.DEFAULT_TIE_BREAK
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.Items
@@ -33,7 +34,6 @@ import java.util.Comparator.comparingInt
 class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
-            @Suppress("SpreadOperator")
             ComparatorChain<FoodItemFacet>(
                 comparingInt {
                     when (it.itemStack.item) {
@@ -51,7 +51,7 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 comparingInt { it.itemStack.foodComponent!!.nutrition },
                 comparingDouble { it.itemStack.foodComponent!!.saturation.toDouble() },
                 PreferStackSize.PREFER_FEWER.asHolderComparator(),
-                *DEFAULT_TIE_BREAK
+                DEFAULT_TIE_BREAK,
             )
     }
 

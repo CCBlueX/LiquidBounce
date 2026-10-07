@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
+import net.ccbluex.liquidbounce.utils.item.durability
+import net.minecraft.core.component.DataComponents
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
     open val category: ItemCategory
@@ -55,10 +57,14 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
         protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.hashCode()
         }
+
         @JvmField
         protected val PREFER_BETTER_DURABILITY: Comparator<in ItemStackHolder> = Comparator.comparingInt {
             it.itemStack.durability
         }
+
+        @JvmField
+        protected val DEFAULT_TIE_BREAK: Comparator<ItemFacet> = PREFER_ITEMS_IN_HOTBAR then STABILIZE_COMPARISON
     }
 
     /**

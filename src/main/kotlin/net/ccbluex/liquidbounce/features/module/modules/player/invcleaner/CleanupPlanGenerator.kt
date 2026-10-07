@@ -91,29 +91,25 @@ class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private va
         // Consider all slots that we aren't allowed to change as done.
         finishedSlots.addAll(template.restrictions.getSlotsWithAtLeast(RestrictionType.FORBID_REPLACING))
 
-        val swaps: ArrayList<InventorySwap> = ArrayList()
+        val swaps = ArrayList<InventorySwap>()
 
-        for (wish in this.wishOrganizer.organizedWishes) {
+        for ((id, targetSlot) in this.wishOrganizer.organizedWishes) {
             // If a better wish was already fulfilled, skip this second wish.
-            if (wish.targetSlot in finishedSlots) {
+            if (targetSlot in finishedSlots) {
                 continue
             }
 
-            val availableItem = itemDispenserRack.nextItemForGroup(wish.id)
+            val availableItem = itemDispenserRack.nextItemForGroup(id) ?: continue
 
-            if (availableItem == null) {
-                continue
-            }
-
-            finishedSlots.add(wish.targetSlot)
+            finishedSlots.add(targetSlot)
             usefulItems.add(availableItem.itemSlot)
 
             // Move the item to the target slot if necessary.
-            if (availableItem.itemSlot != wish.targetSlot) {
+            if (availableItem.itemSlot != targetSlot) {
                 swaps.add(
                     InventorySwap(
                         from = availableItem.itemSlot,
-                        to = wish.targetSlot,
+                        to = targetSlot,
                         priority = availableItem.category.type.allocationPriority
                     )
                 )
@@ -128,7 +124,7 @@ class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private va
     private fun discoverItemFacets(): List<ItemFacet> {
         val categorizer = ItemCategorization(availableItems)
 
-        val availableItemFacets = availableItems.flatMap { categorizer.getItemFacets(it).asIterable() }
+        val availableItemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
 
         return availableItemFacets
     }
@@ -147,7 +143,7 @@ class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private va
             }
 
             val itemType = ItemAndComponents(stack)
-            val stacksOfType = itemsByType.computeIfAbsent(itemType) { mutableListOf() }
+            val stacksOfType = itemsByType.computeIfAbsent(itemType) { ArrayList() }
 
             stacksOfType.add(availableSlot)
         }

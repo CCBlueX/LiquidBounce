@@ -65,7 +65,8 @@ class CleanupPlanTemplate(
     /**
      * Contains all information about what the inv cleaner is *not allowed* to do.
      */
-    class CleanupPlanRestrictions(
+    @JvmInline
+    value class CleanupPlanRestrictions(
         private val slotRestrictionMap: Map<ItemSlot, RestrictionType>,
     ) {
 

@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.DEFAULT_TIE_BREAK
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
@@ -41,10 +40,9 @@ class CrossbowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f),
             )
         private val COMPARATOR =
-            @Suppress("SpreadOperator")
             ComparatorChain<CrossbowItemFacet>(
                 VALUE_ESTIMATOR.asHolderComparator(),
-                *DEFAULT_TIE_BREAK
+                DEFAULT_TIE_BREAK,
             )
     }
 

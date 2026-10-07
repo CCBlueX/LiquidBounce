@@ -19,14 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.DEFAULT_TIE_BREAK
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_BETTER_DURABILITY
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ENCHANTABLE
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.item.asHolderComparator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
@@ -64,12 +62,12 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                comparingDouble(::estimateDamage),
+                comparingDouble { estimateDamage(it.itemStack) },
                 SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
                 comparing { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
-                *DEFAULT_TIE_BREAK
+                DEFAULT_TIE_BREAK,
             )
 
         private fun estimateDamage(stack: ItemStack): Double {
