@@ -53,12 +53,12 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     }
 
     private fun update() {
-        onUpdate.removeIf { (listener, callback) ->
-            if (listener !in registry) {
-                true
-            } else {
-                callback.run()
-                false
+        onUpdate.removeIf { (listener, _) -> listener !in registry }
+
+        // Callbacks can change subscriptions. Skip removed entries and defer new ones until the next update.
+        for (entry in onUpdate.toTypedArray()) {
+            if (entry in onUpdate) {
+                entry.second.run()
             }
         }
     }
@@ -72,6 +72,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
     fun unsubscribe(subscriber: EventListener) {
         registry.remove(subscriber)
+        onUpdate.removeIf { (listener, _) -> listener === subscriber }
         if (registry.isEmpty()) {
             entities.clear()
             update()

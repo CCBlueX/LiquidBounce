@@ -34,6 +34,10 @@ class WindowResizeEvent(val width: Int, val height: Int) : Event()
 class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @AddonApi
+@Tag("windowTitle")
+class WindowTitleEvent(val title: StringBuilder) : Event()
+
+@AddonApi
 @Tag("mouseButton")
 class MouseButtonEvent(
     val key: InputConstants.Key,

@@ -80,15 +80,6 @@ object EnchantLevelArgumentType : ArgumentType<EnchantLevel> {
 }
 
 /**
- * Resolves this parsed level against an enchantment holder: [EnchantLevel.Max] becomes
- * the enchantment's own maximum, an explicit level passes through unchanged.
- */
-inline fun EnchantLevel.resolve(maxLevelOf: () -> Int): Int? = when (this) {
-    is EnchantLevel.Max -> maxLevelOf()
-    is EnchantLevel.Explicit -> level
-}
-
-/**
  * Renders this parsed level for the command result message: `max` stays the keyword,
  * an explicit level prints as its number.
  */

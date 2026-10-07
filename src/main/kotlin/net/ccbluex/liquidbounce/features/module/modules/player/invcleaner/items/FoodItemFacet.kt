@@ -27,23 +27,30 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.Items
+import java.util.Comparator.comparingDouble
+import java.util.Comparator.comparingInt
 
 class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             @Suppress("SpreadOperator")
             ComparatorChain<FoodItemFacet>(
-                compareBy { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE },
-                compareBy { it.itemStack.item == Items.GOLDEN_APPLE },
+                comparingInt {
+                    when (it.itemStack.item) {
+                        Items.ENCHANTED_GOLDEN_APPLE -> 1
+                        Items.GOLDEN_APPLE -> 0
+                        else -> -1
+                    }
+                },
                 // Nutriment
-                compareBy {
+                comparingDouble {
                     val foodComponent = it.itemStack.foodComponent!!
 
-                    foodComponent.saturation / foodComponent.nutrition.toFloat()
+                    foodComponent.saturation / foodComponent.nutrition.toDouble()
                 },
-                compareBy { it.itemStack.foodComponent!!.nutrition },
-                compareBy { it.itemStack.foodComponent!!.saturation },
-                compareBy { it.itemStack.count },
+                comparingInt { it.itemStack.foodComponent!!.nutrition },
+                comparingDouble { it.itemStack.foodComponent!!.saturation.toDouble() },
+                PreferStackSize.PREFER_FEWER.asHolderComparator(),
                 *DEFAULT_TIE_BREAK
             )
     }

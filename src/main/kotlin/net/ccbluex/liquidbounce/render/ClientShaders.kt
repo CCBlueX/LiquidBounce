@@ -127,9 +127,7 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
     override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
 
-    override fun close() {
-        // NOOP
-    }
+    override fun close() = Unit
 
     companion object Source : ShaderSource {
         override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
@@ -139,9 +137,7 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
 
-        override fun close() {
-            // NOOP
-        }
+        override fun close() = Unit
     }
 
 }

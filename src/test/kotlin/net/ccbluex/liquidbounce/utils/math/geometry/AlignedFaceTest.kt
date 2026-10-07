@@ -22,12 +22,15 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.ccbluex.fastutil.forEachDouble
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.test.assertVec3Equals
+import net.ccbluex.liquidbounce.utils.block.targetfinding.trimFace
+import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -248,6 +251,26 @@ class AlignedFaceTest {
         val edge = AlignedFace(Vec3(0.0, 2.0, 3.0), Vec3(4.0, 2.0, 3.0))
 
         assertVec3Equals(Vec3(1.0, 2.0, 3.0), edge.samplePointOnFace(0.25, 0.75), eps)
+    }
+
+    @Test
+    fun `the constant axis stays exactly zero through the transformations`() {
+        val face = AlignedFace.get(Direction.UP, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+
+        assertEquals(0.0, face.dimensions.y, 0.0)
+        assertEquals(0.0, face.offset(Vec3(0.5, -1.0, 2.0)).dimensions.y, 0.0)
+        assertEquals(0.0, face.offset(Vec3i(3, -4, 5)).dimensions.y, 0.0)
+        assertEquals(0.0, face.truncateY(5.5).dimensions.y, 0.0)
+        assertEquals(0.0, face.clamp(AABB(2.0, 0.0, 0.0, 10.0, 10.0, 10.0)).dimensions.y, 0.0)
+        assertEquals(0.0, trimFace(face).dimensions.y, 0.0)
+    }
+
+    @Test
+    fun `a face with a near zero thickness is not treated as planar`() {
+        val face = AlignedFace(Vec3(1.0, 0.0, 0.0), Vec3(1.0 + 1e-9, 3.0, 4.0))
+
+        assertFailsWith<IllegalStateException> { face.toPlane() }
+        assertFailsWith<IllegalStateException> { face.samplePointOnFace(0.5, 0.5) }
     }
 
     // --- plane / line interactions ---

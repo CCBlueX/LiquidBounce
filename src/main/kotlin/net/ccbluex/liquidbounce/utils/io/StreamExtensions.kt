@@ -17,19 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.integration.backend
+package net.ccbluex.liquidbounce.utils.io
 
-import net.ccbluex.liquidbounce.features.addon.AddonApi
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.Charset
 
-/**
- * Determines if acceleration is supported on the current system.
- * Is In Beta is a flag to prevent it from being used by default on a supported
- * but not tested system.
- */
-@AddonApi
-data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
-    companion object {
-        @JvmField
-        val UNSUPPORTED = BrowserAccelerationFlags(isSupported = false, isBeta = false)
-    }
+@JvmOverloads
+fun InputStream.readText(charset: Charset = Charsets.UTF_8): String {
+    val out = FastByteArrayOutputStream(maxOf(available(), FastByteArrayOutputStream.DEFAULT_INITIAL_CAPACITY))
+    this.transferTo(out)
+    return out.toString(charset)
 }

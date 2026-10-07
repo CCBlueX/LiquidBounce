@@ -35,6 +35,8 @@ import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
+import java.util.Comparator.comparing
+import java.util.Comparator.comparingDouble
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -62,9 +64,9 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                compareBy { estimateDamage(it.itemStack) },
-                compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
-                compareBy { it.itemStack.isSword },
+                comparingDouble(::estimateDamage),
+                SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
+                comparing { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
                 *DEFAULT_TIE_BREAK

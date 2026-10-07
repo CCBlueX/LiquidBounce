@@ -433,7 +433,7 @@ inline fun InputStream.readNativeImage(): NativeImage = NativeImage.read(this)
  * Read and close source. Accepts JPEG and PNG.
  */
 fun BufferedSource.readNativeImage(): NativeImage =
-    this.ensurePngOrConvertJpeg().inputStream().readNativeImage()
+    use { source -> source.ensurePngOrConvertJpeg().inputStream().readNativeImage() }
 
 /**
  * Read from file. Accepts JPEG and PNG.
@@ -506,9 +506,7 @@ value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
         j.align(alignedSize)
     }
 
-    inline operator fun Unit.plus(other: Unit) {
-        // NOOP
-    }
+    inline operator fun Unit.plus(other: Unit) = Unit
 
     inline fun get() = j.get()
 }

@@ -161,7 +161,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         }
     }
 
-    private fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
+    fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
         val checkedHoles = hashSetOf<Hole>()
         var remainingItems = availableItems
 
@@ -181,7 +181,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
 
             found.sortedByDescending { it.leftDouble() }
                 .mapTo(holeContext.blocks) { BlockPos.of(it.rightLong()) }
-            if (remainingItems <= 0) {
+            if (remainingItems <= 0 && !player.abilities.instabuild) {
                 return
             }
         }
@@ -194,7 +194,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         remainingItems: Int,
         found: MutableSet<DoubleLongPair>
     ): Int {
-        var remainingItems1 = remainingItems
+        var itemsAfterHoles = remainingItems
         val region = entity.blockPosition().expandToBoundingBox(fillArea, fillArea, fillArea)
 
         holeContext.holes.forEach { hole ->
@@ -208,9 +208,9 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
 
             val holeSize = hole.size
-            remainingItems1 -= holeSize
-            if (remainingItems1 < 0 && !player.abilities.instabuild) {
-                remainingItems1 += holeSize
+            itemsAfterHoles -= holeSize
+            if (itemsAfterHoles < 0 && !player.abilities.instabuild) {
+                itemsAfterHoles += holeSize
                 return@forEach
             }
 
@@ -219,12 +219,12 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
                 DoubleLongPair.of(valid.rightDouble(), it.asLong())
             }
 
-            if (remainingItems1 == 0 && !player.abilities.instabuild) {
+            if (itemsAfterHoles == 0 && !player.abilities.instabuild) {
                 return 0
             }
         }
 
-        return remainingItems
+        return itemsAfterHoles
     }
 
     private fun isValidHole(
@@ -265,7 +265,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     }
 
     @JvmRecord
-    private data class HoleContext(
+    data class HoleContext(
         val holes: List<Hole>,
         val selfInHole: Boolean,
         val selfRegion: BoundingBox,

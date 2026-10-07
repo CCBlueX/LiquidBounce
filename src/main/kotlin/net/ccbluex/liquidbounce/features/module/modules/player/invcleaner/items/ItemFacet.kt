@@ -40,7 +40,26 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
      */
     open fun shouldKeep(): Boolean = false
 
-    override fun compareTo(other: ItemFacet): Int = compareValuesBy<ItemFacet>(this, other, ItemFacet::isInHotbar)
+    override fun compareTo(other: ItemFacet): Int = compareValuesBy(this, other, ItemFacet::isInHotbar)
+
+    companion object {
+        @JvmField
+        protected val PREFER_ENCHANTABLE: Comparator<in ItemStackHolder> = Comparator.comparingInt {
+            it.itemStack[DataComponents.ENCHANTABLE]?.value ?: 0
+        }
+
+        @JvmField
+        protected val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = Comparator.comparing { it.isInHotbar }
+
+        @JvmField
+        protected val STABILIZE_COMPARISON: Comparator<in ItemStackHolder> = Comparator.comparingInt {
+            it.itemStack.hashCode()
+        }
+        @JvmField
+        protected val PREFER_BETTER_DURABILITY: Comparator<in ItemStackHolder> = Comparator.comparingInt {
+            it.itemStack.durability
+        }
+    }
 
     /**
      * Example:

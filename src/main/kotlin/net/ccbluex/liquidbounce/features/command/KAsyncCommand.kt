@@ -41,7 +41,7 @@ private val LOADING_CHARS = charArrayOf('|', '/', '-', '\\')
 
 private val EXECUTING_COMMANDS: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-class KAsyncCommand<S : Any>(
+class KAsyncCommand<S : Any> internal constructor(
     val allowParallel: Boolean,
     private val scope: CoroutineScope,
     val handler: Handler<S>,

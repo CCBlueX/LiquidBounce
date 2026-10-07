@@ -188,6 +188,11 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.MAVEN_TOKEN_NAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_TOKEN_SECRET }}
         run: ./gradlew publish -x test -x detekt
+      - name: Generate Script API definitions
+        env:
+          GH_TOKEN: ${{ secrets.LIQUIDBOUNCE_PAT }}
+          VERSION: ${{ needs.extract-versions.outputs.lb_version }}+${{ needs.extract-versions.outputs.minecraft_version }}
+        run: gh workflow run generate-definitions.yml -R CCBlueX/LiquidBounce-Addon-ScriptAPI -f liquidbounce="$VERSION"
 
   verify-pr:
     runs-on: ubuntu-latest

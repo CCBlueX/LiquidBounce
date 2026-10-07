@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.doubles.DoubleLongPair
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
+import it.unimi.dsi.fastutil.doubles.DoubleObjectImmutablePair
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.math.iterate
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.EntityDimensions
@@ -66,8 +68,7 @@ abstract class TrapPlanner<T>(
     ): List<BlockPos> {
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
-        val normalizedStartBB =
-            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -blockPos.z.toDouble())
+        val normalizedStartBB = dims.makeBoundingBox(pos) - blockPos
         val normalizedEndBB = normalizedStartBB.move(
             velocity.x * ticksToLookAhead,
             0.0,
@@ -86,17 +87,17 @@ abstract class TrapPlanner<T>(
         orderedOffsets: List<BlockPos>,
         eyePos: Vec3,
     ): Comparator<BlockPos> {
-        val priorityByPos = Long2IntOpenHashMap(orderedOffsets.size)
+        val priorityByPos = Object2IntOpenHashMap<BlockPos>(orderedOffsets.size)
         priorityByPos.defaultReturnValue(Int.MAX_VALUE)
         orderedOffsets.forEachIndexed { index, offset ->
-            priorityByPos.putIfAbsent(origin.offset(offset).asLong(), index)
+            priorityByPos.putIfAbsent(origin.offset(offset), index)
         }
 
         val eyeDistanceComparator = BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(eyePos)
 
         return Comparator { first, second ->
-            val firstRank = priorityByPos[first.asLong()]
-            val secondRank = priorityByPos[second.asLong()]
+            val firstRank = priorityByPos.getInt(first)
+            val secondRank = priorityByPos.getInt(second)
 
             if (firstRank != secondRank) {
                 secondRank.compareTo(firstRank)
@@ -112,7 +113,7 @@ abstract class TrapPlanner<T>(
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
-        val offsets = mutableListOf<DoubleLongPair>()
+        val offsets = ArrayList<DoubleObjectImmutablePair<BlockPos>>()
 
         startBox.collidingRegion.iterate().forEach { offset ->
             val bp = offsetPos.offset(offset)
@@ -135,11 +136,11 @@ abstract class TrapPlanner<T>(
 
             val intersect = startBox.intersect(bb).size + endBox.intersect(bb).size * 0.5
 
-            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
+            offsets.add(DoubleObjectImmutablePair(intersect, offset.immutable))
         }
 
         offsets.sortByDescending { it.leftDouble() }
 
-        return offsets.map { BlockPos.of(it.rightLong()) }
+        return offsets.map { it.right() }
     }
 }

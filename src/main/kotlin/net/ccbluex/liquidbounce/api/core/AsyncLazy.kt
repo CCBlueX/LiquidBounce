@@ -25,28 +25,37 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KProperty
 
+/**
+ * Shares an initialization attempt between callers and caches a successful result.
+ * Failed or cancelled attempts are reported to their callers; a later call can retry.
+ */
 class AsyncLazy<T>(
     private val initializer: suspend () -> T
 ) {
-    private val deferred: CompletableDeferred<T> = CompletableDeferred()
-    private val initialized = atomic(false)
-
-    private suspend fun initialize() {
-        if (initialized.compareAndSet(expect = false, update = true)) {
-            try {
-                val result = initializer()
-                deferred.complete(result)
-            } catch (e: Throwable) {
-                deferred.completeExceptionally(e)
-                // Reset initialized flag if initialization fails
-                initialized.value = false
-            }
-        }
-    }
+    private val deferred = atomic<CompletableDeferred<T>?>(null)
 
     suspend fun get(): T {
-        initialize()
-        return deferred.await()
+        while (true) {
+            val current = deferred.value
+            if (current != null) {
+                return current.await()
+            }
+
+            val attempt = CompletableDeferred<T>()
+            if (!deferred.compareAndSet(expect = null, update = attempt)) {
+                continue
+            }
+
+            try {
+                attempt.complete(initializer())
+            } catch (e: Throwable) {
+                // Detach before waking waiters, so a caller handling this failure can retry.
+                deferred.compareAndSet(expect = attempt, update = null)
+                attempt.completeExceptionally(e)
+            }
+
+            return attempt.await()
+        }
     }
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {

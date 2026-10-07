@@ -120,7 +120,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
             && !ModuleBlink.running
             && !ModuleScaffold.running
             && !ModuleFreeze.running
-            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
+            && (maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby)
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingHook?>(
         priority = FIRST_PRIORITY,
