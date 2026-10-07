@@ -66,6 +66,8 @@ accessible method net/minecraft/client/KeyMapping release ()V
 accessible field net/minecraft/world/entity/LivingEntity attackStrengthTicker I
 accessible field net/minecraft/world/entity/LivingEntity jumping Z
 accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I
+accessible field net/minecraft/world/entity/LivingEntity swingState Lnet/minecraft/world/entity/LivingEntity$SwingState;
+accessible field net/minecraft/world/entity/LivingEntity$SwingState ticks I
 accessible method net/minecraft/world/entity/Entity isInvulnerableToBase (Lnet/minecraft/world/damagesource/DamageSource;)Z
 accessible method net/minecraft/world/entity/Entity canAddPassenger (Lnet/minecraft/world/entity/Entity;)Z
 
