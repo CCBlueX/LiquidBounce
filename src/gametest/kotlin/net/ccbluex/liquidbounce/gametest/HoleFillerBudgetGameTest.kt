@@ -40,12 +40,6 @@ import java.util.UUID
 /** Exercises the smart collector with two targets competing for one hotbar budget. */
 class HoleFillerBudgetGameTest : FabricClientGameTest {
 
-    private val contextType = ModuleHoleFiller::class.java.declaredClasses.single { it.simpleName == "HoleContext" }
-    private val constructor = contextType.declaredConstructors.single().apply { isAccessible = true }
-    private val collector = ModuleHoleFiller::class.java.getDeclaredMethod(
-        "collectHolesSmart", Double::class.javaPrimitiveType, contextType, Int::class.javaPrimitiveType,
-    ).apply { isAccessible = true }
-
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleHoleFiller) }
@@ -130,8 +124,8 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
 
     private fun collect(holes: List<Hole>, budget: Int): Set<BlockPos> {
         val blocks = linkedSetOf<BlockPos>()
-        val holeContext = constructor.newInstance(holes, false, BoundingBox(BlockPos.ZERO), blocks)
-        collector.invoke(ModuleHoleFiller, 100.0, holeContext, budget)
+        val holeContext = ModuleHoleFiller.HoleContext(holes, false, BoundingBox(BlockPos.ZERO), blocks)
+        ModuleHoleFiller.collectHolesSmart(100.0, holeContext, budget)
         return blocks
     }
 
