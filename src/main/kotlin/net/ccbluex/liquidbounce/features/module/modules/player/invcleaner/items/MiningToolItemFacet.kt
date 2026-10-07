@@ -35,6 +35,11 @@ import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
+        const val MASK_AXE = 1 shl 0
+        const val MASK_PICKAXE = 1 shl 1
+        const val MASK_SHOVEL = 1 shl 2
+        const val MASK_HOE = 1 shl 3
+
         private val VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
@@ -54,31 +59,26 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
+
+        // TODO: compare multi tool item
+        private val ItemStack.miningToolType: Int
+            get() {
+                var bits = 0
+                if (isAxe) bits = bits or MASK_AXE
+                if (isPickaxe) bits = bits or MASK_PICKAXE
+                if (isShovel) bits = bits or MASK_SHOVEL
+                if (isHoe) bits = bits or MASK_HOE
+                if (bits == 0) error("Item ${this.item} is not a mining tool")
+                return bits
+            }
     }
 
-    private val subtype = ItemToolType.guessType(itemSlot.itemStack)
+    private val subtype = itemSlot.itemStack.miningToolType
 
     override val category: ItemCategory
         get() = ItemCategory(GenericItemType.TOOL, subtype)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
-    }
-
-    enum class ItemToolType {
-        AXE,
-        PICKAXE,
-        SHOVEL,
-        HOE;
-
-        companion {
-            fun guessType(stack: ItemStack) = when {
-                stack.isPickaxe -> PICKAXE
-                stack.isAxe -> AXE
-                stack.isShovel -> SHOVEL
-                stack.isHoe -> HOE
-                else -> error("Unknown tool item ${stack.item}.")
-            }
-        }
     }
 }

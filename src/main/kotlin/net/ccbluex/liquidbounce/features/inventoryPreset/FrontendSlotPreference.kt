@@ -98,7 +98,7 @@ sealed class FrontendSlotPreference {
             AXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.ItemToolType.AXE)
+                    setOf(MiningToolItemFacet.MASK_AXE)
                 )
             ),
 
@@ -106,7 +106,7 @@ sealed class FrontendSlotPreference {
             HOE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.ItemToolType.HOE)
+                    setOf(MiningToolItemFacet.MASK_HOE)
                 )
             ),
 
@@ -114,7 +114,7 @@ sealed class FrontendSlotPreference {
             SHOVEL_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.ItemToolType.SHOVEL)
+                    setOf(MiningToolItemFacet.MASK_SHOVEL)
                 )
             ),
 
@@ -122,7 +122,7 @@ sealed class FrontendSlotPreference {
             PICKAXE_TOOL(
                 CleanupPlanTemplate.SlotContentPreference(
                     GenericItemType.TOOL,
-                    setOf(MiningToolItemFacet.ItemToolType.PICKAXE)
+                    setOf(MiningToolItemFacet.MASK_PICKAXE)
                 )
             ),
 
