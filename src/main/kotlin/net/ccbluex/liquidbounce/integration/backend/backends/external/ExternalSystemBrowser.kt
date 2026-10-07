@@ -57,21 +57,13 @@ class ExternalSystemBrowser(
 
     override val texture: BrowserTexture? = null
 
-    @Suppress("EmptyFunctionBlock")
-    override fun forceReload() {
-    }
+    override fun forceReload() = Unit
 
-    @Suppress("EmptyFunctionBlock")
-    override fun reload() {
-    }
+    override fun reload() = Unit
 
-    @Suppress("EmptyFunctionBlock")
-    override fun goForward() {
-    }
+    override fun goForward() = Unit
 
-    @Suppress("EmptyFunctionBlock")
-    override fun goBack() {
-    }
+    override fun goBack() = Unit
 
     override fun close() {
         backend.removeBrowser(this)
@@ -85,9 +77,7 @@ class ExternalSystemBrowser(
         viewport = viewport.copy(width = width, height = height)
     }
 
-    @Suppress("EmptyFunctionBlock")
-    override fun invalidate() {
-    }
+    override fun invalidate() = Unit
 
     override fun toString() = "ExternalBrowser(url='$url', viewport=$viewport, visible=$visible, priority=$priority)"
 
