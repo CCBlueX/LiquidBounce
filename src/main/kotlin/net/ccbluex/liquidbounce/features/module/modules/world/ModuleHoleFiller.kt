@@ -161,7 +161,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         }
     }
 
-    internal fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
+    fun collectHolesSmart(range: Double, holeContext: HoleContext, availableItems: Int) {
         val checkedHoles = hashSetOf<Hole>()
         var remainingItems = availableItems
 
@@ -265,7 +265,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
     }
 
     @JvmRecord
-    internal data class HoleContext(
+    data class HoleContext(
         val holes: List<Hole>,
         val selfInHole: Boolean,
         val selfRegion: BoundingBox,
