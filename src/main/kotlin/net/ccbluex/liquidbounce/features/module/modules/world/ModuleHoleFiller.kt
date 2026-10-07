@@ -181,7 +181,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
 
             found.sortedByDescending { it.leftDouble() }
                 .mapTo(holeContext.blocks) { BlockPos.of(it.rightLong()) }
-            if (remainingItems <= 0) {
+            if (remainingItems <= 0 && !player.abilities.instabuild) {
                 return
             }
         }
@@ -224,7 +224,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
             }
         }
 
-        return remainingItems
+        return remainingItems1
     }
 
     private fun isValidHole(
