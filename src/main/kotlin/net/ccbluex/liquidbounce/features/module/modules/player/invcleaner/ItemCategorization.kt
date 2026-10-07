@@ -60,8 +60,10 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.BucketItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.EnderpearlItem
 import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -72,6 +74,8 @@ import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
 import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.material.LavaFluid
+import net.minecraft.world.level.material.WaterFluid
 
 data class ItemCategory(val type: GenericItemType, val subtype: Any = Unit)
 
@@ -102,6 +106,9 @@ enum class GenericItemType(
     SHIELD(true),
     THROWABLE(false),
     FOOD(false),
+    BUCKET(false),
+    PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
     /**
@@ -230,6 +237,25 @@ class ItemCategorization(
                 }
                 item is EggItem || item is SnowballItem || item is WindChargeItem -> {
                     add(ThrowableItemFacet(slot))
+                }
+                item == Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, 2)))
+                item is BucketItem -> {
+                    val subtype = when (item.content) {
+                        is WaterFluid -> 0
+                        is LavaFluid -> 1
+                        else -> item.content.javaClass.hashCode()
+                    }
+
+                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.BUCKET, subtype)))
+                }
+                item is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.PEARL)))
+                item == Items.GOLDEN_APPLE -> {
+                    add(FoodItemFacet(slot))
+                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.GAPPLE)))
+                }
+                item == Items.ENCHANTED_GOLDEN_APPLE -> {
+                    add(FoodItemFacet(slot))
+                    add(PrimitiveItemFacet(slot, ItemCategory(GenericItemType.GAPPLE), 1))
                 }
                 else -> {
                     if (slot.itemStack.isFood) {
