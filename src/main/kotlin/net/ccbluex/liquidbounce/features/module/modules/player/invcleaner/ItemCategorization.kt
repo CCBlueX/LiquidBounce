@@ -61,6 +61,7 @@ import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
+import net.minecraft.world.item.EggItem
 import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -68,6 +69,8 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
+import net.minecraft.world.item.SnowballItem
+import net.minecraft.world.item.WindChargeItem
 import net.minecraft.world.item.enchantment.Enchantments
 
 data class ItemCategory(val type: GenericItemType, val subtype: Any = Unit)
@@ -123,14 +126,14 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), Type.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, Type.ARMOR, id))
         }
 
         /**
          * We expect to be full armor to be diamond armor.
          */
         @JvmStatic
-        private val diamondArmorPieces = enumMapOf(
+        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMapOf(
             EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0),
             EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
             EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
@@ -148,9 +151,9 @@ class ItemCategorization(
     }
 
     /**
-     * Sometimes there are situations where armor pieces aren’t the best ones with the current armor, but become
+     * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
      * the best ones as soon as we upgrade one of the other armor pieces.
-     * In those cases, we don't want to miss out on this armor piece in the future, thus we keep it.
+     * In those cases, we don't want to miss out on this armor piece in the future thus we keep it.
      */
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator
@@ -225,7 +228,7 @@ class ItemCategorization(
                         add(PotionItemFacet(slot))
                     }
                 }
-                item == Items.SNOWBALL || item == Items.EGG || item == Items.WIND_CHARGE -> {
+                item is EggItem || item is SnowballItem || item is WindChargeItem -> {
                     add(ThrowableItemFacet(slot))
                 }
                 else -> {

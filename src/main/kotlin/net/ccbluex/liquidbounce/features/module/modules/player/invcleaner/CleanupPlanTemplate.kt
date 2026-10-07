@@ -28,7 +28,7 @@ class CleanupPlanTemplate(
     val slotContentMap: Map<ItemSlot, CleanupPlanSlotContent>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
-     * the given constraint. More info on how constraints work at [ItemNumberContraintGroup].
+     * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
      */
     val itemAmountConstraintProvider: ItemAmountConstraintProvider,
     /**

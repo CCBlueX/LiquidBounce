@@ -23,40 +23,33 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
 class ItemDispenserRack(wishOrganizer: WishOrganizer, itemFacets: List<ItemFacet>) {
-    private val dispensersForType: Map<WishOrganizer.WishItemGroupId, ItemDispenser>
-    private val alreadyDispensedItemSlots = HashSet<ItemSlot>()
-
-    init {
-        val wishGroupAvailableFacetMap = HashMap<WishOrganizer.WishItemGroupId, ArrayDeque<ItemFacet>>()
-
+    private val dispensersForType = buildMap {
         for (facet in itemFacets) {
             val wishGroupsForFacet = wishOrganizer.itemCategoryWishGroupMap[facet.category] ?: continue
 
             for (id in wishGroupsForFacet) {
-                wishGroupAvailableFacetMap.computeIfAbsent(id) { ArrayDeque() }.add(facet)
+                getOrPut(id, ::ArrayList).add(facet)
             }
         }
 
-        wishGroupAvailableFacetMap.values.forEach { facetList -> facetList.sortDescending() }
-
-        this.dispensersForType = wishGroupAvailableFacetMap.mapValues { ItemDispenser(it.value) }
+        values.forEach { facetList -> facetList.sort() }
     }
 
-    fun nextItemForGroup(id: WishOrganizer.WishItemGroupId) = this.dispensersForType[id]?.nextItem()
+    private val alreadyDispensedItemSlots = HashSet<ItemSlot>()
 
-    private inner class ItemDispenser(private val itemList: ArrayDeque<ItemFacet>) {
-        fun nextItem(): ItemFacet? {
-            while (this.itemList.isNotEmpty()) {
-                val currentItem = this.itemList.removeFirst()
+    fun nextItemForGroup(id: WishOrganizer.WishItemGroupId): ItemFacet? {
+        val facetStack = this.dispensersForType[id] ?: return null
+        while (facetStack.isNotEmpty()) {
+            val currentItem = facetStack.removeLast()
 
-                // Check if this item slot has already been dispensed.
-                // This is possible as an item might appear in multiple dispensers.
-                if (alreadyDispensedItemSlots.add(currentItem.itemSlot)) {
-                    return currentItem
-                }
+            // Check if this item slot has already been dispensed.
+            // This is possible as an item might appear in multiple dispensers.
+            if (alreadyDispensedItemSlots.add(currentItem.itemSlot)) {
+                return currentItem
             }
-
-            return null
         }
+
+        return null
     }
+
 }

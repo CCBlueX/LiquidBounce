@@ -18,12 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemNumberConstraintEnforcer.SatisfactionStatus
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
-class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private val availableItems: List<ItemSlot>) {
+
+class CleanupPlanGenerator(
+    private val template: CleanupPlanTemplate,
+    private val availableItems: List<ItemSlot>,
+) {
     private val wishOrganizer = WishOrganizer(this.template)
     private val constraintEnforcer = ItemNumberConstraintEnforcer(template)
 
@@ -129,8 +134,8 @@ class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private va
         return availableItemFacets
     }
 
-    private fun groupItemsByType(): HashMap<ItemAndComponents, MutableList<ItemSlot>> {
-        val itemsByType = HashMap<ItemAndComponents, MutableList<ItemSlot>>()
+    private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
+        val itemsByType = Object2ObjectOpenHashMap<ItemAndComponents, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
             val stack = availableSlot.itemStack
@@ -143,7 +148,7 @@ class CleanupPlanGenerator(private val template: CleanupPlanTemplate, private va
             }
 
             val itemType = ItemAndComponents(stack)
-            val stacksOfType = itemsByType.computeIfAbsent(itemType) { ArrayList() }
+            val stacksOfType = itemsByType.computeIfAbsent(itemType) { mutableListOf() }
 
             stacksOfType.add(availableSlot)
         }

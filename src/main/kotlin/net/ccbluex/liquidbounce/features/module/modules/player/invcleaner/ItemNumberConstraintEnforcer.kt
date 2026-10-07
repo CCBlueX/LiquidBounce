@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
  * - Decides whether an item is useful or not.
  */
 class ItemNumberConstraintEnforcer(private val template: CleanupPlanTemplate) {
-    private val currentLimit = Object2IntOpenHashMap<ItemNumberContraintGroup>()
+    private val currentLimit = Object2IntOpenHashMap<ItemNumberConstraintGroup>()
 
     /**
      * Decides whether the given item facet is useful.

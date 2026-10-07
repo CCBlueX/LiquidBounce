@@ -33,7 +33,7 @@ import java.util.Objects
  * - If the BLOCKS constraint was processed first, the TNT would be kept since the BLOCKS constraint is not yet
  * satisfied.
  */
-abstract class ItemNumberContraintGroup(
+abstract class ItemNumberConstraintGroup(
     /**
      * The range of desired item amounts (which might be raw item counts, food saturation, etc.):
      * - The lower limit defines the desired amount of items (=> any more items *might* be thrown out)
@@ -54,7 +54,7 @@ class ItemCategoryConstraintGroup(
     acceptableRange: IntRange,
     priority: Int,
     val category: ItemCategory,
-) : ItemNumberContraintGroup(acceptableRange, priority) {
+) : ItemNumberConstraintGroup(acceptableRange, priority) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -82,7 +82,7 @@ class SpecificItemGroupConstraintGroup(
     acceptableRange: IntRange,
     priority: Int,
     val groupId: Int
-): ItemNumberContraintGroup(acceptableRange, priority) {
+): ItemNumberConstraintGroup(acceptableRange, priority) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -101,7 +101,7 @@ class ItemFunctionCategoryConstraintGroup(
     acceptableRange: IntRange,
     priority: Int,
     val function: ItemFunction,
-) : ItemNumberContraintGroup(acceptableRange, priority) {
+) : ItemNumberConstraintGroup(acceptableRange, priority) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -117,7 +117,7 @@ class ItemFunctionCategoryConstraintGroup(
 }
 
 class ItemConstraintInfo(
-    val group: ItemNumberContraintGroup,
+    val group: ItemNumberConstraintGroup,
     val amountAddedByItem: Int,
     /**
      * Specifies whether this constraint is a default option.
