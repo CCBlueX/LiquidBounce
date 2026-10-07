@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import java.util.Objects
+
 /**
  * Defines an item constraint group.
  *
@@ -40,7 +42,7 @@ abstract class ItemNumberConstraintGroup(
     val acceptableRange: IntRange,
     /**
      * The priority of this constraint group. Lower values are processed first.
-     * It Affects the order in which items are processed.
+     * It affects the order in which items are processed.
      */
     val priority: Int,
 ) {
@@ -63,7 +65,7 @@ class ItemCategoryConstraintGroup(
     }
 
     override fun hashCode(): Int {
-        return category.hashCode()
+        return Objects.hash(this.javaClass, this.category)
     }
 }
 
@@ -82,7 +84,7 @@ class ItemFunctionCategoryConstraintGroup(
     }
 
     override fun hashCode(): Int {
-        return function.hashCode()
+        return Objects.hash(this.javaClass, this.function)
     }
 }
 

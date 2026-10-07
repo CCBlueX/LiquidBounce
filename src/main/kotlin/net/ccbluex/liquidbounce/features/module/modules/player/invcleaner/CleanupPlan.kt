@@ -156,14 +156,14 @@ class InventoryCleanupPlan(
 
         val itemsToMerge = ArrayList<ItemSlot>()
 
-        for ((key, value) in mergeableItems) {
-            val maxStackSize = key.item.defaultMaxStackSize
+        for (slots in mergeableItems.values) {
+            val maxStackSize = slots.firstOrNull()?.itemStack?.maxStackSize ?: continue
 
-            if (!canMerge(value, maxStackSize)) {
+            if (!canMerge(slots, maxStackSize)) {
                 continue
             }
 
-            val stacks = value.mapTo(ArrayDeque(value.size)) {
+            val stacks = slots.mapTo(ArrayDeque(slots.size)) {
                 MergeableStack(it, it.itemStack.count)
             }
             stacks.sortBy { it.count }

@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
@@ -51,13 +51,12 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 comparingInt { it.itemStack.foodComponent!!.nutrition },
                 comparingDouble { it.itemStack.foodComponent!!.saturation.toDouble() },
                 PreferStackSize.PREFER_FEWER.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 
-    override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
-        get() = listOf(ObjectIntPair.of(ItemFunction.FOOD, itemStack.count * itemStack.foodComponent!!.nutrition))
+    override val providedItemFunctions: List<ProvidedFunction>
+        get() = listOf(ProvidedFunction(ItemFunction.FOOD, itemStack.count * itemStack.foodComponent!!.nutrition))
 
     override val category: ItemCategory
         get() = ItemType.FOOD.defaultCategory
