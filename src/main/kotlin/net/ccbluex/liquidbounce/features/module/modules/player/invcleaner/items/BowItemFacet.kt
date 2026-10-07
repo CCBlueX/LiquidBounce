@@ -38,7 +38,7 @@ class BowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.INFINITY, 4.0f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, -0.2f),
             )
         private val COMPARATOR =
             ComparatorChain<BowItemFacet>(
