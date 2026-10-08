@@ -66,13 +66,9 @@ class WishOrganizer(template: CleanupPlanTemplate) {
         organizedWishes.sortWith(wishComparator)
 
         wishIdMap.forEach { (wish, itemGroupId) ->
-            for (subtype in wish.subtypes) {
-                val itemCategory = ItemCategory(wish.itemType, subtype)
+            val itemCategory = ItemCategory(wish.itemType, wish.subtype)
 
-                val wishItemGroups = itemCategoryWishGroupMap.computeIfAbsent(itemCategory) { ArrayList() }
-
-                wishItemGroups.add(itemGroupId)
-            }
+            itemCategoryWishGroupMap.computeIfAbsent(itemCategory) { ArrayList() }.add(itemGroupId)
         }
     }
 

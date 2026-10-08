@@ -37,7 +37,7 @@ object InventoryPresetAdapter : JsonSerializer<InventoryPreset>, JsonDeserialize
         typeOfSrc: Type,
         context: JsonSerializationContext
     ): JsonElement = JsonObject().apply {
-        add("items", context.serialize(src.itemRulesToArray()))
+        add("items", context.serialize(src.itemRules))
         add("maxStacks", context.serialize(src.itemLimitRules))
     }
 

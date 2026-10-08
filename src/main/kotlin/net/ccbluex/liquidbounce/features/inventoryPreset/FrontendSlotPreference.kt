@@ -63,7 +63,7 @@ sealed class FrontendSlotPreference {
 
             val contentPreference = CleanupPlanTemplate.SlotContentPreference(
                 itemType = GenericItemType.ANY_ITEM,
-                subtypes = setOf(ItemSubtype.SpecificItem(item))
+                subtype = ItemSubtype.SpecificItem(item)
             )
 
             return ConvertedSlotPreference(contentPreference)
@@ -85,71 +85,57 @@ sealed class FrontendSlotPreference {
          * Enum representing item categories used for preset item classification.
          */
         @Suppress("UNUSED")
-        enum class ItemGroupType(val preference: CleanupPlanTemplate.SlotContentPreference) {
+        enum class ItemGroupType(
+            private val itemType: GenericItemType,
+            private val subtype: ItemSubtype = ItemSubtype.None,
+        ) {
             @SerializedName("ARROWS")
-            ARROWS(CleanupPlanTemplate.SlotContentPreference(GenericItemType.ARROW)),
+            ARROWS(GenericItemType.ARROW),
 
             @SerializedName("SWORD")
-            SWORD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SWORD)),
+            SWORD(GenericItemType.SWORD),
 
             @SerializedName("WEAPON")
-            WEAPON(CleanupPlanTemplate.SlotContentPreference(GenericItemType.WEAPON)),
+            WEAPON(GenericItemType.WEAPON),
 
             @SerializedName("AXE")
-            AXE_TOOL(
-                CleanupPlanTemplate.SlotContentPreference(
-                    GenericItemType.TOOL,
-                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_AXE))
-                )
-            ),
+            AXE_TOOL(GenericItemType.TOOL, ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_AXE)),
 
             @SerializedName("HOE")
-            HOE_TOOL(
-                CleanupPlanTemplate.SlotContentPreference(
-                    GenericItemType.TOOL,
-                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_HOE))
-                )
-            ),
+            HOE_TOOL(GenericItemType.TOOL, ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_HOE)),
 
             @SerializedName("SHOVEL")
-            SHOVEL_TOOL(
-                CleanupPlanTemplate.SlotContentPreference(
-                    GenericItemType.TOOL,
-                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_SHOVEL))
-                )
-            ),
+            SHOVEL_TOOL(GenericItemType.TOOL, ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_SHOVEL)),
 
             @SerializedName("PICKAXE")
-            PICKAXE_TOOL(
-                CleanupPlanTemplate.SlotContentPreference(
-                    GenericItemType.TOOL,
-                    setOf(ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_PICKAXE))
-                )
-            ),
+            PICKAXE_TOOL(GenericItemType.TOOL, ItemSubtype.ToolTypes(MiningToolItemFacet.MASK_PICKAXE)),
 
             @SerializedName("FOOD")
-            FOOD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.FOOD)),
+            FOOD(GenericItemType.FOOD),
 
             @SerializedName("POTION")
-            POTION(CleanupPlanTemplate.SlotContentPreference(GenericItemType.POTION)),
+            POTION(GenericItemType.POTION),
 
             @SerializedName("BLOCK")
-            BLOCK(CleanupPlanTemplate.SlotContentPreference(GenericItemType.BLOCK)),
+            BLOCK(GenericItemType.BLOCK),
 
             @SerializedName("THROWABLE")
-            THROWABLE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.THROWABLE)),
+            THROWABLE(GenericItemType.THROWABLE),
 
             @SerializedName("SPEAR")
-            SPEAR(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SPEAR)),
+            SPEAR(GenericItemType.SPEAR),
 
             @SerializedName("MACE")
-            MACE(CleanupPlanTemplate.SlotContentPreference(GenericItemType.MACE)),
+            MACE(GenericItemType.MACE),
 
             @SerializedName("SHIELD")
-            SHIELD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.SHIELD)),
+            SHIELD(GenericItemType.SHIELD),
 
             @SerializedName("ROD")
-            ROD(CleanupPlanTemplate.SlotContentPreference(GenericItemType.ROD))
+            ROD(GenericItemType.ROD);
+
+            val preference: CleanupPlanTemplate.SlotContentPreference
+                get() = CleanupPlanTemplate.SlotContentPreference(itemType, subtype)
         }
 
         override fun serialize(context: JsonSerializationContext) = JsonObject().apply {

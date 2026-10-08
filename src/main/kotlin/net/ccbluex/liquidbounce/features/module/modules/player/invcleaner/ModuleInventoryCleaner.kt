@@ -71,11 +71,12 @@ object ModuleInventoryCleaner : ClientModule(
 
     val cleanupTemplateFromSettings: CleanupPlanTemplate
         get() {
-            val specifiedSlotTargets = this.inventoryPresets.items
             val currentRestrictionMap = hashMapOf<ItemSlot, RestrictionType>()
 
-            val mapped = specifiedSlotTargets
-                .map { (slot, choice) ->
+            val mapped = this.inventoryPresets.itemRules
+                .mapIndexed { index, choice ->
+                    val slot = HotbarItemSlot.entries[index]
+
                     val wishes = choice.mapNotNull {
                         val representation = it.toBackendRepresentation()
 
@@ -95,7 +96,6 @@ object ModuleInventoryCleaner : ClientModule(
 
             val slotTargets = linkedMapOf<ItemSlot, List<SlotContentPreference>>(*mapped)
 
-
             // Disallow tampering with armor slots since auto armor already handles them
             Slots.Armor.forEach { currentRestrictionMap[it] = RestrictionType.FORBID_TAMPERING }
 
@@ -107,9 +107,7 @@ object ModuleInventoryCleaner : ClientModule(
             val configuredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->
                 val converted = rule.items
                     .mapNotNull { item -> item.toBackendRepresentation().contentPreference }
-                    .flatMap { preference ->
-                        preference.subtypes.map { ItemCategory(preference.itemType, it) }
-                    }
+                    .map { ItemCategory(it.itemType, it.subtype) }
 
                 converted to rule.itemCount
             }
