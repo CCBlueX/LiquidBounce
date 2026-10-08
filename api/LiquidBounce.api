@@ -676,6 +676,14 @@ public final class net/ccbluex/liquidbounce/features/chat/ChatSession : net/ccbl
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/features/chat/party/LocationReporter : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public final class net/ccbluex/liquidbounce/features/chat/party/PartyManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;

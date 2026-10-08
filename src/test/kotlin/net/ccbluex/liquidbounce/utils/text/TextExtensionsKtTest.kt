@@ -26,8 +26,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class TextExtensionsKtTest {
+    @Test
+    fun `routes are sensitive addresses`() {
+        assertTrue("Ab3xYz.eu-fra.liquidproxy.net".isSensitiveAddress())
+        assertTrue("Ab3xYz.EU-FRA.LiquidProxy.NET.".isSensitiveAddress())
+        assertTrue("Ab3xYz.socks.liquidbounce.net:25565".isSensitiveAddress())
+        assertFalse("hypixel.net".isSensitiveAddress())
+        assertFalse("liquidproxy.net".isSensitiveAddress())
+        assertFalse("127.0.0.1:25565".isSensitiveAddress())
+    }
+
     @Test
     fun testHideSensitiveAddress() {
         // Should redact subdomains
