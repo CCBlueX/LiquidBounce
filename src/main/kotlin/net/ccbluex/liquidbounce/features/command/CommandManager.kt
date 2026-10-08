@@ -397,18 +397,8 @@ object CommandManager : EventListener {
         }
     }
 
-    /**
-     * A path typed through an alias continues in a redirected child context, and a bare alias has no
-     * children of its own, so both are followed to the target.
-     */
-    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
-        val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
-        val commandPath = context.nodes.joinToString(" ") { it.node.name }
-
-        return getDispatcher().getSmartUsage(lastNode, ClientCommandSource)
-            .values
-            .map { usage -> "$commandPath $usage".asPlainText() }
-    }
+    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>) =
+        commandUsage(getDispatcher(), context)
 
     /**
      * Tokenizes the [line].
@@ -609,6 +599,23 @@ internal fun normalizeCommandSpaces(input: String): String {
     }
 
     return builder.toString()
+}
+
+/**
+ * A path typed through an alias continues in a redirected child context, and a bare alias has no
+ * children of its own, so both are followed to the target.
+ */
+internal fun commandUsage(
+    dispatcher: CommandDispatcher<ClientCommandSource>,
+    context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>,
+): List<Component> {
+    val nodes = generateSequence(context) { it.child }.flatMap { it.nodes }.toList()
+    val lastNode = nodes.lastOrNull()?.node ?: return emptyList()
+    val commandPath = nodes.joinToString(" ") { it.node.name }
+
+    return dispatcher.getSmartUsage(lastNode.redirect ?: lastNode, ClientCommandSource)
+        .values
+        .map { usage -> "$commandPath $usage".asPlainText() }
 }
 
 /**

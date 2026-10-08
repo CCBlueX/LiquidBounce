@@ -22,6 +22,7 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.arguments.IntegerArgumentType
+import com.mojang.brigadier.arguments.StringArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.CommandErrors
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.argument
@@ -111,6 +112,25 @@ class CommandParseFailureTest {
         assertEquals("liquidbounce.commandManager.invalidChoice", exception.translationKey())
         assertEquals(usage, exception.usageInfo.dropLast(1))
         assertTrue(exception.usageInfo.last().string.contains("<--[HERE]"))
+    }
+
+    @Test
+    fun `usage follows aliases`() {
+        val main = dispatcher.register(
+            literal("liquidchat").then(
+                literal("server").then(argument("message", StringArgumentType.greedyString()).executes { 1 })
+            )
+        )
+        dispatcher.register(literal("lc").redirect(main))
+
+        fun usage(input: String) = commandUsage(
+            dispatcher,
+            dispatcher.parse(StringReader(input), ClientCommandSource).context.build(input),
+        ).map { it.string }
+
+        assertEquals(listOf("lc server <message>"), usage("lc server"))
+        assertEquals(listOf("lc server <message>"), usage("lc"))
+        assertEquals(listOf("liquidchat server <message>"), usage("liquidchat"))
     }
 
     private fun CommandException.translationKey(): String =
