@@ -917,6 +917,7 @@
   "liquidbounce.module.packetMine.messages.noVfp": "Either choose another switch method or install via fabric plus!",
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
   "liquidbounce.module.particles.description": "Displays particles when attacking an entity.",
+  "liquidbounce.module.partyESP.description": "Shows LiquidChat party members who are out of render distance.",
   "liquidbounce.module.phase.description": "Allows you to phase through blocks by exploiting the anti-cheat.",
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
   "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "PingSpoof cannot be enabled in single player.",
