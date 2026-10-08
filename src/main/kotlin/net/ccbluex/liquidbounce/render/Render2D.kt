@@ -223,6 +223,11 @@ fun GuiGraphicsExtractor.drawQuad(
     }
 }
 
+/**
+ * @param fillBottomColor Color at the bottom edge of the [fillColor], interpolated over the height. `null` keeps
+ * the fill solid.
+ */
+@Suppress("LongParameterList")
 fun GuiGraphicsExtractor.drawRoundedRect(
     x1: Float,
     y1: Float,
@@ -230,6 +235,7 @@ fun GuiGraphicsExtractor.drawRoundedRect(
     y2: Float,
     radius: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
+    fillBottomColor: Color4b? = null,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
     outlineWidth: Float = 1.0f,
 ) {
@@ -252,6 +258,7 @@ fun GuiGraphicsExtractor.drawRoundedRect(
             y21,
             radius.coerceAtLeast(0.0f),
             fill.argb,
+            (fillBottomColor ?: fill).argb,
             outline.argb,
             outlineWidth.coerceAtLeast(0.0f),
             copyPosePooled(),
