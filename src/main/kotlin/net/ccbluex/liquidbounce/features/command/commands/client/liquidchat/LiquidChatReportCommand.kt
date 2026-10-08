@@ -33,8 +33,9 @@ internal fun CmdLiteralScope.reportCommand() = literal("report") {
         argument("reason", StringArgumentType.greedyString()) { reason ->
             exec { ctx ->
                 val reference = ctx.get(user)
-                val message = ChatSession.findUser(reference)?.id?.let(ChatSession::lastMessageOf)
-                sendChatPacket(Serverbound.Report(reference, message, ctx.get(reason)))
+                val target = ChatSession.findUser(reference)?.id
+                val message = target?.let(ChatSession::lastMessageOf)
+                sendChatPacket(Serverbound.Report(target ?: reference, message, ctx.get(reason)))
                 1
             }
         }

@@ -80,7 +80,8 @@ object ChatActions {
     }
 
     fun block(user: String, blocked: Boolean) {
-        send(Serverbound.Block(user, blocked))
+        // the server finds Minecraft accounts by id only
+        send(Serverbound.Block(ChatSession.findUser(user)?.id ?: user, blocked))
         GlobalSettingsClientChat.notice(regular(t(if (blocked) "blocked" else "unblocked", shown(user))))
     }
 
