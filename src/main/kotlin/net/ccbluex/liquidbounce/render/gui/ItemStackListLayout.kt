@@ -59,7 +59,7 @@ internal object ItemStackListLayout {
 
     fun computeBounds(state: ItemStackListRenderState): BoundingBox2f {
         val dimensions = measureContent(state)
-        val padding = state.backgroundMargin + BACKGROUND_GLOW_SPREAD
+        val padding = state.background.padding
         val w = (dimensions.width + padding * 2f) * state.scale
         val h = (dimensions.height + padding * 2f) * state.scale
         val halfW = w * 0.5f
