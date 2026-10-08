@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.ServerJoin
@@ -77,8 +78,8 @@ object PartyManager : EventListener {
 
     private fun t(key: String, vararg args: Any?) = translation("liquidbounce.liquidchat.party.$key", *args)
 
-    private fun notice(vararg parts: Component) = GlobalSettingsClientChat.notice(
-        Component.empty().apply { parts.forEach(::append) }
+    internal fun notice(vararg parts: Component) = GlobalSettingsClientChat.notice(
+        Component.empty().append(ChatMessageFormat.partyTag()).apply { parts.forEach(::append) }
     )
 
     private fun update(newParty: PartyInfo?) {
@@ -102,10 +103,12 @@ object PartyManager : EventListener {
         val before = previous.members.orEmpty().associateBy { it.user.id }
         val after = current.members.orEmpty().associateBy { it.user.id }
 
-        (after.keys - before.keys).forEach { notice(regular(t("memberJoined", variable(after[it]!!.user.name)))) }
-        (before.keys - after.keys).forEach { notice(regular(t("memberLeft", variable(before[it]!!.user.name)))) }
+        val name = { member: PartyMember -> ChatMessageFormat.displayName(member.user) }
+        (after.keys - before.keys).forEach { notice(regular(t("memberJoined", name(after.getValue(it))))) }
+        (before.keys - after.keys).forEach { notice(regular(t("memberLeft", name(before.getValue(it))))) }
         if (previous.leader != current.leader) {
-            notice(regular(t("newLeader", variable(ChatSession.nameOf(current.leader)))))
+            val leader = after[current.leader]?.let(name) ?: variable(ChatSession.nameOf(current.leader))
+            notice(regular(t("newLeader", leader)))
         }
     }
 
@@ -113,7 +116,7 @@ object PartyManager : EventListener {
         invites[packet.party] = packet
         ChatSession.remember(listOf(packet.from))
         notice(
-            regular(t("invite", variable(packet.from.name))),
+            regular(t("invite", ChatMessageFormat.displayName(packet.from))),
             ChatNotices.button(translation("liquidbounce.liquidchat.accept"), ChatFormatting.GREEN) {
                 GlobalSettingsClientChat.chatClient.sendPacket(C2SPartyPacket("accept", party = packet.party))
             },
@@ -124,7 +127,7 @@ object PartyManager : EventListener {
     }
 
     private fun onWarp(packet: S2CPartyWarpPacket) = notice(
-        regular(t("warp", variable(packet.from.name), variable(packet.server))),
+        regular(t("warp", ChatMessageFormat.displayName(packet.from), variable(packet.server))),
         ChatNotices.button(translation("liquidbounce.liquidchat.join"), ChatFormatting.GREEN) {
             ServerJoin.confirm(packet.server, packet.from.name)
         },

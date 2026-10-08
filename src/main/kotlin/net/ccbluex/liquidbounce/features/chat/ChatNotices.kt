@@ -52,6 +52,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+internal fun buttonOf(text: MutableComponent): Component =
+    Component.literal(" [").withStyle(ChatFormatting.DARK_GRAY)
+        .append(text)
+        .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
+
 /**
  * Prints what the chat server reports besides messages: requests, presence and moderation.
  */
@@ -60,6 +65,7 @@ object ChatNotices : EventListener {
     private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
 
     private var knownRequests = emptySet<String>()
+    private var knownFriends: Set<String>? = null
     private var knownInvites = emptySet<String>()
 
     private fun t(key: String, vararg args: Any?) = translation("liquidbounce.liquidchat.$key", *args)
@@ -69,9 +75,7 @@ object ChatNotices : EventListener {
     )
 
     fun button(text: MutableComponent, color: ChatFormatting, action: () -> Unit): Component =
-        Component.literal(" [").withStyle(ChatFormatting.DARK_GRAY)
-            .append(text.withStyle(color).onClickRun(action))
-            .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
+        buttonOf(text.withStyle(color).onClickRun(action))
 
     private fun send(packet: AxochatPacket.C2S) =
         GlobalSettingsClientChat.chatClient.sendPacket(packet)
@@ -101,7 +105,7 @@ object ChatNotices : EventListener {
                 reports.forEach(::printReport)
             }
             is S2CPunishmentsPacket -> {
-                notice(regular(t("punishments", variable(packet.user.name))))
+                notice(regular(t("punishments", ChatMessageFormat.displayName(packet.user))))
                 packet.punishments.orEmpty().forEach(::printPunishment)
             }
 
@@ -110,6 +114,13 @@ object ChatNotices : EventListener {
     }
 
     private fun onFriends(packet: S2CFriendsPacket) {
+        val friends = packet.friends.orEmpty().map { it.user }
+        knownFriends?.let { known ->
+            friends.filter { it.id !in known }
+                .forEach { notice(regular(t("friend.added", ChatMessageFormat.displayName(it)))) }
+        }
+        knownFriends = friends.mapTo(hashSetOf()) { it.id }
+
         val incoming = packet.incoming.orEmpty()
         for (user in incoming) {
             if (user.id in knownRequests) {
@@ -117,7 +128,7 @@ object ChatNotices : EventListener {
             }
 
             notice(
-                regular(t("friend.request", variable(user.name))),
+                regular(t("friend.request", ChatMessageFormat.displayName(user))),
                 button(t("accept"), ChatFormatting.GREEN) { send(C2SFriendPacket("accept", user.id)) },
                 button(t("decline"), ChatFormatting.RED) { send(C2SFriendPacket("decline", user.id)) },
             )
@@ -127,7 +138,7 @@ object ChatNotices : EventListener {
 
     private fun onPresence(packet: S2CPresencePacket) {
         val friend = ChatSession.findFriend(packet.user) ?: return
-        val name = variable(friend.user.name)
+        val name = ChatMessageFormat.displayName(friend.user)
         val server = packet.server
 
         when {
@@ -157,8 +168,13 @@ object ChatNotices : EventListener {
     }
 
     private fun printReport(report: ChatReport) = notice(
-        regular(t("report", variable(report.reporter.name), variable(report.target.name), report.reason,
-            formatTime(report.time))),
+        regular(t(
+            "report",
+            ChatMessageFormat.displayName(report.reporter),
+            ChatMessageFormat.displayName(report.target),
+            report.reason,
+            formatTime(report.time),
+        )),
         regular(report.content?.let { " \"$it\"" } ?: ""),
         button(t("resolve"), ChatFormatting.GREEN) {
             send(C2SResolveReportPacket(report.id))
@@ -178,6 +194,7 @@ object ChatNotices : EventListener {
     private val stateHandler = handler<ClientChatStateChange> { event ->
         if (event.state == ClientChatStateChange.State.DISCONNECTED) {
             knownRequests = emptySet()
+            knownFriends = null
             knownInvites = emptySet()
         }
     }

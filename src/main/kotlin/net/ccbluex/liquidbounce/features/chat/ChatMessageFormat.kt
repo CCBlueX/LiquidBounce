@@ -20,7 +20,10 @@
 package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.onClickRun
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
@@ -29,12 +32,24 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 
-/**
- * Builds the prefixes of LiquidChat messages: channel, head, role and name.
- */
 object ChatMessageFormat {
+
+    fun displayName(user: ChatUserRef, color: ChatFormatting = ChatFormatting.GOLD): MutableComponent {
+        if (!user.isAccount) {
+            return Component.literal(user.name).withStyle(ChatFormatting.GRAY)
+                .append(Component.literal(" [MC]").withStyle(ChatFormatting.DARK_GRAY))
+        }
+
+        val name = Component.literal(user.name).withStyle(color)
+        val minecraft = user.minecraft?.name
+        if (minecraft != null && !minecraft.equals(user.name, true)) {
+            name.append(Component.literal(" ($minecraft)").withStyle(ChatFormatting.GRAY))
+        }
+        return name
+    }
 
     fun messagePrefix(event: ClientChatMessageEvent, playerSprite: Component): Component {
         val author = event.author
@@ -42,7 +57,10 @@ object ChatMessageFormat {
 
         if (author != null && channel != null && ChatSession.isSelf(author.id)
             && channel.startsWith(ChatSession.USER_PREFIX)) {
-            return directMessagePrefix(ChatSession.nameOf(channel.removePrefix(ChatSession.USER_PREFIX)))
+            val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
+            val name = ChatSession.userOf(receiver)?.let { displayName(it, ChatFormatting.BLUE) }
+                ?: Component.literal(ChatSession.nameOf(receiver)).withStyle(ChatFormatting.BLUE)
+            return directMessagePrefix(name)
         }
 
         val role = author?.roles?.firstOrNull()
@@ -52,11 +70,20 @@ object ChatMessageFormat {
             author?.highlight == true -> ChatFormatting.GOLD
             else -> ChatFormatting.GRAY
         }
-        val name = event.user.name.asPlainText(
-            Style.EMPTY + nameColor +
-                ClickEvent.CopyToClipboard(event.user.name) +
-                HoverEvent.ShowText(event.user.name.asPlainText())
-        )
+        val name = when {
+            author == null -> event.user.name.asPlainText(
+                Style.EMPTY + nameColor +
+                    ClickEvent.CopyToClipboard(event.user.name) +
+                    HoverEvent.ShowText(event.user.name.asPlainText())
+            )
+            ChatSession.isSelf(author.id) -> displayName(author.toUserRef(), nameColor)
+            else -> {
+                val user = author.toUserRef()
+                displayName(user, nameColor)
+                    .onHover(HoverEvent.ShowText(translation("liquidbounce.liquidchat.action.hover")))
+                    .onClickRun { ChatActions.userActions(user) }
+            }
+        }
 
         val parts = mutableListOf<Component>()
         channelTag(event)?.let(parts::add)
@@ -83,22 +110,27 @@ object ChatMessageFormat {
         val (name, color) = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.SERVER_CHAT ->
                 translation("liquidbounce.liquidchat.channel.server").string to ChatFormatting.DARK_AQUA
-            ClientChatMessageEvent.ChatGroup.PARTY_CHAT ->
-                translation("liquidbounce.liquidchat.channel.party").string to ChatFormatting.LIGHT_PURPLE
+            ClientChatMessageEvent.ChatGroup.PARTY_CHAT -> return partyTag()
             ClientChatMessageEvent.ChatGroup.GROUP_CHAT ->
                 ChatSession.channelName(event.channel ?: return null) to ChatFormatting.GREEN
             else -> return null
         }
 
-        return bracketed("[", name, "] ", color)
+        return bracketed("[", name.asPlainText(color), "] ")
     }
 
-    private fun bracketed(open: String, name: String, close: String, color: ChatFormatting) = listOf(
+    fun partyTag() = bracketed(
+        "[",
+        translation("liquidbounce.liquidchat.channel.party").string.asPlainText(ChatFormatting.LIGHT_PURPLE),
+        "] ",
+    )
+
+    private fun bracketed(open: String, name: Component, close: String) = listOf(
         open.asPlainText(ChatFormatting.DARK_GRAY),
-        name.asPlainText(color),
+        name,
         close.asPlainText(ChatFormatting.DARK_GRAY),
     ).asText()
 
-    fun directMessagePrefix(receiver: String) = bracketed("[→ ", receiver, "] ", ChatFormatting.BLUE)
+    fun directMessagePrefix(receiver: Component) = bracketed("[→ ", receiver, "] ")
 
 }

@@ -36,10 +36,7 @@ import net.minecraft.network.chat.Component
 
 internal val LIQUIDCHAT_MESSAGE = MessageMetadata(id = "LiquidChat#command", remove = false)
 
-/**
- * Sends [packet] if logged in to a server that speaks protocol v2.
- */
-internal fun sendChatPacket(packet: AxochatPacket.C2S) {
+internal fun requireChat() {
     val client = GlobalSettingsClientChat.chatClient
     val reason = when {
         !client.isConnected -> "liquidbounce.liquidchat.notConnected"
@@ -50,14 +47,21 @@ internal fun sendChatPacket(packet: AxochatPacket.C2S) {
     if (reason != null) {
         throw CommandException(translation(reason))
     }
+}
 
-    client.sendPacket(packet)
+internal fun sendChatPacket(packet: AxochatPacket.C2S) {
+    requireChat()
+    GlobalSettingsClientChat.chatClient.sendPacket(packet)
 }
 
 internal fun printLine(vararg parts: Component) = chat(*parts, metadata = LIQUIDCHAT_MESSAGE)
 
 internal val chatUsers: SuggestionProvider<ClientCommandSource> = suggestions {
     ChatSession.knownNames() + ClientCommandSource.onlinePlayerNames
+}
+
+internal val chatAccounts: SuggestionProvider<ClientCommandSource> = suggestions {
+    ChatSession.knownNames(accounts = true)
 }
 
 internal val chatFriends: SuggestionProvider<ClientCommandSource> = suggestions {
@@ -75,9 +79,11 @@ object CommandLiquidChat : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("liquidchat", aliases = listOf("lc")) {
+            msgCommand()
             friendCommand()
             friendsCommand()
             blockCommand()
+            unblockCommand()
             groupCommands()
             serverCommand()
             reportCommand()

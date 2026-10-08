@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLocationPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SSightingsPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ChatPlayer
 import net.ccbluex.liquidbounce.features.chat.packet.LocationWorld
 import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
-import net.ccbluex.liquidbounce.features.chat.packet.PartyPlayer
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.isSensitiveAddress
@@ -142,7 +142,7 @@ object LocationReporter : EventListener {
         return C2SLocationPacket(
             server,
             LocationWorld(level.dimension().identifier().toString(), seed, ageTracker.current(now)),
-            mc.player?.let { PartyPlayer(it.uuid, it.gameProfile.name) },
+            mc.player?.let { ChatPlayer(it.uuid, it.gameProfile.name) },
         )
     }
 

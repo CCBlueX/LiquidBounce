@@ -80,7 +80,7 @@ object ChatSession : EventListener {
     var groups: List<ChatGroup> = emptyList()
         private set
 
-    private val names = ConcurrentHashMap<String, String>()
+    private val users = ConcurrentHashMap<String, ChatUserRef>()
 
     private val recentMessages = object : LinkedHashMap<Long, String>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
@@ -88,7 +88,11 @@ object ChatSession : EventListener {
 
     fun isSelf(id: String) = self?.id == id
 
-    fun nameOf(id: String): String = names[id] ?: id.take(8)
+    val isAccount get() = self?.isAccount == true
+
+    fun nameOf(id: String): String = users[id]?.name ?: id.take(8)
+
+    fun userOf(id: String): ChatUserRef? = users[id]
 
     fun channelName(channel: String): String {
         val id = channel.removePrefix(GROUP_PREFIX)
@@ -98,10 +102,12 @@ object ChatSession : EventListener {
     fun findGroup(reference: String): ChatGroup? =
         groups.firstOrNull { it.id == reference } ?: groups.firstOrNull { it.name.equals(reference, true) }
 
-    fun findUserId(reference: String): String? =
-        reference.takeIf(names::containsKey) ?: names.entries.firstOrNull { it.value.equals(reference, true) }?.key
+    fun findUser(reference: String): ChatUserRef? =
+        users[reference] ?: users.values.firstOrNull { it.name.equals(reference, true) }
 
-    fun knownNames(): Collection<String> = names.values.toSortedSet(String.CASE_INSENSITIVE_ORDER)
+    fun knownNames(accounts: Boolean = false): Collection<String> = users.values
+        .filter { !isSelf(it.id) && (!accounts || it.isAccount) }
+        .mapTo(sortedSetOf(String.CASE_INSENSITIVE_ORDER)) { it.name }
 
     fun findFriend(reference: String): ChatFriend? =
         friends.firstOrNull { it.user.id == reference } ?: friends.firstOrNull { it.user.name.equals(reference, true) }
@@ -110,7 +116,7 @@ object ChatSession : EventListener {
         recentMessages.entries.lastOrNull { it.value == userId }?.key
     }
 
-    fun remember(users: Iterable<ChatUserRef>) = users.forEach { names[it.id] = it.name }
+    fun remember(users: Iterable<ChatUserRef>) = users.forEach { this.users[it.id] = it }
 
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
@@ -118,12 +124,12 @@ object ChatSession : EventListener {
             is S2CWelcomePacket -> {
                 self = packet.user
                 isStaff = packet.staff
-                names[packet.user.id] = packet.user.name
+                users[packet.user.id] = packet.user.toUserRef()
             }
 
             is S2CSettingsPacket -> settings = packet
             is S2CChatMessagePacket -> {
-                names[packet.author.id] = packet.author.name
+                users[packet.author.id] = packet.author.toUserRef()
                 synchronized(recentMessages) {
                     recentMessages[packet.id] = packet.author.id
                 }

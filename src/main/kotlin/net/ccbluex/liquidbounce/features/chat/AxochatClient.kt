@@ -121,8 +121,11 @@ private val KNOWN_ERRORS = setOf(
     "NotBanned", "Banned", "RateLimited", "PrivateMessageNotAccepted", "EmptyMessage", "MessageTooLong",
     "InvalidCharacter", "InvalidId", "Internal", "UnknownUser", "UnknownChannel", "UnknownGroup", "Muted",
     "NotInParty", "AlreadyInParty", "PartyFull", "PartyLocked", "NoInvite", "NotFriends", "AlreadyFriends",
-    "RequestsDisabled", "GroupFull", "InvalidName", "TooLarge",
+    "AccountRequired", "GroupFull", "InvalidName", "TooLarge",
 )
+
+// what the server answers when it cannot verify the Minecraft session of an account login
+private val PROOF_ERRORS = setOf("LoginFailed", "InvalidId", "MojangRequestMissing")
 
 class AxochatClient(private val allowMessages: () -> Boolean) {
 
@@ -199,6 +202,9 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
 
     @Volatile
     private var helloReply: CompletableDeferred<Int>? = null
+
+    @Volatile
+    private var provingMinecraft = false
 
     private val serializerGson by lazy {
         GsonBuilder()
@@ -283,6 +289,7 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
         isConnecting = false
         isLoggedIn = false
+        provingMinecraft = false
         protocol = 1
     }
 
@@ -308,6 +315,14 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
      * Request Mojang authentication details for login
      */
     fun requestMojangLogin() = sendPacket(C2SRequestMojangInfoPacket())
+
+    /**
+     * Proves the Minecraft session after a LiquidBounce Account login, so others see its name next to the account.
+     */
+    fun proveMinecraft() {
+        provingMinecraft = true
+        sendPacket(C2SRequestMojangInfoPacket())
+    }
 
     /**
      * Sends [message] to [channel]. v1 servers only know the global channel and direct messages.
@@ -373,32 +388,7 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
             }
 
             is S2CMojangInfoPacket -> {
-                EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-
-                runCatching {
-                    val sessionHash = packet.sessionHash
-
-                    mc.services.sessionService.joinServer(
-                        mc.user.profileId,
-                        mc.user.accessToken,
-                        sessionHash
-                    )
-                    sendPacket(
-                        C2SLoginMojangPacket(
-                            mc.user.name,
-                            mc.user.profileId,
-                            allowMessages = allowMessages()
-                        )
-                    )
-                }.onFailure { cause ->
-                    if (cause is InvalidCredentialsException) {
-                        EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.AUTHENTICATION_FAILED))
-                    } else {
-                        EventManager.callEvent(ClientChatErrorEvent(
-                            cause.localizedMessage ?: cause.message ?: cause.javaClass.name
-                        ))
-                    }
-                }
+                joinSession(packet.sessionHash)
                 return
             }
 
@@ -414,13 +404,20 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
                 packet.author,
                 packet.id,
             ))
-            is S2CErrorPacket -> EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code))
+            is S2CErrorPacket -> if (provingMinecraft && packet.code in PROOF_ERRORS) {
+                provingMinecraft = false
+                logger.info("LiquidChat did not accept the Minecraft session: ${packet.code}")
+            } else {
+                EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code))
+            }
             is S2CSuccessPacket -> {
                 when (packet.reason) {
                     "Login" -> {
                         isLoggedIn = true
                         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGED_IN))
                     }
+
+                    "Minecraft" -> provingMinecraft = false
 
                     // TODO: Replace with translation
                     "Ban" -> chat("§7[§a§lChat§7] §9Successfully banned user!")
@@ -432,6 +429,33 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         }
 
         EventManager.callEvent(ClientChatPacketEvent(packet))
+    }
+
+    /**
+     * Joins the session server with [sessionHash] and logs in, or proves the session of an account login.
+     */
+    private fun joinSession(sessionHash: String) {
+        val proving = provingMinecraft
+        if (!proving) {
+            EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
+        }
+
+        runCatching {
+            mc.services.sessionService.joinServer(mc.user.profileId, mc.user.accessToken, sessionHash)
+            sendPacket(C2SLoginMojangPacket(mc.user.name, mc.user.profileId, allowMessages = allowMessages()))
+        }.onFailure { cause ->
+            when {
+                proving -> {
+                    provingMinecraft = false
+                    logger.info("Could not prove the Minecraft session to LiquidChat", cause)
+                }
+                cause is InvalidCredentialsException ->
+                    EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.AUTHENTICATION_FAILED))
+                else -> EventManager.callEvent(ClientChatErrorEvent(
+                    cause.localizedMessage ?: cause.message ?: cause.javaClass.name
+                ))
+            }
+        }
     }
 
     private fun chatGroupOf(channel: String) = when {

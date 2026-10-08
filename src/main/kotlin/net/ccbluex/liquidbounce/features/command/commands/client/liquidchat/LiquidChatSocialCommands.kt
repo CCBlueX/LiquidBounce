@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.arguments.StringArgumentType
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import net.ccbluex.liquidbounce.features.chat.ChatActions
+import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.ServerJoin
-import net.ccbluex.liquidbounce.features.chat.packet.C2SBlockPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
 import net.ccbluex.liquidbounce.features.chat.packet.ChatFriend
@@ -30,8 +32,10 @@ import net.ccbluex.liquidbounce.features.chat.packet.ChatGroup
 import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -40,24 +44,64 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 
-/**
- * One command for every step of a friendship: request, accept, withdraw or end it, whichever applies.
- */
-internal fun CmdLiteralScope.friendCommand() = literal("friend") {
-    argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
-        exec { ctx ->
-            val reference = ctx.get(user)
-            val friend = ChatSession.findFriend(reference)
-            val incoming = ChatSession.incomingRequests.firstOrNull { it.name.equals(reference, true) }
-            val outgoing = ChatSession.outgoingRequests.firstOrNull { it.name.equals(reference, true) }
-            val packet = when {
-                friend != null -> C2SFriendPacket("remove", friend.user.id)
-                incoming != null -> C2SFriendPacket("accept", incoming.id)
-                outgoing != null -> C2SFriendPacket("remove", outgoing.id)
-                else -> C2SFriendPacket("request", reference)
+private val incomingRequests: SuggestionProvider<ClientCommandSource> = suggestions {
+    ChatSession.incomingRequests.map { it.name }
+}
+
+private val friendsAndRequests: SuggestionProvider<ClientCommandSource> = suggestions {
+    ChatSession.friends.map { it.user.name } + ChatSession.outgoingRequests.map { it.name }
+}
+
+private val blockedUsers: SuggestionProvider<ClientCommandSource> = suggestions {
+    ChatSession.blocks.map { it.name }
+}
+
+private fun Iterable<ChatUserRef>.find(reference: String) =
+    firstOrNull { it.id == reference } ?: firstOrNull { it.name.equals(reference, true) }
+
+internal fun CmdLiteralScope.msgCommand() = literal("msg") {
+    argument("user", ClientStringArgumentType.word(), chatAccounts) { user ->
+        argument("message", StringArgumentType.greedyString()) { message ->
+            exec { ctx ->
+                GlobalSettingsClientChat.send(ChatSession.USER_PREFIX + ctx.get(user), ctx.get(message))
+                1
             }
-            sendChatPacket(packet)
-            1
+        }
+    }
+}
+
+internal fun CmdLiteralScope.friendCommand() = literal("friend") {
+    literal("add") {
+        argument("user", ClientStringArgumentType.word(), chatAccounts) { user ->
+            exec { ctx ->
+                requireChat()
+                ChatActions.requestFriend(ctx.get(user))
+                1
+            }
+        }
+    }
+    literal("remove") {
+        argument("user", ClientStringArgumentType.word(), friendsAndRequests) { user ->
+            exec { ctx ->
+                val reference = ctx.get(user)
+                val removed = ChatSession.friends.map { it.user }.find(reference)
+                    ?: ChatSession.outgoingRequests.find(reference)
+                    ?: throw CommandException(t("friend.remove.unknown", reference))
+                sendChatPacket(C2SFriendPacket("remove", removed.id))
+                printLine(regular(t("friend.remove.done", ChatMessageFormat.displayName(removed))))
+                1
+            }
+        }
+    }
+    literal("accept") {
+        argument("user", ClientStringArgumentType.word(), incomingRequests) { user ->
+            exec { ctx ->
+                val reference = ctx.get(user)
+                val request = ChatSession.incomingRequests.find(reference)
+                    ?: throw CommandException(t("friend.accept.unknown", reference))
+                sendChatPacket(C2SFriendPacket("accept", request.id))
+                1
+            }
         }
     }
 }
@@ -68,7 +112,9 @@ internal fun CmdLiteralScope.friendsCommand() = literal("friends") {
         ChatSession.friends
             .sortedWith(compareBy({ !it.online }, { it.user.name.lowercase() }))
             .forEach { printFriend(it, t("friends.join")) }
-        ChatSession.incomingRequests.forEach { printRequest(it, t("friends.incoming", variable(it.name))) }
+        ChatSession.incomingRequests.forEach {
+            printRequest(it, t("friends.incoming", ChatMessageFormat.displayName(it)))
+        }
         1
     }
 }
@@ -84,7 +130,7 @@ private fun printFriend(friend: ChatFriend, joinLabel: MutableComponent) {
     printLine(
         Component.literal(if (friend.online) "● " else "○ ")
             .withStyle(if (friend.online) ChatFormatting.GREEN else ChatFormatting.DARK_GRAY),
-        variable(friend.user.name),
+        ChatMessageFormat.displayName(friend.user),
         regular(server?.let { " ($it)" } ?: ""),
         join,
     )
@@ -97,25 +143,33 @@ private fun printRequest(request: ChatUserRef, text: MutableComponent) = printLi
     },
 )
 
-/**
- * Blocks or unblocks a user; without one, lists who is blocked.
- */
 internal fun CmdLiteralScope.blockCommand() = literal("block") {
     exec {
         printLine(regular(t("block.header", variable(ChatSession.blocks.size.toString()))))
-        ChatSession.blocks.forEach { printLine(regular("- "), variable(it.name)) }
+        ChatSession.blocks.forEach { printLine(regular("- "), ChatMessageFormat.displayName(it)) }
         1
     }
     argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
         exec { ctx ->
-            val reference = ctx.get(user)
-            val blocked = ChatSession.blocks.firstOrNull { it.id == reference || it.name.equals(reference, true) }
-            sendChatPacket(C2SBlockPacket(blocked?.id ?: reference, blocked == null))
+            requireChat()
+            ChatActions.block(ctx.get(user), true)
             1
         }
     }
 }
 
+internal fun CmdLiteralScope.unblockCommand() = literal("unblock") {
+    argument("user", ClientStringArgumentType.word(), blockedUsers) { user ->
+        exec { ctx ->
+            val reference = ctx.get(user)
+            val blocked = ChatSession.blocks.find(reference)
+                ?: throw CommandException(t("unblock.unknown", reference))
+            requireChat()
+            ChatActions.block(blocked.id, false)
+            1
+        }
+    }
+}
 internal fun CmdLiteralScope.serverCommand() = literal("server") {
     argument("message", StringArgumentType.greedyString()) { message ->
         exec { ctx ->

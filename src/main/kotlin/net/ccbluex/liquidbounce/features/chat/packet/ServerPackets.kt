@@ -202,7 +202,7 @@ data class C2SLocationPacket(
     @SerializedName("world")
     val world: LocationWorld?,
     @SerializedName("player")
-    val player: PartyPlayer?,
+    val player: ChatPlayer?,
 ) : AxochatPacket.C2S
 
 data class C2SSightingsPacket(

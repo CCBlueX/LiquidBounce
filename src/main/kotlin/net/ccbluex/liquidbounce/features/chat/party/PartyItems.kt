@@ -27,6 +27,8 @@ import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
@@ -100,7 +102,15 @@ object PartyItems {
         return stack
     }
 
-    fun viewedPlayer(member: PartyMember, inventory: JsonObject, level: ClientLevel): RemotePlayer {
+    fun show(member: PartyMember, inventory: JsonObject) {
+        val level = mc.level ?: return
+        val viewed = viewedPlayer(member, inventory, level)
+        mc.schedule {
+            mc.gui.setScreen(ViewedInventoryScreen { viewed })
+        }
+    }
+
+    private fun viewedPlayer(member: PartyMember, inventory: JsonObject, level: ClientLevel): RemotePlayer {
         val profile = member.player?.let { GameProfile(it.uuid, it.name) }
             ?: GameProfile(member.user.uuid, member.user.name)
         val player = RemotePlayer(level, profile).apply { id = level.nextLocalEntityId() }

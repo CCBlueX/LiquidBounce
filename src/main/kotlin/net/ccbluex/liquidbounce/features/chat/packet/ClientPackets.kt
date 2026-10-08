@@ -231,13 +231,6 @@ data class S2CGroupsPacket(
     val groups: List<ChatGroup>?,
 ) : AxochatPacket.S2C
 
-data class PartyPlayer(
-    @SerializedName("uuid")
-    val uuid: UUID,
-    @SerializedName("name")
-    val name: String,
-)
-
 data class PartyMember(
     @SerializedName("user")
     val user: ChatUserRef,
@@ -250,7 +243,7 @@ data class PartyMember(
     @SerializedName("relation")
     val relation: String,
     @SerializedName("player")
-    val player: PartyPlayer?,
+    val player: ChatPlayer?,
     @SerializedName("server")
     val server: String?,
 )

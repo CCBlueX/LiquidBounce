@@ -279,6 +279,7 @@ export interface ChatUserRef {
     kind: "account" | "mojang";
     name: string;
     uuid: string;
+    minecraft: { uuid: string; name: string } | null;
 }
 
 export interface ChatRole {

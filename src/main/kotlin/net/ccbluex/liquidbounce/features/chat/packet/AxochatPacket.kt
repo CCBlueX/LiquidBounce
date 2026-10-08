@@ -42,6 +42,18 @@ data class AxoUser(
     val uuid: UUID,
 )
 
+data class ChatPlayer(
+    @SerializedName("uuid")
+    val uuid: UUID,
+    @SerializedName("name")
+    val name: String,
+)
+
+/**
+ * A LiquidChat user: a LiquidBounce Account, or a Minecraft account without one.
+ *
+ * @param minecraft the Minecraft account an online LiquidBounce Account proved it plays on
+ */
 data class ChatUserRef(
     @SerializedName("id")
     val id: String,
@@ -51,7 +63,11 @@ data class ChatUserRef(
     val name: String,
     @SerializedName("uuid")
     val uuid: UUID,
-)
+    @SerializedName("minecraft")
+    val minecraft: ChatPlayer? = null,
+) {
+    val isAccount get() = kind == ACCOUNT
+}
 
 data class ChatRole(
     @SerializedName("id")
@@ -75,7 +91,13 @@ data class ChatAuthor(
     val roles: List<ChatRole>?,
     @SerializedName("highlight")
     val highlight: Boolean,
+    @SerializedName("minecraft")
+    val minecraft: ChatPlayer? = null,
 ) {
+    val isAccount get() = kind == ACCOUNT
+
     fun toAxoUser() = AxoUser(name, uuid)
-    fun toUserRef() = ChatUserRef(id, kind, name, uuid)
+    fun toUserRef() = ChatUserRef(id, kind, name, uuid, minecraft)
 }
+
+private const val ACCOUNT = "account"

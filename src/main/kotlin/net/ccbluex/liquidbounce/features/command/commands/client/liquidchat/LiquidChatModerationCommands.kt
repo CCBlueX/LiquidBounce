@@ -59,7 +59,7 @@ internal fun CmdLiteralScope.reportCommand() = literal("report") {
         argument("reason", StringArgumentType.greedyString()) { reason ->
             exec { ctx ->
                 val reference = ctx.get(user)
-                val message = ChatSession.findUserId(reference)?.let(ChatSession::lastMessageOf)
+                val message = ChatSession.findUser(reference)?.id?.let(ChatSession::lastMessageOf)
                 sendChatPacket(C2SReportPacket(reference, message, ctx.get(reason)))
                 1
             }

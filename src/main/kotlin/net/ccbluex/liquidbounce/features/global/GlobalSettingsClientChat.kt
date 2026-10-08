@@ -142,7 +142,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         } else if (!chatClient.isModern && channel.startsWith(ChatSession.USER_PREFIX)) {
             // v1 servers do not echo direct messages
             val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
-            writeChat(ChatMessageFormat.directMessagePrefix(receiver), regular(message))
+            val prefix = ChatMessageFormat.directMessagePrefix(receiver.asPlainText(ChatFormatting.BLUE))
+            writeChat(prefix, regular(message))
         }
     }
 
@@ -157,34 +158,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    private fun registerPartyChatCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
-        dispatcher.register("pc") {
-            argument("message", StringArgumentType.greedyString()) { message ->
-                exec { ctx ->
-                    send(ChatSession.PARTY, ctx.get(message))
-                    1
-                }
-            }
-        }
-    }
-
-    private fun registerMessageCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
-        dispatcher.register("msg", aliases = listOf("whisper")) {
-            argument("user", StringArgumentType.word()) { user ->
-                argument("message", StringArgumentType.greedyString()) { message ->
-                    exec { ctx ->
-                        send(ChatSession.USER_PREFIX + ctx.get(user), ctx.get(message))
-                        1
-                    }
-                }
-            }
-        }
-    }
-
     init {
         CommandManager.register(::registerChatWriteCommand)
-        CommandManager.register(::registerMessageCommand)
-        CommandManager.register(::registerPartyChatCommand)
     }
 
     private fun sendSettings() {
@@ -331,6 +306,10 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 login()
             }
             ClientChatStateChange.State.LOGGED_IN -> {
+                // a cracked session has no access token to join the session server with
+                if (accountLoginPending && mc.user.accessToken.length > 1) {
+                    chatClient.proveMinecraft()
+                }
                 accountLoginPending = false
                 sendSettings()
                 notification(
