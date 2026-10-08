@@ -53,10 +53,6 @@ object ChatSession : EventListener {
         private set
 
     @Volatile
-    var isStaff = false
-        private set
-
-    @Volatile
     var settings: S2CSettingsPacket? = null
         private set
 
@@ -123,7 +119,6 @@ object ChatSession : EventListener {
         when (val packet = event.packet) {
             is S2CWelcomePacket -> {
                 self = packet.user
-                isStaff = packet.staff
                 users[packet.user.id] = packet.user.toUserRef()
             }
 
@@ -168,7 +163,6 @@ object ChatSession : EventListener {
     private val stateHandler = handler<ClientChatStateChange> { event ->
         if (event.state == ClientChatStateChange.State.DISCONNECTED) {
             self = null
-            isStaff = false
             settings = null
             friends = emptyList()
             incomingRequests = emptyList()

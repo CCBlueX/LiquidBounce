@@ -73,7 +73,9 @@ internal val chatGroups: SuggestionProvider<ClientCommandSource> = suggestions {
 }
 
 /**
- * LiquidChat social and moderation commands
+ * LiquidChat Command
+ *
+ * Messages, friends, blocks, groups, server chat and reports.
  */
 object CommandLiquidChat : CommandRegistrar {
 
@@ -87,7 +89,6 @@ object CommandLiquidChat : CommandRegistrar {
             groupCommands()
             serverCommand()
             reportCommand()
-            moderationCommands()
         }
     }
 

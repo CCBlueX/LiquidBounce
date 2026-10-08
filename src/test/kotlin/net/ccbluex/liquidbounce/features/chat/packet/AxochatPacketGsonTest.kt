@@ -32,7 +32,7 @@ class AxochatPacketGsonTest {
     private val serializer = GsonBuilder()
         .registerTypeAdapter(AxochatPacket.C2S::class.java, PacketSerializer().apply {
             register<C2SHelloPacket>("Hello")
-            register<C2SRequestReportsPacket>("RequestReports")
+            register<C2SRequestMojangInfoPacket>("RequestMojangInfo")
             register<C2SPartyPacket>("Party")
         })
         .create()
@@ -55,7 +55,7 @@ class AxochatPacketGsonTest {
 
     @Test
     fun `packets without body have no content`() {
-        assertEquals("""{"m":"RequestReports"}""", encode(C2SRequestReportsPacket()))
+        assertEquals("""{"m":"RequestMojangInfo"}""", encode(C2SRequestMojangInfoPacket()))
         assertEquals("""{"m":"Hello","c":{"protocol":2}}""", encode(C2SHelloPacket(2)))
     }
 

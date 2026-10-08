@@ -87,32 +87,6 @@ data class C2SPrivateMessagePacket(
 
 ) : AxochatPacket.C2S
 
-/**
- * A client can send this packet to ban other users from using this chat.
- *
- * @param user user is an ID.
- */
-data class C2SBanUserPacket(
-
-    @SerializedName("user")
-    val user: String
-
-) : AxochatPacket.C2S
-
-/**
- * A client can send this packet to unban other users.
- *
- * @param user user is an ID.
- */
-data class C2SUnbanUserPacket(
-
-    @SerializedName("user")
-    val user: String
-
-) : AxochatPacket.C2S
-
-class C2SRequestUserCountPacket : AxochatPacket.C2S
-
 data class C2SHelloPacket(
     @SerializedName("protocol")
     val protocol: Int,
@@ -228,38 +202,4 @@ data class C2SReportPacket(
     val message: Long?,
     @SerializedName("reason")
     val reason: String,
-) : AxochatPacket.C2S
-
-data class C2SPunishPacket(
-    @SerializedName("user")
-    val user: String?,
-    @SerializedName("ip")
-    val ip: String?,
-    @SerializedName("kind")
-    val kind: String,
-    @SerializedName("duration")
-    val duration: Long?,
-    @SerializedName("reason")
-    val reason: String,
-    @SerializedName("include_ip")
-    val includeIp: Boolean,
-) : AxochatPacket.C2S
-
-data class C2SPardonPacket(
-    @SerializedName("user")
-    val user: String?,
-    @SerializedName("ip")
-    val ip: String?,
-) : AxochatPacket.C2S
-
-data class C2SRequestPunishmentsPacket(
-    @SerializedName("user")
-    val user: String,
-) : AxochatPacket.C2S
-
-class C2SRequestReportsPacket : AxochatPacket.C2S
-
-data class C2SResolveReportPacket(
-    @SerializedName("id")
-    val id: String,
 ) : AxochatPacket.C2S

@@ -88,7 +88,7 @@ data class S2CPrivateMessagePacket(
 ) : AxochatPacket.S2C
 
 /**
- * This packet is sent after either LoginMojang, LoginJWT, BanUser or UnbanUser were processed successfully.
+ * This packet is sent after a login or an action was processed successfully.
  *
  * @param reason of success packet
  */
@@ -128,13 +128,6 @@ data class S2CErrorPacket(
             ?.value?.takeIf { it.isJsonPrimitive }?.asString
 
 }
-
-data class S2CUserCountPacket(
-    @SerializedName("connections")
-    val connections: Int,
-    @SerializedName("logged_in")
-    val loggedIn: Int,
-) : AxochatPacket.S2C
 
 data class S2CHelloPacket(
     @SerializedName("protocol")
@@ -315,57 +308,4 @@ data class S2CPunishedPacket(
     val reason: String,
     @SerializedName("expires")
     val expires: Long?,
-) : AxochatPacket.S2C
-
-data class ChatPunishment(
-    @SerializedName("id")
-    val id: String,
-    @SerializedName("kind")
-    val kind: String,
-    @SerializedName("ip")
-    val ip: String?,
-    @SerializedName("reason")
-    val reason: String,
-    @SerializedName("issued_by")
-    val issuedBy: ChatUserRef?,
-    @SerializedName("created")
-    val created: Long,
-    @SerializedName("expires")
-    val expires: Long?,
-)
-
-data class S2CPunishmentsPacket(
-    @SerializedName("user")
-    val user: ChatUserRef,
-    @SerializedName("punishments")
-    val punishments: List<ChatPunishment>?,
-) : AxochatPacket.S2C
-
-data class ChatReport(
-    @SerializedName("id")
-    val id: String,
-    @SerializedName("reporter")
-    val reporter: ChatUserRef,
-    @SerializedName("target")
-    val target: ChatUserRef,
-    @SerializedName("channel")
-    val channel: String?,
-    @SerializedName("message")
-    val message: Long?,
-    @SerializedName("content")
-    val content: String?,
-    @SerializedName("reason")
-    val reason: String,
-    @SerializedName("time")
-    val time: Long,
-)
-
-data class S2CReportsPacket(
-    @SerializedName("reports")
-    val reports: List<ChatReport>?,
-) : AxochatPacket.S2C
-
-data class S2CReportCreatedPacket(
-    @SerializedName("report")
-    val report: ChatReport,
 ) : AxochatPacket.S2C

@@ -48,14 +48,12 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
-import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SBanUserPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SBlockPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SChatMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
@@ -65,20 +63,13 @@ import net.ccbluex.liquidbounce.features.chat.packet.C2SLocationPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginAccountPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginMojangPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SPardonPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyStatePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPrivateMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SPunishPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SReportPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestMojangInfoPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestPunishmentsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestReportsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestUserCountPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SResolveReportPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SSettingsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SSightingsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SUnbanUserPacket
 import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
 import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
 import net.ccbluex.liquidbounce.features.chat.packet.S2CBlocksPacket
@@ -96,21 +87,15 @@ import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyWarpPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPresencePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPrivateMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPunishedPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPunishmentsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CReportCreatedPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CReportsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CSettingsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CUserCountPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CWelcomePacket
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.netty.clientChannelAndGroup
 import net.ccbluex.liquidbounce.utils.netty.syncSuspend
 import java.net.URI
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private const val MAX_FRAME_SIZE = 256 * 1024
@@ -136,9 +121,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         register<C2SLoginMojangPacket>("LoginMojang")
         register<C2SMessagePacket>("Message")
         register<C2SPrivateMessagePacket>("PrivateMessage")
-        register<C2SBanUserPacket>("BanUser")
-        register<C2SUnbanUserPacket>("UnbanUser")
-        register<C2SRequestUserCountPacket>("RequestUserCount")
         register<C2SHelloPacket>("Hello")
         register<C2SLoginAccountPacket>("LoginAccount")
         register<C2SSettingsPacket>("Settings")
@@ -151,11 +133,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         register<C2SSightingsPacket>("Sightings")
         register<C2SPartyStatePacket>("PartyState")
         register<C2SReportPacket>("Report")
-        register<C2SPunishPacket>("Punish")
-        register<C2SPardonPacket>("Pardon")
-        register<C2SRequestPunishmentsPacket>("RequestPunishments")
-        register<C2SRequestReportsPacket>("RequestReports")
-        register<C2SResolveReportPacket>("ResolveReport")
     }
 
     private val deserializer = PacketDeserializer().apply {
@@ -164,7 +141,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         register<S2CPrivateMessagePacket>("PrivateMessage")
         register<S2CErrorPacket>("Error")
         register<S2CSuccessPacket>("Success")
-        register<S2CUserCountPacket>("UserCount")
         register<S2CHelloPacket>("Hello")
         register<S2CWelcomePacket>("Welcome")
         register<S2CSettingsPacket>("Settings")
@@ -178,9 +154,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
         register<S2CPartyWarpPacket>("PartyWarp")
         register<S2CPartyMemberStatePacket>("PartyMemberState")
         register<S2CPunishedPacket>("Punished")
-        register<S2CPunishmentsPacket>("Punishments")
-        register<S2CReportsPacket>("Reports")
-        register<S2CReportCreatedPacket>("ReportCreated")
     }
 
     val isConnected: Boolean
@@ -341,30 +314,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
     }
 
     /**
-     * Ban user from server
-     */
-    suspend fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
-
-    /**
-     * Unban user from server
-     */
-    suspend fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
-
-    /**
-     * Convert username or uuid to UUID
-     */
-    private suspend fun toUUID(target: String): String {
-        return try {
-            UUID.fromString(target)
-
-            target
-        } catch (_: IllegalArgumentException) {
-            val incomingUUID = lookupUuidByName(target)
-            incomingUUID.toString()
-        }
-    }
-
-    /**
      * Login with a LiquidBounce Account access token (v2 only)
      */
     fun loginAccount(accessToken: String) {
@@ -418,10 +367,6 @@ class AxochatClient(private val allowMessages: () -> Boolean) {
                     }
 
                     "Minecraft" -> provingMinecraft = false
-
-                    // TODO: Replace with translation
-                    "Ban" -> chat("§7[§a§lChat§7] §9Successfully banned user!")
-                    "Unban" -> chat("§7[§a§lChat§7] §9Successfully unbanned user!")
                 }
             }
 

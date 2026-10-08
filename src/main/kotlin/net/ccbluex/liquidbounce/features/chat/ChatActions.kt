@@ -67,10 +67,6 @@ object ChatActions {
         }
         actions += ChatNotices.button(t("action.block"), ChatFormatting.RED) { block(user.id, true) }
         actions += suggestion(t("action.report"), ChatFormatting.YELLOW, "lc report ${user.name} ")
-        if (ChatSession.isStaff) {
-            actions += suggestion(t("action.mute"), ChatFormatting.RED, "lc mod mute ${user.name} 1h ")
-            actions += suggestion(t("action.ban"), ChatFormatting.DARK_RED, "lc mod ban ${user.name} 1d ")
-        }
         GlobalSettingsClientChat.notice(Component.empty().append(ChatMessageFormat.displayName(user)).apply {
             actions.forEach(::append)
         })

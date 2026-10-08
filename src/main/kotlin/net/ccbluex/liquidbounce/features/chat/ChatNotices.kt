@@ -27,18 +27,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SResolveReportPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ChatPunishment
-import net.ccbluex.liquidbounce.features.chat.packet.ChatReport
 import net.ccbluex.liquidbounce.features.chat.packet.S2CFriendsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CGroupsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPresencePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPunishedPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPunishmentsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CReportCreatedPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CReportsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CUserCountPacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.onClickRun
@@ -57,9 +50,6 @@ internal fun buttonOf(text: MutableComponent): Component =
         .append(text)
         .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
 
-/**
- * Prints what the chat server reports besides messages: requests, presence and moderation.
- */
 object ChatNotices : EventListener {
 
     private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
@@ -80,7 +70,7 @@ object ChatNotices : EventListener {
     private fun send(packet: AxochatPacket.C2S) =
         GlobalSettingsClientChat.chatClient.sendPacket(packet)
 
-    fun formatTime(millis: Long): String = timeFormat.format(Instant.ofEpochMilli(millis))
+    private fun formatTime(millis: Long): String = timeFormat.format(Instant.ofEpochMilli(millis))
 
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
@@ -93,20 +83,8 @@ object ChatNotices : EventListener {
                 packet.reason,
                 packet.expires?.let(::formatTime) ?: t("punished.permanent").string,
             )).withStyle(ChatFormatting.RED))
-            is S2CSuccessPacket -> if (packet.reason in setOf("Report", "Punish", "Pardon", "Resolve")) {
-                notice(regular(t("success.${packet.reason.lowercase()}")))
-            }
-            is S2CUserCountPacket -> notice(regular(t("userCount", variable(packet.connections.toString()),
-                variable(packet.loggedIn.toString()))))
-            is S2CReportCreatedPacket -> printReport(packet.report)
-            is S2CReportsPacket -> {
-                val reports = packet.reports.orEmpty()
-                notice(regular(t("reports", variable(reports.size.toString()))))
-                reports.forEach(::printReport)
-            }
-            is S2CPunishmentsPacket -> {
-                notice(regular(t("punishments", ChatMessageFormat.displayName(packet.user))))
-                packet.punishments.orEmpty().forEach(::printPunishment)
+            is S2CSuccessPacket -> if (packet.reason == "Report") {
+                notice(regular(t("success.report")))
             }
 
             else -> {}
@@ -166,29 +144,6 @@ object ChatNotices : EventListener {
         }
         knownInvites = invites.mapTo(hashSetOf()) { it.id }
     }
-
-    private fun printReport(report: ChatReport) = notice(
-        regular(t(
-            "report",
-            ChatMessageFormat.displayName(report.reporter),
-            ChatMessageFormat.displayName(report.target),
-            report.reason,
-            formatTime(report.time),
-        )),
-        regular(report.content?.let { " \"$it\"" } ?: ""),
-        button(t("resolve"), ChatFormatting.GREEN) {
-            send(C2SResolveReportPacket(report.id))
-        },
-    )
-
-    private fun printPunishment(punishment: ChatPunishment) = notice(regular(t(
-        "punishment",
-        punishment.kind,
-        punishment.reason,
-        punishment.ip ?: "-",
-        punishment.issuedBy?.name ?: "-",
-        punishment.expires?.let(::formatTime) ?: t("punished.permanent").string,
-    )))
 
     @Suppress("unused")
     private val stateHandler = handler<ClientChatStateChange> { event ->
