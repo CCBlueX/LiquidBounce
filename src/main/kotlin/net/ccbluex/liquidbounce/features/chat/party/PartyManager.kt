@@ -37,14 +37,19 @@ import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyWarpPacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.text.isSensitiveAddress
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
+private val SAME_SERVER = setOf("nearby", "world", "instance", "server")
 
 object PartyManager : EventListener {
 
@@ -110,6 +115,12 @@ object PartyManager : EventListener {
             val leader = after[current.leader]?.let(name) ?: variable(ChatSession.nameOf(current.leader))
             notice(regular(t("newLeader", leader)))
         }
+        if (previous.locked != current.locked) {
+            notice(regular(t(if (current.locked) "locked" else "unlocked")))
+        }
+        if (previous.pvp != current.pvp) {
+            notice(regular(t(if (current.pvp) "pvpOn" else "pvpOff")))
+        }
     }
 
     private fun onInvite(packet: S2CPartyInvitePacket) {
@@ -126,12 +137,32 @@ object PartyManager : EventListener {
         )
     }
 
-    private fun onWarp(packet: S2CPartyWarpPacket) = notice(
-        regular(t("warp", ChatMessageFormat.displayName(packet.from), variable(packet.server))),
-        ChatNotices.button(translation("liquidbounce.liquidchat.join"), ChatFormatting.GREEN) {
-            ServerJoin.confirm(packet.server, packet.from.name)
-        },
-    )
+    fun warp() {
+        val reason = when {
+            mc.hasSingleplayerServer() || mc.currentServer == null -> "warp.noServer"
+            mc.currentServer?.ip?.isSensitiveAddress() == true -> "warp.route"
+            others.isEmpty() -> "warp.alone"
+            others.all { it.relation in SAME_SERVER } -> "warp.allThere"
+            else -> null
+        }
+        if (reason != null) {
+            notice(warning(t(reason)))
+        } else {
+            GlobalSettingsClientChat.chatClient.sendPacket(C2SPartyPacket("warp"))
+        }
+    }
+
+    // the leader gets their own warp back as confirmation
+    private fun onWarp(packet: S2CPartyWarpPacket) = if (ChatSession.isSelf(packet.from.id)) {
+        notice(regular(t("warped", variable(packet.server))))
+    } else {
+        notice(
+            regular(t("warp", ChatMessageFormat.displayName(packet.from), variable(packet.server))),
+            ChatNotices.button(translation("liquidbounce.liquidchat.join"), ChatFormatting.GREEN) {
+                ServerJoin.confirm(packet.server, packet.from.name)
+            },
+        )
+    }
 
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->

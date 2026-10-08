@@ -260,12 +260,18 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         chatClient.reconnect()
     }
 
+    /**
+     * Connection errors carry no code and are left to the notifications.
+     */
     @Suppress("unused")
-    private val handleLoginFailure = handler<ClientChatErrorEvent> { event ->
-        if (event.code == "LoginFailed" && accountLoginPending) {
-            accountLoginPending = false
-            logger.info("LiquidBounce Account login failed, falling back to Mojang...")
-            chatClient.requestMojangLogin()
+    private val handleError = handler<ClientChatErrorEvent> { event ->
+        when {
+            event.code == "LoginFailed" && accountLoginPending -> {
+                accountLoginPending = false
+                logger.info("LiquidBounce Account login failed, falling back to Mojang...")
+                chatClient.requestMojangLogin()
+            }
+            event.code != null -> notice(event.error.asText().withStyle(ChatFormatting.RED))
         }
     }
 

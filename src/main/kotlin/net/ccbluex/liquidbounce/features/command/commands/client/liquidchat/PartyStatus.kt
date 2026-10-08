@@ -34,10 +34,12 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.world.phys.Vec3
 import kotlin.math.roundToInt
@@ -145,11 +147,13 @@ internal object PartyStatus {
         return (health + (status.amount("absorption") ?: 0f)).roundToInt()
     }
 
+    private fun CmdI18n.explained(key: String) = t("button.$key").onHover(HoverEvent.ShowText(t("button.$key.hover")))
+
     private fun CmdI18n.actions(party: PartyInfo, ownRole: String?) = Component.empty().apply {
         if (ownRole == "leader") {
-            append(button(t("button.warp"), ChatFormatting.GREEN, C2SPartyPacket("warp")))
-            val lock = if (party.locked) "button.unlock" else "button.lock"
-            append(button(t(lock), ChatFormatting.YELLOW, C2SPartyPacket("lock", locked = !party.locked)))
+            append(ChatNotices.button(explained("warp"), ChatFormatting.GREEN) { PartyManager.warp() })
+            val lock = explained(if (party.locked) "unlock" else "lock")
+            append(button(lock, ChatFormatting.YELLOW, C2SPartyPacket("lock", locked = !party.locked)))
             append(button(t("button.disband"), ChatFormatting.RED, C2SPartyPacket("disband")))
         }
         append(button(t("button.leave"), ChatFormatting.RED, C2SPartyPacket("leave")))

@@ -67,7 +67,13 @@ object CommandParty : CommandRegistrar {
             memberAction("leader") { C2SPartyPacket("transfer", user = it.user.id) }
             inventoryCommand()
             simpleAction("leave") { C2SPartyPacket("leave") }
-            simpleAction("warp") { C2SPartyPacket("warp") }
+            literal("warp") {
+                exec {
+                    requireChat()
+                    PartyManager.warp()
+                    1
+                }
+            }
             lockCommand()
             simpleAction("disband") { C2SPartyPacket("disband") }
         }
