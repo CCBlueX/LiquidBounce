@@ -616,8 +616,6 @@
   "liquidbounce.liquidchat.party.memberJoined": "%s joined the party.",
   "liquidbounce.liquidchat.party.memberLeft": "%s left the party.",
   "liquidbounce.liquidchat.party.newLeader": "%s leads the party now.",
-  "liquidbounce.liquidchat.party.pvpDisabled": "PvP between party members is off; members count as friends.",
-  "liquidbounce.liquidchat.party.pvpEnabled": "PvP between party members is on.",
   "liquidbounce.liquidchat.party.warp": "%s asks the party to join %s.",
   "liquidbounce.liquidchat.presence.offline": "%s went offline.",
   "liquidbounce.liquidchat.presence.online": "%s is online.",

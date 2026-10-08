@@ -48,6 +48,7 @@ object GlobalSettingsTarget : ValueGroup(
             Targets.ANGERABLE,
             Targets.WATER_CREATURE,
             Targets.INVISIBLE,
+            Targets.PARTY,
         ),
         choices = enumSetAllOf(),
     )

@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.features.chat.party
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
@@ -39,6 +40,8 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -51,10 +54,10 @@ object PartyManager : EventListener {
     val invites = ConcurrentHashMap<String, S2CPartyInvitePacket>()
 
     @Volatile
-    private var allyUuids = emptySet<UUID>()
+    private var memberUuids = emptySet<UUID>()
 
     @Volatile
-    private var allyNames = emptySet<String>()
+    private var memberNames = emptySet<String>()
 
     val members: List<PartyMember>
         get() = party?.members.orEmpty()
@@ -69,12 +72,8 @@ object PartyManager : EventListener {
         ?: members.firstOrNull { it.user.name.equals(reference, true) }
         ?: members.firstOrNull { it.player?.name.equals(reference, true) }
 
-    /**
-     * Party members are allies while the party has PvP turned off.
-     */
-    fun isAlly(uuid: UUID) = uuid in allyUuids
-
-    fun isAlly(name: String) = name.lowercase() in allyNames
+    fun isMember(entity: Entity) =
+        entity is Player && (entity.uuid in memberUuids || entity.gameProfile.name.lowercase() in memberNames)
 
     private fun t(key: String, vararg args: Any?) = translation("liquidbounce.liquidchat.party.$key", *args)
 
@@ -88,9 +87,9 @@ object PartyManager : EventListener {
         ChatSession.remember(newParty?.members.orEmpty().map { it.user })
         PartyMemberStates.publish(newParty)
 
-        val allies = newParty?.takeIf { !it.pvp }?.members.orEmpty().filter { it.relation != "self" }
-        allyUuids = allies.mapNotNullTo(hashSetOf()) { it.player?.uuid }
-        allyNames = allies.mapNotNullTo(hashSetOf()) { it.player?.name?.lowercase() }
+        val others = newParty?.members.orEmpty().filter { it.relation != "self" }
+        memberUuids = others.mapNotNullTo(hashSetOf()) { it.player?.uuid }
+        memberNames = others.mapNotNullTo(hashSetOf()) { it.player?.name?.lowercase() }
 
         when {
             newParty == null && previous != null -> notice(regular(t("left")))
@@ -105,9 +104,6 @@ object PartyManager : EventListener {
 
         (after.keys - before.keys).forEach { notice(regular(t("memberJoined", variable(after[it]!!.user.name)))) }
         (before.keys - after.keys).forEach { notice(regular(t("memberLeft", variable(before[it]!!.user.name)))) }
-        if (previous.pvp != current.pvp) {
-            notice(regular(t(if (current.pvp) "pvpEnabled" else "pvpDisabled")))
-        }
         if (previous.leader != current.leader) {
             notice(regular(t("newLeader", variable(ChatSession.nameOf(current.leader)))))
         }
@@ -154,9 +150,16 @@ object PartyManager : EventListener {
                 party = null
                 PartyMemberStates.publish(null)
             }
-            allyUuids = emptySet()
-            allyNames = emptySet()
+            memberUuids = emptySet()
+            memberNames = emptySet()
             invites.clear()
+        }
+    }
+
+    @Suppress("unused")
+    private val tagHandler = handler<TagEntityEvent> { event ->
+        if (isMember(event.entity)) {
+            event.assumePartyMember()
         }
     }
 
