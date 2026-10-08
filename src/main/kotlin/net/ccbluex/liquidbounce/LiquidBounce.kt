@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.party.LocationReporter
 import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates
+import net.ccbluex.liquidbounce.features.chat.party.PartyStandIns
 import net.ccbluex.liquidbounce.features.chat.party.PartyStateReporter
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
@@ -297,6 +298,7 @@ object LiquidBounce : EventListener {
         LocationReporter
         PartyMemberStates
         PartyStateReporter
+        PartyStandIns
         ActiveServerList
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)

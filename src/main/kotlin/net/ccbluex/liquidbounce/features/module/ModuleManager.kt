@@ -218,7 +218,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles
-import net.ccbluex.liquidbounce.features.module.modules.render.ModulePartyESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProphuntESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProtectionZones
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap
@@ -636,7 +635,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleParticles,
             ModuleESP,
             ModuleLogoffSpot,
-            ModulePartyESP,
             ModuleFreeCam,
             ModuleSmoothCamera,
             ModuleFreeLook,
