@@ -71,6 +71,8 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import java.util.TreeSet
+import kotlin.random.Random
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 object GlobalSettingsClientChat : ToggleableValueGroup(
@@ -176,14 +178,25 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         chatClient.disconnect()
     }
 
+    private var reconnectAttempts = 0
+
     @Suppress("unused")
     private val repeatable = tickHandler(Dispatchers.IO) {
-        if (!chatClient.isConnected) {
-            chatClient.connect()
-        } else {
-            // Wait 5 seconds before retrying
+        if (chatClient.isConnected) {
+            if (chatClient.isLoggedIn) {
+                reconnectAttempts = 0
+            }
             delay(5.seconds)
+            return@tickHandler
         }
+
+        if (reconnectAttempts > 0) {
+            // Exponential backoff with jitter, so a server restart is not hit by every client at once
+            val backoff = (2.seconds * (1 shl (reconnectAttempts - 1).coerceAtMost(6))).coerceAtMost(2.minutes)
+            delay(backoff * Random.nextDouble(0.75, 1.25))
+        }
+        reconnectAttempts++
+        chatClient.connect()
     }
 
     @Suppress("unused")
@@ -261,6 +274,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     translation("liquidbounce.liquidchat.states.connected"),
                     NotificationEvent.Severity.INFO
                 )
+
+                chatClient.negotiate()
 
                 // When the token is not empty, we can try to login via JWT
                 if (jwtToken.isNotEmpty()) {

@@ -394,8 +394,8 @@ object CommandManager : EventListener {
     }
 
     /**
-     * Builds the usage lines for a command context, based on the Brigadier tree
-     * ([CommandDispatcher.getSmartUsage]).
+     * A path typed through an alias continues in a redirected child context, and a bare alias has no
+     * children of its own, so both are followed to the target.
      */
     private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
         val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()

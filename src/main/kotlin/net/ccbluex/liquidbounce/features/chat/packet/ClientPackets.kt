@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.chat.packet
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import java.util.UUID
 
 /**
  * AXOCHAT PROTOCOL
@@ -112,11 +115,277 @@ data class S2CSuccessPacket(
 /**
  * This packet may be sent at any time, but is usually a response to a failed action of the client.
  *
- * @param message Error message
+ * @param message error code; older servers sent `InvalidCharacter` as `{"InvalidCharacter": "x"}`
+ * @param detail extra information about the error (v2)
  */
 data class S2CErrorPacket(
 
     @SerializedName("message")
-    val message: String
+    val message: JsonElement?,
 
+    @SerializedName("detail")
+    val detail: String?
+
+) : AxochatPacket.S2C {
+
+    val code: String
+        get() = when {
+            message == null || message.isJsonNull -> "Internal"
+            message.isJsonPrimitive -> message.asString
+            message.isJsonObject -> message.asJsonObject.keySet().firstOrNull() ?: "Internal"
+            else -> message.toString()
+        }
+
+    val details: String?
+        get() = detail ?: message?.takeIf { it.isJsonObject }?.asJsonObject?.entrySet()?.firstOrNull()
+            ?.value?.takeIf { it.isJsonPrimitive }?.asString
+
+}
+
+data class S2CUserCountPacket(
+    @SerializedName("connections")
+    val connections: Int,
+    @SerializedName("logged_in")
+    val loggedIn: Int,
+) : AxochatPacket.S2C
+
+data class S2CHelloPacket(
+    @SerializedName("protocol")
+    val protocol: Int,
+) : AxochatPacket.S2C
+
+data class S2CWelcomePacket(
+    @SerializedName("user")
+    val user: ChatAuthor,
+    @SerializedName("staff")
+    val staff: Boolean,
+) : AxochatPacket.S2C
+
+data class S2CSettingsPacket(
+    @SerializedName("allow_messages")
+    val allowMessages: Boolean,
+    @SerializedName("hide_server")
+    val hideServer: Boolean,
+    @SerializedName("accept_friend_requests")
+    val acceptFriendRequests: Boolean,
+    @SerializedName("server_chat")
+    val serverChat: Boolean,
+) : AxochatPacket.S2C
+
+data class S2CChatMessagePacket(
+    @SerializedName("channel")
+    val channel: String,
+    @SerializedName("id")
+    val id: Long,
+    @SerializedName("time")
+    val time: Long,
+    @SerializedName("author")
+    val author: ChatAuthor,
+    @SerializedName("content")
+    val content: String,
+) : AxochatPacket.S2C
+
+data class ChatFriend(
+    @SerializedName("user")
+    val user: ChatUserRef,
+    @SerializedName("since")
+    val since: Long,
+    @SerializedName("online")
+    val online: Boolean,
+    @SerializedName("server")
+    val server: String?,
+)
+
+data class S2CFriendsPacket(
+    @SerializedName("friends")
+    val friends: List<ChatFriend>?,
+    @SerializedName("incoming")
+    val incoming: List<ChatUserRef>?,
+    @SerializedName("outgoing")
+    val outgoing: List<ChatUserRef>?,
+) : AxochatPacket.S2C
+
+data class S2CPresencePacket(
+    @SerializedName("user")
+    val user: String,
+    @SerializedName("online")
+    val online: Boolean,
+    @SerializedName("server")
+    val server: String?,
+) : AxochatPacket.S2C
+
+data class S2CBlocksPacket(
+    @SerializedName("users")
+    val users: List<ChatUserRef>?,
+) : AxochatPacket.S2C
+
+data class ChatGroupMember(
+    @SerializedName("user")
+    val user: ChatUserRef,
+    @SerializedName("role")
+    val role: String,
+    @SerializedName("online")
+    val online: Boolean,
+)
+
+data class ChatGroup(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("role")
+    val role: String,
+    @SerializedName("members")
+    val members: List<ChatGroupMember>?,
+)
+
+data class S2CGroupsPacket(
+    @SerializedName("groups")
+    val groups: List<ChatGroup>?,
+) : AxochatPacket.S2C
+
+data class PartyPlayer(
+    @SerializedName("uuid")
+    val uuid: UUID,
+    @SerializedName("name")
+    val name: String,
+)
+
+data class PartyMember(
+    @SerializedName("user")
+    val user: ChatUserRef,
+    @SerializedName("role")
+    val role: String,
+    @SerializedName("online")
+    val online: Boolean,
+    @SerializedName("muted")
+    val muted: Boolean,
+    @SerializedName("relation")
+    val relation: String,
+    @SerializedName("player")
+    val player: PartyPlayer?,
+    @SerializedName("server")
+    val server: String?,
+)
+
+data class PartyInfo(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("leader")
+    val leader: String,
+    @SerializedName("locked")
+    val locked: Boolean,
+    @SerializedName("pvp")
+    val pvp: Boolean,
+    @SerializedName("members")
+    val members: List<PartyMember>?,
+)
+
+data class S2CPartyPacket(
+    @SerializedName("party")
+    val party: PartyInfo?,
+) : AxochatPacket.S2C
+
+data class S2CPartyInvitePacket(
+    @SerializedName("party")
+    val party: String,
+    @SerializedName("from")
+    val from: ChatUserRef,
+    @SerializedName("expires")
+    val expires: Long,
+) : AxochatPacket.S2C
+
+data class S2CPartyWarpPacket(
+    @SerializedName("from")
+    val from: ChatUserRef,
+    @SerializedName("server")
+    val server: String,
+) : AxochatPacket.S2C
+
+data class PartyPosition(
+    @SerializedName("x")
+    val x: Double,
+    @SerializedName("y")
+    val y: Double,
+    @SerializedName("z")
+    val z: Double,
+    @SerializedName("yaw")
+    val yaw: Float,
+    @SerializedName("pitch")
+    val pitch: Float,
+    @SerializedName("dimension")
+    val dimension: String,
+)
+
+data class S2CPartyMemberStatePacket(
+    @SerializedName("member")
+    val member: String,
+    @SerializedName("position")
+    val position: PartyPosition?,
+    @SerializedName("status")
+    val status: JsonObject?,
+    @SerializedName("inventory")
+    val inventory: JsonObject?,
+) : AxochatPacket.S2C
+
+data class S2CPunishedPacket(
+    @SerializedName("kind")
+    val kind: String,
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("expires")
+    val expires: Long?,
+) : AxochatPacket.S2C
+
+data class ChatPunishment(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("kind")
+    val kind: String,
+    @SerializedName("ip")
+    val ip: String?,
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("issued_by")
+    val issuedBy: ChatUserRef?,
+    @SerializedName("created")
+    val created: Long,
+    @SerializedName("expires")
+    val expires: Long?,
+)
+
+data class S2CPunishmentsPacket(
+    @SerializedName("user")
+    val user: ChatUserRef,
+    @SerializedName("punishments")
+    val punishments: List<ChatPunishment>?,
+) : AxochatPacket.S2C
+
+data class ChatReport(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("reporter")
+    val reporter: ChatUserRef,
+    @SerializedName("target")
+    val target: ChatUserRef,
+    @SerializedName("channel")
+    val channel: String?,
+    @SerializedName("message")
+    val message: Long?,
+    @SerializedName("content")
+    val content: String?,
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("time")
+    val time: Long,
+)
+
+data class S2CReportsPacket(
+    @SerializedName("reports")
+    val reports: List<ChatReport>?,
+) : AxochatPacket.S2C
+
+data class S2CReportCreatedPacket(
+    @SerializedName("report")
+    val report: ChatReport,
 ) : AxochatPacket.S2C

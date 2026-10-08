@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
+import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -150,7 +151,10 @@ class ClientChatMessageEvent(
 }
 
 @Tag("clientChatError")
-class ClientChatErrorEvent(val error: String) : Event(), WebSocketEvent
+class ClientChatErrorEvent(val error: String, val code: String? = null) : Event(), WebSocketEvent
+
+@Tag("clientChatPacket")
+class ClientChatPacketEvent(val packet: AxochatPacket.S2C) : Event()
 
 @Tag("clientChatJwtToken")
 // Do not define as WebSocket event, because it contains sensitive data

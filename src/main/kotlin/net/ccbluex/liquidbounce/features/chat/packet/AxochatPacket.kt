@@ -41,3 +41,41 @@ data class AxoUser(
     @SerializedName("uuid")
     val uuid: UUID,
 )
+
+data class ChatUserRef(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("kind")
+    val kind: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("uuid")
+    val uuid: UUID,
+)
+
+data class ChatRole(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("staff")
+    val staff: Boolean,
+)
+
+data class ChatAuthor(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("kind")
+    val kind: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("uuid")
+    val uuid: UUID,
+    @SerializedName("roles")
+    val roles: List<ChatRole>?,
+    @SerializedName("highlight")
+    val highlight: Boolean,
+) {
+    fun toAxoUser() = AxoUser(name, uuid)
+    fun toUserRef() = ChatUserRef(id, kind, name, uuid)
+}

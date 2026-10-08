@@ -115,15 +115,13 @@ class PacketDeserializer : JsonDeserializer<AxochatPacket> {
      * @throws JsonParseException if json is not in the expected format of `typeofT`
      */
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext?): AxochatPacket? {
-        val packetObject = json.asJsonObject
-        val packetName = packetObject.get("m").asString
+        val packetObject = json.takeIf { it.isJsonObject }?.asJsonObject ?: return null
+        val packetName = packetObject.get("m")?.takeIf { it.isJsonPrimitive }?.asString ?: return null
+        val packetClass = packetRegistry[packetName] ?: return null
 
-        if (!packetRegistry.containsKey(packetName)) return null
+        val content = packetObject.get("c")?.takeIf { it.isJsonObject } ?: EMPTY_JSON_OBJECT
 
-        if (!packetObject.has("c")) packetObject.add("c", EMPTY_JSON_OBJECT)
-
-        return publicGson.fromJson(packetObject.get("c"), packetRegistry[packetName])
-
+        return publicGson.fromJson(content, packetClass)
     }
 
 }
