@@ -94,6 +94,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PartyUpdateEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
@@ -232,6 +233,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClientChatMessageEvent::class.java,
     ClientChatErrorEvent::class.java,
     ClientChatPacketEvent::class.java,
+    PartyUpdateEvent::class.java,
     WorldChangeEvent::class.java,
     AccountManagerMessageEvent::class.java,
     AccountManagerAdditionResultEvent::class.java,

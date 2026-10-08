@@ -1,11 +1,13 @@
 import type {
     BedState,
+    ChatAuthor,
     ConfigurableSetting,
     HudComponent,
     ItemStack,
     MinecraftKey,
     MinecraftKeyboardKey,
     MinecraftMouseKey,
+    PartySnapshot,
     PlayerData,
     Proxy,
     Screen,
@@ -37,6 +39,7 @@ export interface EventMap {
     clientChatStateChange: ClientChatStateChangeEvent;
     clientChatMessage: ClientChatMessageEvent;
     clientChatError: ClientChatErrorEvent;
+    partyUpdate: PartyUpdateEvent;
     accountManagerMessage: AccountManagerMessageEvent;
     accountManagerLogin: AccountManagerLoginEvent;
     accountManagerAddition: AccountManagerAdditionEvent;
@@ -243,13 +246,19 @@ export interface ClientChatMessageEvent {
         uuid: string;
     };
     message: string;
-    chatGroup: "PublicChat" | "PrivateChat";
+    chatGroup: "PublicChat" | "PrivateChat" | "ServerChat" | "PartyChat" | "GroupChat";
     // Not "public"/"private" because the EnumChoiceSerializer in Kotlin ignores @SerializedName annotations, bug?
+    channel?: string;
+    author?: ChatAuthor;
+    id?: number;
 }
 
 export interface ClientChatErrorEvent {
     error: string;
+    code?: string;
 }
+
+export type PartyUpdateEvent = PartySnapshot;
 
 export interface SessionEvent {
     session: Session;

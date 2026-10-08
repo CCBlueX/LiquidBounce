@@ -86,6 +86,7 @@ object PartyManager : EventListener {
         val previous = party
         party = newParty
         ChatSession.remember(newParty?.members.orEmpty().map { it.user })
+        PartyMemberStates.publish(newParty)
 
         val allies = newParty?.takeIf { !it.pvp }?.members.orEmpty().filter { it.relation != "self" }
         allyUuids = allies.mapNotNullTo(hashSetOf()) { it.player?.uuid }
@@ -149,7 +150,10 @@ object PartyManager : EventListener {
     @Suppress("unused")
     private val stateHandler = handler<ClientChatStateChange> { event ->
         if (event.state == ClientChatStateChange.State.DISCONNECTED) {
-            party = null
+            if (party != null) {
+                party = null
+                PartyMemberStates.publish(null)
+            }
             allyUuids = emptySet()
             allyNames = emptySet()
             invites.clear()

@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.chat.packet.ChatAuthor
+import net.ccbluex.liquidbounce.features.chat.packet.PartyInfo
+import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates.MemberView
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -171,6 +173,9 @@ class ClientChatErrorEvent(val error: String, val code: String? = null) : Event(
 
 @Tag("clientChatPacket")
 class ClientChatPacketEvent(val packet: AxochatPacket.S2C) : Event()
+
+@Tag("partyUpdate")
+class PartyUpdateEvent(val party: PartyInfo?, val states: Map<String, MemberView>) : Event(), WebSocketEvent
 
 @Tag("accountManagerMessage")
 class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
