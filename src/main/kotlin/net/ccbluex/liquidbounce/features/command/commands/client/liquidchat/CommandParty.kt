@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.CommandDispatcher
@@ -29,7 +28,6 @@ import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
-import net.ccbluex.liquidbounce.features.command.arguments.BooleanArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
@@ -49,8 +47,8 @@ private val partyMembers: SuggestionProvider<ClientCommandSource> = suggestions 
     PartyManager.others.map { it.user.name }
 }
 
-private val partyInviters: SuggestionProvider<ClientCommandSource> = suggestions {
-    PartyManager.invites.values.map { it.from.name }
+private val partyPlayers: SuggestionProvider<ClientCommandSource> = suggestions {
+    PartyManager.invites.values.map { it.from.name } + ChatSession.knownNames() + ClientCommandSource.onlinePlayerNames
 }
 
 /**
@@ -62,48 +60,23 @@ object CommandParty : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("party", aliases = listOf("p")) {
-            literal("invite") {
-                argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
-                    exec { ctx ->
-                        sendChatPacket(C2SPartyPacket("invite", user = ctx.get(user)))
-                        1
-                    }
-                }
+            exec {
+                printParty()
+                1
             }
-            inviteAnswer("join", "accept")
-            inviteAnswer("decline", "decline")
-            memberAction("kick") { C2SPartyPacket("kick", user = it.user.id) }
-            memberAction("promote") { C2SPartyPacket("promote", user = it.user.id, admin = true) }
-            memberAction("demote") { C2SPartyPacket("promote", user = it.user.id, admin = false) }
-            memberAction("setleader") { C2SPartyPacket("transfer", user = it.user.id) }
-            memberAction("mute") { C2SPartyPacket("mute", user = it.user.id, muted = true) }
-            memberAction("unmute") { C2SPartyPacket("mute", user = it.user.id, muted = false) }
             simpleAction("leave") { C2SPartyPacket("leave") }
-            simpleAction("lock") { C2SPartyPacket("lock", locked = true) }
-            simpleAction("unlock") { C2SPartyPacket("lock", locked = false) }
             simpleAction("warp") { C2SPartyPacket("warp") }
             simpleAction("disband") { C2SPartyPacket("disband") }
-            literal("pvp") {
-                optional("enabled", BooleanArgumentType("enabled")) { enabled ->
-                    exec { ctx ->
-                        val party = PartyManager.party ?: throw CommandException(t("notInParty"))
-                        sendChatPacket(C2SPartyPacket("pvp", enabled = ctx.get(enabled) ?: !party.pvp))
-                        1
-                    }
-                }
-            }
-            literal("chat") {
+            literal("lock") {
                 exec {
-                    ChatSession.channel = if (ChatSession.channel == ChatSession.PARTY) {
-                        ChatSession.GLOBAL
-                    } else {
-                        ChatSession.PARTY
-                    }
-                    printLine(regular(t("chat.${ChatSession.channel}")))
+                    val party = PartyManager.party ?: throw CommandException(t("notInParty"))
+                    sendChatPacket(C2SPartyPacket("lock", locked = !party.locked))
                     1
                 }
             }
-            literal("inventory", aliases = listOf("inv")) {
+            memberAction("kick") { C2SPartyPacket("kick", user = it.user.id) }
+            memberAction("leader") { C2SPartyPacket("transfer", user = it.user.id) }
+            literal("inv", aliases = listOf("inventory")) {
                 requires { it.isIngame }
                 argument("member", ClientStringArgumentType.word(), partyMembers) { member ->
                     exec { ctx ->
@@ -112,26 +85,27 @@ object CommandParty : CommandRegistrar {
                     }
                 }
             }
-            literal("list", aliases = listOf("status")) {
-                exec {
-                    printParty()
+            argument("player", ClientStringArgumentType.word(), partyPlayers) { player ->
+                exec { ctx ->
+                    inviteOrJoin(ctx.get(player))
                     1
                 }
             }
         }
     }
 
-    private fun CmdLiteralScope.inviteAnswer(name: String, action: String) = literal(name) {
-        argument("user", ClientStringArgumentType.word(), partyInviters) { user ->
-            exec { ctx ->
-                val reference = ctx.get(user)
-                val invite = PartyManager.invites[reference]
-                    ?: PartyManager.invites.values.firstOrNull { it.from.name.equals(reference, true) }
-                    ?: throw CommandException(t("noInvite", reference))
-                PartyManager.invites.remove(invite.party)
-                sendChatPacket(C2SPartyPacket(action, party = invite.party))
-                1
-            }
+    /**
+     * Joins the party of [reference] if they invited us, otherwise invites them.
+     */
+    private fun inviteOrJoin(reference: String) {
+        val invite = PartyManager.invites.values.firstOrNull {
+            it.from.id == reference || it.from.name.equals(reference, true)
+        }
+        if (invite != null) {
+            PartyManager.invites.remove(invite.party)
+            sendChatPacket(C2SPartyPacket("accept", party = invite.party))
+        } else {
+            sendChatPacket(C2SPartyPacket("invite", user = reference))
         }
     }
 
@@ -161,7 +135,7 @@ object CommandParty : CommandRegistrar {
 
     private fun CmdI18n.showInventory(member: PartyMember) {
         val inventory = PartyMemberStates[member.user.id]?.inventory
-            ?: throw CommandException(t("inventory.unknown", member.user.name))
+            ?: throw CommandException(t("inv.unknown", member.user.name))
         val viewed = PartyItems.viewedPlayer(member, inventory, world)
         mc.schedule {
             mc.gui.setScreen(ViewedInventoryScreen { viewed })
@@ -173,10 +147,9 @@ object CommandParty : CommandRegistrar {
         val members = party.members.orEmpty()
 
         printLine(regular(t(
-            "list.header",
+            "header",
             variable(members.size.toString()),
-            t(if (party.pvp) "list.pvpOn" else "list.pvpOff"),
-            t(if (party.locked) "list.locked" else "list.open"),
+            t(if (party.locked) "locked" else "open"),
         )))
         for (member in members) {
             printLine(
@@ -185,7 +158,6 @@ object CommandParty : CommandRegistrar {
                 variable(member.user.name),
                 regular(" ${member.role}, ${member.relation}"),
                 regular(member.server?.let { " ($it)" } ?: ""),
-                regular(if (member.muted) " [muted]" else ""),
             )
         }
     }

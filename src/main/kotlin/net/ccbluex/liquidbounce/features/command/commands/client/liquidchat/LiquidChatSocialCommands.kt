@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.arguments.StringArgumentType
@@ -26,11 +25,14 @@ import net.ccbluex.liquidbounce.features.chat.ServerJoin
 import net.ccbluex.liquidbounce.features.chat.packet.C2SBlockPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ChatFriend
 import net.ccbluex.liquidbounce.features.chat.packet.ChatGroup
+import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -38,89 +40,86 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 
-internal fun CmdLiteralScope.friendCommands() = literal("friend") {
-    for (action in listOf("add", "remove", "accept", "decline")) {
-        friendAction(action)
-    }
-    literal("list") {
-        exec {
-            val header = t("friend.list.header", variable(ChatSession.friends.size.toString()))
-            printFriendList(header, t("friend.list.join"))
-            for (request in ChatSession.incomingRequests) {
-                printLine(regular(t("friend.list.incoming", variable(request.name))))
-            }
-            1
-        }
-    }
-    literal("join") {
-        argument("user", ClientStringArgumentType.word(), chatFriends) { user ->
-            exec { ctx ->
-                val friend = ChatSession.findFriend(ctx.get(user))
-                    ?: throw CommandException(t("friend.join.unknown", ctx.get(user)))
-                val server = friend.server ?: throw CommandException(t("friend.join.noServer", friend.user.name))
-                ServerJoin.confirm(server, friend.user.name)
-                1
-            }
-        }
-    }
-}
-
-private fun CmdLiteralScope.friendAction(action: String) = literal(action) {
-    argument("user", ClientStringArgumentType.word(), if (action == "add") chatUsers else chatFriends) { user ->
+/**
+ * One command for every step of a friendship: request, accept, withdraw or end it, whichever applies.
+ */
+internal fun CmdLiteralScope.friendCommand() = literal("friend") {
+    argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
         exec { ctx ->
             val reference = ctx.get(user)
-            val target = ChatSession.findFriend(reference)?.user?.id
-                ?: ChatSession.incomingRequests.firstOrNull { it.name.equals(reference, true) }?.id
-                ?: reference
-            sendChatPacket(C2SFriendPacket(if (action == "add") "request" else action, target))
+            val friend = ChatSession.findFriend(reference)
+            val incoming = ChatSession.incomingRequests.firstOrNull { it.name.equals(reference, true) }
+            val outgoing = ChatSession.outgoingRequests.firstOrNull { it.name.equals(reference, true) }
+            val packet = when {
+                friend != null -> C2SFriendPacket("remove", friend.user.id)
+                incoming != null -> C2SFriendPacket("accept", incoming.id)
+                outgoing != null -> C2SFriendPacket("remove", outgoing.id)
+                else -> C2SFriendPacket("request", reference)
+            }
+            sendChatPacket(packet)
             1
         }
     }
 }
 
-private fun printFriendList(header: MutableComponent, joinLabel: MutableComponent) {
-    printLine(regular(header))
-    for (friend in ChatSession.friends.sortedWith(compareBy({ !it.online }, { it.user.name.lowercase() }))) {
-        val server = friend.server
-        val join = if (server != null) {
-            ChatNotices.button(joinLabel.copy(), ChatFormatting.GREEN) { ServerJoin.confirm(server, friend.user.name) }
-        } else {
-            Component.empty()
-        }
-
-        printLine(
-            Component.literal(if (friend.online) "● " else "○ ")
-                .withStyle(if (friend.online) ChatFormatting.GREEN else ChatFormatting.DARK_GRAY),
-            variable(friend.user.name),
-            regular(server?.let { " ($it)" } ?: ""),
-            join,
-        )
+internal fun CmdLiteralScope.friendsCommand() = literal("friends") {
+    exec {
+        printLine(regular(t("friends.header", variable(ChatSession.friends.size.toString()))))
+        ChatSession.friends
+            .sortedWith(compareBy({ !it.online }, { it.user.name.lowercase() }))
+            .forEach { printFriend(it, t("friends.join")) }
+        ChatSession.incomingRequests.forEach { printRequest(it, t("friends.incoming", variable(it.name))) }
+        1
     }
 }
 
-internal fun CmdLiteralScope.blockCommands() {
-    literal("block") {
-        argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
-            exec { ctx ->
-                sendChatPacket(C2SBlockPacket(ctx.get(user), true))
-                1
-            }
+private fun printFriend(friend: ChatFriend, joinLabel: MutableComponent) {
+    val server = friend.server
+    val join = if (server != null) {
+        ChatNotices.button(joinLabel, ChatFormatting.GREEN) { ServerJoin.confirm(server, friend.user.name) }
+    } else {
+        Component.empty()
+    }
+
+    printLine(
+        Component.literal(if (friend.online) "● " else "○ ")
+            .withStyle(if (friend.online) ChatFormatting.GREEN else ChatFormatting.DARK_GRAY),
+        variable(friend.user.name),
+        regular(server?.let { " ($it)" } ?: ""),
+        join,
+    )
+}
+
+private fun printRequest(request: ChatUserRef, text: MutableComponent) = printLine(
+    regular(text),
+    ChatNotices.button(translation("liquidbounce.liquidchat.accept"), ChatFormatting.GREEN) {
+        GlobalSettingsClientChat.chatClient.sendPacket(C2SFriendPacket("accept", request.id))
+    },
+)
+
+/**
+ * Blocks or unblocks a user; without one, lists who is blocked.
+ */
+internal fun CmdLiteralScope.blockCommand() = literal("block") {
+    exec {
+        printLine(regular(t("block.header", variable(ChatSession.blocks.size.toString()))))
+        ChatSession.blocks.forEach { printLine(regular("- "), variable(it.name)) }
+        1
+    }
+    argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
+        exec { ctx ->
+            val reference = ctx.get(user)
+            val blocked = ChatSession.blocks.firstOrNull { it.id == reference || it.name.equals(reference, true) }
+            sendChatPacket(C2SBlockPacket(blocked?.id ?: reference, blocked == null))
+            1
         }
     }
-    literal("unblock") {
-        argument("user", ClientStringArgumentType.word(), chatBlocks) { user ->
-            exec { ctx ->
-                val reference = ctx.get(user)
-                val target = ChatSession.blocks.firstOrNull { it.name.equals(reference, true) }?.id ?: reference
-                sendChatPacket(C2SBlockPacket(target, false))
-                1
-            }
-        }
-    }
-    literal("blocks") {
-        exec {
-            printLine(regular(t("blocks.header", variable(ChatSession.blocks.size.toString()))))
-            ChatSession.blocks.forEach { printLine(regular("- "), variable(it.name)) }
+}
+
+internal fun CmdLiteralScope.serverCommand() = literal("server") {
+    argument("message", StringArgumentType.greedyString()) { message ->
+        exec { ctx ->
+            GlobalSettingsClientChat.send(ChatSession.SERVER, ctx.get(message))
             1
         }
     }
@@ -178,6 +177,17 @@ internal fun CmdLiteralScope.groupCommands() = literal("group") {
             }
         }
     }
+    literal("say") {
+        argument("group", ClientStringArgumentType.string(), chatGroups) { group ->
+            argument("message", StringArgumentType.greedyString()) { message ->
+                exec { ctx ->
+                    val target = group(ctx.get(group))
+                    GlobalSettingsClientChat.send(ChatSession.GROUP_PREFIX + target.id, ctx.get(message))
+                    1
+                }
+            }
+        }
+    }
     literal("list") {
         exec {
             printLine(regular(t("group.list.header", variable(ChatSession.groups.size.toString()))))
@@ -191,37 +201,6 @@ internal fun CmdLiteralScope.groupCommands() = literal("group") {
                 )
             }
             1
-        }
-    }
-}
-
-internal fun CmdLiteralScope.channelCommands() = literal("channel") {
-    for (channel in listOf(ChatSession.GLOBAL, ChatSession.SERVER, ChatSession.PARTY)) {
-        literal(channel) {
-            exec {
-                ChatSession.channel = channel
-                printLine(regular(t("channel.set", variable(channel))))
-                1
-            }
-        }
-    }
-    literal("group") {
-        argument("group", ClientStringArgumentType.string(), chatGroups) { group ->
-            exec { ctx ->
-                val target = group(ctx.get(group))
-                ChatSession.channel = ChatSession.GROUP_PREFIX + target.id
-                printLine(regular(t("channel.set", variable(target.name))))
-                1
-            }
-        }
-    }
-    literal("user") {
-        argument("user", ClientStringArgumentType.word(), chatUsers) { user ->
-            exec { ctx ->
-                ChatSession.channel = ChatSession.USER_PREFIX + ctx.get(user)
-                printLine(regular(t("channel.set", variable(ctx.get(user)))))
-                1
-            }
         }
     }
 }

@@ -45,23 +45,25 @@ class CommandLiquidChatTest {
 
     @Test
     fun `social subcommands parse`() {
-        parses("liquidchat friend add Notch")
-        parses("lc friend list")
+        parses("liquidchat friend Notch")
+        parses("lc friends")
+        parses("lc block")
         parses("lc block Spammer")
         parses("lc group create Bed Wars Team")
         parses("lc group invite \"Bed Wars Team\" Notch")
-        parses("lc channel group Bedwars")
+        parses("lc group say Bedwars gg")
+        parses("lc server anyone here?")
         parses("lc report Spammer sells coins in chat")
     }
 
     @Test
     fun `party subcommands parse`() {
-        parses("party invite Notch")
-        parses("p join Notch")
-        parses("party pvp")
-        parses("party pvp off")
-        parses("party setleader Notch")
-        parses("party status")
+        parses("party")
+        parses("party Notch")
+        parses("p Notch")
+        parses("party leader Notch")
+        parses("party kick Notch")
+        parses("party lock")
         parses("party warp")
     }
 

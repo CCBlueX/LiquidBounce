@@ -64,10 +64,6 @@ internal val chatFriends: SuggestionProvider<ClientCommandSource> = suggestions 
     ChatSession.friends.map { it.user.name }
 }
 
-internal val chatBlocks: SuggestionProvider<ClientCommandSource> = suggestions {
-    ChatSession.blocks.map { it.name }
-}
-
 internal val chatGroups: SuggestionProvider<ClientCommandSource> = suggestions {
     ChatSession.groups.map { it.name }
 }
@@ -79,10 +75,11 @@ object CommandLiquidChat : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("liquidchat", aliases = listOf("lc")) {
-            friendCommands()
-            blockCommands()
+            friendCommand()
+            friendsCommand()
+            blockCommand()
             groupCommands()
-            channelCommands()
+            serverCommand()
             reportCommand()
             moderationCommands()
         }

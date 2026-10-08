@@ -132,7 +132,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     fun notice(message: Component) = writeChat(PlainText.EMPTY, message)
 
-    private fun send(channel: String, message: String) {
+    fun send(channel: String, message: String) {
         if (!checkLoggedIn()) {
             return
         }
@@ -150,7 +150,18 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         dispatcher.register("chat") {
             argument("message", StringArgumentType.greedyString()) { message ->
                 exec { ctx ->
-                    send(ChatSession.channel, ctx.get(message))
+                    send(ChatSession.GLOBAL, ctx.get(message))
+                    1
+                }
+            }
+        }
+    }
+
+    private fun registerPartyChatCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("pc") {
+            argument("message", StringArgumentType.greedyString()) { message ->
+                exec { ctx ->
+                    send(ChatSession.PARTY, ctx.get(message))
                     1
                 }
             }
@@ -173,6 +184,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     init {
         CommandManager.register(::registerChatWriteCommand)
         CommandManager.register(::registerMessageCommand)
+        CommandManager.register(::registerPartyChatCommand)
     }
 
     private fun sendSettings() {

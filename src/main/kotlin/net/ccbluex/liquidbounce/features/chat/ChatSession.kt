@@ -60,12 +60,6 @@ object ChatSession : EventListener {
     var settings: S2CSettingsPacket? = null
         private set
 
-    /**
-     * Channel `.chat` writes to.
-     */
-    @Volatile
-    var channel = GLOBAL
-
     @Volatile
     var friends: List<ChatFriend> = emptyList()
         private set
@@ -170,7 +164,6 @@ object ChatSession : EventListener {
             self = null
             isStaff = false
             settings = null
-            channel = GLOBAL
             friends = emptyList()
             incomingRequests = emptyList()
             outgoingRequests = emptyList()
