@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.client.liquidchat.CommandLiquidChat
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
@@ -163,6 +164,7 @@ object CommandManager : EventListener {
         register(CommandRemoteView)
         register(CommandDebug)
         register(CommandFriend)
+        register(CommandLiquidChat)
         register(CommandClient)
         register(CommandConfig)
         register(CommandLocalConfig)

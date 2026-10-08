@@ -102,6 +102,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
     private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
+    private val hideServer by boolean("HideServer", false).onChanged { sendSettings() }
+    private val acceptFriendRequests by boolean("AcceptFriendRequests", true).onChanged { sendSettings() }
 
     val chatClient = AxochatClient { allowMessages }
     private val prefix: Component = "".asText()
@@ -175,7 +177,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun sendSettings() {
         if (chatClient.isLoggedIn && chatClient.isModern) {
-            chatClient.sendPacket(C2SSettingsPacket(allowMessages = allowMessages, serverChat = serverChat))
+            chatClient.sendPacket(C2SSettingsPacket(allowMessages, hideServer, acceptFriendRequests, serverChat))
         }
     }
 
