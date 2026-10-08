@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ChatAuthor
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -140,6 +141,12 @@ class ClientChatMessageEvent(
     val user: AxoUser,
     val message: String,
     val chatGroup: ChatGroup,
+    /**
+     * `null` on protocol v1, as are [author] and [id].
+     */
+    val channel: String? = null,
+    val author: ChatAuthor? = null,
+    val id: Long? = null,
 ) : Event(), WebSocketEvent {
     enum class ChatGroup(override val tag: String) : Tagged {
         @SerializedName("public")
@@ -147,6 +154,15 @@ class ClientChatMessageEvent(
 
         @SerializedName("private")
         PRIVATE_CHAT("PrivateChat"),
+
+        @SerializedName("server")
+        SERVER_CHAT("ServerChat"),
+
+        @SerializedName("party")
+        PARTY_CHAT("PartyChat"),
+
+        @SerializedName("group")
+        GROUP_CHAT("GroupChat"),
     }
 }
 

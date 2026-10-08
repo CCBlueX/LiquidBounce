@@ -17,8 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 package net.ccbluex.liquidbounce.features.global
 
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
@@ -40,39 +43,35 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.AxochatClient
+import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
+import net.ccbluex.liquidbounce.features.chat.ChatSession
+import net.ccbluex.liquidbounce.features.chat.packet.C2SSettingsPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.item.component.ResolvableProfile
-import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.arguments.StringArgumentType
-import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.collection.Filter
 import java.util.TreeSet
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
@@ -101,7 +100,10 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
-    private val chatClient = AxochatClient()
+    private val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
+    private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
+
+    val chatClient = AxochatClient { allowMessages }
     private val prefix: Component = "".asText()
         .withStyle(ChatFormatting.RESET).withStyle(ChatFormatting.GRAY)
         .append(this.name.asPlainText(ChatFormatting.BLUE))
@@ -112,29 +114,55 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val filteredNames = hashSetOf<String>()
 
+    /**
+     * Prints why the chat cannot be used right now.
+     */
+    fun checkLoggedIn(): Boolean {
+        val reason = when {
+            !chatClient.isConnected -> "liquidbounce.liquidchat.notConnected"
+            !chatClient.isLoggedIn -> "liquidbounce.liquidchat.notLoggedIn"
+            else -> return true
+        }
+
+        chat(prefix, translation(reason).withStyle(ChatFormatting.GRAY), metadata = exceptionData)
+        return false
+    }
+
+    fun notice(message: Component) = writeChat(PlainText.EMPTY, message)
+
+    private fun send(channel: String, message: String) {
+        if (!checkLoggedIn()) {
+            return
+        }
+
+        if (!chatClient.sendMessage(channel, message)) {
+            notice(translation("liquidbounce.liquidchat.requiresV2").withStyle(ChatFormatting.GRAY))
+        } else if (!chatClient.isModern && channel.startsWith(ChatSession.USER_PREFIX)) {
+            // v1 servers do not echo direct messages
+            val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
+            writeChat(ChatMessageFormat.directMessagePrefix(receiver), regular(message))
+        }
+    }
+
     private fun registerChatWriteCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("chat") {
             argument("message", StringArgumentType.greedyString()) { message ->
-                execSuspend { ctx ->
-                    if (!chatClient.isConnected) {
-                        chat(
-                            prefix,
-                            translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
-                            metadata = exceptionData
-                        )
-                        return@execSuspend
-                    }
+                exec { ctx ->
+                    send(ChatSession.channel, ctx.get(message))
+                    1
+                }
+            }
+        }
+    }
 
-                    if (!chatClient.isLoggedIn) {
-                        chat(
-                            prefix,
-                            translation("liquidbounce.liquidchat.notLoggedIn").withStyle(ChatFormatting.GRAY),
-                            metadata = exceptionData
-                        )
-                        return@execSuspend
+    private fun registerMessageCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("msg", aliases = listOf("whisper")) {
+            argument("user", StringArgumentType.word()) { user ->
+                argument("message", StringArgumentType.greedyString()) { message ->
+                    exec { ctx ->
+                        send(ChatSession.USER_PREFIX + ctx.get(user), ctx.get(message))
+                        1
                     }
-
-                    chatClient.sendMessage(ctx.get(message))
                 }
             }
         }
@@ -142,6 +170,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     init {
         CommandManager.register(::registerChatWriteCommand)
+        CommandManager.register(::registerMessageCommand)
+    }
+
+    private fun sendSettings() {
+        if (chatClient.isLoggedIn && chatClient.isModern) {
+            chatClient.sendPacket(C2SSettingsPacket(allowMessages = allowMessages, serverChat = serverChat))
+        }
     }
 
     override fun onEnabled() {
@@ -204,32 +239,14 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
             ObjectContents(PlayerSprite(resolvableProfile, false), optional())
         ).copyable(copyContent = event.user.uuid.toString())
 
-        fun namePart(formatting: ChatFormatting) =
-            event.user.name.asPlainText(
-                Style.EMPTY + formatting +
-                    ClickEvent.CopyToClipboard(event.user.name) +
-                    HoverEvent.ShowText(event.user.name.asPlainText())
-            )
-
-        val prefix = when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
-                textOf(
-                    playerSpritePart,
-                    PlainText.SPACE,
-                    namePart(ChatFormatting.GRAY),
-                    " ▸ ".asPlainText(ChatFormatting.DARK_GRAY),
-                )
-            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
-                textOf(
-                    "[".asPlainText(ChatFormatting.DARK_GRAY),
-                    playerSpritePart,
-                    PlainText.SPACE,
-                    namePart(ChatFormatting.BLUE),
-                    "] ".asPlainText(ChatFormatting.DARK_GRAY),
-                )
+        val prefix = ChatMessageFormat.messagePrefix(event, playerSpritePart)
+        val content = if (event.author?.highlight == true) {
+            event.message.asText().withStyle(ChatFormatting.WHITE)
+        } else {
+            regular(event.message)
         }
 
-        writeChat(prefix, regular(event.message).copyable(copyContent = event.message))
+        writeChat(prefix, content.copyable(copyContent = event.message))
 
         if (event.chatGroup !in autoTranslate) {
             return@suspendHandler
@@ -300,6 +317,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 login()
             }
             ClientChatStateChange.State.LOGGED_IN -> {
+                accountLoginPending = false
+                sendSettings()
                 notification(
                     "LiquidChat",
                     translation("liquidbounce.liquidchat.states.loggedIn"),

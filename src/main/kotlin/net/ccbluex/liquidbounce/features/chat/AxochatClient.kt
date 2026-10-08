@@ -124,7 +124,7 @@ private val KNOWN_ERRORS = setOf(
     "RequestsDisabled", "GroupFull", "InvalidName", "TooLarge",
 )
 
-class AxochatClient {
+class AxochatClient(private val allowMessages: () -> Boolean) {
 
     private var channel: Channel? = null
 
@@ -310,21 +310,19 @@ class AxochatClient {
     fun requestMojangLogin() = sendPacket(C2SRequestMojangInfoPacket())
 
     /**
-     * Send chat message to the global channel
+     * Sends [message] to [channel]. v1 servers only know the global channel and direct messages.
+     *
+     * @return false if the channel needs protocol v2
      */
-    fun sendMessage(message: String) = if (isModern) {
-        sendPacket(C2SChatMessagePacket("global", message))
-    } else {
-        sendPacket(C2SMessagePacket(message))
-    }
-
-    /**
-     * Send private chat message to server
-     */
-    fun sendPrivateMessage(receiver: String, message: String) = if (isModern) {
-        sendPacket(C2SChatMessagePacket("user/$receiver", message))
-    } else {
-        sendPacket(C2SPrivateMessagePacket(receiver, message))
+    fun sendMessage(channel: String, message: String): Boolean {
+        when {
+            isModern -> sendPacket(C2SChatMessagePacket(channel, message))
+            channel == ChatSession.GLOBAL -> sendPacket(C2SMessagePacket(message))
+            channel.startsWith(ChatSession.USER_PREFIX) ->
+                sendPacket(C2SPrivateMessagePacket(channel.removePrefix(ChatSession.USER_PREFIX), message))
+            else -> return false
+        }
+        return true
     }
 
     /**
@@ -356,7 +354,7 @@ class AxochatClient {
      */
     fun loginAccount(accessToken: String) {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-        sendPacket(C2SLoginAccountPacket(accessToken, allowMessages = true))
+        sendPacket(C2SLoginAccountPacket(accessToken, allowMessages = allowMessages()))
     }
 
     /**
@@ -389,7 +387,7 @@ class AxochatClient {
                         C2SLoginMojangPacket(
                             mc.user.name,
                             mc.user.profileId,
-                            allowMessages = true
+                            allowMessages = allowMessages()
                         )
                     )
                 }.onFailure { cause ->
@@ -408,6 +406,14 @@ class AxochatClient {
                 ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT))
             is S2CPrivateMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(packet.user, packet.content,
                 ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT))
+            is S2CChatMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(
+                packet.author.toAxoUser(),
+                packet.content,
+                chatGroupOf(packet.channel),
+                packet.channel,
+                packet.author,
+                packet.id,
+            ))
             is S2CErrorPacket -> EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code))
             is S2CSuccessPacket -> {
                 when (packet.reason) {
@@ -426,6 +432,14 @@ class AxochatClient {
         }
 
         EventManager.callEvent(ClientChatPacketEvent(packet))
+    }
+
+    private fun chatGroupOf(channel: String) = when {
+        channel == ChatSession.SERVER -> ClientChatMessageEvent.ChatGroup.SERVER_CHAT
+        channel == ChatSession.PARTY -> ClientChatMessageEvent.ChatGroup.PARTY_CHAT
+        channel.startsWith(ChatSession.GROUP_PREFIX) -> ClientChatMessageEvent.ChatGroup.GROUP_CHAT
+        channel.startsWith(ChatSession.USER_PREFIX) -> ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT
+        else -> ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT
     }
 
     private fun translateError(packet: S2CErrorPacket): String {
