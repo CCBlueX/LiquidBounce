@@ -21,12 +21,12 @@ void main() {
     float innerRatio = clamp(float(vUv2.y) / INNER_RATIO_SCALE, 0.0, 1.0);
     // Match rounded_rect AA strategy: one-sided smoothing inside the shape boundary.
     float dOuter = dist - 1.0;
-    float outerAlpha = smoothstep(0.0, -aa, dOuter);
+    float outerAlpha = 1.0 - smoothstep(-aa, 0.0, dOuter);
 
     float innerAlpha = 1.0;
     if (innerRatio > 0.0) {
         float dInner = innerRatio - dist;
-        innerAlpha = smoothstep(0.0, -aa, dInner);
+        innerAlpha = 1.0 - smoothstep(-aa, 0.0, dInner);
     }
     float alpha = outerAlpha * innerAlpha;
 
