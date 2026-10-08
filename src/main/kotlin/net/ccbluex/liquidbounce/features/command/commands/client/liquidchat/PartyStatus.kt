@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
 import net.ccbluex.liquidbounce.features.chat.party.PartyItems
 import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates
+import net.ccbluex.liquidbounce.features.chat.party.amount
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
@@ -140,8 +141,8 @@ internal object PartyStatus {
             return null
         }
         val status = PartyMemberStates[member.user.id]?.status ?: return null
-        val health = status["health"]?.asFloat ?: return null
-        return (health + (status["absorption"]?.asFloat ?: 0f)).roundToInt()
+        val health = status.amount("health") ?: return null
+        return (health + (status.amount("absorption") ?: 0f)).roundToInt()
     }
 
     private fun CmdI18n.actions(party: PartyInfo, ownRole: String?) = Component.empty().apply {

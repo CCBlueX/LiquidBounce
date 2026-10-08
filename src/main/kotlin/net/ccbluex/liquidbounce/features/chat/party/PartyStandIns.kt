@@ -128,9 +128,9 @@ object PartyStandIns : EventListener, Iterable<RemotePlayer> {
         val status = state?.status
         if (status != null && status !== standIn.status) {
             standIn.status = status
-            status["max_health"]?.asFloat?.let { player.getAttribute(Attributes.MAX_HEALTH)?.baseValue = it.toDouble() }
-            status["health"]?.asFloat?.let { player.health = it }
-            status["absorption"]?.asFloat?.let { player.absorptionAmount = it }
+            status.amount("max_health")?.let { player.getAttribute(Attributes.MAX_HEALTH)?.baseValue = it.toDouble() }
+            status.amount("health")?.let { player.health = it }
+            status.amount("absorption")?.let { player.absorptionAmount = it }
             player.setItemSlot(EquipmentSlot.MAINHAND, PartyItems.decode(status["main_hand"], level))
             player.setItemSlot(EquipmentSlot.OFFHAND, PartyItems.decode(status["off_hand"], level))
             status["armor_items"]?.takeIf { it.isJsonArray }?.asJsonArray?.forEachIndexed { index, item ->

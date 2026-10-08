@@ -1020,7 +1020,7 @@
   "liquidbounce.settings.clientChat.acceptFriendRequests.description": "Lets other users send you friend requests.",
   "liquidbounce.settings.clientChat.allowMessages.description": "Allows other users to send you direct messages.",
   "liquidbounce.settings.clientChat.hideServer.description": "Hides the server you play on from your LiquidChat friends.",
-  "liquidbounce.settings.clientChat.serverChat.description": "Joins the chat of everyone on your Minecraft server who uses LiquidChat. They can see that you use LiquidBounce.",
+  "liquidbounce.settings.clientChat.serverChat.description": "Joins the chat of everyone on your Minecraft server who uses LiquidChat. Anyone who claims to be on that server can read it and see that you use LiquidBounce.",
   "liquidbounce.tooltip.clickToCopy": "Click to copy",
   "liquidbounce.unsupportedDeepLearning": "The AI engine has not been initialized. Your system might not be supported.",
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client for Minecraft."

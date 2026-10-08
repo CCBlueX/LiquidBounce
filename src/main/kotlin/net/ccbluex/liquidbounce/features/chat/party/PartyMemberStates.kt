@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.chat.party
 
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
@@ -35,6 +36,15 @@ import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import java.util.concurrent.ConcurrentHashMap
 
 private const val PUBLISH_INTERVAL = 1000L
+
+// beyond any health a player can have
+private const val MAX_AMOUNT = 1024f
+
+/**
+ * Members send whatever they like.
+ */
+fun JsonObject.amount(key: String): Float? = (this[key] as? JsonPrimitive)?.takeIf { it.isNumber }?.asFloat
+    ?.takeIf { it.isFinite() }?.coerceIn(0f, MAX_AMOUNT)
 
 object PartyMemberStates : EventListener {
 
