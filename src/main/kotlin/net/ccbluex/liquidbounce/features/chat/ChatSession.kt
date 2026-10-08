@@ -20,21 +20,15 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import net.ccbluex.axochat.group.Group
+import net.ccbluex.axochat.protocol.Clientbound
+import net.ccbluex.axochat.user.Author
+import net.ccbluex.axochat.user.Friend
+import net.ccbluex.axochat.user.UserRef
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.chat.packet.ChatAuthor
-import net.ccbluex.liquidbounce.features.chat.packet.ChatFriend
-import net.ccbluex.liquidbounce.features.chat.packet.ChatGroup
-import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
-import net.ccbluex.liquidbounce.features.chat.packet.S2CBlocksPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CChatMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CFriendsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CGroupsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPresencePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CSettingsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CWelcomePacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import java.util.concurrent.ConcurrentHashMap
 
@@ -49,34 +43,34 @@ object ChatSession : EventListener {
     private const val REMEMBERED_MESSAGES = 256
 
     @Volatile
-    var self: ChatAuthor? = null
+    var self: Author? = null
         private set
 
     @Volatile
-    var settings: S2CSettingsPacket? = null
+    var settings: Clientbound.Settings? = null
         private set
 
     @Volatile
-    var friends: List<ChatFriend> = emptyList()
+    var friends: List<Friend> = emptyList()
         private set
 
     @Volatile
-    var incomingRequests: List<ChatUserRef> = emptyList()
+    var incomingRequests: List<UserRef> = emptyList()
         private set
 
     @Volatile
-    var outgoingRequests: List<ChatUserRef> = emptyList()
+    var outgoingRequests: List<UserRef> = emptyList()
         private set
 
     @Volatile
-    var blocks: List<ChatUserRef> = emptyList()
+    var blocks: List<UserRef> = emptyList()
         private set
 
     @Volatile
-    var groups: List<ChatGroup> = emptyList()
+    var groups: List<Group> = emptyList()
         private set
 
-    private val users = ConcurrentHashMap<String, ChatUserRef>()
+    private val users = ConcurrentHashMap<String, UserRef>()
 
     private val recentMessages = object : LinkedHashMap<Long, String>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
@@ -88,56 +82,56 @@ object ChatSession : EventListener {
 
     fun nameOf(id: String): String = users[id]?.name ?: id.take(8)
 
-    fun userOf(id: String): ChatUserRef? = users[id]
+    fun userOf(id: String): UserRef? = users[id]
 
     fun channelName(channel: String): String {
         val id = channel.removePrefix(GROUP_PREFIX)
         return groups.firstOrNull { it.id == id }?.name ?: id.take(8)
     }
 
-    fun findGroup(reference: String): ChatGroup? =
+    fun findGroup(reference: String): Group? =
         groups.firstOrNull { it.id == reference } ?: groups.firstOrNull { it.name.equals(reference, true) }
 
-    fun findUser(reference: String): ChatUserRef? =
+    fun findUser(reference: String): UserRef? =
         users[reference] ?: users.values.firstOrNull { it.name.equals(reference, true) }
 
     fun knownNames(accounts: Boolean = false): Collection<String> = users.values
         .filter { !isSelf(it.id) && (!accounts || it.isAccount) }
         .mapTo(sortedSetOf(String.CASE_INSENSITIVE_ORDER)) { it.name }
 
-    fun findFriend(reference: String): ChatFriend? =
+    fun findFriend(reference: String): Friend? =
         friends.firstOrNull { it.user.id == reference } ?: friends.firstOrNull { it.user.name.equals(reference, true) }
 
     fun lastMessageOf(userId: String): Long? = synchronized(recentMessages) {
         recentMessages.entries.lastOrNull { it.value == userId }?.key
     }
 
-    fun remember(users: Iterable<ChatUserRef>) = users.forEach { this.users[it.id] = it }
+    fun remember(users: Iterable<UserRef>) = users.forEach { this.users[it.id] = it }
 
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
         when (val packet = event.packet) {
-            is S2CWelcomePacket -> {
+            is Clientbound.Welcome -> {
                 self = packet.user
                 users[packet.user.id] = packet.user.toUserRef()
             }
 
-            is S2CSettingsPacket -> settings = packet
-            is S2CChatMessagePacket -> {
+            is Clientbound.Settings -> settings = packet
+            is Clientbound.ChatMessage -> {
                 users[packet.author.id] = packet.author.toUserRef()
                 synchronized(recentMessages) {
                     recentMessages[packet.id] = packet.author.id
                 }
             }
 
-            is S2CFriendsPacket -> {
+            is Clientbound.Friends -> {
                 friends = packet.friends.orEmpty()
                 incomingRequests = packet.incoming.orEmpty()
                 outgoingRequests = packet.outgoing.orEmpty()
-                remember(friends.map(ChatFriend::user) + incomingRequests + outgoingRequests)
+                remember(friends.map(Friend::user) + incomingRequests + outgoingRequests)
             }
 
-            is S2CPresencePacket -> friends = friends.map { friend ->
+            is Clientbound.Presence -> friends = friends.map { friend ->
                 if (friend.user.id == packet.user) {
                     friend.copy(online = packet.online, server = packet.server)
                 } else {
@@ -145,12 +139,12 @@ object ChatSession : EventListener {
                 }
             }
 
-            is S2CBlocksPacket -> {
+            is Clientbound.Blocks -> {
                 blocks = packet.users.orEmpty()
                 remember(blocks)
             }
 
-            is S2CGroupsPacket -> {
+            is Clientbound.Groups -> {
                 groups = packet.groups.orEmpty()
                 remember(groups.flatMap { it.members.orEmpty() }.map { it.user })
             }

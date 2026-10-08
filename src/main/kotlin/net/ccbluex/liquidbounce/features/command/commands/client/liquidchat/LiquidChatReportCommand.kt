@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.arguments.StringArgumentType
+import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.features.chat.ChatSession
-import net.ccbluex.liquidbounce.features.chat.packet.C2SReportPacket
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
@@ -34,7 +34,7 @@ internal fun CmdLiteralScope.reportCommand() = literal("report") {
             exec { ctx ->
                 val reference = ctx.get(user)
                 val message = ChatSession.findUser(reference)?.id?.let(ChatSession::lastMessageOf)
-                sendChatPacket(C2SReportPacket(reference, message, ctx.get(reason)))
+                sendChatPacket(Serverbound.Report(reference, message, ctx.get(reason)))
                 1
             }
         }

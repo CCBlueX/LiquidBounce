@@ -20,6 +20,11 @@
 
 package net.ccbluex.liquidbounce.features.chat.party
 
+import net.ccbluex.axochat.party.PartyInfo
+import net.ccbluex.axochat.party.PartyMember
+import net.ccbluex.axochat.party.Relation
+import net.ccbluex.axochat.protocol.Clientbound
+import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
@@ -29,12 +34,6 @@ import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.ServerJoin
-import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyPacket
-import net.ccbluex.liquidbounce.features.chat.packet.PartyInfo
-import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyInvitePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyWarpPacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -49,7 +48,7 @@ import net.minecraft.world.entity.player.Player
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
-private val SAME_SERVER = setOf("nearby", "world", "instance", "server")
+private val SAME_SERVER = setOf(Relation.Nearby, Relation.World, Relation.Instance, Relation.Server)
 
 object PartyManager : EventListener {
 
@@ -57,7 +56,7 @@ object PartyManager : EventListener {
     var party: PartyInfo? = null
         private set
 
-    val invites = ConcurrentHashMap<String, S2CPartyInvitePacket>()
+    val invites = ConcurrentHashMap<String, Clientbound.PartyInvite>()
 
     @Volatile
     private var memberUuids = emptySet<UUID>()
@@ -69,7 +68,7 @@ object PartyManager : EventListener {
         get() = party?.members.orEmpty()
 
     val others: List<PartyMember>
-        get() = members.filter { it.relation != "self" }
+        get() = members.filter { it.relation != Relation.Self }
 
     val isLeader: Boolean
         get() = party?.leader?.let(ChatSession::isSelf) == true
@@ -93,7 +92,7 @@ object PartyManager : EventListener {
         ChatSession.remember(newParty?.members.orEmpty().map { it.user })
         PartyMemberStates.publish(newParty)
 
-        val others = newParty?.members.orEmpty().filter { it.relation != "self" }
+        val others = newParty?.members.orEmpty().filter { it.relation != Relation.Self }
         memberUuids = others.mapNotNullTo(hashSetOf()) { it.player?.uuid }
         memberNames = others.mapNotNullTo(hashSetOf()) { it.player?.name?.lowercase() }
 
@@ -123,16 +122,16 @@ object PartyManager : EventListener {
         }
     }
 
-    private fun onInvite(packet: S2CPartyInvitePacket) {
+    private fun onInvite(packet: Clientbound.PartyInvite) {
         invites[packet.party] = packet
         ChatSession.remember(listOf(packet.from))
         notice(
             regular(t("invite", ChatMessageFormat.displayName(packet.from))),
             ChatNotices.button(translation("liquidbounce.liquidchat.accept"), ChatFormatting.GREEN) {
-                GlobalSettingsClientChat.chatClient.sendPacket(C2SPartyPacket("accept", party = packet.party))
+                GlobalSettingsClientChat.chatClient.sendPacket(Serverbound.Party.Accept(packet.party))
             },
             ChatNotices.button(translation("liquidbounce.liquidchat.decline"), ChatFormatting.RED) {
-                GlobalSettingsClientChat.chatClient.sendPacket(C2SPartyPacket("decline", party = packet.party))
+                GlobalSettingsClientChat.chatClient.sendPacket(Serverbound.Party.Decline(packet.party))
             },
         )
     }
@@ -148,12 +147,12 @@ object PartyManager : EventListener {
         if (reason != null) {
             notice(warning(t(reason)))
         } else {
-            GlobalSettingsClientChat.chatClient.sendPacket(C2SPartyPacket("warp"))
+            GlobalSettingsClientChat.chatClient.sendPacket(Serverbound.Party.Warp)
         }
     }
 
     // the leader gets their own warp back as confirmation
-    private fun onWarp(packet: S2CPartyWarpPacket) = if (ChatSession.isSelf(packet.from.id)) {
+    private fun onWarp(packet: Clientbound.PartyWarp) = if (ChatSession.isSelf(packet.from.id)) {
         notice(regular(t("warped", variable(packet.server))))
     } else {
         notice(
@@ -167,9 +166,9 @@ object PartyManager : EventListener {
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
         when (val packet = event.packet) {
-            is S2CPartyPacket -> update(packet.party)
-            is S2CPartyInvitePacket -> onInvite(packet)
-            is S2CPartyWarpPacket -> onWarp(packet)
+            is Clientbound.Party -> update(packet.party)
+            is Clientbound.PartyInvite -> onInvite(packet)
+            is Clientbound.PartyWarp -> onWarp(packet)
             else -> {}
         }
 

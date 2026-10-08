@@ -19,11 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
-import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SBlockPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
+import net.ccbluex.axochat.protocol.Serverbound
+import net.ccbluex.axochat.user.UserRef
 import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
@@ -43,7 +40,7 @@ object ChatActions {
 
     private fun t(key: String, vararg args: Any?) = translation("liquidbounce.liquidchat.$key", *args)
 
-    private fun send(packet: AxochatPacket.C2S) = GlobalSettingsClientChat.chatClient.sendPacket(packet)
+    private fun send(packet: Serverbound) = GlobalSettingsClientChat.chatClient.sendPacket(packet)
 
     private fun shown(user: String): Component =
         ChatSession.findUser(user)?.let { ChatMessageFormat.displayName(it) } ?: variable(user)
@@ -56,7 +53,7 @@ object ChatActions {
     /**
      * Messages, friends and parties are between LiquidBounce Accounts only.
      */
-    fun userActions(user: ChatUserRef) {
+    fun userActions(user: UserRef) {
         val actions = mutableListOf<Component>()
         if (user.isAccount && ChatSession.isAccount) {
             actions += suggestion(t("action.message"), ChatFormatting.AQUA, "lc msg ${user.name} ")
@@ -73,17 +70,17 @@ object ChatActions {
     }
 
     fun inviteToParty(user: String) {
-        send(C2SPartyPacket("invite", user = user))
+        send(Serverbound.Party.Invite(user))
         PartyManager.notice(regular(t("party.invited", shown(user))))
     }
 
     fun requestFriend(user: String) {
-        send(C2SFriendPacket("request", user))
+        send(Serverbound.Friend(Serverbound.FriendAction.Request, user))
         GlobalSettingsClientChat.notice(regular(t("friend.requested", shown(user))))
     }
 
     fun block(user: String, blocked: Boolean) {
-        send(C2SBlockPacket(user, blocked))
+        send(Serverbound.Block(user, blocked))
         GlobalSettingsClientChat.notice(regular(t(if (blocked) "blocked" else "unblocked", shown(user))))
     }
 

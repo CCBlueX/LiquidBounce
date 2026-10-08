@@ -20,18 +20,19 @@
 
 package net.ccbluex.liquidbounce.features.chat.party
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
+import com.google.gson.JsonParser
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.floatOrNull
+import net.ccbluex.axochat.party.PartyInfo
+import net.ccbluex.axochat.party.Position
+import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.PartyUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.chat.packet.PartyInfo
-import net.ccbluex.liquidbounce.features.chat.packet.PartyPosition
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyMemberStatePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyPacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import java.util.concurrent.ConcurrentHashMap
 
@@ -43,14 +44,14 @@ private const val MAX_AMOUNT = 1024f
 /**
  * Members send whatever they like.
  */
-fun JsonObject.amount(key: String): Float? = (this[key] as? JsonPrimitive)?.takeIf { it.isNumber }?.asFloat
+fun JsonObject.amount(key: String): Float? = (this[key] as? JsonPrimitive)?.takeUnless { it.isString }?.floatOrNull
     ?.takeIf { it.isFinite() }?.coerceIn(0f, MAX_AMOUNT)
 
 object PartyMemberStates : EventListener {
 
     class MemberState {
         @Volatile
-        var position: PartyPosition? = null
+        var position: Position? = null
 
         @Volatile
         var positionAt = 0L
@@ -62,7 +63,7 @@ object PartyMemberStates : EventListener {
         var inventory: JsonObject? = null
     }
 
-    data class MemberView(val position: PartyPosition?, val status: JsonObject?)
+    data class MemberView(val position: Position?, val status: com.google.gson.JsonObject?)
 
     private val states = ConcurrentHashMap<String, MemberState>()
 
@@ -70,7 +71,10 @@ object PartyMemberStates : EventListener {
 
     operator fun get(memberId: String): MemberState? = states[memberId]
 
-    fun views(): Map<String, MemberView> = states.mapValues { (_, state) -> MemberView(state.position, state.status) }
+    // the theme reads Gson's JSON
+    fun views(): Map<String, MemberView> = states.mapValues { (_, state) ->
+        MemberView(state.position, state.status?.let { JsonParser.parseString(it.toString()).asJsonObject })
+    }
 
     fun publish(party: PartyInfo?) {
         publishedAt = System.currentTimeMillis()
@@ -80,7 +84,7 @@ object PartyMemberStates : EventListener {
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
         when (val packet = event.packet) {
-            is S2CPartyMemberStatePacket -> {
+            is Clientbound.PartyMemberState -> {
                 val state = states.computeIfAbsent(packet.member) { MemberState() }
                 packet.position?.let {
                     state.position = it
@@ -95,7 +99,7 @@ object PartyMemberStates : EventListener {
                 }
             }
 
-            is S2CPartyPacket -> {
+            is Clientbound.Party -> {
                 val members = packet.party?.members.orEmpty().mapTo(hashSetOf()) { it.user.id }
                 states.keys.retainAll(members)
             }

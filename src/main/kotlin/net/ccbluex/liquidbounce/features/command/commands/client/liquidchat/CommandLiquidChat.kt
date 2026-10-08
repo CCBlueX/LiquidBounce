@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.suggestion.SuggestionProvider
+import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.features.chat.ChatSession
-import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -49,7 +49,7 @@ internal fun requireChat() {
     }
 }
 
-internal fun sendChatPacket(packet: AxochatPacket.C2S) {
+internal fun sendChatPacket(packet: Serverbound) {
     requireChat()
     GlobalSettingsClientChat.chatClient.sendPacket(packet)
 }

@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.chat.party
 
-import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import net.ccbluex.axochat.party.PartyMember
+import net.ccbluex.axochat.party.Position
+import net.ccbluex.axochat.party.Relation
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
-import net.ccbluex.liquidbounce.features.chat.packet.PartyPosition
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -81,7 +83,7 @@ object PartyStandIns : EventListener, Iterable<RemotePlayer> {
         return camera.add(position.subtract(camera).scale(scale)) to scale
     }
 
-    private fun convert(position: PartyPosition, level: ClientLevel): Vec3? {
+    private fun convert(position: Position, level: ClientLevel): Vec3? {
         val own = level.dimension()
         val raw = Vec3(position.x, position.y, position.z)
         val dimension = position.dimension
@@ -98,7 +100,7 @@ object PartyStandIns : EventListener, Iterable<RemotePlayer> {
     private fun wanted(level: ClientLevel): Map<PartyMember, Vec3> {
         val now = System.currentTimeMillis()
         return PartyManager.others.mapNotNull { member ->
-            if (member.relation != "world" && member.relation != "instance") {
+            if (member.relation != Relation.World && member.relation != Relation.Instance) {
                 return@mapNotNull null
             }
             val player = member.player ?: return@mapNotNull null
@@ -133,7 +135,7 @@ object PartyStandIns : EventListener, Iterable<RemotePlayer> {
             status.amount("absorption")?.let { player.absorptionAmount = it }
             player.setItemSlot(EquipmentSlot.MAINHAND, PartyItems.decode(status["main_hand"], level))
             player.setItemSlot(EquipmentSlot.OFFHAND, PartyItems.decode(status["off_hand"], level))
-            status["armor_items"]?.takeIf { it.isJsonArray }?.asJsonArray?.forEachIndexed { index, item ->
+            (status["armor_items"] as? JsonArray)?.forEachIndexed { index, item ->
                 ARMOR_SLOTS.getOrNull(index)?.let { player.setItemSlot(it, PartyItems.decode(item, level)) }
             }
         }

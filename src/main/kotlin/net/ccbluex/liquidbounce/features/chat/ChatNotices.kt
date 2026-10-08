@@ -20,18 +20,14 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import net.ccbluex.axochat.group.GroupRole
+import net.ccbluex.axochat.protocol.Clientbound
+import net.ccbluex.axochat.protocol.Serverbound
+import net.ccbluex.axochat.protocol.SuccessReason
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CFriendsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CGroupsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPresencePacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CPunishedPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.onClickRun
@@ -67,7 +63,7 @@ object ChatNotices : EventListener {
     fun button(text: MutableComponent, color: ChatFormatting, action: () -> Unit): Component =
         buttonOf(text.withStyle(color).onClickRun(action))
 
-    private fun send(packet: AxochatPacket.C2S) =
+    private fun send(packet: Serverbound) =
         GlobalSettingsClientChat.chatClient.sendPacket(packet)
 
     private fun formatTime(millis: Long): String = timeFormat.format(Instant.ofEpochMilli(millis))
@@ -75,15 +71,15 @@ object ChatNotices : EventListener {
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->
         when (val packet = event.packet) {
-            is S2CFriendsPacket -> onFriends(packet)
-            is S2CPresencePacket -> onPresence(packet)
-            is S2CGroupsPacket -> onGroups(packet)
-            is S2CPunishedPacket -> notice(regular(t(
+            is Clientbound.Friends -> onFriends(packet)
+            is Clientbound.Presence -> onPresence(packet)
+            is Clientbound.Groups -> onGroups(packet)
+            is Clientbound.Punished -> notice(regular(t(
                 "punished.${packet.kind}",
                 packet.reason,
                 packet.expires?.let(::formatTime) ?: t("punished.permanent").string,
             )).withStyle(ChatFormatting.RED))
-            is S2CSuccessPacket -> if (packet.reason == "Report") {
+            is Clientbound.Success -> if (packet.reason == SuccessReason.Report) {
                 notice(regular(t("success.report")))
             }
 
@@ -91,7 +87,7 @@ object ChatNotices : EventListener {
         }
     }
 
-    private fun onFriends(packet: S2CFriendsPacket) {
+    private fun onFriends(packet: Clientbound.Friends) {
         val friends = packet.friends.orEmpty().map { it.user }
         knownFriends?.let { known ->
             friends.filter { it.id !in known }
@@ -107,14 +103,18 @@ object ChatNotices : EventListener {
 
             notice(
                 regular(t("friend.request", ChatMessageFormat.displayName(user))),
-                button(t("accept"), ChatFormatting.GREEN) { send(C2SFriendPacket("accept", user.id)) },
-                button(t("decline"), ChatFormatting.RED) { send(C2SFriendPacket("decline", user.id)) },
+                button(t("accept"), ChatFormatting.GREEN) {
+                    send(Serverbound.Friend(Serverbound.FriendAction.Accept, user.id))
+                },
+                button(t("decline"), ChatFormatting.RED) {
+                    send(Serverbound.Friend(Serverbound.FriendAction.Decline, user.id))
+                },
             )
         }
         knownRequests = incoming.mapTo(hashSetOf()) { it.id }
     }
 
-    private fun onPresence(packet: S2CPresencePacket) {
+    private fun onPresence(packet: Clientbound.Presence) {
         val friend = ChatSession.findFriend(packet.user) ?: return
         val name = ChatMessageFormat.displayName(friend.user)
         val server = packet.server
@@ -129,8 +129,8 @@ object ChatNotices : EventListener {
         }
     }
 
-    private fun onGroups(packet: S2CGroupsPacket) {
-        val invites = packet.groups.orEmpty().filter { it.role == "invited" }
+    private fun onGroups(packet: Clientbound.Groups) {
+        val invites = packet.groups.orEmpty().filter { it.role == GroupRole.Invited }
         for (group in invites) {
             if (group.id in knownInvites) {
                 continue
@@ -138,8 +138,8 @@ object ChatNotices : EventListener {
 
             notice(
                 regular(t("group.invite", variable(group.name))),
-                button(t("accept"), ChatFormatting.GREEN) { send(C2SGroupPacket("accept", group = group.id)) },
-                button(t("decline"), ChatFormatting.RED) { send(C2SGroupPacket("decline", group = group.id)) },
+                button(t("accept"), ChatFormatting.GREEN) { send(Serverbound.Group.Accept(group.id)) },
+                button(t("decline"), ChatFormatting.RED) { send(Serverbound.Group.Decline(group.id)) },
             )
         }
         knownInvites = invites.mapTo(hashSetOf()) { it.id }

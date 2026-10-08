@@ -20,13 +20,19 @@
 
 package net.ccbluex.liquidbounce.features.chat.party
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonNull
-import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import com.mojang.authlib.GameProfile
-import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
+import net.ccbluex.axochat.party.PartyMember
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
@@ -53,34 +59,34 @@ object PartyItems {
 
     fun encode(stack: ItemStack, withName: Boolean = true): JsonElement {
         if (stack.isEmpty) {
-            return JsonNull.INSTANCE
+            return JsonNull
         }
 
-        return JsonObject().apply {
-            addProperty("identifier", BuiltInRegistries.ITEM.getKey(stack.item).toString())
-            addProperty("count", stack.count)
+        return buildJsonObject {
+            put("identifier", BuiltInRegistries.ITEM.getKey(stack.item).toString())
+            put("count", stack.count)
             if (stack.isDamageableItem) {
-                addProperty("damage", stack.damageValue)
-                addProperty("maxDamage", stack.maxDamage)
+                put("damage", stack.damageValue)
+                put("maxDamage", stack.maxDamage)
             }
 
             val customName = stack.customName
             if (withName && customName != null) {
-                addProperty("displayName", customName.string.take(MAX_NAME))
+                put("displayName", customName.string.take(MAX_NAME))
             }
 
             val enchantments = stack.enchantments.entrySet()
             if (enchantments.isNotEmpty()) {
-                add("enchantments", JsonObject().apply {
+                putJsonObject("enchantments") {
                     for (entry in enchantments) {
-                        addProperty(entry.key.registeredName, entry.intValue)
+                        put(entry.key.registeredName, entry.intValue)
                     }
-                })
+                }
             }
         }
     }
 
-    fun encode(stacks: Iterable<ItemStack>, withName: Boolean = true) = JsonArray().apply {
+    fun encode(stacks: Iterable<ItemStack>, withName: Boolean = true) = buildJsonArray {
         stacks.forEach { add(encode(it, withName)) }
     }
 
@@ -89,20 +95,19 @@ object PartyItems {
      * never components with events or deep nesting.
      */
     fun decode(json: JsonElement?, level: ClientLevel): ItemStack {
-        val item = json?.takeIf { it.isJsonObject }?.asJsonObject ?: return ItemStack.EMPTY
+        val item = json as? JsonObject ?: return ItemStack.EMPTY
         val identifier = item.text("identifier")?.let(Identifier::tryParse) ?: return ItemStack.EMPTY
         val count = item.number("count")?.toInt()?.coerceIn(1, MAX_COUNT) ?: 1
         val stack = ItemStack(BuiltInRegistries.ITEM.getValue(identifier), count)
 
         item.number("damage")?.toInt()?.let(stack::setDamageValue)
-        val name = item["displayName"]?.let { name -> if (name.isJsonObject) name.asJsonObject.text("text") else null }
-            ?: item.text("displayName")
+        val name = (item["displayName"] as? JsonObject)?.text("text") ?: item.text("displayName")
         name?.let { stack.set(DataComponents.CUSTOM_NAME, Component.literal(it.take(MAX_NAME))) }
 
         val enchantments = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
-        item["enchantments"]?.takeIf { it.isJsonObject }?.asJsonObject?.entrySet()?.forEach { (id, enchantmentLevel) ->
+        (item["enchantments"] as? JsonObject)?.forEach { (id, enchantmentLevel) ->
             val key = Identifier.tryParse(id) ?: return@forEach
-            val value = (enchantmentLevel as? JsonPrimitive)?.takeIf { it.isNumber }?.asInt ?: return@forEach
+            val value = (enchantmentLevel as? JsonPrimitive)?.takeUnless { it.isString }?.intOrNull ?: return@forEach
             enchantments.get(ResourceKey.create(Registries.ENCHANTMENT, key))
                 .ifPresent { stack.enchant(it, value.coerceIn(1, MAX_ENCHANTMENT_LEVEL)) }
         }
@@ -110,9 +115,9 @@ object PartyItems {
         return stack
     }
 
-    private fun JsonObject.text(key: String) = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.asString
+    private fun JsonObject.text(key: String) = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
 
-    private fun JsonObject.number(key: String) = (this[key] as? JsonPrimitive)?.takeIf { it.isNumber }?.asDouble
+    private fun JsonObject.number(key: String) = (this[key] as? JsonPrimitive)?.takeUnless { it.isString }?.doubleOrNull
         ?.takeIf { it.isFinite() }
 
     fun show(member: PartyMember, inventory: JsonObject) {
@@ -128,10 +133,10 @@ object PartyItems {
             ?: GameProfile(member.user.uuid, member.user.name)
         val player = RemotePlayer(level, profile).apply { id = level.nextLocalEntityId() }
 
-        inventory["main"]?.takeIf { it.isJsonArray }?.asJsonArray?.forEachIndexed { slot, item ->
+        (inventory["main"] as? JsonArray)?.forEachIndexed { slot, item ->
             player.inventory.setItem(slot, decode(item, level))
         }
-        val armor = inventory["armor"]?.takeIf { it.isJsonArray }?.asJsonArray
+        val armor = inventory["armor"] as? JsonArray
         val armorSlots = listOf(EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD)
         armor?.forEachIndexed { index, item ->
             armorSlots.getOrNull(index)?.let { player.setItemSlot(it, decode(item, level)) }

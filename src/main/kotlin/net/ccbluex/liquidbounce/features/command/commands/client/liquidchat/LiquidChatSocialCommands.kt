@@ -20,16 +20,15 @@ package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.suggestion.SuggestionProvider
+import net.ccbluex.axochat.group.Group
+import net.ccbluex.axochat.protocol.Serverbound
+import net.ccbluex.axochat.user.Friend
+import net.ccbluex.axochat.user.UserRef
 import net.ccbluex.liquidbounce.features.chat.ChatActions
 import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.ServerJoin
-import net.ccbluex.liquidbounce.features.chat.packet.C2SFriendPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ChatFriend
-import net.ccbluex.liquidbounce.features.chat.packet.ChatGroup
-import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -56,7 +55,7 @@ private val blockedUsers: SuggestionProvider<ClientCommandSource> = suggestions 
     ChatSession.blocks.map { it.name }
 }
 
-private fun Iterable<ChatUserRef>.find(reference: String) =
+private fun Iterable<UserRef>.find(reference: String) =
     firstOrNull { it.id == reference } ?: firstOrNull { it.name.equals(reference, true) }
 
 internal fun CmdLiteralScope.msgCommand() = literal("msg") {
@@ -87,7 +86,7 @@ internal fun CmdLiteralScope.friendCommand() = literal("friend") {
                 val removed = ChatSession.friends.map { it.user }.find(reference)
                     ?: ChatSession.outgoingRequests.find(reference)
                     ?: throw CommandException(t("friend.remove.unknown", reference))
-                sendChatPacket(C2SFriendPacket("remove", removed.id))
+                sendChatPacket(Serverbound.Friend(Serverbound.FriendAction.Remove, removed.id))
                 printLine(regular(t("friend.remove.done", ChatMessageFormat.displayName(removed))))
                 1
             }
@@ -99,7 +98,7 @@ internal fun CmdLiteralScope.friendCommand() = literal("friend") {
                 val reference = ctx.get(user)
                 val request = ChatSession.incomingRequests.find(reference)
                     ?: throw CommandException(t("friend.accept.unknown", reference))
-                sendChatPacket(C2SFriendPacket("accept", request.id))
+                sendChatPacket(Serverbound.Friend(Serverbound.FriendAction.Accept, request.id))
                 1
             }
         }
@@ -119,7 +118,7 @@ internal fun CmdLiteralScope.friendsCommand() = literal("friends") {
     }
 }
 
-private fun printFriend(friend: ChatFriend, joinLabel: MutableComponent) {
+private fun printFriend(friend: Friend, joinLabel: MutableComponent) {
     val server = friend.server
     val join = if (server != null) {
         ChatNotices.button(joinLabel, ChatFormatting.GREEN) { ServerJoin.confirm(server, friend.user.name) }
@@ -136,10 +135,10 @@ private fun printFriend(friend: ChatFriend, joinLabel: MutableComponent) {
     )
 }
 
-private fun printRequest(request: ChatUserRef, text: MutableComponent) = printLine(
+private fun printRequest(request: UserRef, text: MutableComponent) = printLine(
     regular(text),
     ChatNotices.button(translation("liquidbounce.liquidchat.accept"), ChatFormatting.GREEN) {
-        GlobalSettingsClientChat.chatClient.sendPacket(C2SFriendPacket("accept", request.id))
+        GlobalSettingsClientChat.chatClient.sendPacket(Serverbound.Friend(Serverbound.FriendAction.Accept, request.id))
     },
 )
 
@@ -179,7 +178,7 @@ internal fun CmdLiteralScope.serverCommand() = literal("server") {
     }
 }
 
-private fun group(reference: String): ChatGroup = ChatSession.findGroup(reference)
+private fun group(reference: String): Group = ChatSession.findGroup(reference)
     ?: throw CommandException(translation("liquidbounce.command.liquidchat.group.unknown", reference))
 
 @Suppress("LongMethod")
@@ -187,34 +186,39 @@ internal fun CmdLiteralScope.groupCommands() = literal("group") {
     literal("create") {
         argument("name", StringArgumentType.greedyString()) { name ->
             exec { ctx ->
-                sendChatPacket(C2SGroupPacket("create", name = ctx.get(name)))
+                sendChatPacket(Serverbound.Group.Create(ctx.get(name)))
                 1
             }
         }
     }
-    for (action in listOf("accept", "decline", "leave", "delete")) {
+    val groupActions = mapOf<String, (String) -> Serverbound.Group>(
+        "accept" to Serverbound.Group::Accept,
+        "decline" to Serverbound.Group::Decline,
+        "leave" to Serverbound.Group::Leave,
+        "delete" to Serverbound.Group::Delete,
+    )
+    for ((action, packet) in groupActions) {
         literal(action) {
             argument("group", ClientStringArgumentType.string(), chatGroups) { group ->
                 exec { ctx ->
-                    sendChatPacket(C2SGroupPacket(action, group = group(ctx.get(group)).id))
+                    sendChatPacket(packet(group(ctx.get(group)).id))
                     1
                 }
             }
         }
     }
-    for (action in listOf("invite", "kick", "promote", "demote")) {
+    val memberActions = mapOf<String, (String, String) -> Serverbound.Group>(
+        "invite" to Serverbound.Group::Invite,
+        "kick" to Serverbound.Group::Kick,
+        "promote" to { group, user -> Serverbound.Group.Promote(group, user, admin = true) },
+        "demote" to { group, user -> Serverbound.Group.Promote(group, user, admin = false) },
+    )
+    for ((action, packet) in memberActions) {
         literal(action) {
             argument("group", ClientStringArgumentType.string(), chatGroups) { group ->
                 argument("user", ClientStringArgumentType.word(), chatFriends) { user ->
                     exec { ctx ->
-                        val packet = when (action) {
-                            "promote" -> C2SGroupPacket("promote", group(ctx.get(group)).id,
-                                user = ctx.get(user), admin = true)
-                            "demote" -> C2SGroupPacket("promote", group(ctx.get(group)).id,
-                                user = ctx.get(user), admin = false)
-                            else -> C2SGroupPacket(action, group(ctx.get(group)).id, user = ctx.get(user))
-                        }
-                        sendChatPacket(packet)
+                        sendChatPacket(packet(group(ctx.get(group)).id, ctx.get(user)))
                         1
                     }
                 }
@@ -225,7 +229,7 @@ internal fun CmdLiteralScope.groupCommands() = literal("group") {
         argument("group", ClientStringArgumentType.string(), chatGroups) { group ->
             argument("name", StringArgumentType.greedyString()) { name ->
                 exec { ctx ->
-                    sendChatPacket(C2SGroupPacket("rename", group(ctx.get(group)).id, name = ctx.get(name)))
+                    sendChatPacket(Serverbound.Group.Rename(group(ctx.get(group)).id, ctx.get(name)))
                     1
                 }
             }

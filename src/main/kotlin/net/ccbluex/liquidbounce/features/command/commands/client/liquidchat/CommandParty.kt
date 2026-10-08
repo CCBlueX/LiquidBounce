@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.command.commands.client.liquidchat
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.suggestion.SuggestionProvider
+import net.ccbluex.axochat.party.PartyMember
+import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.features.chat.ChatActions
 import net.ccbluex.liquidbounce.features.chat.ChatSession
-import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyPacket
-import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
 import net.ccbluex.liquidbounce.features.chat.party.PartyItems
 import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates
@@ -63,10 +63,10 @@ object CommandParty : CommandRegistrar {
             inviteCommand()
             acceptCommand()
             chatCommand()
-            memberAction("kick") { C2SPartyPacket("kick", user = it.user.id) }
-            memberAction("leader") { C2SPartyPacket("transfer", user = it.user.id) }
+            memberAction("kick") { Serverbound.Party.Kick(it.user.id) }
+            memberAction("leader") { Serverbound.Party.Transfer(it.user.id) }
             inventoryCommand()
-            simpleAction("leave") { C2SPartyPacket("leave") }
+            simpleAction("leave") { Serverbound.Party.Leave }
             literal("warp") {
                 exec {
                     requireChat()
@@ -75,7 +75,7 @@ object CommandParty : CommandRegistrar {
                 }
             }
             lockCommand()
-            simpleAction("disband") { C2SPartyPacket("disband") }
+            simpleAction("disband") { Serverbound.Party.Disband }
         }
     }
 
@@ -96,7 +96,7 @@ object CommandParty : CommandRegistrar {
                 val invite = PartyManager.invites.values.firstOrNull {
                     it.from.id == reference || it.from.name.equals(reference, true)
                 } ?: throw CommandException(t("accept.unknown", reference))
-                sendChatPacket(C2SPartyPacket("accept", party = invite.party))
+                sendChatPacket(Serverbound.Party.Accept(invite.party))
                 PartyManager.invites.remove(invite.party)
                 1
             }
@@ -128,12 +128,12 @@ object CommandParty : CommandRegistrar {
     private fun CmdLiteralScope.lockCommand() = literal("lock") {
         exec {
             val party = PartyManager.party ?: throw CommandException(t("notInParty"))
-            sendChatPacket(C2SPartyPacket("lock", locked = !party.locked))
+            sendChatPacket(Serverbound.Party.Lock(!party.locked))
             1
         }
     }
 
-    private fun CmdLiteralScope.memberAction(name: String, packet: (PartyMember) -> C2SPartyPacket) = literal(name) {
+    private fun CmdLiteralScope.memberAction(name: String, packet: (PartyMember) -> Serverbound.Party) = literal(name) {
         argument("member", ClientStringArgumentType.word(), partyMembers) { member ->
             exec { ctx ->
                 sendChatPacket(packet(requireMember(ctx.get(member))))
@@ -142,7 +142,7 @@ object CommandParty : CommandRegistrar {
         }
     }
 
-    private fun CmdLiteralScope.simpleAction(name: String, packet: () -> C2SPartyPacket) = literal(name) {
+    private fun CmdLiteralScope.simpleAction(name: String, packet: () -> Serverbound.Party) = literal(name) {
         exec {
             sendChatPacket(packet())
             1

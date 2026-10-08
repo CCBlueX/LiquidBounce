@@ -20,6 +20,10 @@
 
 package net.ccbluex.liquidbounce.features.chat.party
 
+import net.ccbluex.axochat.party.PartyMember
+import net.ccbluex.axochat.party.World
+import net.ccbluex.axochat.protocol.Serverbound
+import net.ccbluex.axochat.user.Player
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -27,11 +31,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.chat.packet.C2SLocationPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SSightingsPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ChatPlayer
-import net.ccbluex.liquidbounce.features.chat.packet.LocationWorld
-import net.ccbluex.liquidbounce.features.chat.packet.PartyMember
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.isSensitiveAddress
@@ -58,10 +57,10 @@ object LocationReporter : EventListener {
     @Volatile
     private var pendingAt = 0L
 
-    private var sent: C2SLocationPacket? = null
+    private var sent: Serverbound.Location? = null
     private var sentAt = 0L
 
-    private var sightings: C2SSightingsPacket? = null
+    private var sightings: Serverbound.Sightings? = null
     private var sightingsSentAt = 0L
     private var sightingsCheckedAt = 0L
 
@@ -134,15 +133,15 @@ object LocationReporter : EventListener {
         }
     }
 
-    private fun current(now: Long): C2SLocationPacket {
-        val level = mc.level ?: return C2SLocationPacket(null, null, null)
+    private fun current(now: Long): Serverbound.Location {
+        val level = mc.level ?: return Serverbound.Location(null, null, null)
         // a LiquidProxy route works as its owner's subscription, so it never leaves the client
         val server = mc.currentServer?.ip?.takeUnless { mc.hasSingleplayerServer() || it.isSensitiveAddress() }
 
-        return C2SLocationPacket(
+        return Serverbound.Location(
             server,
-            LocationWorld(level.dimension().identifier().toString(), seed, ageTracker.current(now)),
-            mc.player?.let { ChatPlayer(it.uuid, it.gameProfile.name) },
+            World(level.dimension().identifier().toString(), seed, ageTracker.current(now)),
+            mc.player?.let { Player(it.uuid, it.gameProfile.name) },
         )
     }
 
@@ -161,7 +160,7 @@ object LocationReporter : EventListener {
         }
     }
 
-    private fun send(packet: C2SLocationPacket, now: Long) {
+    private fun send(packet: Serverbound.Location, now: Long) {
         sent = packet
         sentAt = now
         client.sendPacket(packet)
@@ -169,7 +168,7 @@ object LocationReporter : EventListener {
 
     private fun reportSightings(now: Long) {
         val members = PartyManager.others
-        val packet = C2SSightingsPacket(
+        val packet = Serverbound.Sightings(
             members.filter(::isLoaded).map { it.user.id }.sorted(),
             members.filter(::isListed).map { it.user.id }.sorted(),
         )

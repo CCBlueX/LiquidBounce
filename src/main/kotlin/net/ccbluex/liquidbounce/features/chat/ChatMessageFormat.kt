@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import net.ccbluex.axochat.user.UserRef
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
-import net.ccbluex.liquidbounce.features.chat.packet.ChatUserRef
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
@@ -37,7 +37,7 @@ import net.minecraft.network.chat.Style
 
 object ChatMessageFormat {
 
-    fun displayName(user: ChatUserRef, color: ChatFormatting = ChatFormatting.GOLD): MutableComponent {
+    fun displayName(user: UserRef, color: ChatFormatting = ChatFormatting.GOLD): MutableComponent {
         if (!user.isAccount) {
             return Component.literal(user.name).withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(" [MC]").withStyle(ChatFormatting.DARK_GRAY))

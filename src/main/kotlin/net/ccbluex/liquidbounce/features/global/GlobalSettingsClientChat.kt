@@ -27,6 +27,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import net.ccbluex.axochat.LoginResult
+import net.ccbluex.axochat.protocol.ErrorCode
+import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
@@ -42,10 +45,9 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.chat.AxochatClient
+import net.ccbluex.liquidbounce.features.chat.LiquidChatClient
 import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
 import net.ccbluex.liquidbounce.features.chat.ChatSession
-import net.ccbluex.liquidbounce.features.chat.packet.C2SSettingsPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
@@ -105,7 +107,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     private val hideServer by boolean("HideServer", false).onChanged { sendSettings() }
     private val acceptFriendRequests by boolean("AcceptFriendRequests", true).onChanged { sendSettings() }
 
-    val chatClient = AxochatClient { allowMessages }
+    val chatClient = LiquidChatClient { allowMessages }
     private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
@@ -160,7 +162,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private fun sendSettings() {
         if (chatClient.isLoggedIn && chatClient.isModern) {
-            chatClient.sendPacket(C2SSettingsPacket(allowMessages, hideServer, acceptFriendRequests, serverChat))
+            chatClient.sendPacket(Serverbound.Settings(allowMessages, hideServer, acceptFriendRequests, serverChat))
         }
     }
 
@@ -243,9 +245,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    @Volatile
-    private var accountLoginPending = false
-
     @Suppress("unused")
     private val accountChange = suspendHandler<UserLoggedInEvent>(behavior = CancelPrevious) {
         chatClient.reconnect()
@@ -261,13 +260,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
      */
     @Suppress("unused")
     private val handleError = handler<ClientChatErrorEvent> { event ->
-        when {
-            event.code == "LoginFailed" && accountLoginPending -> {
-                accountLoginPending = false
-                logger.info("LiquidBounce Account login failed, falling back to Mojang...")
-                chatClient.requestMojangLogin()
-            }
-            event.code != null -> notice(event.error.asText().withStyle(ChatFormatting.RED))
+        if (event.code != null) {
+            notice(event.error.asText().withStyle(ChatFormatting.RED))
         }
     }
 
@@ -285,13 +279,24 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
         if (accessToken != null) {
             logger.info("Logging in with LiquidBounce Account...")
-            accountLoginPending = true
-            chatClient.loginAccount(accessToken)
-        } else {
-            logger.info("Requesting to login into Mojang...")
-            accountLoginPending = false
-            chatClient.requestMojangLogin()
+            when (val result = chatClient.loginAccount(accessToken)) {
+                LoginResult.Success -> {
+                    // a cracked session has no access token to join the session server with
+                    if (mc.user.accessToken.length > 1) {
+                        chatClient.proveMinecraft()
+                    }
+                    return
+                }
+                is LoginResult.Refused -> if (result.error.code != ErrorCode.LoginFailed) {
+                    return
+                }
+                LoginResult.Closed -> return
+            }
+            logger.info("LiquidBounce Account login failed, falling back to Mojang...")
         }
+
+        logger.info("Logging in with the Minecraft account...")
+        chatClient.loginMojang()
     }
 
     @Suppress("unused")
@@ -304,15 +309,13 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     NotificationEvent.Severity.INFO
                 )
 
-                chatClient.negotiate()
-                login()
+                // outside this handler, which the login's own state changes would cancel
+                eventListenerScope.launch {
+                    chatClient.negotiate()
+                    login()
+                }
             }
             ClientChatStateChange.State.LOGGED_IN -> {
-                // a cracked session has no access token to join the session server with
-                if (accountLoginPending && mc.user.accessToken.length > 1) {
-                    chatClient.proveMinecraft()
-                }
-                accountLoginPending = false
                 sendSettings()
                 notification(
                     "LiquidChat",
