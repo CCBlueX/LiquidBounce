@@ -51,7 +51,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.api.thirdparty.lookupUuidByName
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
@@ -64,7 +63,6 @@ import net.ccbluex.liquidbounce.features.chat.packet.C2SGroupPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SHelloPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLocationPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginAccountPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginMojangPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPardonPacket
@@ -73,7 +71,6 @@ import net.ccbluex.liquidbounce.features.chat.packet.C2SPartyStatePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPrivateMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SPunishPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SReportPacket
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestMojangInfoPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestPunishmentsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestReportsPacket
@@ -92,7 +89,6 @@ import net.ccbluex.liquidbounce.features.chat.packet.S2CGroupsPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CHelloPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CMojangInfoPacket
-import net.ccbluex.liquidbounce.features.chat.packet.S2CNewJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyInvitePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyMemberStatePacket
 import net.ccbluex.liquidbounce.features.chat.packet.S2CPartyPacket
@@ -139,8 +135,6 @@ class AxochatClient {
         register<C2SPrivateMessagePacket>("PrivateMessage")
         register<C2SBanUserPacket>("BanUser")
         register<C2SUnbanUserPacket>("UnbanUser")
-        register<C2SRequestJWTPacket>("RequestJWT")
-        register<C2SLoginJWTPacket>("LoginJWT")
         register<C2SRequestUserCountPacket>("RequestUserCount")
         register<C2SHelloPacket>("Hello")
         register<C2SLoginAccountPacket>("LoginAccount")
@@ -163,7 +157,6 @@ class AxochatClient {
 
     private val deserializer = PacketDeserializer().apply {
         register<S2CMojangInfoPacket>("MojangInfo")
-        register<S2CNewJWTPacket>("NewJWT")
         register<S2CMessagePacket>("Message")
         register<S2CPrivateMessagePacket>("PrivateMessage")
         register<S2CErrorPacket>("Error")
@@ -359,11 +352,11 @@ class AxochatClient {
     }
 
     /**
-     * Login to web socket via JWT
+     * Login with a LiquidBounce Account access token (v2 only)
      */
-    fun loginViaJwt(token: String) {
+    fun loginAccount(accessToken: String) {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-        sendPacket(C2SLoginJWTPacket(token, allowMessages = true))
+        sendPacket(C2SLoginAccountPacket(accessToken, allowMessages = true))
     }
 
     /**
@@ -429,7 +422,6 @@ class AxochatClient {
                 }
             }
 
-            is S2CNewJWTPacket -> EventManager.callEvent(ClientChatJwtTokenEvent(packet.token))
             else -> {}
         }
 

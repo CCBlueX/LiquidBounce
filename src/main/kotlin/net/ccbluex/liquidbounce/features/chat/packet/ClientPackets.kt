@@ -46,19 +46,6 @@ data class S2CMojangInfoPacket(
 ) : AxochatPacket.S2C
 
 /**
- * After the client sent the server a RequestJWT packet, the server will provide the client with json web token.
- * This token can be used in the LoginJWT packet.
- *
- * @param token JWT token
- */
-data class S2CNewJWTPacket(
-
-    @SerializedName("token")
-    val token: String
-
-) : AxochatPacket.S2C
-
-/**
  * This packet will be sent to every authenticated client
  * if another client successfully sent a message to the server.
  *

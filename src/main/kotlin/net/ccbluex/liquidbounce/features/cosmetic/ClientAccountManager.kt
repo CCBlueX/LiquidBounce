@@ -19,9 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.cosmetic
 
+import kotlinx.coroutines.CompletableDeferred
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.types.Config
 
 object ClientAccountManager : Config("account") {
     var clientAccount by value("account", ClientAccount.ENV_ACCOUNT ?: ClientAccount.EMPTY_ACCOUNT)
+
+    /**
+     * Completes once the stored account was loaded and renewed at startup, or turned out to be missing.
+     */
+    internal val restored = CompletableDeferred<Unit>()
 }

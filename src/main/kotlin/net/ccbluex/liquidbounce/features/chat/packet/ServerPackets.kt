@@ -60,23 +60,6 @@ data class C2SLoginMojangPacket(
 ) : AxochatPacket.C2S
 
 /**
- * To log in using a json web token, the client has to send a LoginJWT packet.
- * it will send Success if the login was successful.
- *
- * @param token can be retrieved by sending RequestJWT on an already authenticated connection.
- * @param allowMessages If allow_messages is true, other clients may send private messages to this client.
- */
-data class C2SLoginJWTPacket(
-
-    @SerializedName("token")
-    val token: String,
-
-    @SerializedName("allow_messages")
-    val allowMessages: Boolean
-
-) : AxochatPacket.C2S
-
-/**
  * The content of this packet will be sent to every client as Message if it fits the validation scheme.
  *
  * @param content content of the message.
@@ -127,15 +110,6 @@ data class C2SUnbanUserPacket(
     val user: String
 
 ) : AxochatPacket.C2S
-
-/**
- * To log in using LoginJWT, a client needs to own a json web token.
- * This token can be retrieved by sending RequestJWT as an already authenticated client to the server.
- * The server will send a NewJWT packet to the client.
- *
- * This packet does not have a body.
- */
-class C2SRequestJWTPacket : AxochatPacket.C2S
 
 class C2SRequestUserCountPacket : AxochatPacket.C2S
 

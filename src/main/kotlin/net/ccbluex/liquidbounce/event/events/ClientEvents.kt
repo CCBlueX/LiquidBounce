@@ -156,10 +156,6 @@ class ClientChatErrorEvent(val error: String, val code: String? = null) : Event(
 @Tag("clientChatPacket")
 class ClientChatPacketEvent(val packet: AxochatPacket.S2C) : Event()
 
-@Tag("clientChatJwtToken")
-// Do not define as WebSocket event, because it contains sensitive data
-class ClientChatJwtTokenEvent(val jwt: String) : Event()
-
 @Tag("accountManagerMessage")
 class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 

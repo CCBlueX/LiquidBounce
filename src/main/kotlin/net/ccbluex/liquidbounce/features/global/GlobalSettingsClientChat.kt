@@ -24,21 +24,24 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.eventListenerScope
-import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.AxochatClient
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
@@ -75,6 +78,8 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
+
 object GlobalSettingsClientChat : ToggleableValueGroup(
     name = "ClientChat",
     enabled = true,
@@ -82,8 +87,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 ) {
 
     private val logger = clientLogger(this.name)
-
-    private var jwtToken by text("JwtToken", "")
 
     private object FilterConf : ToggleableValueGroup(this, "Filter", false) {
         private val usernames by textList("Usernames", TreeSet(String.CASE_INSENSITIVE_ORDER))
@@ -137,29 +140,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    private fun registerChatJwtCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
-        dispatcher.register("chatjwt") {
-            execSuspend {
-                if (!chatClient.isConnected) {
-                    chat(
-                        prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
-                        metadata = exceptionData
-                    )
-                    return@execSuspend
-                }
-
-                chatClient.sendPacket(C2SRequestJWTPacket())
-                chat(
-                    prefix, translation("liquidbounce.liquidchat.jwtTokenRequested").withStyle(ChatFormatting.GRAY),
-                    metadata = exceptionData
-                )
-            }
-        }
-    }
-
     init {
         CommandManager.register(::registerChatWriteCommand)
-        CommandManager.register(::registerChatJwtCommand)
     }
 
     override fun onEnabled() {
@@ -259,10 +241,49 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
+    @Volatile
+    private var accountLoginPending = false
+
     @Suppress("unused")
-    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CancelPrevious) { event ->
-        jwtToken = event.jwt
+    private val accountChange = suspendHandler<UserLoggedInEvent>(behavior = CancelPrevious) {
         chatClient.reconnect()
+    }
+
+    @Suppress("unused")
+    private val accountRemoval = suspendHandler<UserLoggedOutEvent>(behavior = CancelPrevious) {
+        chatClient.reconnect()
+    }
+
+    @Suppress("unused")
+    private val handleLoginFailure = handler<ClientChatErrorEvent> { event ->
+        if (event.code == "LoginFailed" && accountLoginPending) {
+            accountLoginPending = false
+            logger.info("LiquidBounce Account login failed, falling back to Mojang...")
+            chatClient.requestMojangLogin()
+        }
+    }
+
+    private suspend fun login() {
+        // at startup the stored account loads alongside; logging in without it would pick the Minecraft identity
+        withTimeoutOrNull(ACCOUNT_RESTORE_TIMEOUT) { ClientAccountManager.restored.await() }
+        val account = ClientAccountManager.clientAccount
+        val accessToken = if (chatClient.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
+            runCatching { account.takeSession().accessToken.value }
+                .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
+                .getOrNull()
+        } else {
+            null
+        }
+
+        if (accessToken != null) {
+            logger.info("Logging in with LiquidBounce Account...")
+            accountLoginPending = true
+            chatClient.loginAccount(accessToken)
+        } else {
+            logger.info("Requesting to login into Mojang...")
+            accountLoginPending = false
+            chatClient.requestMojangLogin()
+        }
     }
 
     @Suppress("unused")
@@ -276,15 +297,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                 )
 
                 chatClient.negotiate()
-
-                // When the token is not empty, we can try to login via JWT
-                if (jwtToken.isNotEmpty()) {
-                    logger.info("Logging in via JWT...")
-                    chatClient.loginViaJwt(jwtToken)
-                } else {
-                    logger.info("Requesting to login into Mojang...")
-                    chatClient.requestMojangLogin()
-                }
+                login()
             }
             ClientChatStateChange.State.LOGGED_IN -> {
                 notification(

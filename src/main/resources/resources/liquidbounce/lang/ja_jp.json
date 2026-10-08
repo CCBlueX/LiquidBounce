@@ -169,7 +169,6 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "ゲームログを確認し、通知してください。",
   "liquidbounce.liquidchat.authenticationFailed": "認証に失敗しました！ LiquidChatはMinecraftの公式アカウントが必要です。",
-  "liquidbounce.liquidchat.jwtTokenReceived": " JWT トークンを受け取りました! 再接続しています... ",
   "liquidbounce.liquidchat.notConnected": "チャットサーバーに接続されていません。LiquidChatモジュールをオンにしてください。",
   "liquidbounce.liquidchat.notLoggedIn": "認証されていません。プレミアムマインクラフトアカウントでのみチャットすることができます。。",
   "liquidbounce.liquidchat.states.connected": "チャット サーバーに接続しました! ",

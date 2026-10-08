@@ -372,6 +372,7 @@ object LiquidBounce : EventListener {
                         logger.info("Successfully renewed client account token.")
                     }
                 }
+                ClientAccountManager.restored.complete(Unit)
             }
         }
 
