@@ -45,13 +45,7 @@ class ItemStackListRenderState(
 
     @JvmField var rowLength: Int = 9
 
-    @JvmField var backgroundColor: Color4b = Color4b.DEFAULT_BG_COLOR
-
-    @JvmField var backgroundOutlineColor: Color4b = Color4b.TRANSPARENT
-
-    @JvmField var backgroundMargin: Float = 2.0F
-
-    @JvmField var useTexture: Boolean = false
+    @JvmField var background: ItemStackListBackground = ItemStackListBackground.Panel.DEFAULT
 
     @JvmField var itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer =
         ItemStackListRenderer.SingleItemStackRenderer.All
@@ -89,35 +83,21 @@ class ItemStackListRenderState(
         this.scale = scale
     }
 
+    fun background(background: ItemStackListBackground): ItemStackListRenderState = apply {
+        this.background = background
+    }
+
+    /**
+     * @param outlineColor Overrides the outline color of the configured panel, for lists that outline per widget.
+     */
     @JvmOverloads
-    fun rectBackground(
-        color: Color4b,
-        outlineColor: Color4b = Color4b.TRANSPARENT,
-        margin: Float = this.backgroundMargin,
+    fun background(
+        choice: ItemStackListRenderer.BackgroundMode,
+        outlineColor: Color4b? = null,
     ): ItemStackListRenderState = apply {
-        require(margin >= 0F) { "Background margin must not be negative." }
-        backgroundColor = color
-        backgroundOutlineColor = outlineColor
-        backgroundMargin = margin
-        useTexture = false
+        val configured = choice.background
+        background = outlineColor?.let(configured::withOutline) ?: configured
     }
-
-    fun textureBackground(): ItemStackListRenderState = apply {
-        useTexture = true
-        backgroundColor = Color4b.TRANSPARENT
-        backgroundOutlineColor = Color4b.TRANSPARENT
-        backgroundMargin = 0F
-    }
-
-    fun background(choice: ItemStackListRenderer.BackgroundMode): ItemStackListRenderState =
-        when (choice) {
-            is ItemStackListRenderer.BackgroundMode.Rect -> rectBackground(
-                choice.fillColor,
-                choice.outlineColor,
-                choice.margin,
-            )
-            is ItemStackListRenderer.BackgroundMode.Texture -> textureBackground()
-        }
 
     fun itemStackRenderer(
         itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer,

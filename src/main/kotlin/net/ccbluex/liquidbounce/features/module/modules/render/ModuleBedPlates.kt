@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
@@ -51,7 +52,7 @@ import org.joml.Vector2f
 object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
-    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
+    private val background = modes(this, "Background", 0, ::backgroundChoices)
     private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
@@ -256,14 +257,14 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
             val outlineColor = if (outline) {
                 Color4b.fullAlpha(bedState.block.color.mapColor.col)
             } else {
-                Color4b.TRANSPARENT
+                null
             }
 
             state.itemStackListRenderState
                 .scale(scale)
                 .centerX(screenPos.x)
                 .centerY(screenPos.y)
-                .rectBackground(backgroundColor, outlineColor)
+                .background(background.activeMode, outlineColor)
                 .draw(event.context, preventOverlap)
 
             i++
