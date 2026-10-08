@@ -24,9 +24,21 @@ import net.minecraft.world.item.Item
 
 class CleanupPlanTemplate(
     /**
-     * Contains requests for each slot (e.g. Slot 1 -> SWORD, Slot 8 -> BLOCK, etc.)
+     * Contains the wishes for each slot, in the order they are preferred.
+     *
+     * ## Example:
+     * - Configuration for the slot: `[(sword), (snowball, egg), (apple)]`
+     * - Available items: `[1x sword, 3x snowball, 16x egg, 64x apple]`
+     *
+     * Behaviour:
+     * 1. The slot would be filled in
+     * 2. If the sword wasn't available, the next wish is considered.
+     * So it searches for the best snowball or egg in the list.
+     * Since 16 eggs are better than 3 snowballs, it will prefer those.
+     * 3. If the eggs weren't available or the snowballs were more, it would fill the slot with the snowball stack.
+     * 4. If no eggs and snowballs are available either, the apples would be filled in.
      */
-    val slotContentMap: Map<ItemSlot, CleanupPlanSlotContent>,
+    val slotContentMap: Map<ItemSlot, List<SlotContentPreference>>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
      * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
@@ -41,25 +53,6 @@ class CleanupPlanTemplate(
      */
     val itemBlacklist: Set<Item> = emptySet(),
 ) {
-
-    class CleanupPlanSlotContent(
-        /**
-         * Content wishes for the target slot.
-         *
-         * ## Example:
-         * - Configuration for the slot: `[(sword), (snowball, egg), (apple)]`
-         * - Available items: `[1x sword, 3x snowball, 16x egg, 64x apple]`
-         *
-         * Behaviour:
-         * 1. The slot would be filled in
-         * 2. If the sword wasn't available, the next wish is considered.
-         * So it searches for the best snowball or egg in the list.
-         * Since 16 eggs are better than 3 snowballs, it will prefer those.
-         * 3. If the eggs weren't available or the snowballs were more, it would fill the slot with the snowball stack.
-         * 4. If no eggs and snowballs are available either, the apples would be filled in.
-         */
-        val slotContentPreferences: List<SlotContentPreference>,
-    )
 
     data class SlotContentPreference(
         val itemType: GenericItemType,

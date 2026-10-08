@@ -48,7 +48,7 @@ class WishOrganizer(template: CleanupPlanTemplate) {
         val wishIdMap = HashMap<CleanupPlanTemplate.SlotContentPreference, WishItemGroupId>()
 
         for ((slot, content) in template.slotContentMap.entries) {
-            content.slotContentPreferences.forEachIndexed { wishIndexInSlot, wish ->
+            content.forEachIndexed { wishIndexInSlot, wish ->
                 val id = wishIdMap.computeIfAbsent(wish) { WishItemGroupId() }
 
                 organizedWishes.add(

@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanSlotContent
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.SlotContentPreference
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -102,7 +101,7 @@ class WishOrganizerTest {
     }
 
     private fun template(vararg targets: Pair<ItemSlot, List<SlotContentPreference>>) = CleanupPlanTemplate(
-        targets.associate { (slot, wishes) -> slot to CleanupPlanSlotContent(wishes) },
+        targets.toMap(),
         itemAmountConstraintProvider = AmountItemAmountConstraintProvider(),
         restrictions = CleanupPlanRestrictions(emptyMap()),
     )

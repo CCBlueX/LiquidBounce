@@ -62,7 +62,6 @@ class AmountItemAmountConstraintProvider(
             val group = SpecificItemGroup(
                 id = id,
                 desiredAmount = desiredAmount,
-                priority = id,
                 default = default,
             )
 
@@ -87,7 +86,7 @@ class AmountItemAmountConstraintProvider(
                 val info = ItemConstraintInfo(
                     group = SpecificItemGroupConstraintGroup(
                         acceptableRange = group.desiredAmount..Integer.MAX_VALUE,
-                        priority = group.priority,
+                        priority = group.id,
                         groupId = group.id
                     ),
                     amountAddedByItem = facet.itemStack.count,
@@ -135,13 +134,12 @@ class AmountItemAmountConstraintProvider(
 
     override fun getAllocationPriority(itemGroup: ItemCategory): Int {
         // Categories without a rule are processed last, so the groups the user cares about are counted first.
-        return this.itemSpecificGroupMap[itemGroup]?.minOf { it.priority } ?: Int.MAX_VALUE
+        return this.itemSpecificGroupMap[itemGroup]?.minOf { it.id } ?: Int.MAX_VALUE
     }
 
     private class SpecificItemGroup(
         val id: Int,
         val desiredAmount: Int,
-        val priority: Int,
         val default: Boolean,
     )
 }

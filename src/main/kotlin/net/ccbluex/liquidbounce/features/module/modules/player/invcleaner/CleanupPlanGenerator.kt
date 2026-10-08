@@ -38,7 +38,8 @@ class CleanupPlanGenerator(
     val plan: InventoryCleanupPlan
 
     init {
-        val allItemFacets = discoverItemFacets()
+        val categorizer = ItemCategorization(availableItems)
+        val allItemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
         // All slots the cleaner may swap into other slots
         val availableItemFacets = allItemFacets.filter {
             this.template.restrictions.getRestrictionFor(it.itemSlot) < RestrictionType.FORBID_REPLACING
@@ -91,8 +92,7 @@ class CleanupPlanGenerator(
 
                         usefulItems.add(facet.itemSlot)
                     }
-                    // TODO: keep oversaturated items out of the wish dispenser as well.
-                    SatisfactionStatus.SATISFIED, SatisfactionStatus.OVERSATURATED -> {}
+                    SatisfactionStatus.SATISFIED -> {}
                 }
             }
         }
@@ -132,17 +132,6 @@ class CleanupPlanGenerator(
             }
         }
         return swaps
-    }
-
-    /**
-     * Discovers all facets from [availableItems]. Filters out any slot that has been restricted
-     */
-    private fun discoverItemFacets(): List<ItemFacet> {
-        val categorizer = ItemCategorization(availableItems)
-
-        val availableItemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
-
-        return availableItemFacets
     }
 
     private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {

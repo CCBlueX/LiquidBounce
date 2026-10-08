@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanSlotContent
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.SlotContentPreference
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -89,11 +89,11 @@ object ModuleInventoryCleaner : ClientModule(
                     // Servers up to 1.15.2 cannot swap the off-hand slot, so it is never filled in there.
                     val targetable = slot != HotbarItemSlot.OFFHAND || HotbarItemSlot.OFFHAND.canBeSwapTarget
 
-                    slot to CleanupPlanSlotContent(if (targetable) wishes else emptyList())
+                    slot to if (targetable) wishes else emptyList()
                 }
                 .toTypedArray()
 
-            val slotTargets = linkedMapOf<ItemSlot, CleanupPlanSlotContent>(*mapped)
+            val slotTargets = linkedMapOf<ItemSlot, List<SlotContentPreference>>(*mapped)
 
 
             // Disallow tampering with armor slots since auto armor already handles them
