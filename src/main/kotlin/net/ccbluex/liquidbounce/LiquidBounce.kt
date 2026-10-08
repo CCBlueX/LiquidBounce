@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.chat.ChatNotices
 import net.ccbluex.liquidbounce.features.chat.ChatSession
+import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -289,6 +290,7 @@ object LiquidBounce : EventListener {
         EnderChestInventoryTracker
         ChatSession
         ChatNotices
+        PartyManager
         ActiveServerList
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)

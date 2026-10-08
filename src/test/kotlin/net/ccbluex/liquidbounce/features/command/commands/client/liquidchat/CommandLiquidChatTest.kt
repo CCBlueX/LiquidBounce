@@ -35,6 +35,7 @@ class CommandLiquidChatTest {
     fun bootstrapMinecraft() {
         MinecraftBootstrap.ensureInitialized()
         CommandLiquidChat.register(dispatcher)
+        CommandParty.register(dispatcher)
     }
 
     private fun parses(input: String) {
@@ -51,6 +52,17 @@ class CommandLiquidChatTest {
         parses("lc group invite \"Bed Wars Team\" Notch")
         parses("lc channel group Bedwars")
         parses("lc report Spammer sells coins in chat")
+    }
+
+    @Test
+    fun `party subcommands parse`() {
+        parses("party invite Notch")
+        parses("p join Notch")
+        parses("party pvp")
+        parses("party pvp off")
+        parses("party setleader Notch")
+        parses("party status")
+        parses("party warp")
     }
 
 }

@@ -116,7 +116,7 @@ object ChatSession : EventListener {
         recentMessages.entries.lastOrNull { it.value == userId }?.key
     }
 
-    private fun remember(users: Iterable<ChatUserRef>) = users.forEach { names[it.id] = it.name }
+    fun remember(users: Iterable<ChatUserRef>) = users.forEach { names[it.id] = it.name }
 
     @Suppress("unused")
     private val packetHandler = handler<ClientChatPacketEvent> { event ->

@@ -31,6 +31,7 @@ import java.util.TreeSet
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.FriendChangeEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.chat.party.PartyManager
 
 object FriendManager : Config("Friends"), EventListener {
 
@@ -77,8 +78,9 @@ object FriendManager : Config("Friends"), EventListener {
 
     }
 
-    fun isFriend(name: String): Boolean = friends.contains(Friend(name, null))
-    fun isFriend(entity: Entity): Boolean = entity is Player && isFriend(entity.gameProfile.name)
+    fun isFriend(name: String): Boolean = friends.contains(Friend(name, null)) || PartyManager.isAlly(name)
+    fun isFriend(entity: Entity): Boolean =
+        entity is Player && (isFriend(entity.gameProfile.name) || PartyManager.isAlly(entity.uuid))
 
     @AddonApi
     fun add(friend: Friend): Boolean = friends.add(friend).also { added ->
