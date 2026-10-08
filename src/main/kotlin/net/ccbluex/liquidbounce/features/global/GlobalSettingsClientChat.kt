@@ -55,12 +55,12 @@ import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clientTag
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -106,11 +106,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     private val acceptFriendRequests by boolean("AcceptFriendRequests", true).onChanged { sendSettings() }
 
     val chatClient = AxochatClient { allowMessages }
-    private val prefix: Component = "".asText()
-        .withStyle(ChatFormatting.RESET).withStyle(ChatFormatting.GRAY)
-        .append(this.name.asPlainText(ChatFormatting.BLUE))
-        .withStyle(ChatFormatting.BOLD)
-        .append(" ▸ ".asText().withStyle(ChatFormatting.RESET).withColor(ChatFormatting.DARK_GRAY))
+    private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
