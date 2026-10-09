@@ -37,8 +37,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.util.CommonColors;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
@@ -154,7 +156,7 @@ public abstract class MixinPlayerTabOverlay {
 
             var latency = Mth.clamp(entry.getLatency(), 0, 9999);
             var color = latency < 150 ? 0xFF00E970 : latency < 300 ? 0xFFE7D020 : 0xFFD74238;
-            var text = latency + (accurateLatency.getSuffix() ? "ms" : "");
+            var text = FormattedCharSequence.forward(latency + (accurateLatency.getSuffix() ? "ms" : ""), Style.EMPTY);
             context.text(textRenderer, text, x + width - textRenderer.width(text), y, color);
             ci.cancel();
         }

@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.RenderPipelines
@@ -143,7 +144,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
             }
             this.centeredText(
                 mc.font,
-                text,
+                text.withFormat(),
                 x + GuiRenderer.DEFAULT_ITEM_SIZE / 2,
                 y,
                 TextCooldownProgress.color.argb,
