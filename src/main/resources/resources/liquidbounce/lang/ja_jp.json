@@ -239,6 +239,7 @@
   "liquidbounce.module.autoShoot.description": "自動的に卵や雪玉をターゲットに投げつけたり、QuakeCraftでシュートしたりします。",
   "liquidbounce.module.autoShop.description": "BedWarsのショップで特定のアイテムを自動的に購入します。",
   "liquidbounce.module.autoTool.description": "ブロックを採掘するためにインベントリ内の最適なツールを自動的に選択します。",
+  "liquidbounce.module.autoTpa.description": "テレポートリクエストを自動的に承認します",
   "liquidbounce.module.autoTrap.description": "自動的に周囲のターゲットに火をつけます。",
   "liquidbounce.module.autoWalk.description": "向いている方向に自動的に歩きます。",
   "liquidbounce.module.autoWeapon.description": "ホットバーから最適な武器を自動的に選択します。",

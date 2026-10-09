@@ -238,6 +238,7 @@
   "liquidbounce.module.autoShop.description": "Autwomaticawwy buys specific items in a BedWaws shop",
   "liquidbounce.module.autoSoup.description": "Automatically eats soup whenever your health is low.",
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
+  "liquidbounce.module.autoTpa.description": "Autwomaticawwy accepts teweportation wequests (・`ω´・)",
   "liquidbounce.module.autoTrap.description": "Automatically sets targets on fire or traps them.",
   "liquidbounce.module.autoWalk.description": "Autwomaticawwy makes u wawk",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
