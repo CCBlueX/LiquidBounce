@@ -389,6 +389,7 @@
   "liquidbounce.module.holeESP.description": "Zoekt en markeert veilige gaten voor crystal-PvP.",
   "liquidbounce.module.holeFiller.description": "Vult automatisch veilige gaten voor crystal-PvP.",
   "liquidbounce.module.hud.description": "Toont een HUD-overlay in het spel met nuttige informatie.",
+  "liquidbounce.module.interceptElytra.description": "Gooit windladingen naar elytra-glijders om hen te onderscheppen en uit de lucht te stoten.",
   "liquidbounce.module.inventoryCleaner.description": "Schoont je inventaris op en gooit onnodige items weg.",
   "liquidbounce.module.inventoryMove.description": "Laat je lopen terwijl een inventarisscherm open is.",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "Je laggt niet langer, en we hebben je scherm gesloten.",
