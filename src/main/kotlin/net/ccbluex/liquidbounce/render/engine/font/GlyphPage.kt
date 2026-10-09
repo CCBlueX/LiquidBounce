@@ -22,7 +22,6 @@ import com.mojang.renderpearl.api.GpuFormat
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import org.lwjgl.sdl.SDLVideo
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -197,19 +196,13 @@ abstract class GlyphPage {
                 val baselineX = characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING
                 val baselineY = characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
 
-                when (SDLVideo.SDL_GetCurrentVideoDriver()) {
-                    "x11" -> {
-                        // Java2D's X11 bitmap glyph path can crash in FreeType; rendering the same outline avoids it.
-                        // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
-                        atlasGraphics.fill(
-                            atlasGraphics.font.createGlyphVector(fontRendererContext, character)
-                                .getGlyphOutline(0, baselineX.toFloat(), baselineY.toFloat())
-                        )
-                    }
-                    else -> {
-                        atlasGraphics.drawString(character, baselineX, baselineY)
-                    }
-                }
+                // Java2D's bitmap glyph path can resolve into LWJGL's bundled FreeType instead of the system one and
+                // crash there; rendering the same outline avoids it.
+                // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
+                atlasGraphics.fill(
+                    atlasGraphics.font.createGlyphVector(fontRendererContext, character)
+                        .getGlyphOutline(0, baselineX.toFloat(), baselineY.toFloat())
+                )
             }
         }
 
