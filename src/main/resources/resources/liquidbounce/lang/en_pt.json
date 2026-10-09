@@ -275,6 +275,7 @@
   "liquidbounce.module.clickTp.description": "Teleports u two teh bwock u awe wooking at when pwessing MIDDLE_CLICK. Onwy wowks on Vuwcan 286 anti-cheat.",
   "liquidbounce.module.clientSpoofer.description": "Spwoofs ywouw gamwe cwient bwand two anothew",
   "liquidbounce.module.clip.description": "Awwows u two cwip fwough bwocks",
+  "liquidbounce.module.clutch.description": "Automatically places a block beneath you when falling into the void.",
   "liquidbounce.module.combineMobs.description": "Combines cwamped entities",
   "liquidbounce.module.consoleSpammer.description": "Spams teh sewwew's consowe with ewwow messages",
   "liquidbounce.module.criticals.description": "Autwomaticawwy cwits ewewwy tim u attack swomweonye",
