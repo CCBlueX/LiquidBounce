@@ -284,6 +284,17 @@
         updateValue();
     }
 
+    // Resets the curve to the points it was declared with.
+    function resetCurve() {
+        if (!chart) return;
+
+        const dataset = chart.data.datasets[0];
+        dataset.data = sortPoints(cSetting.defaultPoints.map(point => ({x: point.x, y: point.y})));
+        ensureEndpoints();
+        chart.update();
+        updateValue();
+    }
+
     // Removes a point which was right clicked
     function removePoint(e: MouseEvent) {
         e.preventDefault();
@@ -319,7 +330,12 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="head" class:expanded on:contextmenu|preventDefault={() => expanded = !expanded}>
         <div class="title">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <ExpandArrow bind:expanded/>
+        <div class="actions">
+            <button class="button-reset" on:click|stopPropagation={resetCurve} title="Reset">
+                <img class="icon" src="img/clickgui/icon-reset.svg" alt="reset-curve" />
+            </button>
+            <ExpandArrow bind:expanded/>
+        </div>
     </div>
 
     <div class="canvas-wrapper" class:visible={expanded}>
@@ -361,6 +377,23 @@
 
     &.expanded {
       margin-bottom: 10px;
+    }
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .button-reset {
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+
+    .icon {
+      height: 14px;
     }
   }
 
