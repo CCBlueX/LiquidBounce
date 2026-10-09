@@ -439,6 +439,7 @@
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
   "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
+  "liquidbounce.liquidchat.jwtTokenRequested": "Requested a JWT token from the chat server...",
   "liquidbounce.liquidchat.notConnected": "Not connected to the chat server! Turn on the LiquidChat module!",
   "liquidbounce.liquidchat.notLoggedIn": "Not authenticated! You can only chat with a premium Minecraft account, sorry!",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
