@@ -17,61 +17,69 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 package net.ccbluex.liquidbounce.features.global
 
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import net.ccbluex.axochat.LoginResult
+import net.ccbluex.axochat.protocol.ErrorCode
+import net.ccbluex.axochat.protocol.Serverbound
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.eventListenerScope
-import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
+import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.chat.AxochatClient
-import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
+import net.ccbluex.liquidbounce.features.chat.LiquidChatClient
+import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
+import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clientTag
+import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.text.textOf
-import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.item.component.ResolvableProfile
-import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.arguments.StringArgumentType
-import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.collection.Filter
 import java.util.TreeSet
+import kotlin.random.Random
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+
+private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
 
 object GlobalSettingsClientChat : ToggleableValueGroup(
     name = "ClientChat",
@@ -80,8 +88,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 ) {
 
     private val logger = clientLogger(this.name)
-
-    private var jwtToken by text("JwtToken", "")
 
     private object FilterConf : ToggleableValueGroup(this, "Filter", false) {
         private val usernames by textList("Usernames", TreeSet(String.CASE_INSENSITIVE_ORDER))
@@ -96,68 +102,68 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
-    private val chatClient = AxochatClient()
-    private val prefix: Component = "".asText()
-        .withStyle(ChatFormatting.RESET).withStyle(ChatFormatting.GRAY)
-        .append(this.name.asPlainText(ChatFormatting.BLUE))
-        .withStyle(ChatFormatting.BOLD)
-        .append(" ▸ ".asText().withStyle(ChatFormatting.RESET).withColor(ChatFormatting.DARK_GRAY))
+    private val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
+    private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
+    private val hideServer by boolean("HideServer", false).onChanged { sendSettings() }
+    private val acceptFriendRequests by boolean("AcceptFriendRequests", true).onChanged { sendSettings() }
+
+    val chatClient = LiquidChatClient { allowMessages }
+    private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
     private val filteredNames = hashSetOf<String>()
 
-    private fun registerChatWriteCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
-        dispatcher.register("chat") {
-            argument("message", StringArgumentType.greedyString()) { message ->
-                execSuspend { ctx ->
-                    if (!chatClient.isConnected) {
-                        chat(
-                            prefix,
-                            translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
-                            metadata = exceptionData
-                        )
-                        return@execSuspend
-                    }
+    /**
+     * Prints why the chat cannot be used right now.
+     */
+    fun checkLoggedIn(): Boolean {
+        val reason = when {
+            !chatClient.isConnected -> "liquidbounce.liquidchat.notConnected"
+            !chatClient.isLoggedIn -> "liquidbounce.liquidchat.notLoggedIn"
+            else -> return true
+        }
 
-                    if (!chatClient.isLoggedIn) {
-                        chat(
-                            prefix,
-                            translation("liquidbounce.liquidchat.notLoggedIn").withStyle(ChatFormatting.GRAY),
-                            metadata = exceptionData
-                        )
-                        return@execSuspend
-                    }
+        chat(prefix, translation(reason).withStyle(ChatFormatting.GRAY), metadata = exceptionData)
+        return false
+    }
 
-                    chatClient.sendMessage(ctx.get(message))
-                }
-            }
+    fun notice(message: Component) = writeChat(PlainText.EMPTY, message)
+
+    fun send(channel: String, message: String) {
+        if (!checkLoggedIn()) {
+            return
+        }
+
+        if (!chatClient.sendMessage(channel, message)) {
+            notice(translation("liquidbounce.liquidchat.requiresV2").withStyle(ChatFormatting.GRAY))
+        } else if (!chatClient.isModern && channel.startsWith(ChatSession.USER_PREFIX)) {
+            // v1 servers do not echo direct messages
+            val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
+            val prefix = ChatMessageFormat.directMessagePrefix(receiver.asPlainText(ChatFormatting.BLUE))
+            writeChat(prefix, regular(message))
         }
     }
 
-    private fun registerChatJwtCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
-        dispatcher.register("chatjwt") {
-            execSuspend {
-                if (!chatClient.isConnected) {
-                    chat(
-                        prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
-                        metadata = exceptionData
-                    )
-                    return@execSuspend
+    private fun registerChatWriteCommand(dispatcher: CommandDispatcher<ClientCommandSource>) {
+        dispatcher.register("chat") {
+            argument("message", StringArgumentType.greedyString()) { message ->
+                exec { ctx ->
+                    send(ChatSession.GLOBAL, ctx.get(message))
+                    1
                 }
-
-                chatClient.sendPacket(C2SRequestJWTPacket())
-                chat(
-                    prefix, translation("liquidbounce.liquidchat.jwtTokenRequested").withStyle(ChatFormatting.GRAY),
-                    metadata = exceptionData
-                )
             }
         }
     }
 
     init {
         CommandManager.register(::registerChatWriteCommand)
-        CommandManager.register(::registerChatJwtCommand)
+    }
+
+    private fun sendSettings() {
+        if (chatClient.isLoggedIn && chatClient.isModern) {
+            chatClient.sendPacket(Serverbound.Settings(allowMessages, hideServer, acceptFriendRequests, serverChat))
+        }
     }
 
     override fun onEnabled() {
@@ -176,14 +182,25 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         chatClient.disconnect()
     }
 
+    private var reconnectAttempts = 0
+
     @Suppress("unused")
     private val repeatable = tickHandler(Dispatchers.IO) {
-        if (!chatClient.isConnected) {
-            chatClient.connect()
-        } else {
-            // Wait 5 seconds before retrying
+        if (chatClient.isConnected) {
+            if (chatClient.isLoggedIn) {
+                reconnectAttempts = 0
+            }
             delay(5.seconds)
+            return@tickHandler
         }
+
+        if (reconnectAttempts > 0) {
+            // Exponential backoff with jitter, so a server restart is not hit by every client at once
+            val backoff = (2.seconds * (1 shl (reconnectAttempts - 1).coerceAtMost(6))).coerceAtMost(2.minutes)
+            delay(backoff * Random.nextDouble(0.75, 1.25))
+        }
+        reconnectAttempts++
+        chatClient.connect()
     }
 
     @Suppress("unused")
@@ -209,32 +226,14 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
             ObjectContents(PlayerSprite(resolvableProfile, false), optional())
         ).copyable(copyContent = event.user.uuid.toString())
 
-        fun namePart(formatting: ChatFormatting) =
-            event.user.name.asPlainText(
-                Style.EMPTY + formatting +
-                    ClickEvent.CopyToClipboard(event.user.name) +
-                    HoverEvent.ShowText(event.user.name.asPlainText())
-            )
-
-        val prefix = when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
-                textOf(
-                    playerSpritePart,
-                    PlainText.SPACE,
-                    namePart(ChatFormatting.GRAY),
-                    " ▸ ".asPlainText(ChatFormatting.DARK_GRAY),
-                )
-            ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
-                textOf(
-                    "[".asPlainText(ChatFormatting.DARK_GRAY),
-                    playerSpritePart,
-                    PlainText.SPACE,
-                    namePart(ChatFormatting.BLUE),
-                    "] ".asPlainText(ChatFormatting.DARK_GRAY),
-                )
+        val prefix = ChatMessageFormat.messagePrefix(event, playerSpritePart)
+        val content = if (event.author?.highlight == true) {
+            event.message.asText().withStyle(ChatFormatting.WHITE)
+        } else {
+            regular(event.message)
         }
 
-        writeChat(prefix, regular(event.message).copyable(copyContent = event.message))
+        writeChat(prefix, content.copyable(copyContent = event.message))
 
         if (event.chatGroup !in autoTranslate) {
             return@suspendHandler
@@ -247,9 +246,57 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     }
 
     @Suppress("unused")
-    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CancelPrevious) { event ->
-        jwtToken = event.jwt
+    private val accountChange = suspendHandler<UserLoggedInEvent>(behavior = CancelPrevious) {
         chatClient.reconnect()
+    }
+
+    @Suppress("unused")
+    private val accountRemoval = suspendHandler<UserLoggedOutEvent>(behavior = CancelPrevious) {
+        chatClient.reconnect()
+    }
+
+    /**
+     * Connection errors carry no code and are left to the notifications.
+     */
+    @Suppress("unused")
+    private val handleError = handler<ClientChatErrorEvent> { event ->
+        if (event.code != null) {
+            notice(event.error.asText().withStyle(ChatFormatting.RED))
+        }
+    }
+
+    private suspend fun login() {
+        // at startup the stored account loads alongside; logging in without it would pick the Minecraft identity
+        withTimeoutOrNull(ACCOUNT_RESTORE_TIMEOUT) { ClientAccountManager.restored.await() }
+        val account = ClientAccountManager.clientAccount
+        val accessToken = if (chatClient.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
+            runCatching { account.takeSession().accessToken.value }
+                .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
+                .getOrNull()
+        } else {
+            null
+        }
+
+        if (accessToken != null) {
+            logger.info("Logging in with LiquidBounce Account...")
+            when (val result = chatClient.loginAccount(accessToken)) {
+                LoginResult.Success -> {
+                    // a cracked session has no access token to join the session server with
+                    if (mc.user.accessToken.length > 1) {
+                        chatClient.proveMinecraft()
+                    }
+                    return
+                }
+                is LoginResult.Refused -> if (result.error.code != ErrorCode.LoginFailed) {
+                    return
+                }
+                LoginResult.Closed -> return
+            }
+            logger.info("LiquidBounce Account login failed, falling back to Mojang...")
+        }
+
+        logger.info("Logging in with the Minecraft account...")
+        chatClient.loginMojang()
     }
 
     @Suppress("unused")
@@ -262,16 +309,14 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
                     NotificationEvent.Severity.INFO
                 )
 
-                // When the token is not empty, we can try to login via JWT
-                if (jwtToken.isNotEmpty()) {
-                    logger.info("Logging in via JWT...")
-                    chatClient.loginViaJwt(jwtToken)
-                } else {
-                    logger.info("Requesting to login into Mojang...")
-                    chatClient.requestMojangLogin()
+                // outside this handler, which the login's own state changes would cancel
+                eventListenerScope.launch {
+                    chatClient.negotiate()
+                    login()
                 }
             }
             ClientChatStateChange.State.LOGGED_IN -> {
+                sendSettings()
                 notification(
                     "LiquidChat",
                     translation("liquidbounce.liquidchat.states.loggedIn"),

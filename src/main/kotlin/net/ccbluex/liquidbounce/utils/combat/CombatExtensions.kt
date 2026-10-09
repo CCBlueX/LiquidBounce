@@ -76,7 +76,17 @@ import net.minecraft.world.phys.Vec3
  * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
 @AddonApi
-data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
+data class EntityTargetingInfo @JvmOverloads constructor(
+    val classification: EntityTargetClassification,
+    val isFriend: Boolean,
+    val isPartyMember: Boolean = false,
+) {
+
+    // keeps add-ons compiled before party members working
+    @Deprecated("Keeps the binary interface", level = DeprecationLevel.HIDDEN)
+    fun copy(classification: EntityTargetClassification = this.classification, isFriend: Boolean = this.isFriend) =
+        copy(classification, isFriend, isPartyMember)
+
     companion object {
         @JvmField
         val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
@@ -104,7 +114,8 @@ enum class Targets(override val tag: String) : Tagged {
     INVISIBLE("Invisible"),
     DEAD("Dead"),
     SLEEPING("Sleeping"),
-    FRIENDS("Friends");
+    FRIENDS("Friends"),
+    PARTY("Party");
 }
 
 private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
@@ -115,6 +126,7 @@ private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
     val info = EntityTaggingManager.getTag(entity).targetingInfo
 
     return when {
+        info.isPartyMember && Targets.PARTY !in this -> false
         info.isFriend && Targets.FRIENDS !in this -> false
         info.classification === EntityTargetClassification.TARGET -> isInteresting(entity, info)
         else -> false
@@ -130,6 +142,7 @@ private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
     val info = EntityTaggingManager.getTag(entity).targetingInfo
 
     return when {
+        info.isPartyMember && Targets.PARTY !in this -> false
         info.isFriend && Targets.FRIENDS !in this -> false
         info.classification !== EntityTargetClassification.IGNORED -> isInteresting(entity, info)
         else -> false
@@ -157,8 +170,9 @@ private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInf
             suspect === mc.player -> false
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
-            // Allow targeting friends even when Players is disabled, as long as Friends is enabled
-            else -> Targets.PLAYERS in this || (info.isFriend && Targets.FRIENDS in this)
+            // Friends and party members count even when Players is disabled
+            else -> Targets.PLAYERS in this || (info.isFriend && Targets.FRIENDS in this) ||
+                (info.isPartyMember && Targets.PARTY in this)
         }
         is WaterAnimal -> Targets.WATER_CREATURE in this
         is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this

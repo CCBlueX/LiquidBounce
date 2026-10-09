@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.chat.party.PartyStandIns
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -37,7 +38,8 @@ import net.minecraft.world.entity.LivingEntity
 private val entities = ReferenceArrayList<LivingEntity>()
 
 /**
- * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition.
+ * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition,
+ * and the [PartyStandIns] of party members beyond render distance while they are a visual target.
  *
  * This collection will be auto updated on [GameTickEvent],
  * and be cleared on [WorldChangeEvent] or at the unsubscription of last [EventListener].
@@ -92,6 +94,10 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
                 entities += entity
             }
+        }
+
+        if (Targets.PARTY in GlobalSettingsTarget.visual) {
+            entities.addAll(PartyStandIns)
         }
 
         update()

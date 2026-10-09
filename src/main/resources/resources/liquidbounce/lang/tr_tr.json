@@ -183,7 +183,6 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Oyun günlüğünü kontrol et ve bizi bilgilendir.",
   "liquidbounce.liquidchat.authenticationFailed": "Kimlik doğrulama başarısız! LiquidChat premium Minecraft hesabı gerektirir.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "JWT token alındı! Yeniden giriş yapılıyor...",
   "liquidbounce.liquidchat.notConnected": "Sohbet sunucusuna bağlı değilsiniz! LiquidChat modülünü açın!",
   "liquidbounce.liquidchat.notLoggedIn": "Kimlik doğrulanmadı! Üzgünüz, sadece premium Minecraft hesabı ile sohbet edebilirsiniz!",
   "liquidbounce.liquidchat.states.connected": "Sohbet sunucusuna bağlanıldı!",

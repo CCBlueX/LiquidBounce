@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.chat.party.PartyStandIns
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -39,14 +40,19 @@ object EspLegacy2DMode : EspMode("Legacy2D") {
             for (entity in RenderedEntities) {
                 if (!shouldRender(entity)) continue
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
+                val actual = entity.interpolateCurrentPosition(event.partialTicks)
+                val (position, size) = if (PartyStandIns.isStandIn(entity)) {
+                    PartyStandIns.anchor(actual, camera.position())
+                } else {
+                    actual to 1.0
+                }
                 val color = getColor(entity).argb
                 val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
 
                 drawLegacy2DMarker(
-                    pos = pos,
-                    entityHeight = entity.boundingBox.ysize,
-                    scale = scale,
+                    pos = position.add(0.0, yOffset.toDouble() * size, 0.0),
+                    entityHeight = entity.boundingBox.ysize * size,
+                    scale = scale * size.toFloat(),
                     foregroundArgb = color,
                     backgroundArgb = backgroundColor
                 )

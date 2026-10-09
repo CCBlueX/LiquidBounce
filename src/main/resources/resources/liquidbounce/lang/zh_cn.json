@@ -370,7 +370,6 @@
   "liquidbounce.generic.locked": "此模块已锁定，无法开启。因为很可能不绕过。",
   "liquidbounce.generic.notifyDeveloper": "检查你的游戏日志并通知我们。",
   "liquidbounce.liquidchat.authenticationFailed": "身份验证失败！ LiquidChat需要Minecraft正版账号。",
-  "liquidbounce.liquidchat.jwtTokenReceived": "接收到JWT令牌！ 重新登录中...",
   "liquidbounce.liquidchat.notConnected": "未链接聊天服务器！ 请开启LiquidChat模块！",
   "liquidbounce.liquidchat.notLoggedIn": "未通过身份验证！ 你只能使用Minecraft正版账号参与聊天，抱歉！",
   "liquidbounce.liquidchat.states.connected": "已连接到聊天服务器！",

@@ -249,7 +249,6 @@
   "liquidbounce.generic.forum": "Forum",
   "liquidbounce.generic.notifyDeveloper": "Überprüfe dein Spielprotokoll und benachrichtige uns.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentifizierung fehlgeschlagen! Für LiquidChat ist ein Minecraft-Premium-Konto erforderlich.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "JWT-Token erhalten! Erneut anmelden...",
   "liquidbounce.liquidchat.notConnected": "Keine Verbindung zum Chatserver! Schalte das LiquidChat-Modul ein!",
   "liquidbounce.liquidchat.notLoggedIn": "Nicht authentifiziert! Du kannst leider nur mit einem Premium-Minecraft-Konto chatten!",
   "liquidbounce.liquidchat.states.connected": "Mit Chatserver verbunden!",

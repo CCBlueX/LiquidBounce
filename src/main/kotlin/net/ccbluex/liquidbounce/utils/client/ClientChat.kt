@@ -45,9 +45,11 @@ import net.minecraft.network.chat.TextColor
 import java.io.File
 
 // Chat formatting
-private val clientPrefix: Component = "".asText()
+private val clientPrefix: Component = clientTag("LiquidBounce")
+
+internal fun clientTag(name: String): Component = "".asText()
     .withStyle(ChatFormatting.RESET, ChatFormatting.GRAY)
-    .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
+    .append(gradientText(name, Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
     .append(" ▸ ".asText().withStyle(ChatFormatting.RESET, ChatFormatting.GRAY))
 
 @AddonApi
