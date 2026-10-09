@@ -83,6 +83,7 @@ enum class ValueType(
     PROXY,
     ACCOUNT,
     SUBSCRIBED_ITEM,
+    INVENTORY_PRESET,
 
     // Invalid type
     INVALID
