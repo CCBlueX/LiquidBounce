@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.cosmetic
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -35,6 +36,8 @@ import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.function.Consumer
 
 /**
  * A more reliable, safer and stress reduced cosmetics service
@@ -60,37 +63,62 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
     internal var carriers = emptySet<String>()
     internal val carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
-    private val lastUpdate = Chronometer()
-    private var task: Job? = null
+    internal val lastUpdate = Chronometer()
+    private val refreshing = AtomicBoolean()
 
     /**
      * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
-     * and then call out [done].
+     * and then call out [done], or [onFailure] if the API did not provide them.
      * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
+     *
+     * An attempt that failed waits for the REFRESH_DELAY as well, so an API that does not answer
+     * is not asked again for every cosmetic lookup.
      */
-    fun refreshCarriers(force: Boolean = false, done: Runnable) {
+    fun refreshCarriers(force: Boolean = false, onFailure: Runnable = Runnable { }, done: Runnable) {
+        refreshCarriersWith(force, { CosmeticApi.getCarriers() }, { mc.execute(it) }, onFailure, done)
+    }
+
+    internal fun refreshCarriersWith(
+        force: Boolean,
+        load: suspend () -> Set<String>,
+        runOnMain: Consumer<Runnable>,
+        onFailure: Runnable,
+        done: Runnable,
+    ): Job? {
         // Check if there is not another task running which could conflict.
-        if (task == null) {
-            // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-            if (lastUpdate.hasElapsed(REFRESH_DELAY) || force) {
-                task = withScope {
-                    runCatching {
-                        carriers = CosmeticApi.getCarriers()
-                        task = null
+        if (refreshing.get()) {
+            return null
+        }
 
-                        // Reset timer and start once again
-                        lastUpdate.reset()
+        // Check if the required time in milliseconds has passed of the REFRESH_DELAY
+        if (!force && !lastUpdate.hasElapsed(REFRESH_DELAY)) {
+            // Call out done immediate because there is no refresh required at the moment
+            done.run()
+            return null
+        }
 
-                        // Call out done
-                        mc.execute(done)
-                    }.onFailure {
-                        logger.error("Failed to refresh cape carriers due to error.", it)
-                    }
-                }
-            } else {
-                // Call out done immediate because there is no refresh required at the moment
-                done.run()
+        if (!refreshing.compareAndSet(false, true)) {
+            return null
+        }
+
+        return withScope {
+            var refreshed = false
+
+            try {
+                carriers = load()
+                refreshed = true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                logger.error("Failed to refresh cape carriers due to error.", e)
+            } finally {
+                // Reset timer and start once again
+                lastUpdate.reset()
+                refreshing.set(false)
             }
+
+            // Call out whether the carriers were refreshed
+            runOnMain.accept(if (refreshed) done else onFailure)
         }
     }
 
