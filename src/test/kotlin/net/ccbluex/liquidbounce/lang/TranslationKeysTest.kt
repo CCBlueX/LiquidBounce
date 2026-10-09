@@ -28,12 +28,19 @@ class TranslationKeysTest {
 
     private companion object {
         /**
-         * The first argument of [translation], when it is written out in the source.
-         * Keys that are put together at runtime cannot be checked here.
+         * Finds literal `translation("liquidbounce.*")` calls only.
+         * Runtime-composed keys from module `message(...)`, command `t(...)`, and setting descriptions
+         * are not checked here; this test is not an exhaustive translation audit.
          */
         val TRANSLATION_CALL = Regex("""\btranslation\(\s*"(liquidbounce\.[A-Za-z0-9_.]+)"""")
 
-        val SOURCE_ROOT: Path = Path.of("src", "main")
+        val SOURCE_ROOT: Path by lazy {
+            val testClasses = Path.of(TranslationKeysTest::class.java.protectionDomain.codeSource.location.toURI())
+            generateSequence(testClasses) { it.parent }
+                .map { it.resolve("src/main") }
+                .firstOrNull { Files.isDirectory(it) }
+                ?: error("Cannot locate src/main from test classes at $testClasses")
+        }
     }
 
     private fun englishKeys(): Set<String> {
@@ -48,8 +55,6 @@ class TranslationKeysTest {
      * The keys written out in the sources, with the position of their first use.
      */
     private fun usedKeys(): Map<String, String> {
-        check(Files.isDirectory(SOURCE_ROOT)) { "The sources are expected in $SOURCE_ROOT of the working directory" }
-
         val used = sortedMapOf<String, String>()
         Files.walk(SOURCE_ROOT).use { paths ->
             paths.filter { it.toString().endsWith(".kt") || it.toString().endsWith(".java") }.forEach { path ->
