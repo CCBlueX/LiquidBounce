@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
 /**
@@ -67,7 +66,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         private val testCondition: Predicate<Entity>,
     ) : Tagged, Predicate<Entity> by testCondition {
         ONLY_FACING("OnlyFacing", { target ->
-            isLookingTowards(target.lookAngle, player.position() - target.position())
+            target.lookAngle.dot(player.position() - target.position()) >= 0.0
         }),
         ONLY_ON_GROUND("OnlyOnGround", { _ ->
             player.onGround()
@@ -241,9 +240,3 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
     }
 
 }
-
-/**
- * Whether an entity looking along [look] faces a point at [offset] from it, which is the case unless the point is
- * behind it.
- */
-internal fun isLookingTowards(look: Vec3, offset: Vec3): Boolean = look.dot(offset) >= 0.0
