@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
@@ -50,11 +51,9 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.round
 
@@ -63,8 +62,15 @@ import kotlin.math.round
  */
 object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    private val requiresSight by boolean("RequiresSight", false)
+    private val rotationMode by enumChoice("RotationMode", AimMode.STABILIZED)
+    private val visibilityMode by enumChoice("VisibilityMode", VisibilityMode.VISIBLE)
+
+    @Suppress("unused")
+    private enum class VisibilityMode(override val tag: String) : Tagged {
+        VISIBLE_AND_RAYTRACED("VisibleAndRaytraced"),
+        VISIBLE("Visible"),
+        ALLOW_NOT_VISIBLE("AllowNotVisible")
+    }
 
     init {
         tree(ScaffoldEagleFeature)
@@ -101,7 +107,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             ),
             FaceHandlingOptions(
                 facePositionFactory,
-                considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
+                considerFacingAwayFaces = visibilityMode == VisibilityMode.ALLOW_NOT_VISIBLE
+                    || ScaffoldDownFeature.shouldGoDown
             ),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
@@ -121,26 +128,25 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             }
         }
 
-        if (requiresSight) {
-            val target = target ?: return null
-            val raycast = traceFromPlayer(rotation = target.rotation)
-
-            if (raycast.type == HitResult.Type.BLOCK && raycast.blockPos == target.interactedBlockPos) {
-                return target.rotation
-            }
+        // Only aim at a target whose click is already visible from the current eye
+        if (visibilityMode == VisibilityMode.VISIBLE_AND_RAYTRACED && target?.verifyClick() == null) {
+            return null
         }
 
         return super.getRotations(target)
     }
 
-    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        target?.verifyClick(
-            rotation,
-            // Going down allows a non-visible hit result
-            onFailure = if (ScaffoldDownFeature.shouldGoDown) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
-        )
+    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+        // Placing through blocks and going down allow a non-visible hit result
+        val allowNotVisible = visibilityMode == VisibilityMode.ALLOW_NOT_VISIBLE || ScaffoldDownFeature.shouldGoDown
 
-    private fun getFacePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (aimMode) {
+        return target?.verifyClick(
+            rotation,
+            onFailure = if (allowNotVisible) FailedClick.PLANNED_HIT else FailedClick.NOTHING,
+        )
+    }
+
+    private fun getFacePositionFactory(optimalLine: Line?): FaceTargetPositionFactory = when (rotationMode) {
         AimMode.CENTER -> CenterTargetPositionFactory
         AimMode.RANDOM -> RandomTargetPositionFactory
         AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(optimalLine)
