@@ -41,14 +41,28 @@
     /**
      * Gets the next possible event which can be used as a bind.
      */
-    const nextBindEvent = () => Promise.any([
-        waitMatches("mouseButton", (e: MouseButtonEvent) =>
-            isClickGuiScreen(e.screen) && !(e.button === 1 /* SDL_BUTTON_LEFT */ && isHovered)
-        ),
-        waitMatches("keyboardKey", (e: KeyboardKeyEvent) =>
-            isClickGuiScreen(e.screen)
-        ),
-    ]);
+    async function nextBindEvent(signal: AbortSignal) {
+        const controller = new AbortController();
+        const onAbort = () => controller.abort(signal.reason);
+        signal.addEventListener("abort", onAbort, {once: true});
+        if (signal.aborted) onAbort();
+
+        try {
+            return await Promise.any([
+                waitMatches("mouseButton", (e: MouseButtonEvent) =>
+                    isClickGuiScreen(e.screen) && !(e.button === 1 /* SDL_BUTTON_LEFT */ && isHovered),
+                    controller.signal
+                ),
+                waitMatches("keyboardKey", (e: KeyboardKeyEvent) =>
+                    isClickGuiScreen(e.screen), controller.signal
+                ),
+            ]);
+        } finally {
+            // Promise.any leaves the other input waiter pending after one of them wins.
+            controller.abort();
+            signal.removeEventListener("abort", onAbort);
+        }
+    }
 
     let addedModifiers = new Set<BindModifier>();
 
@@ -82,12 +96,20 @@
     }
 
     let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+    let bindingController: AbortController | undefined;
 
-    onDestroy(() => {
+    function cancelBinding() {
+        bindingController?.abort();
+        bindingController = undefined;
+        binding = false;
         if (timeout !== undefined) {
             clearTimeout(timeout);
+            timeout = undefined;
         }
-    });
+        addedModifiers.clear();
+    }
+
+    onDestroy(cancelBinding);
 
     async function toggleBinding() {
         // Binding progress -> cancel it
@@ -97,34 +119,41 @@
         }
 
         binding = true;
+        const controller = new AbortController();
+        bindingController = controller;
 
-        let event = await nextBindEvent();
-        // Promise doesn't support cancellation, so we need manual check
-        if (!binding) return;
+        try {
+            let event = await nextBindEvent(controller.signal);
+            if (controller.signal.aborted) return;
 
-        let result = handleBindEventIfNotModifier(event);
+            let result = handleBindEventIfNotModifier(event);
 
-        while (result) {
-            if (timeout !== undefined) {
-                clearTimeout(timeout);
-            }
-            const {key, modifier} = result;
-
-            addedModifiers.add(modifier);
-            addedModifiers = addedModifiers; // Trigger reactive update
-
-            timeout = setTimeout(() => {
-                if (binding) {
-                    handleActionChange(key);
+            while (result) {
+                if (timeout !== undefined) {
+                    clearTimeout(timeout);
                 }
-                timeout = undefined;
-            }, 1000);
+                const {key, modifier} = result;
 
-            event = await nextBindEvent();
+                addedModifiers.add(modifier);
+                addedModifiers = addedModifiers; // Trigger reactive update
 
-            if (!binding) return;
+                timeout = setTimeout(() => {
+                    if (!controller.signal.aborted) {
+                        handleActionChange(key);
+                    }
+                    timeout = undefined;
+                }, 1000);
 
-            result = handleBindEventIfNotModifier(event);
+                event = await nextBindEvent(controller.signal);
+                if (controller.signal.aborted) return;
+
+                result = handleBindEventIfNotModifier(event);
+            }
+        } catch (error) {
+            if (!controller.signal.aborted) {
+                cancelBinding();
+                throw error;
+            }
         }
     }
 
@@ -132,8 +161,7 @@
         addedModifiers.delete(KEY_CODE_TO_MODIFIERS[newBoundKey]); // We don't want Shift+RIGHT_SHIFT
         cSetting.value.boundKey = newBoundKey;
         cSetting.value.modifiers = Array.from(addedModifiers);
-        addedModifiers.clear();
-        binding = false;
+        cancelBinding();
         handleChange();
     }
 
