@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.misc.proxy
 
+import com.google.common.net.HostAndPort
+import com.google.common.net.InetAddresses
 import io.netty.handler.proxy.HttpProxyHandler
 import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.api.core.HttpClient
@@ -107,6 +109,8 @@ data class Proxy(
          * - `hostname:port:username:password`
          * - `username:password:hostname:port`
          * - `username:password@hostname:port`
+         *
+         * IPv6 hosts must be enclosed in brackets, for example `[2001:db8::1]:1080`.
          */
         fun parse(text: String): Proxy {
             val proxyType = when {
@@ -118,42 +122,71 @@ data class Proxy(
             val proxyText = text.substringAfter("://")
             return when {
                 '@' in proxyText -> {
-                    val (credentials, addr) = proxyText.split('@', limit = 2)
-                    val (username, password) = credentials.split(':', limit = 2)
-                    val (host, port) = addr.split(':', limit = 2)
-
-                    Proxy(host, port.toInt(), credentials(username, password), proxyType)
-                }
-
-                proxyText.count { it == ':' } == 3 -> {
-                    val parts = proxyText.split(':', limit = 4)
-
-                    when {
-                        // host:port:username:password
-                        parts[1].isValidPort() -> Proxy(
-                            parts[0],
-                            parts[1].toInt(),
-                            credentials(parts[2], parts[3]),
-                            proxyType
-                        )
-
-                        // username:password:host:port
-                        parts[3].isValidPort() -> Proxy(
-                            parts[2],
-                            parts[3].toInt(),
-                            credentials(parts[0], parts[1]),
-                            proxyType
-                        )
-
-                        else -> error("Invalid proxy format: no valid port found")
-                    }
+                    val credentials = proxyText.substringBeforeLast('@').split(':', limit = 2)
+                    require(credentials.size == 2) { "Proxy credentials must be username:password" }
+                    val address = parseAddress(proxyText.substringAfterLast('@'))
+                    Proxy(address.host, address.port, credentials(credentials[0], credentials[1]), proxyType)
                 }
 
                 else -> {
-                    val (host, port) = proxyText.split(':', limit = 2)
-                    Proxy(host, port.toInt(), null, proxyType)
+                    require(!InetAddresses.isInetAddress(proxyText)) { "IPv6 proxy hosts must be bracketed with a port" }
+                    val parts = splitFields(proxyText)
+
+                    when {
+                        parts.size == 2 -> {
+                            val address = parseAddress(proxyText)
+                            Proxy(address.host, address.port, null, proxyType)
+                        }
+
+                        // host:port:username:password
+                        parts.size == 4 && parts[1].isValidPort() -> {
+                            val address = parseAddress("${parts[0]}:${parts[1]}")
+                            Proxy(address.host, address.port, credentials(parts[2], parts[3]), proxyType)
+                        }
+
+                        // username:password:host:port
+                        parts.size == 4 && parts[3].isValidPort() -> {
+                            val address = parseAddress("${parts[2]}:${parts[3]}")
+                            Proxy(address.host, address.port, credentials(parts[0], parts[1]), proxyType)
+                        }
+
+                        else -> throw IllegalArgumentException("Invalid proxy format: expected a host and valid port")
+                    }
                 }
             }
+        }
+
+        private fun parseAddress(text: String): HostAndPort {
+            val address = HostAndPort.fromString(text).requireBracketsForIPv6()
+            require(address.host.isNotBlank()) { "Proxy host must not be empty" }
+            require(address.hasPort() && address.port in 1..65535) { "Proxy port must be in 1..65535" }
+            return address
+        }
+
+        /** Split legacy formats without treating the colons inside an IPv6 host as separators. */
+        private fun splitFields(text: String): List<String> {
+            val fields = ArrayList<String>()
+            var start = 0
+            var bracketed = false
+            for ((index, char) in text.withIndex()) {
+                when (char) {
+                    '[' -> {
+                        require(!bracketed) { "Invalid proxy host brackets" }
+                        bracketed = true
+                    }
+                    ']' -> {
+                        require(bracketed) { "Invalid proxy host brackets" }
+                        bracketed = false
+                    }
+                    ':' -> if (!bracketed) {
+                        fields.add(text.substring(start, index))
+                        start = index + 1
+                    }
+                }
+            }
+            require(!bracketed) { "Unclosed proxy host bracket" }
+            fields.add(text.substring(start))
+            return fields
         }
 
         private fun String.isValidPort(): Boolean {
