@@ -85,11 +85,10 @@ object ChunkRenderer {
         }
 
         /**
-         * The column itself and its eight neighbours: a height change in any of them changes
-         * the brightness of the column.
+         * The eight neighbors of a column, excluding the column itself: only they take part in the
+         * shading of the column.
          */
-        private val surroundingOffsets = arrayOf(
-            Vector2i(0, 0),
+        private val neighborOffsets = arrayOf(
             Vector2i(-1, 0),
             Vector2i(1, 0),
             Vector2i(0, -1),
@@ -99,6 +98,12 @@ object ChunkRenderer {
             Vector2i(-1, -1),
             Vector2i(1, -1),
         )
+
+        /**
+         * The column itself and its eight neighbors: a height change in any of them makes the pixel
+         * of the column stale.
+         */
+        private val surroundingOffsets = arrayOf(Vector2i(0, 0)) + neighborOffsets
 
         private val AIR_COLOR = ARGB.color(179, 207, 255)
 
@@ -153,7 +158,7 @@ object ChunkRenderer {
         ): Int {
             val height = surfacePos.y
 
-            val higherOffsets = surroundingOffsets.filter { offset ->
+            val higherOffsets = neighborOffsets.filter { offset ->
                 heightAt(chunk, heightmap, surfacePos.x + offset.x, surfacePos.z + offset.y) > height
             }
 
