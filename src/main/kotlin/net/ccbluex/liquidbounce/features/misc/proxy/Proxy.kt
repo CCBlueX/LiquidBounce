@@ -175,9 +175,9 @@ data class Proxy(
                 when (char) {
                     '[' -> {
                         require(!bracketed) { "Invalid proxy host brackets" }
-                        // Only the first or third field can be a host in the legacy formats.
+                        // Credentials may contain brackets, so only IP literals open a host field.
                         if (index == start && (fields.isEmpty() || fields.size == 2)) {
-                            bracketed = true
+                            bracketed = startsBracketedHost(text, index)
                         }
                     }
                     ']' -> {
@@ -189,9 +189,16 @@ data class Proxy(
                     }
                 }
             }
-            require(!bracketed) { "Unclosed proxy host bracket" }
             fields.add(text.substring(start))
             return fields
+        }
+
+        private fun startsBracketedHost(text: String, index: Int): Boolean {
+            val closing = text.indexOf(']', index + 1)
+            val host = text.substring(index + 1, if (closing >= 0) closing else text.length)
+            val isIp = InetAddresses.isInetAddress(host.substringBefore('%'))
+            require(!isIp || closing >= 0) { "Unclosed proxy host bracket" }
+            return isIp
         }
 
         private fun String.isValidPort(): Boolean {

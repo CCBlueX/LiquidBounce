@@ -62,10 +62,14 @@ class ProxyParsingTest {
     }
 
     @Test
-    fun `does not treat brackets in legacy passwords as host delimiters`() {
+    fun `does not treat brackets in legacy credentials as host delimiters`() {
         for (password in listOf("pa[ss]word", "[secret", "secret]")) {
             assertProxy("proxy.example:1080:alice:$password", "proxy.example", "alice", password)
             assertProxy("alice:$password:proxy.example:1080", "proxy.example", "alice", password)
+        }
+        for (username in listOf("al[ice]", "[alice", "alice]", "[alice]")) {
+            assertProxy("proxy.example:1080:$username:secret", "proxy.example", username, "secret")
+            assertProxy("$username:secret:proxy.example:1080", "proxy.example", username, "secret")
         }
     }
 
