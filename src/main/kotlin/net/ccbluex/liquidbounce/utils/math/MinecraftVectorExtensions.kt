@@ -215,6 +215,10 @@ operator fun ChunkPos.contains(blockPos: Long): Boolean =
     SectionPos.blockToSectionCoord(BlockPos.getX(blockPos)) == this.x
         && SectionPos.blockToSectionCoord(BlockPos.getZ(blockPos)) == this.z
 
+fun ChunkPos.contains(blockX: Int, blockZ: Int): Boolean =
+    SectionPos.blockToSectionCoord(blockX) == this.x
+        && SectionPos.blockToSectionCoord(blockZ) == this.z
+
 fun Iterable<Vec3>.average(): Vec3 {
     var x = 0.0
     var y = 0.0
