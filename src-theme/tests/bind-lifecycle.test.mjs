@@ -46,8 +46,14 @@ function fixture() {
     }, "ws.ts");
     const component = readFileSync(new URL("src/routes/clickgui/setting/bind/BindSetting.svelte", root), "utf8");
     // Run the component's real script with a supplied prop and mocked Svelte lifecycle/dispatch.
-    const script = component.match(/<script lang="ts">([\s\S]*?)<\/script>/)[1]
-        .replace("export let setting: ModuleSetting;", "export let setting: ModuleSetting = globalThis.__setting;");
+    // This fixture does not compile Svelte markup. Keep these source matches in sync if the
+    // component's script tag or exported setting declaration changes.
+    const scriptMatch = component.match(/<script lang="ts">([\s\S]*?)<\/script>/);
+    assert.ok(scriptMatch, "Update the fixture to match BindSetting's TypeScript script tag");
+    const settingDeclaration = "export let setting: ModuleSetting;";
+    assert.ok(scriptMatch[1].includes(settingDeclaration), "Update the fixture to match BindSetting's setting prop");
+    const script = scriptMatch[1]
+        .replace(settingDeclaration, "export let setting: ModuleSetting = globalThis.__setting;");
     const bind = evaluate(script + "\nexport {toggleBinding};", context, {
         "svelte": {createEventDispatcher: () => () => changes++, onDestroy: hook => destroyHooks.push(hook)},
         "../../../../integration/ws": ws,
