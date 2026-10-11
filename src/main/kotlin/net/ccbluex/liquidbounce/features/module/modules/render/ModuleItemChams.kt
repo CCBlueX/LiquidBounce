@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.util.ARGB
 import org.joml.Vector2f
-import java.util.function.Supplier
 
 /**
  * Module ItemChams
@@ -62,7 +61,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
         private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-        @JvmField val OVERRIDE = ScopedValue.newInstance<GpuTextureView>()
+        @JvmField val OVERRIDE: ScopedValue<GpuTextureView> = ScopedValue.newInstance()
 
         private var textureView: GpuTextureView? = null
 
@@ -142,20 +141,11 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
             return when (tintMode) {
                 ShieldTintMode.OVERRIDE -> tint.argb
-                ShieldTintMode.MULTIPLY -> multiplyArgb(tintedColor, tint.argb)
+                ShieldTintMode.MULTIPLY -> ARGB.multiply(tintedColor, tint.argb)
             }
         }
 
         fun usesTranslucentTint(tintedColor: Int) = running && ARGB.alpha(applyTint(tintedColor)) < 255
-
-        private fun multiplyArgb(left: Int, right: Int): Int = ARGB.color(
-            multiplyChannel(ARGB.alpha(left), ARGB.alpha(right)),
-            multiplyChannel(ARGB.red(left), ARGB.red(right)),
-            multiplyChannel(ARGB.green(left), ARGB.green(right)),
-            multiplyChannel(ARGB.blue(left), ARGB.blue(right)),
-        )
-
-        private fun multiplyChannel(left: Int, right: Int) = (left * right + 127) / 255
     }
 
     /**
