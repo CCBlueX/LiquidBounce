@@ -62,6 +62,14 @@ class ProxyParsingTest {
     }
 
     @Test
+    fun `does not treat brackets in legacy passwords as host delimiters`() {
+        for (password in listOf("pa[ss]word", "[secret", "secret]")) {
+            assertProxy("proxy.example:1080:alice:$password", "proxy.example", "alice", password)
+            assertProxy("alice:$password:proxy.example:1080", "proxy.example", "alice", password)
+        }
+    }
+
+    @Test
     fun `keeps host first precedence when legacy credentials contain a numeric password`() {
         assertProxy("proxy.example:1080:alice:1234", "proxy.example", "alice", "1234")
     }

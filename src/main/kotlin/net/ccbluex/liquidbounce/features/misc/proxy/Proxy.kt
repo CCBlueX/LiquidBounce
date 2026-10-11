@@ -129,7 +129,9 @@ data class Proxy(
                 }
 
                 else -> {
-                    require(!InetAddresses.isInetAddress(proxyText)) { "IPv6 proxy hosts must be bracketed with a port" }
+                    require(!InetAddresses.isInetAddress(proxyText)) {
+                        "IPv6 proxy hosts must be bracketed with a port"
+                    }
                     val parts = splitFields(proxyText)
 
                     when {
@@ -159,6 +161,7 @@ data class Proxy(
         private fun parseAddress(text: String): HostAndPort {
             val address = HostAndPort.fromString(text).requireBracketsForIPv6()
             require(address.host.isNotBlank()) { "Proxy host must not be empty" }
+            require('[' !in address.host && ']' !in address.host) { "Invalid proxy host brackets" }
             require(address.hasPort() && address.port in 1..65535) { "Proxy port must be in 1..65535" }
             return address
         }
@@ -172,10 +175,12 @@ data class Proxy(
                 when (char) {
                     '[' -> {
                         require(!bracketed) { "Invalid proxy host brackets" }
-                        bracketed = true
+                        // Only the first or third field can be a host in the legacy formats.
+                        if (index == start && (fields.isEmpty() || fields.size == 2)) {
+                            bracketed = true
+                        }
                     }
                     ']' -> {
-                        require(bracketed) { "Invalid proxy host brackets" }
                         bracketed = false
                     }
                     ':' -> if (!bracketed) {
