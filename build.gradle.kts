@@ -205,6 +205,7 @@ dependencies {
     // Test libraries
     testImplementation(kotlin("test"))
     testImplementation(libs.fabric.loader.junit)
+    testImplementation(libs.liquidbounce.cef) { isTransitive = false }
     testImplementation(libs.kotlinx.coroutines.test)
 }
 

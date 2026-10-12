@@ -11,6 +11,7 @@
     "authlib.MixinMinecraftServicesSessionServiceAccessor",
     "blaze3d.MixinInputConstants",
     "blaze3d.MixinWindow",
+    "cef.MixinCefClient",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeperBlockPos",
     "lithium.MixinChunkAwareBlockCollisionSweeperVoxelShape",
