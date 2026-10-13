@@ -25,7 +25,7 @@
 
     let {tabs, activeTab = $bindable(0), onChangeTab}: Props = $props();
 
-    let subTabs = $derived(tabs[activeTab].content) as SubTab[];
+    let subTabs = $derived(tabs[activeTab]?.content ?? []) as SubTab[];
 
     const ActiveContent = $derived.by(() => {
         const content = tabs[activeTab]?.content;
