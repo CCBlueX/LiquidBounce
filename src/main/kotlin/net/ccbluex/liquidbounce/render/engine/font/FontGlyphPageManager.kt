@@ -48,6 +48,7 @@ class FontGlyphPageManager(
     private val registeredFonts = registeredFaces.toSet()
     private val staticPage = ArrayList<StaticGlyphPage>()
     private val staticGlyphs = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>>()
+    private val resolvedFonts = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<FontId?>>()
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
         fontHeight = ceil(primaryFace.plainStyle.height * 2.0F).toInt()
     )
@@ -159,13 +160,34 @@ class FontGlyphPageManager(
         val requestedFont = font.style(style) ?: font.plainStyle
         staticGlyphs[requestedFont]?.get(codepoint)?.let { return it }
 
-        val resolvedFont = resolveFont(font, fallbackFonts, style, codepoint) ?: return null
+        val resolvedFont = resolveFontCached(font, requestedFont, style, codepoint) ?: return null
         findResolvedStaticGlyph(font, resolvedFont, codepoint)?.let { return it }
 
         val fontGlyph = FontGlyph(codepoint, resolvedFont)
         val glyphIdentifier = GlyphIdentifier(fontGlyph)
         this.dynamicFontManager.requestGlyph(fontGlyph)
         return this.dynamicallyLoadedGlyphs[glyphIdentifier]
+    }
+
+    /**
+     * [resolveFont] answers the same request the same way every time, but costs a Java2D glyph lookup
+     * under [GlyphPage.fontRasterizationLock], which the background rasterizer holds as well. Text
+     * misses the static pages on every frame it is drawn, so the answer is remembered here; `null`
+     * marks a codepoint no configured font can rasterize.
+     */
+    private fun resolveFontCached(
+        requestedFace: FontFace,
+        requestedFont: FontId,
+        style: @FontStyle Int,
+        codepoint: Int,
+    ): FontId? {
+        val matchedFonts = resolvedFonts.computeIfAbsent(requestedFont) { Int2ObjectOpenHashMap() }
+
+        if (!matchedFonts.containsKey(codepoint)) {
+            matchedFonts[codepoint] = resolveFont(requestedFace, fallbackFonts, style, codepoint)
+        }
+
+        return matchedFonts[codepoint]
     }
 
     private fun findResolvedStaticGlyph(
@@ -195,6 +217,7 @@ class FontGlyphPageManager(
             this.staticPage.clear()
         }
         this.dynamicallyLoadedGlyphs.clear()
+        this.resolvedFonts.clear()
     }
 
 }
