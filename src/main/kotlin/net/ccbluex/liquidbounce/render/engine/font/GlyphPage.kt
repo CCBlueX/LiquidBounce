@@ -31,7 +31,6 @@ import java.awt.Point
 import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.GlyphMetrics
-import java.awt.font.LineMetrics
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import kotlin.math.ceil
@@ -81,7 +80,7 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
 }
 
 @JvmRecord
-data class GlyphLayoutInfo(val useHorizontalBaseline: Boolean, val advanceX: Float, val advanceY: Float)
+data class GlyphLayoutInfo(val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
     abstract val texture: GlyphAtlasTexture
@@ -114,7 +113,6 @@ abstract class GlyphPage {
         class CharacterGenerationInfo(
             val fontGlyph: FontGlyph,
             val glyphMetrics: GlyphMetrics,
-            val lineMetrics: LineMetrics
         ) {
             lateinit var atlasLocation: Point
 
@@ -134,13 +132,6 @@ abstract class GlyphPage {
                     pixelWidth + DEFAULT_PADDING * 2,
                     pixelHeight + DEFAULT_PADDING * 2
                 )
-        }
-
-        /**
-         * Initializes the static values for glyph pages. Has to be called from a thread with an OpenGL context.
-         */
-        fun init() {
-            maxTextureSize.value
         }
 
         @JvmStatic
@@ -244,9 +235,8 @@ abstract class GlyphPage {
                     it.pixelYMax.toFloat(),
                 ),
                 layoutInfo = GlyphLayoutInfo(
-                    useHorizontalBaseline = false, // TODO Find this out
                     advanceX = it.glyphMetrics.advanceX,
-                    advanceY = it.glyphMetrics.advanceY
+                    advanceY = it.glyphMetrics.advanceY,
                 )
             )
         }
@@ -262,11 +252,9 @@ abstract class GlyphPage {
 
                 val charString = Character.toString(it.codepoint)
                 val glyphVector = font.createGlyphVector(fontRendererContext, charString)
-
-                val lineMetrics = font.getLineMetrics(charString, fontRendererContext)
                 val glyph = glyphVector.getGlyphMetrics(0)
 
-                CharacterGenerationInfo(it, glyph, lineMetrics)
+                CharacterGenerationInfo(it, glyph)
             }
     }
 }

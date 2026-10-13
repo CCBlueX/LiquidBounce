@@ -107,19 +107,6 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         return renderInfo
     }
 
-    /**
-     * Clears the allocator and uses optimized characters with optimized allocation order to reduce the amount of
-     * fragmentation.
-     *
-     * @return Removed chars
-     */
-    fun optimizeAtlas(): List<Pair<GlyphIdentifier, GlyphRenderInfo>> {
-        // Free everything, create a new allocator and use max(largestFontGlyph.height, medianFontGlyphHeight) as
-        // minimal vertical slice height and the dimensions of the smallest character is minDimension.
-
-        TODO()
-    }
-
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo) {
         val location = generationInfo.atlasLocation
         val dimension = generationInfo.atlasDimension

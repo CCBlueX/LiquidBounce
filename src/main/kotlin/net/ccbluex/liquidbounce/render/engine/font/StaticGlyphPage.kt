@@ -52,14 +52,6 @@ class StaticGlyphPage(
             } while (remainingChars.isNotEmpty())
         }
 
-        /**
-         * Creates a bitmap which contains all [chars].
-         */
-        fun createGlyphPageWithFittingCharacters(chars: List<FontGlyph>): Pair<StaticGlyphPage, List<FontGlyph>> {
-            val (preparedPage, remainingGlyphs) = prepareGlyphPageWithFittingCharacters(chars)
-            return preparedPage.materialize() to remainingGlyphs
-        }
-
         private fun prepareGlyphPageWithFittingCharacters(
             chars: List<FontGlyph>
         ): Pair<PreparedStaticGlyphPage, List<FontGlyph>> {
@@ -143,7 +135,7 @@ class StaticGlyphPage(
         }
 
         /**
-         * Used for [createGlyphPageWithFittingCharacters]. Assigns a position to every glyph.
+         * Used for [prepareGlyphPages]. Assigns a position to every glyph.
          *
          * @param atlasWidth The width of the atlas. No character will be longer that this width
          *
