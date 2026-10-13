@@ -1,6 +1,12 @@
 <script lang="ts">
     import type {Component, Snippet} from "svelte";
 
+    interface Props {
+        tabs: Tab[];
+        activeTab?: number;
+        onChangeTab?: (activeTab: number) => void | Promise<void>;
+    }
+
     type Content = Component | Snippet;
 
     type SubTab = {
@@ -17,11 +23,9 @@
     let availableTabsElement = $state<HTMLElement | undefined>();
     let activeSubTabs = $state<Record<number, number>>({});
 
-    let {tabs, activeTab = $bindable(0), onChangeTab}: {
-        tabs: Tab[];
-        activeTab?: number;
-        onChangeTab?: (activeTab: number) => void | Promise<void>;
-    } = $props();
+    let {tabs, activeTab = $bindable(0), onChangeTab}: Props = $props();
+
+    let subTabs = $derived(tabs[activeTab]?.content ?? []) as SubTab[];
 
     const ActiveContent = $derived.by(() => {
         const content = tabs[activeTab]?.content;
@@ -66,7 +70,7 @@
     <div style="width: {availableTabsElement?.clientWidth}px">
         {#if Array.isArray(tabs[activeTab]?.content)}
             <div class="available-sub-tabs">
-                {#each tabs[activeTab].content as subTab, index (subTab.title)}
+                {#each subTabs as subTab, index (subTab.title)}
                     <button
                             class="sub-tab-button"
                             class:active={index === (activeSubTabs[activeTab] ?? 0)}
