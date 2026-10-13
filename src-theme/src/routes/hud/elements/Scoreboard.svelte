@@ -4,6 +4,7 @@
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
     import {createGlobalRegex, replaceTextComponent} from "../../../util/regex_replace";
+    import type {HudScoreboardSettings} from "../components";
 
     export let settings: { [name: string]: any };
 

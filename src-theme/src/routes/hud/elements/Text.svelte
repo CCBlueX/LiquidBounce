@@ -3,6 +3,7 @@
     import type {PlayerData} from "../../../integration/types";
     import {intToRgba, rgbaToHex} from "../../../integration/util";
     import {listen} from "../../../integration/ws";
+    import type {HudTextSettings} from "../components";
 
     let playerData: PlayerData | null = null;
 
