@@ -24,10 +24,11 @@ import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import okhttp3.MediaType
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.Buffer
 import okio.BufferedSink
 
-private fun Buffer.asRequestBody(mediaType: MediaType) = object : RequestBody() {
+internal fun Buffer.asRequestBody(mediaType: MediaType) = object : RequestBody() {
     override fun contentType() = mediaType
     override fun contentLength(): Long = size
     override fun writeTo(sink: BufferedSink) {
@@ -45,3 +46,5 @@ fun Gson.makeRequestBody(data: Any?): RequestBody {
 
 @JvmOverloads
 fun JsonElement.toRequestBody(gson: Gson = GSON_DEFAULT): RequestBody = gson.makeRequestBody(this)
+
+fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)

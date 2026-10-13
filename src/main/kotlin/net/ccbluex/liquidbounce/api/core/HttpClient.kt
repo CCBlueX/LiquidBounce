@@ -123,7 +123,7 @@ object HttpClient {
             }
         }
         .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
-        .addInterceptor(DefaultHeaderInterceptor("User-Agent") { DEFAULT_AGENT })
+        .addInterceptor(DefaultHeaderInterceptor(HttpHeaders.UserAgent) { DEFAULT_AGENT })
         .proxy(java.net.Proxy.NO_PROXY)
         .build()
 
@@ -160,8 +160,8 @@ object HttpClient {
         // Credentials are scoped to the hosts they belong to. Registered as network interceptors, so they
         // are re-evaluated for every redirect hop and cannot follow a redirect to a foreign host.
         .addNetworkInterceptor(
-            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) { ApiConfig.sessionToken }
-                .whenUrl { it.host in ApiConfig.trustedHosts }
+            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) { ApiConfig.config.sessionToken }
+                .whenUrl { it.host == ApiConfig.config.url.host }
         )
         .addNetworkInterceptor(
             DefaultHeaderInterceptor(HttpHeaders.Cookie, {
@@ -190,7 +190,7 @@ object HttpClient {
             .url(url)
             .method(method.name, body)
             .headers(Headers.Builder().apply(headers).build())
-            .header("User-Agent", agent)
+            .header(HttpHeaders.UserAgent, agent)
             .build()
 
         return if (progressListener == null) {
@@ -242,8 +242,6 @@ inline fun <reified T> Response.parse(): T {
         else -> bodyAsJson<T>(publicGson) // Keep publicGson for backwards compatibility
     }
 }
-
-fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
 
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
     : Exception("${method.name} $url failed with code $code: $content")

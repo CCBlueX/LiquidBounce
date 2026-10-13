@@ -18,19 +18,8 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AVATAR_USERNAME_URL
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AVATAR_UUID_URL
 import okhttp3.Headers
 import okhttp3.RequestBody
-import java.util.UUID
-
-fun formatAvatarUrl(uuid: UUID?, username: String): String {
-    return if (uuid != null) {
-        AVATAR_UUID_URL.format(uuid)
-    } else {
-        AVATAR_USERNAME_URL.format(username)
-    }
-}
 
 /**
  * Base API class
