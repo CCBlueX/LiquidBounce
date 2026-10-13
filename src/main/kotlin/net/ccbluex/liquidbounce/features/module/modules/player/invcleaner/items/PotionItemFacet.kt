@@ -104,8 +104,7 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             PreferAmplifier,
             PreferSplashPotions,
             PreferHigherDurationPotions,
-            PREFER_ITEMS_IN_HOTBAR,
-            STABILIZE_COMPARISON
+            DEFAULT_TIE_BREAK
         )
 
         private val MobEffect.tier: Tier

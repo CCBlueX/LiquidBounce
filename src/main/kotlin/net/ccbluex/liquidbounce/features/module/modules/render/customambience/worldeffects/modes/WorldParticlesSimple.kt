@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.render.BuiltinParticle
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cbrt
@@ -58,7 +58,7 @@ object WorldParticlesSimple : WorldParticlesMode("Simple") {
         val rMaxCb = radius.last.toDouble().pow(3)
         val distance = cbrt(Random.nextDouble(rMinCb, rMaxCb))
 
-        coords.add(player.position().add(coord * distance), lifetime.last)
+        coords.add(player.position().fma(distance, coord), lifetime.last)
     }
 
     override fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float) {

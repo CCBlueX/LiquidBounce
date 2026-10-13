@@ -342,11 +342,13 @@ fun Long.formatAsCapacity(): String {
 fun String.hideSensitiveAddress(): String {
     val idx = lastIndexOf(':')
     val host = if (idx == -1) this else substring(0, idx)
+    // DNS ignores case and a trailing dot, so neither may keep a route visible
+    val name = host.lowercase().trimEnd('.')
 
     // Hide possibly sensitive information from LiquidProxy
     val newHost = when {
-        host.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
-        host.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
+        name.endsWith(".liquidbounce.net") -> "<redacted>.liquidbounce.net"
+        name.endsWith(".liquidproxy.net") -> "<redacted>.liquidproxy.net"
         else -> host
     }
 

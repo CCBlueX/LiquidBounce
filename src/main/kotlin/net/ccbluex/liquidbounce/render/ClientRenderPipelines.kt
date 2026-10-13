@@ -470,6 +470,56 @@ object ClientRenderPipelines {
         withDepthStencilState(optional())
     }
 
+    /**
+     * Additive effect layer (flow, trail, glow, chromatic, scanlines) drawn over the held item.
+     */
+    @JvmField
+    val ItemChamsEffects = newPipeline("item_chams/effects") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsEffects)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("trail")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.ADDITIVE))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Recovers the held item from the capture with an animated hue/brightness shift.
+     */
+    @JvmField
+    val ItemChamsRecolor = newPipeline("item_chams/recolor") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsRecolor)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState(BlendFunction.TRANSLUCENT))
+        withDepthStencilState(optional())
+    }
+
+    /**
+     * Accumulates the captured held item into the trail history buffer with decay.
+     */
+    @JvmField
+    val ItemChamsTrail = newPipeline("item_chams/trail") {
+        screenQuadSnippet()
+        withFragmentShader(ClientShaders.Fragment.ItemChamsTrail)
+        withBindGroupLayout {
+            withSampler("capture")
+            withSampler("depthTex")
+            withSampler("history")
+            withUniformBuffer(ClientUniformDefine.ITEM_CHAMS_EFFECTS)
+        }
+        withColorTargetState(ColorTargetState.DEFAULT)
+        withDepthStencilState(optional())
+    }
+
     @JvmField
     val ChamsBlit: RenderPipeline = newPipeline("chams/blit") {
         screenQuadSnippet()

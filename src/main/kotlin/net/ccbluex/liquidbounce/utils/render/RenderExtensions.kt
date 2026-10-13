@@ -506,9 +506,7 @@ value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
         j.align(alignedSize)
     }
 
-    inline operator fun Unit.plus(other: Unit) {
-        // NOOP
-    }
+    inline operator fun Unit.plus(other: Unit) = Unit
 
     inline fun get() = j.get()
 }

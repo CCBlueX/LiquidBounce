@@ -36,10 +36,13 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.BY_Y
+import net.ccbluex.liquidbounce.utils.math.BY_Y_DESC
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
 import net.minecraft.tags.FluidTags
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.BucketPickup
@@ -249,13 +252,13 @@ object ModuleLiquidFiller : ClientModule("LiquidFiller", ModuleCategories.WORLD)
 
         BOTTOM_TOP("BottomTop") {
             override fun sort(positions: MutableList<BlockPos>, eyePos: Vec3) {
-                positions.sortBy { it.y }
+                positions.sortWith(Vec3i.BY_Y)
             }
         },
 
         TOP_BOTTOM("TopBottom") {
             override fun sort(positions: MutableList<BlockPos>, eyePos: Vec3) {
-                positions.sortByDescending { it.y }
+                positions.sortWith(Vec3i.BY_Y_DESC)
             }
         };
 

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.utils.VisibilityPredicate
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.math.vertices
@@ -170,7 +171,7 @@ class StabilizedRotationTargetPositionFactory(
         val optimalLineFromPlayer = Line(playerLocation.eyePos, optimalLine.direction)
         val collisionWithFacePlane = trimmedFace.toPlane().intersection(optimalLineFromPlayer) ?: return null
 
-        val b = playerPosition.add(directionToOptimalLine.scale(2.0))
+        val b = playerPosition.fma(2.0, directionToOptimalLine)
 
         val cropBox = AABB(
             collisionWithFacePlane.x,
@@ -358,7 +359,7 @@ abstract class BaseYawTargetPositionFactory : FaceTargetPositionFactory {
         val yawDiff = Mth.wrapDegrees(endYaw - startYaw)
         val targetYawDiff = Mth.wrapDegrees(targetYaw - startYaw)
         val t = if (yawDiff != 0f) targetYawDiff / yawDiff else 0f
-        return start.add(segmentDelta.scale(t.toDouble().coerceIn(0.0, 1.0)))
+        return start.fma(t.coerceIn(0F, 1F).toDouble(), segmentDelta)
     }
 
     private fun calculateYaw(point: Vec3, eyePos: Vec3): Float {

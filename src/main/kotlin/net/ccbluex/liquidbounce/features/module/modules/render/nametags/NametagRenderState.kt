@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawItemEnchantments
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.gui.ItemStackListBackground
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.SingleItemStackRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
@@ -124,7 +125,7 @@ internal class NametagRenderState {
          */
         @JvmField
         val equipmentList = ItemStackListRenderState(stacksView)
-            .rectBackground(Color4b.TRANSPARENT)
+            .background(ItemStackListBackground.Panel(fillColor = Color4b.TRANSPARENT))
             .itemStackRenderer { font, index, stack, x, y ->
                 val delegation = if (NametagEquipment.showInfo) {
                     if (entity === player) {

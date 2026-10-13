@@ -67,8 +67,7 @@ sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
             delta: Float
         ): Boolean = false // Show default Minecraft wallpaper
 
-        @Suppress("EmptyFunctionBlock")
-        override fun close() { }
+        override fun close() = Unit
     }
 
     /**

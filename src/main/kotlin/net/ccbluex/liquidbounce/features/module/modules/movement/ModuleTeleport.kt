@@ -47,7 +47,12 @@ import kotlin.math.floor
  *
  * Commands: [CommandVClip], [CommandTeleport], [CommandPlayerTeleport]
  */
-object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, aliases = listOf("tp")) {
+object ModuleTeleport : ClientModule(
+    "Teleport",
+    ModuleCategories.EXPLOIT,
+    aliases = listOf("tp"),
+    disableOnQuit = true,
+) {
 
     private val allFull by boolean("AllFullPacket", false)
     private val paperExploit by boolean("PaperBypass", false)
@@ -74,8 +79,8 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
         if (indicatedTeleport == null) {
             chat(warning(message("useCommand")))
 
-            // Disables module on next render tick
-            mc.execute {
+            // Has to be queued: the enabled value is not committed until onEnabled returned.
+            mc.schedule {
                 this.enabled = false
             }
         }
@@ -84,6 +89,10 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
     override fun onDisabled() {
         indicatedTeleport = null
         teleportsToWait = 0
+
+        if (withDisabler) {
+            ModuleDisabler.enabled = false
+        }
     }
 
     fun indicateTeleport(x: Double = player.x, y: Double = player.y, z: Double = player.z) {

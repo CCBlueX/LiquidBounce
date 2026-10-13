@@ -31,6 +31,7 @@ import net.minecraft.util.Continuation
 import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.EntityGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.LevelReader
@@ -214,3 +215,5 @@ private val localEntityIdGenerator = AtomicInteger(-1)
  * `Tried to access entity ID before ID assignment`.
  */
 fun Level.nextLocalEntityId(): Int = localEntityIdGenerator.getAndDecrement()
+
+inline fun Level.getChunk(pos: ChunkPos) = getChunk(pos.x, pos.z)

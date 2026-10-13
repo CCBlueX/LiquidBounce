@@ -20,6 +20,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.kotlin.coerceIn
+import net.ccbluex.liquidbounce.utils.kotlin.rangeAround
+import net.ccbluex.liquidbounce.utils.kotlin.safeIntRangeOf
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
@@ -40,7 +43,7 @@ object FloorNukerArea : NukerArea("Floor") {
     private val topToBottom by boolean("TopToBottom", true)
 
     @Suppress("detekt:CognitiveComplexMethod")
-    override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
+    override fun lookupTargets(radius: Float, limit: Int?): List<Pair<BlockPos, BlockState>> {
         val (startX, startY, startZ) =
             if (relativeToPlayer) startPosition.offset(player.blockPosition()) else startPosition
         val (endX, endY, endZ) =
@@ -59,42 +62,32 @@ object FloorNukerArea : NukerArea("Floor") {
             return emptyList()
         }
 
-        // Create ranges from start position to end position, they might be flipped, so we need to use min/max
-        val xRange = minOf(startX, endX)..maxOf(startX, endX)
-        val yRange = minOf(startY, endY)..maxOf(startY, endY)
-        val zRange = minOf(startZ, endZ)..maxOf(startZ, endZ)
+        val xRange = safeIntRangeOf(startX, endX).coerceIn(player.blockX.rangeAround(radius.toInt() + 1))
+        val yRange = safeIntRangeOf(startY, endY).coerceIn(player.blockY.rangeAround(radius.toInt() + 1))
+        val zRange = safeIntRangeOf(startZ, endZ).coerceIn(player.blockZ.rangeAround(radius.toInt() + 1))
 
         // Iterate through each Y range first, so we can as soon we find a block on the floor,
         // we can skip the rest
         // From top to bottom
-
         start.set(xRange.first, 0, zRange.first)
         end.set(xRange.last, 0, zRange.last)
 
-        // Check if [topToBottom] is enabled, if so reverse the range
-        for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
-            start.y = y
-            end.y = y
-            val m = (start..end).iterate().mapNotNull { pos ->
-                val state = pos.state ?: return@mapNotNull null
-                if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
-                    pos.immutable() to state
-                } else {
-                    null
-                }
-            }
+        return buildList {
+            // Check if [topToBottom] is enabled, if so reverse the range
+            for (y in yRange.let { if (topToBottom) it.reversed() else it }) {
+                start.y = y
+                end.y = y
 
-            // Return when not empty
-            if (m.isNotEmpty()) {
-                return if (count != null) {
-                    m.take(count)
-                } else {
-                    m
+                for (pos in (start..end).iterate()) {
+                    val state = pos.state ?: continue
+
+                    if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
+                        add(pos.immutable() to state)
+                        limit?.also { limit -> if (size >= limit) return@buildList }
+                    }
                 }
             }
         }
-
-        return emptyList()
     }
 
 }

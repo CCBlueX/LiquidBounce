@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
@@ -135,7 +136,7 @@ abstract class TrapPlanner<T>(
 
             val intersect = startBox.intersect(bb).size + endBox.intersect(bb).size * 0.5
 
-            offsets.add(DoubleObjectImmutablePair(intersect, offset))
+            offsets.add(DoubleObjectImmutablePair(intersect, offset.immutable))
         }
 
         offsets.sortByDescending { it.leftDouble() }

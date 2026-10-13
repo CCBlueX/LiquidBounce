@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
-import net.ccbluex.liquidbounce.utils.text.TextList;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -35,7 +34,7 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.TransferState;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.Connection;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -106,19 +105,15 @@ public abstract class MixinConnectScreen extends MixinScreen {
     }
 
     @Unique
-    private Component getConnectionDetails(Connection clientConnection, ServerAddress serverAddress) {
+    private FormattedCharSequence getConnectionDetails(Connection clientConnection, ServerAddress serverAddress) {
         // This will either be the socket address or the server address
         var socketAddr = getSocketAddress(clientConnection, serverAddress);
-        var serverAddr = String.format(
-                "%s:%s",
-                hideSensitiveAddress(serverAddress.getHost()),
-                serverAddress.getPort()
-        );
+        var serverAddr = hideSensitiveAddress(serverAddress.getHost()) + ":" + serverAddress.getPort();
         var ipInfo = IpInfoApi.INSTANCE.getCurrent();
 
         var spacer = PlainText.of(" ⟺ ", ChatFormatting.DARK_GRAY);
 
-        var textParts = new ArrayList<Component>();
+        var textParts = new ArrayList<FormattedCharSequence>();
 
         var client = PlainText.of("Client", ChatFormatting.BLUE);
         textParts.add(client);
@@ -146,7 +141,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         var server = PlainText.of(serverAddr, ChatFormatting.GREEN);
         textParts.add(server);
 
-        return TextList.of(textParts);
+        return FormattedCharSequence.fromList(textParts);
     }
 
     @Unique

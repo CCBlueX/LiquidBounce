@@ -29,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.function.Consumer;
+
 @Mixin(KeyMapping.class)
 public abstract class MixinKeyMapping {
 
@@ -40,6 +42,16 @@ public abstract class MixinKeyMapping {
     @ModifyReturnValue(method = "isDown", at = @At("RETURN"))
     private boolean isPressed(boolean original) {
         return EventManager.INSTANCE.callEvent(new KeybindIsPressedEvent((KeyMapping) (Object) this, original)).isPressed();
+    }
+
+    /**
+     * TODO(26.4): remove this after 26.4-snapshot-2
+     */
+    @Inject(method = "forAllKeyMappings", at = @At("HEAD"), cancellable = true)
+    private static void fix(InputConstants.Key key, Consumer<KeyMapping> operation, CallbackInfo ci) {
+        if (key.equals(InputConstants.UNKNOWN)) {
+            ci.cancel();
+        }
     }
 
 }
