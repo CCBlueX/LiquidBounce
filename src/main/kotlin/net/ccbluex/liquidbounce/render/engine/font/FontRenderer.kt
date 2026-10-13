@@ -98,7 +98,7 @@ class FontRenderer(
         val processed = MinecraftTextProcessor.process(text, parameters.color)
         val glyphs = resolveGlyphs(processed)
         val scale = parameters.scale
-        val width = getStringWidth(processed, glyphs, parameters.shadow)
+        val width = getStringWidth(glyphs, parameters.shadow)
 
         val x = parameters.horizontalAnchor?.anchorToDrawX(
             x = parameters.x,
@@ -164,8 +164,6 @@ class FontRenderer(
         var underlineStartX: Float = Float.NaN
         var strikeThroughStartX: Float = Float.NaN
 
-        val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
-
         // 2D glyphs join a run of quads per atlas page instead of becoming one element each.
         var run: TextRunGuiElementRenderState? = null
 
@@ -220,11 +218,8 @@ class FontRenderer(
                 }
             }
 
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
-
-            x += layoutInfo.advanceX * scale
-            y += layoutInfo.advanceY * scale
+            x += glyph.renderInfo.layoutInfo.advanceX * scale
+            y += glyph.renderInfo.layoutInfo.advanceY * scale
         }
 
         if (!underlineStartX.isNaN()) {
@@ -243,32 +238,17 @@ class FontRenderer(
         shadow: Boolean
     ): Float {
         val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
-        val width = getStringWidth(processed, resolveGlyphs(processed), shadow)
+        val width = getStringWidth(resolveGlyphs(processed), shadow)
 
         MinecraftTextProcessor.TEXT_POOL.recycle(processed)
 
         return width
     }
 
-    private fun getStringWidth(
-        text: RecyclingProcessedText,
-        glyphs: List<GlyphDescriptor>,
-        shadow: Boolean,
-    ): Float {
-        if (text.chars.isEmpty()) {
-            return 0.0f
-        }
-
+    private fun getStringWidth(glyphs: List<GlyphDescriptor>, shadow: Boolean): Float {
         var x = 0.0f
 
-        val fallbackLayoutInfo = this.glyphManager.getFallbackGlyph(this.font).renderInfo.layoutInfo
-
-        text.forEachIndexed { index, processedChar ->
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyphs[index].renderInfo.layoutInfo else fallbackLayoutInfo
-
-            x += layoutInfo.advanceX
-        }
+        glyphs.forEach { x += it.renderInfo.layoutInfo.advanceX }
 
         return if (shadow) {
             x + 2.0f
