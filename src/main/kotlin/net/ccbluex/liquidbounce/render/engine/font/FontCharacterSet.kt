@@ -121,7 +121,7 @@ internal object FontCharacterSet {
     ) {
         styles.forEach { style ->
             codepoints.forEach { codepoint ->
-                resolveStaticFont(requestedFace, fallbackFaces, style, codepoint)?.let { font ->
+                resolveFont(requestedFace, fallbackFaces, style, codepoint)?.let { font ->
                     destination.add(FontGlyph(codepoint, font))
                 }
             }
@@ -130,23 +130,6 @@ internal object FontCharacterSet {
 
     private fun IntOpenHashSet.addRange(range: IntRange) {
         range.forEach(this::add)
-    }
-
-    private fun resolveStaticFont(
-        requestedFace: FontFace,
-        fallbackFaces: List<FontFace>,
-        style: @FontStyle Int,
-        codepoint: Int,
-    ): FontId? = synchronized(GlyphPage.fontRasterizationLock) {
-        val requestedFont = requestedFace.style(style) ?: requestedFace.plainStyle
-        if (requestedFont.awtFont.canDisplay(codepoint)) {
-            return@synchronized requestedFont
-        }
-
-        fallbackFaces.asSequence()
-            .filter { it !== requestedFace }
-            .map(FontFace::plainStyle)
-            .firstOrNull { it.awtFont.canDisplay(codepoint) }
     }
 
     private val FONT_GLYPH_COMPARATOR = Comparator.comparing<FontGlyph, String> { it.font.awtFont.fontName }

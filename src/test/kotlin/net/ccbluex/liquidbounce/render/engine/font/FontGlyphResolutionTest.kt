@@ -42,6 +42,32 @@ class FontGlyphResolutionTest {
     }
 
     @Test
+    fun testRequestedFaceKeepsItsGlyphWhenAFallbackCoversItToo() = runTest {
+        val face = FontFace("Test", 43f)
+        face.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+        val fallback = FontFace("Fallback", 43f)
+        fallback.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+
+        val resolved = resolveFont(face, listOf(fallback), Font.PLAIN, 'A'.code)
+
+        assertSame(face.plainStyle, resolved)
+    }
+
+    @Test
+    fun testFallbackFaceIgnoresTheRequestedStyle() = runTest {
+        val face = FontFace("Test", 43f)
+        face.fillStyle(CoverageFont(Font.PLAIN, covered = false), Font.PLAIN)
+        val fallback = FontFace("Fallback", 43f)
+        fallback.fillStyle(CoverageFont(Font.PLAIN, covered = true), Font.PLAIN)
+        fallback.fillStyle(CoverageFont(Font.BOLD, covered = true), Font.BOLD)
+
+        val resolved = resolveFont(face, listOf(fallback), Font.BOLD, 'A'.code)
+
+        assertNotNull(fallback.style(Font.BOLD))
+        assertSame(fallback.plainStyle, resolved)
+    }
+
+    @Test
     fun testGlyphIdentifierIncludesActualFont() {
         val firstFont = createFontId(Font.SANS_SERIF)
         val secondFont = createFontId(Font.SERIF)
@@ -78,4 +104,12 @@ class FontGlyphResolutionTest {
         -12f,
         1f,
     )
+}
+
+/**
+ * A font with a fixed glyph coverage, so the fallback path can be tested without depending on which
+ * fonts the machine happens to have installed.
+ */
+private class CoverageFont(style: Int, private val covered: Boolean) : Font("Dialog", style, 43) {
+    override fun canDisplay(codePoint: Int): Boolean = covered
 }

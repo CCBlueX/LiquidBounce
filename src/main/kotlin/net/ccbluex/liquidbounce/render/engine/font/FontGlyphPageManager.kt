@@ -224,6 +224,13 @@ class FontGlyphPageManager(
 
 class GlyphDescriptor(val page: GlyphPage, val renderInfo: GlyphRenderInfo)
 
+/**
+ * The font that has to rasterize [codepoint] in [style]: [requestedFace] itself when it covers the
+ * codepoint, otherwise the first fallback face that does.
+ *
+ * Fallback faces are only ever warmed with plain glyphs, so they are asked for their plain style
+ * regardless of [style] - a styled one would resolve to a font no glyph page holds.
+ */
 internal fun resolveFont(
     requestedFace: FontFace,
     fallbackFaces: List<FontFace>,
@@ -238,7 +245,7 @@ internal fun resolveFont(
 
         fallbackFaces.asSequence()
             .filter { it !== requestedFace }
-            .map { it.style(style) ?: it.plainStyle }
+            .map(FontFace::plainStyle)
             .firstOrNull { it.awtFont.canDisplay(codepoint) }
     }
 }
