@@ -40,20 +40,16 @@ class StaticGlyphPage(
         fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> =
             prepareGlyphPages(chars).map(PreparedStaticGlyphPage::materialize)
 
-        internal fun prepareGlyphPages(chars: List<FontGlyph>): List<PreparedStaticGlyphPage> {
-            val glyphPages = mutableListOf<PreparedStaticGlyphPage>()
-
+        internal fun prepareGlyphPages(chars: List<FontGlyph>): List<PreparedStaticGlyphPage> = buildList {
             var remainingChars = chars
 
             do {
                 val result = prepareGlyphPageWithFittingCharacters(remainingChars)
 
-                glyphPages.add(result.first)
+                this.add(result.first)
 
                 remainingChars = result.second
             } while (remainingChars.isNotEmpty())
-
-            return glyphPages
         }
 
         /**

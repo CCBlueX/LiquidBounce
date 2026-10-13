@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
+import it.unimi.dsi.fastutil.ints.IntArrays
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
@@ -42,7 +43,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         retainPixels = true,
     )
     private val glyphMap = Object2ObjectOpenHashMap<GlyphIdentifier, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
-    private var copyScratchBuffer = IntArray(0)
+    private var copyScratchBuffer = IntArrays.EMPTY_ARRAY
 
     private val allocator = DynamicAtlasAllocator(
         atlasSize,

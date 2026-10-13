@@ -19,13 +19,14 @@
 
 package net.ccbluex.liquidbounce.utils.io
 
-import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.Charset
 
+/**
+ * Reads all bytes of this stream and decodes them using the given [charset].
+ *
+ * The whole stream is loaded into memory, so only use this for reasonably sized input.
+ */
 @JvmOverloads
-fun InputStream.readText(charset: Charset = Charsets.UTF_8): String {
-    val out = FastByteArrayOutputStream(maxOf(available(), FastByteArrayOutputStream.DEFAULT_INITIAL_CAPACITY))
-    this.transferTo(out)
-    return out.toString(charset)
-}
+fun InputStream.readText(charset: Charset = Charsets.UTF_8): String =
+    String(readAllBytes(), charset)
