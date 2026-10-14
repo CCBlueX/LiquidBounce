@@ -59,5 +59,25 @@ data class MarketplaceItem(
     @SerializedName("recent_works")
     val recentWorks: Int = 0,
     @SerializedName("recent_fails")
-    val recentFails: Int = 0
+    val recentFails: Int = 0,
+    @SerializedName("source_url")
+    val sourceUrl: String? = null,
+    @SerializedName("source_required")
+    val sourceRequired: Boolean = false,
+    @SerializedName("community_editable")
+    val communityEditable: Boolean = false,
+    @SerializedName("can_edit")
+    val canEdit: Boolean = false,
+    @SerializedName("can_manage")
+    val canManage: Boolean = false,
+    val contributors: List<MarketplaceContributor>? = null
+)
+
+data class MarketplaceContributor(
+    val uid: String,
+    val nickname: String? = null,
+    @SerializedName("first_contributed_at")
+    val firstContributedAt: String,
+    @SerializedName("last_contributed_at")
+    val lastContributedAt: String
 )

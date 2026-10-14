@@ -31,6 +31,9 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
+internal val MarketplaceApi.ItemDetails.requiresConfigOwner: Boolean
+    get() = visibility != null
+
 /**
  * Edits the listing of the tracked config
  */
@@ -94,9 +97,12 @@ object ConfigSetCommand {
         description: String? = null,
         details: MarketplaceApi.ItemDetails = MarketplaceApi.ItemDetails(),
     ) {
-        requireOwnTracked()
-
-        val session = session()
+        val session = if (details.requiresConfigOwner) {
+            requireOwnTracked()
+            request { session() }
+        } else {
+            requireEditableTracked()
+        }
         val updated = request {
             val item = MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session)
             MarketplaceApi.updateMarketplaceItem(
