@@ -83,7 +83,10 @@ internal interface MarketplaceService {
     ): MarketplaceItem
 
     @GET("marketplace/code/{code}")
-    suspend fun itemByCode(@Path("code") code: String): MarketplaceItem
+    suspend fun itemByCode(
+        @Path("code") code: String,
+        @Header("Authorization") authorization: String? = null,
+    ): MarketplaceItem
 
     // Revisions
     @GET("marketplace/{id}/revisions")

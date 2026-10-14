@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
-import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -26,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentT
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
-import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -66,8 +64,7 @@ object ConfigInfoCommand {
                         resolveConfig(input).id
                     }
 
-                    val loggedIn = ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT
-                    val item = request { MarketplaceApi.getMarketplaceItem(id, if (loggedIn) session() else null) }
+                    val item = request { MarketplaceApi.getMarketplaceItem(id, sessionOrNull()) }
                     printInfo(item)
                 }
             }

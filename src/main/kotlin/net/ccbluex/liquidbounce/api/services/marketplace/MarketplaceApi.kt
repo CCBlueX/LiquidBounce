@@ -163,7 +163,8 @@ object MarketplaceApi {
     suspend fun getMarketplaceItem(id: Int, session: OAuthSession? = null) =
         service.item(id, session?.authorization)
 
-    suspend fun getMarketplaceItemByCode(shareCode: String) = service.itemByCode(shareCode)
+    suspend fun getMarketplaceItemByCode(shareCode: String, session: OAuthSession? = null) =
+        service.itemByCode(shareCode, session?.authorization)
 
     // Revisions
     /**
