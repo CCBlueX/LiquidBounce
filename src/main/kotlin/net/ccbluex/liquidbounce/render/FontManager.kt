@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
@@ -39,13 +39,6 @@ import java.io.InputStream
 object FontManager {
 
     private val logger = clientLogger("FontManager")
-
-    private val STYLES = intArrayOf(
-        Font.PLAIN,
-        Font.BOLD,
-        Font.ITALIC,
-        Font.BOLD or Font.ITALIC,
-    )
 
     /**
      * As fallback, we can use a common font that is available on all systems.
@@ -125,7 +118,7 @@ object FontManager {
     internal fun createGlyphManager() {
         _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            registeredFaces = ObjectImmutableList(fontFaces.values),
+            registeredFonts = ObjectOpenHashSet(fontFaces.values),
             primaryFace = defaultFontFace,
             fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
@@ -175,7 +168,7 @@ object FontManager {
     private suspend fun systemFont(name: String): FontFace {
         val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
 
-        STYLES.forEach { style ->
+        for (style in 0..3) {
             val font = Font(name, style, DEFAULT_FONT_SIZE.toInt())
             fontFace.fillStyle(font, style)
         }

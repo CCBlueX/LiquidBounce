@@ -28,6 +28,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
@@ -40,21 +41,22 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 
 class FontGlyphPageManager(
-    registeredFaces: Collection<FontFace>,
+    private val registeredFonts: Set<FontFace>,
     private val primaryFace: FontFace,
     private val fallbackFonts: List<FontFace> = emptyList()
 ) : EventListener, AutoCloseable {
 
-    private val registeredFonts = registeredFaces.toSet()
+    init {
+        require(primaryFace in registeredFonts) { "Primary font $primaryFace is not registered" }
+    }
+
     private val staticPage = ArrayList<StaticGlyphPage>()
     private val staticGlyphs = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>>()
     private val resolvedFonts = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<FontId?>>()
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
         fontHeight = ceil(primaryFace.plainMetrics.height * 2.0F).toInt()
     )
-    private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
-        this.dynamicPage
-    )
+    private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(this.dynamicPage)
 
     private val fallbackGlyphs: Map<FontId, GlyphDescriptor>
     private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<FontGlyph, GlyphDescriptor>()
@@ -63,8 +65,6 @@ class FontGlyphPageManager(
     private var commonHanWarmupJob: Job? = null
 
     init {
-        require(primaryFace in registeredFonts) { "Primary font $primaryFace is not registered" }
-
         val eagerGlyphs = FontCharacterSet.createEagerGlyphs(registeredFonts, primaryFace, fallbackFonts)
         registerStaticPages(StaticGlyphPage.createGlyphPages(eagerGlyphs))
 
@@ -219,6 +219,7 @@ class FontGlyphPageManager(
 
 }
 
+@ValueClassCandidate
 class GlyphDescriptor(val page: GlyphPage, val renderInfo: RasterizedGlyph)
 
 /**

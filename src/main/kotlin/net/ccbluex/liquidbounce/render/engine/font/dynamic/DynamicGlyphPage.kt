@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import it.unimi.dsi.fastutil.ints.IntArrays
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
@@ -57,8 +57,8 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
      *
      * @return A list of characters that could not be added
      */
-    fun tryAdd(glyphs: Iterable<FontGlyph>): List<FontGlyph> {
-        val failed = ObjectArrayList<FontGlyph>()
+    fun tryAdd(glyphs: Iterable<FontGlyph>): Set<FontGlyph> {
+        val failed = ObjectOpenHashSet<FontGlyph>()
 
         val changesToDo = glyphs
             .filter { glyphId -> !glyphMap.containsKey(glyphId) }

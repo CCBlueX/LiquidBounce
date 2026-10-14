@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -191,7 +192,7 @@ class DynamicFontCacheManager(
     /**
      * Tries the given allocations, returns all allocations that failed.
      */
-    private fun tryAllocations(requests: Iterable<FontGlyph>): List<FontGlyph> {
+    private fun tryAllocations(requests: Iterable<FontGlyph>): Set<FontGlyph> {
         val unsuccessful = this.dynamicGlyphPage.tryAdd(requests)
 
         requests.forEach {
@@ -227,6 +228,7 @@ class DynamicFontCacheManager(
         }
     }
 
+    @ValueClassCandidate
     class ChangeOnAtlas(
         @JvmField val key: FontGlyph,
         @JvmField val descriptor: GlyphDescriptor,
