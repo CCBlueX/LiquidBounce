@@ -42,7 +42,7 @@ import kotlin.math.max
  * and how they are rendered
  */
 @JvmRecord
-data class GlyphRenderInfo(
+data class RasterizedGlyph(
     /**
      * Which Unicode codepoint does this glyph represent?
      */
@@ -55,32 +55,32 @@ data class GlyphRenderInfo(
      * The bounds of the rendered glyph. Used for rendering.
      */
     val glyphBounds: BoundingBox2f,
-    val layoutInfo: GlyphLayoutInfo
+    val advance: GlyphAdvance,
 )
 
 class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: Dimension) {
     val uvCoordinatesOnTexture: BoundingBox2s
-    val atlasWidth: Float
-    val atlasHeight: Float
+    val pixelWidth: Float
+    val pixelHeight: Float
 
     init {
-        val atlasWidth = atlasDimensions.width.toFloat()
-        val atlasHeight = atlasDimensions.height.toFloat()
+        val textureWidth = atlasDimensions.width.toFloat()
+        val textureHeight = atlasDimensions.height.toFloat()
 
         this.uvCoordinatesOnTexture = BoundingBox2s(
-            pixelBoundingBox.xMin / atlasWidth,
-            pixelBoundingBox.yMin / atlasHeight,
-            pixelBoundingBox.xMax / atlasWidth,
-            pixelBoundingBox.yMax / atlasHeight,
+            pixelBoundingBox.xMin / textureWidth,
+            pixelBoundingBox.yMin / textureHeight,
+            pixelBoundingBox.xMax / textureWidth,
+            pixelBoundingBox.yMax / textureHeight,
         )
 
-        this.atlasWidth = pixelBoundingBox.xMax - pixelBoundingBox.xMin
-        this.atlasHeight = pixelBoundingBox.yMax - pixelBoundingBox.yMin
+        this.pixelWidth = pixelBoundingBox.xMax - pixelBoundingBox.xMin
+        this.pixelHeight = pixelBoundingBox.yMax - pixelBoundingBox.yMin
     }
 }
 
 @JvmRecord
-data class GlyphLayoutInfo(val advanceX: Float, val advanceY: Float)
+data class GlyphAdvance(val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
     abstract val texture: GlyphAtlasTexture
@@ -110,7 +110,7 @@ abstract class GlyphPage {
         /**
          * Used for the Font Atlas generation
          */
-        class CharacterGenerationInfo(
+        class PendingGlyph(
             val fontGlyph: FontGlyph,
             val glyphMetrics: GlyphMetrics,
         ) {
@@ -141,7 +141,7 @@ abstract class GlyphPage {
         @JvmStatic
         protected fun renderGlyphs(
             atlas: BufferedImage,
-            glyphsToRender: Iterable<CharacterGenerationInfo>,
+            glyphsToRender: Iterable<PendingGlyph>,
         ) {
             // Allocate the atlas texture
             val atlasGraphics = atlas.createGraphics()
@@ -156,8 +156,8 @@ abstract class GlyphPage {
                 atlasGraphics.font = font.awtFont
 
                 // Draw glyphs onto the image
-                for (characterInfo in glyphs) {
-                    renderGlyphOnAtlas(characterInfo, atlasGraphics)
+                for (pendingGlyph in glyphs) {
+                    renderGlyphOnAtlas(pendingGlyph, atlasGraphics)
                 }
 
             }
@@ -165,28 +165,28 @@ abstract class GlyphPage {
             atlasGraphics.dispose()
         }
 
-        private fun renderGlyphOnAtlas(characterInfo: CharacterGenerationInfo, atlasGraphics: Graphics2D) {
+        private fun renderGlyphOnAtlas(pendingGlyph: PendingGlyph, atlasGraphics: Graphics2D) {
             // Whitespaces are not placed, so they are not rendered
-            if (characterInfo.glyphMetrics.isWhitespace) {
+            if (pendingGlyph.glyphMetrics.isWhitespace) {
                 return
             }
 
             atlasGraphics.paint = Color(0, 0, 0, 0)
             atlasGraphics.composite = AlphaComposite.Clear
             atlasGraphics.fillRect(
-                characterInfo.atlasLocation.x,
-                characterInfo.atlasLocation.y,
-                characterInfo.atlasDimension.width,
-                characterInfo.atlasDimension.height
+                pendingGlyph.atlasLocation.x,
+                pendingGlyph.atlasLocation.y,
+                pendingGlyph.atlasDimension.width,
+                pendingGlyph.atlasDimension.height
             )
             atlasGraphics.paint = Color.white
             atlasGraphics.composite = AlphaComposite.SrcOver
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             synchronized(fontRasterizationLock) {
-                val character = Character.toString(characterInfo.fontGlyph.codepoint)
-                val baselineX = characterInfo.atlasLocation.x - characterInfo.pixelXMin + DEFAULT_PADDING
-                val baselineY = characterInfo.atlasLocation.y - characterInfo.pixelYMin + DEFAULT_PADDING
+                val character = Character.toString(pendingGlyph.fontGlyph.codepoint)
+                val baselineX = pendingGlyph.atlasLocation.x - pendingGlyph.pixelXMin + DEFAULT_PADDING
+                val baselineY = pendingGlyph.atlasLocation.y - pendingGlyph.pixelYMin + DEFAULT_PADDING
 
                 when (SDLVideo.SDL_GetCurrentVideoDriver()) {
                     "x11" -> {
@@ -205,10 +205,10 @@ abstract class GlyphPage {
         }
 
         @JvmStatic
-        protected fun createGlyphFromGenerationInfo(
-            it: CharacterGenerationInfo,
+        protected fun createRasterizedGlyph(
+            it: PendingGlyph,
             atlasDimensions: Dimension
-        ): GlyphRenderInfo {
+        ): RasterizedGlyph {
             val atlasLocation = if (!it.glyphMetrics.isWhitespace) {
                 val x = it.atlasLocation.x.toFloat() + DEFAULT_PADDING
                 val y = it.atlasLocation.y.toFloat() + DEFAULT_PADDING
@@ -225,7 +225,7 @@ abstract class GlyphPage {
                 null
             }
 
-            return GlyphRenderInfo(
+            return RasterizedGlyph(
                 it.fontGlyph.codepoint,
                 atlasLocation = atlasLocation,
                 glyphBounds = BoundingBox2f(
@@ -234,7 +234,7 @@ abstract class GlyphPage {
                     it.pixelXMax.toFloat(),
                     it.pixelYMax.toFloat(),
                 ),
-                layoutInfo = GlyphLayoutInfo(
+                advance = GlyphAdvance(
                     advanceX = it.glyphMetrics.advanceX,
                     advanceY = it.glyphMetrics.advanceY,
                 )
@@ -242,7 +242,7 @@ abstract class GlyphPage {
         }
 
         @JvmStatic
-        protected fun createCharacterCreationInfo(it: FontGlyph): CharacterGenerationInfo? =
+        protected fun createPendingGlyph(it: FontGlyph): PendingGlyph? =
             synchronized(fontRasterizationLock) {
                 val font = it.font.awtFont
 
@@ -254,7 +254,7 @@ abstract class GlyphPage {
                 val glyphVector = font.createGlyphVector(fontRendererContext, charString)
                 val glyph = glyphVector.getGlyphMetrics(0)
 
-                CharacterGenerationInfo(it, glyph)
+                PendingGlyph(it, glyph)
             }
     }
 }

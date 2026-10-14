@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.PendingGlyph
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.awt.Dimension
 import java.awt.Point
@@ -34,7 +34,7 @@ import kotlin.math.sqrt
  */
 class StaticGlyphPage(
     override val texture: GlyphAtlasTexture,
-    val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
+    val glyphs: Set<Pair<FontId, RasterizedGlyph>>
 ): GlyphPage() {
     companion {
         fun createGlyphPages(chars: List<FontGlyph>): List<StaticGlyphPage> =
@@ -96,7 +96,7 @@ class StaticGlyphPage(
 
             val glyphs = placementPlan.glyphsToRender
                 .mapTo(ObjectOpenHashSet(placementPlan.glyphsToRender.size)) {
-                    it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
+                    it.fontGlyph.font to createRasterizedGlyph(it, placementPlan.atlasDimension)
                 }
 
             return PreparedStaticGlyphPage(atlas, glyphs)
@@ -110,7 +110,7 @@ class StaticGlyphPage(
         private fun tryCharacterPlacement(chars: List<FontGlyph>): GlyphPlacementResult? {
             // Get information about the glyphs and sort them by their height
             val glyphsToRender = chars
-                .mapNotNull { createCharacterCreationInfo(it) }
+                .mapNotNull { createPendingGlyph(it) }
                 .sortedBy { it.glyphMetrics.bounds2D.height }
 
             val maxTextureSize = maxTextureSize.value
@@ -141,7 +141,7 @@ class StaticGlyphPage(
          *
          * @return The height of the resulting texture. Is at least (1, 1)
          */
-        private fun placeCharacters(glyphs: List<CharacterGenerationInfo>, atlasWidth: Int): Dimension {
+        private fun placeCharacters(glyphs: List<PendingGlyph>, atlasWidth: Int): Dimension {
             var currentX = 0
             var currentY = 0
 
@@ -180,12 +180,12 @@ class StaticGlyphPage(
         }
     }
 
-    private class GlyphPlacementResult(val glyphsToRender: List<CharacterGenerationInfo>, val atlasDimension: Dimension)
+    private class GlyphPlacementResult(val glyphsToRender: List<PendingGlyph>, val atlasDimension: Dimension)
 }
 
 internal class PreparedStaticGlyphPage(
     private val atlas: BufferedImage,
-    private val glyphs: Set<Pair<FontId, GlyphRenderInfo>>,
+    private val glyphs: Set<Pair<FontId, RasterizedGlyph>>,
 ) {
     fun materialize(): StaticGlyphPage = StaticGlyphPage(
         GlyphAtlasTexture(

@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.element.TextRunGuiElementRenderState
-import net.ccbluex.liquidbounce.render.setColor
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.util.ARGB
 import net.minecraft.util.FormattedCharSequence
@@ -218,8 +217,8 @@ class FontRenderer(
                 }
             }
 
-            x += glyph.renderInfo.layoutInfo.advanceX * scale
-            y += glyph.renderInfo.layoutInfo.advanceY * scale
+            x += glyph.renderInfo.advance.advanceX * scale
+            y += glyph.renderInfo.advance.advanceY * scale
         }
 
         if (!underlineStartX.isNaN()) {
@@ -248,7 +247,7 @@ class FontRenderer(
     private fun getStringWidth(glyphs: List<GlyphDescriptor>, shadow: Boolean): Float {
         var x = 0.0f
 
-        glyphs.forEach { x += it.renderInfo.layoutInfo.advanceX }
+        glyphs.forEach { x += it.renderInfo.advance.advanceX }
 
         return if (shadow) {
             x + 2.0f
@@ -324,8 +323,8 @@ class FontRenderer(
 
         quad[0] = x + glyphBounds.xMin * scale
         quad[1] = y + glyphBounds.yMin * scale
-        quad[2] = x + (glyphBounds.xMin + atlasLocation.atlasWidth) * scale
-        quad[3] = y + (glyphBounds.yMin + atlasLocation.atlasHeight) * scale
+        quad[2] = x + (glyphBounds.xMin + atlasLocation.pixelWidth) * scale
+        quad[3] = y + (glyphBounds.yMin + atlasLocation.pixelHeight) * scale
 
         val uv = atlasLocation.uvCoordinatesOnTexture
         quad[4] = uv.min.u

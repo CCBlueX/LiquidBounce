@@ -219,7 +219,7 @@ class FontGlyphPageManager(
 
 }
 
-class GlyphDescriptor(val page: GlyphPage, val renderInfo: GlyphRenderInfo)
+class GlyphDescriptor(val page: GlyphPage, val renderInfo: RasterizedGlyph)
 
 /**
  * The font that has to rasterize [codepoint] in [style]: [requestedFace] itself when it covers the
