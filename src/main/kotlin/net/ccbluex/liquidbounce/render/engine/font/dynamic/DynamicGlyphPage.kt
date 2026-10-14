@@ -25,7 +25,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
 import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
-import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
@@ -42,7 +41,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         pixels = image.toLuminanceNativeImage(),
         retainPixels = true,
     )
-    private val glyphMap = Object2ObjectOpenHashMap<GlyphIdentifier, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
+    private val glyphMap = Object2ObjectOpenHashMap<FontGlyph, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     private var copyScratchBuffer = IntArrays.EMPTY_ARRAY
 
     private val allocator = DynamicAtlasAllocator(
@@ -52,7 +51,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     )
 
     fun getGlyph(fontGlyph: FontGlyph): GlyphRenderInfo? {
-        return glyphMap[GlyphIdentifier(fontGlyph)]?.first
+        return glyphMap[fontGlyph]?.first
     }
 
     /**
@@ -64,7 +63,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         val failed = ObjectArrayList<FontGlyph>()
 
         val changesToDo = c
-            .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier(glyphId)) }
+            .filter { glyphId -> !glyphMap.containsKey(glyphId) }
             .mapNotNull { fontGlyph ->
                 createCharacterCreationInfo(fontGlyph) ?: run {
                     failed.add(fontGlyph)
@@ -91,7 +90,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         changesToDo.forEach { (generationInfo, slice) ->
             val glyph = createGlyphFromGenerationInfo(generationInfo, atlasSize)
 
-            glyphMap.put(GlyphIdentifier(generationInfo.fontGlyph), glyph to slice)
+            glyphMap[generationInfo.fontGlyph] = glyph to slice
 
             updateNativeTexture(generationInfo)
         }
@@ -99,7 +98,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         return failed
     }
 
-    fun free(glyphIdentifier: GlyphIdentifier): GlyphRenderInfo? {
+    fun free(glyphIdentifier: FontGlyph): GlyphRenderInfo? {
         val (renderInfo, sliceHandle) = this.glyphMap.remove(glyphIdentifier) ?: return null
 
         this.allocator.free(sliceHandle)

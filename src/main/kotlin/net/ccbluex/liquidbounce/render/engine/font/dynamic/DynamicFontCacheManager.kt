@@ -27,7 +27,6 @@ import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
-import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -43,9 +42,9 @@ class DynamicFontCacheManager(
     private val glyphPageDirtyFlag = AtomicBoolean(false)
     private val glyphPageChanges = ObjectArrayList<ChangeOnAtlas>()
 
-    private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
+    private val cacheData = ConcurrentHashMap<FontGlyph, CharCacheData>()
 
-    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
+    private val requests = ObjectOpenHashSet<FontGlyph>()
     private val requestsLock = ReentrantLock()
     private val hasRequest = requestsLock.newCondition()
     private val running = AtomicBoolean(false)
@@ -54,14 +53,13 @@ class DynamicFontCacheManager(
     private var workerThread: Thread? = null
 
     fun requestGlyph(fontGlyph: FontGlyph) {
-        val glyphIdentifier = GlyphIdentifier(fontGlyph)
-        val cacheObject = this.cacheData.computeIfAbsent(glyphIdentifier) { CharCacheData() }
+        val cacheObject = this.cacheData.computeIfAbsent(fontGlyph) { CharCacheData() }
 
         cacheObject.lastUsage.set(System.currentTimeMillis())
 
         if (cacheObject.cacheState.compareAndSet(UNCACHED, REQUESTED)) {
             this.requestsLock.withLock {
-                requests.add(glyphIdentifier)
+                requests.add(fontGlyph)
                 hasRequest.signal()
             }
         }
@@ -153,10 +151,10 @@ class DynamicFontCacheManager(
             }
         }
 
-        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it)) }
+        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(it) }
     }
 
-    private fun dontRetryAllocationOf(it: GlyphIdentifier) {
+    private fun dontRetryAllocationOf(it: FontGlyph) {
         this.cacheData[it]!!.cacheState.set(BLOCKED)
     }
 
@@ -205,7 +203,7 @@ class DynamicFontCacheManager(
 
         requests.forEach {
             if (it !in unsuccessful) {
-                this.cacheData[GlyphIdentifier(it)]!!.cacheState.set(CACHED)
+                this.cacheData[it]!!.cacheState.set(CACHED)
 
                 val addedGlyph = this.dynamicGlyphPage.getGlyph(it)!!
 

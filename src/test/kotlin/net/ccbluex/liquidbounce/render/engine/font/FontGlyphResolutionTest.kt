@@ -68,13 +68,13 @@ class FontGlyphResolutionTest {
     }
 
     @Test
-    fun testGlyphIdentifierIncludesActualFont() {
+    fun testFontGlyphIncludesActualFont() {
         val firstFont = createFontId(Font.SANS_SERIF)
         val secondFont = createFontId(Font.SERIF)
         val codepoint = 0x20000
 
-        val first = GlyphIdentifier(codepoint, firstFont)
-        val second = GlyphIdentifier(codepoint, secondFont)
+        val first = FontGlyph(codepoint, firstFont)
+        val second = FontGlyph(codepoint, secondFont)
 
         assertEquals(codepoint, first.codepoint)
         assertNotEquals(first, second)

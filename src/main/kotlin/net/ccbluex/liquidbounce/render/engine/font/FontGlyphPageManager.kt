@@ -57,7 +57,7 @@ class FontGlyphPageManager(
     )
 
     private val fallbackGlyphs: Map<FontFace, GlyphDescriptor>
-    private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<GlyphIdentifier, GlyphDescriptor>()
+    private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<FontGlyph, GlyphDescriptor>()
     private val closed = AtomicBoolean(false)
     private val staticPagesLock = Any()
     private var commonHanWarmupJob: Job? = null
@@ -82,7 +82,7 @@ class FontGlyphPageManager(
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
         this.dynamicFontManager.update().forEach { update ->
-            val key = GlyphIdentifier(update.descriptor.renderInfo.codepoint, update.font)
+            val key = FontGlyph(update.descriptor.renderInfo.codepoint, update.font)
 
             if (!update.removed) {
                 dynamicallyLoadedGlyphs.put(key, update.descriptor)
@@ -164,9 +164,8 @@ class FontGlyphPageManager(
         findResolvedStaticGlyph(font, resolvedFont, codepoint)?.let { return it }
 
         val fontGlyph = FontGlyph(codepoint, resolvedFont)
-        val glyphIdentifier = GlyphIdentifier(fontGlyph)
         this.dynamicFontManager.requestGlyph(fontGlyph)
-        return this.dynamicallyLoadedGlyphs[glyphIdentifier]
+        return this.dynamicallyLoadedGlyphs[fontGlyph]
     }
 
     /**
