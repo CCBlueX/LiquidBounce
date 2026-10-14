@@ -31,6 +31,7 @@ import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
 import net.minecraft.util.Util.OS.WINDOWS
+import okio.Buffer
 import java.awt.Font
 import java.io.File
 import java.io.InputStream
@@ -141,7 +142,8 @@ object FontManager {
                 return
             }
 
-            if (fontFaces.values.any { it.file == file }) {
+            val source = FontFace.Source.LocalFile(file)
+            if (loadedOrNull(source) != null) {
                 logger.warn("Font file ${file.absolutePath} is already loaded.")
                 return
             }
@@ -150,7 +152,7 @@ object FontManager {
 
             // Name will consist of the font name and family. This makes it possible
             // to select the different styles of the font.
-            val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
+            val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, source)
             fontFace.fillDerivedStyles(font)
             addFontFace(fontFace)
         } catch (e: Exception) {
@@ -158,15 +160,33 @@ object FontManager {
         }
     }
 
-    suspend fun queueFontFromStream(stream: InputStream) {
-        val font = stream.createFont().deriveFont(DEFAULT_FONT_SIZE)
-        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file = null)
+    /**
+     * Read and close the [stream] as font
+     */
+    suspend fun queueFontFromStream(stream: InputStream): Boolean {
+        val buffer = Buffer()
+        stream.use(buffer::readFrom)
+        return queueFontFromBuffer(buffer)
+    }
+
+    suspend fun queueFontFromBuffer(buffer: Buffer): Boolean {
+        val source = FontFace.Source.InMemory(buffer.sha256())
+        if (loadedOrNull(source) != null) {
+            logger.info("Skipping a font that is already loaded.")
+            return false
+        }
+
+        val font = buffer.inputStream().createFont().deriveFont(DEFAULT_FONT_SIZE)
+        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, source)
         fontFace.fillDerivedStyles(font)
         addFontFace(fontFace)
+        return true
     }
 
     private suspend fun systemFont(name: String): FontFace {
-        val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
+        val source = FontFace.Source.System(name)
+        // Skip loaded check to prevent class init error
+        val fontFace = FontFace(name, DEFAULT_FONT_SIZE, source)
 
         for (style in 0..3) {
             val font = Font(name, style, DEFAULT_FONT_SIZE.toInt())
@@ -175,5 +195,8 @@ object FontManager {
 
         return fontFace
     }
+
+    private fun loadedOrNull(source: FontFace.Source): FontFace? =
+        fontFaces.values.firstOrNull { it.source == source }
 
 }

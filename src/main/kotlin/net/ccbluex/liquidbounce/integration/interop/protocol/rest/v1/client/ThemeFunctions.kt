@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.FontManager
 
 // GET /api/v1/client/theme
@@ -76,7 +77,7 @@ private fun Route.getFonts() = get { call.respond(FontManager.fontFaces.keys) }
 private fun Route.getFont() = get("/{name}") {
     val name = call.parameters["name"] ?: call.badRequest("Missing font name")
     val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
-    val file = font.file ?: run {
+    val (file) = font.source as? FontFace.Source.LocalFile ?: run {
         call.respond(io.ktor.http.HttpStatusCode.NoContent)
         return@get
     }

@@ -26,17 +26,16 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.fontRasterizationLock
 import net.ccbluex.liquidbounce.render.engine.font.TextMetrics
+import okio.ByteString
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
+import java.time.Instant
 
 class FontFace(
     val name: String,
     val size: Float,
-    /**
-     * The file of the font. If the font is a system font, this will be null.
-     */
-    val file: File? = null,
+    val source: Source = Source.Unspecified(Instant.now()),
 ) {
     /**
      * Style of the font. If an element is null, fall back to `[0]`
@@ -53,9 +52,6 @@ class FontFace(
 
     /** How each style in [styles] lays out, filled by the same call. */
     private val metrics: Array<TextMetrics?> = arrayOfNulls(4)
-
-    @Volatile
-    private var cachedHash: Int = 0
 
     private var cachedRenderer: FontRenderer? = null
 
@@ -119,36 +115,37 @@ class FontFace(
 
             styles[style] = fontId
             metrics[style] = textMetrics
-            cachedHash = 0
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is FontFace) return false
-
-        if (size != other.size) return false
-        if (name != other.name) return false
-        if (file != other.file) return false
-        if (!styles.contentEquals(other.styles)) return false
-
-        return true
+    override fun toString(): String {
+        return "FontFace(name='$name', size=$size, source=$source)"
     }
 
     /**
-     * @see java.lang.String.hashCode
+     * Source type and identity.
      */
-    override fun hashCode(): Int {
-        var h = cachedHash
-        if (h == 0) {
-            var result = size.hashCode() // size != 0
-            result = 31 * result + name.hashCode()
-            result = 31 * result + file?.absolutePath.hashCode()
-            result = 31 * result + styles.contentHashCode()
-            h = result
-            cachedHash = h
-        }
-        return h
+    sealed interface Source {
+        /**
+         * Only for default constructor.
+         */
+        @ConsistentCopyVisibility
+        data class Unspecified internal constructor(val instant: Instant) : Source
+
+        /**
+         * Loaded via AWT system font lookup with name.
+         */
+        data class System(val name: String) : Source
+
+        /**
+         * Loaded from [path].
+         */
+        data class LocalFile(val path: File) : Source
+
+        /**
+         * Loaded from in-memory content with hash [sha256].
+         */
+        data class InMemory(val sha256: ByteString) : Source
     }
 
 }
