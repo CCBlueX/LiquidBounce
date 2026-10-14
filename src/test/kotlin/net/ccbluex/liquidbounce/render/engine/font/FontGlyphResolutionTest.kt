@@ -81,21 +81,14 @@ class FontGlyphResolutionTest {
     }
 
     @Test
-    fun testFontIdHashCoversEveryField() {
+    fun testFontIdIdentityIsItsFont() {
         val base = createFontId(Font.SANS_SERIF)
+        val sameFont = createFontId(Font.SANS_SERIF)
 
-        assertEquals(base, createFontId(Font.SANS_SERIF))
+        assertEquals(base, sameFont)
+        assertEquals(base.hashCode(), sameFont.hashCode())
 
-        assertNotEquals(base.hashCode(), createFontId(Font.SERIF).hashCode())
-        assertNotEquals(base.hashCode(), base.copy(height = base.height + 1f).hashCode())
-        assertNotEquals(base.hashCode(), base.copy(ascent = base.ascent + 1f).hashCode())
-        assertNotEquals(base.hashCode(), base.copy(underlineOffset = base.underlineOffset + 1f).hashCode())
-        assertNotEquals(base.hashCode(), base.copy(underlineThickness = base.underlineThickness + 1f).hashCode())
-        assertNotEquals(base.hashCode(), base.copy(strikethroughOffset = base.strikethroughOffset + 1f).hashCode())
-        assertNotEquals(
-            base.hashCode(),
-            base.copy(strikethroughThickness = base.strikethroughThickness + 1f).hashCode()
-        )
+        assertNotEquals(base, createFontId(Font.SERIF))
     }
 
     @Test
@@ -106,21 +99,13 @@ class FontGlyphResolutionTest {
         assertTrue(face.style(Font.BOLD)!!.awtFont.isBold)
         assertTrue(face.style(Font.ITALIC)!!.awtFont.isItalic)
         assertNotNull(face.style(Font.BOLD or Font.ITALIC))
-        assertTrue(face.plainStyle.underlineOffset > 0f)
-        assertTrue(face.plainStyle.underlineThickness > 0f)
-        assertTrue(face.plainStyle.strikethroughOffset < 0f)
-        assertTrue(face.plainStyle.strikethroughThickness > 0f)
+        assertTrue(face.plainMetrics.underlineOffset > 0f)
+        assertTrue(face.plainMetrics.underlineThickness > 0f)
+        assertTrue(face.plainMetrics.strikethroughOffset < 0f)
+        assertTrue(face.plainMetrics.strikethroughThickness > 0f)
     }
 
-    private fun createFontId(name: String) = FontId(
-        Font(name, Font.PLAIN, 43),
-        51f,
-        40f,
-        2f,
-        1f,
-        -12f,
-        1f,
-    )
+    private fun createFontId(name: String) = FontId(Font(name, Font.PLAIN, 43))
 }
 
 /**

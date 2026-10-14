@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.fontRasterizationLock
+import net.ccbluex.liquidbounce.render.engine.font.TextMetrics
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -50,6 +51,9 @@ class FontFace(
      */
     private val styles: Array<FontId?> = arrayOfNulls(4)
 
+    /** How each style in [styles] lays out, filled by the same call. */
+    private val metrics: Array<TextMetrics?> = arrayOfNulls(4)
+
     @Volatile
     private var cachedHash: Int = 0
 
@@ -66,6 +70,11 @@ class FontFace(
     val plainStyle: FontId
         get() = requireNotNull(styles[0]) {
             "FontFace ${name}_$size has no plain style!"
+        }
+
+    val plainMetrics: TextMetrics
+        get() = requireNotNull(metrics[0]) {
+            "FontFace ${name}_$size has no plain metrics!"
         }
 
     val filledStyles: List<FontId> get() = styles.filterNotNull()
@@ -88,20 +97,20 @@ class FontFace(
         }
 
         withContext(Dispatchers.Default) {
-            val fontId = synchronized(fontRasterizationLock) {
+            val (fontId, textMetrics) = synchronized(fontRasterizationLock) {
                 val graphics = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
                 try {
                     graphics.font = font
-                    val metrics = graphics.fontMetrics
+                    val fontMetrics = graphics.fontMetrics
                     val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
-                    FontId(
-                        font,
-                        metrics.height.toFloat(),
-                        metrics.ascent.toFloat(),
-                        lineMetrics.underlineOffset,
-                        lineMetrics.underlineThickness,
-                        lineMetrics.strikethroughOffset,
-                        lineMetrics.strikethroughThickness,
+
+                    FontId(font) to TextMetrics(
+                        height = fontMetrics.height.toFloat(),
+                        ascent = fontMetrics.ascent.toFloat(),
+                        underlineOffset = lineMetrics.underlineOffset,
+                        underlineThickness = lineMetrics.underlineThickness,
+                        strikethroughOffset = lineMetrics.strikethroughOffset,
+                        strikethroughThickness = lineMetrics.strikethroughThickness,
                     )
                 } finally {
                     graphics.dispose()
@@ -109,6 +118,7 @@ class FontFace(
             }
 
             styles[style] = fontId
+            metrics[style] = textMetrics
             cachedHash = 0
         }
     }

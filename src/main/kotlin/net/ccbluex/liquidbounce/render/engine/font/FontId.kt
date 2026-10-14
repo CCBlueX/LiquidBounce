@@ -20,25 +20,10 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import java.awt.Font
-import java.util.Objects
 
-data class FontId(
-    val awtFont: Font,
-    val height: Float,
-    val ascent: Float,
-    val underlineOffset: Float,
-    val underlineThickness: Float,
-    val strikethroughOffset: Float,
-    val strikethroughThickness: Float,
-) {
-    /**
-     * Every glyph lookup keys on a [FontId], which puts this hash on the render path three to four times
-     * per character per frame. The fields never change, so it is computed once.
-     */
-    private val cachedHash = Objects.hash(
-        awtFont, height, ascent, underlineOffset, underlineThickness, strikethroughOffset,
-        strikethroughThickness,
-    )
-
-    override fun hashCode(): Int = cachedHash
-}
+/**
+ * One face at one style, as rasterized here: the identity every glyph lookup keys on.
+ *
+ * Its layout lives in [TextMetrics], which a [FontFace] pairs up with this.
+ */
+data class FontId(val awtFont: Font)

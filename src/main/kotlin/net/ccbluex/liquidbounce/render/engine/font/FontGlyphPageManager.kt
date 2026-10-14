@@ -50,7 +50,7 @@ class FontGlyphPageManager(
     private val staticGlyphs = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>>()
     private val resolvedFonts = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<FontId?>>()
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
-        fontHeight = ceil(primaryFace.plainStyle.height * 2.0F).toInt()
+        fontHeight = ceil(primaryFace.plainMetrics.height * 2.0F).toInt()
     )
     private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
         this.dynamicPage

@@ -65,14 +65,16 @@ class FontRenderer(
      */
     private val quad = FloatArray(8)
 
-    override val height: Float = font.plainStyle.height
+    private val metrics: TextMetrics = font.plainMetrics
 
-    private val ascent: Float = font.plainStyle.ascent
+    override val height: Float = metrics.height
 
-    private val underlineOffset: Float = font.plainStyle.underlineOffset
-    private val underlineThickness: Float = font.plainStyle.underlineThickness
-    private val strikethroughOffset: Float = font.plainStyle.strikethroughOffset
-    private val strikethroughThickness: Float = font.plainStyle.strikethroughThickness
+    private val ascent: Float = metrics.ascent
+
+    private val underlineOffset: Float = metrics.underlineOffset
+    private val underlineThickness: Float = metrics.underlineThickness
+    private val strikethroughOffset: Float = metrics.strikethroughOffset
+    private val strikethroughThickness: Float = metrics.strikethroughThickness
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
