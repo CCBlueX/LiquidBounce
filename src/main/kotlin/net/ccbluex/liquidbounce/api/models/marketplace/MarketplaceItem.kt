@@ -63,5 +63,13 @@ data class MarketplaceItem(
     @SerializedName("community_editable")
     val communityEditable: Boolean = false,
     @SerializedName("can_edit")
-    val canEdit: Boolean = false
+    val canEdit: Boolean = false,
+    @SerializedName("source_url")
+    val sourceUrl: String? = null,
+    val contributors: List<MarketplaceContributor>? = null
+)
+
+data class MarketplaceContributor(
+    val uid: String,
+    val nickname: String? = null
 )

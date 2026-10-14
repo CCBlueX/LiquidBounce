@@ -93,6 +93,11 @@ object ConfigInfoCommand {
         item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
             field(regular(t("info.tags", tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
+        item.contributors?.takeIf { it.isNotEmpty() }?.let { contributors ->
+            val names = contributors.joinToText(DEFAULT_SEPARATOR) { variable(it.nickname ?: it.uid) }
+            field(regular(t("info.contributors", names)))
+        }
+        item.sourceUrl?.let { field(regular(t("info.source", variable(it).copyable()))) }
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
             val names = dependencies.joinToText(DEFAULT_SEPARATOR) {
