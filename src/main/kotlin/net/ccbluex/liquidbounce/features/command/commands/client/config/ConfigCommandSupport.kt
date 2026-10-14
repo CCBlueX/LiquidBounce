@@ -25,6 +25,7 @@ import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
@@ -130,6 +131,29 @@ internal suspend fun CmdI18n.requireOwnTracked() {
     if (ownUserId() != ConfigTracker.itemUid) {
         throw CommandException(t("error.notOwner", variable(ConfigTracker.itemName)))
     }
+}
+
+/**
+ * Owner, anyone the API lets edit, or anyone signed in once the owner opened a public config to the community.
+ */
+internal fun MarketplaceItem.isEditableBy(userId: String?): Boolean = when {
+    userId == null || type != MarketplaceItemType.CONFIG -> false
+    uid == userId || canEdit -> true
+    else -> communityEditable && visibility == MarketplaceItemVisibility.PUBLIC
+}
+
+/**
+ * The session to publish the tracked config with, if the user may edit it.
+ */
+internal suspend fun CmdI18n.requireEditableTracked(): OAuthSession {
+    requireTracked()
+    val userId = request { ownUserId() }
+    val session = request { session() }
+    val item = request { MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session) }
+    if (!item.isEditableBy(userId)) {
+        throw CommandException(t("error.notEditor", variable(item.name)))
+    }
+    return session
 }
 
 internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility =

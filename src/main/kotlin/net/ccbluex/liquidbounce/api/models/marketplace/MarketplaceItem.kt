@@ -59,5 +59,9 @@ data class MarketplaceItem(
     @SerializedName("recent_works")
     val recentWorks: Int = 0,
     @SerializedName("recent_fails")
-    val recentFails: Int = 0
+    val recentFails: Int = 0,
+    @SerializedName("community_editable")
+    val communityEditable: Boolean = false,
+    @SerializedName("can_edit")
+    val canEdit: Boolean = false
 )

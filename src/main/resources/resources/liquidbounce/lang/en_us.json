@@ -86,6 +86,7 @@
   "liquidbounce.command.config.depend.removed": "%s no longer depends on %s.",
   "liquidbounce.command.config.error.ambiguous": "Several configs are named %s, pick one: %s",
   "liquidbounce.command.config.error.invalidVisibility": "Unknown visibility %s, use public or unlisted.",
+  "liquidbounce.command.config.error.notEditor": "You cannot publish changes to %s.",
   "liquidbounce.command.config.error.notFound": "No config found for %s.",
   "liquidbounce.command.config.error.notOwner": "Only the author can change %s.",
   "liquidbounce.command.config.error.notTracking": "No marketplace config is loaded.",
