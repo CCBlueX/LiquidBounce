@@ -86,7 +86,6 @@ class FontGlyphResolutionTest {
 
         assertEquals(base, createFontId(Font.SANS_SERIF))
 
-        assertNotEquals(base.hashCode(), base.copy(style = Font.BOLD).hashCode())
         assertNotEquals(base.hashCode(), createFontId(Font.SERIF).hashCode())
         assertNotEquals(base.hashCode(), base.copy(height = base.height + 1f).hashCode())
         assertNotEquals(base.hashCode(), base.copy(ascent = base.ascent + 1f).hashCode())
@@ -114,7 +113,6 @@ class FontGlyphResolutionTest {
     }
 
     private fun createFontId(name: String) = FontId(
-        Font.PLAIN,
         Font(name, Font.PLAIN, 43),
         51f,
         40f,

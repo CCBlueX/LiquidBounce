@@ -23,7 +23,6 @@ import java.awt.Font
 import java.util.Objects
 
 data class FontId(
-    val style: @FontStyle Int,
     val awtFont: Font,
     val height: Float,
     val ascent: Float,
@@ -37,7 +36,7 @@ data class FontId(
      * per character per frame. The fields never change, so it is computed once.
      */
     private val cachedHash = Objects.hash(
-        style, awtFont, height, ascent, underlineOffset, underlineThickness, strikethroughOffset,
+        awtFont, height, ascent, underlineOffset, underlineThickness, strikethroughOffset,
         strikethroughThickness,
     )
 

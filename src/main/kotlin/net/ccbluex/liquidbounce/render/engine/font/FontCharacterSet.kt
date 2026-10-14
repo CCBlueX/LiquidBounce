@@ -86,7 +86,7 @@ internal object FontCharacterSet {
             destination = result,
             requestedFace = primaryFace,
             fallbackFaces = fallbackFaces,
-            styles = primaryFace.filledStyles.mapToIntArray { it.style },
+            styles = primaryFace.filledStyles.mapToIntArray { it.awtFont.style },
             codepoints = eagerCodepoints,
         )
 
@@ -133,6 +133,6 @@ internal object FontCharacterSet {
     }
 
     private val FONT_GLYPH_COMPARATOR = Comparator.comparing<FontGlyph, String> { it.font.awtFont.fontName }
-        .thenComparingInt { it.font.style }
+        .thenComparingInt { it.font.awtFont.style }
         .thenComparingInt { it.codepoint }
 }

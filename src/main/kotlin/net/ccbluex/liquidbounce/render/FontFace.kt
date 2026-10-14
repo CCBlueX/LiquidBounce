@@ -95,7 +95,6 @@ class FontFace(
                     val metrics = graphics.fontMetrics
                     val lineMetrics = font.getLineMetrics("Ag", graphics.fontRenderContext)
                     FontId(
-                        style,
                         font,
                         metrics.height.toFloat(),
                         metrics.ascent.toFloat(),
