@@ -22,8 +22,6 @@ package net.ccbluex.liquidbounce.render.engine.font.dynamic
 import it.unimi.dsi.fastutil.ints.IntArrays
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
-import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage

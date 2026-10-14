@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine.font
+package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
