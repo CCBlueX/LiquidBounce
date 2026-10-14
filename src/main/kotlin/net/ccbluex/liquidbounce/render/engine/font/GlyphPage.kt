@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.renderpearl.api.GpuFormat
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -79,6 +80,7 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
     }
 }
 
+@ValueClassCandidate
 @JvmRecord
 data class GlyphAdvance(val advanceX: Float, val advanceY: Float)
 

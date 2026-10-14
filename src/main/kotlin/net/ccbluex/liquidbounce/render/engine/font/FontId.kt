@@ -19,11 +19,15 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import java.awt.Font
 
 /**
  * One face at one style, as rasterized here: the identity every glyph lookup keys on.
  *
- * Its layout lives in [TextMetrics], which a [FontFace] pairs up with this.
+ * Its layout lives in [TextMetrics], which a [net.ccbluex.liquidbounce.render.FontFace]
+ * pairs up with this.
  */
+@ValueClassCandidate
+@JvmRecord
 data class FontId(val awtFont: Font)

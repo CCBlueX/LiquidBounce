@@ -19,9 +19,11 @@
 
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.minecraft.world.phys.Vec2
 import java.awt.geom.Rectangle2D
 
+@ValueClassCandidate
 @JvmRecord
 data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val yMax: Float) {
     constructor(rect: Rectangle2D) : this(
