@@ -24,7 +24,6 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
-import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -133,10 +132,8 @@ class DynamicFontCacheManager(
             retrievedRequests
         }
 
-        val allocationList = requestedChars.map { FontGlyph(it.codepoint, it.font) }
-
         val unsuccessfulAllocations = this.glyphPageLock.withLock {
-            tryAllocations(allocationList)
+            tryAllocations(requestedChars)
         }
 
         if (unsuccessfulAllocations.isEmpty()) {
@@ -172,11 +169,7 @@ class DynamicFontCacheManager(
             if (renderInfo != null) {
                 freedAny = true
                 this.glyphPageChanges.add(
-                    ChangeOnAtlas(
-                        GlyphDescriptor(this.dynamicGlyphPage, renderInfo),
-                        glyphId.font,
-                        removed = true
-                    )
+                    ChangeOnAtlas(glyphId, GlyphDescriptor(this.dynamicGlyphPage, renderInfo), removed = true)
                 )
             } else {
                 logger.warn("Character '${glyphId.codepoint}' was freed twice.")
@@ -209,11 +202,7 @@ class DynamicFontCacheManager(
 
                 this.glyphPageDirtyFlag.set(true)
                 this.glyphPageChanges.add(
-                    ChangeOnAtlas(
-                        GlyphDescriptor(this.dynamicGlyphPage, addedGlyph),
-                        it.font,
-                        removed = false
-                    )
+                    ChangeOnAtlas(it, GlyphDescriptor(this.dynamicGlyphPage, addedGlyph), removed = false)
                 )
             }
         }
@@ -239,8 +228,8 @@ class DynamicFontCacheManager(
     }
 
     class ChangeOnAtlas(
+        @JvmField val key: FontGlyph,
         @JvmField val descriptor: GlyphDescriptor,
-        @JvmField val font: FontId,
         @JvmField val removed: Boolean,
     )
 }

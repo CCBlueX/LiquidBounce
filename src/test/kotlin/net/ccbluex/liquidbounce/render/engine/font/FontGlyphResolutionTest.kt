@@ -81,6 +81,25 @@ class FontGlyphResolutionTest {
     }
 
     @Test
+    fun testFontIdHashCoversEveryField() {
+        val base = createFontId(Font.SANS_SERIF)
+
+        assertEquals(base, createFontId(Font.SANS_SERIF))
+
+        assertNotEquals(base.hashCode(), base.copy(style = Font.BOLD).hashCode())
+        assertNotEquals(base.hashCode(), createFontId(Font.SERIF).hashCode())
+        assertNotEquals(base.hashCode(), base.copy(height = base.height + 1f).hashCode())
+        assertNotEquals(base.hashCode(), base.copy(ascent = base.ascent + 1f).hashCode())
+        assertNotEquals(base.hashCode(), base.copy(underlineOffset = base.underlineOffset + 1f).hashCode())
+        assertNotEquals(base.hashCode(), base.copy(underlineThickness = base.underlineThickness + 1f).hashCode())
+        assertNotEquals(base.hashCode(), base.copy(strikethroughOffset = base.strikethroughOffset + 1f).hashCode())
+        assertNotEquals(
+            base.hashCode(),
+            base.copy(strikethroughThickness = base.strikethroughThickness + 1f).hashCode()
+        )
+    }
+
+    @Test
     fun testDerivedStylesAndDecorationMetrics() = runTest {
         val face = FontFace("Test", 43f)
         face.fillDerivedStyles(Font(Font.SANS_SERIF, Font.PLAIN, 43))

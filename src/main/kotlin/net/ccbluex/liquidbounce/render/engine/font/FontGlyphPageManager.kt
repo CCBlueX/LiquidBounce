@@ -56,7 +56,7 @@ class FontGlyphPageManager(
         this.dynamicPage
     )
 
-    private val fallbackGlyphs: Map<FontFace, GlyphDescriptor>
+    private val fallbackGlyphs: Map<FontId, GlyphDescriptor>
     private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<FontGlyph, GlyphDescriptor>()
     private val closed = AtomicBoolean(false)
     private val staticPagesLock = Any()
@@ -71,7 +71,7 @@ class FontGlyphPageManager(
         val primaryFallback = requireNotNull(staticGlyphs[primaryFace.plainStyle]?.get('?'.code)) {
             "Primary font $primaryFace has no fallback glyph"
         }
-        fallbackGlyphs = registeredFonts.associateWith { font ->
+        fallbackGlyphs = registeredFonts.associateBy({ it.plainStyle }) { font ->
             staticGlyphs[font.plainStyle]?.get('?'.code) ?: primaryFallback
         }
 
@@ -82,12 +82,10 @@ class FontGlyphPageManager(
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
         this.dynamicFontManager.update().forEach { update ->
-            val key = FontGlyph(update.descriptor.renderInfo.codepoint, update.font)
-
             if (!update.removed) {
-                dynamicallyLoadedGlyphs.put(key, update.descriptor)
+                dynamicallyLoadedGlyphs[update.key] = update.descriptor
             } else {
-                dynamicallyLoadedGlyphs.remove(key)
+                dynamicallyLoadedGlyphs.remove(update.key)
             }
         }
     }
@@ -199,7 +197,7 @@ class FontGlyphPageManager(
         .firstNotNullOfOrNull { staticGlyphs[it]?.get(codepoint) }
 
     fun getFallbackGlyph(font: FontFace): GlyphDescriptor {
-        return fallbackGlyphs[font] ?: error("Font $font is not registered")
+        return fallbackGlyphs[font.plainStyle] ?: error("Font $font is not registered")
     }
 
     override fun close() {
