@@ -49,7 +49,7 @@
 
         binding = false;
 
-        if (e.keyCode !== 256) {
+        if (e.keyCode !== 27 /* SDLK_ESCAPE */) {
             cSetting.value = e.key;
         } else {
             cSetting.value = UNKNOWN_KEY;
@@ -65,7 +65,7 @@
             return;
         }
 
-        if (!binding || (e.button === 0 && isHovered)) {
+        if (!binding || (e.button === 1 /* SDL_BUTTON_LEFT */ && isHovered)) {
             return;
         }
 

@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
@@ -51,6 +51,18 @@ fun <T> Iterable<Predicate<T>>.matchesAny(t: T): Boolean =
 
 fun <T> Iterable<Predicate<T>>.matchesAll(t: T): Boolean =
     all { it.test(t) }
+
+inline fun <reified T> MutableCollection<T>.drainToArray(): Array<T> {
+    val r = this.toTypedArray()
+    this.clear()
+    return r
+}
+
+fun <T> MutableCollection<T>.drainToList(): List<T> {
+    val r = this.toList()
+    this.clear()
+    return r
+}
 
 inline fun <T : Any> Array<T?>.getOrSet(index: Int, defaultValue: () -> T): T {
     val t = get(index)
