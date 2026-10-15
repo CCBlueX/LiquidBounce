@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
-import io.ktor.utils.io.CancellationException
 import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
