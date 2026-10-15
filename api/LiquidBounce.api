@@ -1257,6 +1257,7 @@ public final class net/ccbluex/liquidbounce/render/FontManager {
 	public final fun fontFace (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/render/FontFace;
 	public static final fun getFONT_RENDERER ()Lnet/ccbluex/liquidbounce/render/engine/font/FontRenderer;
 	public final fun getGlyphManager ()Lnet/ccbluex/liquidbounce/render/engine/font/FontGlyphPageManager;
+	public final fun queueFontFromBuffer (Lokio/Buffer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun queueFontFromStream (Ljava/io/InputStream;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
