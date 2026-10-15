@@ -24,10 +24,9 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
-import net.ccbluex.liquidbounce.render.engine.font.FontId
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
-import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -43,9 +42,9 @@ class DynamicFontCacheManager(
     private val glyphPageDirtyFlag = AtomicBoolean(false)
     private val glyphPageChanges = ObjectArrayList<ChangeOnAtlas>()
 
-    private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
+    private val cacheData = ConcurrentHashMap<FontGlyph, CharCacheData>()
 
-    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
+    private val requests = ObjectOpenHashSet<FontGlyph>()
     private val requestsLock = ReentrantLock()
     private val hasRequest = requestsLock.newCondition()
     private val running = AtomicBoolean(false)
@@ -54,14 +53,13 @@ class DynamicFontCacheManager(
     private var workerThread: Thread? = null
 
     fun requestGlyph(fontGlyph: FontGlyph) {
-        val glyphIdentifier = GlyphIdentifier(fontGlyph)
-        val cacheObject = this.cacheData.computeIfAbsent(glyphIdentifier) { CharCacheData() }
+        val cacheObject = this.cacheData.computeIfAbsent(fontGlyph) { CharCacheData() }
 
         cacheObject.lastUsage.set(System.currentTimeMillis())
 
         if (cacheObject.cacheState.compareAndSet(UNCACHED, REQUESTED)) {
             this.requestsLock.withLock {
-                requests.add(glyphIdentifier)
+                requests.add(fontGlyph)
                 hasRequest.signal()
             }
         }
@@ -135,10 +133,8 @@ class DynamicFontCacheManager(
             retrievedRequests
         }
 
-        val allocationList = requestedChars.map { FontGlyph(it.codepoint, it.font) }
-
         val unsuccessfulAllocations = this.glyphPageLock.withLock {
-            tryAllocations(allocationList)
+            tryAllocations(requestedChars)
         }
 
         if (unsuccessfulAllocations.isEmpty()) {
@@ -153,10 +149,10 @@ class DynamicFontCacheManager(
             }
         }
 
-        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it)) }
+        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(it) }
     }
 
-    private fun dontRetryAllocationOf(it: GlyphIdentifier) {
+    private fun dontRetryAllocationOf(it: FontGlyph) {
         this.cacheData[it]!!.cacheState.set(BLOCKED)
     }
 
@@ -174,11 +170,7 @@ class DynamicFontCacheManager(
             if (renderInfo != null) {
                 freedAny = true
                 this.glyphPageChanges.add(
-                    ChangeOnAtlas(
-                        GlyphDescriptor(this.dynamicGlyphPage, renderInfo),
-                        glyphId.font,
-                        removed = true
-                    )
+                    ChangeOnAtlas(glyphId, GlyphDescriptor(this.dynamicGlyphPage, renderInfo), removed = true)
                 )
             } else {
                 logger.warn("Character '${glyphId.codepoint}' was freed twice.")
@@ -200,22 +192,18 @@ class DynamicFontCacheManager(
     /**
      * Tries the given allocations, returns all allocations that failed.
      */
-    private fun tryAllocations(requests: Iterable<FontGlyph>): List<FontGlyph> {
+    private fun tryAllocations(requests: Iterable<FontGlyph>): Set<FontGlyph> {
         val unsuccessful = this.dynamicGlyphPage.tryAdd(requests)
 
         requests.forEach {
             if (it !in unsuccessful) {
-                this.cacheData[GlyphIdentifier(it)]!!.cacheState.set(CACHED)
+                this.cacheData[it]!!.cacheState.set(CACHED)
 
                 val addedGlyph = this.dynamicGlyphPage.getGlyph(it)!!
 
                 this.glyphPageDirtyFlag.set(true)
                 this.glyphPageChanges.add(
-                    ChangeOnAtlas(
-                        GlyphDescriptor(this.dynamicGlyphPage, addedGlyph),
-                        it.font,
-                        removed = false
-                    )
+                    ChangeOnAtlas(it, GlyphDescriptor(this.dynamicGlyphPage, addedGlyph), removed = false)
                 )
             }
         }
@@ -240,9 +228,10 @@ class DynamicFontCacheManager(
         }
     }
 
+    @ValueClassCandidate
     class ChangeOnAtlas(
+        @JvmField val key: FontGlyph,
         @JvmField val descriptor: GlyphDescriptor,
-        @JvmField val font: FontId,
         @JvmField val removed: Boolean,
     )
 }

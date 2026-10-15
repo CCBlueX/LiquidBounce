@@ -19,7 +19,18 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-@JvmRecord
-data class GlyphIdentifier(val codepoint: Int, val font: FontId) {
-    constructor(fontGlyph: FontGlyph) : this(fontGlyph.codepoint, fontGlyph.font)
-}
+/**
+ * The vertical metrics of a font in one style: the line box it occupies and where its decorations sit.
+ *
+ * Kept apart from [FontId] because these describe how text is laid out, not which font it uses - and
+ * because every glyph lookup keys on [FontId], so leaving metrics out of it keeps them out of its
+ * equals and hashCode.
+ */
+data class TextMetrics(
+    val height: Float,
+    val ascent: Float,
+    val underlineOffset: Float,
+    val underlineThickness: Float,
+    val strikethroughOffset: Float,
+    val strikethroughThickness: Float,
+)

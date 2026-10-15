@@ -46,6 +46,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.coroutines.executeAsync
+import okio.Buffer
 import okio.BufferedSource
 import okio.sink
 import java.io.File
@@ -225,6 +226,9 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
+        Buffer::class.java -> body.source().use {
+            Buffer().apply { writeAll(it) }
+        } as T
         NativeImage::class.java -> body.source().readNativeImage() as T
         else -> body.charStream().readJson<T>()
     }

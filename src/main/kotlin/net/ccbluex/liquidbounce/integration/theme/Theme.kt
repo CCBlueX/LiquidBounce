@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
@@ -45,8 +46,8 @@ import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.text.capitalize
 import okhttp3.Headers
+import okio.Buffer
 import java.io.File
-import java.io.InputStream
 import java.util.Locale
 
 /**
@@ -231,14 +232,15 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private suspend fun loadFonts() {
         for (font in metadata.fonts) {
-            runCatching {
-                get<InputStream>("/fonts/$font").use { stream ->
-                    FontManager.queueFontFromStream(stream)
+            try {
+                val responseBody = get<Buffer>("/fonts/$font")
+                if (FontManager.queueFontFromBuffer(responseBody)) {
+                    logger.info("Loaded font $font for theme ${metadata.name}")
                 }
-
-                logger.info("Loaded font $font for theme ${metadata.name}")
-            }.onFailure {
-                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to load font $font for theme ${metadata.name}", e)
             }
         }
     }

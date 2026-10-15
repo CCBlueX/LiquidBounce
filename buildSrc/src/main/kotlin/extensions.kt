@@ -105,7 +105,7 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
                     }
                 } else {
                     logger.error("Failed to get GitHub API response for $repoOwner:$repoName " +
-                        "(HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
+                        "(HTTP ${response.statusCode()}): ${String(response.body().readAllBytes())}")
                     emptyList()
                 }
             }

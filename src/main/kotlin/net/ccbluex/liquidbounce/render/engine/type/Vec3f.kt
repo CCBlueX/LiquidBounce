@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -29,6 +30,7 @@ import org.joml.Vector3fc
 import kotlin.math.sqrt
 
 @Suppress("TooManyFunctions")
+@ValueClassCandidate
 @JvmRecord
 data class Vec3f(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())

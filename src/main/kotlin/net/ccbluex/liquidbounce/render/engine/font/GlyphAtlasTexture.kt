@@ -24,6 +24,7 @@ import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
+import it.unimi.dsi.fastutil.ints.IntArrays
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.render.write
 import net.minecraft.client.renderer.texture.AbstractTexture
@@ -133,7 +134,7 @@ internal fun BufferedImage.copyCoverageToNativeImage(
     targetY: Int = 0,
     width: Int = this.width,
     height: Int = this.height,
-    scratchBuffer: IntArray = IntArray(0),
+    scratchBuffer: IntArray = IntArrays.EMPTY_ARRAY,
 ): IntArray {
     validateCoverageCopy(target, sourceX, sourceY, targetX, targetY, width, height)
 
