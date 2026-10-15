@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -44,7 +44,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent> {
         if (disableOnYChange && player.position().y != startY) {
             ModuleAutoBuild.enabled = false
         }

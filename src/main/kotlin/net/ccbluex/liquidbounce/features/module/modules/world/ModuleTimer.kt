@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -52,7 +54,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
 
         private val speed by float("Speed", 2f, 0.1f..20f)
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
         }
 

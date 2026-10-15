@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -74,10 +75,10 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
     }
 
     @Suppress("unused")
-    private val handleVehicleMovement = tickHandler {
+    private val handleVehicleMovement = handler<GameTickEvent> {
         val vehicle = player.controlledVehicle ?: run {
             wasInVehicle = false
-            return@tickHandler
+            return@handler
         }
 
         // Show explanation message

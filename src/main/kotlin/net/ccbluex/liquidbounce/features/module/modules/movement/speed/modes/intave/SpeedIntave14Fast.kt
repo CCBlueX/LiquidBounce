@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -36,7 +37,7 @@ class SpeedIntave14Fast(parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14Fast
     private val timer by boolean("Timer", true)
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         when (player.airTicks) {
             1 -> {
                 player.deltaMovement = player.deltaMovement.multiply(factorX = 1.04F, factorZ = 1.04F)

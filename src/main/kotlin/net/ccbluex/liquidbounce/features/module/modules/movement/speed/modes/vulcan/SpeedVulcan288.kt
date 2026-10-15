@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -57,7 +57,7 @@ class SpeedVulcan288(parent: ModeValueGroup<*>) : SpeedBHopBase("Vulcan288", par
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
         if (!player.onGround()) {
             if (abs(player.fallDistance) > 0 && hasSpeed) {

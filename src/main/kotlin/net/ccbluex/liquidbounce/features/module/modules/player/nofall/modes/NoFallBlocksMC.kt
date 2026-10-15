@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -36,7 +36,7 @@ internal object NoFallBlocksMC : NoFallMode("BlocksMC") {
         get() = super.running && player.tickCount > MIN_AGE
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (player.deltaMovement.y < -0.7) {
             shouldClip = true
             fallMotion = player.deltaMovement.y

@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hy
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.world.effect.MobEffects
 
 /**
@@ -39,24 +40,24 @@ class SpeedHylexGround(override val parent: ModeValueGroup<*>) : Mode("HylexGrou
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (!player.onGround()) {
             groundTicks = 0
-            return@tickHandler
+            return@handler
         }
 
         groundTicks++
 
         if (groundTicks <= 5) {
-            return@tickHandler
+            return@handler
         }
 
         if (player.hurtTime >= 1) {
-            return@tickHandler
+            return@handler
         }
 
         if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) >= 1) {
-            return@tickHandler
+            return@handler
         }
 
         if (!(mc.options.keyLeft.isDown || mc.options.keyRight.isDown)) {
@@ -65,7 +66,7 @@ class SpeedHylexGround(override val parent: ModeValueGroup<*>) : Mode("HylexGrou
                 1.0,
                 1.2174
             )
-            return@tickHandler
+            return@handler
         }
 
         player.deltaMovement = player.deltaMovement.multiply(

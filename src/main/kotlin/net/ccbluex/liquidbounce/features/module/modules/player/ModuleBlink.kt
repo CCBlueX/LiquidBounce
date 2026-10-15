@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
@@ -119,12 +120,12 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
     }
 
     @Suppress("unused")
-    private val tickTask = tickHandler {
+    private val tickTask = handler<GameTickEvent> {
         if (ModuleAutoDodge.enabled) {
-            val playerPosition = positions.firstOrNull() ?: return@tickHandler
+            val playerPosition = positions.firstOrNull() ?: return@handler
 
             if (ModuleAutoDodge.getInflictedHit(playerPosition) == null) {
-                return@tickHandler
+                return@handler
             }
 
             val evadingPacket = ModuleAutoDodge.findAvoidingArrowPosition()
