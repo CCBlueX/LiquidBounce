@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove.Behaviour.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveBlinkFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSneakControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.drainToArray
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.ccbluex.liquidbounce.utils.network.sendCloseInventory
@@ -51,6 +53,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.network.protocol.Packet
 import net.minecraft.world.entity.player.Input
+import java.util.function.Predicate
 
 /**
  * InventoryMove module
@@ -63,14 +66,19 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
     @Suppress("unused")
-    enum class Behaviour(override val tag: String, val handleScreens: (Screen) -> Boolean) : Tagged {
+    private enum class Behaviour(
+        override val tag: String,
+        private val handleScreens: Predicate<Screen>,
+    ) : Tagged {
         NORMAL("Normal", { !it.isInEditBox() && !ModuleClickGui.isInSearchBar }),
         // disable clicks while moving
-        SAFE("Safe", { NORMAL.handleScreens(it) && (it !is AbstractContainerScreen<*> || it is InventoryScreen) }),
+        SAFE("Safe", NORMAL.handleScreens.and { (it !is AbstractContainerScreen<*> || it is InventoryScreen) }),
         // stop in inventory
-        UNDETECTABLE("Undetectable", { NORMAL.handleScreens(it) && it !is AbstractContainerScreen<*> }),
+        UNDETECTABLE("Undetectable", NORMAL.handleScreens.and { it !is AbstractContainerScreen<*> }),
         // stop input on inventory action
-        STOP_ON_ACTION("StopOnAction", { NORMAL.handleScreens(it) })
+        STOP_ON_ACTION("StopOnAction", NORMAL.handleScreens);
+
+        fun handleScreens(screen: Screen): Boolean = handleScreens.test(screen)
     }
 
     private fun Screen.isInEditBox() = when (this.focused) {
@@ -123,8 +131,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
         if (behavior !== Behaviour.SAFE) return@handler
 
-        val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
-            ?: return@handler
+        val key = movementKeys.keys.find { it.matches(event.key) } ?: return@handler
         val pressed = shouldHandleInputs(key) && !event.isReleased
         movementKeys.put(key, pressed)
 
@@ -133,7 +140,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         }
     }
 
-    private val delayedContainerPackets = mutableListOf<Packet<*>>()
+    private val delayedContainerPackets = ArrayList<Packet<*>>()
 
     override fun onDisabled() {
         delayedContainerPackets.clear()
@@ -144,8 +151,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val movementInputHandler = handler<MovementInputEvent>(FINAL_DECISION) { event ->
         if (delayedContainerPackets.isEmpty()) return@handler
 
-        val packetsSnapshot = delayedContainerPackets.toTypedArray()
-        delayedContainerPackets.clear()
+        val packetsSnapshot = delayedContainerPackets.drainToArray()
         event.sneak = false
         event.jump = false
         event.directionalInput = DirectionalInput.NONE
