@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {CurveSetting, ModuleSetting} from "../../../integration/types";
+    import type {CurveSetting, ModuleSetting, Vec2} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import {
@@ -8,10 +8,8 @@
         LinearScale,
         LineController,
         LineElement,
-        type Point,
         PointElement,
-        ScatterController,
-        type ScatterDataPoint
+        ScatterController
     } from "chart.js";
     import dragDataPlugin from "chartjs-plugin-dragdata";
     import ExpandArrow from "./common/ExpandArrow.svelte";
@@ -29,7 +27,7 @@
 
     $: setItem(thisPath, expanded.toString());
 
-    type TChart = ChartJS<'line', ScatterDataPoint[], unknown>;
+    type TChart = ChartJS<'line', Vec2[], unknown>;
 
     let canvasElement: HTMLCanvasElement;
     let chart: TChart | null = null;
@@ -77,14 +75,13 @@
         return Math.min(Math.max(v, min), max)
     }
 
-    function sortPoints(arr: ScatterDataPoint[]) {
+    function sortPoints(arr: Vec2[]) {
         return arr.sort((a, b) => a.x - b.x);
     }
 
     function updateValue() {
         if (!chart) return;
-        const ds = chart.data.datasets[0] as any;
-        cSetting.value = ds.data.map((p: ScatterDataPoint) => ({x: p.x, y: p.y})) as Point[];
+        cSetting.value = chart.data.datasets[0].data.map(point => ({x: point.x, y: point.y}));
         setting = { ...cSetting };
         dispatch("change");
     }
@@ -97,7 +94,7 @@
 
         const dataset = chart.data.datasets[0];
 
-        const findAtX = (x: number) => dataset.data.find((p: ScatterDataPoint) => Math.abs(p.x - x) <= EPS);
+        const findAtX = (x: number) => dataset.data.find((p: Vec2) => Math.abs(p.x - x) <= EPS);
 
         if (findAtX(cSetting.xAxis.range.from) === undefined) {
             dataset.data.push({x: cSetting.xAxis.range.from, y: cSetting.yAxis.range.from / 2});
@@ -136,7 +133,7 @@
         };
     }
 
-    function lockEdgePoints(previousPoint: Point, currentPoint: Point) {
+    function lockEdgePoints(previousPoint: Vec2, currentPoint: Vec2) {
         const minOpen = cSetting.xAxis.range.from + EDGE_MARGIN;
         const maxOpen = cSetting.xAxis.range.to - EDGE_MARGIN;
 
@@ -225,7 +222,7 @@
                             if (!chart) return;
 
                             const previousPoint = chart.data.datasets[datasetIndex].data[index];
-                            const currentPoint = value as Point;
+                            const currentPoint = value as Vec2;
 
                             lockEdgePoints(previousPoint, currentPoint);
                         },
@@ -234,7 +231,7 @@
 
                             const dataset = chart.data.datasets[datasetIndex];
                             const previousPoint = dataset.data[index];
-                            const currentPoint = value as Point;
+                            const currentPoint = value as Vec2;
 
                             lockEdgePoints(previousPoint, currentPoint);
                             sortPoints(dataset.data);
