@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.phys.shapes.Shapes
@@ -36,7 +36,7 @@ object ModuleAirJump : ClientModule("AirJump", ModuleCategories.MOVEMENT) {
     val allowJump: Boolean
         get() = running && (mode == Mode.JUMP_FREELY || mode == Mode.DOUBLE_JUMP && doubleJump)
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.onGround()) {
             doubleJump = true
         }

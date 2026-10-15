@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -46,7 +47,7 @@ class SpeedSpeedYPort(parent: ModeValueGroup<*>) : SpeedBHopBase("YPort", parent
     private val speed by float("Speed", 0.4f, 0.1f..1f)
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (!player.onGround() && player.moving) {
             player.deltaMovement = player.deltaMovement.copy(y = -1.0)
         }

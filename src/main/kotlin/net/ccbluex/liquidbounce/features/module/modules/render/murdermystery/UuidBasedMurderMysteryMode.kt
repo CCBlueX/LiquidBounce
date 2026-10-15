@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.player.AbstractClientPlayer
@@ -39,7 +40,7 @@ sealed class UuidBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) 
     protected var currentPlayerType = PlayerType.NEUTRAL
 
     val repeatable =
-        tickHandler {
+        handler<GameTickEvent> {
             currentPlayerType = player.handItems.firstNotNullOfOrNull {
                 when {
                     it.item is BowItem || it.item == Items.ARROW -> PlayerType.DETECTIVE_LIKE

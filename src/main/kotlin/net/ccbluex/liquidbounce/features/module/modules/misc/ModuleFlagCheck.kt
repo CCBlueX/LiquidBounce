@@ -22,6 +22,7 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -154,16 +155,16 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent> {
         if (!invalidAttributes) {
-            return@tickHandler
+            return@handler
         }
 
         val invalidHeath = player.health <= 0f && player.isAlive
         val invalidHunger = player.foodData.foodLevel <= 0
 
         if (!invalidHeath && !invalidHunger) {
-            return@tickHandler
+            return@handler
         }
 
         val invalidReasons = mutableListOf<String>()

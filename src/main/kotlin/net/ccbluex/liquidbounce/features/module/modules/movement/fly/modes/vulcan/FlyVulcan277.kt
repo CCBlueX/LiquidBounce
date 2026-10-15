@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulc
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 
 /**
@@ -35,7 +36,7 @@ internal object FlyVulcan277 : Mode("Vulcan277") {
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.fallDistance > 0.1) {
             if (player.tickCount % 2 == 0) {
                 player.deltaMovement.y = -0.155
