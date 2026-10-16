@@ -40,7 +40,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 import kotlin.time.Duration.Companion.seconds
 
-private data class MutableProperty<T>(var value: T) : ReadWriteProperty<Any?, T> {
+private data class MutableProperty<T>(@JvmField var value: T) : ReadWriteProperty<Any?, T> {
     override fun getValue(thisRef: Any?, property: KProperty<*>): T = this.value
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
         this.value = value

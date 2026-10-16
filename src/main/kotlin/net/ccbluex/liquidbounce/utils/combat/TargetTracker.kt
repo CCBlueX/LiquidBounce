@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType.INT
 import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.mapReadOnly
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
 import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
@@ -103,16 +104,13 @@ open class TargetSelector(
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
 
-    @Suppress("unused", "UnusedPrivateProperty")
     private val priority by multiEnumChoice(
         name = "Priority",
         default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
         canBeNone = false,
-    ).onChanged { set ->
-        comparator = ComparatorChain(comparisonFunctions = set.toTypedArray())
+    ).mapReadOnly { set ->
+        ComparatorChain(comparators = set.toTypedArray())
     }
-
-    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE
 
     /**
      * Counts available targets.
@@ -137,7 +135,7 @@ open class TargetSelector(
             return entities
         }
 
-        entities.sortWith(this.comparator)
+        entities.sortWith(this.priority)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -198,7 +196,6 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
             when (entity) {
                 is Player -> 0
                 is Enemy -> 1
-                is NeutralMob if entity.persistentAngerTarget == player.uuid -> 2
                 else -> Int.MAX_VALUE
             }
 

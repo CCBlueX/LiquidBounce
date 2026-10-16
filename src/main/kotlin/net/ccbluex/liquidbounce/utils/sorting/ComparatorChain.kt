@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.sorting
 
-class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<in T>) : Comparator<T> {
+class ComparatorChain<T>(private vararg val comparators: Comparator<in T>) : Comparator<T> {
 
     override fun compare(o1: T, o2: T): Int {
-        for (comparisonFunction in this.comparisonFunctions) {
+        for (comparisonFunction in this.comparators) {
             val comparisonResult = comparisonFunction.compare(o1, o2)
 
             if (comparisonResult != 0) {
