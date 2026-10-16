@@ -8,7 +8,6 @@
   "client": [
     "authlib.MixinMinecraftClient",
     "authlib.MixinMinecraftServicesSessionService",
-    "authlib.MixinMinecraftServicesSessionServiceAccessor",
     "blaze3d.MixinInputConstants",
     "blaze3d.MixinWindow",
     "djl.MixinUtils",

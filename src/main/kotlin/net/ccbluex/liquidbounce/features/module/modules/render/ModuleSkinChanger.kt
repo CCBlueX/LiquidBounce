@@ -21,8 +21,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.services.MinecraftServicesEnvironment
-import com.mojang.authlib.services.response.discovery.Service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -48,9 +46,10 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.features.account.AccountService
+import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinMinecraftServicesSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
@@ -284,18 +283,10 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             return false
         }
 
-        val sessionService = mc.services.sessionService
-        if (sessionService !is MixinMinecraftServicesSessionServiceAccessor) {
-            return false
-        }
-
-        val discoveryService = sessionService.discoveryService
-        val sessionUrl = runCatching { discoveryService.getUrl(Service.SESSION, "join") }.getOrNull() ?: ""
-        if (!sessionUrl.startsWith(MinecraftServicesEnvironment.PROD.environment.discoveryUrl
-                    .substringBefore("/minecraft"))) {
-            // custom authentication endpoints are used
-            // e.g. The Altening
-            logger.info("Skipped skin upload as custom authentication endpoint is used: $sessionUrl")
+        // Uploading goes to Mojang with the session's access token, which a custom authentication
+        // endpoint's token is not valid for.
+        if (SessionWithService.getService(mc.user) == AccountService.THEALTENING) {
+            logger.info("Skipped skin upload as custom authentication endpoint is used")
             return false
         }
 

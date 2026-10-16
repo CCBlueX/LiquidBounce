@@ -31,6 +31,10 @@ import com.mojang.authlib.services.ProfileResult
 import com.mojang.authlib.services.request.JoinMinecraftServerRequest
 import com.mojang.authlib.services.response.HasJoinedMinecraftServerResponse
 import com.mojang.authlib.services.response.MinecraftProfilePropertiesResponse
+import com.mojang.authlib.services.response.ProfileAction
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
 import java.net.InetAddress
 import java.net.Proxy
 import java.net.URI
@@ -40,16 +44,16 @@ import java.util.UUID
  * TheAltening exposes Yggdrasil session endpoints, not an Authlib 10 discovery document.
  * Keep Authlib's texture decoding and signature checks, but route session requests explicitly.
  *
- * Request/response handling follows Mojang's [MinecraftServicesSessionService] in
- * [Authlib 10.0.77](https://libraries.minecraft.net/com/mojang/authlib/10.0.77/authlib-10.0.77.jar):
- * `joinServer`, `hasJoinedServer`, and `fetchProfileUncached`.
- * The fixed endpoint layout follows `com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService`
- * in [Authlib 9.0.75](https://libraries.minecraft.net/com/mojang/authlib/9.0.75/authlib-9.0.75.jar),
- * adapted to TheAltening's session host instead of Authlib 10 service discovery.
+ * Request/response handling follows [MinecraftServicesSessionService] as of the Authlib version this
+ * module resolves (10.0.77): [MinecraftServicesSessionService.joinServer],
+ * [MinecraftServicesSessionService.hasJoinedServer] and its `fetchProfileUncached`.
+ * The fixed endpoint layout follows `com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService`,
+ * which resolved the same Yggdrasil paths against a session host before Authlib 10 introduced
+ * service discovery.
  */
 internal class AlteningSessionService(
     discoveryService: MinecraftServicesDiscoveryService,
-    sessionServer: URI = URI.create(ALTENING_SESSION),
+    sessionServer: URI = URI(ALTENING_SESSION),
 ) : MinecraftServicesSessionService(discoveryService.servicesKeySet, Proxy.NO_PROXY, discoveryService) {
 
     private val client = MinecraftClient.unauthenticated(Proxy.NO_PROXY)
@@ -68,16 +72,19 @@ internal class AlteningSessionService(
     // Match Authlib: rejected sessions return null; only service unavailability propagates.
     @Suppress("SwallowedException")
     override fun hasJoinedServer(user: String, serverId: String, address: InetAddress?): ProfileResult? {
-        val arguments = mutableMapOf<String, Any>("username" to user, "serverId" to serverId)
-        address?.let { arguments["ip"] = it.hostAddress }
+        val arguments = buildMap<String, Any>(3) {
+            this["username"] = user
+            this["serverId"] = serverId
+            address?.let { this["ip"] = it.hostAddress }
+        }
         val url = HttpDiscoveryService.concatenateURL(verifyUrl, HttpDiscoveryService.buildQuery(arguments))
 
         return try {
             val response = client.get(url, HasJoinedMinecraftServerResponse::class.java) ?: return null
             val id = response.id() ?: return null
             ProfileResult(
-                GameProfile(id, user, response.properties() ?: PropertyMap.EMPTY),
-                response.profileActions().mapNotNull { it.type() }.toSet(),
+                GameProfile(id, user, response.properties ?: PropertyMap.EMPTY),
+                extractProfileActionTypes(response.profileActions),
             )
         } catch (exception: MinecraftClientException) {
             val cause = exception.toAuthenticationException()
@@ -86,16 +93,30 @@ internal class AlteningSessionService(
         }
     }
 
+    /**
+     * Insecure profiles are not served from the 6 hour cache [MinecraftServicesSessionService] keeps,
+     * because that cache and its `fetchProfileUncached` are private - every lookup reaches TheAltening
+     * over HTTP instead.
+     *
+     * TODO: mirror the cache here if TheAltening's profile endpoint turns into a rate limit.
+     */
     override fun fetchProfile(profileId: UUID, requireSecure: Boolean): ProfileResult? {
-        val id = profileId.toString().replace("-", "")
-        val url = URI.create("$profileUrl$id?unsigned=${!requireSecure}").toURL()
+        val id = profileId.toUndashedString()
+        val url = URI("$profileUrl$id?unsigned=${!requireSecure}").toURL()
 
         return try {
             val response = client.get(url, MinecraftProfilePropertiesResponse::class.java) ?: return null
-            ProfileResult(response.profile(), response.profileActions().mapNotNull { it.type() }.toSet())
-        } catch (_: MinecraftClientException) {
+            ProfileResult(response.profile(), extractProfileActionTypes(response.profileActions))
+        } catch (exception: MinecraftClientException) {
+            logger.warn("Couldn't look up profile properties for $profileId", exception)
             null
         }
     }
+
+    /**
+     * @see [MinecraftServicesSessionService.extractProfileActionTypes]
+     */
+    private fun extractProfileActionTypes(response: Set<ProfileAction>) =
+        response.mapNotNullTo(enumSetOf()) { it.type }
 
 }

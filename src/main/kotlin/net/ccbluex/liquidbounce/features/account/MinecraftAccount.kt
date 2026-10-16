@@ -73,9 +73,6 @@ sealed class MinecraftAccount(val service: AccountService) {
 
     val bans = hashMapOf<String, Ban>()
 
-    protected open val authenticationService: MinecraftServicesDiscoveryService
-        get() = mojangAuthentication
-
     /** Allows providers using legacy session endpoints to keep Mojang discovery for other services. */
     internal open fun createMinecraftSessionService(service: MinecraftServicesDiscoveryService): SessionService =
         service.createMinecraftSessionService()
@@ -105,7 +102,7 @@ sealed class MinecraftAccount(val service: AccountService) {
             service,
         )
 
-        return session to authenticationService
+        return session to mojangAuthentication
     }
 
     fun toJson(): JsonObject = JsonObject().apply {
