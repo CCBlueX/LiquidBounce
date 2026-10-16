@@ -93,7 +93,6 @@ class ResourceTask internal constructor(
             this.update(total, contentLength, false)
         }
         this.update(total, contentLength, true)
-        this.isCompleted = true
     }
 
     private companion object {
