@@ -751,7 +751,7 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
-private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+private val HEALTH_KEYWORDS = arrayOf("❤", "HP", "Health", "Здоровья", "Здоровье")
 
 fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false

@@ -24,9 +24,12 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_12_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.maxCosToBox
+import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
+import kotlin.math.acos
 
 fun LocalPlayer.setRotation(rotation: Rotation) {
     rotation.normalize().let { normalizedRotation ->
@@ -109,18 +112,31 @@ object RotationUtil {
     }
 
     /**
-     * Calculates the angle between the cross-hair and the entity.
-     *
-     * Useful for deciding if the player is looking at something or not.
+     * How well the cross-hair points at [entity], as the cosine of the smallest angle between the
+     * view direction and a direction towards the entity: 1.0 while the view ray passes through its
+     * bounding box. Monotonic in that angle, so callers compare against `cos(limit)` or sort
+     * descending instead of converting back to degrees.
      */
-    fun crosshairAngleToEntity(entity: Entity): Float {
-        val player = mc.player ?: return 0.0F
-        val eyes = player.eyePosition
+    fun crosshairCosToEntity(entity: Entity): Double {
+        val player = mc.player ?: return 1.0
 
-        val rotationToEntity = Rotation.lookingAt(point = entity.boundingBox.center, from = eyes)
-
-        return player.rotation.directionAngleTo(rotationToEntity)
+        return maxCosToBox(player.eyePosition, player.rotation.directionVector, entity.boundingBox)
     }
+
+    /**
+     * Angle in degrees between the cross-hair and the closest direction towards [entity], i.e. the
+     * arccosine of [crosshairCosToEntity].
+     *
+     * The cosine comes from a slab test against the bounding box, falling back to the minimum over
+     * its silhouette edges, where each edge's stationary point solves a linear equation. Aiming at
+     * the closest point of the box rather than at its centre is what keeps the value usable up
+     * close, where a box can span most of the view.
+     *
+     * Prefer [crosshairCosToEntity] for sorting and comparing: it orders identically while skipping
+     * the arccosine.
+     */
+    fun crosshairAngleToEntity(entity: Entity): Float =
+        acos(crosshairCosToEntity(entity).coerceIn(-1.0, 1.0)).toDegrees().toFloat()
 
     /**
      * Calculate difference between two angle points
