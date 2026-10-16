@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.google.gson.JsonObject
 import com.mojang.authlib.GameProfile
+import com.mojang.authlib.minecraft.SessionService
 import com.mojang.authlib.services.MinecraftServicesDiscoveryService
 import com.mojang.authlib.services.MinecraftServicesEnvironment
 import com.mojang.util.UndashedUuid
@@ -74,6 +75,10 @@ sealed class MinecraftAccount(val service: AccountService) {
 
     protected open val authenticationService: MinecraftServicesDiscoveryService
         get() = mojangAuthentication
+
+    /** Allows providers using legacy session endpoints to keep Mojang discovery for other services. */
+    internal open fun createMinecraftSessionService(service: MinecraftServicesDiscoveryService): SessionService =
+        service.createMinecraftSessionService()
 
     abstract fun refresh()
 
