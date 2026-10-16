@@ -1146,6 +1146,9 @@ public final class net/ccbluex/liquidbounce/integration/task/type/ResourceTask :
 	public final fun getBytesRead ()J
 	public final fun getContentLength ()J
 	public final fun getSpeed ()J
+	public final fun transferring (Ljava/io/InputStream;Ljava/io/OutputStream;)V
+	public final fun transferring (Ljava/io/InputStream;Ljava/io/OutputStream;J)V
+	public static synthetic fun transferring$default (Lnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;Ljava/io/InputStream;Ljava/io/OutputStream;JILjava/lang/Object;)V
 	public final fun update (JJ)V
 	public final fun update (JJZ)V
 	public static synthetic fun update$default (Lnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;JJZILjava/lang/Object;)V

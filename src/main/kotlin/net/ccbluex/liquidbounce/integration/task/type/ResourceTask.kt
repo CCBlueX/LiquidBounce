@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.integration.task.type
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import java.io.InputStream
+import java.io.OutputStream
 import java.time.InstantSource
 import java.time.temporal.ChronoUnit
 
@@ -79,7 +81,20 @@ class ResourceTask internal constructor(
         }
     }
 
-
+    @JvmOverloads
+    fun transferring(input: InputStream, output: OutputStream, contentLength: Long = -1) {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+            val bytesRead = input.read(buffer)
+            if (bytesRead == -1) break
+            output.write(buffer, 0, bytesRead)
+            total += bytesRead
+            this.update(total, contentLength, false)
+        }
+        this.update(total, contentLength, true)
+        this.isCompleted = true
+    }
 
     private companion object {
         const val SAMPLE_INTERVAL_MS = 500L
