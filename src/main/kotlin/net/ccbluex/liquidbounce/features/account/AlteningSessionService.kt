@@ -39,6 +39,13 @@ import java.util.UUID
 /**
  * TheAltening exposes Yggdrasil session endpoints, not an Authlib 10 discovery document.
  * Keep Authlib's texture decoding and signature checks, but route session requests explicitly.
+ *
+ * Request/response handling follows Mojang's [MinecraftServicesSessionService] in
+ * [Authlib 10.0.77](https://libraries.minecraft.net/com/mojang/authlib/10.0.77/authlib-10.0.77.jar):
+ * `joinServer`, `hasJoinedServer`, and `fetchProfileUncached`.
+ * The fixed endpoint layout follows `com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService`
+ * in [Authlib 9.0.75](https://libraries.minecraft.net/com/mojang/authlib/9.0.75/authlib-9.0.75.jar),
+ * adapted to TheAltening's session host instead of Authlib 10 service discovery.
  */
 internal class AlteningSessionService(
     discoveryService: MinecraftServicesDiscoveryService,
