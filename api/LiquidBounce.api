@@ -1141,6 +1141,32 @@ public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : n
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/integration/task/type/ResourceTask : net/ccbluex/liquidbounce/integration/task/type/Task {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getBytesRead ()J
+	public final fun getContentLength ()J
+	public final fun getSpeed ()J
+	public final fun update (JJ)V
+	public final fun update (JJZ)V
+	public static synthetic fun update$default (Lnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;JJZILjava/lang/Object;)V
+}
+
+public class net/ccbluex/liquidbounce/integration/task/type/Task {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun areAllSubTasksCompleted ()Z
+	public final fun calculateProgress ()F
+	public final fun getJob ()Lkotlinx/coroutines/Job;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOrCreateFileTask (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/task/type/ResourceTask;
+	public final fun getOrCreateTask (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/integration/task/type/Task;
+	public final fun getProgress ()F
+	public final fun getSubTasks ()Ljava/util/concurrent/ConcurrentHashMap;
+	public final fun isCompleted ()Z
+	public final fun setCompleted (Z)V
+	public final fun setJob (Lkotlinx/coroutines/Job;)V
+	public final fun setProgress (F)V
+}
+
 public abstract class net/ccbluex/liquidbounce/integration/theme/component/HudComponent : net/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup {
 	public fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;ZLnet/ccbluex/liquidbounce/utils/render/Alignment;[Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

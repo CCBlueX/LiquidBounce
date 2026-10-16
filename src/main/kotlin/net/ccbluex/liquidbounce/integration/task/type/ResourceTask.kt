@@ -19,12 +19,14 @@
 
 package net.ccbluex.liquidbounce.integration.task.type
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.time.InstantSource
 import java.time.temporal.ChronoUnit
 
 /**
  * A task with IO progress tracking
  */
+@AddonApi
 class ResourceTask internal constructor(
     name: String,
     private val clock: InstantSource,
@@ -76,6 +78,8 @@ class ResourceTask internal constructor(
             0f
         }
     }
+
+
 
     private companion object {
         const val SAMPLE_INTERVAL_MS = 500L

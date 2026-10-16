@@ -20,11 +20,13 @@
 package net.ccbluex.liquidbounce.integration.task.type
 
 import kotlinx.coroutines.Job
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * An asynchronous task with progress tracking
  */
+@AddonApi
 open class Task(val name: String) {
 
     @Volatile
@@ -32,7 +34,7 @@ open class Task(val name: String) {
         get() = if (subTasks.isNotEmpty()) calculateProgress() else field
     @Volatile
     var isCompleted: Boolean = false
-        get() = field && if (subTasks.isNotEmpty()) areAllSubTasksCompleted() else true
+        get() = field && (subTasks.isEmpty() || areAllSubTasksCompleted())
     @Volatile
     var job: Job? = null
     val subTasks = ConcurrentHashMap<String, Task>()
@@ -48,7 +50,7 @@ open class Task(val name: String) {
      * Creates or gets an existing download sub-task
      */
     fun getOrCreateFileTask(subTaskName: String): ResourceTask {
-        return subTasks.computeIfAbsent(subTaskName) { ResourceTask(subTaskName) } as ResourceTask
+        return subTasks.computeIfAbsent(subTaskName, ::ResourceTask) as ResourceTask
     }
 
     /**
