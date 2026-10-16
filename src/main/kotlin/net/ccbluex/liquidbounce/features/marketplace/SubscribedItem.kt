@@ -204,8 +204,8 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
         val part = itemDir.resolve(".$revisionId.part")
         val progress = subTask?.let { subTask ->
-            OkHttpProgressInterceptor.ProgressListener { bytesRead, contentLength, _ ->
-                subTask.update(bytesRead, contentLength)
+            OkHttpProgressInterceptor.ProgressListener { bytesRead, contentLength, done ->
+                subTask.update(bytesRead, contentLength, done)
             }
         }
 

@@ -33,7 +33,6 @@ open class Task(val name: String) {
     @Volatile
     var isCompleted: Boolean = false
         get() = field && if (subTasks.isNotEmpty()) areAllSubTasksCompleted() else true
-    var startTime: Long = System.currentTimeMillis()
     @Volatile
     var job: Job? = null
     val subTasks = ConcurrentHashMap<String, Task>()
@@ -49,7 +48,7 @@ open class Task(val name: String) {
      * Creates or gets an existing download sub-task
      */
     fun getOrCreateFileTask(subTaskName: String): ResourceTask {
-        return subTasks.computeIfAbsent(subTaskName, ::ResourceTask) as ResourceTask
+        return subTasks.computeIfAbsent(subTaskName) { ResourceTask(subTaskName) } as ResourceTask
     }
 
     /**
