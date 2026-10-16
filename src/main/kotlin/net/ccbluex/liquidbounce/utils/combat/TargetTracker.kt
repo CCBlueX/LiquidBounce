@@ -37,9 +37,10 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.NeutralMob
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
@@ -149,7 +150,7 @@ open class TargetSelector(
             && entity.hurtTime <= hurtTime
             && validateRange(entity)
             && entity.shouldBeAttacked()
-            && fov >= RotationUtil.crosshairAngleToEntity(entity)
+            && (fov >= 180f || Mth.cos(fov.toDouble().toRadians()) <= RotationUtil.crosshairCosToEntity(entity))
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true
@@ -224,7 +225,7 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
      */
     DIRECTION("Direction") {
         override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
-            RotationUtil.crosshairAngleToEntity(o1) compareTo RotationUtil.crosshairAngleToEntity(o2)
+            RotationUtil.crosshairCosToEntity(o2) compareTo RotationUtil.crosshairCosToEntity(o1)
     },
 
     /**

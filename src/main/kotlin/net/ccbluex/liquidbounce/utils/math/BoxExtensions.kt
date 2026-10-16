@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
@@ -28,6 +27,9 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sqrt
 
 val AABB.vertices: Array<Vec3>
     get() = arrayOf(
@@ -178,3 +180,157 @@ fun AABB.isSideVisible(direction: Direction, eyes: Vec3): Boolean {
         Direction.SOUTH -> eyes.z > this.maxZ
     }
 }
+
+
+/**
+ * Cosine of the smallest angle between [view] (a unit vector) and the direction from [eye]
+ * towards any point of [box].
+ *
+ * On a miss the optimum always lies on a silhouette edge: a stationary point inside a face
+ * requires the direction to be parallel to [view], which is either the hit the slab test
+ * already caught or the global minimum.
+ */
+@Suppress("CognitiveComplexMethod")
+internal fun maxCosToBox(eye: Vec3, view: Vec3, box: AABB): Double {
+    if (rayHitsBox(eye, view, box)) {
+        return 1.0
+    }
+
+    val xLoFront = eye.x < box.minX
+    val xHiFront = eye.x > box.maxX
+    val yLoFront = eye.y < box.minY
+    val yHiFront = eye.y > box.maxY
+    val zLoFront = eye.z < box.minZ
+    val zHiFront = eye.z > box.maxZ
+
+    var best = -1.0
+
+    for (yi in 0..1) {
+        val y = if (yi == 0) box.minY else box.maxY
+        val yFront = if (yi == 0) yLoFront else yHiFront
+
+        for (zi in 0..1) {
+            val zFront = if (zi == 0) zLoFront else zHiFront
+            if (yFront == zFront) continue
+
+            val z = if (zi == 0) box.minZ else box.maxZ
+            best = max(best, edgeMaxCos(eye, view, box.minX, y, z, box.maxX - box.minX, 0.0, 0.0))
+        }
+    }
+
+    for (xi in 0..1) {
+        val x = if (xi == 0) box.minX else box.maxX
+        val xFront = if (xi == 0) xLoFront else xHiFront
+
+        for (zi in 0..1) {
+            val zFront = if (zi == 0) zLoFront else zHiFront
+            if (xFront == zFront) continue
+
+            val z = if (zi == 0) box.minZ else box.maxZ
+            best = max(best, edgeMaxCos(eye, view, x, box.minY, z, 0.0, box.maxY - box.minY, 0.0))
+        }
+    }
+
+    for (xi in 0..1) {
+        val x = if (xi == 0) box.minX else box.maxX
+        val xFront = if (xi == 0) xLoFront else xHiFront
+
+        for (yi in 0..1) {
+            val yFront = if (yi == 0) yLoFront else yHiFront
+            if (xFront == yFront) continue
+
+            val y = if (yi == 0) box.minY else box.maxY
+            best = max(best, edgeMaxCos(eye, view, x, y, box.minZ, 0.0, 0.0, box.maxZ - box.minZ))
+        }
+    }
+
+    return best
+}
+
+/**
+ * Whether the ray `eye + t * view` with `t >= 0` meets [box]. An eye inside the box always hits.
+ *
+ * `box.clip(eye, eye.fma(t, view)).isPresent`
+ *
+ * @see AABB.clip
+ */
+@Suppress("ReturnCount")
+private fun rayHitsBox(eye: Vec3, view: Vec3, box: AABB): Boolean {
+    var tMin = 0.0
+    var tMax = Double.POSITIVE_INFINITY
+
+    if (view.x != 0.0) {
+        val t1 = (box.minX - eye.x) / view.x
+        val t2 = (box.maxX - eye.x) / view.x
+        tMin = max(tMin, min(t1, t2))
+        tMax = min(tMax, max(t1, t2))
+        if (tMin > tMax) return false
+    } else if (eye.x < box.minX || eye.x > box.maxX) {
+        return false
+    }
+
+    if (view.y != 0.0) {
+        val t1 = (box.minY - eye.y) / view.y
+        val t2 = (box.maxY - eye.y) / view.y
+        tMin = max(tMin, min(t1, t2))
+        tMax = min(tMax, max(t1, t2))
+        if (tMin > tMax) return false
+    } else if (eye.y < box.minY || eye.y > box.maxY) {
+        return false
+    }
+
+    if (view.z != 0.0) {
+        val t1 = (box.minZ - eye.z) / view.z
+        val t2 = (box.maxZ - eye.z) / view.z
+        tMin = max(tMin, min(t1, t2))
+        tMax = min(tMax, max(t1, t2))
+        if (tMin > tMax) return false
+    } else if (eye.z < box.minZ || eye.z > box.maxZ) {
+        return false
+    }
+
+    return true
+}
+
+/**
+ * Largest cosine between [view] and the direction from [eye] towards a point of the edge
+ * `(ax, ay, az) + t * (wx, wy, wz)`, `t` in `[0, 1]`. The quadratic term cancels in the
+ * derivative, so the endpoints and that single stationary point cover the maximum.
+ */
+private fun edgeMaxCos(
+    eye: Vec3,
+    view: Vec3,
+    ax: Double,
+    ay: Double,
+    az: Double,
+    wx: Double,
+    wy: Double,
+    wz: Double,
+): Double {
+    val px = ax - eye.x
+    val py = ay - eye.y
+    val pz = az - eye.z
+
+    val a = px * view.x + py * view.y + pz * view.z
+    val b = wx * view.x + wy * view.y + wz * view.z
+    val c = px * px + py * py + pz * pz
+    val d = px * wx + py * wy + pz * wz
+    val e = wx * wx + wy * wy + wz * wz
+
+    var best = max(cosAt(a, c), cosAt(a + b, c + 2.0 * d + e))
+
+    // A zero denominator yields NaN or an infinity, which the range check rejects
+    val t = (a * d - b * c) / (b * d - a * e)
+    if (t > 0.0 && t < 1.0) {
+        best = max(best, cosAt(a + b * t, c + 2.0 * d * t + e * t * t))
+    }
+
+    return best
+}
+
+/**
+ * @param along projection of the offset on the view direction
+ * @param lengthSquared squared length of that offset
+ */
+private fun cosAt(along: Double, lengthSquared: Double): Double =
+    if (lengthSquared <= 0.0) 1.0 else along / sqrt(lengthSquared)
