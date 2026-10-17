@@ -40,6 +40,8 @@ class AlignedFaceTest {
 
     private val eps = 1e-9
 
+    private val sampleProportions = doubleArrayOf(0.0, 0.05, 0.5, 0.95, 1.0)
+
     /** An xy face spanning [0, 2] x [0, 3] in the z = 0 plane. */
     private val sampleFace = AlignedFace(Vec3.ZERO, Vec3(2.0, 3.0, 0.0))
 
@@ -301,6 +303,36 @@ class AlignedFaceTest {
             Vec3(3.0, 2.0, 4.0),
         )) {
             assertPointOnPlane(corner, plane)
+        }
+    }
+
+    @Test
+    fun `a face has a constant coordinate along its own normal`() {
+        // Shapes like stairs have several boxes whose faces of the same direction lie in different planes.
+        val boxes = listOf(
+            doubleArrayOf(0.0, 0.0, 0.0, 1.0, 1.0, 1.0),
+            doubleArrayOf(0.0, 0.0, 0.0, 1.0, 0.5, 1.0),
+            doubleArrayOf(0.0, 0.5, 0.0, 1.0, 1.0, 1.0),
+        )
+
+        for (direction in Direction.entries) {
+            val normal = direction.unitVec3
+
+            for (box in boxes) {
+                val face = AlignedFace.get(direction, box[0], box[1], box[2], box[3], box[4], box[5])
+                val planeCoordinate = face.from.dot(normal)
+
+                for (a in sampleProportions) {
+                    for (b in sampleProportions) {
+                        assertEquals(
+                            planeCoordinate,
+                            face.samplePointOnFace(a, b).dot(normal),
+                            eps,
+                            "The facing of a $direction face must not depend on the sampled point",
+                        )
+                    }
+                }
+            }
         }
     }
 

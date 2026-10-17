@@ -231,14 +231,23 @@ object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory {
         }
     }
 
-    private val FACE_SAMPLE_PROPORTIONS = doubleArrayOf(0.05, 0.1, 0.175, 0.3, 0.5, 0.7, 0.825, 0.9, 0.95)
+    /**
+     * Proportions to sample the face with, tried in order. The coarse grid covers the center, the corners and
+     * the edge midpoints; the finer grid, denser towards the edges, is only reached when it is fully occluded.
+     */
+    private val FACE_SAMPLE_PROPORTIONS = arrayOf(
+        doubleArrayOf(0.5, 0.15, 0.85),
+        doubleArrayOf(0.05, 0.1, 0.175, 0.3, 0.5, 0.7, 0.825, 0.9, 0.95),
+    )
 
     private fun findVisiblePointOnFace(face: AlignedFace, targetPos: BlockPos, eyePos: Vec3): Vec3? {
-        for (a in FACE_SAMPLE_PROPORTIONS) {
-            for (b in FACE_SAMPLE_PROPORTIONS) {
-                val point = face.samplePointOnFace(a, b)
-                if (VisibilityPredicate.Outline.isVisible(eyePos, point + targetPos)) {
-                    return point
+        for (proportions in FACE_SAMPLE_PROPORTIONS) {
+            for (a in proportions) {
+                for (b in proportions) {
+                    val point = face.samplePointOnFace(a, b)
+                    if (VisibilityPredicate.Outline.isVisible(eyePos, point + targetPos)) {
+                        return point
+                    }
                 }
             }
         }

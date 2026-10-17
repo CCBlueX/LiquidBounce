@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.utils.math.intersects
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.world.anyMatched
-import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
@@ -179,7 +178,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             return true
         }
 
-        return world.findBlocksIntersects(boundingBox).anyMatched { pos, blockState ->
+        return world.findBlocksIn(boundingBox).anyMatched { pos, blockState ->
             val fluidState = blockState.fluidState
             val block = blockState.block
 
