@@ -324,6 +324,7 @@
   "liquidbounce.module.clientSpoofer.description": "Spooft de naam van je gameclient.",
   "liquidbounce.module.clip.description": "Laat je door blokken heen clippen.",
   "liquidbounce.module.clip.messages.whoosh": "Zoef!",
+  "liquidbounce.module.clutch.description": "Plaatst automatisch een blok onder je wanneer je in de leegte valt.",
   "liquidbounce.module.combineMobs.description": "Voegt samenhokkende entiteiten samen.",
   "liquidbounce.module.consoleSpammer.description": "Spamt de serverconsole met foutmeldingen.",
   "liquidbounce.module.criticals.description": "Veroorzaakt automatisch critical hits bij elke aanval.",
