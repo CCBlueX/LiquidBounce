@@ -36,7 +36,21 @@ data class MarketplaceItemRevision(
     /**
      * The LiquidBounce versions an add-on revision works with, `null` when no build is known to.
      */
-    val liquidbounce: LiquidBounceRange? = null
+    val liquidbounce: LiquidBounceRange? = null,
+    @SerializedName("source_repository")
+    val sourceRepository: String? = null,
+    @SerializedName("source_ref")
+    val sourceRef: String? = null,
+    @SerializedName("source_commit")
+    val sourceCommit: String? = null,
+    @SerializedName("source_release_url")
+    val sourceReleaseUrl: String? = null,
+    @SerializedName("source_release_tag")
+    val sourceReleaseTag: String? = null,
+    @SerializedName("source_build_url")
+    val sourceBuildUrl: String? = null,
+    @SerializedName("uploader_uid")
+    val uploaderUid: String? = null
 )
 
 data class LiquidBounceRange(val min: String, val max: String) {
