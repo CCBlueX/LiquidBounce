@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
+import net.ccbluex.liquidbounce.utils.entity.EntitySelectorValueGroup
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
@@ -46,6 +47,8 @@ import net.ccbluex.liquidbounce.utils.math.toVec3f
  */
 
 object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
+
+    private val entitySelector = tree(EntitySelectorValueGroup("Entities"))
 
     private val modes = choices("ColorMode", 0) {
         arrayOf(
@@ -78,6 +81,10 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
             val maxDistanceSq = maximumDistance.sq()
             for (entity in RenderedEntities) {
+                if (!entitySelector.matches(entity)) {
+                    continue
+                }
+
                 val distanceSq = entity.position().cameraDistanceSq().toFloat()
                 if (distanceSq > maxDistanceSq) {
                     continue
