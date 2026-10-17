@@ -202,7 +202,6 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Bekijk je gamelog en meld dit aan ons.",
   "liquidbounce.liquidchat.authenticationFailed": "Authenticatie mislukt! LiquidChat vereist een premium Minecraft-account.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "JWT-token ontvangen! Opnieuw inloggen...",
   "liquidbounce.liquidchat.notConnected": "Niet verbonden met de chatserver! Schakel de LiquidChat-module in!",
   "liquidbounce.liquidchat.notLoggedIn": "Niet geauthenticeerd! LiquidChat werkt alleen met een premium-account.",
   "liquidbounce.liquidchat.states.connected": "Verbonden met de chatserver!",

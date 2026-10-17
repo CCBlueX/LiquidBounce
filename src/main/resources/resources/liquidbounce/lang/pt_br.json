@@ -176,7 +176,6 @@
   "liquidbounce.generic.forum": "Forum",
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Verifique seu log de jogo e nos avise.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.states.connected": "Conectado!",
   "liquidbounce.liquidchat.states.connecting": "Conectando para o servidor de chat...",
   "liquidbounce.liquidchat.states.disconnected": "Disconectado!",

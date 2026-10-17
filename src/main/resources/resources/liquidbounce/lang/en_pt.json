@@ -171,7 +171,6 @@
   "liquidbounce.generic.guilded": "Guiwded",
   "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentication failed! LiquidChat requires Minecraft premium account.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
   "liquidbounce.liquidchat.states.connected": "Cwonnyected two chat sewwew (o･ω･o)",
   "liquidbounce.liquidchat.states.connecting": "Cwonnyecting two chat sewwew ;;w;; (o´∀`o) ^w^",
   "liquidbounce.liquidchat.states.disconnected": "Discwonnyected fwom chat sewwew ^w^",
