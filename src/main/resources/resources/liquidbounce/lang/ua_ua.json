@@ -263,6 +263,7 @@
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Перезавантаження успішне",
   "liquidbounce.module.autoSoup.description": "Автоматично їсть супи, коли ваше здоров'я на виході.",
   "liquidbounce.module.autoTool.description": "Автоматично вибирає найкращий інструмент для ламання блока.",
+  "liquidbounce.module.autoTpa.description": "Автоматично приймає запити на телепортацію",
   "liquidbounce.module.autoTrap.description": "Автоматично підпалює цілі навколо вас.",
   "liquidbounce.module.autoWalk.description": "Автоматично змушує вас іти в тому напрямку, куди ви дивитесь.",
   "liquidbounce.module.autoWeapon.description": "Автоматично вибирає найкращу зброю у вашому арсеналі.",

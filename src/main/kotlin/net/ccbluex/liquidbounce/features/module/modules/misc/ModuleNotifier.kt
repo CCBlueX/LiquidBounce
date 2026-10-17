@@ -73,6 +73,8 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionMessages by boolean("ItemConsumptionMessages", true)
     private val itemConsumptionMessageFormat by text("ItemConsumptionMessageFormat", $$"%1$s used %2$s")
 
+    val autotpaMessages by boolean("AutoTPAMessages", true)
+
     private val heldItemMessages by boolean("HeldItemMessages", false)
     private val heldItemMessageFormat by text("HeldItemMessageFormat", $$"%1$s holds %2$s x%3$s in %4$s")
     private val heldItems by items("HeldItems", itemSortedSetOf(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE))
@@ -320,7 +322,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         )
     }
 
-    private fun sendNotifierMessage(message: String) {
+    fun sendNotifierMessage(message: String) {
         if (useNotification) {
             notification(this.name, message, NotificationEvent.Severity.INFO)
         } else {
