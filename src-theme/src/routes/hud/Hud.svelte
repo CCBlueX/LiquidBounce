@@ -27,6 +27,7 @@
     import ClosedCaptions from "./elements/ClosedCaptions.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
     import {os} from "../clickgui/clickgui_store";
+    import BedPlatesView from "./elements/BedPlatesView.svelte";
     import InventoryStatistics from "./elements/inventory/InventoryStatistics.svelte";
     import {
         HUD_EDITOR_ELEMENTS_CONTEXT,
@@ -101,6 +102,8 @@
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
                     <BlockCounter settings={c.settings}/>
+                {:else if c.name === "BedPlatesView"}
+                    <BedPlatesView settings={c.settings}/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}
