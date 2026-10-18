@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.ints.IntIterator
 import it.unimi.dsi.fastutil.longs.LongArrayList
-import net.ccbluex.fastutil.enumSetOf
 import okio.Buffer
 import java.io.Closeable
 import java.io.EOFException
@@ -35,7 +34,7 @@ import java.util.stream.StreamSupport
 
 private const val NEWLINE: Byte = '\n'.code.toByte()
 
-private val READ = enumSetOf(StandardOpenOption.READ)
+private val READ = setOf(StandardOpenOption.READ)
 
 /**
  * Reads the UTF-8 code points of [path] chunk by chunk, the file is never loaded into memory.
