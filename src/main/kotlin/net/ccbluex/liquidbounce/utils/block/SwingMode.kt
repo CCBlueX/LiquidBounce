@@ -39,9 +39,9 @@ enum class SwingMode(
     HIDE_CLIENT("HideForClient", true),
     HIDE_SERVER("HideForServer", false);
 
-    fun swing(hand: InteractionHand) = accept(hand)
+    override fun accept(hand: InteractionHand) = swing(hand)
 
-    override fun accept(hand: InteractionHand) {
+    fun swing(hand: InteractionHand) {
         val animation = player.getItemInHand(hand).attackAnimation
         when (this) {
             DO_NOT_HIDE -> {
