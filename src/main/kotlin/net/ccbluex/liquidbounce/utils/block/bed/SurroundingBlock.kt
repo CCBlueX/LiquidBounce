@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
+import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.level.block.Block
 
 @JvmRecord
@@ -29,10 +31,11 @@ data class SurroundingBlock(
     override fun compareTo(other: SurroundingBlock): Int = comparator.compare(this, other)
 
     companion object {
-        private val comparator: Comparator<SurroundingBlock> =
-            Comparator.comparingInt<SurroundingBlock> { it.layer }
-                .thenComparingInt { -it.count }
-                .thenComparingDouble { -it.block.defaultDestroyTime().toDouble() }
-                .thenComparing { it.block.descriptionId }
+        private val comparator = ComparatorChain<SurroundingBlock>(
+            Comparator.comparingInt { it.layer },
+            Comparator.comparingInt { it.count.inv() },
+            Comparator.comparing({ it.block }, UnbreakableFirst),
+            Comparator.comparing { it.block.descriptionId },
+        )
     }
 }

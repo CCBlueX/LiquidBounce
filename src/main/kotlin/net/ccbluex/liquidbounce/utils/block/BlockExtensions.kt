@@ -650,6 +650,11 @@ fun BlockPos.isBlastResistant(): Boolean {
     return getBlock()!!.explosionResistance >= 600f
 }
 
+val UnbreakableFirst: Comparator<Block> = Comparator.comparingDouble<Block> {
+    val hardness = it.defaultDestroyTime()
+    if (hardness == -1f) Double.POSITIVE_INFINITY else hardness.toDouble()
+}.reversed()
+
 @Suppress("UnusedReceiverParameter")
 fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
     return state.getValue(RespawnAnchorBlock.CHARGE) > 0
