@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.minecraft.client.Minecraft
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -49,7 +49,7 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
             context.worldBuilder().create().use { world ->
                 world.server.runCommand("gamemode survival @a")
                 context.waitFor({ client -> client.player?.hasInfiniteMaterials() == false }, 200)
-                context.onClient {
+                context.onClient { mc ->
                     ModuleHoleFiller.enabled = false
                     ModuleHoleFiller.settings.getValue("Area").setByString("2")
                     GlobalSettingsTarget.combatChoices.deserializeFrom(
@@ -62,15 +62,15 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
                     // Keep both targets in the loaded spawn chunk, on opposite sides of the player.
                     player.absSnapTo(8.5, player.y, 8.5)
                     val base = player.blockPosition()
-                    val targets = listOf(
-                        addTarget(base.offset(3, 0, 0), "BudgetTarget1"),
-                        addTarget(base.offset(-4, 0, 0), "BudgetTarget2"),
-                    )
+                    val targets = [
+                        addTarget(mc, base.offset(3, 0, 0), "BudgetTarget1"),
+                        addTarget(mc, base.offset(-4, 0, 0), "BudgetTarget2"),
+                    ]
                     try {
                         val level = checkNotNull(mc.level)
                         check(level.entitiesForRendering().count { it in targets } == 2)
                         check(targets.all { it.shouldBeAttacked() }) { "The fixture targets are not attackable" }
-                        assertBudgets(base, targets)
+                        assertBudgets(mc, base, targets)
                     } finally {
                         player.abilities.instabuild = false
                         val level = checkNotNull(mc.level)
@@ -87,7 +87,7 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
         }
     }
 
-    private fun assertBudgets(base: BlockPos, targets: List<RemotePlayer>) {
+    private fun assertBudgets(mc: Minecraft, base: BlockPos, targets: List<RemotePlayer>) {
         val player = checkNotNull(mc.player)
         val holes = listOf(
             Hole.OneByTwo(base.offset(3, -1, 0), Direction.Axis.X),
@@ -112,7 +112,7 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
         check(collect(holes, 1).size == 4) { "Creative mode was limited by its item count" }
     }
 
-    private fun addTarget(pos: BlockPos, name: String): RemotePlayer {
+    private fun addTarget(mc: Minecraft, pos: BlockPos, name: String): RemotePlayer {
         val level = checkNotNull(mc.level)
         return RemotePlayer(level, GameProfile(UUID.randomUUID(), name)).apply {
             id = level.nextLocalEntityId()

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.resources.sounds.Sound
@@ -76,12 +77,23 @@ enum class HitFXRegistry(
     }
 
     companion {
+        private val allCustomSoundIds = buildMap {
+            HitFXRegistry.entries.forEach {
+                for (id in it.customSoundIds) {
+                    this[clientIdentifier(id)] = id
+                }
+            }
+        }
+
         fun registerSounds(
             registry: MutableMap<Identifier, WeighedSoundEvents>,
             cache: MutableMap<Identifier, Resource>
         ) {
-            for (id in entries.flatMap { it.customSoundIds }) {
-                val location = clientIdentifier(id)
+            if (SelfDestruct.isDestructed) {
+                return
+            }
+
+            for ((location, id) in allCustomSoundIds) {
                 val sound = Sound(
                     location, ConstantFloat.of(1F), ConstantFloat.of(1F), 1, Sound.Type.FILE, false, false, 16
                 )
@@ -90,6 +102,13 @@ enum class HitFXRegistry(
                 cache.putIfAbsent(sound.path, Resource(mc.vanillaPackResources.fullResources()) {
                     LiquidBounce.resource("sounds/$id.ogg")
                 })
+            }
+        }
+
+        fun unregisterSounds() {
+            val registry = mc.soundManager.registry
+            for ((location, _) in allCustomSoundIds) {
+                registry.remove(location)
             }
         }
     }

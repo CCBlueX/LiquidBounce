@@ -18,7 +18,6 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.core.registries.Registries
@@ -61,7 +60,7 @@ class EnchantCommandGameTest : FabricClientGameTest {
         levelArgument: String?,
         explicitLevel: Int?,
     ) {
-        context.onClient {
+        context.onClient { mc ->
             val player = checkNotNull(mc.player)
             val item = ItemStack(Items.DIAMOND_SWORD)
             player.setItemInHand(InteractionHand.MAIN_HAND, item)
@@ -88,7 +87,7 @@ class EnchantCommandGameTest : FabricClientGameTest {
     }
 
     private fun assertSingleLevel(context: ClientGameTestContext, levelArgument: String?, explicitLevel: Int?) {
-        context.onClient {
+        context.onClient { mc ->
             val player = checkNotNull(mc.player)
             player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
             val input = "enchant add sharpness" + (levelArgument?.let { " $it" } ?: "")

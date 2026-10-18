@@ -15,7 +15,8 @@
       "net.ccbluex.liquidbounce.gametest.HoleFillerBudgetGameTest",
       "net.ccbluex.liquidbounce.gametest.FallDamageTrackerGameTest",
       "net.ccbluex.liquidbounce.gametest.TeleportDisconnectGameTest",
-      "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest"
+      "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
+      "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest"
     ]
   },
   "depends": {
