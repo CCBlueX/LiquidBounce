@@ -40,9 +40,13 @@ fun ClientGameTestContext.waitForClient() {
 /**
  * Runs [block] on the client thread; the game only allows touching it there.
  */
-fun ClientGameTestContext.onClient(block: FailableConsumer<Minecraft, RuntimeException>) = runOnClient<RuntimeException>(block)
+fun ClientGameTestContext.onClient(
+    block: FailableConsumer<Minecraft, RuntimeException>
+) = runOnClient<RuntimeException>(block)
 
-fun <T> ClientGameTestContext.fromClient(block: FailableFunction<Minecraft, T, RuntimeException>): T = computeOnClient(block)
+fun <T> ClientGameTestContext.fromClient(
+    block: FailableFunction<Minecraft, T, RuntimeException>
+): T = computeOnClient(block)
 
 /**
  * Runs a client command, without the prefix.
