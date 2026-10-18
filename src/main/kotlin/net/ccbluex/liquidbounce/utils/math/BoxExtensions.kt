@@ -43,6 +43,18 @@ val AABB.vertices: Array<Vec3>
         Vec3(maxX, maxY, maxZ),
     )
 
+/**
+ * Volume of this box. [AABB] orders its bounds on construction, so the box [AABB.intersect] builds from two disjoint
+ * boxes is the gap between them and has a positive volume; use [overlapVolume] for how much two boxes share.
+ */
+val AABB.volume: Double get() = xsize * ysize * zsize
+
+/**
+ * Volume this box and [other] share, zero when they do not intersect.
+ */
+fun AABB.overlapVolume(other: AABB): Double =
+    if (intersects(other)) intersect(other).volume else 0.0
+
 // Box operators
 
 inline operator fun AABB.plus(offset: Position): AABB =

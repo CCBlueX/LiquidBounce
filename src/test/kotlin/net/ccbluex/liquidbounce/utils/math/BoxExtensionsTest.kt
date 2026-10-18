@@ -95,4 +95,15 @@ class BoxExtensionsTest {
         assertTrue(box.isHitByLine(Vec3(0.5, 0.5, 0.5), Vec3(0.5, 0.5, 0.5)))
         assertFalse(box.isHitByLine(Vec3(1.5, 0.5, 0.5), Vec3(1.5, 0.5, 0.5)))
     }
+
+    @Test
+    fun `volume measures the box and overlapVolume ignores the gap between disjoint boxes`() {
+        val box = AABB(0.0, 0.0, 0.0, 0.6, 1.8, 0.6)
+        val disjoint = AABB(2.0, 0.0, 0.0, 3.0, 1.0, 1.0)
+
+        assertEquals(0.6 * 1.8 * 0.6, box.volume, 1e-9)
+        assertEquals(0.6 * 1.0 * 0.6, box.overlapVolume(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)), 1e-9)
+        assertEquals(0.0, box.overlapVolume(disjoint), 1e-9)
+        assertTrue(box.intersect(disjoint).volume > 0.0)
+    }
 }
