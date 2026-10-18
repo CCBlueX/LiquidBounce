@@ -45,7 +45,6 @@ internal object Soup : HealthBasedBuff("Soup") {
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
-    override suspend fun execute(slot: HotbarItemSlot) {
         val ticksToWait = if (DropAfterUse.enabled) wait.random() else 0
         
         // Use item (be aware, it will always return false in this case)
