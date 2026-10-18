@@ -212,9 +212,9 @@ fun Vec3.searchBlocksInCuboid(
         floor(this.z - radius).toInt(),
     )
     val to = BlockPos(
-        ceil(this.x + radius).toInt(),
-        ceil(this.y + radius).toInt(),
-        ceil(this.z + radius).toInt(),
+        floor(this.x + radius).toInt(),
+        floor(this.y + radius).toInt(),
+        floor(this.z + radius).toInt(),
     )
 
     return buildList {
@@ -417,8 +417,8 @@ inline fun AABB.isBlockAtPosition(
 ): Boolean {
     val blockPos = BlockPos.MutableBlockPos(0, floor(minY).toInt(), 0)
 
-    for (x in floor(minX).toInt()..ceil(maxX).toInt()) {
-        for (z in floor(minZ).toInt()..ceil(maxZ).toInt()) {
+    for (x in floor(minX).toInt()..floor(maxX).toInt()) {
+        for (z in floor(minZ).toInt()..floor(maxZ).toInt()) {
             blockPos.x = x
             blockPos.z = z
 
@@ -460,7 +460,7 @@ inline fun AABB.collideBlockIntersects(
 val AABB.collidingRegion: BoundingBox
     get() = BoundingBox(
         floor(this.minX).toInt(), floor(this.minY).toInt(), floor(this.minZ).toInt(),
-        ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt(),
+        floor(this.maxX).toInt(), floor(this.maxY).toInt(), floor(this.maxZ).toInt(),
     )
 
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
