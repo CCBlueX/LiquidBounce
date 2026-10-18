@@ -201,9 +201,9 @@ fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(
 fun Vec3.horizontalDistanceToSqr(x: Double, z: Double): Double = Mth.lengthSquared(this.x - x, this.z - z)
 
 fun Position.distanceToCenterSqr(blockPos: Long): Double {
-    val dx = this.x() - BlockPos.getX(blockPos)
-    val dy = this.y() - BlockPos.getY(blockPos)
-    val dz = this.z() - BlockPos.getZ(blockPos)
+    val dx = this.x() - BlockPos.getX(blockPos) - 0.5
+    val dy = this.y() - BlockPos.getY(blockPos) - 0.5
+    val dz = this.z() - BlockPos.getZ(blockPos) - 0.5
     return Mth.lengthSquared(dx, dy, dz)
 }
 
