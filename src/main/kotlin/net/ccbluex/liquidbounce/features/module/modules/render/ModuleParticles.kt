@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -99,7 +98,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
             if (particle.alpha <= 0 || cameraPos.distanceToSqr(particle.pos) > 30 * 30) {
                 true
             } else {
-                particle.update(cameraPos)
+                particle.update()
                 false
             }
         }
@@ -125,8 +124,6 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val displayHandler = handler<WorldRenderEvent> { event ->
         event.renderEnvironment {
             for (particle in particles) {
-                if (!particle.visible) continue
-
                 particle.render(event.partialTicks)
             }
         }
@@ -140,12 +137,11 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
             (-0.01..0.01).random()
         )
         @JvmField var alpha = 1f
-        @JvmField var visible = true
         private val rotation = (0f..360f).random()
         private val spawnTime = System.currentTimeMillis()
         private var collisionTime = -1L
 
-        fun update(cameraPos: Vec3) {
+        fun update() {
             prevPos = pos
 
             if (collisionTime != -1L) {
@@ -182,7 +178,6 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
             }
 
             pos = nextPos
-            visible = hasLineOfSight(cameraPos, pos)
         }
 
         context(env: WorldRenderEnvironment)
