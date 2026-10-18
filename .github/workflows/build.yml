@@ -276,16 +276,23 @@ jobs:
           # Minecraft asks for an sRGB framebuffer, which Xvfb's GLX does not offer
           SDL_VIDEO_FORCE_EGL: 1
         run: |
-          # A game still alive after 5 minutes is stuck, a whole run takes about 2, and the Gradle task
-          # only gives up after 10. Dump its threads then, into a file so that a watchdog still waiting
-          # after a successful run cannot hold the step open.
-          dump=build/gametest-thread-dump.txt
+          # A run whose game is still alive after 5 minutes is stuck: a whole run takes about 2, and the
+          # Gradle task only gives up after 10, so dump its threads while it is still hung
+          java="$JAVA_HOME/bin"
+          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest &
+          gradle=$!
           (
-            until pgrep -qf 'net\.fabricmc\.devlaunchinjector\.Main'; do sleep 5; done
-            sleep 300
+            until "$java/jps" -l | grep -q 'devlaunchinjector\.Main'; do
+              kill -0 "$gradle" 2>/dev/null || exit 0
+              sleep 5
+            done
+            for _ in $(seq 60); do
+              kill -0 "$gradle" 2>/dev/null || exit 0
+              sleep 5
+            done
             echo "=== $(date -Is) thread dump of the game JVM ==="
-            pgrep -f 'net\.fabricmc\.devlaunchinjector\.Main' | xargs -r -n1 "$JAVA_HOME/bin/jstack" -l
-          ) > "$dump" 2>&1 &
-          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest || status=$?
-          cat "$dump"
-          exit "${status:-0}"
+            for pid in $("$java/jps" -l | grep 'devlaunchinjector\.Main' | cut -d' ' -f1); do
+              "$java/jstack" -l "$pid"
+            done
+          ) &
+          wait "$gradle"
