@@ -86,7 +86,7 @@ fun useItem(
 
     if (useItemResult is InteractionResult.Success) {
         if (useItemResult.swingSource === SwingSource.PREDICTED) {
-            swingMode.accept(hand)
+            swingMode.interactSwing(hand)
         }
 
         player.itemUsed(hand)
@@ -138,7 +138,7 @@ fun interactEntity(
     val result = gameMode.interact(player, entity, hitResult, hand)
 
     if (result.shouldSwingHand()) {
-        swingMode.swing(hand)
+        swingMode.interactSwing(hand)
     }
 
     return result
@@ -203,7 +203,7 @@ fun interactBlock(
     val useResult = gameMode.useItemOn(player, hand, hitResult)
     if (useResult is InteractionResult.Success) {
         if (useResult.swingSource === SwingSource.PREDICTED) {
-            swingMode.swing(hand)
+            swingMode.interactSwing(hand)
             if (!itemStack.isEmpty && (itemStack.count != oldCount || player.hasInfiniteMaterials())) {
                 player.itemUsed(hand)
             }

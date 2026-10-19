@@ -153,7 +153,7 @@ object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
         val actionResult = interaction.useItemOn(player, event.hand, hitResult)
         if (actionResult.shouldSwingHand()) {
-            SwingMode.DO_NOT_HIDE.swing(event.hand)
+            SwingMode.DO_NOT_HIDE.interactSwing(event.hand)
         }
         event.cancelEvent()
     }
