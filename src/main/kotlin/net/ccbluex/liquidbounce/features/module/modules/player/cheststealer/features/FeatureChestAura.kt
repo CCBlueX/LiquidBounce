@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -197,8 +198,11 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         }
 
         // Attempt to interact with the block
-        if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
-            swingMode.swing(InteractionHand.MAIN_HAND)
+        val useItemOnResult = interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult)
+        if (useItemOnResult is InteractionResult.Success) {
+            if (useItemOnResult.shouldSwingHand()) {
+                swingMode.interactSwing(InteractionHand.MAIN_HAND)
+            }
 
             var wasInteractionSuccessful = false
 

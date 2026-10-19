@@ -1563,17 +1563,16 @@ public final class net/ccbluex/liquidbounce/utils/block/ChunkScanner : net/ccblu
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/utils/block/SwingMode : java/lang/Enum, java/util/function/Consumer, net/ccbluex/liquidbounce/config/types/list/Tagged {
+public final class net/ccbluex/liquidbounce/utils/block/SwingMode : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
 	public static final field DO_NOT_HIDE Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_BOTH Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_CLIENT Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_SERVER Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
-	public synthetic fun accept (Ljava/lang/Object;)V
-	public fun accept (Lnet/minecraft/world/InteractionHand;)V
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getServerSwing ()Z
 	public fun getTag ()Ljava/lang/String;
 	public fun getTagAliases ()Ljava/util/List;
+	public final fun interactSwing (Lnet/minecraft/world/InteractionHand;)V
 	public final fun swing (Lnet/minecraft/world/InteractionHand;)V
 	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/block/SwingMode;

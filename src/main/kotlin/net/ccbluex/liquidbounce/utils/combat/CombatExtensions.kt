@@ -264,7 +264,6 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false):
     // You HAVE to look at the entity before attacking it.
     if (piercingWeapon != null && !interaction.isSpectator) {
         interaction.piercingAttack(itemStack.attackAnimation, piercingWeapon)
-        swing.swing(InteractionHand.MAIN_HAND)
         return true
     }
 

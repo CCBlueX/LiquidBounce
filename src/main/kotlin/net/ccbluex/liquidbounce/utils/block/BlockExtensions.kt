@@ -502,7 +502,7 @@ fun doPlacement(
                 val useItemResult = interaction.useItem(player, hand, rotation.yRot, rotation.xRot)
                 if (useItemResult is Success) {
                     if (useItemResult.swingSource == SwingSource.PREDICTED && onItemUseSuccess()) {
-                        swingMode.swing(hand)
+                        swingMode.interactSwing(hand)
                     }
 
                     player.itemUsed(hand)
@@ -536,7 +536,7 @@ private inline fun handleActionsOnAccept(
     }
 
     if (shouldSwing()) {
-        swingMode.swing(hand)
+        swingMode.interactSwing(hand)
     }
 
     if (wasStackUsed) {

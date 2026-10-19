@@ -243,7 +243,7 @@ object ModuleFucker : ClientModule(
         // Use action should be used if the block is the same as the current target and the action is set to use.
         if (destroyerTarget.action == DestroyAction.USE) {
             if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult).shouldSwingHand()) {
-                swingMode.swing(InteractionHand.MAIN_HAND)
+                swingMode.interactSwing(InteractionHand.MAIN_HAND)
             }
 
             waitTicks(delay)
