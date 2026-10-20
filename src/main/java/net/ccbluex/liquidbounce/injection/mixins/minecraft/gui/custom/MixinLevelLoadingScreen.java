@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
@@ -34,8 +35,13 @@ public abstract class MixinLevelLoadingScreen extends MixinScreen {
     protected void init(CallbackInfo ci) {
         super.init(ci);
 
+
         if (SelfDestruct.INSTANCE.isDestructed()) {
             return;
+        }
+
+        if (ModuleFreeCam.INSTANCE.getEnabled()) {
+            ModuleFreeCam.INSTANCE.setEnabled(false);
         }
 
         Button quitButton = Button.builder(CommonComponents.GUI_PROCEED, _ -> this.minecraft.gui.setScreen(null))

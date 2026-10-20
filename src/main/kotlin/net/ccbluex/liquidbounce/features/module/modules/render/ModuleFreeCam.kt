@@ -289,12 +289,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             Priority.NOT_IMPORTANT, ModuleFreeCam)
     }
 
-    @Suppress("unused")
-    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
-        // If not, will get stuck when world change
-        enabled = false
-    }
-
     fun applyCameraPosition(entity: Entity?, partialTicks: Float) {
         if (!running || entity != player || !PositionState.available) {
             return
