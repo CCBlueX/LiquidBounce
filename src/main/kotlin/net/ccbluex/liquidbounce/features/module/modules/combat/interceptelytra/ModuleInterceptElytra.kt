@@ -61,17 +61,24 @@ import net.minecraft.world.phys.Vec3
  * players' abilities are never synced to the client (see ClientboundPlayerAbilitiesPacket,
  * which carries no entity id), and ability-flyers cannot glide (see Player#canGlide). Teammates
  * (while Teams is enabled and matches) and friends (unless Friends is a global Combat target) are
- * also excluded. Blast Protection adds +0.15 explosion knockback resistance per level and piece
- * (see blast_protection.json); a full level-IV set takes zero knockback, and enchantments are not
- * synced to the client, so such targets cannot be distinguished beforehand.
+ * also excluded. Blast Protection adds +0.15 explosion knockback resistance per level and per
+ * armor piece to the 0..1-clamped explosion_knockback_resistance attribute (see
+ * blast_protection.json and Attributes); four level-IV pieces add 2.4, clamped to 1.0, which
+ * zeroes the burst knockback — and four level-II pieces already saturate it. It does not reduce
+ * the 1.0 direct-hit damage: the burst never damages entities (damagesEntities = false) and the
+ * wind_charge damage type is not in #minecraft:is_explosion. Worn item stacks and attribute
+ * modifiers are synced to the client (see ServerEntity#sendPairingData /
+ * ClientboundSetEquipmentPacket), so such targets can be told apart in advance.
  *
  * @see InterceptElytraSolver
  */
 object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.COMBAT) {
 
     private const val MILLISECONDS_PER_TICK = 50
-    // ~1.1 blocks of tolerance (sqrt(1.2)): half the 1.5/t sampling step (0.75) plus the
-    // 0.3125 charge box; squared in use.
+    // ~1.1 blocks of tolerance (sqrt(1.2)): the simulated path is sampled once per tick, so a
+    // sample can sit up to 0.75 blocks off the true path, and the static world ignores both the
+    // target's box (0.6 tall in Pose.FALL_FLYING, half-height 0.3) and vanilla's hit margin
+    // (ProjectileUtil.computeMargin, at most 0.3 blocks); squared in use.
     private const val VERIFY_TOLERANCE_SQ = 1.2
 
     // Eye-to-hitbox distance (nearest box point), in blocks.
@@ -95,7 +102,8 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f, "°")
     private val considerInventory by boolean("ConsiderInventory", true)
     // Leads the target anchor by the tracking interval (2 ticks for players, EntityTypes.PLAYER)
-    // plus half the round-trip time, so the solver sees where the target is, not its last report.
+    // plus half the round-trip time, so every aim and prediction mode sees where the target is,
+    // not its last report.
     private val lagCompensation by boolean("LagCompensation", true)
     private val requireLineOfSight by boolean("RequireLineOfSight", true)
     private val verifyHit by boolean("VerifyHit", false)
@@ -215,7 +223,9 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
             knownMovement.z,
         )
         // Lag compensation: lead the anchor so the solve runs on the target's live position.
-        // No-op in singleplayer, where the integrated server shares the world state.
+        // Zeroed in singleplayer, where the keep-alive round trip is negligible
+        // (mc.hasSingleplayerServer()); the 2-tick tracking interval still applies there,
+        // because the client's copy of remote players is driven by the same movement packets.
         val lagTicks = if (lagCompensation && !mc.hasSingleplayerServer()) {
             2.0 + player.ping / 100.0
         } else {
@@ -243,16 +253,16 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
                     )
                     Aim(solution.rotation, solution.flightTicks, predictedImpact)
                 } else {
-                    directAim(eye, target, targetPosition)
+                    directAim(eye, target, targetPosition, lagTicks)
                 }
             }
 
-            AimMode.DIRECT -> directAim(eye, target, targetPosition)
+            AimMode.DIRECT -> directAim(eye, target, targetPosition, lagTicks)
         }
     }
 
     /** Aims at the predicted target position without the closed-form interception. */
-    private fun directAim(eye: Vec3, target: LivingEntity, targetPosition: Vec3): Aim {
+    private fun directAim(eye: Vec3, target: LivingEntity, targetPosition: Vec3, lagTicks: Double): Aim {
         val flightTicks = InterceptElytraSolver.estimateFlightTicks(targetPosition.distanceTo(eye))
         val predicted = when (predictionMode) {
             PredictionMode.LINEAR -> InterceptElytraSolver.predictGliderLinear(
@@ -262,7 +272,10 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
                 engagedMultiplier.toDouble(),
             )
 
-            PredictionMode.SIMULATED -> PositionExtrapolation.getBestForEntity(target).getPositionInTicks(flightTicks)
+            // Extrapolating from the observed (lagged) state over delay plus flight time equals
+            // leading the anchor by the same amount, so SIMULATED shares the lag compensation.
+            PredictionMode.SIMULATED -> PositionExtrapolation.getBestForEntity(target)
+                .getPositionInTicks(lagTicks + flightTicks)
         }
 
         return Aim(Rotation.lookingAt(predicted, eye), flightTicks, predicted)
@@ -279,19 +292,26 @@ object ModuleInterceptElytra : ClientModule("InterceptElytra", ModuleCategories.
      */
     private fun passesVerification(aim: Aim): Boolean {
         // Note: the shared trajectory renderer inherits the owner's deltaMovement while the
-        // solver above uses the position-based known movement; the residual is absorbed by the
-        // tolerance below and the whole check stays opt-in.
+        // solver above uses the position-based known movement, and it starts the charge at
+        // eyeY - 0.1 instead of the vanilla spawn height (WindChargeItem#use). Its entity search
+        // box also uses a 1.0 radius (TrajectoryInfo.WIND_CHARGE) versus the vanilla 0.15625
+        // half-extent. These residuals are absorbed by the tolerance below, and the check
+        // stays opt-in.
         val result = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             player,
             TrajectoryInfo.WIND_CHARGE,
             TrajectoryType.WindCharge,
             aim.rotation,
-        ).runSimulation(maxFlightTicks + 1)
+        ).runSimulation(maxFlightTicks + 1) // one sample past the solver's bound
 
-        // The simulation advances in ~1.5-block steps per tick plus inherited thrower velocity;
-        // the tolerance (~1.1 blocks) covers that granularity plus the 0.3125-block wind charge
-        // (see EntityTypes.WIND_CHARGE). This is a coarse geometric filter, not a vanilla hit test:
-        // vanilla resolves the charge against the target's box, not a point.
+        // The simulation advances in ~1.5-block steps per tick plus inherited thrower velocity
+        // (with along-track momentum the step exceeds 1.5, so the half-step budget assumes
+        // momentum-free flight). The tolerance (~1.1 blocks) covers that per-tick sampling
+        // granularity plus the target's own hitbox and vanilla's hit margin — not the 0.3125
+        // charge box, which vanilla never adds to the target: the hit test clips a one-tick
+        // segment against entity.getBoundingBox().inflate(entityMargin) (see
+        // ProjectileUtil.getEntityHitResult / computeMargin). This is a coarse geometric filter,
+        // not a vanilla hit test: vanilla resolves the charge against the target's box, not a point.
         // Best for short flights: the residual against the solver's known movement grows
         // with flight time. Note that vanilla adds server-side aim jitter (~1.7 degrees worst
         // case, see InterceptElytraSolver.WIND_CHARGE_SPEED), which this deterministic

@@ -45,8 +45,10 @@ object InterceptElytraSolver {
      * per axis to the normalized aim direction (`Projectile.getMovementToShoot`) with uncertainty
      * 1.0 for hand-thrown charges (`WindChargeItem.use`; thrown power equals
      * `PROJECTILE_SHOOT_POWER` = 1.5). Worst case ~1.7° combined (~0.6 blocks at 20 blocks);
-     * transverse RMS ~0.57° (~0.20 blocks at 20, from Var = spread²/6 per axis — see
-     * `RandomSource#triangle`). No solver precision can beat that spread.
+     * transverse RMS ~0.57° (~0.20 blocks at 20): Var = spread²/6 per axis (see
+     * `RandomSource#triangle`), of which by isotropy the 2/3 lying perpendicular to the aim
+     * direction gives RMS = spread/√3 — only the perpendicular part shifts a point target, and
+     * the worst case (~0.6 blocks) is tight, not padded. No solver precision can beat that spread.
      *
      * @see net.minecraft.world.item.WindChargeItem#PROJECTILE_SHOOT_POWER
      */
@@ -76,8 +78,9 @@ object InterceptElytraSolver {
      * @param targetVelocity the target's linear velocity, in blocks per tick.
      * @param maxFlightTicks upper bound for the predicted flight time; beyond it prediction is unreliable.
      * @return the shot solution, or null when no interception exists within the window — e.g. the
-     * target outruns the projectile (no positive root; a firework-boosted glider converges to
-     * ~1.7 b/t against the charge's 1.5 b/t, see FireworkRocketEntity), the target is at
+     * target outruns the projectile on the closing axis (no positive root; a firework-boosted
+     * glider converges to ~1.7 b/t — ~1.67 even with elytra drag — against the charge's 1.5 b/t,
+     * see FireworkRocketEntity), the target is at
      * (within ~3e-5 blocks of) the eye, the root falls outside `MIN_FLIGHT_TICKS..maxFlightTicks`,
      * the degenerate linear case does not close (`B >= 0`), or any of the four vector inputs is
      * non-finite.

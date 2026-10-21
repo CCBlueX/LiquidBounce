@@ -78,6 +78,12 @@ class InterceptElytraSolverTest {
     }
 
     @Test
+    fun `linear branch with separating geometry returns null`() {
+        // w = 1.5 receding: A = 1.5² - 2.25 = 0.0 exactly, B = 2 * (20 * 1.5) = 60 >= 0 -> null.
+        assertNull(solve(eye, Vec3(20.0, 1.0, 0.0), Vec3(WIND_CHARGE_SPEED, 0.0, 0.0)))
+    }
+
+    @Test
     fun `target at eye position returns null`() {
         assertNull(solve(eye, eye, Vec3.ZERO))
     }
@@ -141,7 +147,7 @@ class InterceptElytraSolverTest {
     }
 
     @Test
-    fun `own vertical velocity is inherited fully by the solver`() {
+    fun `solver uses the thrower's raw vertical velocity without ground zeroing`() {
         // Ground-zeroing happens in the caller, not here: own = (0, 1, 0) gives
         // w = (0, -1, 0), A = -1.25, B = 0, C = 400 -> t = sqrt(2000) / 2.5.
         val targetPos = Vec3(20.0, 1.0, 0.0)
@@ -154,13 +160,17 @@ class InterceptElytraSolverTest {
     }
 
     @Test
-    fun `NaN input returns null`() {
+    fun `non-finite input returns null`() {
         assertNull(solve(eye, Vec3(Double.NaN, 1.0, 0.0), Vec3.ZERO))
         assertNull(solve(Vec3(Double.POSITIVE_INFINITY, 0.0, 0.0), Vec3(20.0, 1.0, 0.0), Vec3.ZERO))
+
+        val infiniteOwn = Vec3(Double.POSITIVE_INFINITY, 0.0, 0.0)
+        assertNull(solve(eye, Vec3(20.0, 1.0, 0.0), Vec3(Double.NaN, 0.0, 0.0)))
+        assertNull(solve(eye, Vec3(20.0, 1.0, 0.0), Vec3.ZERO, ownVelocity = infiniteOwn))
     }
 
     @Test
-    fun `round trip matches continuous vanilla flight`() {
+    fun `float rotation round trip keeps the solved shot on target`() {
         val targetPos = Vec3(30.0, 3.0, -12.0)
         val targetVelocity = Vec3(-0.7, 0.1, 0.4)
         val own = Vec3(0.3, 0.0, -0.2)
@@ -179,11 +189,13 @@ class InterceptElytraSolverTest {
             .distanceTo(targetPos.add(targetVelocity.scale(approachTime)))
 
         // Float yaw/pitch quantization is ~1e-7 rad; the dominant noise is vanilla's 64k-entry
-        // sin/cos table (steps 2π/65536 ≈ 9.6e-5 rad, ~6.8e-5 rad combined over both axes);
-        // at ~33 blocks that is ~2.2e-3 blocks, far below the 0.3125-block wind charge size
-        // (see EntityTypes.WIND_CHARGE).
+        // sin/cos table (steps 2π/65536 ≈ 9.6e-5 rad, worst-case ~6.8e-5 rad combined over both
+        // axes; the observed error reaches ~1.2e-4 rad because the cos index can land one entry
+        // off for angles in (−π/2, 0)). Over the ~18.5 blocks of flight (1.5 x approachTime)
+        // that is ~2.2e-3 blocks — 4.5× below the 1e-2 assertion, and 140× below the 0.3125-block
+        // wind charge size (see EntityTypes.WIND_CHARGE).
         assertTrue(closestDistance < 1e-2, "closest approach was $closestDistance blocks")
-        assertEquals(solution.flightTicks, approachTime, 0.5)
+        assertEquals(solution.flightTicks, approachTime, 1e-3)
     }
 
     @Test
@@ -211,9 +223,10 @@ class InterceptElytraSolverTest {
         ownVelocity: Vec3 = Vec3.ZERO,
     ) {
         // Direction is reconstructed from float yaw/pitch through vanilla's 64k-entry sin/cos
-        // table (~9.6e-5 rad steps), so the round-trip error grows with flight time and can reach
-        // ~1.4e-3 blocks at 20 blocks — over 200x smaller than the 0.3125-block wind charge
-        // (see EntityTypes.WIND_CHARGE; assert tolerance 5e-3 is 62.5x smaller).
+        // table (steps ≈ 9.6e-5 rad, worst case ~1.2e-4 rad including the cos-index off-by-one),
+        // so the round-trip error grows with flight time; observed here up to ~1.2e-3 blocks —
+        // over 200x smaller than the 0.3125-block wind charge (see EntityTypes.WIND_CHARGE),
+        // with the 5e-3 assertion keeping >4x headroom.
         val projectileVelocity = solution.rotation.directionVector.scale(WIND_CHARGE_SPEED).add(ownVelocity)
         val impact = eye.add(projectileVelocity.scale(solution.flightTicks))
         val expected = targetPos.add(targetVelocity.scale(solution.flightTicks))
