@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -287,12 +286,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         RotationManager.setRotationTarget(rotations.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
-    }
-
-    @Suppress("unused")
-    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
-        // If not, will get stuck when world change
-        enabled = false
     }
 
     fun applyCameraPosition(entity: Entity?, partialTicks: Float) {

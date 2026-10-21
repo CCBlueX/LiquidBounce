@@ -342,6 +342,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
     private void hookWorldChangeEvent(ClientLevel world, boolean bl, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
+        if (ModuleFreeCam.INSTANCE.getEnabled()) ModuleFreeCam.INSTANCE.setEnabled(false);
     }
 
     @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
