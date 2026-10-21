@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
@@ -257,6 +258,12 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         ModuleDebug.debugParameter(this, "Position", PositionState.pos)
         ModuleDebug.debugParameter(this, "Rotation", PositionState.rot)
+    }
+
+    @Suppress("unused")
+    private val mouseRotationHandler = handler<MouseRotationEvent> { event ->
+        PositionState.rotation(event.cursorDeltaX * 0.15f, event.cursorDeltaY * 0.15f)
+        event.cancelEvent()
     }
 
     @Suppress("unused")
