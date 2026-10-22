@@ -79,6 +79,8 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -294,6 +296,8 @@ object LiquidBounce : EventListener {
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
+        ItemStackListRenderer
+        IndicatorRenderer
 
         AddonManager.discover()
     }

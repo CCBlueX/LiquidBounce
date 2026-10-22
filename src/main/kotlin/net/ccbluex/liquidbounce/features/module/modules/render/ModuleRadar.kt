@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
@@ -36,26 +37,29 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.math.fastSin
-import net.ccbluex.liquidbounce.utils.math.floorToInt
-import net.ccbluex.liquidbounce.utils.client.scaledDimension
-import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
+import net.ccbluex.liquidbounce.utils.kotlin.optional
+import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.render.asTexture
-import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
-import net.minecraft.client.CameraType
+import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.contents.ObjectContents
+import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import org.joml.Matrix3x2f
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
-import kotlin.math.atan2
 
 /**
  * Radar module
@@ -64,48 +68,9 @@ import kotlin.math.atan2
  */
 object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = listOf("PointerESP")) {
 
-    private val tiltModes = choices("Tilt", 0) {
-        arrayOf(TiltMode.Static, TiltMode.ByPitch)
-    }
-
-    private sealed class TiltMode(name: String) : Mode(name) {
-        final override val parent: ModeValueGroup<*>
-            get() = tiltModes
-
-        abstract fun transform(pose: Matrix3x2f, partialTick: Float)
-
-        object Static : TiltMode("Static") {
-            private val angle by float("Angle", 90f, -90f..90f, "deg")
-
-            override fun transform(pose: Matrix3x2f, partialTick: Float) {
-                pose.scale(1f, angle.fastSin())
-            }
-        }
-
-        object ByPitch : TiltMode("ByPitch") {
-            private val limitation by floatRange("Limitation", 45f..90f, 0f..90f, "deg").onChanged {
-                limitationNeg = -it
-            }
-            private var limitationNeg: ClosedFloatingPointRange<Float> = -limitation
-
-            override fun transform(pose: Matrix3x2f, partialTick: Float) {
-                val pitchRad = run {
-                    val pitch = player.getXRot(partialTick)
-                    if (pitch >= 0) {
-                        pitch.coerceIn(limitation)
-                    } else {
-                        pitch.coerceIn(limitationNeg)
-                    }
-                }.toRadians()
-
-                pose.scale(1f, pitchRad.fastSin())
-            }
-        }
-    }
-
-    private val radius by float("Radius", 40f, 2f..200f)
-
     private val onlyPlayers by boolean("OnlyPlayers", false)
+    private val hideTeammates by boolean("HideTeammates", false)
+    private val showInView by boolean("ShowInView", true)
 
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
@@ -115,12 +80,14 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         )
     }
 
-    private sealed class PointerMode(name: String) : Mode(name) {
+    /**
+     * Arrows are drawn along their local +Y axis, base first, so that [length] is the distance from the base to the
+     * tip [IndicatorRenderer] puts on the anchor.
+     */
+    private sealed class PointerMode(name: String) : Mode(name), IndicatorStyle {
+
         final override val parent: ModeValueGroup<*>
             get() = pointerModes
-
-        context(ctx: GuiGraphicsExtractor)
-        abstract fun draw(color: Color4b)
 
         object Triangle : PointerMode("Triangle") {
             private val width by float("Width", 8f, 1f..100f)
@@ -129,8 +96,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 minOf(it, height)
             }
 
-            context(ctx: GuiGraphicsExtractor)
-            override fun draw(color: Color4b) {
+            override val length: Float
+                get() = height
+
+            override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) {
                 if (Mth.equal(tailConcaveSize, 0f)) {
                     ctx.drawTriangle(
                         x0 = -width * 0.5f, y0 = 0f,
@@ -163,8 +132,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
             private val size by float("Size", 10f, 1f..100f)
 
-            context(ctx: GuiGraphicsExtractor)
-            override fun draw(color: Color4b) {
+            override val length: Float
+                get() = size
+
+            override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) {
                 ctx.drawTexQuad(
                     texture.textureSetup,
                     -size / 2f, 0f, size / 2f, size,
@@ -192,6 +163,59 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         yAxis = "Alpha" axis 0f..1f,
     )
 
+    private class RadarIndicatorState(
+        override val pos: Vec3,
+        override val priority: Int,
+        override val indicatorStyle: IndicatorStyle,
+        override val indicatorColor: Color4b,
+        override val showInView: Boolean,
+        private val entity: Entity,
+    ) : IndicatorRenderState {
+
+        /**
+         * `{head} {name}`, laid out on the side of the anchor the arrow is not on so it stays on screen and clear
+         * of the arrow.
+         */
+        override fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float) {
+            val font = mc.font
+            val name = entity.displayName
+            val head = (entity as? Player)?.let(::headOf)
+
+            val headWidth = head?.let { font.width(it) + font.width(SPACE) } ?: 0
+            val width = headWidth + font.width(name)
+
+            val x = when {
+                outwardX > AXIS_TOLERANCE -> -width
+                outwardX < -AXIS_TOLERANCE -> 0
+                else -> -width / 2
+            }
+            val y = when {
+                outwardY > AXIS_TOLERANCE -> -font.lineHeight
+                outwardY < -AXIS_TOLERANCE -> 0
+                else -> -font.lineHeight / 2
+            }
+
+            if (head != null) {
+                // White, otherwise the arrow's color is applied to the head as well.
+                ctx.text(font, head, x, y, Color4b.WHITE.argb, TEXT_SHADOW)
+            }
+
+            ctx.text(font, name, x + headWidth, y, indicatorColor.argb, TEXT_SHADOW)
+        }
+
+        private companion object {
+            const val SPACE = " "
+            const val TEXT_SHADOW = true
+
+            /**
+             * Below this the arrow counts as pointing straight along the other axis, so the tag stays centered on it
+             * rather than being pushed to one side.
+             */
+            const val AXIS_TOLERANCE = 0.1F
+        }
+
+    }
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
         super.onEnabled()
@@ -202,46 +226,36 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         super.onDisabled()
     }
 
+    /**
+     * The head renders through the font like any other text, but only a player's profile carries the skin.
+     */
+    private fun headOf(player: Player): Component = MutableComponent.create(
+        ObjectContents(PlayerSprite(player.profile, false), optional())
+    )
+
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
-        with(it.context) {
-            pose().withPush {
-                val (width, height) = mc.window.scaledDimension
-                translate(width * 0.5f, height * 0.5f)
+        val pointerMode = pointerModes.activeMode
+        val colorMode = colorModes.activeMode
 
-                val yawRad = player.getYRot(it.tickDelta).toRadians()
-                val playerPos = player.interpolateCurrentPosition(it.tickDelta)
+        for (entity in RenderedEntities) {
+            if (entity === player || (onlyPlayers && entity !is Player)) continue
+            if (hideTeammates && ModuleTeams.isInClientPlayersTeam(entity)) continue
 
-                tiltModes.activeMode.transform(this, it.tickDelta)
+            val pos = entity.interpolateCurrentPosition(it.tickDelta)
+            val distance = pos.cameraDistance().toFloat()
+            val alpha = (alpha.transform(distance) * 255).floorToInt()
+            if (alpha == 0) continue
 
-                if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
-                    scale(-1f, 1f)
-                }
-
-                rotate(-yawRad)
-
-                for (entity in RenderedEntities) {
-                    if (entity === player || (onlyPlayers && entity !is Player)) continue
-                    val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
-
-                    val cameraDistance = entityPos.cameraDistance().toFloat()
-                    val alpha = (alpha.transform(cameraDistance) * 255).floorToInt()
-                    if (alpha == 0) continue
-
-                    val color = colorModes.activeMode.getColor(entity).alpha(alpha)
-
-                    val diffX = entityPos.x - playerPos.x
-                    val diffZ = entityPos.z - playerPos.z
-
-                    withPush {
-                        rotate(atan2(diffZ, diffX).toFloat() + Mth.HALF_PI)
-                        translate(0f, radius)
-                        with(this@with) {
-                            pointerModes.activeMode.draw(color = color)
-                        }
-                    }
-                }
-            }
+            IndicatorRenderer.submit(RadarIndicatorState(
+                pos = pos,
+                // Closer entities get a higher priority, so they end up covering the ones behind them.
+                priority = -distance.toInt(),
+                indicatorStyle = pointerMode,
+                indicatorColor = colorMode.getColor(entity).alpha(alpha),
+                showInView = showInView,
+                entity = entity,
+            ))
         }
     }
 
