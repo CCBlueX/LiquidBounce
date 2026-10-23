@@ -106,7 +106,7 @@
     }
 </script>
 
-<span class="text-component" style="min-height: {fontSize}px">
+<span class="text-component">
     {#if typeof textComponent === "string"}
         <svelte:self {fontSize} {allowPreformatting} {preFormattingMonospace} textComponent={convertLegacyCodes(textComponent)}/>
     {:else if textComponent}
