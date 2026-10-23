@@ -355,6 +355,7 @@
   "liquidbounce.module.holeEsp.description": "Знаходить і відображає безпечні місця для битви на кристалах.",
   "liquidbounce.module.holeFiller.description": "Автоматично заповнює безпечні місця для кристал-PvP.",
   "liquidbounce.module.hud.description": "Показує в ігровому інтерфейсі різні корисні інструменти.",
+  "liquidbounce.module.interceptElytra.description": "Запускає вітрові заряди у гравців, що планерують на елітрах, щоб збити їх з неба.",
   "liquidbounce.module.inventoryCleaner.description": "Автоматично викидає непотрібні предмети та сортує залишилися.",
   "liquidbounce.module.inventoryMove.description": "Дозволяє вам ходити з відкритим інвентарем.",
   "liquidbounce.module.inventoryTracker.description": "Відстежує інвентарі інших гравців.",
