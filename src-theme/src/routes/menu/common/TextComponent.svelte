@@ -118,7 +118,7 @@
                       class:strikethrough={textComponent.strikethrough ?? inheritedStrikethrough}
                       class:allow-preformatting={allowPreformatting}
                       class:monospace={preFormattingMonospace && allowPreformatting}
-                      style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
+                      style="color: {translateColor(textComponent.color ?? inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
             {:else}
                 <svelte:self {allowPreformatting} {preFormattingMonospace} {fontSize}
                              inheritedColor={textComponent.color ?? inheritedColor}
