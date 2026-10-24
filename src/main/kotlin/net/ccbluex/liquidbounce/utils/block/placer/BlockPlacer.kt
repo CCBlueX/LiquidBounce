@@ -236,11 +236,20 @@ class BlockPlacer(
 
         // we found the same path again, updating is not required
         if (currentPlaceCandidates == supportPath) {
-            currentPlaceCandidates.forEach { blocks.put(it.asLong(), true) }
+            currentPlaceCandidates.forEach { addToQueue(it, update = false, isSupport = true) }
             return
         }
 
-        currentPlaceCandidates.forEach { removeFromQueue(blockPosCache.set(it)) }
+        // A support position that is also a structural target keeps its place in the queue, only the
+        // support flag is dropped so the module's own item is used again.
+        currentPlaceCandidates.forEach {
+            val posAsLong = it.asLong()
+            if (blocks.containsKey(posAsLong)) {
+                blocks.put(posAsLong, false)
+            } else {
+                targetRenderer.removeBlock(blockPosCache.set(posAsLong))
+            }
+        }
 
         supportPath?.let { path ->
             for (pos in path) {
@@ -439,21 +448,33 @@ class BlockPlacer(
 
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
+     *
+     * Support positions are left untouched. They are picked by [SupportFeature] and their lifetime is
+     * managed by [findSupportPath]; a support path spanning multiple positions needs several ticks to
+     * be placed, so dropping them here would cut the path down to its first block every tick.
      */
     fun update(positions: Collection<BlockPos>) {
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
+
+            if (entry.booleanValue) {
+                continue
+            }
+
             val position = blockPosCache.set(entry.longKey)
             if (position !in positions) {
                 targetRenderer.removeBlock(position)
                 iterator.remove()
-            } else {
-                entry.setValue(false)
             }
         }
 
-        positions.forEach { addToQueue(it, false) }
+        // Structural targets take precedence over support positions, otherwise the support path search
+        // would strip them again and they would never be placed with the module's own item.
+        positions.forEach {
+            addToQueue(it, update = false)
+            blocks.put(it.asLong(), false)
+        }
         targetRenderer.updateAll()
     }
 
