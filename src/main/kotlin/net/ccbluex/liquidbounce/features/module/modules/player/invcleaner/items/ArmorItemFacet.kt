@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSubtype
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
@@ -36,7 +37,7 @@ class ArmorItemFacet(
     private val armorPiece = ArmorPiece(itemSlot)
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
+        get() = ItemCategory(GenericItemType.ARMOR, ItemSubtype.ArmorSlot(armorPiece.entitySlotId))
 
     override fun shouldKeep(): Boolean {
         return this.stacksToKeep.contains(this.itemSlot)
