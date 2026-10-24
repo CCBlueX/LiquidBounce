@@ -222,14 +222,15 @@ class BlockPlacer(
             val pos = blockPosCache.set(posAsLong)
 
             support.findSupport(pos)?.let { path ->
-                val size = path.size
-                if (supportPath == null || supportPath.size > size) {
-                    supportPath = path
+                // A path of a single position means the search considered the target itself placeable,
+                // which scheduleCurrentPlacements just refuted. It contains no supporting block, so it is
+                // no candidate at all - and must not stop the scan of the remaining targets.
+                if (path.size <= 1) {
+                    return@let
                 }
 
-                // one block is almost the best we can get, so why bother scanning the other blocks
-                if (size <= 1) {
-                    break
+                if (supportPath == null || supportPath.size > path.size) {
+                    supportPath = path
                 }
             }
         }
