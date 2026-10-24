@@ -254,8 +254,14 @@ class BlockPlacer(
         support.chronometer.reset()
     }
 
+    /**
+     * Schedules placements for all queued positions.
+     *
+     * @return `true` when at least one placement was scheduled. The scheduled action may still
+     * fail later (e.g. in the post-rotation task), so this is not a placement guarantee.
+     */
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
-        var hasPlaced = false
+        var hasScheduled = false
 
         val searchOptions = createSearchOptions(itemStack)
 
@@ -290,10 +296,10 @@ class BlockPlacer(
                 return true
             }
 
-            hasPlaced = true
+            hasScheduled = true
         }
 
-        return hasPlaced
+        return hasScheduled
     }
 
     private fun isBlocked(posAsLong: Long): Boolean {
@@ -339,7 +345,9 @@ class BlockPlacer(
             return false
         }
 
-        if (slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()) {
+        // Non-block items (e.g. flint and steel for ignition) are used even on solid positions
+        val canUseAtPosition = slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()
+        if (canUseAtPosition) {
             var result = false
             val onSuccess = {
                 removeFromQueue(pos)
