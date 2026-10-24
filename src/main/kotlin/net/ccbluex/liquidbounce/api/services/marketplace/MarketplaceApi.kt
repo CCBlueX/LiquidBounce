@@ -173,8 +173,8 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     suspend fun getMarketplaceItem(id: Int, session: OAuthSession? = null) =
         get<MarketplaceItem>("/marketplace/$id", headers = { session?.let { addAuth(it) } })
 
-    suspend fun getMarketplaceItemByCode(shareCode: String) =
-        get<MarketplaceItem>("/marketplace/code/${shareCode.urlEncoded()}")
+    suspend fun getMarketplaceItemByCode(shareCode: String, session: OAuthSession? = null) =
+        get<MarketplaceItem>("/marketplace/code/${shareCode.urlEncoded()}", headers = { session?.let { addAuth(it) } })
 
     // Revisions
     /**
