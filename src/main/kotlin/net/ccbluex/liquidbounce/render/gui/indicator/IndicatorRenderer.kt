@@ -94,10 +94,13 @@ object IndicatorRenderer : EventListener {
 
         val projected = WorldToScreen.calculateScreenPos(state.pos)
         val offset = projected?.let { Vector2f(it.x - centerX, it.y - centerY) }
+        // A target behind the camera has no projection to test, and is never inside the viewport.
+        val inView = offset != null && abs(offset.x) <= centerX && abs(offset.y) <= centerY
 
-        if (offset != null && !state.showInView && abs(offset.x) <= centerX && abs(offset.y) <= centerY) {
-            // Inside the viewport, which this indicator does not want. A target behind the camera never gets here,
-            // it has no projection to test.
+        if (inView && !state.showInView) {
+            return
+        }
+        if (!inView && !state.showOffscreen) {
             return
         }
 

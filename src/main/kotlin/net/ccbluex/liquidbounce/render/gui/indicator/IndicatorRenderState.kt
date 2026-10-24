@@ -49,6 +49,12 @@ interface IndicatorRenderState {
     val showInView: Boolean get() = true
 
     /**
+     * Whether the indicator is drawn while its target is outside the viewport, which includes targets behind the
+     * camera. Turning this off leaves only the targets that are on screen.
+     */
+    val showOffscreen: Boolean get() = true
+
+    /**
      * How much of the screen the arrows keep clear, as a fraction of the half-size on each axis: `0.1` keeps them
      * 10% away from every border, which shrinks the frame at the same shape as the screen.
      */

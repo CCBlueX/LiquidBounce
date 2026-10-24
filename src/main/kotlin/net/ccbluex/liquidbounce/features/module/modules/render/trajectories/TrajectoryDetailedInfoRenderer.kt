@@ -28,12 +28,18 @@ import net.ccbluex.liquidbounce.features.module.modules.render.TimeUnit
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
+import net.ccbluex.liquidbounce.render.gui.indicator.NoneIndicatorStyle
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.withFormat
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
 
 object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
@@ -64,74 +70,166 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
 
     private val scale by float("Scale", 1F, 0.25F..4F)
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
-    private fun Vec3.calcScreenPosWithOffset(): Vec3f? {
-        return WorldToScreen.calculateScreenPos(add(renderOffset))
+
+    /**
+     * Indicators for targets that cannot be seen. The edge inset belongs here, since it only decides how far
+     * inside the screen those are kept.
+     */
+    private object RenderOffscreen : ToggleableValueGroup(this, "RenderOffscreen", true) {
+        val edgeInset by float("EdgeInset", 0f, 0f..0.9f)
     }
 
-    private val fontRenderer get() = FontManager.FONT_RENDERER
+    init {
+        tree(RenderOffscreen)
+    }
 
-    val renderHandler = handler<OverlayRenderEvent> { event ->
-        with(event.context) {
-            ModuleTrajectories.simulationResults.forEachIndexed { index, (renderer, result) ->
-                val screenPos =
-                    when {
-                        showAt === ShowAt.OWNER && renderer.simulationOwner === player -> when (renderer.type) {
-                            // If this renderer is created by player holding items and showAt is OWNER,
-                            // then show at the landing position
-                            TrajectoryInfoRenderer.Type.HYPOTHETICAL ->
-                                ShowAt.LANDING.apply(renderer, result).calcScreenPosWithOffset()
+    private class TrajectoryIndicatorState(
+        override val pos: Vec3,
+        override val indicatorColor: Color4b,
+        override val edgeInset: Float,
+        override val showOffscreen: Boolean,
+        private val icon: ItemStack,
+        private val lines: List<FormattedCharSequence>,
+        private val showItem: Boolean,
+        private val scale: Float,
+    ) : IndicatorRenderState {
 
-                            else -> {
-                                val centerX = mc.window.guiScaledWidth * 0.5F
-                                val centerY = mc.window.guiScaledHeight * 0.5F
-                                Vec3f(centerX + 50F, centerY + index * (mc.font.lineHeight + 1), 0F)
-                            }
-                        }
+        override val indicatorStyle: IndicatorStyle = NoneIndicatorStyle
 
-                        else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
-                    } ?: return@forEachIndexed
+        override fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float) {
+            val width = infoBlockWidth(lines, showItem, scale)
+            val height = infoBlockHeight(lines, showItem, scale)
 
-                pose().pushMatrix()
-                pose().translate(screenPos.x, screenPos.y)
-                pose().scale(scale)
+            // The block is drawn with its top center at the origin, so an arrow to one side shifts it to the other
+            // one, and an arrow below lifts it above the anchor.
+            val shiftX = when {
+                outwardX > AXIS_TOLERANCE -> -width * 0.5F
+                outwardX < -AXIS_TOLERANCE -> width * 0.5F
+                else -> 0.0F
+            }
+            val shiftY = if (outwardY > AXIS_TOLERANCE) -height else 0.0F
 
-                val texts = buildList {
-                    add(timeUnit.format(result.positions.size).withFormat())
-                    if (distance && result.positions.isNotEmpty()) {
-                        add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".withFormat())
-                    }
-                    val displayOwner = renderer.displayOwner
-                    if (ownerName && displayOwner != null && displayOwner !== player) {
-                        add("Owner: ".withFormat() + displayOwner.displayName.sanitizeForeignInput())
-                    }
-                }
-
-                if (item) {
-                    item(renderer.icon, -8, 0)
-
-                    pose().pushMatrix()
-                    pose().translate(0F, 16F)
-                }
-                val fontRenderer = fontRenderer
-                pose().scale(fontRenderer.scaleToVanillaFont)
-                var y = 0F
-
-                for (text in texts) {
-                    fontRenderer.draw(text) {
-                        this.color = TrajectoryDetailedInfoRenderer.color
-                        this.y = y
-                        horizontalAnchor = HorizontalAnchor.CENTER
-                        shadow = true
-                    }
-
-                    y += fontRenderer.height + 1f
-                }
-                if (item) {
-                    pose().popMatrix()
-                }
-
-                pose().popMatrix()
+            ctx.pose().withPush {
+                translate(shiftX, shiftY)
+                ctx.drawInfoBlock(icon, lines, showItem, scale, indicatorColor)
             }
         }
+
     }
+
+    private fun buildLines(
+        renderer: TrajectoryInfoRenderer,
+        result: TrajectoryInfoRenderer.SimulationResult,
+    ): List<FormattedCharSequence> = buildList {
+        add(timeUnit.format(result.positions.size).withFormat())
+
+        if (distance && result.positions.isNotEmpty()) {
+            add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".withFormat())
+        }
+
+        val displayOwner = renderer.displayOwner
+        if (ownerName && displayOwner != null && displayOwner !== player) {
+            add("Owner: ".withFormat() + displayOwner.displayName.sanitizeForeignInput())
+        }
+    }
+
+    val renderHandler = handler<OverlayRenderEvent> { event ->
+        ModuleTrajectories.simulationResults.forEachIndexed { index, (renderer, result) ->
+            val lines = buildLines(renderer, result)
+
+            val worldPos = when {
+                showAt === ShowAt.OWNER && renderer.simulationOwner === player -> when (renderer.type) {
+                    // A trajectory this client predicts for itself has no meaningful world position to point at, so
+                    // it stays a stack at the crosshair instead of becoming an indicator.
+                    TrajectoryInfoRenderer.Type.HYPOTHETICAL -> ShowAt.LANDING.apply(renderer, result)
+                    else -> {
+                        val centerX = mc.window.guiScaledWidth * 0.5F
+                        val centerY = mc.window.guiScaledHeight * 0.5F
+
+                        event.context.pose().withPush {
+                            translate(centerX + 50.0F, centerY + index * (mc.font.lineHeight + 1))
+                            event.context.drawInfoBlock(renderer.icon, lines, item, scale, color)
+                        }
+
+                        return@forEachIndexed
+                    }
+                }
+
+                else -> showAt.apply(renderer, result)
+            }
+
+            IndicatorRenderer.submit(TrajectoryIndicatorState(
+                pos = worldPos.add(renderOffset),
+                indicatorColor = color,
+                edgeInset = RenderOffscreen.edgeInset,
+                showOffscreen = RenderOffscreen.enabled,
+                icon = renderer.icon,
+                lines = lines,
+                showItem = item,
+                scale = scale,
+            ))
+        }
+    }
+
+}
+
+private const val ITEM_SIZE = 16.0F
+private const val LINE_GAP = 1.0F
+
+/**
+ * Below this the arrow counts as pointing straight along the other axis, so the block stays centred on it.
+ */
+private const val AXIS_TOLERANCE = 0.1F
+
+/**
+ * Draws [icon] and [lines] with the block's top centre at the current pose origin.
+ */
+private fun GuiGraphicsExtractor.drawInfoBlock(
+    icon: ItemStack,
+    lines: List<FormattedCharSequence>,
+    showItem: Boolean,
+    scale: Float,
+    color: Color4b,
+) {
+    val fontRenderer = FontManager.FONT_RENDERER
+
+    pose().withPush {
+        scale(scale)
+
+        var top = 0.0F
+        if (showItem) {
+            item(icon, -8, 0)
+            top = ITEM_SIZE
+        }
+
+        translate(0.0F, top)
+        scale(fontRenderer.scaleToVanillaFont)
+
+        var y = 0.0F
+        for (line in lines) {
+            fontRenderer.draw(line) {
+                this.color = color
+                this.y = y
+                horizontalAnchor = HorizontalAnchor.CENTER
+                shadow = true
+            }
+
+            y += fontRenderer.height + LINE_GAP
+        }
+    }
+}
+
+private fun infoBlockWidth(lines: List<FormattedCharSequence>, showItem: Boolean, scale: Float): Float {
+    val fontRenderer = FontManager.FONT_RENDERER
+    val textWidth = lines.maxOfOrNull { fontRenderer.getStringWidth(it) } ?: 0.0F
+    val contentWidth = maxOf(if (showItem) ITEM_SIZE else 0.0F, textWidth * fontRenderer.scaleToVanillaFont)
+
+    return contentWidth * scale
+}
+
+private fun infoBlockHeight(lines: List<FormattedCharSequence>, showItem: Boolean, scale: Float): Float {
+    val fontRenderer = FontManager.FONT_RENDERER
+    val textHeight = lines.size * (fontRenderer.height + LINE_GAP) * fontRenderer.scaleToVanillaFont
+
+    return (if (showItem) ITEM_SIZE + textHeight else textHeight) * scale
 }
