@@ -35,11 +35,11 @@ import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTexQuad
-import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
+import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
@@ -55,7 +55,6 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.objects.PlayerSprite
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -82,13 +81,15 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     }
 
     /**
-     * Arrows are drawn along their local +Y axis, base first, so that [length] is the distance from the base to the
-     * tip [IndicatorRenderer] puts on the anchor.
+     * The arrow the active pointer mode draws, built once per frame so the reusable styles stay free of
+     * configuration.
      */
-    private sealed class PointerMode(name: String) : Mode(name), IndicatorStyle {
+    private sealed class PointerMode(name: String) : Mode(name) {
 
         final override val parent: ModeValueGroup<*>
             get() = pointerModes
+
+        abstract fun style(): IndicatorStyle
 
         object Triangle : PointerMode("Triangle") {
             private val width by float("Width", 8f, 1f..100f)
@@ -97,38 +98,10 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 minOf(it, height)
             }
 
-            override val length: Float
-                get() = height
-
-            override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) {
-                if (Mth.equal(tailConcaveSize, 0f)) {
-                    ctx.drawTriangle(
-                        x0 = -width * 0.5f, y0 = 0f,
-                        x1 = 0f, y1 = height,
-                        x2 = width * 0.5f, y2 = 0f,
-                        fillColor = color,
-                        cull = false,
-                    )
-                } else {
-                    ctx.drawTriangle(
-                        x0 = -width * 0.5f, y0 = 0f,
-                        x1 = 0f, y1 = height,
-                        x2 = 0f, y2 = tailConcaveSize,
-                        fillColor = color,
-                        cull = false,
-                    ) // left
-                    ctx.drawTriangle(
-                        x0 = 0f, y0 = tailConcaveSize,
-                        x1 = 0f, y1 = height,
-                        x2 = width * 0.5f, y2 = 0f,
-                        fillColor = color,
-                        cull = false,
-                    ) // right
-                }
-            }
+            override fun style() = TriangleIndicatorStyle(width, height, tailConcaveSize)
         }
 
-        class ImageMode(name: String, val texture: AbstractTexture) : PointerMode(name) {
+        class ImageMode(name: String, val texture: AbstractTexture) : PointerMode(name), IndicatorStyle {
             constructor(name: String, nativeImage: NativeImage) : this(name, nativeImage.asTexture { "Radar $name" })
 
             private val size by float("Size", 10f, 1f..100f)
@@ -145,6 +118,9 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                     pipeline = ClientRenderPipelines.GUI.TexQuadNoCull,
                 )
             }
+
+            // Its own texture is not reusable, so it is its own style.
+            override fun style(): IndicatorStyle = this
         }
     }
 
@@ -237,7 +213,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
-        val pointerMode = pointerModes.activeMode
+        val style = pointerModes.activeMode.style()
         val colorMode = colorModes.activeMode
 
         for (entity in RenderedEntities) {
@@ -253,7 +229,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 pos = pos,
                 // Closer entities get a higher priority, so they end up covering the ones behind them.
                 priority = -distance.toInt(),
-                indicatorStyle = pointerMode,
+                indicatorStyle = style,
                 indicatorColor = colorMode.getColor(entity).alpha(alpha),
                 showInView = showInView,
                 edgeInset = edgeInset,
