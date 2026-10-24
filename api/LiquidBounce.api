@@ -523,6 +523,7 @@ public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccblu
 public final class net/ccbluex/liquidbounce/event/events/TagEntityEvent : net/ccbluex/liquidbounce/event/Event {
 	public fun <init> (Lnet/minecraft/world/entity/Entity;Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;)V
 	public final fun assumeFriend ()V
+	public final fun assumePartyMember ()V
 	public final fun color (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;)V
 	public final fun dontTarget ()V
 	public final fun getColor ()Lnet/ccbluex/liquidbounce/utils/kotlin/PriorityField;
@@ -653,6 +654,62 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 }
 
 public final class net/ccbluex/liquidbounce/features/blink/BlinkManager : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/ChatNotices : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/ChatSession : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/party/LocationReporter : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/party/PartyManager : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/party/PartyMemberStates : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/party/PartyStandIns : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker, net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/party/PartyStateReporter : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -1814,14 +1871,20 @@ public final class net/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo {
 	public static final field Companion Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo$Companion;
 	public static final field DEFAULT Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
 	public fun <init> (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;Z)V
+	public fun <init> (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;ZZ)V
+	public synthetic fun <init> (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;
 	public final fun component2 ()Z
-	public final fun copy (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;Z)Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
+	public final fun component3 ()Z
+	public final synthetic fun copy (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;Z)Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
+	public final fun copy (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;ZZ)Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
 	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;ZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
+	public static synthetic fun copy$default (Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;ZZILjava/lang/Object;)Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetingInfo;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getClassification ()Lnet/ccbluex/liquidbounce/utils/combat/EntityTargetClassification;
 	public fun hashCode ()I
 	public final fun isFriend ()Z
+	public final fun isPartyMember ()Z
 	public fun toString ()Ljava/lang/String;
 }
 

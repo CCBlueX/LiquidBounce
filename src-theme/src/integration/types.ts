@@ -274,6 +274,88 @@ export interface ItemStack {
     enchantments?: Record<string, number>;
 }
 
+export interface ChatUserRef {
+    id: string;
+    kind: "account" | "mojang";
+    name: string;
+    uuid: string;
+    minecraft: { uuid: string; name: string } | null;
+}
+
+export interface ChatRole {
+    id: string;
+    name: string;
+    staff: boolean;
+}
+
+export interface ChatAuthor extends ChatUserRef {
+    roles: ChatRole[] | null;
+    highlight: boolean;
+}
+
+export type PartyRelation = "self" | "nearby" | "world" | "instance" | "server" | "elsewhere" | "offline";
+
+export interface PartyMember {
+    user: ChatUserRef;
+    role: "leader" | "admin" | "member";
+    online: boolean;
+    muted: boolean;
+    relation: PartyRelation;
+    player: { uuid: string; name: string } | null;
+    server: string | null;
+}
+
+export interface Party {
+    id: string;
+    leader: string;
+    locked: boolean;
+    pvp: boolean;
+    members: PartyMember[];
+}
+
+export interface PartyPosition extends Vec3 {
+    yaw: number;
+    pitch: number;
+    dimension: string;
+}
+
+// Items without their default fields; empty slots are null
+export interface PartyItemStack {
+    identifier: string;
+    count: number;
+    damage?: number;
+    maxDamage?: number;
+    displayName?: TextComponent | string;
+    enchantments?: Record<string, number>;
+}
+
+export interface PartyMemberStatus {
+    health: number;
+    max_health: number;
+    absorption: number;
+    food: number;
+    saturation: number;
+    armor: number;
+    xp_level: number;
+    game_mode: string;
+    ping: number;
+    dead: boolean;
+    effects: { id: string; amplifier: number; duration: number }[];
+    main_hand: PartyItemStack | null;
+    off_hand: PartyItemStack | null;
+    armor_items: (PartyItemStack | null)[];
+}
+
+export interface PartyMemberView {
+    position: PartyPosition | null;
+    status: PartyMemberStatus | null;
+}
+
+export interface PartySnapshot {
+    party: Party | null;
+    states: Record<string, PartyMemberView>;
+}
+
 export interface PrintableKey {
     translationKey: string;
     localized: string;

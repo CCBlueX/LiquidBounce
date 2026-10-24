@@ -18,6 +18,7 @@ import type {
     Metadata,
     MinecraftKeybind,
     Module,
+    PartySnapshot,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
@@ -190,6 +191,15 @@ export async function getPlayerInventory(): Promise<PlayerInventory> {
     const data: PlayerInventory = await response.json();
 
     return data;
+}
+
+export async function getParty(): Promise<PartySnapshot | null> {
+    const response = await fetch(`${API_BASE}/client/party`);
+    if (response.status === 204) {
+        return null;
+    }
+
+    return await response.json();
 }
 
 export async function getCrosshairData(): Promise<HitResult> {

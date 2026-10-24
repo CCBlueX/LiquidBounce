@@ -48,6 +48,8 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.client.liquidchat.CommandLiquidChat
+import net.ccbluex.liquidbounce.features.command.commands.client.liquidchat.CommandParty
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
@@ -163,6 +165,8 @@ object CommandManager : EventListener {
         register(CommandRemoteView)
         register(CommandDebug)
         register(CommandFriend)
+        register(CommandLiquidChat)
+        register(CommandParty)
         register(CommandClient)
         register(CommandConfig)
         register(CommandLocalConfig)
@@ -393,18 +397,8 @@ object CommandManager : EventListener {
         }
     }
 
-    /**
-     * Builds the usage lines for a command context, based on the Brigadier tree
-     * ([CommandDispatcher.getSmartUsage]).
-     */
-    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
-        val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
-        val commandPath = context.nodes.joinToString(" ") { it.node.name }
-
-        return getDispatcher().getSmartUsage(lastNode, ClientCommandSource)
-            .values
-            .map { usage -> "$commandPath $usage".asPlainText() }
-    }
+    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>) =
+        commandUsage(getDispatcher(), context)
 
     /**
      * Tokenizes the [line].
@@ -605,6 +599,23 @@ internal fun normalizeCommandSpaces(input: String): String {
     }
 
     return builder.toString()
+}
+
+/**
+ * A path typed through an alias continues in a redirected child context, and a bare alias has no
+ * children of its own, so both are followed to the target.
+ */
+internal fun commandUsage(
+    dispatcher: CommandDispatcher<ClientCommandSource>,
+    context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>,
+): List<Component> {
+    val nodes = generateSequence(context) { it.child }.flatMap { it.nodes }.toList()
+    val lastNode = nodes.lastOrNull()?.node ?: return emptyList()
+    val commandPath = nodes.joinToString(" ") { it.node.name }
+
+    return dispatcher.getSmartUsage(lastNode.redirect ?: lastNode, ClientCommandSource)
+        .values
+        .map { usage -> "$commandPath $usage".asPlainText() }
 }
 
 /**

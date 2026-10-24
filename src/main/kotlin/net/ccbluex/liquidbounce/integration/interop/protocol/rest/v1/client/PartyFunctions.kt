@@ -16,28 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.chat.packet
 
-import com.google.gson.annotations.SerializedName
-import java.util.UUID
 
-sealed interface AxochatPacket {
-    sealed interface C2S : AxochatPacket
-    sealed interface S2C : AxochatPacket
+package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-    annotation class Metadata(val name: String)
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.features.chat.party.PartyManager
+import net.ccbluex.liquidbounce.features.chat.party.PartyMemberStates
+
+// GET /api/v1/client/party
+internal fun Route.partyRoutes() = get("/party") {
+    val party = PartyManager.party
+    if (party == null) {
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    } else {
+        call.respond(interopGson.toJsonTree(mapOf("party" to party, "states" to PartyMemberStates.views())))
+    }
 }
-
-/**
- * A axochat user
- *
- * @param name of user
- * @param uuid of user
- */
-@JvmRecord
-data class AxoUser(
-    @SerializedName("name")
-    val name: String,
-    @SerializedName("uuid")
-    val uuid: UUID,
-)

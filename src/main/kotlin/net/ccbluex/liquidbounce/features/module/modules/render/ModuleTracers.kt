@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.chat.party.PartyStandIns
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -56,6 +57,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
         )
     }
 
+    private val partyColor by color("Party", Color4b(70, 119, 255))
+
     private val lineWidth by float("LineWidth", 1f, 1f..16f)
 
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
@@ -78,19 +81,23 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
 
             val maxDistanceSq = maximumDistance.sq()
             for (entity in RenderedEntities) {
+                val standIn = PartyStandIns.isStandIn(entity)
                 val distanceSq = entity.position().cameraDistanceSq().toFloat()
-                if (distanceSq > maxDistanceSq) {
+                if (!standIn && distanceSq > maxDistanceSq) {
                     continue
                 }
 
-                val color = if (FriendManager.isFriend(entity)) {
-                    Color4b.BLUE
-                } else {
-                    EntityTaggingManager.getTag(entity).color ?: modes.activeMode.getColor(entity)
+                val tag = EntityTaggingManager.getTag(entity)
+                val color = when {
+                    tag.targetingInfo.isPartyMember -> partyColor
+                    FriendManager.isFriend(entity) -> Color4b.BLUE
+                    else -> tag.color ?: modes.activeMode.getColor(entity)
                 }
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks).subtract(camera.position()).toVec3f()
-                val topPos = pos.add(0f, entity.bbHeight, 0f)
+                val actual = entity.interpolateCurrentPosition(event.partialTicks)
+                val (position, size) = if (standIn) PartyStandIns.anchor(actual, camera.position()) else actual to 1.0
+                val pos = position.subtract(camera.position()).toVec3f()
+                val topPos = pos.add(0f, entity.bbHeight * size.toFloat(), 0f)
 
                 if (lineWidth == 1.0f) {
                     drawLines(color.argb, eyeVector, pos, pos, topPos)

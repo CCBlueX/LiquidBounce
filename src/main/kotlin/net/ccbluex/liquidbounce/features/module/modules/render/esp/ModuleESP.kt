@@ -65,6 +65,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
     }
     private val invisibleColor by color("Invisible", Color4b.ORANGE)
     private val friendColor by color("Friends", Color4b.GREEN)
+    private val partyColor by color("Party", Color4b(70, 119, 255))
 
     internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
@@ -86,11 +87,16 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
         }
 
         if (entity is Player) {
+            val tag = EntityTaggingManager.getTag(entity)
+            if (tag.targetingInfo.isPartyMember && partyColor.a > 0) {
+                return partyColor
+            }
+
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
             }
 
-            EntityTaggingManager.getTag(entity).color?.let { return it }
+            tag.color?.let { return it }
         }
 
         return colorModes.activeMode.getColor(entity)

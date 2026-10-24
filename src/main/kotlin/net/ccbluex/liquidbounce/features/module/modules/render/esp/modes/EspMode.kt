@@ -23,9 +23,11 @@ import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.chat.party.PartyStandIns
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
@@ -43,7 +45,8 @@ sealed class EspMode(
         get() = modes
 
     fun shouldRender(entity: Entity?): Boolean {
-        return entity != null && entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq()
+        return entity != null && (PartyStandIns.isStandIn(entity) ||
+            entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq())
     }
 
     sealed class BoxBased(name: String) : EspMode(name) {
@@ -79,23 +82,34 @@ sealed class EspMode(
         protected class BoxBasedEspRenderState {
             @JvmField var entity: LivingEntity? = null
             @JvmField var localBox: AABB = EMPTY_BOX
+            @JvmField var drawnBox: AABB = EMPTY_BOX
             @JvmField var position: Vec3 = Vec3.ZERO
             @JvmField var worldBox: AABB = EMPTY_BOX
 
             fun update(tickDelta: Float) {
-                position = entity?.interpolateCurrentPosition(tickDelta) ?: Vec3.ZERO
-                worldBox = localBox.move(position)
+                val entity = entity
+                val actual = entity?.interpolateCurrentPosition(tickDelta) ?: Vec3.ZERO
+                if (entity != null && PartyStandIns.isStandIn(entity)) {
+                    val (anchored, scale) = PartyStandIns.anchor(actual, mc.gameRenderer.mainCamera().position())
+                    position = anchored
+                    drawnBox = localBox.scaled(scale)
+                } else {
+                    position = actual
+                    drawnBox = localBox
+                }
+                worldBox = drawnBox.move(position)
             }
 
             fun reset() {
                 entity = null
                 localBox = EMPTY_BOX
+                drawnBox = EMPTY_BOX
                 position = Vec3.ZERO
                 worldBox = EMPTY_BOX
             }
 
             operator fun component1() = entity!!
-            operator fun component2() = localBox
+            operator fun component2() = drawnBox
             operator fun component3() = position
             operator fun component4() = worldBox
         }
@@ -114,3 +128,6 @@ sealed class EspMode(
         }
     }
 }
+
+private fun AABB.scaled(scale: Double) =
+    AABB(minX * scale, minY * scale, minZ * scale, maxX * scale, maxY * scale, maxZ * scale)

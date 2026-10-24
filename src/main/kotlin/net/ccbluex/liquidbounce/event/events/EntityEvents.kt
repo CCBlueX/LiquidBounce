@@ -68,6 +68,10 @@ class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo)
         this.targetingInfo = targetingInfo.copy(isFriend = true)
     }
 
+    fun assumePartyMember() {
+        this.targetingInfo = targetingInfo.copy(isPartyMember = true)
+    }
+
     fun color(col: Color4b, priority: Priority) {
         this.color.trySet(col, priority)
     }

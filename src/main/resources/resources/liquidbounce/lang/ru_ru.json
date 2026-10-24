@@ -241,7 +241,6 @@
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.notifyDeveloper": "Проверьте свои логи и оповестите нас.",
   "liquidbounce.liquidchat.authenticationFailed": "Аутентификация не удалась! LiquidChat требует премиум-аккаунт Minecraft.",
-  "liquidbounce.liquidchat.jwtTokenReceived": "Получен JWT токен! Перезагружаемся...",
   "liquidbounce.liquidchat.notConnected": "Нет подключения к серверу чата! Включите модуль LiquidChat!",
   "liquidbounce.liquidchat.notLoggedIn": "Не авторизован! Вы можете общаться только с премиум-аккаунтом Minecraft, извините!",
   "liquidbounce.liquidchat.states.connected": "Подключено к серверу чата!",

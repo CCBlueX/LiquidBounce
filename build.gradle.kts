@@ -155,6 +155,9 @@ dependencies {
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
 
+    // LiquidChat protocol client
+    jij(libs.axochat.client)
+
     // TheAltening alt service
     jij(libs.thealtening)
 
