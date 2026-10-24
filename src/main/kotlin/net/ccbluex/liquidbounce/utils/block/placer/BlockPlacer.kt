@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -28,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -57,7 +57,6 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -75,7 +74,7 @@ import kotlin.math.max
 @Suppress("TooManyFunctions")
 class BlockPlacer(
     name: String,
-    val module: ClientModule,
+    val parent: EventListener,
     val priority: Priority,
     val slotFinder: Function<BlockPos?, HotbarItemSlot?>,
     allowSupportPlacements: Boolean = true
@@ -99,11 +98,24 @@ class BlockPlacer(
      */
     private val sneak by intRange("Sneak", 1..1, 0..10, "ticks")
 
-    private val ignores by multiEnumChoice("Ignore", Ignore.entries)
+    private val ignores by multiEnumChoice("Ignore", enumSetAllOf<Ignore>())
 
     val ignoreOpenInventory get() = Ignore.OPEN_INVENTORY in ignores
 
     val ignoreUsingItem get() = Ignore.USING_ITEM in ignores
+
+    /**
+     * Whether the placer may act right now: no container screen and no item use, unless the matching
+     * [Ignore] option is enabled.
+     *
+     * Modules that gate their own target search on the same conditions should consult this instead of
+     * repeating the checks, so their search cannot disagree with what the placer is doing.
+     */
+    fun canAct(): Boolean {
+        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
+        val usingItem = !ignoreUsingItem && player.isUsingItem
+        return !inventoryOpen && !usingItem
+    }
 
     val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
@@ -121,12 +133,12 @@ class BlockPlacer(
         }
     }
 
-    val crystalDestroyer = tree(CrystalDestroyFeature(this, module))
+    val crystalDestroyer = tree(CrystalDestroyFeature(this))
 
     /**
      * Renders all tracked positions that are queued to be placed.
      */
-    val targetRenderer = tree(PlacementRenderer("TargetRendering", false, module))
+    val targetRenderer = tree(PlacementRenderer("TargetRendering", false, parent))
 
     /**
      * Renders all placements.
@@ -134,7 +146,7 @@ class BlockPlacer(
     val placedRenderer = tree(PlacementRenderer(
         "PlacedRendering",
         true,
-        module,
+        parent,
         keep = false
     ))
 
@@ -163,9 +175,13 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
-        val usingItem = !ignoreUsingItem && player.isUsingItem
-        if (inventoryOpen || usingItem) {
+        if (!canAct()) {
+            return@handler
+        }
+
+        // Still cooling down, so there is nothing to place this tick. Scheduling would only lock the
+        // rotation target and burn a target-finding pass for an action that is dropped afterwards.
+        if (ticksToWait > 0) {
             return@handler
         }
 
@@ -221,25 +237,35 @@ class BlockPlacer(
             val pos = blockPosCache.set(posAsLong)
 
             support.findSupport(pos)?.let { path ->
-                val size = path.size
-                if (supportPath == null || supportPath.size > size) {
-                    supportPath = path
+                // A path of a single position means the search considered the target itself placeable,
+                // which scheduleCurrentPlacements just refuted. It contains no supporting block, so it is
+                // no candidate at all - and must not stop the scan of the remaining targets.
+                if (path.size <= 1) {
+                    return@let
                 }
 
-                // one block is almost the best we can get, so why bother scanning the other blocks
-                if (size <= 1) {
-                    break
+                if (supportPath == null || supportPath.size > path.size) {
+                    supportPath = path
                 }
             }
         }
 
         // we found the same path again, updating is not required
         if (currentPlaceCandidates == supportPath) {
-            currentPlaceCandidates.forEach { blocks.put(it.asLong(), true) }
+            currentPlaceCandidates.forEach { addToQueue(it, update = false, isSupport = true) }
             return
         }
 
-        currentPlaceCandidates.forEach { removeFromQueue(blockPosCache.set(it)) }
+        // A support position that is also a structural target keeps its place in the queue, only the
+        // support flag is dropped so the module's own item is used again.
+        currentPlaceCandidates.forEach {
+            val posAsLong = it.asLong()
+            if (blocks.containsKey(posAsLong)) {
+                blocks.put(posAsLong, false)
+            } else {
+                targetRenderer.removeBlock(blockPosCache.set(posAsLong))
+            }
+        }
 
         supportPath?.let { path ->
             for (pos in path) {
@@ -253,8 +279,14 @@ class BlockPlacer(
         support.chronometer.reset()
     }
 
+    /**
+     * Schedules placements for all queued positions.
+     *
+     * @return `true` when at least one placement was scheduled. The scheduled action may still
+     * fail later (e.g. in the post-rotation task), so this is not a placement guarantee.
+     */
     private fun scheduleCurrentPlacements(itemStack: ItemStack): Boolean {
-        var hasPlaced = false
+        var hasScheduled = false
 
         val searchOptions = createSearchOptions(itemStack)
 
@@ -289,10 +321,10 @@ class BlockPlacer(
                 return true
             }
 
-            hasPlaced = true
+            hasScheduled = true
         }
 
-        return hasPlaced
+        return hasScheduled
     }
 
     private fun isBlocked(posAsLong: Long): Boolean {
@@ -304,9 +336,7 @@ class BlockPlacer(
 
         val blockedResult = pos.isBlockedByEntitiesReturnCrystal()
         if (crystalDestroyer.enabled) {
-            blockedResult.value()?.let {
-                crystalDestroyer.currentTarget = it
-            }
+            blockedResult.value()?.let(crystalDestroyer::suggestTarget)
         }
 
         if (blockedResult.keyBoolean()) {
@@ -338,7 +368,9 @@ class BlockPlacer(
             return false
         }
 
-        if (slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()) {
+        // Non-block items (e.g. flint and steel for ignition) are used even on solid positions
+        val canUseAtPosition = slot.itemStack.item !is BlockItem || pos.stateOrEmpty.canBeReplaced()
+        if (canUseAtPosition) {
             var result = false
             val onSuccess = {
                 removeFromQueue(pos)
@@ -430,21 +462,42 @@ class BlockPlacer(
 
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
+     *
+     * Support positions are left untouched as long as they still support a target. They are picked by
+     * [SupportFeature] and their lifetime is managed by [findSupportPath]; a support path spanning multiple
+     * positions needs several ticks to be placed, so dropping them here would cut the path down to its
+     * first block every tick. Once the target they were built for is gone, they are dropped.
      */
     fun update(positions: Collection<BlockPos>) {
+        val supportDepth = support.depth
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
+
+            if (entry.booleanValue) {
+                val supportPos = blockPosCache.set(entry.longKey)
+                // The search never picks a support position farther than Support.Depth from its target,
+                // so anything past that distance belongs to a target that is no longer queued.
+                if (positions.none { it.distManhattan(supportPos) <= supportDepth }) {
+                    targetRenderer.removeBlock(supportPos)
+                    iterator.remove()
+                }
+                continue
+            }
+
             val position = blockPosCache.set(entry.longKey)
             if (position !in positions) {
                 targetRenderer.removeBlock(position)
                 iterator.remove()
-            } else {
-                entry.setValue(false)
             }
         }
 
-        positions.forEach { addToQueue(it, false) }
+        // Structural targets take precedence over support positions, otherwise the support path search
+        // would strip them again and they would never be placed with the module's own item.
+        positions.forEach {
+            addToQueue(it, update = false)
+            blocks.put(it.asLong(), false)
+        }
         targetRenderer.updateAll()
     }
 
@@ -504,7 +557,7 @@ class BlockPlacer(
         inaccessible.clear()
     }
 
-    override fun parent(): EventListener = module
+    override fun parent(): EventListener = parent
 
     private enum class Ignore(override val tag: String) : Tagged {
         OPEN_INVENTORY("OpenInventory"),

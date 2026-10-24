@@ -729,11 +729,7 @@ fun BlockPos.isUnobstructed(
     except: Entity? = null,
     box: AABB = FULL_BOX,
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
-): Boolean {
-    val posBox = box + this
-    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
-        .isEmpty()
-}
+): Boolean = getBlockingEntities(except, box, predicate).isEmpty()
 
 fun BlockPos.getBlockingEntities(
     except: Entity? = null,

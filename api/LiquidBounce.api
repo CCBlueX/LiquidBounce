@@ -1431,10 +1431,10 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationManager : net/c
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;ILnet/ccbluex/liquidbounce/features/module/ClientModule;)V
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
-	public static synthetic fun setRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationManager;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;ILnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
+	public static synthetic fun setRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationManager;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)V
 }
 
 public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
