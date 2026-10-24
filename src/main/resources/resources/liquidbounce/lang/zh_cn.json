@@ -425,6 +425,7 @@
   "liquidbounce.module.autoBuild.messages.noFlintAndSteel": "没有打火石，无法启动传送门, 关闭中...",
   "liquidbounce.module.autoBuild.messages.noObsidian": "没有足够的黑曜石, 关闭中...",
   "liquidbounce.module.autoBuild.messages.noPosition": "没有找到合适的位置，关闭中...",
+  "liquidbounce.module.autoBuild.messages.igniteTimeout": "无法点燃传送门，关闭中...",
   "liquidbounce.module.autoChatGame.description": "使用OpenAI玩聊天游戏。",
   "liquidbounce.module.autoClicker.description": "按住鼠标按钮时自动点击。",
   "liquidbounce.module.autoConfig.description": "自动应用适合你当前游玩的服务器的正确配置。",

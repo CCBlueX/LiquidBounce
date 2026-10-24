@@ -483,6 +483,7 @@
   "liquidbounce.module.autoBuild.messages.noFlintAndSteel": "No flint-and-steel found, disabling...",
   "liquidbounce.module.autoBuild.messages.noObsidian": "No obsidian found, disabling...",
   "liquidbounce.module.autoBuild.messages.noPosition": "No possible position found, disabling...",
+  "liquidbounce.module.autoBuild.messages.igniteTimeout": "The portal could not be ignited, disabling...",
   "liquidbounce.module.autoChatGame.description": "Uses OpenAI to play chat games.",
   "liquidbounce.module.autoClicker.description": "Clicks automatically when holding down the attack button.",
   "liquidbounce.module.autoConfig.description": "Automatically applies the correct config for the server you are playing on.",
