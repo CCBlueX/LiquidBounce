@@ -73,6 +73,7 @@ enum class ValueType(
     // Groups
     // todo: rename to VALUE_GROUP
     CONFIGURABLE,
+    ENTITY_SELECTOR,
     // todo: rename to TOGGLEABLE_GROUP
     TOGGLEABLE,
     // todo: rename to MODE_GROUP

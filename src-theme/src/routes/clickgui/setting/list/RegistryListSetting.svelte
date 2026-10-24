@@ -22,4 +22,10 @@
     });
 </script>
 
-<GenericListSetting {path} bind:setting={setting} {items} on:change />
+<GenericListSetting
+    {path}
+    bind:setting={setting}
+    {items}
+    showBulkActions
+    on:change
+/>
