@@ -75,7 +75,13 @@ class NormalRotationMode(
             onFinished.run()
             if (aimAfterInstantAction) {
                 mc.execute {
-                    RotationManager.setRotationTarget(rotation, !ignoreOpenInventory, rotations, priority, eventListener)
+                    RotationManager.setRotationTarget(
+                        rotation,
+                        !ignoreOpenInventory,
+                        rotations,
+                        priority,
+                        eventListener
+                    )
                 }
             }
 

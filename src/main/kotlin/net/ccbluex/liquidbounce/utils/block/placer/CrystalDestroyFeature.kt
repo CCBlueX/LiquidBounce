@@ -45,7 +45,10 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     private val rotationMode = modes(this, "RotationMode") {
-        arrayOf(NormalRotationMode(it, eventListener, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, eventListener))
+        [
+            NormalRotationMode(it, eventListener, Priority.IMPORTANT_FOR_USAGE_3),
+            NoRotationMode(it, eventListener),
+        ]
     }
 
     private val chronometer = Chronometer()
