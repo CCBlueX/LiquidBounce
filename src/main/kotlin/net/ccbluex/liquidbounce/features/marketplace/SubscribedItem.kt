@@ -204,22 +204,21 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
         val part = itemDir.resolve(".$revisionId.part")
         val progress = subTask?.let { subTask ->
-            OkHttpProgressInterceptor.ProgressListener { bytesRead, contentLength, _ ->
-                subTask.update(bytesRead, contentLength)
-            }
+            OkHttpProgressInterceptor.ProgressListener(subTask::update)
         }
 
-        try {
-            withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
+            try {
                 part.deleteRecursively()
                 // TODO: Check checksum
                 request(MarketplaceApi.downloadRevision(id, revisionId), HttpMethod.GET, progressListener = progress)
                     .use { response -> extractZip(response.body.byteStream(), part) }
+                part.rename(unpacked)
+            } finally {
+                part.deleteRecursively()
             }
-            part.rename(unpacked)
-        } finally {
-            part.deleteRecursively()
         }
+
         return unpacked
     }
 
