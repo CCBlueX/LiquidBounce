@@ -256,6 +256,31 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
         this.rotationThreadLocal.remove();
 
+        applyNoRotateSet(prevRotation, player);
+    }
+
+    @WrapMethod(method = "handleRotatePlayer")
+    private void wrapNoRotateSet(ClientboundPlayerRotationPacket packet, Operation<Void> original) {
+        var player = Minecraft.getInstance().player;
+        if (player == null || !ModuleNoRotateSet.INSTANCE.getRunning()
+                || Minecraft.getInstance().gui.screen() instanceof LevelLoadingScreen) {
+            original.call(packet);
+            return;
+        }
+
+        var prevRotation = new Rotation(player.getYRot(), player.getXRot(), true);
+        original.call(packet);
+        applyNoRotateSet(prevRotation, player);
+    }
+
+    /**
+     * Restores the rotation the player was looking at before the server changed it.
+     *
+     * Both handlers also move the old rotation to the server-side values, so the restored angle has to be
+     * written to the old rotation too, otherwise the camera interpolates back to the server-side angle.
+     */
+    @Unique
+    private static void applyNoRotateSet(Rotation prevRotation, Player player) {
         if (ModuleNoRotateSet.INSTANCE.getMode().getActiveMode() == ModuleNoRotateSet.ResetRotation.INSTANCE) {
             // Changes your server side rotation and then resets it with provided settings
             var rotationTarget = ModuleNoRotateSet.ResetRotation.INSTANCE.getRotations().toRotationTarget(
@@ -271,6 +296,7 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         // just to update the rotation server-side.
         player.setYRot(prevRotation.yRot() + 0.000001f);
         player.setXRot(prevRotation.xRot() + 0.000001f);
+        player.setOldRot();
     }
 
     @ModifyVariable(method = "sendChat", at = @At("HEAD"), argsOnly = true, name = "content")
