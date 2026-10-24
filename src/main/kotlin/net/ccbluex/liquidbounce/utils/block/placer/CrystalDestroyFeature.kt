@@ -52,18 +52,34 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
     private val chronometer = Chronometer()
 
     var currentTarget: EndCrystal? = null
-        set(value) {
-            if (value != field && value != null) {
-                raytraceBox(
-                    player.eyePosition,
-                    value.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = wallRange.toDouble(),
-                )?.let { field = value }
-            } else {
-                field = value
-            }
+        private set
+
+    /**
+     * Suggests [crystal] as the crystal to destroy. The candidate is only accepted when it is reachable
+     * and closer to the player's eye than the current target, so the choice does not depend on the order
+     * in which blocked positions happen to be visited.
+     */
+    fun suggestTarget(crystal: EndCrystal) {
+        val current = currentTarget
+        if (current === crystal) {
+            return
         }
+
+        if (current != null && current.distanceToSqr(player.eyePosition) <= crystal.distanceToSqr(player.eyePosition)) {
+            return
+        }
+
+        raytraceBox(
+            player.eyePosition,
+            crystal.boundingBox,
+            range = range.toDouble(),
+            wallsRange = wallRange.toDouble(),
+        )?.let { currentTarget = crystal }
+    }
+
+    fun clearTarget() {
+        currentTarget = null
+    }
 
     val repeatable = handler<GameTickEvent> {
         val target = currentTarget ?: return@handler
@@ -73,7 +89,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
         }
 
         if (wouldKill(target)) {
-            currentTarget = null
+            clearTarget()
             return@handler
         }
 
@@ -101,13 +117,13 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
             val target = currentTarget ?: return@rotate
 
             if (wouldKill(target)) {
-                currentTarget = null
+                clearTarget()
                 return@rotate
             }
 
             attackEntity(target, swingMode)
             chronometer.reset()
-            currentTarget = null
+            clearTarget()
         })
     }
 
@@ -125,7 +141,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
 
         val packet = it.packet
         if (packet is ClientboundRemoveEntitiesPacket && target.id in packet.entityIds) {
-            currentTarget = null
+            clearTarget()
         }
     }
 
@@ -133,7 +149,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
      * This should be called when the module using this destroyer is disabled.
      */
     fun onDisable() {
-        currentTarget = null
+        clearTarget()
     }
 
 }

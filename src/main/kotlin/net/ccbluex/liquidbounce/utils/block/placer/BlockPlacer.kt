@@ -327,9 +327,7 @@ class BlockPlacer(
 
         val blockedResult = pos.isBlockedByEntitiesReturnCrystal()
         if (crystalDestroyer.enabled) {
-            blockedResult.value()?.let {
-                crystalDestroyer.currentTarget = it
-            }
+            blockedResult.value()?.let(crystalDestroyer::suggestTarget)
         }
 
         if (blockedResult.keyBoolean()) {

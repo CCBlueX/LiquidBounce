@@ -188,7 +188,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 val crystal = blockedResult.value() ?: continue
 
                 // try to replace the current target
-                placer.crystalDestroyer.currentTarget = crystal
+                placer.crystalDestroyer.suggestTarget(crystal)
 
                 // we could target the blocking crystal, now we have to wait a tick before it has been destroyed
                 // anyway, so we can return here
