@@ -170,6 +170,12 @@ class BlockPlacer(
             return@handler
         }
 
+        // Still cooling down, so there is nothing to place this tick. Scheduling would only lock the
+        // rotation target and burn a target-finding pass for an action that is dropped afterwards.
+        if (ticksToWait > 0) {
+            return@handler
+        }
+
         if (blocks.isEmpty()) {
             return@handler
         }
