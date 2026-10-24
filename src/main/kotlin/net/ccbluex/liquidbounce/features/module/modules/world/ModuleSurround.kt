@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -71,17 +72,14 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
      */
     private val DEFAULT_BLOCKS = arrayOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
 
-    private val features by multiEnumChoice("Features",
-        Features.EXTEND,
-        Features.DOWN,
-    )
+    private val features by multiEnumChoice("Features", enumSetOf(Features.EXTEND, Features.DOWN))
 
     /**
      * Disables the module when the y-coordinate changes.
      * Or when the player has moved at least 0.5 blocks away from the original center.
      * Or when the player has a speed that is faster than or equal to 5 m/s.
      */
-    private val disableOn by multiEnumChoice("DisableOn", DisableOn.Y_CHANGE)
+    private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.Y_CHANGE))
 
     /**
      * Replaces broken blocks instantly.
