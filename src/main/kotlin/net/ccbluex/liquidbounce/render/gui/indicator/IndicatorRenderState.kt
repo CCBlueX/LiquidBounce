@@ -40,6 +40,12 @@ interface IndicatorRenderState {
 
     val indicatorStyle: IndicatorStyle
 
+    /**
+     * Style drawn while the target is inside the viewport, so an indicator can point at what cannot be seen without
+     * putting an arrow on what is already visible. Defaults to [indicatorStyle].
+     */
+    val inViewIndicatorStyle: IndicatorStyle get() = indicatorStyle
+
     val indicatorColor: Color4b
 
     /**

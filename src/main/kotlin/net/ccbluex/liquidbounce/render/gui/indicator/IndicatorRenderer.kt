@@ -129,7 +129,7 @@ object IndicatorRenderer : EventListener {
             outward = direction
         }
 
-        val style = state.indicatorStyle
+        val style = if (inView) state.inViewIndicatorStyle else state.indicatorStyle
         val anchorX = centerX + anchor.x
         val anchorY = centerY + anchor.y
         val tagDistance = style.length + TAG_GAP

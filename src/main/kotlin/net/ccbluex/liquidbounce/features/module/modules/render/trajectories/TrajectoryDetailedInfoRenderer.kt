@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.NoneIndicatorStyle
+import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
@@ -94,7 +95,12 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
         private val scale: Float,
     ) : IndicatorRenderState {
 
-        override val indicatorStyle: IndicatorStyle = NoneIndicatorStyle
+        override val indicatorStyle: IndicatorStyle = OFFSCREEN_ARROW
+
+        /**
+         * A trajectory that is already on screen needs no arrow pointing at it.
+         */
+        override val inViewIndicatorStyle: IndicatorStyle = NoneIndicatorStyle
 
         override fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float) {
             val width = infoBlockWidth(lines, showItem, scale)
@@ -175,6 +181,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
 
 private const val ITEM_SIZE = 16.0F
 private const val LINE_GAP = 1.0F
+
+private val OFFSCREEN_ARROW = TriangleIndicatorStyle(width = 8.0F, height = 10.0F)
 
 /**
  * Below this the arrow counts as pointing straight along the other axis, so the block stays centred on it.
