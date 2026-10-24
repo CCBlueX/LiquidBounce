@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
 import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -57,9 +58,13 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
 
     /**
      * Finds the shortest support path to make [targetPos] placeable via Dijkstra search.
+     *
+     * [targetPos] may be a [BlockPos.MutableBlockPos] owned by the caller; it is made immutable here
+     * because the search keeps the start node in the returned path and the caller reuses its instance.
      */
     @Suppress("ComplexCondition")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
+        val targetPos = targetPos.immutable
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
             isGoal = { pos -> pos.hasAnySolidPlacementNeighbor() && (pos == targetPos || placer.canClickPlace(pos)) },
