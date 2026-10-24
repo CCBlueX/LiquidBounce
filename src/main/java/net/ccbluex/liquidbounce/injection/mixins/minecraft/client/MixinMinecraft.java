@@ -340,8 +340,13 @@ public abstract class MixinMinecraft {
     }
 
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
-    private void hookWorldChangeEvent(ClientLevel world, boolean bl, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
+    private void hookWorldChangeEvent(ClientLevel level, boolean stopSound, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new WorldChangeEvent(level));
+        if (ModuleFreeCam.INSTANCE.getEnabled()) {
+            ModuleFreeCam.INSTANCE.setEnabled(false);
+            // isn't inGame, needs to be called manually
+            ModuleFreeCam.INSTANCE.onDisabled();
+        }
     }
 
     @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",
