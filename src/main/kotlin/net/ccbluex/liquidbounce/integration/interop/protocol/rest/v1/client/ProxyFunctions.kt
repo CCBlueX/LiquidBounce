@@ -122,14 +122,16 @@ private fun Route.postClipboardProxy() = post("/clipboard") {
         try {
             val clipboardText = mc.keyboardHandler.clipboard
             if (clipboardText.isBlank()) {
-                return@execute
+                throw IllegalArgumentException("Clipboard is empty. Copy a proxy address before importing.")
             }
 
             val proxy = try {
                 Proxy.parse(clipboardText.trim())
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException(
-                    "Invalid proxy format. Expected format: host:port:username:password or host:port",
+                    "Invalid proxy format. Use host:port, host:port:username:password, " +
+                        "username:password:host:port, or username:password@host:port. " +
+                        "IPv6 hosts require [brackets] and ports must be in 1..65535.",
                     e
                 )
             }
