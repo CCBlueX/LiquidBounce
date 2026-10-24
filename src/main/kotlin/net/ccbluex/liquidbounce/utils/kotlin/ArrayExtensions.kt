@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import net.ccbluex.fastutil.forEachDouble
 import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Stream
+import kotlin.math.nextUp
 
 inline infix operator fun IntRange.contains(range: IntRange): Boolean {
     return this.first <= range.first && this.last >= range.last
@@ -84,7 +85,7 @@ inline fun range(
 }
 
 fun ClosedFloatingPointRange<Float>.random(): Float {
-    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive)
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive.nextUp())
 }
 
 inline operator fun ClosedFloatingPointRange<Float>.unaryMinus(): ClosedFloatingPointRange<Float> {
@@ -92,7 +93,7 @@ inline operator fun ClosedFloatingPointRange<Float>.unaryMinus(): ClosedFloating
 }
 
 fun ClosedFloatingPointRange<Double>.random(): Double {
-    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive)
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive.nextUp())
 }
 
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
@@ -101,7 +102,7 @@ fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double>
     return start.toDouble()..endInclusive.toDouble()
 }
 
-fun <T> List<T>.subList(fromIndex: Int): List<T> {
+inline fun <T> List<T>.subList(fromIndex: Int): List<T> {
     return this.subList(fromIndex, this.size)
 }
 
