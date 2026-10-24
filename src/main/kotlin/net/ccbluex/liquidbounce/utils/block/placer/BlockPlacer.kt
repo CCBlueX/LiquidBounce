@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.placer
 
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -99,7 +100,7 @@ class BlockPlacer(
      */
     private val sneak by intRange("Sneak", 1..1, 0..10, "ticks")
 
-    private val ignores by multiEnumChoice("Ignore", Ignore.entries)
+    private val ignores by multiEnumChoice("Ignore", enumSetAllOf<Ignore>())
 
     val ignoreOpenInventory get() = Ignore.OPEN_INVENTORY in ignores
 

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -57,7 +58,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
 
     private val doublePlace by multiEnumChoice<DoublePlace>("DoublePlace")
 
-    private val placeAt by multiEnumChoice("PlaceAt", PlaceAt.entries)
+    private val placeAt by multiEnumChoice("PlaceAt", enumSetAllOf<PlaceAt>())
 
     /**
      * Replaces broken blocks instantly.
