@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -58,7 +57,6 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
@@ -76,7 +74,7 @@ import kotlin.math.max
 @Suppress("TooManyFunctions")
 class BlockPlacer(
     name: String,
-    val module: ClientModule,
+    val parent: EventListener,
     val priority: Priority,
     val slotFinder: Function<BlockPos?, HotbarItemSlot?>,
     allowSupportPlacements: Boolean = true
@@ -106,6 +104,19 @@ class BlockPlacer(
 
     val ignoreUsingItem get() = Ignore.USING_ITEM in ignores
 
+    /**
+     * Whether the placer may act right now: no container screen and no item use, unless the matching
+     * [Ignore] option is enabled.
+     *
+     * Modules that gate their own target search on the same conditions should consult this instead of
+     * repeating the checks, so their search cannot disagree with what the placer is doing.
+     */
+    fun canAct(): Boolean {
+        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
+        val usingItem = !ignoreUsingItem && player.isUsingItem
+        return !inventoryOpen && !usingItem
+    }
+
     val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
     val rotationMode = modes(this, "RotationMode") {
@@ -122,12 +133,12 @@ class BlockPlacer(
         }
     }
 
-    val crystalDestroyer = tree(CrystalDestroyFeature(this, module))
+    val crystalDestroyer = tree(CrystalDestroyFeature(this))
 
     /**
      * Renders all tracked positions that are queued to be placed.
      */
-    val targetRenderer = tree(PlacementRenderer("TargetRendering", false, module))
+    val targetRenderer = tree(PlacementRenderer("TargetRendering", false, parent))
 
     /**
      * Renders all placements.
@@ -135,7 +146,7 @@ class BlockPlacer(
     val placedRenderer = tree(PlacementRenderer(
         "PlacedRendering",
         true,
-        module,
+        parent,
         keep = false
     ))
 
@@ -164,9 +175,7 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>
-        val usingItem = !ignoreUsingItem && player.isUsingItem
-        if (inventoryOpen || usingItem) {
+        if (!canAct()) {
             return@handler
         }
 
@@ -454,16 +463,25 @@ class BlockPlacer(
     /**
      * Removes all positions that are not in [positions] and adds all that are not in the queue.
      *
-     * Support positions are left untouched. They are picked by [SupportFeature] and their lifetime is
-     * managed by [findSupportPath]; a support path spanning multiple positions needs several ticks to
-     * be placed, so dropping them here would cut the path down to its first block every tick.
+     * Support positions are left untouched as long as they still support a target. They are picked by
+     * [SupportFeature] and their lifetime is managed by [findSupportPath]; a support path spanning multiple
+     * positions needs several ticks to be placed, so dropping them here would cut the path down to its
+     * first block every tick. Once the target they were built for is gone, they are dropped.
      */
     fun update(positions: Collection<BlockPos>) {
+        val supportDepth = support.depth
         val iterator = blocks.fastIterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
 
             if (entry.booleanValue) {
+                val supportPos = blockPosCache.set(entry.longKey)
+                // The search never picks a support position farther than Support.Depth from its target,
+                // so anything past that distance belongs to a target that is no longer queued.
+                if (positions.none { it.distManhattan(supportPos) <= supportDepth }) {
+                    targetRenderer.removeBlock(supportPos)
+                    iterator.remove()
+                }
                 continue
             }
 
@@ -539,7 +557,7 @@ class BlockPlacer(
         inaccessible.clear()
     }
 
-    override fun parent(): EventListener = module
+    override fun parent(): EventListener = parent
 
     private enum class Ignore(override val tag: String) : Tagged {
         OPEN_INVENTORY("OpenInventory"),

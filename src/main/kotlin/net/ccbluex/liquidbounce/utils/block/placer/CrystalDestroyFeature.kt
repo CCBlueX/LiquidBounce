@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -37,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
-class CrystalDestroyFeature(eventListener: EventListener, private val module: ClientModule) :
+class CrystalDestroyFeature(private val eventListener: EventListener) :
     ToggleableValueGroup(eventListener, "DestroyCrystals", true) {
 
     private val range by float("Range", 4.5f, 1f..6f)
@@ -46,7 +45,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     private val rotationMode = modes(this, "RotationMode") {
-        arrayOf(NormalRotationMode(it, module, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, module))
+        arrayOf(NormalRotationMode(it, eventListener, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, eventListener))
     }
 
     private val chronometer = Chronometer()

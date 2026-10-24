@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.level.block.BedBlock
@@ -89,15 +88,14 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
+        if (!placer.canAct()) {
             return@handler
         }
 
-        if (!placer.ignoreUsingItem && player.isUsingItem) {
-            return@handler
-        }
-
+        // The placer knows nothing about this option, so an empty queue is the only way to hold back
+        // placements while the player is not sneaking.
         if (requiresSneak && !player.isShiftKeyDown) {
+            placer.clear()
             return@handler
         }
 
@@ -119,7 +117,11 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
         // Get the closest bed block
         val (blockPos, state) = bedBlocks.minByOrNull {
             (blockPos, _) -> blockPos.distToCenterSqr(eyesPos)
-        } ?: return@handler
+        } ?: run {
+            // No bed left to defend, so the previous queue must not keep being placed.
+            placer.clear()
+            return@handler
+        }
 
         val placementPositions = blockPos.searchBedLayer(state, maxLayers)
             .filterTo(mutableListOf()) { (_, pos) ->
@@ -127,6 +129,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
             }
 
         if (placementPositions.isEmpty()) {
+            placer.clear()
             return@handler
         }
 

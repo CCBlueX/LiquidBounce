@@ -111,6 +111,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", ModuleCategories.WORLD), Ho
         val blockPos = player.blockPosition()
         val selfInHole = holes.any { it.contains(blockPos) }
         if (Features.ONLY_WHEN_SELF_IN_HOLE in features && !selfInHole) {
+            // The placer keeps working from its queue, so the queue has to be emptied for this to stop.
+            placer.clear()
             return@handler
         }
 

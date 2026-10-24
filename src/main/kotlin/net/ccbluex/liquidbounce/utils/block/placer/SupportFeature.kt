@@ -43,7 +43,7 @@ import net.minecraft.core.Direction
  */
 class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Support", true) {
 
-    private val depth by int("Depth", 4, 1..12)
+    val depth by int("Depth", 4, 1..12)
     val delay by int("Delay", 500, 0..1000, "ms")
 
     // what block helping blocks can be, by default just "trash blocks", meaning very common blocks
