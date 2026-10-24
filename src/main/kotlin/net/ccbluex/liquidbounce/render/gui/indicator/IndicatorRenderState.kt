@@ -49,6 +49,12 @@ interface IndicatorRenderState {
     val showInView: Boolean get() = true
 
     /**
+     * How much of the screen the arrows keep clear, as a fraction of the half-size on each axis: `0.1` keeps them
+     * 10% away from every border, which shrinks the frame at the same shape as the screen.
+     */
+    val edgeInset: Float get() = 0.0F
+
+    /**
      * Draws the tag, which is whatever an indicator wants to show next to its arrow.
      *
      * The pose is already translated to the tag anchor, one arrow length inside the screen from the arrow, so draw

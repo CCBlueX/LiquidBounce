@@ -52,6 +52,11 @@ object IndicatorRenderer : EventListener {
      */
     private const val BORDER_MARGIN = 1.0F
 
+    /**
+     * Upper bound for [IndicatorRenderState.edgeInset], so a config file cannot collapse the frame to a point.
+     */
+    private const val MAX_EDGE_INSET = 0.9F
+
     private val submitted = ArrayList<IndicatorRenderState>()
     private val ordered = ArrayList<IndicatorRenderState>()
 
@@ -96,11 +101,16 @@ object IndicatorRenderer : EventListener {
             return
         }
 
+        // The frame the arrows are kept in. Shrinking it by a fraction keeps its shape and can never swallow the
+        // whole screen, which an absolute margin would once it outgrows the half-size.
+        val halfWidth = centerX * (1.0F - state.edgeInset.coerceIn(0.0F, MAX_EDGE_INSET))
+        val halfHeight = centerY * (1.0F - state.edgeInset.coerceIn(0.0F, MAX_EDGE_INSET))
+
         val anchor: Vector2f
         val outward: Vector2f
 
         if (offset != null) {
-            anchor = IndicatorGeometry.clampToBorder(offset.x, offset.y, centerX, centerY, BORDER_MARGIN)
+            anchor = IndicatorGeometry.clampToBorder(offset.x, offset.y, halfWidth, halfHeight, BORDER_MARGIN)
             // A target exactly at the screen center has no direction to point at, the arrow then points straight
             // down. Mutates offset, which is not needed in its raw form past this point.
             outward = if (offset.lengthSquared() == 0.0F) Vector2f(0.0F, 1.0F) else offset.normalize()
@@ -112,7 +122,7 @@ object IndicatorRenderer : EventListener {
             if (direction.lengthSquared() == 0.0F) return
             direction.normalize()
 
-            anchor = IndicatorGeometry.borderPoint(direction.x, direction.y, centerX, centerY, BORDER_MARGIN)
+            anchor = IndicatorGeometry.borderPoint(direction.x, direction.y, halfWidth, halfHeight, BORDER_MARGIN)
             outward = direction
         }
 

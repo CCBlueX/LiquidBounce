@@ -71,6 +71,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     private val onlyPlayers by boolean("OnlyPlayers", false)
     private val hideTeammates by boolean("HideTeammates", false)
     private val showInView by boolean("ShowInView", true)
+    private val edgeInset by float("EdgeInset", 0f, 0f..0.9f)
 
     private val pointerModes = choices("PointerMode", 0) {
         arrayOf(
@@ -169,6 +170,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         override val indicatorStyle: IndicatorStyle,
         override val indicatorColor: Color4b,
         override val showInView: Boolean,
+        override val edgeInset: Float,
         private val entity: Entity,
     ) : IndicatorRenderState {
 
@@ -254,6 +256,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 indicatorStyle = pointerMode,
                 indicatorColor = colorMode.getColor(entity).alpha(alpha),
                 showInView = showInView,
+                edgeInset = edgeInset,
                 entity = entity,
             ))
         }
