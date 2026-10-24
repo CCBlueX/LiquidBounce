@@ -24,72 +24,54 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
 import kotlin.math.abs
 
-private const val ROTATE_COMMAND = "rotate @a 90 90"
 private const val SERVER_ROTATION = 90f
 private const val AIM = 0f
 private const val EPSILON = 0.01f
-private const val SETTLE_TICKS = 20
-private const val TIMEOUT_TICKS = 200
-private const val APPLY_TICKS = 3
 private const val REPEATS = 5
 
+private val SERVER_ROTATION_PACKET = ClientboundPlayerRotationPacket(SERVER_ROTATION, false, SERVER_ROTATION, false)
+
 /**
- * `/rotate` reaches the client as [net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket],
- * not as a position packet. NoRotateSet has to swallow that packet too, and has to keep the old rotation
- * in sync with the restored one, otherwise the camera snaps to the server-side angle.
+ * `/rotate` reaches the client as [ClientboundPlayerRotationPacket], not as a position packet, so NoRotateSet
+ * has to handle that packet too. It also has to keep the old rotation in sync with the restored one, otherwise
+ * the camera still snaps to the server-side angle.
  */
 class NoRotateSetGameTest : FabricClientGameTest {
 
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleNoRotateSet) }
-        context.onClient { ModuleNoRotateSet.enabled = false }
 
         try {
-            context.worldBuilder().create().use { world ->
-                // Let the spawn corrections finish, they would otherwise overwrite the measured rotation.
-                context.waitTicks(SETTLE_TICKS)
+            context.worldBuilder().create().use {
+                context.onClient { mc ->
+                    val player = checkNotNull(mc.player)
+                    val connection = checkNotNull(mc.connection)
 
-                // Without the module the server rotation has to arrive, otherwise the assertions prove nothing.
-                world.server.runCommand(ROTATE_COMMAND)
-                world.server.waitFor({ server ->
-                    server.playerList.players.any { abs(it.yRot - SERVER_ROTATION) < EPSILON }
-                }, TIMEOUT_TICKS)
-                context.waitFor({ client ->
-                    client.player?.let { abs(it.yRot - SERVER_ROTATION) < EPSILON } == true
-                }, TIMEOUT_TICKS)
+                    ModuleNoRotateSet.enabled = false
+                    connection.handleRotatePlayer(SERVER_ROTATION_PACKET)
+                    check(abs(player.yRot - SERVER_ROTATION) < EPSILON) {
+                        "The server rotation did not reach the camera: ${player.yRot}"
+                    }
 
-                context.onClient {
                     ModuleNoRotateSet.mode.setByString("SilentAccept")
                     ModuleNoRotateSet.enabled = true
-                    aim(checkNotNull(it.player))
-                }
+                    aim(player)
 
-                // A repeating command block rotates every tick, which used to make the camera jitter.
-                repeat(REPEATS) {
-                    world.server.runCommand(ROTATE_COMMAND)
-                    context.waitTicks(APPLY_TICKS)
-                    context.onClient {
-                        val player = checkNotNull(it.player)
-                        check(abs(player.yRot - AIM) < EPSILON && abs(player.xRot - AIM) < EPSILON) {
-                            "Server rotation reached the camera: ${player.yRot}/${player.xRot}"
-                        }
-                        check(abs(player.yRotO - AIM) < EPSILON && abs(player.xRotO - AIM) < EPSILON) {
-                            "Server rotation reached the old rotation: ${player.yRotO}/${player.xRotO}"
-                        }
+                    // A repeating command block rotates every tick, which used to make the camera jitter.
+                    repeat(REPEATS) {
+                        connection.handleRotatePlayer(SERVER_ROTATION_PACKET)
+                        checkCameraStaysAimed(player)
                     }
-                }
 
-                // ResetRotation has to hand the server rotation to the rotation engine instead of the camera.
-                context.onClient {
+                    // ResetRotation hands the server rotation to the rotation engine instead of the camera.
                     ModuleNoRotateSet.mode.setByString("ResetRotation")
-                    aim(checkNotNull(it.player))
-                }
-                world.server.runCommand(ROTATE_COMMAND)
-                context.waitTicks(APPLY_TICKS)
-                context.fromClient {
+                    aim(player)
+                    connection.handleRotatePlayer(SERVER_ROTATION_PACKET)
+
                     val target = checkNotNull(RotationManager.activeRotationTarget) {
                         "ResetRotation did not hand the server rotation to the rotation engine"
                     }
@@ -110,6 +92,15 @@ class NoRotateSetGameTest : FabricClientGameTest {
         player.yRot = AIM
         player.xRot = AIM
         player.setOldRot()
+    }
+
+    private fun checkCameraStaysAimed(player: LocalPlayer) {
+        check(abs(player.yRot - AIM) < EPSILON && abs(player.xRot - AIM) < EPSILON) {
+            "The server rotation reached the camera: ${player.yRot}/${player.xRot}"
+        }
+        check(abs(player.yRotO - AIM) < EPSILON && abs(player.xRotO - AIM) < EPSILON) {
+            "The server rotation reached the old rotation: ${player.yRotO}/${player.xRotO}"
+        }
     }
 
 }
