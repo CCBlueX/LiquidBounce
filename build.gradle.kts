@@ -454,16 +454,14 @@ val publishVersion: String = providers.gradleProperty("publish.version").orNull 
 publishing {
     publications {
         create<MavenPublication>("mod") {
+            // Add-ons compile against the client, so they need its dependency metadata. Minecraft
+            // itself is not part of the outgoing variants, so it stays out of the POM.
+            from(components["java"])
+
             groupId = providers.gradleProperty("maven_group").get()
             artifactId = providers.gradleProperty("archives_base_name").get()
             version = publishVersion
 
-            // Dev and production are both Mojang names here, so there is no remapJar to publish.
-            artifact(tasks.jar)
-            artifact(tasks.named("sourcesJar")) { classifier = "sources" }
-
-            // No from(components["java"]): the POM would list com.mojang:minecraft, which no
-            // public repository serves.
             pom {
                 name = "LiquidBounce"
                 description = "A free mixin-based injection hacked-client for Minecraft " +
