@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.render.gui.indicator.NoneIndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.text.plus
@@ -45,6 +47,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import org.joml.Vector2f
 
 object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories, "ShowDetailedInfo", false) {
     private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
@@ -72,7 +75,12 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
     private val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS, aliases = listOf("DurationUnit"))
     private val color by color("Color", Color4b.WHITE)
 
-    private val scale by float("Scale", 1F, 0.25F..4F)
+    private val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
 
     /**
@@ -151,7 +159,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
 
                         event.context.pose().withPush {
                             translate(centerX + 50.0F, centerY + index * (mc.font.lineHeight + 1))
-                            event.context.drawInfoBlock(renderer.icon, lines, item, scale, color)
+                            event.context.drawInfoBlock(renderer.icon, lines, item, scale.transform(0.0F), color)
                         }
 
                         return@forEachIndexed
@@ -169,7 +177,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 icon = renderer.icon,
                 lines = lines,
                 showItem = item,
-                scale = scale,
+                scale = scale.transform(worldPos.cameraDistance().toFloat()),
             ))
         }
     }

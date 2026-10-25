@@ -30,11 +30,6 @@ import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 internal const val ITEM_STACK_SLOT_SIZE = 18
 internal const val ITEM_STACK_ITEM_SIZE = GuiRenderer.DEFAULT_ITEM_SIZE
 
-/**
- * Maximum distance the background glow reaches past the background rect.
- */
-internal const val BACKGROUND_GLOW_SPREAD = 3.0F
-
 internal object ItemStackListLayout {
 
     @JvmRecord
