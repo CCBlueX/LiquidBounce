@@ -7,10 +7,10 @@ jdk = "25"
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
 minecraft = "26.3"
-fabric-loom = "1.18-SNAPSHOT"
+fabric-loom = "1.19-SNAPSHOT"
 fabric-loader = "0.19.5"
 fabric-loaderMin = "0.18.4"
-fabric-api = "0.160.5+26.3"
+fabric-api = "0.165.0+26.3"
 
 # https://github.com/CCBlueX/LiquidBounce-Addon-CEF
 liquidbounce-cef = "1.0.1+26.3"
@@ -30,7 +30,7 @@ ktor = "3.6.0"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.10"
-discord-ipc = "-SNAPSHOT"
+discord-ipc = "1.0.0"
 
 # Recommended mods
 modmenu = "21.0.0"
@@ -87,7 +87,7 @@ semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j"
 ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
 fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
 fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
-discord-ipc = { group = "com.github.CCBlueX", name = "discord-ipc", version.ref = "discord-ipc" }
+discord-ipc = { group = "net.ccbluex", name = "discord-ipc", version.ref = "discord-ipc" }
 
 djl-api = { group = "ai.djl", name = "api", version.ref = "djl" }
 djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref = "djl" }
