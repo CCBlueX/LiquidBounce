@@ -39,10 +39,13 @@ import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.StringDecomposer
+import net.minecraft.world.item.component.ResolvableProfile
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -54,6 +57,16 @@ inline fun String.stripMinecraftColorCodes(): String =
     ChatFormatting.stripFormatting(this)!!
 
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
+
+/**
+ * A [Component] that renders this profile's head through the font, so it lines up with the surrounding text.
+ */
+fun ResolvableProfile.asPlayerHead(
+    hat: Boolean = false,
+    fallback: Component? = null,
+): MutableComponent = MutableComponent.create(
+    ObjectContents(PlayerSprite(this, hat), Optional.ofNullable(fallback))
+)
 
 /**
  * Returns a [MutableComponent] from the receiver.

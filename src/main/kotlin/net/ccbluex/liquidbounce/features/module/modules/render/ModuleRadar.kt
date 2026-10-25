@@ -42,12 +42,11 @@ import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorVisibility
 import net.ccbluex.liquidbounce.render.gui.indicator.TextureIndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.text.asPlayerHead
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
-import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
@@ -55,10 +54,6 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.renderer.texture.AbstractTexture
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.contents.ObjectContents
-import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
@@ -156,7 +151,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
          */
         override fun measureTag(): BoundingBox2f {
             val font = mc.font
-            val head = (entity as? Player)?.let(::headOf)
+            val head = (entity as? Player)?.profile?.asPlayerHead()
             val width = (head?.let { font.width(it) + font.width(SPACE) } ?: 0) + font.width(entity.simpleDisplayName)
             val halfHeight = font.lineHeight * 0.5F
 
@@ -166,7 +161,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         override fun extractTag(ctx: GuiGraphicsExtractor) {
             val font = mc.font
             val name = entity.simpleDisplayName
-            val head = (entity as? Player)?.let(::headOf)
+            val head = (entity as? Player)?.profile?.asPlayerHead()
             val headWidth = head?.let { font.width(it) + font.width(SPACE) } ?: 0
 
             val x = -(headWidth + font.width(name)) * 0.5F
@@ -196,13 +191,6 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         RenderedEntities.unsubscribe(this)
         super.onDisabled()
     }
-
-    /**
-     * The head renders through the font like any other text, but only a player's profile carries the skin.
-     */
-    private fun headOf(player: Player): Component = MutableComponent.create(
-        ObjectContents(PlayerSprite(player.profile, false), optional())
-    )
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> {
