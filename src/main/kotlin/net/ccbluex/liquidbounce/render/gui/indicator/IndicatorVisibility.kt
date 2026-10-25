@@ -17,12 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.text
+package net.ccbluex.liquidbounce.render.gui.indicator
 
-import net.minecraft.network.chat.Style
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-inline fun Style.with(block: StyleBuilder.() -> Unit): Style =
-    StyleBuilder(this).apply(block).build()
-
-inline fun style(block: StyleBuilder.() -> Unit): Style =
-    Style.EMPTY.with(block)
+/**
+ * Where an indicator is drawn.
+ *
+ * [OFFSCREEN] covers targets outside the viewport as well as targets behind the camera, which have no projection to
+ * test at all.
+ */
+enum class IndicatorVisibility(override val tag: String) : Tagged {
+    IN_VIEW("InView"),
+    OFFSCREEN("Offscreen"),
+}

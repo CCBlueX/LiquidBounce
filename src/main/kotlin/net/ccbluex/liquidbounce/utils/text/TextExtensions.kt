@@ -33,16 +33,20 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
 import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.ComponentUtils
 import net.minecraft.network.chat.FontDescription
 import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.StringDecomposer
+import net.minecraft.world.item.component.ResolvableProfile
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -54,6 +58,16 @@ inline fun String.stripMinecraftColorCodes(): String =
     ChatFormatting.stripFormatting(this)!!
 
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
+
+/**
+ * A [Component] that renders this profile's head through the font, so it lines up with the surrounding text.
+ */
+fun ResolvableProfile.asPlayerHead(
+    hat: Boolean = false,
+    fallback: Component? = null,
+): MutableComponent = MutableComponent.create(
+    ObjectContents(PlayerSprite(this, hat), Optional.ofNullable(fallback))
+)
 
 /**
  * Returns a [MutableComponent] from the receiver.
@@ -77,7 +91,7 @@ inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence 
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
 /**
- * Returns an immutable [Component] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
@@ -113,44 +127,25 @@ inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {
     return builder.build()
 }
 
-fun <T> Collection<T>.joinToText(
-    separator: Component,
-    prefix: Component? = null,
-    postfix: Component? = null,
-    transform: Function<in T, out Component>,
-): Component {
-    if (isEmpty()) {
-        return PlainText.EMPTY
-    }
-
-    val iterator = iterator()
-    val offset = if (prefix == null) 0 else 1
-    var arraySize = this.size * 2 - 1
-    if (prefix != null) arraySize++
-    if (postfix != null) arraySize++
-
-    return Array(arraySize) { i ->
-        when {
-            i == 0 && prefix != null -> prefix
-            i == arraySize - 1 && postfix != null -> postfix
-            i % 2 == offset -> transform.apply(iterator.next())
-            else -> separator
-        }
-    }.asText()
-}
-
 /**
  * Joins a list of [String] into a single [Component] with the given [separator].
  */
 @JvmName("stringsJoinToText")
 fun Collection<String>.joinToText(separator: Component): Component =
-    joinToText(separator, transform = Function(PlainText::of))
+    ComponentUtils.formatList(this, separator, PlainText::of)
+
+/**
+ * Joins a list of [String] into a single [Component] with the given [separator].
+ */
+@JvmName("objectsJoinToText")
+inline fun <T : Any> Collection<T>.joinToText(separator: Component, formatter: Function<T, Component>): Component =
+    ComponentUtils.formatList(this, separator, formatter)
 
 /**
  * Joins a list of [Component] into a single [Component] with the given [separator].
  */
-fun Collection<Component>.joinToText(separator: Component): Component =
-    joinToText(separator, transform = Function.identity())
+inline fun Collection<Component>.joinToText(separator: Component): Component =
+    ComponentUtils.formatList(this, separator)
 
 inline fun FormattedCharSequence.codePointsToString(): String =
     AppenderCharSink.codePointsToString(this)

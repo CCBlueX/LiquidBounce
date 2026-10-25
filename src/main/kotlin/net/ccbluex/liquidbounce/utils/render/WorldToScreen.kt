@@ -32,6 +32,7 @@ import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Matrix4fc
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
 import java.text.NumberFormat
@@ -45,6 +46,7 @@ object WorldToScreen {
     private var cachedCameraPos: Vec3 = Vec3.ZERO
 
     private val cacheMat4f = Matrix4f()
+    private val cacheVec2f = Vector2f()
     private val cacheVec3f = Vector3f()
     private val cacheVec4f = Vector4f()
 
@@ -91,6 +93,42 @@ object WorldToScreen {
             )
 
         return Vec3f(screenPos)
+    }
+
+    /**
+     * Offset from the screen center towards [pos], in GUI pixels, y down.
+     *
+     * Unlike [calculateScreenPos] this stays valid for positions behind the camera. The perspective divide flips x
+     * and y once `w` turns negative, so that flip is negated back here, which keeps the direction continuous while
+     * the target crosses the view plane.
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun calculateScreenOffset(pos: Vec3, cameraPos: Vec3 = this.cachedCameraPos): Vector2f? {
+        val transformedPos = cacheVec4f.set(
+            (pos.x - cameraPos.x).toFloat(),
+            (pos.y - cameraPos.y).toFloat(),
+            (pos.z - cameraPos.z).toFloat(),
+            1.0F
+        ).mul(this.projModelViewMatrix)
+
+        if (!transformedPos.x.isFinite() || !transformedPos.y.isFinite() ||
+            !transformedPos.w.isFinite() || transformedPos.w == 0.0F
+        ) {
+            return null
+        }
+
+        val sign = if (transformedPos.w < 0.0F) -1.0F else 1.0F
+
+        val scaleFactor = mc.window.guiScale
+        val guiScaleMul = 0.5f / scaleFactor.toFloat()
+
+        val offset = cacheVec2f.set(
+            transformedPos.x / transformedPos.w * sign * guiScaleMul * mc.gameRenderer.mainRenderTarget().width,
+            -transformedPos.y / transformedPos.w * sign * guiScaleMul * mc.gameRenderer.mainRenderTarget().height,
+        )
+
+        return Vector2f(offset)
     }
 
     @JvmStatic
