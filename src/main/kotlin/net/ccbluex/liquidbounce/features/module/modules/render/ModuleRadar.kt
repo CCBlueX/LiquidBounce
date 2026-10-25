@@ -30,18 +30,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
-import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorVisibility
+import net.ccbluex.liquidbounce.render.gui.indicator.TextureIndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -54,6 +53,7 @@ import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
@@ -105,26 +105,23 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
             override fun style() = TriangleIndicatorStyle(width, height, tailConcaveSize)
         }
 
-        class ImageMode(name: String, val texture: AbstractTexture) : PointerMode(name), IndicatorStyle {
+        class ImageMode(name: String, val texture: AbstractTexture) : PointerMode(name) {
             constructor(name: String, nativeImage: NativeImage) : this(name, nativeImage.asTexture { "Radar $name" })
 
             private val size by float("Size", 10f, 1f..100f)
 
-            override val length: Float
-                get() = size
+            /**
+             * Built once: the [textureSetup] property allocates a setup per access, and a native image texture is
+             * ready as soon as it is created.
+             */
+            private val textureSetup: TextureSetup = texture.textureSetup
 
-            override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) {
-                ctx.drawTexQuad(
-                    texture.textureSetup,
-                    -size / 2f, 0f, size / 2f, size,
-                    u1 = 1f, v1 = 1f, u2 = 0f, v2 = 0f,
-                    argb = color.argb,
-                    pipeline = ClientRenderPipelines.GUI.TexQuadNoCull,
-                )
-            }
-
-            // Its own texture is not reusable, so it is its own style.
-            override fun style(): IndicatorStyle = this
+            override fun style() = TextureIndicatorStyle(
+                textureSetup = textureSetup,
+                size = size,
+                // The images are stored tip up.
+                u1 = 1f, v1 = 1f, u2 = 0f, v2 = 0f,
+            )
         }
     }
 
