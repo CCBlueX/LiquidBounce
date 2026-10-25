@@ -91,7 +91,7 @@ inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence 
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
 /**
- * Returns an immutable [Component] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
