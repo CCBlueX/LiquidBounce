@@ -94,20 +94,20 @@ object IndicatorRenderer : EventListener {
 
         val projected = WorldToScreen.calculateScreenPos(state.pos)
         val offset = projected?.let { Vector2f(it.x - centerX, it.y - centerY) }
-        // A target behind the camera has no projection to test, and is never inside the viewport.
+        // A target behind the camera has no projection to test, and is never inside the viewport. This tests the
+        // viewport itself, not the inset frame below, because it is about seeing the target.
         val inView = offset != null && abs(offset.x) <= centerX && abs(offset.y) <= centerY
 
-        if (inView && !state.showInView) {
-            return
-        }
-        if (!inView && !state.showOffscreen) {
+        val visibility = if (inView) IndicatorVisibility.IN_VIEW else IndicatorVisibility.OFFSCREEN
+        if (visibility !in state.visibleAt) {
             return
         }
 
         // The frame the arrows are kept in. Shrinking it by a fraction keeps its shape and can never swallow the
         // whole screen, which an absolute margin would once it outgrows the half-size.
-        val halfWidth = centerX * (1.0F - state.edgeInset.coerceIn(0.0F, MAX_EDGE_INSET))
-        val halfHeight = centerY * (1.0F - state.edgeInset.coerceIn(0.0F, MAX_EDGE_INSET))
+        val inset = state.edgeInset.coerceIn(0.0F, MAX_EDGE_INSET)
+        val halfWidth = centerX * (1.0F - inset)
+        val halfHeight = centerY * (1.0F - inset)
 
         val anchor: Vector2f
         val outward: Vector2f

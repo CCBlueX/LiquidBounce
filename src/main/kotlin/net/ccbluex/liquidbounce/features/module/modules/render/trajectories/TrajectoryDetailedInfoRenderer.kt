@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorVisibility
 import net.ccbluex.liquidbounce.render.gui.indicator.NoneIndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.render.withPush
@@ -88,7 +89,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
         override val pos: Vec3,
         override val indicatorColor: Color4b,
         override val edgeInset: Float,
-        override val showOffscreen: Boolean,
+        override val visibleAt: Collection<IndicatorVisibility>,
         private val icon: ItemStack,
         private val lines: List<FormattedCharSequence>,
         private val showItem: Boolean,
@@ -168,7 +169,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
                 pos = worldPos.add(renderOffset),
                 indicatorColor = color,
                 edgeInset = RenderOffscreen.edgeInset,
-                showOffscreen = RenderOffscreen.enabled,
+                visibleAt = if (RenderOffscreen.enabled) IndicatorVisibility.entries else IN_VIEW_ONLY,
                 icon = renderer.icon,
                 lines = lines,
                 showItem = item,
@@ -183,6 +184,8 @@ private const val ITEM_SIZE = 16.0F
 private const val LINE_GAP = 1.0F
 
 private val OFFSCREEN_ARROW = TriangleIndicatorStyle(width = 8.0F, height = 10.0F)
+
+private val IN_VIEW_ONLY: Collection<IndicatorVisibility> = setOf(IndicatorVisibility.IN_VIEW)
 
 /**
  * Below this the arrow counts as pointing straight along the other axis, so the block stays centred on it.

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.NativeImage
+import net.ccbluex.fastutil.enumSetAllOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
@@ -39,6 +40,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorStyle
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorVisibility
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -69,7 +71,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val onlyPlayers by boolean("OnlyPlayers", false)
     private val hideTeammates by boolean("HideTeammates", false)
-    private val showInView by boolean("ShowInView", true)
+    private val show by multiEnumChoice("Show", enumSetAllOf<IndicatorVisibility>(), canBeNone = false)
     private val edgeInset by float("EdgeInset", 0f, 0f..0.9f)
 
     private val pointerModes = choices("PointerMode", 0) {
@@ -145,7 +147,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
         override val priority: Int,
         override val indicatorStyle: IndicatorStyle,
         override val indicatorColor: Color4b,
-        override val showInView: Boolean,
+        override val visibleAt: Collection<IndicatorVisibility>,
         override val edgeInset: Float,
         private val entity: Entity,
     ) : IndicatorRenderState {
@@ -231,7 +233,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                 priority = -distance.toInt(),
                 indicatorStyle = style,
                 indicatorColor = colorMode.getColor(entity).alpha(alpha),
-                showInView = showInView,
+                visibleAt = show,
                 edgeInset = edgeInset,
                 entity = entity,
             ))

@@ -49,16 +49,10 @@ interface IndicatorRenderState {
     val indicatorColor: Color4b
 
     /**
-     * Whether the indicator is drawn while its target is inside the viewport as well. An offscreen indicator
-     * usually only wants the targets that cannot be seen.
+     * Where this indicator is drawn. An offscreen indicator usually only wants [IndicatorVisibility.OFFSCREEN],
+     * since an arrow over something already visible is noise.
      */
-    val showInView: Boolean get() = true
-
-    /**
-     * Whether the indicator is drawn while its target is outside the viewport, which includes targets behind the
-     * camera. Turning this off leaves only the targets that are on screen.
-     */
-    val showOffscreen: Boolean get() = true
+    val visibleAt: Collection<IndicatorVisibility> get() = IndicatorVisibility.entries
 
     /**
      * How much of the screen the arrows keep clear, as a fraction of the half-size on each axis: `0.1` keeps them
