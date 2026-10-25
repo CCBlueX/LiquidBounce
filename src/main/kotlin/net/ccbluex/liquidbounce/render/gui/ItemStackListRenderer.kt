@@ -56,7 +56,6 @@ object ItemStackListRenderer : EventListener {
 
     private val textRenderer = mc.font
     private val planned = ArrayList<ItemStackListRenderState>()
-    private val overlapRearranger = GuiOverlapRearranger()
 
     @JvmStatic
     fun Block.createItemStackForRendering(count: Int): ItemStack {
@@ -200,7 +199,7 @@ object ItemStackListRenderer : EventListener {
 
         try {
             if (planned.size > 1) {
-                overlapRearranger.rearrange(planned)
+                GuiOverlapRearranger.rearrange(planned)
             }
 
             with(it.context) {
