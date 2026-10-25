@@ -78,4 +78,16 @@ internal object IndicatorGeometry {
         return borderPoint(offsetX, offsetY, halfWidth, halfHeight, margin, target)
     }
 
+    /**
+     * How far a span running from [min] to [max] has to move so that it stays within `0..extent`.
+     *
+     * A span wider than the extent cannot fit at all: it then keeps its start inside and overflows the other end,
+     * which is the least bad option for a tag that simply is too long.
+     */
+    fun fitInside(min: Float, max: Float, extent: Float): Float = when {
+        min < 0.0F -> -min
+        max > extent -> extent - max
+        else -> 0.0F
+    }
+
 }

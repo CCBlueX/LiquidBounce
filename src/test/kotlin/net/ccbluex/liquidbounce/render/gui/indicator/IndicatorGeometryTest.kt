@@ -123,6 +123,27 @@ class IndicatorGeometryTest {
         assertEquals(0f, result.y)
     }
 
+    @Test
+    fun `a span already inside needs no shift`() {
+        assertEquals(0f, IndicatorGeometry.fitInside(10f, 40f, 100f))
+    }
+
+    @Test
+    fun `a span past the start is moved in`() {
+        assertEquals(10f, IndicatorGeometry.fitInside(-10f, 40f, 100f))
+    }
+
+    @Test
+    fun `a span past the end is moved back`() {
+        assertEquals(-20f, IndicatorGeometry.fitInside(60f, 120f, 100f))
+    }
+
+    @Test
+    fun `a span wider than the extent keeps its start inside`() {
+        // Moving it to the start overflows the end instead, which is the least bad option.
+        assertEquals(10f, IndicatorGeometry.fitInside(-10f, 150f, 100f))
+    }
+
     private fun onBorder(offset: Vector2f): Boolean =
         abs(abs(offset.x) - LIMIT_X) < TOLERANCE || abs(abs(offset.y) - LIMIT_Y) < TOLERANCE
 

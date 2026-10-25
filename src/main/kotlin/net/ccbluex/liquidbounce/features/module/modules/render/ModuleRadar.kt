@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTexQuad
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
@@ -46,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.math.floorToInt
 import net.ccbluex.liquidbounce.utils.render.asTexture
@@ -153,45 +155,37 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
     ) : IndicatorRenderState {
 
         /**
-         * `{head} {name}`, laid out on the side of the anchor the arrow is not on so it stays on screen and clear
-         * of the arrow.
+         * `{head} {name}` on a single line, centred on the origin.
          */
-        override fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float) {
+        override fun measureTag(): BoundingBox2f {
             val font = mc.font
-            val name = entity.displayName
             val head = (entity as? Player)?.let(::headOf)
+            val width = (head?.let { font.width(it) + font.width(SPACE) } ?: 0) + font.width(entity.simpleDisplayName)
+            val halfHeight = font.lineHeight * 0.5F
 
+            return BoundingBox2f(-width * 0.5F, -halfHeight, width * 0.5F, halfHeight)
+        }
+
+        override fun extractTag(ctx: GuiGraphicsExtractor) {
+            val font = mc.font
+            val name = entity.simpleDisplayName
+            val head = (entity as? Player)?.let(::headOf)
             val headWidth = head?.let { font.width(it) + font.width(SPACE) } ?: 0
-            val width = headWidth + font.width(name)
 
-            val x = when {
-                outwardX > AXIS_TOLERANCE -> -width
-                outwardX < -AXIS_TOLERANCE -> 0
-                else -> -width / 2
-            }
-            val y = when {
-                outwardY > AXIS_TOLERANCE -> -font.lineHeight
-                outwardY < -AXIS_TOLERANCE -> 0
-                else -> -font.lineHeight / 2
-            }
+            val x = -(headWidth + font.width(name)) * 0.5F
+            val y = -font.lineHeight * 0.5F
 
             if (head != null) {
                 // White, otherwise the arrow's color is applied to the head as well.
-                ctx.text(font, head, x, y, Color4b.WHITE.argb, TEXT_SHADOW)
+                ctx.text(font, head, x.toInt(), y.toInt(), Color4b.WHITE.argb, TEXT_SHADOW)
             }
 
-            ctx.text(font, name, x + headWidth, y, indicatorColor.argb, TEXT_SHADOW)
+            ctx.text(font, name, (x + headWidth).toInt(), y.toInt(), indicatorColor.argb, TEXT_SHADOW)
         }
 
         private companion object {
             const val SPACE = " "
             const val TEXT_SHADOW = true
-
-            /**
-             * Below this the arrow counts as pointing straight along the other axis, so the tag stays centered on it
-             * rather than being pushed to one side.
-             */
-            const val AXIS_TOLERANCE = 0.1F
         }
 
     }

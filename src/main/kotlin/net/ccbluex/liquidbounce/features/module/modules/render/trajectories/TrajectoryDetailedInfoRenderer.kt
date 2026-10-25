@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.features.module.modules.render.TimeUnit
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderState
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorVisibility
 import net.ccbluex.liquidbounce.render.gui.indicator.NoneIndicatorStyle
 import net.ccbluex.liquidbounce.render.gui.indicator.TriangleIndicatorStyle
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.text.plus
@@ -103,23 +105,17 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
          */
         override val inViewIndicatorStyle: IndicatorStyle = NoneIndicatorStyle
 
-        override fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float) {
+        /**
+         * The block is drawn with its top center at the origin.
+         */
+        override fun measureTag(): BoundingBox2f {
             val width = infoBlockWidth(lines, showItem, scale)
-            val height = infoBlockHeight(lines, showItem, scale)
 
-            // The block is drawn with its top center at the origin, so an arrow to one side shifts it to the other
-            // one, and an arrow below lifts it above the anchor.
-            val shiftX = when {
-                outwardX > AXIS_TOLERANCE -> -width * 0.5F
-                outwardX < -AXIS_TOLERANCE -> width * 0.5F
-                else -> 0.0F
-            }
-            val shiftY = if (outwardY > AXIS_TOLERANCE) -height else 0.0F
+            return BoundingBox2f(-width * 0.5F, 0.0F, width * 0.5F, infoBlockHeight(lines, showItem, scale))
+        }
 
-            ctx.pose().withPush {
-                translate(shiftX, shiftY)
-                ctx.drawInfoBlock(icon, lines, showItem, scale, indicatorColor)
-            }
+        override fun extractTag(ctx: GuiGraphicsExtractor) {
+            ctx.drawInfoBlock(icon, lines, showItem, scale, indicatorColor)
         }
 
     }
@@ -136,7 +132,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
 
         val displayOwner = renderer.displayOwner
         if (ownerName && displayOwner != null && displayOwner !== player) {
-            add("Owner: ".withFormat() + displayOwner.displayName.sanitizeForeignInput())
+            add("Owner: ".withFormat() + displayOwner.simpleDisplayName.sanitizeForeignInput())
         }
     }
 
@@ -186,11 +182,6 @@ private const val LINE_GAP = 1.0F
 private val OFFSCREEN_ARROW = TriangleIndicatorStyle(width = 8.0F, height = 10.0F)
 
 private val IN_VIEW_ONLY: Collection<IndicatorVisibility> = setOf(IndicatorVisibility.IN_VIEW)
-
-/**
- * Below this the arrow counts as pointing straight along the other axis, so the block stays centred on it.
- */
-private const val AXIS_TOLERANCE = 0.1F
 
 /**
  * Draws [icon] and [lines] with the block's top centre at the current pose origin.

@@ -57,6 +57,11 @@ object IndicatorRenderer : EventListener {
      */
     private const val MAX_EDGE_INSET = 0.9F
 
+    /**
+     * Below this the arrow counts as pointing straight along the other axis, so the tag is not pushed to one side.
+     */
+    private const val AXIS_TOLERANCE = 0.1F
+
     private val submitted = ArrayList<IndicatorRenderState>()
     private val ordered = ArrayList<IndicatorRenderState>()
 
@@ -134,9 +139,28 @@ object IndicatorRenderer : EventListener {
         val anchorY = centerY + anchor.y
         val tagDistance = style.length + TAG_GAP
 
+        // Lay the tag out on the far side of the arrow, then pull it back inside the screen. Doing it here keeps
+        // every tag on the same rule instead of each one repeating the direction checks.
+        val tag = state.measureTag()
+        val sideX = when {
+            outward.x > AXIS_TOLERANCE -> -tag.xMax
+            outward.x < -AXIS_TOLERANCE -> -tag.xMin
+            else -> 0.0F
+        }
+        val sideY = when {
+            outward.y > AXIS_TOLERANCE -> -tag.yMax
+            outward.y < -AXIS_TOLERANCE -> -tag.yMin
+            else -> 0.0F
+        }
+
+        val baseX = anchorX - outward.x * tagDistance + sideX
+        val baseY = anchorY - outward.y * tagDistance + sideY
+        val placedX = baseX + IndicatorGeometry.fitInside(baseX + tag.xMin, baseX + tag.xMax, centerX * 2.0F)
+        val placedY = baseY + IndicatorGeometry.fitInside(baseY + tag.yMin, baseY + tag.yMax, centerY * 2.0F)
+
         ctx.pose().withPush {
-            translate(anchorX - outward.x * tagDistance, anchorY - outward.y * tagDistance)
-            state.extractTag(ctx, outward.x, outward.y)
+            translate(placedX, placedY)
+            state.extractTag(ctx)
         }
 
         ctx.pose().withPush {

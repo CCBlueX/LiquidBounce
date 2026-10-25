@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.gui.indicator
 
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.world.phys.Vec3
@@ -61,12 +62,18 @@ interface IndicatorRenderState {
     val edgeInset: Float get() = 0.0F
 
     /**
-     * Draws the tag, which is whatever an indicator wants to show next to its arrow.
+     * Extent of the tag in the space [extractTag] draws in, i.e. relative to the point the pose is translated to.
      *
-     * The pose is already translated to the tag anchor, one arrow length inside the screen from the arrow, so draw
-     * around the origin. ([outwardX], [outwardY]) is the unit direction the arrow points in, away from the screen
-     * center: content laid out on the opposite side of the origin keeps clear of the arrow and stays on screen.
+     * It is measured before the tag is drawn, so the renderer can keep the whole tag on screen instead of only the
+     * arrow. Where the origin sits inside this box is up to the tag: a box centred on the origin is centred on the
+     * anchor, one that starts at zero hangs below it.
      */
-    fun extractTag(ctx: GuiGraphicsExtractor, outwardX: Float, outwardY: Float)
+    fun measureTag(): BoundingBox2f
+
+    /**
+     * Draws the tag around the origin. The pose is already translated so that [measureTag] sits on the far side of
+     * the anchor from the arrow, and inside the screen.
+     */
+    fun extractTag(ctx: GuiGraphicsExtractor)
 
 }
