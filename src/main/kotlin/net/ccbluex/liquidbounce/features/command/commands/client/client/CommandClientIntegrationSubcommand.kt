@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import java.net.URI
 
@@ -100,7 +101,7 @@ object CommandClientIntegrationSubcommand {
                                 )
                             )
                     )
-                    .append(regular(", "))
+                    .append(DEFAULT_SEPARATOR)
                     .append(
                         variable("Clipboard")
                             .copyable(

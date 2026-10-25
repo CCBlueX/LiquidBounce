@@ -44,6 +44,8 @@ import net.ccbluex.liquidbounce.utils.text.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
@@ -149,17 +151,14 @@ object CommandServerInfo : EventListener, CommandRegistrar {
         printStyledText("ping", ping.toString())
 
         // Server Channels and transactions
-        val channelsText = ServerObserver.payloadChannels.map { id ->
-            variable(id.toString())
-        }.joinToText(regular(", "))
+        val channelsText = ServerObserver.payloadChannels.joinToText(DEFAULT_SEPARATOR) { variable(it.toString()) }
         printStyledComponent("channels", channelsText)
-        val transactionsText = ServerObserver.transactions.map { variable(it.toString()) }.joinToText(regular(", "))
+        val transactionsText = ServerObserver.transactions.joinToText(DEFAULT_SEPARATOR) { variable(it.toString()) }
         printStyledComponent("transactions", transactionsText)
 
         val transactionDiffText = ServerObserver.transactions
             .windowed(2) { it[1] - it[0] }
-            .map { variable(it.toString()) }
-            .joinToText(regular(", "))
+            .joinToText(DEFAULT_SEPARATOR) { variable(it.toString()) }
         printStyledComponent("transactionDifferences", transactionDiffText)
 
         // Anti-cheat detection
@@ -176,7 +175,7 @@ object CommandServerInfo : EventListener, CommandRegistrar {
 
         // Show available detection methods if none were specified
         if (detections.isEmpty()) {
-            val detectionList = DetectionType.entries.map { variable(it.tag) }.joinToText(regular(", "))
+            val detectionList = DetectionType.entries.joinToText(DEFAULT_SEPARATOR) { variable(it.tag) }
             printStyledComponent("detectParameter", detectionList, formatting = ::warning)
         }
     }
@@ -196,7 +195,7 @@ object CommandServerInfo : EventListener, CommandRegistrar {
         val plugins = ServerObserver.plugins ?: return
 
         val pluginCount = plugins.size
-        val pluginList = ServerObserver.formattedPluginList?.joinToText(regular(", ")) ?: markAsError("N/A")
+        val pluginList = ServerObserver.formattedPluginList?.joinToText(DEFAULT_SEPARATOR) ?: markAsError("N/A")
 
         chat(regular(t("plugins", variable(pluginCount.toString()), pluginList)))
     }

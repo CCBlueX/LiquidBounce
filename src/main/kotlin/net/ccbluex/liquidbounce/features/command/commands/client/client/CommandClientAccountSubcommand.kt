@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils
 
 object CommandClientAccountSubcommand {
     fun CmdLiteralScope.account() {
@@ -72,7 +72,7 @@ object CommandClientAccountSubcommand {
                 info.nickname?.let { nickname -> chat(regular("Nickname: "), variable(nickname)) }
                 chat(regular("Email: "), variable(info.email))
                 chat(regular("User ID: "), variable(info.userId))
-                chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
+                chat(regular("Groups: "), info.groups.joinToText(ComponentUtils.DEFAULT_SEPARATOR, ::variable))
                 chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
             }
         } catch (e: HttpException) {

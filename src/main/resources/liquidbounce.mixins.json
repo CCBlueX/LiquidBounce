@@ -168,7 +168,6 @@
     "minecraft.text.MixinGuiMessage",
     "minecraft.text.MixinGuiMessageLineVisible",
     "minecraft.text.MixinMutableComponent",
-    "minecraft.text.MixinStyleAccessor",
     "minecraft.text.MixinTextColor",
     "minecraft.text.MixinTranslatableContents",
     "minecraft.util.MixinDownloadQueue",
