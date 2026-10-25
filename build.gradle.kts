@@ -135,22 +135,29 @@ dependencies {
     api(libs.fabric.api)
     api(libs.fabric.kotlin)
 
+    // Mods the client only needs while developing. They must not reach the published POM - no add-on
+    // declares the Modrinth or ViaVersion repository - so they are compileOnly + localRuntime rather
+    // than api + runtimeOnly.
+
     // Mod menu
-    api(libs.modmenu)
+    compileOnly(libs.modmenu)
+    localRuntime(libs.modmenu)
 
     // Recommended mods (on IDE)
-    api(libs.sodium)
-    api(libs.lithium)
-    runtimeOnly(libs.immediatelyFast)
-    runtimeOnly(libs.iris)
+    compileOnly(libs.sodium)
+    compileOnly(libs.lithium)
+    localRuntime(libs.sodium)
+    localRuntime(libs.lithium)
+    localRuntime(libs.immediatelyFast)
+    localRuntime(libs.iris)
 
     // ViaFabricPlus
-    api(libs.vfp.api)
-    runtimeOnly(libs.vfp)
+    compileOnly(libs.vfp.api)
+    localRuntime(libs.vfp)
 
     // Exploit Preventer
-    api(libs.exploitPreventer.api)
-    runtimeOnly(libs.exploitPreventer)
+    compileOnly(libs.exploitPreventer.api)
+    localRuntime(libs.exploitPreventer)
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
@@ -168,7 +175,6 @@ dependencies {
     // brings nothing along.
     include(libs.liquidbounce.cef)
     localRuntime(libs.liquidbounce.cef) { isTransitive = false }
-
 
     // Ktor Server
     jij(libs.ktor.server.core)

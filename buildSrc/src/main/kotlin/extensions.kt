@@ -22,6 +22,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.exclude
 import java.net.URI
@@ -123,10 +124,16 @@ fun Project.addResolvedDependencies(
     from: Configuration,
     vararg toConfigurations: String,
 ) {
-    val resolvedDeps = from.incoming.resolutionResult.allDependencies
-        .map { dep ->
-            val requested = dep.requested.displayName
-            dependencies.create(requested) {
+    // Flattened copies instead of `extendsFrom`, which would push the excludes of `from` onto every
+    // consumer of `toConfigurations`. Coordinates come from the resolved graph, so each module lands
+    // here once, at the version that was actually selected.
+    val resolvedDeps = from.incoming.resolutionResult.allComponents
+        // A Kotlin multiplatform root only redirects to the platform module, which is a component of
+        // its own in this graph; keeping both lists that module twice in the POM.
+        .filter { component -> component.variants.none { it.externalVariant.isPresent } }
+        .mapNotNull { it.id as? ModuleComponentIdentifier }
+        .map { id ->
+            dependencies.create("${id.group}:${id.module}:${id.version}") {
                 (this as? ModuleDependency)?.isTransitive = false
             }
         }
