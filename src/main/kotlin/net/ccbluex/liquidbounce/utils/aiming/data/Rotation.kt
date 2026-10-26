@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -33,10 +34,10 @@ import org.joml.Quaternionf
 import java.lang.Math.fma
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.math.roundToInt
 
 @AddonApi
+@ValueClassCandidate
 @JvmRecord
 data class Rotation @JvmOverloads constructor(
     val yaw: Float,
@@ -61,7 +62,7 @@ data class Rotation @JvmOverloads constructor(
         fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
                 yaw = Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
-                pitch = Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat()),
+                pitch = Mth.wrapDegrees(-atan2(diffY, Mth.length(diffX, diffZ)).toDegrees().toFloat()),
             )
         }
     }
@@ -147,6 +148,13 @@ data class Rotation @JvmOverloads constructor(
     fun rotationDeltaLengthTo(other: Rotation): Float = rotationDeltaTo(other).length()
 
     /**
+     * Same metric as [rotationDeltaLengthTo] without the square root.
+     *
+     * Use this when only the ordering of two deltas matters.
+     */
+    fun rotationDeltaLengthSqrTo(other: Rotation): Float = rotationDeltaTo(other).lengthSqr()
+
+    /**
      * Calculates a new rotation that is closer to the [other] rotation by a limiting factor of
      * [horizontalFactor] and [verticalFactor], which should be between 0 and 180 degrees.
      */
@@ -176,7 +184,7 @@ data class Rotation @JvmOverloads constructor(
 
     @JvmOverloads
     fun isRotationDeltaCloseTo(other: Rotation, tolerance: Float = 2f): Boolean =
-        rotationDeltaLengthTo(other) <= tolerance
+        rotationDeltaLengthSqrTo(other) <= tolerance * tolerance
 
     fun add(x: Float, y: Float): Rotation {
         return Rotation(yaw = this.yRot + y, pitch = this.xRot + x)

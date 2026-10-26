@@ -58,6 +58,7 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
@@ -66,7 +67,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
 import java.util.Comparator.comparingDouble
-import kotlin.math.hypot
 
 /**
  * Stronghold finder module.
@@ -446,7 +446,7 @@ object ModuleStrongholdFinder : ClientModule(
 
             val deltaX = target.x - start.x
             val deltaZ = target.z - start.z
-            val horizontalLength = hypot(deltaX, deltaZ)
+            val horizontalLength = Mth.length(deltaX, deltaZ)
             if (horizontalLength > 1e-6) {
                 val markerEnd = Vec3(
                     start.x + deltaX / horizontalLength * 2.0,
