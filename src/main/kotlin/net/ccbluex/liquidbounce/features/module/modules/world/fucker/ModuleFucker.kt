@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -57,7 +56,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.forAllFaces
-import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -71,7 +70,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -170,7 +168,6 @@ object ModuleFucker : ClientModule(
         return BreakingProgress.Provider.Default.breakingProgress(target.pos)
     }
 
-    private val targetPointProportions = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
     private const val MAX_SURROUNDING_PATH_BLOCKS = 8
     private const val RAYCAST_TARGET_EPSILON = 0.005
 
@@ -452,17 +449,15 @@ object ModuleFucker : ClientModule(
         }
 
         targetShape.move(target).forAllFaces { side, minX, minY, minZ, maxX, maxY, maxZ ->
-            val face = AABB(minX, minY, minZ, maxX, maxY, maxZ)
-            for (a in targetPointProportions) {
-                for (b in targetPointProportions) {
-                    val targetPoint = face.samplePointOnSide(side, a, b)
-                    val path = createSurroundingPath(targetPoint) ?: continue
+            AlignedFace.get(side, minX, minY, minZ, maxX, maxY, maxZ)
+                .forEachSamplePoint(0.2) { targetPoint ->
+                    val path = createSurroundingPath(targetPoint) ?: return@forEachSamplePoint true
                     val currentBestPath = bestPath
                     if (currentBestPath == null || currentBestPath >= path) {
                         bestPath = path
                     }
+                    true
                 }
-            }
         }
 
         return bestPath
@@ -473,7 +468,6 @@ object ModuleFucker : ClientModule(
         val end = targetPoint.add(direction)
         val clipContext = ClipContext(eyePos, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
         val ignoredBlocks = ArrayList<BlockPos>(MAX_SURROUNDING_PATH_BLOCKS)
-        val visited = LongOpenHashSet(MAX_SURROUNDING_PATH_BLOCKS)
         var reachedTarget = false
         var invalidPath = false
 
@@ -493,8 +487,7 @@ object ModuleFucker : ClientModule(
 
                 if (!reachedTarget) {
                     val state = blockPos.state
-                    invalidPath = !visited.add(blockPos.asLong()) ||
-                        state == null || state.isAir || state.isNotBreakable(blockPos) ||
+                    invalidPath = state == null || state.isAir || state.isNotBreakable(blockPos) ||
                         ignoredBlocks.size >= MAX_SURROUNDING_PATH_BLOCKS
                     if (!invalidPath) {
                         ignoredBlocks += blockPos

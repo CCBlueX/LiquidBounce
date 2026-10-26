@@ -29,7 +29,16 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class TweakedMethods {
+import java.util.function.Function;
+
+public final class TweakedMethods {
+
+    private TweakedMethods() {}
+
+    public static final Function<ClipContext, BlockHitResult> DEFAULT_MISS_FACTORY = (context) -> {
+        Vec3 delta = context.getFrom().subtract(context.getTo());
+        return BlockHitResult.miss(context.getTo(), Direction.getApproximateNearest(delta.x, delta.y, delta.z), BlockPos.containing(context.getTo()));
+    };
 
     public static BlockHitResult tweakedRaycast(BlockGetter blockView, ClipContext context) {
         if (ModuleGhostHand.INSTANCE.getRunning()) {
@@ -61,10 +70,7 @@ public class TweakedMethods {
             double d = blockHitResult == null ? Double.MAX_VALUE : contextx.getFrom().distanceToSqr(blockHitResult.getLocation());
             double e = blockHitResult2 == null ? Double.MAX_VALUE : contextx.getFrom().distanceToSqr(blockHitResult2.getLocation());
             return d <= e ? blockHitResult : blockHitResult2;
-        }, contextx -> {
-            Vec3 vec3d = contextx.getFrom().subtract(contextx.getTo());
-            return BlockHitResult.miss(contextx.getTo(), Direction.getApproximateNearest(vec3d), BlockPos.containing(contextx.getTo()));
-        });
+        }, DEFAULT_MISS_FACTORY);
     }
 
 }

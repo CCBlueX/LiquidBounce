@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -27,6 +30,8 @@ import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.lang.Math.fma
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
@@ -95,14 +100,64 @@ class AlignedFace(from: Vec3, to: Vec3) {
      */
     fun samplePointOnFace(a: Double, b: Double): Vec3 {
         val dims = dimensions
-        // An axis-aligned face has exactly one constant axis; spread the two sample proportions over
-        // the two variable axes.
         return when {
-            dims.x == 0.0 -> Vec3(from.x, from.y + dims.y * a, from.z + dims.z * b)
-            dims.y == 0.0 -> Vec3(from.x + dims.x * a, from.y, from.z + dims.z * b)
-            dims.z == 0.0 -> Vec3(from.x + dims.x * a, from.y + dims.y * b, from.z)
+            dims.x == 0.0 -> Vec3(from.x, fma(dims.y, a, from.y), fma(dims.z, b, from.z))
+            dims.y == 0.0 -> Vec3(fma(dims.x, a, from.x), from.y, fma(dims.z, b, from.z))
+            dims.z == 0.0 -> Vec3(fma(dims.x, a, from.x), fma(dims.y, b, from.y), from.z)
             else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
         }
+    }
+
+    /**
+     * Walks the sampling grid of this face, spreading [proportions] over its two variable axes.
+     *
+     * Both axes share [proportions], so the grid always holds `proportions.size ** 2` points regardless of how
+     * large the face is.
+     *
+     * [action] returns `false` to stop the walk, for callers that already found a good enough point. Because
+     * this function is inline, a non-local `return` inside [action] also leaves the enclosing function.
+     *
+     * @return `true` when every point was visited, `false` when [action] stopped the walk
+     */
+    inline fun forEachSamplePoint(proportions: DoubleArray, action: (Vec3) -> Boolean): Boolean {
+        for (a in proportions) {
+            for (b in proportions) {
+                if (!action(samplePointOnFace(a, b))) {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+
+    /**
+     * Walks a sampling grid whose points are about [spacing] apart in world space.
+     *
+     * The point count follows the face size instead of being fixed, so a thin or small face is sampled by
+     * fewer points than a large one and each point covers roughly the same area. Points sit at cell centres,
+     * so they never land on the face border.
+     *
+     * The `action` contract and return value are the same as in the proportion overload.
+     */
+    inline fun forEachSamplePoint(spacing: Double, action: (Vec3) -> Boolean): Boolean {
+        require(spacing > 0.0) { "spacing must be positive, was $spacing" }
+
+        val dims = dimensions
+        // The two variable axes, in the same order samplePointOnFace spreads a and b over them. A face with
+        // two constant axes gives length 0 for the axis it does not use, which collapses that row to a single
+        // point instead of duplicating the whole walk.
+        val (lengthA, lengthB) = when {
+            dims.x == 0.0 -> DoubleDoubleImmutablePair(dims.y, dims.z)
+            dims.y == 0.0 -> DoubleDoubleImmutablePair(dims.x, dims.z)
+            dims.z == 0.0 -> DoubleDoubleImmutablePair(dims.x, dims.y)
+            else -> error("Face must be axis aligned for this function to work. dimensions=$dims")
+        }
+
+        return forEachGridCenter(
+            max(1, ceil(lengthA / spacing).toInt()),
+            max(1, ceil(lengthB / spacing).toInt()),
+        ) { a, b -> action(samplePointOnFace(a, b)) }
     }
 
     fun coerceInFace(line: LinearGeometry3): LineSegment? {
@@ -171,8 +226,9 @@ class AlignedFace(from: Vec3, to: Vec3) {
     }
 
     /**
-     * The two in-plane axes of this face. An aligned face is constant on exactly one axis, so its constant axis is
-     * exactly zero — the same exactness the factory and the transformations of this class maintain.
+     * The two in-plane axes of this face. A non-degenerate aligned face is constant on exactly one axis, so its
+     * constant axis is exactly zero — the same exactness the factory and the transformations of this class
+     * maintain.
      */
     private fun getDirectionVectors(): Pair<Vec3, Vec3> {
         val dims = dimensions

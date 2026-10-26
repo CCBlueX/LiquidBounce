@@ -19,14 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
-import net.ccbluex.fastutil.forEachDouble
-import net.ccbluex.fastutil.step
+import net.ccbluex.liquidbounce.utils.kotlin.IntIntValuePair
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.world.phys.Vec3
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sqrt
 
 class PlaneSection(
@@ -35,31 +34,54 @@ class PlaneSection(
     val dirVec2: Vec3,
 ) {
 
+    /**
+     * Casts at most [maxPoints] points over this section, spread so that the area covered by each point is
+     * equal regardless of how the section is proportioned.
+     *
+     * Points sit at cell centres, so they never land on the section border where a ray through them would
+     * graze the edge.
+     *
+     * @see getFairPointCounts
+     */
     inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3) -> Unit) {
-        val (stepDir2, stepDir1) = getFairStepSide(maxPoints)
+        val (countDir1, countDir2) = getFairPointCounts(maxPoints)
 
-        (0.0..1.0 step stepDir1).forEachDouble { y ->
-            (0.0..1.0 step stepDir2).forEachDouble { z ->
-                consumer(originPoint.fma(y, dirVec1).fma(z, dirVec2))
-            }
+        forEachGridCenter(countDir1, countDir2) { t1, t2 ->
+            consumer(originPoint.fma(t1, dirVec1).fma(t2, dirVec2))
+            true
         }
     }
 
-    fun getFairStepSide(nPoints: Int): DoubleDoublePair {
+    /**
+     * Point counts per direction of a grid that holds no more than [nPoints] points while keeping the area
+     * covered by each point equal, i.e. the counts follow the side lengths of the section.
+     *
+     * The budget wins when the two conflict: a section whose side ratio is more extreme than [nPoints] : 1 is
+     * capped at [nPoints] points instead of following the ratio.
+     *
+     * @return `(countDir1, countDir2)`
+     */
+    fun getFairPointCounts(nPoints: Int): IntIntValuePair {
+        require(nPoints > 0) { "nPoints must be positive, was $nPoints" }
+
         val vec1zero = dirVec1.isLikelyZero
         val vec2zero = dirVec2.isLikelyZero
 
         return when {
             !vec1zero && !vec2zero -> {
+                // countDir1 / countDir2 must equal len1 / len2 for equal per-point area, and the product must
+                // not exceed nPoints. Capping the first count at nPoints keeps the second one, which is derived
+                // from it, at 1 or above, so the product stays inside the budget even for extreme side ratios.
                 val aspectRatio = dirVec2.length() / dirVec1.length()
-                val stepDir2 = sqrt(1.0 / (aspectRatio * nPoints))
-                val stepDir1 = sqrt(aspectRatio / nPoints)
+                val countDir1 = min(nPoints, max(1, floor(sqrt(nPoints / aspectRatio)).toInt()))
+                val countDir2 = max(1, nPoints / countDir1)
 
-                DoubleDoublePair.of(stepDir2, stepDir1)
+                IntIntValuePair(countDir1, countDir2)
             }
-            vec1zero && vec2zero -> DoubleDoublePair.of(1.0, 1.0)
-            vec1zero -> DoubleDoublePair.of(1.0, 2.0 / nPoints)
-            else -> DoubleDoublePair.of(2.0 / nPoints, 1.0)
+            // A zero-length direction covers no area: all points go onto the remaining one.
+            vec1zero && vec2zero -> IntIntValuePair(1, 1)
+            vec1zero -> IntIntValuePair(1, nPoints)
+            else -> IntIntValuePair(nPoints, 1)
         }
     }
 

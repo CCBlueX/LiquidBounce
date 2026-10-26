@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntCollection
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.liquidbounce.common.TweakedMethods
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -314,7 +315,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 }
 
 /**
- * Basically [BlockGetter.raycast] but this method allows us to exclude blocks using [exclude].
+ * Basically [BlockGetter.clip] but this method allows us to exclude blocks using [exclude].
  */
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
@@ -372,14 +373,7 @@ fun BlockGetter.raycast(
 
             if (blockHitDistance <= fluidHitDistance) blockHitResult else fluidHitResult
         },
-        { raycastContext ->
-            val vec = raycastContext.from.subtract(raycastContext.to)
-            BlockHitResult.miss(
-                raycastContext.to,
-                Direction.getApproximateNearest(vec.x, vec.y, vec.z),
-                BlockPos.containing(raycastContext.to)
-            )
-        })
+        TweakedMethods.DEFAULT_MISS_FACTORY)
 }
 
 fun BlockPos.canStandOn(): Boolean {
