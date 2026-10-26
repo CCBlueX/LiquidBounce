@@ -31,6 +31,7 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -256,6 +257,124 @@ class AlignedFaceTest {
     }
 
     @Test
+    fun `get from a direction and box keeps the box offset on an east face`() {
+        val box = AABB(0.25, 0.1, 0.4, 0.75, 0.6, 0.9)
+
+        val point = AlignedFace.get(Direction.EAST, box).samplePointOnFace(0.5, 0.25)
+
+        assertVec3Equals(Vec3(0.75, 0.35, 0.525), point, eps)
+    }
+
+    @Test
+    fun `get from a direction and box keeps the box offset on an up face`() {
+        val box = AABB(0.2, 0.3, 0.4, 0.8, 0.5, 0.9)
+
+        val point = AlignedFace.get(Direction.UP, box).samplePointOnFace(0.25, 0.75)
+
+        assertVec3Equals(Vec3(0.35, 0.5, 0.775), point, eps)
+    }
+
+    @Test
+    fun `forEachSamplePoint visits one point per proportion pair on the face`() {
+        val visited = ArrayList<Vec3>()
+
+        val completed = sampleFace.forEachSamplePoint(sampleProportions) { point ->
+            visited += point
+            true
+        }
+
+        assertTrue(completed)
+        assertEquals(sampleProportions.size * sampleProportions.size, visited.size)
+        assertVec3Equals(Vec3(0.0, 0.0, 0.0), visited.first(), eps)
+        assertVec3Equals(Vec3(2.0, 3.0, 0.0), visited.last(), eps)
+        assertEquals(0.0, visited.first().z, 0.0)
+        assertEquals(0.0, visited.last().z, 0.0)
+    }
+
+    @Test
+    fun `forEachSamplePoint stops on the first rejected point`() {
+        val visited = ArrayList<Vec3>()
+
+        val completed = sampleFace.forEachSamplePoint(sampleProportions) { point ->
+            visited += point
+            visited.size < 3
+        }
+
+        assertFalse(completed)
+        assertEquals(3, visited.size)
+    }
+
+    @Test
+    fun `forEachSamplePoint with spacing matches the equivalent proportion grid on a unit face`() {
+        val unitFace = AlignedFace(Vec3.ZERO, Vec3(1.0, 0.0, 1.0))
+
+        val bySpacing = ArrayList<Vec3>()
+        val completed = unitFace.forEachSamplePoint(0.2) { point ->
+            bySpacing += point
+            true
+        }
+        val byProportions = ArrayList<Vec3>()
+        unitFace.forEachSamplePoint(doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)) { point ->
+            byProportions += point
+            true
+        }
+
+        assertTrue(completed)
+        assertEquals(25, bySpacing.size)
+        assertEquals(byProportions.size, bySpacing.size)
+        byProportions.forEachIndexed { index, expected ->
+            assertVec3Equals(expected, bySpacing[index], eps)
+        }
+    }
+
+    @Test
+    fun `forEachSamplePoint with spacing scales the point count with the face size`() {
+        val unitFace = AlignedFace(Vec3.ZERO, Vec3(1.0, 0.0, 1.0))
+        val thinFace = AlignedFace(Vec3.ZERO, Vec3(1.0, 0.0, 0.25))
+
+        val unitPoints = unitFace.countSamplePoints(0.2)
+        val thinPoints = thinFace.countSamplePoints(0.2)
+
+        // Both faces are 1.0 wide, so they share the 5 columns; the thin one only needs 2 rows.
+        assertEquals(10, thinPoints)
+        assertTrue(thinPoints < unitPoints)
+    }
+
+    @Test
+    fun `forEachSamplePoint with spacing lowers the point count as the spacing grows`() {
+        val unitFace = AlignedFace(Vec3.ZERO, Vec3(1.0, 0.0, 1.0))
+
+        assertEquals(4, unitFace.countSamplePoints(0.5))
+        assertEquals(1, unitFace.countSamplePoints(2.0))
+    }
+
+    @Test
+    fun `forEachSamplePoint with spacing keeps points off the face border`() {
+        val unitFace = AlignedFace(Vec3.ZERO, Vec3(1.0, 0.0, 1.0))
+
+        unitFace.forEachSamplePoint(0.2) { point ->
+            assertTrue(point.x > 0.0 && point.x < 1.0, "x on the border: ${point.x}")
+            assertTrue(point.z > 0.0 && point.z < 1.0, "z on the border: ${point.z}")
+            true
+        }
+    }
+
+    @Test
+    fun `forEachSamplePoint with spacing does not duplicate points on a line face`() {
+        // A face along y: b scales the zero-length z axis, so the walk has to stay a single row.
+        val lineFace = AlignedFace(Vec3.ZERO, Vec3(0.0, 2.0, 0.0))
+
+        val visited = ArrayList<Vec3>()
+        lineFace.forEachSamplePoint(0.5) { point ->
+            visited += point
+            true
+        }
+
+        assertEquals(4, visited.size)
+        assertEquals(4, visited.toSet().size)
+    }
+
+    @Test
     fun `the constant axis stays exactly zero through the transformations`() {
         val face = AlignedFace.get(Direction.UP, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
 
@@ -343,7 +462,7 @@ class AlignedFaceTest {
         val segment = sampleFace.coerceInFace(line)
 
         assertNotNull(segment)
-        assertVec3Equals(Vec3(0.0, 0.5, 0.0), segment!!.start, eps)
+        assertVec3Equals(Vec3(0.0, 0.5, 0.0), segment.start, eps)
         assertVec3Equals(Vec3(2.0, 1.5, 0.0), segment.end, eps)
     }
 
@@ -354,7 +473,7 @@ class AlignedFaceTest {
         val segment = sampleFace.coerceInFace(line)
 
         assertNotNull(segment)
-        assertPointOnLine(line, segment!!.start)
+        assertPointOnLine(line, segment.start)
         assertPointOnLine(line, segment.end)
         assertPointOnFaceBoundary(segment.start)
         assertPointOnFaceBoundary(segment.end)
@@ -367,7 +486,7 @@ class AlignedFaceTest {
         val segment = sampleFace.coerceInFace(line)
 
         assertNotNull(segment)
-        assertVec3Equals(Vec3(0.0, 1.0, 0.0), segment!!.start, eps)
+        assertVec3Equals(Vec3(0.0, 1.0, 0.0), segment.start, eps)
         assertVec3Equals(Vec3(2.0, 1.0, 0.0), segment.end, eps)
     }
 
@@ -453,6 +572,15 @@ class AlignedFaceTest {
             abs(point.z - face.to.z) <= tolerance
 
         assertTrue(onBoundary, "Point $point is not on the boundary of face $face")
+    }
+
+    private fun AlignedFace.countSamplePoints(spacing: Double): Int {
+        var count = 0
+        forEachSamplePoint(spacing) {
+            count++
+            true
+        }
+        return count
     }
 
     private fun sampleFaceBoundaryMinDistanceSqr(face: AlignedFace, line: Line, step: Double): Double {
