@@ -50,6 +50,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerRotationPacket
@@ -240,11 +241,11 @@ object RotationManager : EventListener {
                 // After generating the next rotation, we need to normalize it
                 .normalize()
 
-            val diff = rotation.rotationDeltaLengthTo(playerRotation)
+            val diffSqr = rotation.rotationDeltaLengthSqrTo(playerRotation)
 
             if (rotationTarget == null && (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK
                     || activeRotationTarget.processors.isEmpty()
-                    || diff <= activeRotationTarget.resetThreshold)) {
+                    || diffSqr <= activeRotationTarget.resetThreshold.sq())) {
                 currentRotation?.let { currentRotation ->
                     player.yRot = player.withFixedYaw(currentRotation)
                     player.yBob = player.yRot

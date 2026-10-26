@@ -1504,6 +1504,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/la
 	public static final fun lookingAt (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public final fun normalize ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public final fun pitch ()F
+	public final fun rotationDeltaLengthSqrTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
 	public final fun rotationDeltaLengthTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
 	public final fun rotationDeltaTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Lnet/ccbluex/liquidbounce/utils/aiming/data/RotationDelta;
 	public final fun toQuaternion ()Lorg/joml/Quaternionf;
