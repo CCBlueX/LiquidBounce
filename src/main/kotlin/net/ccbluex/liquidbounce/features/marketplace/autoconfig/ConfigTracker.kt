@@ -25,6 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.HttpClient
@@ -55,7 +56,7 @@ import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
 import java.io.Reader
 
@@ -124,7 +125,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      */
     val chain: List<Step>
         get() = chainText.split(',').filter(String::isNotEmpty).map { step ->
-            val (itemId, revisionId) = step.split(':').map(String::toInt)
+            val (itemId, revisionId) = step.split(':').mapToIntArray(String::toInt)
             Step(itemId, revisionId)
         }
 
@@ -495,15 +496,16 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         val file = cacheFile(itemId, revisionId)
         if (!file.exists()) {
             file.parentFile.mkdirs()
-            val part = File(file.parentFile, "${file.name}.part")
+            val part = file.resolveSibling("${file.name}.part")
             HttpClient.download(MarketplaceApi.downloadRevision(itemId, revisionId), part)
             check(part.renameTo(file)) { "Failed to store revision $revisionId" }
         }
         return file
     }
 
-    private fun readConfig(file: File): JsonObject =
+    private suspend fun readConfig(file: File): JsonObject = withContext(Dispatchers.IO) {
         publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
+    }
 
     /**
      * Backs up the current settings unless a backup exists, then applies [configs] in order. A
@@ -562,12 +564,10 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     private fun snapshot(): Map<String, String> = buildMap {
         ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
             .asJsonObject["value"].asJsonArray.forEach { module ->
-                this[module.asJsonObject["name"].asString] = sha256(module.toString())
+                this[module.asJsonObject["name"].asString] = sha256Hex(module.toString())
             }
-        this[SPOOFERS] = sha256(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
+        this[SPOOFERS] = sha256Hex(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
     }
-
-    private fun sha256(text: String) = DigestUtils.sha256Hex(text)
 
     private fun encodeHashes(hashes: Map<String, String>) = publicGson.toJson(hashes)
 

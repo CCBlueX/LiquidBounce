@@ -19,14 +19,22 @@
 
 package net.ccbluex.liquidbounce.api.core
 
+import java.io.IOException
 import java.net.HttpURLConnection
 
+/**
+ * A response with a non-2xx status code.
+ *
+ * An [IOException] on purpose: OkHttp hands a failure thrown by an interceptor to the callback as-is only
+ * when it is an [IOException] - anything else is replaced with a synthetic `canceled due to ...` [IOException]
+ * that carries the original as suppressed. Staying an [IOException] keeps `catch (e: HttpException)` reachable.
+ */
 class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
-    : Exception("${method.name} $url failed with code $code: $content")
+    : IOException("${method.name} $url failed with code $code: $content")
 
 /**
- * The [HttpException] behind this. OkHttp hands one thrown by an interceptor of an async call on
- * wrapped in an [java.io.IOException].
+ * The [HttpException] behind this, if any - either itself, or the one a wrapper such as a
+ * [java.util.concurrent.CompletionException] carries.
  */
 val Throwable.httpException: HttpException?
     get() = this as? HttpException

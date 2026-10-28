@@ -33,6 +33,9 @@ class ApiConfig(
     val apiEndpointV1 = url.apiEndpoint(1)
     val apiEndpointV3 = url.apiEndpoint(3)
 
+    val retrofitApiV1 = apiRetrofit(apiEndpointV1)
+    val retrofitApiV3 = apiRetrofit(apiEndpointV3)
+
     private fun HttpUrl.apiEndpoint(version: Int): String =
         newBuilder().addPathSegments("api/v$version").build().toString()
 

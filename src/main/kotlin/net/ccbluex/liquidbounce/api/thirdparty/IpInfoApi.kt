@@ -19,15 +19,20 @@
 package net.ccbluex.liquidbounce.api.thirdparty
 
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.logger
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 
 /**
  * An implementation for the ipinfo.io API including
  * keeping track of the current IP address.
  */
-object IpInfoApi : BaseApi("https://ipinfo.io") {
+object IpInfoApi {
+
+    private val service = apiRetrofit("https://ipinfo.io").create<Service>()
 
     /**
      * Information about the current IP address of the user. This can change depending on if the
@@ -49,8 +54,16 @@ object IpInfoApi : BaseApi("https://ipinfo.io") {
         }.getOrNull()
     }
 
-    suspend fun own() = get<IpData>("/json")
-    suspend fun someoneElse(ip: String) = get<IpData>("/$ip/json")
+    suspend fun own() = service.own()
+    suspend fun someoneElse(ip: String) = service.forIp(ip)
+
+    internal interface Service {
+        @GET("json")
+        suspend fun own(): IpData
+
+        @GET("{ip}/json")
+        suspend fun forIp(@Path("ip") ip: String): IpData
+    }
 
     /**
      * Represents information about an IP address
