@@ -239,7 +239,7 @@ object ConfigSystem {
      */
     private fun serializeValueGroup(valueGroup: ValueGroup, writer: Writer, gson: Gson = fileGson) {
         gson.newJsonWriter(writer).use {
-            gson.toJson(valueGroup, ValueGroup::class.javaObjectType, it)
+            gson.toJson(valueGroup, ValueGroup::class.java, it)
         }
     }
 
@@ -247,7 +247,13 @@ object ConfigSystem {
      * Serialize a config to a [JsonObject].
      */
     fun serializeValueGroup(valueGroup: ValueGroup, gson: Gson = fileGson): JsonObject =
-        gson.toJsonTree(valueGroup, ValueGroup::class.javaObjectType) as JsonObject
+        gson.toJsonTree(valueGroup, ValueGroup::class.java) as JsonObject
+
+    /**
+     * Deserialize a config from a [CharSequence]
+     */
+    fun deserializeValueGroup(valueGroup: ValueGroup, source: CharSequence, gson: Gson = fileGson) =
+        deserializeValueGroup(valueGroup, Reader.of(source), gson)
 
     /**
      * Deserialize a config from a reader, and close it
