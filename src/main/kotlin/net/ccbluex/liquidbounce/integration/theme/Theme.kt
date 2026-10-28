@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
-import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +44,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.text.capitalize
-import okhttp3.Headers
 import okio.Buffer
 import java.io.File
 import java.util.Locale
@@ -57,17 +55,7 @@ import java.util.Locale
  */
 @Suppress("TooManyFunctions")
 class Theme private constructor(val origin: Origin, url: String) :
-    BaseApi(
-        url.trimEnd('/'),
-        // DO NOT use headersOf(...) because LunarClient uses an outdated version of
-        // the OkHttp library.
-        defaultHeaders = Headers.Builder()
-            .add(
-                HttpHeaderNames.COOKIE.toString(),
-                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
-            )
-            .build()
-    ), AutoCloseable, SimpleReloadListener.Sequenced {
+    BaseApi(url.trimEnd('/')), AutoCloseable, SimpleReloadListener.Sequenced {
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),

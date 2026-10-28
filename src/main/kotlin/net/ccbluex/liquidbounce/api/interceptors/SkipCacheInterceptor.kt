@@ -22,13 +22,15 @@ package net.ccbluex.liquidbounce.api.interceptors
 import okhttp3.CacheControl
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.util.function.Predicate
 
-class CacheBlacklistInterceptor(
-    val blacklistedHosts: Set<String>,
+class SkipCacheInterceptor(
+    val condition: Predicate<in String>,
 ) : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        if (request.url.host in blacklistedHosts) {
+        if (condition.test(request.url.host)) {
             val newRequest = request.newBuilder()
                 .cacheControl(cacheControl)
                 .build()
