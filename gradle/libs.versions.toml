@@ -24,7 +24,7 @@ retrofit = "3.0.0"
 # djl
 djl = "0.38.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-okhttp = "5.5.0"
+okhttp = "5.5.1"
 
 ktor = "3.6.0"
 semver4j = "3.1.0"
