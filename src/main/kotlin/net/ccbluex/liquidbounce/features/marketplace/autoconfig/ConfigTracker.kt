@@ -56,8 +56,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.input.CharSequenceReader
 import java.io.File
+import java.io.Reader
 
 /**
  * Tracks the marketplace config the client runs.
@@ -211,8 +211,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * Applies a config that does not come from the marketplace. It stops tracking but keeps
      * the backup.
      */
-    suspend fun loadExternal(source: String, modules: Collection<ValueGroup> = emptyList()) {
-        val config = publicGson.newJsonReader(CharSequenceReader(source)).use { it.parseTree().asJsonObject }
+    suspend fun loadExternal(source: CharSequence, modules: Collection<ValueGroup> = emptyList()) {
+        val config = publicGson.newJsonReader(Reader.of(source)).use { it.parseTree().asJsonObject }
 
         withContext(Dispatchers.Main) {
             apply(listOf(config), modules)

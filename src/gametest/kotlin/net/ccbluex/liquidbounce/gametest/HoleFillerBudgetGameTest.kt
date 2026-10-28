@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleHoleFiller
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
@@ -53,10 +53,10 @@ class HoleFillerBudgetGameTest : FabricClientGameTest {
                     ModuleHoleFiller.enabled = false
                     ModuleHoleFiller.settings.getValue("Area").setByString("2")
                     GlobalSettingsTarget.combatChoices.deserializeFrom(
-                        Gson(), JsonArray().apply { add("Players") }
+                        GSON_DEFAULT, JsonArray().apply { add("Players") }
                     )
                     ModuleHoleFiller.settings.getValue("Features").deserializeFrom(
-                        Gson(), JsonArray().apply { add("Smart") }
+                        GSON_DEFAULT, JsonArray().apply { add("Smart") }
                     )
                     val player = checkNotNull(mc.player)
                     // Keep both targets in the loaded spawn chunk, on opposite sides of the player.

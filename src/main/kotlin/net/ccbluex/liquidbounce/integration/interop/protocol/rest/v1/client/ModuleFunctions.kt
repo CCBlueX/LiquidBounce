@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.utils.client.logger
-import org.apache.commons.io.input.CharSequenceReader
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("name", name)
@@ -102,33 +101,34 @@ private fun Route.putSettings() = put {
     val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
     withContext(Dispatchers.Main) {
-        ConfigSystem.deserializeValueGroup(module, CharSequenceReader(call.receiveText()))
+        ConfigSystem.deserializeValueGroup(module, call.receiveText())
         ConfigSystem.store(modulesConfig)
-
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
     }
+    call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/modules/panic
-private fun Route.postPanic() = post("/panic") { withContext(Dispatchers.Main) {
-    AutoConfig.withLoading {
-        runCatching {
-            for (module in ModuleManager) {
-                if (module.category == ModuleCategories.RENDER) {
-                    continue
+private fun Route.postPanic() = post("/panic") {
+    withContext(Dispatchers.Main) {
+        AutoConfig.withLoading {
+            runCatching {
+                for (module in ModuleManager) {
+                    if (module.category == ModuleCategories.RENDER) {
+                        continue
+                    }
+
+                    module.enabled = false
                 }
 
-                module.enabled = false
+                ConfigSystem.store(modulesConfig)
+            }.onFailure {
+                logger.error("Failed to panic disable modules", it)
             }
-
-            ConfigSystem.store(modulesConfig)
-        }.onFailure {
-            logger.error("Failed to panic disable modules", it)
         }
     }
 
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
-} }
+}
 
 @JvmRecord
 private data class ModuleRequest(val name: String) {

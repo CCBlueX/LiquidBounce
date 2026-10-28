@@ -19,13 +19,13 @@
 package net.ccbluex.liquidbounce.api.core
 
 import net.ccbluex.liquidbounce.utils.client.logger
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.lang3.RandomStringUtils
 
 class ApiConfig(
     val url: String,
     @Suppress("unused")
     val secure: Boolean = url.startsWith("https://"),
-    val sessionToken: String
 ) {
 
     val apiEndpointV1 = "$url/api/v1"
@@ -65,26 +65,49 @@ class ApiConfig(
         const val AVATAR_UUID_URL = "$AVATAR_BASE_URL/%s/100"
         const val AVATAR_USERNAME_URL = "$AVATAR_BASE_URL/%s"
 
+        const val SESSION_TOKEN_HEADER = "X-Session-Token"
+
         /**
          * Defines the API environment for LiquidBounce.
          * This should be initialized before the API is used through [net.ccbluex.liquidbounce.LiquidBounce].
          */
-        val config by AsyncLazy<ApiConfig> {
+        val config by AsyncLazy {
             lookup()
         }
 
-        suspend fun lookup(): ApiConfig {
-            val sessionToken = System.getProperty(
+        /**
+         * The session token identifying this client.
+         *
+         * Computed without any network I/O so that [net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor]
+         * can read it while [lookup] — which issues its own requests through [HttpClient] — is still running.
+         */
+        val sessionToken: String by lazy {
+            System.getProperty(
                 "net.ccbluex.liquidbounce.api.token",
                 RandomStringUtils.secure().nextAlphanumeric(16)
             )
-            logger.info("API Session Token: $sessionToken")
+        }
+
+        /**
+         * Hosts that belong to our API and may therefore receive the session token.
+         *
+         * Only locally known values are considered — the hardcoded [API_URLS] and the URL provided by
+         * LiquidLauncher. Anything else (a remote theme, a third-party API, a redirect target) is excluded.
+         */
+        val trustedHosts: Set<String> = buildSet {
+            API_URLS.mapNotNullTo(this) { it.toHttpUrlOrNull()?.host }
+            System.getProperty("net.ccbluex.liquidbounce.api.url")
+                ?.let { it.toHttpUrlOrNull()?.host?.let(::add) }
+        }
+
+        suspend fun lookup(): ApiConfig {
+            logger.info("API Session Token: ${sessionToken.take(PREFIX_LENGTH)}***")
 
             // We trust LiquidLauncher to have found the correct API URL
             val propertyUrl = System.getProperty("net.ccbluex.liquidbounce.api.url")
             if (propertyUrl != null) {
                 logger.info("Using API URL from system property: $propertyUrl")
-                return ApiConfig(propertyUrl, sessionToken = sessionToken)
+                return ApiConfig(propertyUrl)
             }
 
             // Try API urls until we find one that works
@@ -95,10 +118,7 @@ class ApiConfig(
                     HttpClient.request(url, HttpMethod.HEAD).close()
 
                     logger.info("API endpoint '$url' is available")
-                    return ApiConfig(
-                        url,
-                        sessionToken = sessionToken
-                    )
+                    return ApiConfig(url)
                 } catch (e: HttpException) {
                     logger.debug("API endpoint '$url' returned status code: ${e.code}")
                 } catch (e: Exception) {
@@ -107,11 +127,10 @@ class ApiConfig(
             }
 
             logger.error("No API endpoints are available, using default: ${API_URLS[0]}")
-            return ApiConfig(
-                API_URLS[0],
-                sessionToken = sessionToken
-            )
+            return ApiConfig(API_URLS[0])
         }
+
+        private const val PREFIX_LENGTH = 4
 
     }
 

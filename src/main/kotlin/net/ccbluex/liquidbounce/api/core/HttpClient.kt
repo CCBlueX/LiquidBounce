@@ -19,17 +19,21 @@
 package net.ccbluex.liquidbounce.api.core
 
 import com.mojang.blaze3d.platform.NativeImage
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.api.interceptors.SkipCacheInterceptor
+import net.ccbluex.liquidbounce.api.interceptors.whenUrl
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
@@ -48,7 +52,6 @@ import okhttp3.Response
 import okhttp3.coroutines.executeAsync
 import okio.Buffer
 import okio.BufferedSource
-import okio.sink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -76,12 +79,7 @@ object HttpClient {
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
-    /**
-     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have [Headers.EMPTY]
-     */
-    @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
-    @JvmField
-    val EMPTY_HEADERS = Headers.Builder().build()
+    private fun String.isLocalHost() = this == "localhost" || this == "127.0.0.1"
 
     object MediaTypes {
         @JvmField
@@ -124,8 +122,8 @@ object HttpClient {
                 logger.error("Failed to initialize cache directory for HTTP client", e)
             }
         }
-        .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
-        .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
+        .addInterceptor(DefaultHeaderInterceptor("User-Agent") { DEFAULT_AGENT })
         .proxy(java.net.Proxy.NO_PROXY)
         .build()
 
@@ -159,6 +157,17 @@ object HttpClient {
     @get:JvmStatic
     val client = defaultClient.newBuilder()
         .addInterceptor(clientHttpApiInterceptor)
+        // Credentials are scoped to the hosts they belong to. Registered as network interceptors, so they
+        // are re-evaluated for every redirect hop and cannot follow a redirect to a foreign host.
+        .addNetworkInterceptor(
+            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) { ApiConfig.sessionToken }
+                .whenUrl { it.host in ApiConfig.trustedHosts }
+        )
+        .addNetworkInterceptor(
+            DefaultHeaderInterceptor(HttpHeaders.Cookie, {
+                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
+            }, false).whenUrl { it.host.isLocalHost() && it.port == ClientInteropServer.PORT }
+        )
         .build()
 
     @get:JvmStatic
@@ -200,7 +209,7 @@ object HttpClient {
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ) = withContext(Dispatchers.IO) {
-        request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+        request(url, HttpMethod.GET, agent, progressListener = progressListener).bodyToFile(file)
     }
 
     /** For Java and JS. Cancelling the returned future also cancels the HTTP call. */
@@ -230,33 +239,8 @@ inline fun <reified T> Response.parse(): T {
             Buffer().apply { writeAll(it) }
         } as T
         NativeImage::class.java -> body.source().readNativeImage() as T
-        else -> body.charStream().readJson<T>()
+        else -> bodyAsJson<T>(publicGson) // Keep publicGson for backwards compatibility
     }
-}
-
-/**
- * Read all UTF-8 lines from [BufferedSource] as an [Iterator].
- *
- * When there are no more lines to read, the source is closed automatically.
- */
-fun BufferedSource.utf8Lines(): Iterator<String> =
-    object : AbstractIterator<String>() {
-        override fun computeNext() {
-            val nextLine = readUtf8Line()
-            if (nextLine != null) {
-                setNext(nextLine)
-            } else {
-                close()
-                done()
-            }
-        }
-    }
-
-/**
- * Save response body to file.
- */
-fun Response.toFile(file: File) = use { response ->
-    file.sink().use(response.body.source()::readAll)
 }
 
 fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
