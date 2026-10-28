@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.account
 
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import com.mojang.authlib.GameProfile
 import com.mojang.util.UndashedUuid
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.makeRequestBody
+import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import okhttp3.Request
 
@@ -75,11 +75,11 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
 
         val request = Request.Builder()
             .url("$baseUrl/authenticate")
-            .post(gson.makeRequestBody(AuthenticationRequest(Agent.MINECRAFT, username, password)))
+            .post(GSON_DEFAULT.makeRequestBody(AuthenticationRequest(Agent.MINECRAFT, username, password)))
             .build()
 
         val response = HttpClient.client.newCall(request).execute().use {
-            it.body.charStream().readJson<AuthenticationResponse>(gson)
+            it.body.charStream().readJson<AuthenticationResponse>(GSON_DEFAULT)
         }
 
         check(response.clientToken == clientIdentifier) { "Client identifier mismatch" }
@@ -91,13 +91,6 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
 
         val profile = GameProfile(UndashedUuid.fromStringLenient(selectedProfile.id), selectedProfile.name)
         return YggdrasilSession(profile, response.accessToken)
-    }
-
-    companion {
-        /**
-         * Plain Gson: these are protocol types with no client-side adapters.
-         */
-        private val gson = Gson()
     }
 
 }

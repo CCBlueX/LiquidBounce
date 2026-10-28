@@ -21,17 +21,11 @@ package net.ccbluex.liquidbounce.api.core
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okio.Buffer
 import okio.BufferedSink
-
-/**
- * Deliberately plain: request bodies must not be pretty-printed and must not run through the client's
- * serialization exclusion strategies, so none of the instances in [net.ccbluex.liquidbounce.config.gson]
- * are appropriate here.
- */
-private val requestBodyGson = Gson()
 
 private fun Buffer.asRequestBody(mediaType: MediaType) = object : RequestBody() {
     override fun contentType() = mediaType
@@ -50,4 +44,4 @@ fun Gson.makeRequestBody(data: Any?): RequestBody {
 }
 
 @JvmOverloads
-fun JsonElement.toRequestBody(gson: Gson = requestBodyGson): RequestBody = gson.makeRequestBody(this)
+fun JsonElement.toRequestBody(gson: Gson = GSON_DEFAULT): RequestBody = gson.makeRequestBody(this)

@@ -36,6 +36,9 @@ import java.io.InputStream
 import java.io.Reader
 import java.nio.charset.Charset
 
+@JvmField
+val GSON_DEFAULT = Gson()
+
 /**
  * Read JSON content
  */
