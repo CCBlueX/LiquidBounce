@@ -61,7 +61,7 @@ inline fun <reified T> InputStream.readJson(charset: Charset = Charsets.UTF_8): 
  * Read JSON content from a [Reader] and close it
  */
 inline fun <reified T> Reader.readJson(gson: Gson = publicGson): T = use {
-    gson.fromJson(it, object : TypeToken<T>() {}.type)
+    gson.fromJson(it, object : TypeToken<T>() {})
 }
 
 inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)

@@ -23,9 +23,9 @@ import com.google.gson.annotations.SerializedName
 import com.mojang.authlib.GameProfile
 import com.mojang.util.UndashedUuid
 import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.bodyAsJson
 import net.ccbluex.liquidbounce.api.core.makeRequestBody
 import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
-import net.ccbluex.liquidbounce.config.gson.util.readJson
 import okhttp3.Request
 
 data class YggdrasilSession(val profile: GameProfile, val accessToken: String)
@@ -78,9 +78,7 @@ class YggdrasilUserAuthentication(val baseUrl: String) {
             .post(GSON_DEFAULT.makeRequestBody(AuthenticationRequest(Agent.MINECRAFT, username, password)))
             .build()
 
-        val response = HttpClient.client.newCall(request).execute().use {
-            it.body.charStream().readJson<AuthenticationResponse>(GSON_DEFAULT)
-        }
+        val response = HttpClient.client.newCall(request).execute().bodyAsJson<AuthenticationResponse>()
 
         check(response.clientToken == clientIdentifier) { "Client identifier mismatch" }
 

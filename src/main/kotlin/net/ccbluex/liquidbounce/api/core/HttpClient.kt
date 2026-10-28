@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
@@ -48,7 +48,6 @@ import okhttp3.Response
 import okhttp3.coroutines.executeAsync
 import okio.Buffer
 import okio.BufferedSource
-import okio.sink
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -200,7 +199,7 @@ object HttpClient {
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ) = withContext(Dispatchers.IO) {
-        request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+        request(url, HttpMethod.GET, agent, progressListener = progressListener).bodyToFile(file)
     }
 
     /** For Java and JS. Cancelling the returned future also cancels the HTTP call. */
@@ -230,33 +229,8 @@ inline fun <reified T> Response.parse(): T {
             Buffer().apply { writeAll(it) }
         } as T
         NativeImage::class.java -> body.source().readNativeImage() as T
-        else -> body.charStream().readJson<T>()
+        else -> bodyAsJson<T>(publicGson)
     }
-}
-
-/**
- * Read all UTF-8 lines from [BufferedSource] as an [Iterator].
- *
- * When there are no more lines to read, the source is closed automatically.
- */
-fun BufferedSource.utf8Lines(): Iterator<String> =
-    object : AbstractIterator<String>() {
-        override fun computeNext() {
-            val nextLine = readUtf8Line()
-            if (nextLine != null) {
-                setNext(nextLine)
-            } else {
-                close()
-                done()
-            }
-        }
-    }
-
-/**
- * Save response body to file.
- */
-fun Response.toFile(file: File) = use { response ->
-    file.sink().use(response.body.source()::readAll)
 }
 
 fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)

@@ -19,3 +19,20 @@
 
 package net.ccbluex.liquidbounce.api.core
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
+import okhttp3.Response
+import okio.sink
+import java.io.File
+
+inline fun <reified T> Response.bodyAsJson(gson: Gson = GSON_DEFAULT): T =
+    bodyAsJson(gson, object : TypeToken<T>() {})
+
+fun <T> Response.bodyAsJson(gson: Gson, type: TypeToken<T>): T = use {
+    gson.fromJson(it.body.charStream(), type)
+}
+
+fun Response.bodyToFile(file: File) = use {
+    file.sink().use(it.body.source()::readAll)
+}

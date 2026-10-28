@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
-import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
@@ -178,7 +177,7 @@ object CommandDebug : CommandRegistrar {
     private suspend fun uploadToPaste(content: String): String {
         val form = "content=$content"
         return HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
-                .parse<String>()
+                .body.string()
     }
 
 }
