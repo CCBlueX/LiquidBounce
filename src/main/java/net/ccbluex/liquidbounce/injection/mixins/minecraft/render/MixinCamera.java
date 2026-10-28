@@ -230,6 +230,13 @@ public abstract class MixinCamera {
         return original;
     }
 
+    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setupPerspective(FFFFF)V"))
+    private void hookAspectRatio(Args args) {
+        if (ModuleAspect.INSTANCE.getRunning()) {
+            args.set(3, (float) args.get(3) / ModuleAspect.getRatioMultiplier());
+        }
+    }
+
     @ModifyArgs(method = "createProjectionMatrixForCulling", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;", remap = false))
     private void hookBasicProjectionMatrix(Args args) {
         if (ModuleAspect.INSTANCE.getRunning()) {
