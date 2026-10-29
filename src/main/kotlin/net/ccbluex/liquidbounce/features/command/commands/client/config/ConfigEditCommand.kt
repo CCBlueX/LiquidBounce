@@ -28,9 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Changes the loaded config on the marketplace, for its author only
- */
 object ConfigEditCommand {
 
     fun CmdLiteralScope.edit() {
@@ -46,12 +43,12 @@ object ConfigEditCommand {
         literal("update") {
             optional("changelog", StringArgumentType.greedyString(), default = null) { changelog ->
                 execSuspend { ctx ->
-                    requireOwnTracked()
+                    val session = requireEditableTracked()
                     if (ConfigTracker.state != ConfigTracker.State.EDITING) {
                         throw CommandException(t("update.notEditing", variable(ConfigTracker.itemName)))
                     }
 
-                    request { ConfigTracker.update(session(), ctx.get(changelog)) }
+                    request { ConfigTracker.update(session, ctx.get(changelog)) }
                     chat(regular(t("update.updated", variable(ConfigTracker.itemName))))
                 }
             }

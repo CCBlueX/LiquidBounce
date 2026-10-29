@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
+import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
+import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
@@ -82,7 +84,8 @@ object MarketplaceConfigs {
      * Configs [input] names: a share code, an item id, `author/name` or a bare name. More than
      * one result means the bare name is ambiguous.
      */
-    suspend fun find(input: String): List<MarketplaceItem> = lookup(input, listOf(MarketplaceItemType.CONFIG))
+    suspend fun find(input: String, session: OAuthSession? = null): List<MarketplaceItem> =
+        lookup(input, listOf(MarketplaceItemType.CONFIG), session)
 
     /**
      * Like [find], for anything a config can depend on: configs first, then add-ons and scripts.
@@ -95,26 +98,37 @@ object MarketplaceConfigs {
     /**
      * Items of [types] that [input] names, like [find]. A bare name goes to the first of [types] that has it.
      */
-    internal suspend fun lookup(input: String, types: List<MarketplaceItemType>) = runCatching {
-        when {
+    internal suspend fun lookup(
+        input: String,
+        types: List<MarketplaceItemType>,
+        session: OAuthSession? = null
+    ): List<MarketplaceItem> = try {
+        val matches = when {
             input.startsWith(SHARE_CODE_PREFIX, ignoreCase = true) ->
-                listOf(MarketplaceApi.getMarketplaceItemByCode(input))
-            input.toIntOrNull() != null -> listOf(MarketplaceApi.getMarketplaceItem(input.toInt()))
+                listOf(MarketplaceApi.getMarketplaceItemByCode(input, session))
+            input.toIntOrNull() != null -> listOf(MarketplaceApi.getMarketplaceItem(input.toInt(), session))
             else -> {
                 val author = input.substringBefore('/', "").takeIf(String::isNotEmpty)
                 val name = input.substringAfter('/')
-                types.firstNotNullOfOrNull { type -> byName(type, name, author).takeIf(List<*>::isNotEmpty) }
+                types.firstNotNullOfOrNull { type -> byName(type, name, author, session).takeIf(List<*>::isNotEmpty) }
                     .orEmpty()
             }
-        }.filter { it.type in types }
-    }.onFailure { logger.info("Nothing found for $input", it) }.getOrDefault(emptyList())
+        }
+        matches.filter { it.type in types }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        logger.info("Nothing found for $input", e)
+        emptyList()
+    }
 
-    private suspend fun byName(type: MarketplaceItemType, name: String, author: String?) =
+    private suspend fun byName(type: MarketplaceItemType, name: String, author: String?, session: OAuthSession?) =
         MarketplaceApi.getMarketplaceItems(
             limit = PAGE_LIMIT,
             type = type,
             branch = API_BRANCH.takeIf { type == MarketplaceItemType.CONFIG },
-            filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE)
+            filter = MarketplaceApi.Filter(name = name, author = author, sort = MarketplaceApi.Sort.SCORE),
+            session = session
         ).items
 
     /**

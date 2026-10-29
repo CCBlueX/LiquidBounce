@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.canEditConfig
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -75,6 +77,19 @@ internal fun formatDate(dateTime: String): String =
 
 internal suspend fun session(): OAuthSession = ClientAccountManager.accountOrException().takeSession()
 
+internal suspend fun optionalSession(
+    takeSession: suspend () -> OAuthSession? = {
+        if (ClientAccountManager.clientAccount == ClientAccount.EMPTY_ACCOUNT) null else session()
+    }
+): OAuthSession? = try {
+    takeSession()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    logger.warn("Failed to get a marketplace session, using public access", e)
+    null
+}
+
 internal suspend fun ownUserId(): String? {
     val account = ClientAccountManager.accountOrException()
     if (account.userInformation == null) {
@@ -84,7 +99,7 @@ internal suspend fun ownUserId(): String? {
 }
 
 internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
-    single(input, MarketplaceConfigs.find(input))
+    single(input, MarketplaceConfigs.find(input, optionalSession()))
 
 /**
  * The one item [input] names. A bare name that several authors use is refused with their
@@ -108,9 +123,20 @@ internal fun CmdI18n.requireTracked() {
 
 internal suspend fun CmdI18n.requireOwnTracked() {
     requireTracked()
-    if (ownUserId() != ConfigTracker.itemUid) {
+    if (request { ownUserId() } != ConfigTracker.itemUid) {
         throw CommandException(t("error.notOwner", variable(ConfigTracker.itemName)))
     }
+}
+
+internal suspend fun CmdI18n.requireEditableTracked(): OAuthSession {
+    requireTracked()
+    val userId = request { ownUserId() }
+    val session = request { session() }
+    val item = request { MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session) }
+    if (!item.canEditConfig(userId)) {
+        throw CommandException(t("error.notEditor", variable(item.name)))
+    }
+    return session
 }
 
 internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility =
