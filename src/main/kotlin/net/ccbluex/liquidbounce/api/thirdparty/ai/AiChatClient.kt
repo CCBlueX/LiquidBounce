@@ -112,7 +112,7 @@ class AiChatClient(
         ?: throw AiRequestException("${protocol.tag} returned no answer")
 
     private fun Throwable.asAiException(): Exception {
-        // HttpClient rejects every non-2xx response, which OkHttp hands to a suspending call wrapped in an IOException.
+        // HttpClient rejects every non-2xx response with its own HttpException; unwrap it for the provider's message.
         val http = httpException
         if (http == null) {
             logger.error("Failed to send request to ${protocol.tag}", this)
