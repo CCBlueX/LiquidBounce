@@ -99,7 +99,8 @@ object ConfigInfoCommand {
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
             val names = dependencies.joinToText(DEFAULT_SEPARATOR) {
-                variable("${it.author?.let { author -> "$author/${it.item.name}" } ?: it.item.address} (${it.item.type.tag})")
+                variable("${it.author?.let { author -> "$author/${it.item.name}" }
+                    ?: it.item.address} (${it.item.type.tag})")
             }
             field(regular(t("info.dependencies", names)))
         }
