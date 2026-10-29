@@ -36,9 +36,11 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
 /**
  * Shows a marketplace config, by default the tracked one
@@ -88,18 +90,19 @@ object ConfigInfoCommand {
             field(regular(it.take(DESCRIPTION_PREVIEW)).withStyle(ChatFormatting.ITALIC))
         }
         item.targetServers?.takeIf { it.isNotEmpty() }?.let {
-            field(regular(t("info.servers", variable(it.joinToString(", ")))))
+            field(regular(t("info.servers", it.joinToText(DEFAULT_SEPARATOR, ::variable))))
         }
         protocolText(item)?.let { field(regular(t("info.protocol", it))) }
         item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
-            field(regular(t("info.tags", variable(tags.joinToString(", ") { it.name }))))
+            field(regular(t("info.tags", tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
-            val names = dependencies.joinToString(", ") {
-                "${it.author?.let { author -> "$author/${it.item.name}" } ?: it.item.address} (${it.item.type.tag})"
+            val names = dependencies.joinToText(DEFAULT_SEPARATOR) {
+                variable("${it.author?.let { author -> "$author/${it.item.name}" }
+                    ?: it.item.address} (${it.item.type.tag})")
             }
-            field(regular(t("info.dependencies", variable(names))))
+            field(regular(t("info.dependencies", names)))
         }
         val source = item.forkedFromItemId?.let { runCatching { MarketplaceApi.getMarketplaceItem(it) }.getOrNull() }
         source?.let {

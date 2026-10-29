@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.SubscribedItem
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
 /**
  * `author/name` of the top items.
@@ -72,7 +74,7 @@ internal fun CmdI18n.subscribedItem(input: String): SubscribedItem {
         0 -> throw CommandException(t("error.notSubscribed", variable(input)))
         1 -> matches.single()
         else -> throw CommandException(
-            t("error.ambiguous", variable(input), variable(suggestSubscribed(matches).joinToString(", ")))
+            t("error.ambiguous", variable(input), suggestSubscribed(matches).joinToText(DEFAULT_SEPARATOR, ::variable))
         )
     }
 }

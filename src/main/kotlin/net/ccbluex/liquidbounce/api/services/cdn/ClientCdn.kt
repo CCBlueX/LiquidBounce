@@ -20,9 +20,8 @@ package net.ccbluex.liquidbounce.api.services.cdn
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.CLIENT_CDN
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import java.io.Reader
 
 object ClientCdn : BaseApi(CLIENT_CDN) {
     suspend fun requestStaffList(address: String): Set<String> =
-        get<Reader>("/staffs/$address").useLines { it.toHashSet() }
+        get<String>("/staffs/$address").lineSequence().toHashSet()
 }

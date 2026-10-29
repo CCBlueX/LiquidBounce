@@ -27,6 +27,7 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -156,6 +157,8 @@ inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonA
     forEach { a.add(transform(it)) }
     return a
 }
+
+fun Iterable<String>.toJsonArray(): JsonArray = mapToJsonArray(::JsonPrimitive)
 
 /**
  * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key

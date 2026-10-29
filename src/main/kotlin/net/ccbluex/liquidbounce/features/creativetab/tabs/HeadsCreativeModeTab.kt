@@ -109,11 +109,11 @@ class HeadsCreativeModeTab : CustomCreativeModeTab(
             name = "player-heads",
             maxRetries = 3,
         ) {
-            val heads: HashMap<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).bodyAsJson()
+            val heads: Map<String, Head> = HttpClient.request(HEAD_DB_API, HttpMethod.GET).bodyAsJson()
 
             heads.values.also {
                 logger.info("Successfully loaded ${it.size} heads from HeadDB")
-            } as Collection<Head>
+            }
         }
     }
 }

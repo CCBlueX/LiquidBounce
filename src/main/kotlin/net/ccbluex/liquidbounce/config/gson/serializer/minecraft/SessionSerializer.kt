@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.ccbluex.liquidbounce.features.account.couldBeOnline
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -48,7 +48,7 @@ object SessionSerializer : JsonSerializer<User> {
             addProperty("uuid", it.profileId.toString())
             addProperty("service", service.tag)
             addProperty("type", it.accountType)
-            addProperty("avatar", formatAvatarUrl(it.profileId, it.name))
+            addProperty("avatar", ApiConfig.formatAvatarUrl(it.profileId, it.name))
             addProperty("online", service.canJoinOnline)
             addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility
         }
