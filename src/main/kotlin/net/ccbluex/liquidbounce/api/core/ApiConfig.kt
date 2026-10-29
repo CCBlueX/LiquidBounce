@@ -23,7 +23,6 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.lang3.StringUtils
 import java.util.UUID
 
 class ApiConfig(
@@ -31,8 +30,11 @@ class ApiConfig(
     val sessionToken: String,
 ) {
 
-    val apiEndpointV1 = "$url/api/v1"
-    val apiEndpointV3 = "$url/api/v3"
+    val apiEndpointV1 = url.apiEndpoint(1)
+    val apiEndpointV3 = url.apiEndpoint(3)
+
+    private fun HttpUrl.apiEndpoint(version: Int): String =
+        newBuilder().addPathSegments("api/v$version").build().toString()
 
     companion object {
 
@@ -78,20 +80,32 @@ class ApiConfig(
 
         const val SESSION_TOKEN_HEADER = "X-Session-Token"
 
+        private val configLazy = AsyncLazy {
+            lookup()
+        }
+
         /**
          * Defines the API environment for LiquidBounce.
          * This should be initialized before the API is used through [net.ccbluex.liquidbounce.LiquidBounce].
          */
-        val config by AsyncLazy {
-            lookup()
-        }
+        val config: ApiConfig by configLazy
+
+        /**
+         * The resolved [config], or `null` while [lookup] is still running.
+         *
+         * Never blocks and never starts a lookup, so
+         * [net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor] can read the selected host and the
+         * session token while [lookup] is issuing its own requests through [HttpClient].
+         */
+        val initializedConfig: ApiConfig?
+            get() = configLazy.getOrNull()
 
         private suspend fun lookup(): ApiConfig {
             val sessionToken = System.getProperty(
                 "net.ccbluex.liquidbounce.api.token",
                 RandomStringUtils.secure().nextAlphanumeric(16)
             )
-            logger.info("API Session Token set: ${StringUtils.abbreviate(sessionToken, 4)}")
+            logger.info("API Session Token set: ${sessionToken.take(4)}***")
 
             // We trust LiquidLauncher to have found the correct API URL
             val propertyUrl = System.getProperty("net.ccbluex.liquidbounce.api.url")?.toHttpUrlOrNull()
@@ -120,9 +134,5 @@ class ApiConfig(
         }
 
     }
-
-
-
-
 
 }

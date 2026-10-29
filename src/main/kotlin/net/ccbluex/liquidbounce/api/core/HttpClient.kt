@@ -158,8 +158,12 @@ object HttpClient {
         // Credentials are scoped to the hosts they belong to. Registered as network interceptors, so they
         // are re-evaluated for every redirect hop and cannot follow a redirect to a foreign host.
         .addNetworkInterceptor(
-            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) { ApiConfig.config.sessionToken }
-                .whenUrl { it.host == ApiConfig.config.url.host }
+            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) {
+                checkNotNull(ApiConfig.initializedConfig) { "API config is not initialized yet" }.sessionToken
+            }.whenUrl { url ->
+                val config = ApiConfig.initializedConfig
+                config != null && url.host == config.url.host
+            }
         )
         .addNetworkInterceptor(
             DefaultHeaderInterceptor(HttpHeaders.Cookie, {
