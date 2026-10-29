@@ -21,31 +21,28 @@ package net.ccbluex.liquidbounce.api.services.marketplace
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
-import net.ccbluex.liquidbounce.api.models.auth.addAuth
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceConfigReport
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceConfigReportSummary
+import net.ccbluex.liquidbounce.api.models.auth.authorization
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceReview
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceRevisionDependency
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceTag
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
-import net.ccbluex.liquidbounce.api.core.toRequestBody
-import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.apiGson
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.create
 import java.io.File
-import java.net.URLEncoder
 
 @Suppress("TooManyFunctions")
-object MarketplaceApi : BaseApi(config.apiEndpointV3) {
+object MarketplaceApi {
+
+    private val baseUrl = config.apiEndpointV3
+
+    private val service: MarketplaceService = config.retrofitApiV3.create()
 
     private data class MarketplaceParams(
         val page: Int = 1,
@@ -57,20 +54,21 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         val branch: String? = API_BRANCH,
         val filter: Filter = Filter(),
     ) {
-        fun buildQueryString() = buildString {
-            append("?page=$page&limit=$limit")
-            query?.let { append("&q=${it.urlEncoded()}") }
-            type?.let { type -> append("&type=${publicGson.toJsonTree(type).asString}") }
-            uid?.let { append("&uid=$it") }
-            branch?.let { append("&branch=$branch") }
-            append("&featured=$featured")
-            filter.name?.let { append("&name=${it.urlEncoded()}") }
-            filter.author?.let { append("&author=${it.urlEncoded()}") }
-            filter.featured?.let { append("&is_featured=$it") }
-            filter.tags.takeIf { it.isNotEmpty() }?.let { append("&tags=${it.joinToString(",")}") }
-            filter.targetServer?.let { append("&target_server=${it.urlEncoded()}") }
-            filter.forkedFrom?.let { append("&forked_from=$it") }
-            filter.sort?.let { append("&sort=${it.tag}") }
+        fun toQuery() = buildMap {
+            put("page", page.toString())
+            put("limit", limit.toString())
+            put("featured", featured.toString())
+            query?.let { put("q", it) }
+            type?.let { put("type", it.tag) }
+            uid?.let { put("uid", it) }
+            branch?.let { put("branch", it) }
+            filter.name?.let { put("name", it) }
+            filter.author?.let { put("author", it) }
+            filter.featured?.let { put("is_featured", it.toString()) }
+            filter.tags.takeIf { it.isNotEmpty() }?.let { put("tags", it.joinToString(",")) }
+            filter.targetServer?.let { put("target_server", it) }
+            filter.forkedFrom?.let { put("forked_from", it.toString()) }
+            filter.sort?.let { put("sort", it.tag) }
         }
     }
 
@@ -102,15 +100,25 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
     ) {
         fun writeTo(json: JsonObject) = with(json) {
             branch?.let { addProperty("branch", it) }
-            tags?.let { add("tags", publicGson.toJsonTree(it)) }
-            targetServers?.let { add("target_servers", publicGson.toJsonTree(it)) }
-            visibility?.let { add("visibility", publicGson.toJsonTree(it)) }
+            tags?.let { add("tags", apiGson.toJsonTree(it)) }
+            targetServers?.let { add("target_servers", apiGson.toJsonTree(it)) }
+            visibility?.let { add("visibility", apiGson.toJsonTree(it)) }
             forkedFromItemId?.let { addProperty("forked_from_item_id", it) }
             forkedFromRevisionId?.let { addProperty("forked_from_revision_id", it) }
         }
     }
 
-    private fun String.urlEncoded(): String = URLEncoder.encode(this, Charsets.UTF_8)
+    private fun itemBody(
+        name: String,
+        type: MarketplaceItemType,
+        description: String,
+        details: ItemDetails,
+    ): RequestBody = JsonObject().apply {
+        addProperty("name", name)
+        add("type", apiGson.toJsonTree(type))
+        addProperty("description", description)
+        details.writeTo(this)
+    }.toRequestBody()
 
     // Marketplace Items
     @Suppress("LongParameterList")
@@ -124,12 +132,12 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         branch: String? = null,
         filter: Filter = Filter(),
         session: OAuthSession? = null
-    ): PaginatedResponse<MarketplaceItem> {
-        val params = MarketplaceParams(page, limit, query, type, featured, uid, branch, filter)
-        return get("/marketplace${params.buildQueryString()}", headers = { session?.let { addAuth(it) } })
-    }
+    ): PaginatedResponse<MarketplaceItem> = service.items(
+        MarketplaceParams(page, limit, query, type, featured, uid, branch, filter).toQuery(),
+        session?.authorization,
+    )
 
-    suspend fun getTags() = get<List<MarketplaceTag>>("/marketplace/tags")
+    suspend fun getTags() = service.tags()
 
     suspend fun createMarketplaceItem(
         session: OAuthSession,
@@ -137,16 +145,7 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         type: MarketplaceItemType,
         description: String,
         details: ItemDetails = ItemDetails()
-    ) = post<MarketplaceItem>(
-        "/marketplace",
-        JsonObject().apply {
-            addProperty("name", name)
-            add("type", publicGson.toJsonTree(type))
-            addProperty("description", description)
-            details.writeTo(this)
-        }.toRequestBody(),
-        headers = { addAuth(session) }
-    )
+    ) = service.createItem(itemBody(name, type, description, details), session.authorization)
 
     @Suppress("LongParameterList")
     suspend fun updateMarketplaceItem(
@@ -156,25 +155,15 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         type: MarketplaceItemType,
         description: String,
         details: ItemDetails = ItemDetails()
-    ) = patch<MarketplaceItem>(
-        "/marketplace/$id",
-        JsonObject().apply {
-            addProperty("name", name)
-            add("type", publicGson.toJsonTree(type))
-            addProperty("description", description)
-            details.writeTo(this)
-        }.toRequestBody(),
-        headers = { addAuth(session) }
-    )
+    ) = service.updateItem(id, itemBody(name, type, description, details), session.authorization)
 
     suspend fun deleteMarketplaceItem(session: OAuthSession, id: Int) =
-        delete<Unit>("/marketplace/$id", headers = { addAuth(session) })
+        service.deleteItem(id, session.authorization)
 
     suspend fun getMarketplaceItem(id: Int, session: OAuthSession? = null) =
-        get<MarketplaceItem>("/marketplace/$id", headers = { session?.let { addAuth(it) } })
+        service.item(id, session?.authorization)
 
-    suspend fun getMarketplaceItemByCode(shareCode: String) =
-        get<MarketplaceItem>("/marketplace/code/${shareCode.urlEncoded()}")
+    suspend fun getMarketplaceItemByCode(shareCode: String) = service.itemByCode(shareCode)
 
     // Revisions
     /**
@@ -186,14 +175,15 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         limit: Int = 10,
         minecraft: String? = null,
         liquidbounce: String? = null
-    ) = get<PaginatedResponse<MarketplaceItemRevision>>(buildString {
-        append("/marketplace/$id/revisions?page=$page&limit=$limit")
-        minecraft?.let { append("&minecraft=${it.urlEncoded()}") }
-        liquidbounce?.let { append("&liquidbounce=${it.urlEncoded()}") }
-    })
+    ) = service.revisions(
+        id = id,
+        page = page,
+        limit = limit,
+        minecraft = minecraft,
+        liquidbounce = liquidbounce,
+    )
 
-    suspend fun getMarketplaceItemRevision(id: Int, revisionId: Int) =
-        get<MarketplaceItemRevision>("/marketplace/$id/revisions/$revisionId")
+    suspend fun getMarketplaceItemRevision(id: Int, revisionId: Int) = service.revision(id, revisionId)
 
     @Suppress("LongParameterList")
     suspend fun createMarketplaceItemRevision(
@@ -205,56 +195,50 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         changelog: String? = null,
         dependencies: String? = null,
         includesBinds: Boolean? = null
-    ): MarketplaceItemRevision {
-        val multipartBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
+    ): MarketplaceItemRevision = service.createRevision(
+        id = id,
+        body = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("file", fileName, content)
             .addFormDataPart("version", version)
-
-        changelog?.let { multipartBuilder.addFormDataPart("changelog", it) }
-        dependencies?.let { multipartBuilder.addFormDataPart("dependencies", it) }
-        includesBinds?.let { multipartBuilder.addFormDataPart("includes_binds", it.toString()) }
-
-        return post(
-            "/marketplace/$id/revisions",
-            multipartBuilder.build(),
-            headers = { addAuth(session) }
-        )
-    }
-
-    suspend fun deleteMarketplaceItemRevision(session: OAuthSession, id: Int, revisionId: Int) =
-        delete<Unit>("/marketplace/$id/revisions/$revisionId", headers = { addAuth(session) })
-
-    fun downloadRevision(id: Int, revisionId: Int) = "$baseUrl/marketplace/$id/revisions/$revisionId/download"
-
-    // Dependencies
-    suspend fun getItemDependencies(id: Int) =
-        get<List<MarketplaceLinkedItem>>("/marketplace/$id/dependencies")
-
-    suspend fun addItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) = post<Unit>(
-        "/marketplace/$id/dependencies",
-        JsonObject().apply {
-            addProperty("dependency_item_id", dependencyItemId)
-        }.toRequestBody(),
-        headers = { addAuth(session) }
+            .apply {
+                changelog?.let { addFormDataPart("changelog", it) }
+                dependencies?.let { addFormDataPart("dependencies", it) }
+                includesBinds?.let { addFormDataPart("includes_binds", it.toString()) }
+            }
+            .build(),
+        authorization = session.authorization,
     )
 
-    suspend fun removeItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) =
-        delete<Unit>("/marketplace/$id/dependencies/$dependencyItemId", headers = { addAuth(session) })
+    suspend fun deleteMarketplaceItemRevision(session: OAuthSession, id: Int, revisionId: Int) =
+        service.deleteRevision(id, revisionId, session.authorization)
 
-    suspend fun getRevisionDependencies(id: Int, revisionId: Int) =
-        get<List<MarketplaceRevisionDependency>>("/marketplace/$id/revisions/$revisionId/dependencies")
+    fun downloadRevision(id: Int, revisionId: Int) =
+        "$baseUrl/marketplace/$id/revisions/$revisionId/download"
+
+    // Dependencies
+    suspend fun getItemDependencies(id: Int) = service.dependencies(id)
+
+    suspend fun addItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) =
+        service.addDependency(
+            id,
+            JsonObject().apply { addProperty("dependency_item_id", dependencyItemId) }.toRequestBody(),
+            session.authorization,
+        )
+
+    suspend fun removeItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) =
+        service.removeDependency(id, dependencyItemId, session.authorization)
+
+    suspend fun getRevisionDependencies(id: Int, revisionId: Int) = service.revisionDependencies(id, revisionId)
 
     suspend fun addRevisionDependency(
         session: OAuthSession,
         id: Int,
         revisionId: Int,
         dependencyRevisionId: Int
-    ) = post<Unit>(
-        "/marketplace/$id/revisions/$revisionId/dependencies",
-        JsonObject().apply {
-            addProperty("dependency_revision_id", dependencyRevisionId)
-        }.toRequestBody(),
-        headers = { addAuth(session) }
+    ) = service.addRevisionDependency(
+        id, revisionId,
+        JsonObject().apply { addProperty("dependency_revision_id", dependencyRevisionId) }.toRequestBody(),
+        session.authorization,
     )
 
     suspend fun removeRevisionDependency(
@@ -262,34 +246,31 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         id: Int,
         revisionId: Int,
         dependencyRevisionId: Int
-    ) = delete<Unit>(
-        "/marketplace/$id/revisions/$revisionId/dependencies",
-        JsonObject().apply {
-            addProperty("dependency_revision_id", dependencyRevisionId)
-        }.toRequestBody(),
-        headers = { addAuth(session) }
+    ) = service.removeRevisionDependency(
+        id, revisionId,
+        JsonObject().apply { addProperty("dependency_revision_id", dependencyRevisionId) }.toRequestBody(),
+        session.authorization,
     )
 
     // Reviews
-    suspend fun getReviews(id: Int, page: Int = 1, limit: Int = 10) =
-        get<PaginatedResponse<MarketplaceReview>>("/marketplace/$id/reviews?page=$page&limit=$limit")
+    suspend fun getReviews(id: Int, page: Int = 1, limit: Int = 10) = service.reviews(id, page, limit)
 
     suspend fun createReview(
         session: OAuthSession,
         id: Int,
         rating: Int,
         review: String? = null
-    ) = post<MarketplaceReview>(
-        "/marketplace/$id/reviews",
+    ) = service.createReview(
+        id,
         JsonObject().apply {
             addProperty("rating", rating)
             review?.let { addProperty("review", it) }
         }.toRequestBody(),
-        headers = { addAuth(session) }
+        session.authorization,
     )
 
     suspend fun deleteReview(session: OAuthSession, id: Int, reviewId: Int) =
-        delete<Unit>("/marketplace/$id/reviews/$reviewId", headers = { addAuth(session) })
+        service.deleteReview(id, reviewId, session.authorization)
 
     // Config reports
     @Suppress("LongParameterList")
@@ -300,42 +281,41 @@ object MarketplaceApi : BaseApi(config.apiEndpointV3) {
         works: Boolean,
         clientVersion: String? = null,
         serverAddress: String? = null
-    ) = put<MarketplaceConfigReport>(
-        "/marketplace/$id/revisions/$revisionId/report",
+    ) = service.putConfigReport(
+        id,
+        revisionId,
         JsonObject().apply {
             addProperty("works", works)
             clientVersion?.let { addProperty("client_version", it) }
             serverAddress?.let { addProperty("server_address", it) }
         }.toRequestBody(),
-        headers = { addAuth(session) }
+        session.authorization,
     )
 
     suspend fun getOwnConfigReport(session: OAuthSession, id: Int, revisionId: Int) =
-        get<MarketplaceConfigReport>("/marketplace/$id/revisions/$revisionId/report", headers = { addAuth(session) })
+        service.configReport(id, revisionId, session.authorization)
 
     suspend fun deleteConfigReport(session: OAuthSession, id: Int, revisionId: Int) =
-        delete<Unit>("/marketplace/$id/revisions/$revisionId/report", headers = { addAuth(session) })
+        service.deleteConfigReport(id, revisionId, session.authorization)
 
-    suspend fun getConfigReports(id: Int) =
-        get<List<MarketplaceConfigReportSummary>>("/marketplace/$id/reports")
+    suspend fun getConfigReports(id: Int) = service.configReports(id)
 
     // Thumbnails
     suspend fun uploadThumbnail(session: OAuthSession, id: Int, thumbnailFile: File) {
-        val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "thumbnail",
-                thumbnailFile.name,
-                thumbnailFile.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG)
-            )
-            .build()
-
-        post<MarketplaceItem>(
-            "/marketplace/$id/thumbnail",
-            requestBody,
-            headers = { addAuth(session) }
+        service.uploadThumbnail(
+            id,
+            MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart(
+                    "thumbnail",
+                    thumbnailFile.name,
+                    thumbnailFile.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG),
+                )
+                .build(),
+            session.authorization,
         )
     }
 
     suspend fun deleteThumbnail(session: OAuthSession, id: Int) =
-        delete<Unit>("/marketplace/$id/thumbnail", headers = { addAuth(session) })
+        service.deleteThumbnail(id, session.authorization)
+
 }

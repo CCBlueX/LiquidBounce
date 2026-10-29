@@ -19,9 +19,20 @@
 package net.ccbluex.liquidbounce.api.services.cdn
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.CLIENT_CDN
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-object ClientCdn : BaseApi(CLIENT_CDN) {
-    suspend fun requestStaffList(address: String): Set<String> =
-        get<String>("/staffs/$address").lineSequence().toHashSet()
+object ClientCdn {
+
+    private val service = apiRetrofit(CLIENT_CDN).create<Service>()
+
+    suspend fun requestStaffList(address: String): Set<String> = service.staff(address).lineSequence().toHashSet()
+
+    internal interface Service {
+        @GET("staffs/{address}")
+        suspend fun staff(@Path("address") address: String): String
+    }
+
 }
