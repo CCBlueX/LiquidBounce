@@ -33,11 +33,6 @@ import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
-
-/**
- * @author MukjepScarlet
- */
 class GoogleTranslateApi(
     override val parent: ModeValueGroup<*>
 ) : TranslatorMode("Google") {
@@ -50,7 +45,7 @@ class GoogleTranslateApi(
         targetLanguage: TranslateLanguage,
         text: String
     ): TranslationResult = withContext(Dispatchers.IO) {
-        val url = GOOGLE_API_URL.newBuilder()
+        val url = baseUrl.newBuilder()
             .addQueryParameter("sl", sourceLanguage.literal)
             .addQueryParameter("tl", targetLanguage.literal)
             .addQueryParameter("q", text)
@@ -91,5 +86,9 @@ class GoogleTranslateApi(
                 toLanguage = targetLanguage
             )
         }
+    }
+
+    companion {
+        private val baseUrl = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
     }
 }
