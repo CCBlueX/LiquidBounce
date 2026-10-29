@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
+import net.ccbluex.liquidbounce.config.gson.util.toJsonArray
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.register
@@ -160,7 +161,7 @@ object CommandDebug : CommandRegistrar {
                     addProperty("id", addon.id)
                     addProperty("name", addon.displayName)
                     addProperty("version", addon.version)
-                    addProperty("authors", addon.authors.joinToString(", "))
+                    add("authors", addon.authors.toJsonArray())
                     addProperty("state", addon.state.name)
                     addProperty("modules", addon.registeredModules.size)
                 })
