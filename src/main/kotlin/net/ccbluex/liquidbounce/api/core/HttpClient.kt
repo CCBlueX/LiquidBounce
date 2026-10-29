@@ -47,7 +47,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.coroutines.executeAsync
 import okio.Buffer
@@ -56,7 +55,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
-import java.net.HttpURLConnection
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -243,23 +241,3 @@ inline fun <reified T> Response.parse(): T {
     }
 }
 
-class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
-    : Exception("${method.name} $url failed with code $code: $content")
-
-/**
- * The [HttpException] behind this. OkHttp hands one thrown by an interceptor of an async call on
- * wrapped in an [IOException].
- */
-val Throwable.httpException: HttpException?
-    get() = this as? HttpException
-        ?: cause as? HttpException
-        ?: suppressed.firstNotNullOfOrNull { it as? HttpException }
-
-/**
- * [block]'s result, `null` when the server answers 404.
- */
-internal inline fun <T> orNotFound(block: () -> T): T? = try {
-    block()
-} catch (e: Exception) {
-    if (e.httpException?.code == HttpURLConnection.HTTP_NOT_FOUND) null else throw e
-}
