@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLim
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
@@ -206,16 +205,6 @@ public abstract class MixinEntity {
         /* Cancel pose if needed */
         if (liquid_bounce$isClientPlayer() && ModuleNoPose.INSTANCE.shouldCancelPose(pose))
             ci.cancel();
-    }
-
-    @Inject(method = "turn", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRotation(double xo, double yo, CallbackInfo ci) {
-        if ((Object) this != Minecraft.getInstance().player) return;
-
-        if (ModuleFreeCam.PositionState.INSTANCE.getAvailable()) {
-            ModuleFreeCam.PositionState.INSTANCE.rotation(xo * 0.15f, yo * 0.15f);
-            ci.cancel();
-        }
     }
 
 }
