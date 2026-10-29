@@ -345,6 +345,7 @@ public abstract class MixinMinecraft {
         if (ModuleFreeCam.INSTANCE.getEnabled()) {
             ModuleFreeCam.INSTANCE.setEnabled(false);
             // isn't inGame, needs to be called manually
+            // TODO: find a better way to do this
             ModuleFreeCam.INSTANCE.onDisabled();
         }
     }
