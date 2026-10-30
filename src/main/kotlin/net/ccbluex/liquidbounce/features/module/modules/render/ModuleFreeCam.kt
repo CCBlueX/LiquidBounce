@@ -255,6 +255,7 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             .with(Direction.Axis.Y, yAxisMovement * speed)
         ModuleDebug.debugParameter(this, "Velocity", velocity)
         PositionState.update(velocity)
+        if (!mc.mouseHandler.isMouseGrabbed) PositionState.rotation(0.0, 0.0)
 
         ModuleDebug.debugParameter(this, "Position", PositionState.pos)
         ModuleDebug.debugParameter(this, "Rotation", PositionState.rot)
