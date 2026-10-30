@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.io.clipboardSet
+import net.ccbluex.liquidbounce.utils.item.mapSavedData
 import net.ccbluex.liquidbounce.utils.item.toNativeImage
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.MapItem
+import net.minecraft.core.component.DataComponents.MAP_ID
 import net.minecraft.world.level.saveddata.maps.MapId
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData
 import java.io.File
@@ -99,8 +99,8 @@ object CommandMapImage : CommandRegistrar {
 
     private fun heldMapData(): Pair<MapId, MapItemSavedData>? =
         player.handItems.firstNotNullOfOrNull { stack ->
-            val component = stack[DataComponents.MAP_ID] ?: return@firstNotNullOfOrNull null
-            MapItem.getSavedData(component, world)?.let { Pair(component, it) }
+            val mapId = stack[MAP_ID] ?: return@firstNotNullOfOrNull null
+            stack.mapSavedData(world)?.let { Pair(mapId, it) }
         }
 
 }
