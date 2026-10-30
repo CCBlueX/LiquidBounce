@@ -52,6 +52,18 @@ our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 4. Open the folder as a Gradle project in your preferred IDE.
 5. Run the client. (`./gradlew runClient`)
 
+## Dependency download proxy
+
+Before online initialization starts, you can choose direct access or an HTTP proxy (`host:port`). This covers initial
+online resources as well as browser and deep learning dependency downloads. The choice is reset on the next launch;
+authenticated proxies are not supported.
+
+To use the operating system's proxy settings, add `-Djava.net.useSystemProxies=true` to the Minecraft launcher's JVM
+arguments before starting the game, then select **system** on the download screen. The JVM supports system proxy
+discovery on Windows, macOS, and GNOME; availability depends on the platform and JVM. This property must be set at
+startup and may also affect other Java networking in the game. System proxy settings can select direct connections for
+particular hosts.
+
 ## Additional libraries
 
 ### Mixins

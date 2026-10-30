@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.integration.task.DownloadProxy
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import java.io.File
@@ -89,7 +90,7 @@ object DeepLearningEngine {
 
         logger.info("Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
-            Engine.getInstance()
+            DownloadProxy.withJavaDownloadProxy { Engine.getInstance() }
         }
         val name = engine.engineName
         val version = engine.version

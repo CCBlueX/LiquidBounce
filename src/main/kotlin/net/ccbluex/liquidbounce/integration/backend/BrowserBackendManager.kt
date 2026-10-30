@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSy
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
+import net.ccbluex.liquidbounce.integration.task.DownloadProxy
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -164,7 +165,9 @@ object BrowserBackendManager : EventListener {
         logger.info("Using the '${provider.id}' browser backend.")
         val browserBackend = provider.create()
         this.backend = browserBackend
-        browserBackend.makeDependenciesAvailable(taskManager, ::start)
+        DownloadProxy.withDownloadClient {
+            browserBackend.makeDependenciesAvailable(taskManager, ::start)
+        }
     }
 
     /**
