@@ -21,8 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.utils.item.MAP_SIZE
-import net.ccbluex.liquidbounce.utils.item.argbColorAt
-import net.minecraft.util.ARGB
+import net.minecraft.world.level.material.MapColor
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData
 import java.util.BitSet
 
@@ -47,8 +46,16 @@ object MurderMysteryFontDetection {
         stream.readJson<HashMap<String, BooleanArray>>()
     }
 
-    private fun isContractLineColor(argb: Int) =
-        argb == ARGB.color(62, 102, 123) || argb == ARGB.color(72, 119, 143)
+    /**
+     * Whether the given packed map color is the background of the contract paper.
+     *
+     * The paper is drawn in [MapColor.WOOD] at various brightness levels, so only the color id is
+     * compared and the brightness bits are ignored.
+     *
+     * @see net.minecraft.world.level.material.MapColor.getPackedId
+     */
+    private fun isContractLineColor(packedColor: Byte): Boolean =
+        (packedColor.toInt() and 0xFF) shr 2 == MapColor.WOOD.id
 
     @Suppress("all")
     fun readContractLine(mapData: MapItemSavedData): String {
@@ -121,10 +128,10 @@ object MurderMysteryFontDetection {
         val contractLine = BitSet(MAP_SIZE * CONTRACT_LINE_HEIGHT)
 
         for (y in 0 until CONTRACT_LINE_HEIGHT) {
-            for (x in 0 until MAP_SIZE) {
-                val color = mapData.argbColorAt(x, CONTRACT_LINE_ROW + y)
+            val rowOffset = (CONTRACT_LINE_ROW + y) * MAP_SIZE
 
-                contractLine[MAP_SIZE * y + x] = isContractLineColor(color)
+            for (x in 0 until MAP_SIZE) {
+                contractLine[MAP_SIZE * y + x] = isContractLineColor(mapData.colors[rowOffset + x])
             }
         }
         return contractLine

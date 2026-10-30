@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
@@ -32,8 +33,7 @@ object MurderMysteryInfectionMode : UuidBasedMurderMysteryMode("Infection") {
     val tickHandler = handler<GameTickEvent> {
         world.players()
             .filter {
-                it.isUsingItem && it.handItems.any { stack -> stack.item is BowItem } ||
-                    it.handItems.any { stack -> stack.item == Items.ARROW }
+                it.usingItemOrNull?.item is BowItem || it.handItems.any { stack -> stack.item == Items.ARROW }
             }
             .forEach { playerEntity ->
                 handleHasBow(playerEntity)
