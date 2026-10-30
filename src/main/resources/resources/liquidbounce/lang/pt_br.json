@@ -301,6 +301,7 @@
   "liquidbounce.module.clickTp.description": "Teletransporta você para o bloco que está olhando ao pressionar MIDDLE_CLICK. Funciona apenas no anticheat Vulcan 286.",
   "liquidbounce.module.clientSpoofer.description": "Falsifica a marca do seu cliente de jogo para outra.",
   "liquidbounce.module.clip.description": "Deixa você passar por blocos.",
+  "liquidbounce.module.clutch.description": "Coloca automaticamente um bloco abaixo de você ao cair no vazio.",
   "liquidbounce.module.combineMobs.description": "Combina entidades amontoadas.",
   "liquidbounce.module.consoleSpammer.description": "Envia spam de mensagens de erro no console do servidor.",
   "liquidbounce.module.criticals.description": "Automaticamente da criticos nos inimigos.",
