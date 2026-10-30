@@ -75,7 +75,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
         )
         private val renderY by float("RenderY", 1.0F, -2.0F..2.0F)
         private val ownerName by boolean("OwnerName", true)
-        private val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS)
+        private val gameTimeUnit by enumChoice("TimeUnit", GameTimeUnit.TICKS)
         private val show by multiEnumChoice("Show", enumSetAllOf<IndicatorVisibility>(), canBeNone = false)
 
         private const val TEXT_SHADOW = true
@@ -139,7 +139,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
                 // Yellow #ffff00 -> Red #ff0000
                 val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
-                var text = timeUnit.format(tnt.fuse).withFormat()
+                var text = gameTimeUnit.format(tnt.fuse).withFormat()
 
                 if (ownerName) {
                     tnt.owner?.name?.let {
