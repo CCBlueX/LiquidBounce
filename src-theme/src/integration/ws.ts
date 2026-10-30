@@ -81,19 +81,34 @@ export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (
 /**
  * Wait next event which matches given {@link predicate}.
  */
-export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, predicate: (event: EventMap[NAME]) => boolean): Promise<EventMap[NAME]> {
+export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, predicate: (event: EventMap[NAME]) => boolean, signal?: AbortSignal): Promise<EventMap[NAME]> {
     return new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+            reject(signal.reason);
+            return;
+        }
+
         const deleteHandler = listenNonComponent(eventName, (e) => {
             try {
                 if (predicate(e)) {
+                    cleanup();
                     resolve(e);
-                    deleteHandler();
                 }
             } catch (e) {
+                cleanup();
                 reject(e);
-                deleteHandler();
             }
-        })
+        });
+
+        const cleanup = () => {
+            deleteHandler();
+            signal?.removeEventListener("abort", onAbort);
+        };
+        const onAbort = () => {
+            cleanup();
+            reject(signal?.reason);
+        };
+        signal?.addEventListener("abort", onAbort, {once: true});
     });
 }
 
@@ -103,10 +118,12 @@ export function cleanupListeners() {
 }
 
 export function deleteListener<NAME extends keyof EventMap>(eventName: NAME, cb: (event: EventMap[NAME]) => void) {
-    listeners.set(
-        eventName,
-        listeners.get(eventName)?.filter(handler => handler !== cb) ?? []
-    );
+    const remaining = listeners.get(eventName)?.filter(handler => handler !== cb);
+    if (remaining?.length) {
+        listeners.set(eventName, remaining);
+    } else {
+        listeners.delete(eventName);
+    }
 }
 
 const PING_PAYLOAD = JSON.stringify({ name: "ping", event: {} });
