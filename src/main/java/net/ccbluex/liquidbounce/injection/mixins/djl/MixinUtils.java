@@ -57,7 +57,7 @@ public abstract class MixinUtils {
                 }
 
                 var task = mainTask.getOrCreateFileTask(url);
-                task.update(bytesRead, contentLength);
+                task.update(bytesRead, contentLength, done);
 
                 if (done) {
                     task.setCompleted(true);
