@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -46,14 +46,14 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * Estimates damage for different enchantments. Note that sharpness is already considered by
          * `ItemStack.attackDamage`
          */
-        private val DAMAGE_ESTIMATOR =
+        val DAMAGE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.1f),
                 // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.2f),
             )
-        internal val SECONDARY_VALUE_ESTIMATOR =
+        val SECONDARY_VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
@@ -117,7 +117,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemType.WEAPON.defaultCategory
+        get() = ItemCategory(GenericItemType.WEAPON)
 
     override val providedItemFunctions: List<ProvidedFunction>
         get() = listOf(ProvidedFunction(ItemFunction.WEAPON_LIKE, 1))
