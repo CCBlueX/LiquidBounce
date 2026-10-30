@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.features.module.modules.render.TimeUnit
+import net.ccbluex.liquidbounce.features.module.modules.render.GameTimeUnit
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
@@ -72,7 +72,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
     private val item by boolean("Item", true)
     private val ownerName by boolean("OwnerName", true)
     private val distance by boolean("Distance", true)
-    private val timeUnit by enumChoice("TimeUnit", TimeUnit.TICKS, aliases = listOf("DurationUnit"))
+    private val gameTimeUnit by enumChoice("TimeUnit", GameTimeUnit.TICKS, aliases = listOf("DurationUnit"))
     private val color by color("Color", Color4b.WHITE)
 
     private val scale = curve(
@@ -132,7 +132,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableValueGroup(ModuleTrajectories,
         renderer: TrajectoryInfoRenderer,
         result: TrajectoryInfoRenderer.SimulationResult,
     ): List<FormattedCharSequence> = buildList {
-        add(timeUnit.format(result.positions.size).withFormat())
+        add(gameTimeUnit.format(result.positions.size).withFormat())
 
         if (distance && result.positions.isNotEmpty()) {
             add("Dist: ${player.position().distanceTo(result.positions.last()).toFixed(1)}m".withFormat())

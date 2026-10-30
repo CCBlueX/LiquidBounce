@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import java.text.DecimalFormat
 
-enum class TimeUnit(
+enum class GameTimeUnit(
     override val tag: String,
 ) : Tagged {
     TICKS("Ticks") {
