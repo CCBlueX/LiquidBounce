@@ -1573,10 +1573,13 @@ public final class net/ccbluex/liquidbounce/utils/block/ChunkScanner : net/ccblu
 }
 
 public final class net/ccbluex/liquidbounce/utils/block/SwingMode : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/block/SwingMode$Companion;
 	public static final field DO_NOT_HIDE Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_BOTH Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_CLIENT Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_SERVER Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
+	public static final field INTERACT_CHOICES Ljava/util/Set;
+	public final fun attackSwing ()V
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getServerSwing ()Z
 	public fun getTag ()Ljava/lang/String;

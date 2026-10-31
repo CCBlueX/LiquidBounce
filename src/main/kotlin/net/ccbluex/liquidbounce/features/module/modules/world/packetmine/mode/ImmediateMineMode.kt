@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTar
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 
 object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canAbort = false) {
 
@@ -38,7 +37,7 @@ object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canA
                 sequence,
             )
         }
-        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
+        ModulePacketMine.swingMode.attackSwing()
     }
 
     override fun finish(mineTarget: MineTarget) {
