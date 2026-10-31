@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.apiGson
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
+import net.ccbluex.liquidbounce.integration.task.DownloadProxy
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
@@ -121,7 +122,7 @@ object HttpClient {
         }
         .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
         .addInterceptor(DefaultHeaderInterceptor(HttpHeaders.UserAgent) { DEFAULT_AGENT })
-        .proxy(java.net.Proxy.NO_PROXY)
+        .proxySelector(DownloadProxy.initializationSelector())
         .build()
 
     /**
@@ -151,8 +152,7 @@ object HttpClient {
     /**
      * API client
      */
-    @get:JvmStatic
-    val client = defaultClient.newBuilder()
+    private val apiClient = defaultClient.newBuilder()
         .addInterceptor(clientHttpApiInterceptor)
         // Credentials are scoped to the hosts they belong to. Registered as network interceptors, so they
         // are re-evaluated for every redirect hop and cannot follow a redirect to a foreign host.
@@ -170,6 +170,18 @@ object HttpClient {
             }, false).whenUrl { it.host.isLocalHost() && it.port == ClientInteropServer.PORT }
         )
         .build()
+
+    // Browser backends obtain their dependency download client while being initialized.
+    @get:JvmStatic
+    val client: OkHttpClient
+        get() = if (DownloadProxy.wantsDownloadClient && DownloadProxy.choice != DownloadProxy.Choice.Direct) {
+            apiClient.newBuilder()
+                .proxy(null)
+                .proxySelector(DownloadProxy.selector())
+                .build()
+        } else {
+            apiClient
+        }
 
     @get:JvmStatic
     val mojangApiClient = MojangApiClient.Builder()
