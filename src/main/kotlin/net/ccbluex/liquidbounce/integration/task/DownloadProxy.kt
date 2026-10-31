@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.integration.task
 
 import kotlinx.coroutines.CompletableDeferred
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.utils.client.mc
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -31,7 +33,9 @@ object DownloadProxy {
     sealed interface Choice {
         data object Direct : Choice
         data object System : Choice
-        data class Custom(val address: InetSocketAddress) : Choice
+        data class Custom(val address: InetSocketAddress, val type: Proxy.Type = Proxy.Type.HTTP) : Choice {
+            init { require(type == Proxy.Type.HTTP || type == Proxy.Type.SOCKS) }
+        }
     }
 
     @Volatile
@@ -44,14 +48,24 @@ object DownloadProxy {
     var pending: CompletableDeferred<Choice>? = null
 
     private val downloadClient = ThreadLocal.withInitial { false }
+    private val systemProxy = SystemProxySelector()
     val wantsDownloadClient: Boolean get() = downloadClient.get()
 
-    fun initializationSelector(delegate: ProxySelector): ProxySelector = object : ProxySelector() {
+    fun openSettings() {
+        val parent = mc.gui.screen()
+        val path = ConfigSystem.rootFolder.toPath().resolve("startup-proxy.properties")
+        val saved = DownloadProxyStorage.load(path) ?: Choice.Direct
+        mc.gui.setScreen(DownloadProxyScreen(CompletableDeferred(), saved, parent) {
+            DownloadProxyStorage.save(path, it)
+        })
+    }
+
+    fun initializationSelector(): ProxySelector = object : ProxySelector() {
         override fun select(uri: URI): List<Proxy> =
-            if (onlineInitialization) selector(delegate).select(uri) else listOf(Proxy.NO_PROXY)
+            if (onlineInitialization) selector().select(uri) else listOf(Proxy.NO_PROXY)
 
         override fun connectFailed(uri: URI, address: SocketAddress, error: IOException) {
-            if (onlineInitialization) selector(delegate).connectFailed(uri, address, error)
+            if (onlineInitialization) selector().connectFailed(uri, address, error)
         }
     }
 
@@ -61,7 +75,10 @@ object DownloadProxy {
         return try { block() } finally { downloadClient.set(previous) }
     }
 
-    fun selector(delegate: ProxySelector, selected: Choice = choice): ProxySelector = object : ProxySelector() {
+    fun selector(
+        selected: Choice = choice,
+        system: ProxySelector = systemProxy,
+    ): ProxySelector = object : ProxySelector() {
         override fun select(uri: URI): List<Proxy> {
             val host = uri.host ?: return listOf(Proxy.NO_PROXY)
             if (host.equals("localhost", true) || host.startsWith("127.") || host == "::1" || host == "[::1]") {
@@ -69,13 +86,13 @@ object DownloadProxy {
             }
             return when (selected) {
                 Choice.Direct -> listOf(Proxy.NO_PROXY)
-                Choice.System -> delegate.select(uri)
-                is Choice.Custom -> listOf(Proxy(Proxy.Type.HTTP, selected.address))
+                Choice.System -> system.select(uri)
+                is Choice.Custom -> listOf(Proxy(selected.type, selected.address))
             }
         }
 
         override fun connectFailed(uri: URI, address: SocketAddress, error: IOException) {
-            if (selected == Choice.System) delegate.connectFailed(uri, address, error)
+            if (selected == Choice.System) system.connectFailed(uri, address, error)
         }
     }
 
@@ -83,7 +100,7 @@ object DownloadProxy {
     fun <T> withJavaDownloadProxy(block: () -> T): T {
         val previous = ProxySelector.getDefault()
         val downloadThread = Thread.currentThread()
-        val downloadSelector = selector(previous)
+        val downloadSelector = selector()
         val scoped = object : ProxySelector() {
             override fun select(uri: URI): List<Proxy> =
                 if (Thread.currentThread() === downloadThread) downloadSelector.select(uri) else previous.select(uri)
@@ -106,7 +123,7 @@ object DownloadProxy {
         val uri = URI("http://${value.trim()}")
         require(uri.host != null && uri.port in 1..65535 && uri.userInfo == null &&
             uri.rawPath.isNullOrEmpty() && uri.rawQuery == null && uri.rawFragment == null) {
-            "Enter an HTTP proxy as host:port."
+            "Enter a proxy as host:port."
         }
         return InetSocketAddress.createUnresolved(uri.host, uri.port)
     }

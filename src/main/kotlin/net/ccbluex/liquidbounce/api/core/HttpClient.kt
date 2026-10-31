@@ -122,7 +122,7 @@ object HttpClient {
         }
         .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
         .addInterceptor(DefaultHeaderInterceptor(HttpHeaders.UserAgent) { DEFAULT_AGENT })
-        .proxySelector(DownloadProxy.initializationSelector(java.net.ProxySelector.getDefault()))
+        .proxySelector(DownloadProxy.initializationSelector())
         .build()
 
     /**
@@ -177,7 +177,7 @@ object HttpClient {
         get() = if (DownloadProxy.wantsDownloadClient && DownloadProxy.choice != DownloadProxy.Choice.Direct) {
             apiClient.newBuilder()
                 .proxy(null)
-                .proxySelector(DownloadProxy.selector(java.net.ProxySelector.getDefault()))
+                .proxySelector(DownloadProxy.selector())
                 .build()
         } else {
             apiClient

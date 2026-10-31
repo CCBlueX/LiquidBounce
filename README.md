@@ -54,15 +54,18 @@ our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
 ## Dependency download proxy
 
-Before online initialization starts, you can choose direct access or an HTTP proxy (`host:port`). This covers initial
-online resources as well as browser and deep learning dependency downloads. The choice is reset on the next launch;
-authenticated proxies are not supported.
+Until initialization completes successfully, choose direct access, system settings, or a custom HTTP/HTTPS or SOCKS5 proxy (`host:port`) for
+online resources and browser and deep learning dependencies. Direct access is the default. The choice is saved for later launches; use
+**LiquidBounce → Startup Download Proxy** on the main menu to change it for the next launch. Without interaction, the
+startup screen continues after five seconds. Using a button cancels the countdown. Authenticated
+proxies are not supported.
 
-To use the operating system's proxy settings, add `-Djava.net.useSystemProxies=true` to the Minecraft launcher's JVM
-arguments before starting the game, then select **system** on the download screen. The JVM supports system proxy
-discovery on Windows, macOS, and GNOME; availability depends on the platform and JVM. This property must be set at
-startup and may also affect other Java networking in the game. System proxy settings can select direct connections for
-particular hosts.
+If the main menu is unavailable, launch with `-Dnet.ccbluex.liquidbounce.downloadProxy.prompt=true` to reopen the
+startup proxy screen.
+
+System proxy discovery requires no launcher options. The JVM supports it on Windows, macOS, and GNOME; the
+operating system may return a direct connection for some destinations. HTTP proxies support HTTPS downloads via CONNECT;
+connections to the proxy itself use plain HTTP. SOCKS5 supports both HTTP and HTTPS downloads.
 
 ## Additional libraries
 

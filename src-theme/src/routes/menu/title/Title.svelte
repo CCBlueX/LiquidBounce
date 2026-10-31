@@ -73,8 +73,10 @@
                 <MainButton title="Proxy Manager" icon="proxymanager" on:click={() => openScreen("proxymanager")}
                             index={0}/>
                 <MainButton title="Click GUI" icon="clickgui" on:click={() => openScreen("clickgui")} index={1}/>
+                <MainButton title="Startup Download Proxy" icon="proxymanager"
+                            on:click={() => openScreen("downloadproxy")} index={2}/>
                 <!-- <MainButton title="Scripts" icon="scripts" index={2}/> -->
-                <MainButton title="Back" icon="back-large" on:click={toggleButtons} index={2}/>
+                <MainButton title="Back" icon="back-large" on:click={toggleButtons} index={3}/>
             {/if}
         </div>
 
