@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -92,7 +91,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
                 mc.missTime = 10
             }
 
-            SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+            SwingMode.DO_NOT_HIDE.attackSwing()
 
             // Notify the user about the failed hit
             KillAuraNotifyWhenFail.notifyForFailedHit(entity, RotationManager.currentRotation

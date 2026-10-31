@@ -42,7 +42,7 @@ enum class SwingMode(
     /**
      * Attack/Break swing, mirroring [net.minecraft.client.Minecraft.startAttack].
      */
-    fun swing(hand: InteractionHand) = swing(hand, player.getItemInHand(hand).attackAnimation, true)
+    fun attackSwing() = swing(InteractionHand.MAIN_HAND, player.mainHandItem.attackAnimation, true)
 
     /**
      * Interaction swing, mirroring [net.minecraft.client.Minecraft.startUseItem]: the swing is only

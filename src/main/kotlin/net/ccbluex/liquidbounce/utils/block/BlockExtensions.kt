@@ -593,10 +593,8 @@ fun doBreak(
     val blockPos = rayTraceResult.blockPos
 
     if (player.isCreative) {
-        if (interaction.startDestroyBlock(blockPos, rayTraceResult.direction)) {
-            swingMode.swing(InteractionHand.MAIN_HAND)
-            return
-        }
+        interaction.startDestroyBlock(blockPos, rayTraceResult.direction)
+        swingMode.attackSwing()
     }
 
     if (immediate) {
@@ -607,7 +605,7 @@ fun doBreak(
                 ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence
             )
         }
-        swingMode.swing(InteractionHand.MAIN_HAND)
+        swingMode.attackSwing()
         interaction.startPrediction(world) { sequence ->
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence
@@ -617,7 +615,7 @@ fun doBreak(
     }
 
     if (interaction.continueDestroyBlock(blockPos, direction)) {
-        swingMode.swing(InteractionHand.MAIN_HAND)
+        swingMode.attackSwing()
         world.addBreakingBlockEffects(blockPos, direction, false)
     }
 }

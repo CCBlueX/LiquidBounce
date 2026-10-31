@@ -275,7 +275,7 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false):
     with(player) {
         // Swing before attacking (on 1.8)
         if (isOlderThanOrEqual1_8) {
-            swing.swing(InteractionHand.MAIN_HAND)
+            swing.attackSwing()
         }
 
         interaction.ensureHasSentCarriedItem()
@@ -320,7 +320,7 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false):
 
         // Swing after attacking (on 1.9+)
         if (!isOlderThanOrEqual1_8) {
-            swing.swing(InteractionHand.MAIN_HAND)
+            swing.attackSwing()
         }
     }
 
