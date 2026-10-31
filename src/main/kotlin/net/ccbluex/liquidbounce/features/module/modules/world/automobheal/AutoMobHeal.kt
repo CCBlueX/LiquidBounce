@@ -63,7 +63,7 @@ object AutoMobHeal : ClientModule(
     private val range by float("Range", 4.5f, 1f..6f)
     private val delay by intRange("Delay", 4..4, 0..40, "ticks")
     private val slotResetDelay by int("SlotResetDelay", 2, 0..20, "ticks")
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private data class HealPlan(
         val target: LivingEntity,

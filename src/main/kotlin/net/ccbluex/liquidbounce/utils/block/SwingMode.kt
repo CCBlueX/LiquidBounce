@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.component.SwingAnimation
+import java.util.EnumSet
 
 @Suppress("unused")
 @AddonApi
@@ -42,7 +43,13 @@ enum class SwingMode(
     /**
      * Attack/Break swing, mirroring [net.minecraft.client.Minecraft.startAttack].
      */
-    fun swing(hand: InteractionHand) = swing(hand, player.getItemInHand(hand).attackAnimation, true)
+    fun attackSwing() = swing(InteractionHand.MAIN_HAND, player.mainHandItem.attackAnimation, true)
+
+    @Deprecated(
+        message = "You can only do attack swing with main hand",
+        replaceWith = ReplaceWith("this.attackSwing()"),
+    )
+    fun swing(hand: InteractionHand) = attackSwing()
 
     /**
      * Interaction swing, mirroring [net.minecraft.client.Minecraft.startUseItem]: the swing is only
@@ -64,5 +71,14 @@ enum class SwingMode(
         if (punch && serverSwing) {
             network.send(ServerboundPunchPacket.INSTANCE)
         }
+    }
+
+    companion object {
+        /**
+         * Choices for [interactSwing] only: interactions are swung by the server itself, so
+         * [HIDE_SERVER] behaves like [DO_NOT_HIDE] and [HIDE_BOTH] like [HIDE_CLIENT].
+         */
+        @JvmField
+        val INTERACT_CHOICES: Set<SwingMode> = EnumSet.of(DO_NOT_HIDE, HIDE_CLIENT)
     }
 }

@@ -55,7 +55,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -254,7 +253,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
                 )
             }
 
-            swingMode.swing(InteractionHand.MAIN_HAND)
+            swingMode.attackSwing()
             return
         }
 

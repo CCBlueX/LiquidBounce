@@ -47,7 +47,7 @@ import kotlin.math.max
 
 object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place", true) {
 
-    private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
     private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
     val oldVersion by boolean("1_12_2", false)
     private val delay by int("Delay", 0, 0..1000, "ms")

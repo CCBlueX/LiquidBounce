@@ -93,7 +93,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     private val rotations = tree(RotationsValueGroup(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     /**
      * The target renderer to render the target, which we are currently aiming at.

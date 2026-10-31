@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTar
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 
 object NormalMineMode : MineMode("Normal") {
 
@@ -42,7 +41,7 @@ object NormalMineMode : MineMode("Normal") {
             )
         }
 
-        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
+        ModulePacketMine.swingMode.attackSwing()
     }
 
     override fun finish(mineTarget: MineTarget) {
@@ -55,7 +54,7 @@ object NormalMineMode : MineMode("Normal") {
             )
         }
 
-        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
+        ModulePacketMine.swingMode.attackSwing()
 
         if (clientSideSet) {
             interaction.destroyBlock(mineTarget.targetPos)
