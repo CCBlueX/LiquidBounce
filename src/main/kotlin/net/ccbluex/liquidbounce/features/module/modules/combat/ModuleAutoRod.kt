@@ -100,7 +100,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val rotations = tree(RotationsValueGroup(this))
     private val aimOffThreshold by float("AimOffThreshold", 5f, 2f..10f)
 
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     init {
         tree(TargetRenderer(this, targetTracker))

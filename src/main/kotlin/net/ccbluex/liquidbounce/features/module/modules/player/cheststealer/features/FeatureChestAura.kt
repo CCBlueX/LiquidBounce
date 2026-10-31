@@ -67,7 +67,7 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
         minOf(interactionRange, it)
     }
     private val interactionDelay by int("Delay", 5, 1..80, "ticks")
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private val notDuringCombat by boolean("NotDuringCombat", true)
 

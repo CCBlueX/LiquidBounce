@@ -83,7 +83,7 @@ class BlockPlacer(
     val range by float("Range", 4.5f, 1f..6f)
     val wallRange by float("WallRange", 4.5f, 0f..6f)
     val cooldown by intRange("Cooldown", 1..2, 0..40, "ticks")
-    val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
+    val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     /**
      * Construct a hit result at the point selected by target finding when the raytrace result is invalid.
