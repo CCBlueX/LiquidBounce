@@ -26,14 +26,17 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
@@ -49,6 +52,9 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * AutoWeapon module
@@ -77,6 +83,18 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
+
+    /**
+     * Favor a sword when KillAura AutoBlock only blocks on danger and we are currently in danger,
+     * so there is a blockable item in hand. Applies wherever [isBlocksAttacksExisting] lets items block.
+     */
+    private val preferBlockingSword by boolean("PreferBlockingSword", true)
+
+    /**
+     * When the target stands next to the void, prefer a weapon enchanted with Knockback to push
+     * them off the edge.
+     */
+    private val prioritizeVoidKnockback by boolean("PrioritizeVoidKnockback", true)
 
     private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
 
@@ -138,6 +156,22 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val canMaceSmash
         get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
+    /**
+     * Distances (in blocks, away from the target along the knockback direction) at which we check
+     * that the landing zone is void. Even the weakest knockback slides the target about two blocks
+     * (0.4 power, ground friction 0.6*0.91), so a hole this close is always reached.
+     */
+    private val voidCheckDistances = doubleArrayOf(1.0, 1.5)
+
+    /**
+     * Yaw offsets (in radians) for the rays we cast away from the target. Knockback has spread and
+     * the target may stand on a narrow strip rather than a solid platform, so we fan out a center
+     * ray plus two angled side rays instead of trusting a single line.
+     */
+    private val voidRayAngles = doubleArrayOf(0.0, 0.30, -0.30)
+
+    private const val DIRECTION_EPSILON = 1.0E-4
+
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
@@ -180,6 +214,46 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         SilentHotbar.resetSlot(this)
     }
 
+    private fun shouldPrioritizeKnockback(target: LivingEntity): Boolean {
+        val direction = Vec3(target.x - player.x, 0.0, target.z - player.z)
+        if (direction.lengthSqr() < DIRECTION_EPSILON) {
+            return false
+        }
+
+        return isNearVoidInDirection(target, direction.normalize())
+    }
+
+    private fun isNearVoidInDirection(target: LivingEntity, direction: Vec3): Boolean {
+        // Fan out several rays away from the target. If any single ray drops straight into the void
+        // over its nearest samples, knockback there sends the target off the edge — so prioritize it.
+        // This catches narrow strips/ledges that a single-ray majority vote would miss.
+        for (angle in voidRayAngles) {
+            val cos = cos(angle)
+            val sin = sin(angle)
+            // Rotate the horizontal direction by [angle] around the Y axis.
+            val dirX = direction.x * cos - direction.z * sin
+            val dirZ = direction.x * sin + direction.z * cos
+
+            if (isVoidAlongRay(target, dirX, dirZ)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /**
+     * A ray counts as a push-into-void when any sample along it is over the void: the target slides
+     * at least as far as [voidCheckDistances] reaches, so it would drop in before it stops.
+     */
+    private fun isVoidAlongRay(target: LivingEntity, dirX: Double, dirZ: Double): Boolean {
+        val voidLevel = player.level().minY.toDouble()
+        return voidCheckDistances.any { distance ->
+            val check = Vec3(target.x + dirX * distance, target.y, target.z + dirZ * distance)
+            target.wouldFallIntoVoid(check, voidLevel)
+        }
+    }
+
     private fun getBestDamageItem(): ItemStack? {
         return Slots.Hotbar.stacks
             .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
@@ -192,9 +266,24 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             .maxByOrNull { it.attackSpeed }
     }
 
+    /**
+     * The [preferredWeapon] with the highest Knockback level, for [Priorities.KNOCKBACK]. It may be an
+     * item without the enchantment - that priority still wants a preferred weapon in hand.
+     */
     private fun getBestKnockbackItem(): ItemStack? {
         return Slots.Hotbar.stacks
             .filter { !it.isEmpty && preferredWeapon.matchesAny(it) }
+            .maxByOrNull { itemStack ->
+                itemStack.getEnchantment(Enchantments.KNOCKBACK)
+            }
+    }
+
+    /**
+     * The item with the highest Knockback level in any hotbar slot, or null when nothing carries it.
+     */
+    private fun getStrongestKnockbackItem(): ItemStack? {
+        return Slots.Hotbar.stacks
+            .filter { !it.isEmpty && it.getEnchantment(Enchantments.KNOCKBACK) > 0 }
             .maxByOrNull { itemStack ->
                 itemStack.getEnchantment(Enchantments.KNOCKBACK)
             }
@@ -204,45 +293,60 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
+        // When AutoBlock only blocks on danger and we are in danger, favor a sword so we can block with it.
+        // Blocking is not limited to shields: wherever the BlocksAttacks component exists, any item can block.
+        val requiresBlockingSword = preferBlockingSword && isBlocksAttacksExisting &&
+            KillAuraAutoBlock.running && KillAuraAutoBlock.isInDanger
 
-        val bestSlot = Slots.Hotbar
+        val weaponFacets = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
+
+        val requiredType = when {
+            // A mace's smash attack cannot be blocked by a shield
+            requiresMace -> WeaponType.MACE
+            // An axe will stun the target if it is blocking with a shield
+            requiresShield -> WeaponType.AXE
+            // Favor a sword so AutoBlock can block with it when only blocking on danger
+            requiresBlockingSword -> WeaponType.SWORD
+            else -> null
+        }
+        if (requiredType != null) {
+            return weaponFacets
+                .filter { requiredType.test(it.itemStack) }
+                .maxOrNull()
+                ?.itemSlot as HotbarItemSlot?
+        }
+
+        // A Knockback weapon pushes a target standing next to the void over its edge
+        if (prioritizeVoidKnockback && target != null && shouldPrioritizeKnockback(target)) {
+            val voidKnockbackItem = getStrongestKnockbackItem()
+            if (voidKnockbackItem != null) {
+                return weaponFacets
+                    .firstOrNull { it.itemStack === voidKnockbackItem }
+                    ?.itemSlot as HotbarItemSlot?
+            }
+        }
+
+        return weaponFacets
             .filter { itemFacet ->
                 val itemStack = itemFacet.itemStack
 
-                
                 when {
-                    // A mace's smash attack cannot be blocked by a shield
-                    requiresMace -> WeaponType.MACE.test(itemStack)
-
-                    // An axe will stun the target if it is blocking with a shield
-                    requiresShield -> WeaponType.AXE.test(itemStack)
+                    // All items
+                    priorityChoice == Priorities.KNOCKBACK -> itemStack === getBestKnockbackItem()
 
                     // All items
-                    priorityChoice == Priorities.KNOCKBACK -> {
-                        val bestKnockbackItem = getBestKnockbackItem()
-                        itemStack == bestKnockbackItem
-                    }
+                    priorityChoice == Priorities.DAMAGE -> itemStack === getBestDamageItem()
 
                     // All items
-                    priorityChoice == Priorities.DAMAGE -> {
-                        val bestDamageItem = getBestDamageItem()
-                        itemStack == bestDamageItem
-                    }
-
-                    // All items
-                    priorityChoice == Priorities.ATTACK_SPEED -> {
-                        val bestSpeedItem = getBestAttackSpeedItem()
-                        itemStack == bestSpeedItem
-                    }
+                    priorityChoice == Priorities.ATTACK_SPEED -> itemStack === getBestAttackSpeedItem()
 
                     // Fall back to a preferred weapon when no special case applies
                     else -> preferredWeapon.matchesAny(itemStack)
                 }
             }
             .maxOrNull()
-
-        return bestSlot?.itemSlot as HotbarItemSlot?
+            ?.itemSlot as HotbarItemSlot?
     }
 
     /**

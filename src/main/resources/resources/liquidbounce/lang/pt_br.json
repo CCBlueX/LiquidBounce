@@ -260,6 +260,8 @@
   "liquidbounce.module.autoTrap.description": "Automaticamente coloca fogo nas entidades em volta de você.",
   "liquidbounce.module.autoWalk.description": "Automaticamente Faz você andar na direção que esta olhando.",
   "liquidbounce.module.autoWeapon.description": "Seleciona automaticamente a melhor arma na sua barra de ferramentas.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Prefere uma espada quando o AutoBlock só bloqueia em perigo e você está em perigo, para ter um item bloqueável na mão.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Prefere uma arma encantada com Repulsão quando o alvo está perto do vazio, para empurrá-lo da borda.",
   "liquidbounce.module.autoWindCharge.description": "Dá impulso automaticamente com cargas de vento ao segurar o pulo.",
   "liquidbounce.module.avoidHazards.description": "Não deixa você de encostar em blocos que dão dano.",
   "liquidbounce.module.backtrack.description": "Faz os alvos lagarem, permitindo atacá-los com mais eficiência.",

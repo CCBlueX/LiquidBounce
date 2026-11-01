@@ -241,6 +241,8 @@
   "liquidbounce.module.autoTrap.description": "Automatically sets targets on fire or traps them.",
   "liquidbounce.module.autoWalk.description": "Autwomaticawwy makes u wawk",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "Favors a sword when AutoBlock only blocks on danger and you are in danger, so you have a blockable item in hand.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Prefers a weapon enchanted with Knockback when the target stands next to the void, to push them off the edge.",
   "liquidbounce.module.autoWindCharge.description": "Autwomaticawwy boosts u using wind chawges when howding jump",
   "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might be malicious.",
   "liquidbounce.module.backtrack.description": "Causes tawgets two wag awwowing u two attack them mowe efficientwy",
