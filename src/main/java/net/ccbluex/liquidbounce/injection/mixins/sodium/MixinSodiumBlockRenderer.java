@@ -51,7 +51,11 @@ public abstract class MixinSodiumBlockRenderer {
         context.liquidBounce$setXRayActive(active);
 
         try {
-            XRayBlockRenderContext.renderIfActive(active, state, () -> original.call(model, state, pos, origin));
+            if (active) {
+                XRayBlockRenderContext.renderIfActive(state, () -> original.call(model, state, pos, origin));
+            } else {
+                original.call(model, state, pos, origin);
+            }
         } finally {
             context.liquidBounce$setXRayActive(null);
         }
