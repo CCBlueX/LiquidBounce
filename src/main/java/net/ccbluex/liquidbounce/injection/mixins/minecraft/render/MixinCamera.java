@@ -51,10 +51,6 @@ public abstract class MixinCamera {
 
     @Shadow
     private boolean detached;
-    @Shadow
-    private float yRot;
-    @Shadow
-    private float xRot;
 
     @Shadow
     protected abstract void setRotation(float yRot, float xRot);
