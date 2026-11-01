@@ -285,6 +285,7 @@
   "liquidbounce.command.serverinfo.transactionDifferences": "交易差異: [%s]",
   "liquidbounce.command.serverinfo.transactions": "交易: [%s]",
   "liquidbounce.command.skull.description": "獲得指定玩家的頭顱。",
+  "liquidbounce.command.skull.invalidName": "%s 不是有效的玩家名。",
   "liquidbounce.command.skull.mustBeCreative": "需要創造模式！",
   "liquidbounce.command.skull.name.description": "玩家名字。",
   "liquidbounce.command.skull.noEmptySlot": "背包已滿。",
