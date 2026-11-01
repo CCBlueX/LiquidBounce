@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -26,4 +28,13 @@ object ModuleQuickPerspectiveSwap : ClientModule(
     "QuickPerspectiveSwap", ModuleCategories.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
 ) {
     val rearView by boolean("RearView", false)
+
+    @Suppress("unused")
+    private val perspectiveHandler = handler<PerspectiveEvent> { event ->
+        // Other camera modes already manage their own perspective.
+        if (ModuleFreeLook.running || ModuleFreeCam.running) return@handler
+
+        // Read the current view every tick so the vanilla F5 key stays in sync.
+        event.perspective = swappedPerspective(event.perspective, rearView)
+    }
 }
