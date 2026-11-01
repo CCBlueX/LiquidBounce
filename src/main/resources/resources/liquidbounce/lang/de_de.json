@@ -439,6 +439,7 @@
   "liquidbounce.module.holeESP.description": "Erkennt und zeigt sichere Orte für Crystal PvP an.",
   "liquidbounce.module.holeFiller.description": "Füllt automatisch sichere Orte mit Blöcken für Crystal PvP.",
   "liquidbounce.module.hud.description": "Zeigt ein In-Game-Overlay mit verschiedenen nützlichen Tools.",
+  "liquidbounce.module.interceptElytra.description": "Wirft Windladungen auf Elytra-Gleiter, um sie abzufangen und aus der Luft zu stoßen.",
   "liquidbounce.module.inventoryCleaner.description": "Sortiert dein Inventar automatisch und wirft alle unnötigen Items weg.",
   "liquidbounce.module.inventoryMove.description": "Ermöglicht das Gehen, während ein Inventar geöffnet ist.",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "Du bist nicht länger im am laggen und wir haben deinen Bildschirm geschlossen.",
