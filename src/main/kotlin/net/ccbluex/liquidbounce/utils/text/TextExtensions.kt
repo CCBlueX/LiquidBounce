@@ -23,8 +23,7 @@ package net.ccbluex.liquidbounce.utils.text
 import com.google.common.base.CaseFormat
 import com.google.common.net.HostAndPort
 import com.google.common.net.InetAddresses
-import it.unimi.dsi.fastutil.chars.CharOpenHashSet
-import net.ccbluex.fastutil.unmodifiable
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
@@ -229,11 +228,17 @@ fun TranslatableContents.toTranslatedString(): String = buildString {
     }
 }
 
-fun FormattedText.asFormattedCharSequence() = FormattedCharSequence { output ->
-    StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
-}
+fun FormattedText.asFormattedCharSequence(): FormattedCharSequence =
+    (this as? Component)?.visualOrderText ?: FormattedCharSequence { output ->
+        StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
+    }
 
-private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
+@Suppress("ComplexCondition")
+private fun isColorCodeChar(char: Char): Boolean =
+    char in '0'..'9'
+        || char in 'a'..'f' || char in 'A'..'F'
+        || char in 'k'..'o' || char in 'K'..'O'
+        || char == 'r' || char == 'R'
 
 /**
  * Translate alt color codes to minecraft color codes
@@ -241,7 +246,7 @@ private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOo
 fun String.translateColorCodes(): String {
     val chars = toCharArray()
     for (i in 0 until chars.lastIndex) {
-        if (chars[i] == '&' && COLOR_CODE_CHARS.contains(chars[i + 1])) {
+        if (chars[i] == '&' && isColorCodeChar(chars[i + 1])) {
             chars[i] = '§'
             chars[i + 1] = chars[i + 1].lowercaseChar()
         }
@@ -350,6 +355,7 @@ fun String.hideSensitiveAddress(): String {
     return if (idx == -1) newHost else newHost + substring(idx)
 }
 
+@ValueClassCandidate
 @JvmRecord
 data class ColoredChar(val char: Char, val color: TextColor)
 
