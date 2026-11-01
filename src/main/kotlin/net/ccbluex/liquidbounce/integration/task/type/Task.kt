@@ -20,11 +20,13 @@
 package net.ccbluex.liquidbounce.integration.task.type
 
 import kotlinx.coroutines.Job
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * An asynchronous task with progress tracking
  */
+@AddonApi
 open class Task(val name: String) {
 
     @Volatile
@@ -32,8 +34,7 @@ open class Task(val name: String) {
         get() = if (subTasks.isNotEmpty()) calculateProgress() else field
     @Volatile
     var isCompleted: Boolean = false
-        get() = field && if (subTasks.isNotEmpty()) areAllSubTasksCompleted() else true
-    var startTime: Long = System.currentTimeMillis()
+        get() = field && (subTasks.isEmpty() || areAllSubTasksCompleted())
     @Volatile
     var job: Job? = null
     val subTasks = ConcurrentHashMap<String, Task>()
