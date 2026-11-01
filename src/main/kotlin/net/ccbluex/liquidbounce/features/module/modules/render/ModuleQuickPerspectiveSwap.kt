@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.minecraft.client.CameraType
 
 object ModuleQuickPerspectiveSwap : ClientModule(
     "QuickPerspectiveSwap", ModuleCategories.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
@@ -35,6 +36,10 @@ object ModuleQuickPerspectiveSwap : ClientModule(
         if (ModuleFreeLook.running || ModuleFreeCam.running) return@handler
 
         // Read the current view every tick so the vanilla F5 key stays in sync.
-        event.perspective = swappedPerspective(event.perspective, rearView)
+        event.perspective = when (event.perspective) {
+            CameraType.FIRST_PERSON -> if (rearView) CameraType.THIRD_PERSON_BACK else CameraType.THIRD_PERSON_FRONT
+            CameraType.THIRD_PERSON_BACK -> CameraType.THIRD_PERSON_FRONT
+            CameraType.THIRD_PERSON_FRONT -> CameraType.THIRD_PERSON_BACK
+        }
     }
 }
