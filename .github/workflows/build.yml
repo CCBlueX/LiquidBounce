@@ -236,6 +236,9 @@ jobs:
         env:
           CI: true
         run: ./gradlew build
+      - name: Run theme regression tests
+        working-directory: src-theme
+        run: npm test
       - name: Upload SARIF to GitHub using the upload-sarif action
         uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
