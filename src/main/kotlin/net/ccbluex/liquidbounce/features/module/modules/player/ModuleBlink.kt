@@ -162,7 +162,10 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
                 }
             }
 
-            notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
+            // Rapid resets would otherwise spam the notification overlay.
+            if (AutoResetOption.resetAfter >= 10) {
+                notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
+            }
             if (autoDisable) {
                 enabled = false
             }
