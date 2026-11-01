@@ -23,6 +23,8 @@ import com.google.common.base.Predicates
 import com.mojang.realmsclient.RealmsMainScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
+import net.ccbluex.liquidbounce.integration.task.DownloadProxy
+import net.ccbluex.liquidbounce.integration.task.DownloadProxyScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screens.DisconnectedScreen
@@ -61,6 +63,7 @@ enum class CustomScreenType(
     CLICK_GUI("clickgui"),
     ALT_MANAGER("altmanager"),
     PROXY_MANAGER("proxymanager"),
+    DOWNLOAD_PROXY("downloadproxy", recognizer = { it is DownloadProxyScreen }, open = DownloadProxy::openSettings),
     BASIC_MENU("basicmenu"),
 
     TITLE(

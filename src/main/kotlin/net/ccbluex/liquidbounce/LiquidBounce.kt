@@ -19,12 +19,14 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.internal.isMissing
 import kotlinx.coroutines.launch
@@ -71,8 +73,12 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.task.DownloadProxy
+import net.ccbluex.liquidbounce.integration.task.DownloadProxyScreen
+import net.ccbluex.liquidbounce.integration.task.DownloadProxyStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
+import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
@@ -89,6 +95,7 @@ import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -102,9 +109,11 @@ import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
+import net.fabricmc.loader.api.FabricLoader
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
@@ -170,6 +179,8 @@ object LiquidBounce : EventListener {
     var isInitialized = false
         private set
 
+    private val initializationStarted = AtomicBoolean()
+
     /**
      * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
      *
@@ -209,10 +220,12 @@ object LiquidBounce : EventListener {
     private fun initializeClient(
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
+        chooseDownloadProxy: Boolean = false,
+        savedProxy: DownloadProxy.Choice? = null,
     ): CompletableFuture<Void?> = CoroutineScope(
         renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
     ).future<Void?> {
-        if (isInitialized) {
+        if (!initializationStarted.compareAndSet(false, true)) {
             return@future null
         }
 
@@ -220,12 +233,22 @@ object LiquidBounce : EventListener {
         RenderSystem.assertOnRenderThread()
         check(!Dispatchers.Main.isMissing())
 
+        val manager = TaskManager(ioScope)
+        taskManager = manager
+        val startupTask = prepareProxySelection(manager, chooseDownloadProxy, savedProxy)
+
         // Initialize managers and features
         Client
         initializeManagers(renderThreadDispatcher)
+        if (chooseDownloadProxy) DownloadProxyStorage.saveCurrent()
         initializeFeatures()
-        initializeResources(workerDispatcher)
+        try {
+            initializeResources(workerDispatcher)
+        } finally {
+            DownloadProxy.onlineInitialization = false
+        }
         prepareGuiStage(renderThreadDispatcher)
+        startupTask?.let { manager.complete(it.name) }
 
         // Register shutdown hook in case [ClientShutdownEvent] is not called
         Runtime.getRuntime().addShutdownHook(Thread(::shutdownClient))
@@ -251,10 +274,34 @@ object LiquidBounce : EventListener {
         AddonManager.notifyStarted()
 
         isInitialized = true
+        DownloadProxyStorage.markInitialized()
         logger.info("$CLIENT_NAME has been successfully initialized.")
         null
-    }.exceptionally { throwable ->
-        ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
+    }.whenComplete { _, throwable ->
+        if (throwable != null) ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
+    }
+
+    private suspend fun prepareProxySelection(
+        manager: TaskManager,
+        chooseProxy: Boolean,
+        savedProxy: DownloadProxy.Choice?,
+    ): Task? {
+        DownloadProxy.choice = savedProxy ?: DownloadProxy.Choice.Direct
+        if (!chooseProxy) {
+            DownloadProxy.onlineInitialization = DownloadProxy.choice != DownloadProxy.Choice.Direct
+            return null
+        }
+        // The reload must finish before its overlay can close and an interactive screen can be used.
+        while (mc.gui.overlay() != null) delay(50)
+        val task = manager.createTask("Online initialization")
+        val selection = CompletableDeferred<DownloadProxy.Choice>()
+        DownloadProxy.pending = selection
+        mc.gui.setScreen(DownloadProxyScreen(selection))
+        DownloadProxy.choice = selection.await()
+        DownloadProxy.pending = null
+        DownloadProxy.onlineInitialization = true
+        mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", manager))
+        return task
     }
 
     /**
@@ -412,38 +459,7 @@ object LiquidBounce : EventListener {
         // Holds the chosen browser backend
         ConfigSystem.load(GlobalManager)
 
-        taskManager = TaskManager(ioScope).apply {
-            // Either immediately starts browser or spawns a task to request browser dependencies,
-            // and then starts the browser through render thread.
-            BrowserBackendManager.makeDependenciesAvailable(this)
-
-            // Initialize deep learning engine as task, because we cannot know if DJL will request
-            // resources from the internet.
-            launch("Deep Learning") { task ->
-                runCatching {
-                    DeepLearningEngine.init(task)
-                    ModelManager.load()
-                    DeepLearningEngine.markInitialized()
-                }.onFailure { exception ->
-                    task.subTasks.clear()
-                    DeepLearningEngine.markUnavailable()
-
-                    // LiquidBounce can still run without deep learning,
-                    // and we don't want to crash the client if it fails.
-                    logger.info("Failed to initialize deep learning.", exception)
-                }
-            }
-
-            launch("Marketplace") { task ->
-                runCatching {
-                    MarketplaceManager.updateAll(task)
-                }.onFailure { exception ->
-                    logger.error("Failed to update marketplace items.", exception)
-                }
-
-                task.isCompleted = true
-            }
-        }
+        startDependencyTasks(requireNotNull(taskManager))
 
         // Prepare glyph manager
         val duration = measureTime {
@@ -451,6 +467,39 @@ object LiquidBounce : EventListener {
         }
         logger.info("Completed loading fonts in ${duration.inWholeMilliseconds} ms.")
         logger.info("Fonts: [ ${FontManager.fontFaces.keys.joinToString()} ]")
+    }
+
+    private fun startDependencyTasks(manager: TaskManager) = with(manager) {
+        // Either immediately starts browser or spawns a task to request browser dependencies,
+        // and then starts the browser through render thread.
+        BrowserBackendManager.makeDependenciesAvailable(this)
+
+        // Initialize deep learning engine as task, because we cannot know if DJL will request
+        // resources from the internet.
+        launch("Deep Learning") { task ->
+            runCatching {
+                DeepLearningEngine.init(task)
+                ModelManager.load()
+                DeepLearningEngine.markInitialized()
+            }.onFailure { exception ->
+                task.subTasks.clear()
+                DeepLearningEngine.markUnavailable()
+
+                // LiquidBounce can still run without deep learning,
+                // and we don't want to crash the client if it fails.
+                logger.info("Failed to initialize deep learning.", exception)
+            }
+        }
+
+        launch("Marketplace") { task ->
+            runCatching {
+                MarketplaceManager.updateAll(task)
+            }.onFailure { exception ->
+                logger.error("Failed to update marketplace items.", exception)
+            }
+
+            task.isCompleted = true
+        }
     }
 
     /**
@@ -525,6 +574,15 @@ object LiquidBounce : EventListener {
     private val screenHandler = handler<ScreenEvent>(priority = FIRST_PRIORITY) { event ->
         val taskManager = taskManager ?: return@handler
 
+        val proxySelection = DownloadProxy.pending
+        if (proxySelection != null && !proxySelection.isCompleted) {
+            if (event.screen !is DownloadProxyScreen) {
+                event.cancelEvent()
+                mc.gui.setScreen(DownloadProxyScreen(proxySelection))
+            }
+            return@handler
+        }
+
         val selection = BrowserBackendManager.pendingSelection
         if (selection != null && !selection.isCompleted) {
             if (event.screen !is BrowserSelectionScreen) {
@@ -560,10 +618,37 @@ object LiquidBounce : EventListener {
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()
-                    initializeClient(
-                        workerDispatcher = prepareDispatcher,
-                        renderThreadDispatcher = applyDispatcher,
-                    )
+                    mc.submit(java.util.function.Supplier {
+                        val test = FabricLoader.getInstance().isModLoaded("liquidbounce-gametest")
+                        val saved = if (test) {
+                            null
+                        } else {
+                            DownloadProxyStorage.load(
+                                mc.gameDirectory.toPath().resolve(CLIENT_NAME).resolve("startup-proxy.properties")
+                            )
+                        }
+                        val requested = env("LB_DOWNLOAD_PROXY_PROMPT", "net.ccbluex.liquidbounce.downloadProxy.prompt")
+                            ?.toBoolean() == true
+                        val chooseProxy = DownloadProxyStorage.shouldPrompt(
+                            saved, DownloadProxyStorage.isInitialized(mc.gameDirectory.toPath().resolve(CLIENT_NAME)),
+                            requested, test
+                        )
+                        chooseProxy to saved
+                    }).thenCompose { (chooseProxy, saved) ->
+                        val initialization = initializeClient(prepareDispatcher, applyDispatcher, chooseProxy, saved)
+                        if (chooseProxy) {
+                            // An interactive screen cannot run behind the reload overlay. Observe failures even
+                            // though this one opt-in reload must finish before initialization can continue.
+                            initialization.thenAccept {
+                                ThemeManager.reloader.reload().whenComplete { _, error ->
+                                    if (error != null) ErrorHandler.fatal(error, additionalMessage = "Theme reload")
+                                }
+                            }
+                            CompletableFuture.completedFuture<Void>(null)
+                        } else {
+                            initialization.thenCompose { ThemeManager.reloader.reload() }
+                        }
+                    }
                 }
         }
 

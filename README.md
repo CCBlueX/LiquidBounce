@@ -52,6 +52,21 @@ our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 4. Open the folder as a Gradle project in your preferred IDE.
 5. Run the client. (`./gradlew runClient`)
 
+## Dependency download proxy
+
+Until initialization completes successfully, choose direct access, system settings, or a custom HTTP/HTTPS or SOCKS5 proxy (`host:port`) for
+online resources and browser and deep learning dependencies. Direct access is the default. The choice is saved for later launches; use
+**LiquidBounce → Startup Download Proxy** on the main menu to change it for the next launch. Without interaction, the
+startup screen continues after five seconds. Using a button cancels the countdown. Authenticated
+proxies are not supported.
+
+If the main menu is unavailable, launch with `-Dnet.ccbluex.liquidbounce.downloadProxy.prompt=true` to reopen the
+startup proxy screen.
+
+System proxy discovery requires no launcher options. The JVM supports it on Windows, macOS, and GNOME; the
+operating system may return a direct connection for some destinations. HTTP proxies support HTTPS downloads via CONNECT;
+connections to the proxy itself use plain HTTP. SOCKS5 supports both HTTP and HTTPS downloads.
+
 ## Additional libraries
 
 ### Mixins
