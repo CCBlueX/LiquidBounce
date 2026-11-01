@@ -354,6 +354,7 @@
   "liquidbounce.command.serverinfo.transactionDifferences": "Transaction Differences: [%s]",
   "liquidbounce.command.serverinfo.transactions": "Transactions: [%s]",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
+  "liquidbounce.command.skull.invalidName": "%s is not a valid player name.",
   "liquidbounce.command.skull.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.skull.name.description": "Name of the player.",
   "liquidbounce.command.skull.noEmptySlot": "There are no empty slots in your inventory.",
