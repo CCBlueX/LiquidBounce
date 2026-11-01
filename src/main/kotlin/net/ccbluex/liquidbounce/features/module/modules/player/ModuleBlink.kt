@@ -54,6 +54,8 @@ import java.util.UUID
 
 object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
+    private const val MIN_AUTO_RESET_NOTIFICATION_TICKS = 10
+
     private val directions by multiEnumChoice("Directions", TransferOrigin.OUTGOING, canBeNone = false)
 
     private val dummy by boolean("Dummy", false)
@@ -162,7 +164,10 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
                 }
             }
 
-            notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
+            // Rapid resets would otherwise spam the notification overlay.
+            if (AutoResetOption.resetAfter >= MIN_AUTO_RESET_NOTIFICATION_TICKS) {
+                notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
+            }
             if (autoDisable) {
                 enabled = false
             }
