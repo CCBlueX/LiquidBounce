@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
@@ -25,9 +26,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.textureSetup
-import net.ccbluex.liquidbounce.utils.render.uploadRect
+import net.ccbluex.liquidbounce.utils.render.uploadRows
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.renderer.texture.DynamicTexture
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -117,7 +117,7 @@ class MinimapTextureAtlasManager {
 
     fun editChunk(
         chunkPos: Long,
-        editor: BiConsumer<DynamicTexture, AtlasPosition>,
+        editor: BiConsumer<NativeImage, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 
@@ -125,7 +125,7 @@ class MinimapTextureAtlasManager {
             dirtyAtlasPositions.add(atlasPosition)
         }
 
-        editor.accept(texture, atlasPosition)
+        editor.accept(texture.pixels, atlasPosition)
     }
 
     /**
@@ -163,34 +163,19 @@ class MinimapTextureAtlasManager {
      * One write covering every dirty cell: the per-call driver cost of a texture write dominates its size.
      */
     private fun uploadDirtyBounds() {
-        val bounds = dirtyBoundsOf(this.dirtyAtlasPositions)
-
-        this.texture.uploadRect(
-            mipLevel = 0,
-            x = bounds.x,
-            y = bounds.y,
-            width = bounds.width,
-            height = bounds.height,
-        )
-    }
-
-    /**
-     * Pixel rectangle covering every cell in [positions]; requires a non-empty collection.
-     */
-    private fun dirtyBoundsOf(positions: Iterable<AtlasPosition>): Rect2i {
-        var minX = Int.MAX_VALUE
         var minY = Int.MAX_VALUE
-        var maxX = Int.MIN_VALUE
         var maxY = Int.MIN_VALUE
 
-        for (position in positions) {
-            minX = minOf(minX, position.baseXOnAtlas)
+        for (position in this.dirtyAtlasPositions) {
             minY = minOf(minY, position.baseYOnAtlas)
-            maxX = maxOf(maxX, position.baseXOnAtlas)
             maxY = maxOf(maxY, position.baseYOnAtlas)
         }
 
-        return Rect2i(minX, minY, maxX - minX + 16, maxY - minY + 16)
+        // Uploads dirty rows covering all [dirtyAtlasPositions]
+        this.texture.uploadRows(
+            y = minY,
+            height = maxY - minY + 16,
+        )
     }
 
     @JvmRecord

@@ -135,25 +135,28 @@ inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
 inline fun GpuBufferSlice.copyFrom(source: GpuBufferSlice) =
     gpuDevice.createCommandEncoder().copyToBuffer(source, this)
 
-@Suppress("LongParameterList")
-inline fun GpuTexture.write(
+/**
+ * Uploads rows `[y, y + height)` of [source] into the same rows of this texture.
+ *
+ * Only whole rows can be written: the official write API takes the source row pitch from the copy
+ * width, so a narrower sub-rectangle would be read with the wrong stride.
+ */
+fun GpuTexture.writeRows(
     source: NativeImage,
+    y: Int,
+    height: Int,
     mipLevel: Int = 0,
     depthOrLayer: Int = 0,
-    destX: Int = 0,
-    destY: Int = 0,
-    width: Int = getWidth(mipLevel),
-    height: Int = getHeight(mipLevel),
-    sourceX: Int = 0,
-    sourceY: Int = 0,
 ) {
-    val commandEncoder = gpuDevice.createCommandEncoder()
-    val slice = commandEncoder.transientMemory()
-        .uploadStaging(source.pixelBytes, 1L, GpuBuffer.USAGE_COPY_SRC)
-    commandEncoder.copyBufferToTexture(
-        slice, sourceX, sourceY, source.width, source.height,
-        this, destX, destY, width, height,
-        mipLevel,depthOrLayer,
+    val width = getWidth(mipLevel)
+    require(source.width == width) {
+        "Source image width (${source.width}) must match the texture width ($width)"
+    }
+
+    val bytes = source.pixelBytes
+    bytes.position(y * (bytes.capacity() / source.height))
+    gpuDevice.createCommandEncoder().writeToTexture(
+        this, bytes, mipLevel, depthOrLayer, 0, y, width, height
     )
 }
 
@@ -294,17 +297,11 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
     return future
 }
 
-fun DynamicTexture.uploadRect(
-    mipLevel: Int,
-    x: Int, y: Int,
-    width: Int, height: Int,
-) = this.texture.write(
-    source = this.pixels!!,
-    mipLevel, depthOrLayer = 0,
-    x, y,
-    width, height,
-    x, y,
-)
+fun DynamicTexture.uploadRows(
+    y: Int,
+    height: Int,
+    mipLevel: Int = 0,
+) = this.texture.writeRows(this.pixels, y, height, mipLevel)
 
 fun NativeImage.toBufferedImage(): BufferedImage {
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)

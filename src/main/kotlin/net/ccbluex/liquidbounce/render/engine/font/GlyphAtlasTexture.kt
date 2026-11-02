@@ -26,7 +26,7 @@ import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import it.unimi.dsi.fastutil.ints.IntArrays
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.render.write
+import net.ccbluex.liquidbounce.utils.render.writeRows
 import net.minecraft.client.renderer.texture.AbstractTexture
 import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
@@ -79,30 +79,17 @@ class GlyphAtlasTexture(
 
     fun upload() = upload(requireNotNull(pixels) { "Glyph atlas has no retained pixel data" })
 
-    @Suppress("LongParameterList")
-    fun uploadRect(
+    fun uploadRows(
         mipLevel: Int,
-        x: Int,
         y: Int,
-        width: Int,
         height: Int,
     ) {
         val pixels = requireNotNull(pixels) { "Glyph atlas has no retained pixel data" }
-        getTexture().write(
-            source = pixels,
-            mipLevel = mipLevel,
-            depthOrLayer = 0,
-            destX = x,
-            destY = y,
-            width = width,
-            height = height,
-            sourceX = x,
-            sourceY = y,
-        )
+        getTexture().writeRows(pixels, y, height, mipLevel)
     }
 
     private fun upload(source: NativeImage) {
-        getTexture().write(source, width = source.width, height = source.height)
+        gpuDevice.createCommandEncoder().writeToTexture(getTexture(), source)
     }
 
     override fun close() {
