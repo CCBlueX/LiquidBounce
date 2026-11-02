@@ -24,7 +24,6 @@ package net.ccbluex.liquidbounce.utils.math
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
@@ -61,9 +60,9 @@ fun VoxelShape.distanceToSqr(position: Vec3): Double {
 
     var distSqr = Double.POSITIVE_INFINITY
     this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
-        val x = Mth.clamp(position.x, x1, x2)
-        val y = Mth.clamp(position.y, y1, y2)
-        val z = Mth.clamp(position.z, z1, z2)
+        val x = Math.clamp(position.x, x1, x2)
+        val y = Math.clamp(position.y, y1, y2)
+        val z = Math.clamp(position.z, z1, z2)
         val currentDistSqr = position.distanceToSqr(x, y, z)
         if (distSqr > currentDistSqr) distSqr = currentDistSqr
     }

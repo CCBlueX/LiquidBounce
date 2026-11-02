@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.CLICK_TO_COPY
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.text.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.ComponentUtils
 import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
@@ -213,7 +212,7 @@ object CommandServerInfo : EventListener, CommandRegistrar {
         key: String,
         data: String? = null,
         formatting: (MutableComponent) -> MutableComponent = ::regular,
-        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy")),
+        hover: HoverEvent? = HoverEvent.ShowText(CLICK_TO_COPY),
         click: ClickEvent? = data?.let(ClickEvent::CopyToClipboard),
     ) {
         val content = data?.let(::variable) ?: markAsError("N/A")
@@ -236,7 +235,7 @@ object CommandServerInfo : EventListener, CommandRegistrar {
         textComponent: Component? = null,
         copyContent: String? = null,
         formatting: (MutableComponent) -> MutableComponent = ::regular,
-        hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
+        hover: HoverEvent? = HoverEvent.ShowText(CLICK_TO_COPY)
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
         val content = copyContent ?: displayComponent.string

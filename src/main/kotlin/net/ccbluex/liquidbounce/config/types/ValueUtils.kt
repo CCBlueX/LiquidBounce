@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
-import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.renderer.texture.AbstractTexture
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -54,13 +54,13 @@ fun <T : Any, R> Value<T>.mapReadOnly(transform: (T) -> R): ReadOnlyProperty<Any
 }
 
 /**
- * Convert the [FileValue] to a [ReadOnlyProperty] of [DynamicTexture].
+ * Convert the [FileValue] to a [ReadOnlyProperty] of [AbstractTexture].
  */
 fun <V> FileValue.toTextureProperty(
     owner: V,
     printErrorToChat: Boolean = true,
-): ReadOnlyProperty<Any?, DynamicTexture?> where V : EventListener, V : Value<*> {
-    val texture = MutableProperty<DynamicTexture?>(null)
+): ReadOnlyProperty<Any?, AbstractTexture?> where V : EventListener, V : Value<*> {
+    val texture = MutableProperty<AbstractTexture?>(null)
     ioScope.launch {
         asStateFlow().filter { it.isFile }.collectLatest { file ->
             while (!inGame || !owner.running) {
@@ -70,7 +70,9 @@ fun <V> FileValue.toTextureProperty(
             try {
                 val nativeImage = file.readNativeImage()
                 withContext(Dispatchers.Main) {
+                    val previous = texture.value
                     texture.value = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
+                    previous?.close()
                 }
             } catch (e: Exception) {
                 val message = "Failed to load texture from '${file.name}' for ${owner.name}"
