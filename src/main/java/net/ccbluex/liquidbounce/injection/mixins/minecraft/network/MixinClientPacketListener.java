@@ -45,7 +45,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -172,9 +171,9 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         var present = original.isPresent();
         if (present && ModuleAntiExploit.canLimit(Limit.EXPLOSION_STRENGTH)) {
             var vec = original.get();
-            double fixedX = Mth.clamp(vec.x, -10.0, 10.0);
-            double fixedY = Mth.clamp(vec.y, -10.0, 10.0);
-            double fixedZ = Mth.clamp(vec.z, -10.0, 10.0);
+            double fixedX = Math.clamp(vec.x, -10.0, 10.0);
+            double fixedY = Math.clamp(vec.y, -10.0, 10.0);
+            double fixedZ = Math.clamp(vec.z, -10.0, 10.0);
 
             if (fixedX != vec.x || fixedY != vec.y || fixedZ != vec.z) {
                 ModuleAntiExploit.INSTANCE.notify(Limit.EXPLOSION_STRENGTH, "Limited too strong explosion", true);

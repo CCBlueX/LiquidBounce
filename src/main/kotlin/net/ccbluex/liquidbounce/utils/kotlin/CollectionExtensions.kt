@@ -29,6 +29,9 @@ import net.minecraft.world.level.block.WeatheringCopperCollection
 import java.util.Collections
 import java.util.SequencedCollection
 import java.util.function.Predicate
+import java.util.stream.Stream
+
+inline fun <T> Stream<T>?.orEmpty(): Stream<T> = this ?: Stream.empty()
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {

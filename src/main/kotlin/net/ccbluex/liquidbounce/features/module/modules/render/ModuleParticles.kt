@@ -200,10 +200,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                 }
 
                 val renderColor = color.alpha(
-                    Mth.clamp(
-                        (alpha * color.a.toFloat()).toInt(),
-                        0, color.a
-                    )
+                    (alpha * color.a.toFloat()).toInt().coerceIn(0, color.a)
                 )
 
                 drawSquareTexture(builtinParticle.texture, size, renderColor.argb)

@@ -63,7 +63,6 @@ import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
@@ -191,7 +190,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         translate(size / 2.0, size / 2.0, 0.0)
                     }
 
-                    val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
+                    val alpha = (color.a - (i * alphaFactor)).coerceIn(0, color.a)
                     val renderColor = color.alpha(alpha)
 
                     drawSquareTexture(ghostModeTexture, size, renderColor.argb, AnchorPoint.CENTER_LEFT)

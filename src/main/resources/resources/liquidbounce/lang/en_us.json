@@ -822,7 +822,6 @@
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.zoom.description": "Allows you to make everything in your world appear smaller or bigger.",
   "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "Therefore falling back to %s angle smoothing.",
-  "liquidbounce.tooltip.clickToCopy": "Click to copy",
   "liquidbounce.unsupportedDeepLearning": "The AI engine has not been initialized. Your system might not be supported.",
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client for Minecraft."
 }
