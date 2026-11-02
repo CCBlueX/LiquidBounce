@@ -136,6 +136,44 @@ inline fun GpuBufferSlice.copyFrom(source: GpuBufferSlice) =
     gpuDevice.createCommandEncoder().copyToBuffer(source, this)
 
 /**
+ * Creates a 2D texture matching the size and channel layout of this image.
+ *
+ * @param upload whether the pixel data is written to the texture right away
+ */
+@JvmOverloads
+fun NativeImage.createGpuTexture(
+    labelGetter: Supplier<String>? = null,
+    usage: @GpuTexture.Usage Int = 0,
+    upload: Boolean = false,
+): GpuTexture {
+    val texture = gpuDevice.createTexture(
+        labelGetter,
+        GpuTexture.USAGE_COPY_DST or usage,
+        format().toGpuFormat(),
+        width, height,
+        1, 1,
+    )
+
+    if (upload) {
+        try {
+            gpuDevice.createCommandEncoder().writeToTexture(texture, this)
+        } catch (throwable: Throwable) {
+            texture.close()
+            throw throwable
+        }
+    }
+
+    return texture
+}
+
+private fun NativeImage.Format.toGpuFormat(): GpuFormat = when (this) {
+    NativeImage.Format.RGBA -> GpuFormat.RGBA8_UNORM
+    NativeImage.Format.RGB -> GpuFormat.RGB8_UNORM
+    NativeImage.Format.LUMINANCE -> GpuFormat.R8_UNORM
+    NativeImage.Format.LUMINANCE_ALPHA -> GpuFormat.RG8_UNORM
+}
+
+/**
  * Uploads rows `[y, y + height)` of [source] into the same rows of this texture.
  *
  * Only whole rows can be written: the official write API takes the source row pitch from the copy
@@ -297,12 +335,6 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
     return future
 }
 
-fun DynamicTexture.uploadRows(
-    y: Int,
-    height: Int,
-    mipLevel: Int = 0,
-) = this.texture.writeRows(this.pixels, y, height, mipLevel)
-
 fun NativeImage.toBufferedImage(): BufferedImage {
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
 
@@ -416,7 +448,7 @@ private fun copyArgbRows(
 /**
  * Should be called from main thread.
  */
-fun NativeImage.registerTexture(identifier: Identifier): DynamicTexture {
+fun NativeImage.registerTexture(identifier: Identifier): AbstractTexture {
     val texture = asTexture(identifier::toString)
     mc.textureManager.register(identifier, texture)
     return texture
@@ -441,14 +473,14 @@ fun File.readNativeImage(): NativeImage =
 
 inline fun NativeImage.asTexture(
     name: String = "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})",
-) = DynamicTexture(Suppliers.ofInstance(name), this)
+): AbstractTexture = DynamicTexture(Suppliers.ofInstance(name), this)
 
 @JvmOverloads
 fun NativeImage.asTexture(
     nameSupplier: Supplier<String> = Supplier {
         "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})"
     },
-) = DynamicTexture(nameSupplier, this)
+): AbstractTexture = DynamicTexture(nameSupplier, this)
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)

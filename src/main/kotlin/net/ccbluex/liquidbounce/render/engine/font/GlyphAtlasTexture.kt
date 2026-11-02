@@ -19,14 +19,15 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import it.unimi.dsi.fastutil.ints.IntArrays
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.render.createGpuTexture
 import net.ccbluex.liquidbounce.utils.render.writeRows
+import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.renderer.texture.AbstractTexture
 import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
@@ -45,36 +46,24 @@ class GlyphAtlasTexture(
     var pixels: NativeImage? = pixels
         private set
 
+    val textureSetup: TextureSetup
+
     init {
         require(pixels.format() == NativeImage.Format.LUMINANCE) {
             "Glyph atlas pixels must use LUMINANCE format"
         }
 
-        val device = gpuDevice
-        val gpuTexture = device.createTexture(
-            label,
-            GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
-            GpuFormat.R8_UNORM,
-            pixels.width,
-            pixels.height,
-            1,
-            1,
-        )
+        val gpuTexture = pixels.createGpuTexture(label, GpuTexture.USAGE_TEXTURE_BINDING, upload = true)
         texture = gpuTexture
         sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
-        textureView = device.createTextureView(gpuTexture)
-
-        try {
-            upload(pixels)
-        } catch (throwable: Throwable) {
-            close()
-            throw throwable
-        }
+        textureView = gpuDevice.createTextureView(gpuTexture)
 
         if (!retainPixels) {
             pixels.close()
             this.pixels = null
         }
+
+        this.textureSetup = TextureSetup.singleTexture(getTextureView(), getSampler())
     }
 
     fun upload() = upload(requireNotNull(pixels) { "Glyph atlas has no retained pixel data" })
