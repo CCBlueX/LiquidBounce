@@ -75,7 +75,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         }
     }
 
-    private inner class Friction : ToggleableValueGroup(this, "Friction", true) {
+    private inner class Friction : ToggleableValueGroup(this, "Friction", false) {
         val factor by float("Factor", 0.15f, 0.0f..1.0f)
     }
 
