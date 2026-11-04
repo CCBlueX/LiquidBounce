@@ -26,7 +26,7 @@ djl = "0.39.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 okhttp = "5.5.1"
 
-ktor = "3.6.0"
+ktor = "3.6.1"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
 fastutil4k = "0.2.10"
