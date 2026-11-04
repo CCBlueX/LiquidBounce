@@ -23,6 +23,7 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import net.ccbluex.liquidbounce.common.LightmapOverride
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -40,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.util.ARGB
 import org.joml.Vector2f
+import java.util.function.Supplier
 
 /**
  * Module ItemChams
@@ -61,8 +63,7 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
         private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-        @JvmField val OVERRIDE: ScopedValue<GpuTextureView> = ScopedValue.newInstance()
-
+        private var texture: GpuTexture? = null
         private var textureView: GpuTextureView? = null
 
         private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
@@ -73,9 +74,9 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
         @JvmStatic
-        fun <T : Any> doOverride(op: ScopedValue.CallableOp<T, Throwable>): T {
-            if (!this.running || this.textureView == null) return op.call()
-            return ScopedValue.where(OVERRIDE, this.textureView).call(op)
+        fun <T : Any> doOverride(op: Supplier<T>): T {
+            if (!this.running || this.textureView == null) return op.get()
+            return LightmapOverride.call(this.textureView!!, op)
         }
 
         /**
@@ -90,11 +91,11 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
             if (!this.running) return
 
             if (this.textureView == null) {
-                this.textureView = gpuDevice.createTexture(
+                this.texture = gpuDevice.createTexture(
                     "$name - Lightmap Texture",
                     GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
                     GpuFormat.RGBA8_UNORM, 16, 16, 1, 1,
-                ).asView()
+                ).also { this.textureView = it.asView() }
             }
 
             if (uboDirty) {
@@ -123,6 +124,8 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
         override fun onDisabled() {
             uboDirty = true
+            texture?.close()
+            texture = null
             textureView?.close()
             textureView = null
             super.onDisabled()
