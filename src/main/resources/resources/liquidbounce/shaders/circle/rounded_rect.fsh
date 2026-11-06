@@ -51,7 +51,7 @@ void main() {
         float aa = fwidth(d);                  // AA width
 
         // 1) inside test near edge (d <= 0)
-        float edgeIn = smoothstep(0.0, -aa, d);          // 1 inside, 0 outside
+        float edgeIn = 1.0 - smoothstep(-aa, 0.0, d);    // 1 inside, 0 outside
 
         // 2) cut off deeper than -w (keep only d >= -w)
         float band   = smoothstep(-w - aa, -w + aa, d);  // 0 deep inside, 1 near edge
@@ -59,7 +59,7 @@ void main() {
         alpha = edgeIn * band;
     } else {
         float aa = fwidth(d);
-        alpha = smoothstep(0.0, -aa, d);
+        alpha = 1.0 - smoothstep(-aa, 0.0, d);
     }
 
     color.a *= alpha;

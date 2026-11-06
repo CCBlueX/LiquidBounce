@@ -33,7 +33,7 @@ inline fun <K : Any, V : Any> Map<K, V>.immutableCopy(): Map<K, V> =
  * Sums the values for matching keys from another map to this map.
  * Modifies the current collection.
  */
-fun <K> Object2IntOpenHashMap<K>.sumValues(anotherMap: Object2IntMap<K>): Object2IntMap<K> {
+fun <K> Object2IntOpenHashMap<K>.sumValues(anotherMap: Object2IntMap<K>): Object2IntOpenHashMap<K> {
     anotherMap.fastIterator().forEach {
         this.addTo(it.key, it.intValue)
     }

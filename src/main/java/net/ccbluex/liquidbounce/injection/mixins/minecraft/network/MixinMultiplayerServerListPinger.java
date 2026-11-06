@@ -20,12 +20,18 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerPingedEvent;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerStatusPinger;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.server.network.EventLoopGroupHolder;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+
+import java.net.InetSocketAddress;
 
 @Mixin(targets = "net.minecraft.client.multiplayer.ServerStatusPinger$1")
 public abstract class MixinMultiplayerServerListPinger {
@@ -36,6 +42,18 @@ public abstract class MixinMultiplayerServerListPinger {
         instance.ping = value;
         EventManager.INSTANCE.callEvent(new ServerPingedEvent(instance));
         return instance;
+    }
+
+    /**
+     * The legacy ping connects to {@link InetSocketAddress#getAddress()}, which is null for an address left to the
+     * proxy to resolve.
+     */
+    @WrapWithCondition(method = "onDisconnect", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/ServerStatusPinger;pingLegacyServer(Ljava/net/InetSocketAddress;Lnet/minecraft/client/multiplayer/resolver/ServerAddress;Lnet/minecraft/client/multiplayer/ServerData;Lnet/minecraft/server/network/EventLoopGroupHolder;)V"))
+    private boolean skipUnresolvedLegacyPing(ServerStatusPinger instance, InetSocketAddress address,
+                                             ServerAddress rawAddress, ServerData data,
+                                             EventLoopGroupHolder eventLoopGroupHolder) {
+        return !address.isUnresolved();
     }
 
 }

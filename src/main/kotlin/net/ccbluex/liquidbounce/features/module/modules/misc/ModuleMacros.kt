@@ -124,7 +124,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
                 )
             }
 
-            private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+            private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
             private val holdTime by intRange("HoldTime", 1..1, 1..20, "ticks")
 
             private enum class Action(override val tag: String) : Tagged {
