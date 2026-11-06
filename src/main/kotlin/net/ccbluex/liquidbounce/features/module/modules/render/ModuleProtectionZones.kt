@@ -41,8 +41,10 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -106,9 +108,24 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         treeAll(Radius, Indicator, Renderer)
     }
 
-    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<Block>() {
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<Block>(), Predicate<BlockState> {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        /**
+         * [net.minecraft.world.level.chunk.ChunkAccess.findBlocks] filters whole sections through
+         * [net.minecraft.world.level.chunk.LevelChunkSection.maybeHas] before touching any block.
+         */
+        override fun chunkUpdate(chunk: LevelChunk) {
+            chunk.findBlocks(this) { pos, state ->
+                track(pos, state.block)
+            }
+        }
+
         override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
-            state.block?.takeIf { it in protBlocks }
+            if (this.test(state)) state.block else null
+
+        override fun test(state: BlockState): Boolean = !state.isAir && state.block in protBlocks
     }
 
     override fun onEnabled() {

@@ -48,9 +48,11 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.shapes.VoxelShape
 import org.joml.Matrix4f
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.function.Predicate
 
 /**
  * BlockESP module
@@ -312,12 +314,27 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     private data class BlockMergeKey(val block: Block, val color: Color4b?)
 
-    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape)
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val shape: VoxelShape) {
+        constructor(pos: BlockPos, state: BlockState) : this(state, state.getShape(world, pos))
+    }
 
-    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>(), Predicate<BlockState> {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        /**
+         * [net.minecraft.world.level.chunk.ChunkAccess.findBlocks] filters whole sections through
+         * [net.minecraft.world.level.chunk.LevelChunkSection.maybeHas] before touching any block.
+         */
+        override fun chunkUpdate(chunk: LevelChunk) {
+            chunk.findBlocks(this) { pos, state ->
+                track(pos, TrackedState(pos, state))
+            }
+        }
+
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (!state.isAir && state.block in targets) {
-                TrackedState(state, state.getShape(world, pos))
+            return if (this.test(state)) {
+                TrackedState(pos, state)
             } else {
                 null
             }
@@ -326,6 +343,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         override fun onUpdated() {
             markDirtyForModes()
         }
+
+        override fun test(state: BlockState): Boolean = !state.isAir && state.block in targets
     }
 
 }

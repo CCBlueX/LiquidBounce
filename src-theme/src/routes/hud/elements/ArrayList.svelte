@@ -7,6 +7,7 @@
     import {flip} from "svelte/animate";
     import {fly} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import type {HudArrayListSettings} from "../components";
 
     export let settings: { [name: string]: any };
 

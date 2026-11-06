@@ -38,10 +38,7 @@ public abstract class MixinSodiumLightDataAccess {
     protected BlockAndTintGetter level;
 
     /**
-     * Maximum light level for all color channels.
-     * <p>
-     * Minecraft's lighting system represents light in a range of 0-15,
-     * where 15 corresponds to maximum brightness.
+     * Maximum light level for all three 4-bit light channels.
      */
     @Unique
     private static final int MAX_LIGHT_LEVEL = 15 | 15 << 4 | 15 << 8;
@@ -49,7 +46,7 @@ public abstract class MixinSodiumLightDataAccess {
     @ModifyReturnValue(method = "compute", at = @At("RETURN"))
     private int modifyLightLevel(int original) {
         var xray = ModuleXRay.INSTANCE;
-        if (xray.getRunning() && xray.getFullBright()) {
+        if (ModuleXRay.renderActive() && xray.getFullBright()) {
             var blockState = this.level.getBlockState(pos);
 
             if (xray.shouldRender(blockState, pos)) {

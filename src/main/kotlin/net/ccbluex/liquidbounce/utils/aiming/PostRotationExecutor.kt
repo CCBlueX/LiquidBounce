@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
@@ -33,9 +32,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
  */
 object PostRotationExecutor : EventListener {
 
-    private class ModuleAction(private val module: ClientModule, private val action: Runnable) {
+    private class ModuleAction(private val eventListener: EventListener, private val action: Runnable) {
         fun executeIfRunning() {
-            if (module.running) {
+            if (eventListener.running) {
                 action.run()
             }
         }
@@ -122,8 +121,8 @@ object PostRotationExecutor : EventListener {
         }
     }
 
-    fun addTask(module: ClientModule, postMove: Boolean, priority: Boolean = false, task: Runnable) {
-        val moduleAction = ModuleAction(module, task)
+    fun addTask(eventListener: EventListener, postMove: Boolean, priority: Boolean = false, task: Runnable) {
+        val moduleAction = ModuleAction(eventListener, task)
         if (priority) {
             priorityAction = moduleAction
             priorityActionPostMove = postMove

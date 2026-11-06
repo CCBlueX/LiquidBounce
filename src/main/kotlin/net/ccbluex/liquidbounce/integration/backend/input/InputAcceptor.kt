@@ -18,9 +18,12 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.input
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
 /**
  * Functional interface to determine if a browser should accept input
  */
+@AddonApi
 fun interface InputAcceptor {
     /**
      * Returns true if the browser should accept input events

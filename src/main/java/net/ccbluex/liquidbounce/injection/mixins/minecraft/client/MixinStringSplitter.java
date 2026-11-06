@@ -19,26 +19,25 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
+import net.ccbluex.liquidbounce.utils.text.TextExtensionsKt;
 import net.minecraft.client.StringSplitter;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.StringDecomposer;
-import org.apache.commons.lang3.mutable.MutableFloat;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Optional;
-
 @Mixin(StringSplitter.class)
 public abstract class MixinStringSplitter {
 
+    // TODO: only `stringWidth` measures the replaced text. `StringSplitter.splitLines` and `headByWidth`
+    //  still lay out the original one, so a replacement longer than the name it replaces can overflow
+    //  the width these methods were measured for.
+
     @Shadow
-    @Final
-    public StringSplitter.WidthProvider widthProvider;
+    public abstract float stringWidth(FormattedCharSequence text);
 
     @Inject(method = "stringWidth(Lnet/minecraft/network/chat/FormattedText;)F", at = @At("HEAD"), cancellable = true)
     private void injectNameProtectWidthB(FormattedText text, CallbackInfoReturnable<Float> cir) {
@@ -46,17 +45,10 @@ public abstract class MixinStringSplitter {
             return;
         }
 
-        MutableFloat mutableFloat = new MutableFloat();
-        text.visit((style, asString) -> {
-            StringDecomposer.iterateFormatted(ModuleNameProtect.INSTANCE.replace(asString), style, (_, stylex, codePoint) -> {
-                mutableFloat.add(widthProvider.getWidth(codePoint, stylex));
-                return true;
-            });
-
-            return Optional.empty();
-        }, Style.EMPTY);
-
-        cir.setReturnValue(mutableFloat.floatValue());
+        // Measure through the same path rendering uses, so bypassed names and names spanning
+        // multiple style parts are measured exactly like they are drawn.
+        FormattedCharSequence replaced = ModuleNameProtect.INSTANCE.wrap(TextExtensionsKt.asFormattedCharSequence(text));
+        cir.setReturnValue(stringWidth(replaced));
     }
 
 }

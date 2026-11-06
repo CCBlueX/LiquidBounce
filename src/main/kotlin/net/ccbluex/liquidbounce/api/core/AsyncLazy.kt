@@ -25,28 +25,52 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KProperty
 
+/**
+ * Shares an initialization attempt between callers and caches a successful result.
+ * Failed or cancelled attempts are reported to their callers; a later call can retry.
+ */
 class AsyncLazy<T>(
     private val initializer: suspend () -> T
 ) {
-    private val deferred: CompletableDeferred<T> = CompletableDeferred()
-    private val initialized = atomic(false)
+    private val deferred = atomic<CompletableDeferred<T>?>(null)
 
-    private suspend fun initialize() {
-        if (initialized.compareAndSet(expect = false, update = true)) {
-            try {
-                val result = initializer()
-                deferred.complete(result)
-            } catch (e: Throwable) {
-                deferred.completeExceptionally(e)
-                // Reset initialized flag if initialization fails
-                initialized.value = false
+    suspend fun get(): T {
+        while (true) {
+            val current = deferred.value
+            if (current != null) {
+                return current.await()
             }
+
+            val attempt = CompletableDeferred<T>()
+            if (!deferred.compareAndSet(expect = null, update = attempt)) {
+                continue
+            }
+
+            try {
+                attempt.complete(initializer())
+            } catch (e: Throwable) {
+                // Detach before waking waiters, so a caller handling this failure can retry.
+                deferred.compareAndSet(expect = attempt, update = null)
+                attempt.completeExceptionally(e)
+            }
+
+            return attempt.await()
         }
     }
 
-    suspend fun get(): T {
-        initialize()
-        return deferred.await()
+    /**
+     * The cached value when initialization has already completed, or `null` otherwise.
+     *
+     * Unlike [get] and [getValue] this neither waits for an in-flight attempt nor starts a new one, so it is safe
+     * to call from a thread that an initialization depends on. A failed attempt is also reported as `null`.
+     */
+    fun getOrNull(): T? {
+        val current = deferred.value ?: return null
+        if (!current.isCompleted) {
+            return null
+        }
+
+        return runCatching { current.getCompleted() }.getOrNull()
     }
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
