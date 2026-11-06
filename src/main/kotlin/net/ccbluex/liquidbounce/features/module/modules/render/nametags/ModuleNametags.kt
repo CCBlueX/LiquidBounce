@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.ccbluex.liquidbounce.utils.entity.cameraDistance
-import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.render.entity
 import net.ccbluex.liquidbounce.utils.render.isCustom
@@ -99,21 +97,21 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     private fun collectAndSortNametagsToRender() {
         nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
+        val cameraPos = mc.gameRenderer.mainCamera().position()
         for (entity in RenderedEntities) {
-            val distance = entity.position().cameraDistance().toFloat()
+            val distance = cameraPos.distanceTo(entity.position()).toFloat()
             val scale = scale.transform(distance)
             if (scale > 0.01f) {
                 val nametag = nametagPool.borrow()
-                nametag.update(entity, scale)
+                nametag.update(entity, scale, distance)
                 nametagsToRender += nametag
             }
         }
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
-    private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> = Comparator.comparingDouble { nametag ->
-        nametag.entity?.position()?.cameraDistanceSq() ?: Double.POSITIVE_INFINITY
-    }
+    private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> =
+        Comparator { a, b -> a.distance compareTo b.distance }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
         return !running || !(state.entity ?: return true).shouldBeShown() || state.isCustom

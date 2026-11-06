@@ -49,6 +49,19 @@ public interface MixinChatComponentAccessor {
     @Accessor
     List<GuiMessage.Line> getTrimmedMessages();
 
+    @Accessor("allMessages")
+    List<GuiMessage> getAllMessages();
+
     @Accessor("chatScrollbarPos")
     int getChatScrollbarPos();
+
+    @Invoker("logChatMessage")
+    void invokeLogChatMessage(GuiMessage message);
+
+    @Invoker("addMessageToDisplayQueue")
+    void invokeAddMessageToDisplayQueue(GuiMessage message);
+
+    @Invoker("addMessageToQueue")
+    void invokeAddMessageToQueue(GuiMessage message);
+
 }

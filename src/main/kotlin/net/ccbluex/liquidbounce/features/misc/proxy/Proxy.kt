@@ -20,8 +20,11 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.handler.proxy.HttpProxyHandler
 import io.netty.handler.proxy.Socks5ProxyHandler
+import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
+import okhttp3.OkHttpClient
 import java.net.InetSocketAddress
+import okhttp3.Credentials as HttpCredentials
 
 /**
  * Contains serializable proxy data
@@ -32,6 +35,8 @@ data class Proxy(
     val credentials: Credentials?,
     val type: Type?,
     var forwardAuthentication: Boolean = false,
+    var proxyResourcePacks: Boolean = false,
+    var proxyDns: Boolean = false,
     var ipInfo: IpInfoApi.IpData? = null,
     var favorite: Boolean = false
 ) {
@@ -55,6 +60,33 @@ data class Proxy(
         } else {
             Socks5ProxyHandler(address, credentials.username, credentials.password)
         }
+    }
+
+    /**
+     * An HTTP client that connects through this proxy and leaves hostnames for it to resolve
+     */
+    fun httpClient(): OkHttpClient {
+        val type = type ?: Type.SOCKS5
+        if (type == Type.SOCKS5 && credentials != null) {
+            ProxyAuthenticator.install()
+        }
+
+        val javaProxyType = when (type) {
+            Type.HTTP -> java.net.Proxy.Type.HTTP
+            Type.SOCKS5 -> java.net.Proxy.Type.SOCKS
+        }
+        return HttpClient.client.newBuilder()
+            .cache(null)
+            .proxy(java.net.Proxy(javaProxyType, address))
+            .proxyAuthenticator { _, response ->
+                if (credentials == null || response.request.header("Proxy-Authorization") != null) {
+                    null
+                } else {
+                    val authorization = HttpCredentials.basic(credentials.username, credentials.password)
+                    response.request.newBuilder().header("Proxy-Authorization", authorization).build()
+                }
+            }
+            .build()
     }
 
     class Credentials(val username: String, val password: String)
