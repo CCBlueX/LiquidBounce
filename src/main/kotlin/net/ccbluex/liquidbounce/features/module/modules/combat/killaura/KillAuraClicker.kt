@@ -52,8 +52,19 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
     KillAuraClickerItemCooldown()
 ) {
 
+    private const val MAX_CLICK_LOOKAHEAD = 20
+
     override val isClickTick: Boolean
         get() = super.isClickTick && (!VelocityReduce.running || VelocityReduce.remainingAttackCount == 0)
+
+    val ticksUntilAttack: Int
+        get() {
+            if (isClickTick) return 0
+            for (t in 1..MAX_CLICK_LOOKAHEAD) {
+                if (willClickAt(t)) return t
+            }
+            return MAX_CLICK_LOOKAHEAD
+        }
 
     private class KillAuraClickerItemCooldown : ItemCooldown() {
 
