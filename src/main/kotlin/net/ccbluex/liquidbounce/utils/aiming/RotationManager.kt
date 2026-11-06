@@ -73,6 +73,7 @@ import net.minecraft.world.phys.AABB
 /**
  * A rotation manager. Will also actively affect our F5 model.
  */
+@Suppress("TooManyFunctions")
 object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     /**
