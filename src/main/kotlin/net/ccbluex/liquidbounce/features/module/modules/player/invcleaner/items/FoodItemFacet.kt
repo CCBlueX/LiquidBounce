@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -59,7 +59,7 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         get() = listOf(ProvidedFunction(ItemFunction.FOOD, itemStack.count * itemStack.foodComponent!!.nutrition))
 
     override val category: ItemCategory
-        get() = ItemType.FOOD.defaultCategory
+        get() = ItemCategory(GenericItemType.FOOD)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as FoodItemFacet)

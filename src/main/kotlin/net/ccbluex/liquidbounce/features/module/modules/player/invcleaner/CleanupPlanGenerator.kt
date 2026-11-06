@@ -18,90 +18,120 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemNumberConstraintEnforcer.SatisfactionStatus
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.minecraft.world.item.Item
+
 
 class CleanupPlanGenerator(
-    private val template: CleanupPlanPlacementTemplate,
+    private val template: CleanupPlanTemplate,
     availableItems: List<ItemSlot>,
-) : ItemPacker.ItemAmountConstraintProvider {
-    private val availableItems = availableItems.filterNot {
-        it.itemStack.item in template.itemBlacklist
-    }
+) {
+    private val wishOrganizer = WishOrganizer(this.template)
+    private val constraintEnforcer = ItemNumberConstraintEnforcer(template)
 
-    private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
+    private val availableItems = availableItems.filterNot { it.itemStack.item in template.itemBlacklist }
 
-    private val packer = ItemPacker()
+    val plan: InventoryCleanupPlan
 
-    private val currentLimit = Object2IntOpenHashMap<ItemNumberConstraintGroup>()
+    init {
+        val categorizer = ItemCategorization(availableItems)
+        val allItemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
+        // All slots the cleaner may swap into other slots
+        val availableItemFacets = allItemFacets.filter {
+            this.template.restrictions.getRestrictionFor(it.itemSlot) < RestrictionType.FORBID_REPLACING
+        }
 
-    // TODO Implement greedy check
-    /**
-     * Keeps track of where a specific type of item should be placed. e.g. BLOCK -> [Hotbar 7, Hotbar 8]
-     */
-    private val categoryToSlotsMap: Map<ItemCategory, List<ItemSlot>> =
-        buildMap<ItemCategory, ArrayList<ItemSlot>> {
-            for ((slot, itemType) in template.slotContentMap) {
-                val category = itemType.category.takeUnless { it.isEmpty() } ?: continue
-                getOrPut(category) { ArrayList(2) }
-                    .add(slot)
+        val itemDispenserRack = ItemDispenserRack(this.wishOrganizer, availableItemFacets)
+
+        val usefulItems = HashSet<ItemSlot>()
+
+        // Consider all slots that may not be touched at all as useful.
+        usefulItems.addAll(template.restrictions.getSlotsWithAtLeast(RestrictionType.FORBID_TAMPERING))
+
+        // Items the categorizer cannot classify are kept: nothing is known about their value.
+        for ((slot, facets) in allItemFacets.groupBy { it.itemSlot }) {
+            if (facets.all { it is PrimitiveItemFacet }) {
+                usefulItems.add(slot)
             }
         }
 
-    fun generatePlan(): InventoryCleanupPlan {
-        val categorizer = ItemCategorization(availableItems)
+        val swaps = generateSwaps(itemDispenserRack, usefulItems)
 
-        // Contains all facets that the available items represent. i.e. if we have an axe in slot 5, this would be
-        // (Axe(Slot 5), Weapon(Slot 5)) since the axe can also function as a weapon.
-        val itemFacets = availableItems.flatMap { categorizer.getItemFacets(it) }
+        findOtherUsefulItems(usefulItems, allItemFacets)
 
-        // i.e. BLOCK -> [Block(Slot 5), Block(Slot 6)]
-        // Keep priority in mind (Tool slots are processed before weapon slots)
-        val facetsGroupedByType =
-            itemFacets
-                .groupBy { it.category }
-                .entries
-                .sortedByDescending { it.key.type.allocationPriority }
+        // Items that must survive the cleanup even if no slot asks for them (god axes, armor for future kits).
+        allItemFacets.filter(ItemFacet::shouldKeep).forEach { usefulItems.add(it.itemSlot) }
 
-        for ((category, availableItems) in facetsGroupedByType) {
-            processItemCategory(category, availableItems)
-        }
-
-        // We aren't allowed to touch those, so we just consider them as useful.
-        packer.usefulItems.addAll(this.template.forbiddenSlots)
-
-        return InventoryCleanupPlan(
-            usefulItems = packer.usefulItems,
-            swaps = hotbarSwaps,
+        this.plan = InventoryCleanupPlan(
+            usefulItems = usefulItems,
+            swaps = swaps,
             mergeableItems = groupItemsByType(),
         )
     }
 
-    private fun processItemCategory(
-        category: ItemCategory,
-        availableItems: List<ItemFacet>,
-    ) {
-        val hotbarSlotsToFill = this.categoryToSlotsMap[category]
+    /**
+     * This function marks all useful items that aren't filled into hotbar slots (i.e., arrows) as useful.
+     */
+    private fun findOtherUsefulItems(usefulItems: HashSet<ItemSlot>, allItemFacets: List<ItemFacet>) {
+        val facetsGroupedByCategory = allItemFacets
+            .groupBy { it.category }
+            .entries
+            .sortedBy { this.template.itemAmountConstraintProvider.getAllocationPriority(it.key) }
 
-        // We need to fill all hotbar slots with this item type.
+        for ((_, facetsInCategory) in facetsGroupedByCategory) {
+            for (facet in facetsInCategory.sortedDescending()) {
+                val satisfactionStatus = this.constraintEnforcer.getSatisfactionStatus(facet)
 
-        // Use a descending sort order so that we can fill the slots with the best items first.
-        val prioritizedItemList = availableItems.sortedDescending()
+                when (satisfactionStatus) {
+                    SatisfactionStatus.NOT_SATISFIED -> {
+                        this.constraintEnforcer.addItem(facet)
 
-        // Decide where the items should go.
-        val requiredMoves =
-            this.packer.packItems(
-                itemsToFillIn = prioritizedItemList,
-                hotbarSlotsToFill = hotbarSlotsToFill,
-                constraintProvider = this,
-                forbiddenSlots = this.template.forbiddenSlots,
-                forbiddenSlotsToFill = this.template.forbiddenSlotsToFill
-            )
+                        usefulItems.add(facet.itemSlot)
+                    }
+                    SatisfactionStatus.SATISFIED -> {}
+                }
+            }
+        }
+    }
 
-        this.hotbarSwaps.addAll(requiredMoves)
+    private fun generateSwaps(
+        itemDispenserRack: ItemDispenserRack,
+        usefulItems: HashSet<ItemSlot>
+    ): ArrayList<InventorySwap> {
+        val finishedSlots = HashSet<ItemSlot>()
+
+        // Consider all slots that we aren't allowed to change as done.
+        finishedSlots.addAll(template.restrictions.getSlotsWithAtLeast(RestrictionType.FORBID_REPLACING))
+
+        val swaps = ArrayList<InventorySwap>()
+
+        for ((id, targetSlot) in this.wishOrganizer.organizedWishes) {
+            // If a better wish was already fulfilled, skip this second wish.
+            if (targetSlot in finishedSlots) {
+                continue
+            }
+
+            val availableItem = itemDispenserRack.nextItemForGroup(id) ?: continue
+
+            finishedSlots.add(targetSlot)
+            usefulItems.add(availableItem.itemSlot)
+
+            // Move the item to the target slot if necessary.
+            if (availableItem.itemSlot != targetSlot) {
+                swaps.add(
+                    InventorySwap(
+                        from = availableItem.itemSlot,
+                        to = targetSlot,
+                        priority = availableItem.category.type.allocationPriority
+                    )
+                )
+            }
+        }
+        return swaps
     }
 
     private fun groupItemsByType(): MutableMap<ItemAndComponents, MutableList<ItemSlot>> {
@@ -125,52 +155,4 @@ class CleanupPlanGenerator(
 
         return itemsByType
     }
-
-    override fun getSatisfactionStatus(item: ItemFacet): ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus {
-        val constraints = this.template.itemAmountConstraintProvider(item)
-
-        constraints.sortBy { it.group.priority }
-
-        for (constraintInfo in constraints) {
-            val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
-            val projectedCount = currentCount + constraintInfo.amountAddedByItem
-
-            // Evaluate the post-addition state so a single accepted stack cannot push the plan
-            // beyond the configured maximum for this constraint group.
-            if (projectedCount > constraintInfo.group.acceptableRange.last) {
-                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
-            } else if (currentCount < constraintInfo.group.acceptableRange.first) {
-                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.NOT_SATISFIED
-            }
-        }
-
-        return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.SATISFIED
-    }
-
-    override fun addItem(item: ItemFacet) {
-        val constraints = this.template.itemAmountConstraintProvider(item)
-
-        for (constraintInfo in constraints) {
-            this.currentLimit.addTo(constraintInfo.group, constraintInfo.amountAddedByItem)
-        }
-    }
 }
-
-class CleanupPlanPlacementTemplate(
-    /**
-     * Contains requests for each slot (e.g. Slot 1 -> SWORD, Slot 8 -> BLOCK, etc.)
-     */
-    val slotContentMap: Map<out ItemSlot, ItemSortChoice>,
-    /**
-     * A function which provides constraint groups for each item category and the number which the item counts against
-     * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
-     */
-    val itemAmountConstraintProvider: (ItemFacet) -> MutableList<ItemConstraintInfo>,
-    val itemBlacklist: Set<Item>,
-    /**
-     * If false, slots which also contains items of that category, those items are not replaced with other items.
-     */
-    val isGreedy: Boolean,
-    val forbiddenSlots: Set<ItemSlot>,
-    val forbiddenSlotsToFill: Set<ItemSlot>
-)

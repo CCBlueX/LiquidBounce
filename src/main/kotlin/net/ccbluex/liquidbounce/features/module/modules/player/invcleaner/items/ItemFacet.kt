@@ -19,9 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSubtype
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.ItemStackHolder
 import net.ccbluex.liquidbounce.utils.item.durability
@@ -29,7 +30,7 @@ import net.minecraft.core.component.DataComponents
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
     open val category: ItemCategory
-        get() = ItemType.NONE.defaultCategory
+        get() = ItemCategory(GenericItemType.ANY_ITEM, ItemSubtype.SpecificItem(itemSlot.itemStack.item))
 
     open val providedItemFunctions: List<ProvidedFunction>
         get() = emptyList()
@@ -68,6 +69,10 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackH
     }
 
     /**
+     * Example:
+     * - Bow -> (BOW_LIKE, 1)
+     * - Porkchop -> (FOOD, <amount of hunger points it regenerates>)
+     *
      * @param amount The amount of the function this item gives.
      */
     data class ProvidedFunction(val type: ItemFunction, val amount: Int)

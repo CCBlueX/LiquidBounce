@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSubtype
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
@@ -31,8 +32,6 @@ import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ToolMaterial
-import net.minecraft.world.item.component.Tool
 import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
@@ -49,10 +48,6 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
             )
         private val COMPARATOR =
-            /**
-             * @see ToolMaterial.applyToolProperties
-             * @see Tool.Rule.minesAndDrops
-             */
             ComparatorChain<MiningToolItemFacet>(
                 compareBy {
                     val toolComponent = it.itemStack.toolComponent ?: return@compareBy 0f
@@ -78,7 +73,10 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             }
     }
 
-    override val category = ItemCategory(ItemType.TOOL, this.itemStack.miningToolType)
+    private val subtype = itemSlot.itemStack.miningToolType
+
+    override val category: ItemCategory
+        get() = ItemCategory(GenericItemType.TOOL, ItemSubtype.ToolTypes(subtype))
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
