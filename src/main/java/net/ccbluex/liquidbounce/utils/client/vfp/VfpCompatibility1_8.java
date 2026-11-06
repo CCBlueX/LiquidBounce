@@ -74,7 +74,12 @@ public enum VfpCompatibility1_8 {
             throw new IllegalStateException("Not on 1.8 protocol");
         }
 
-        var packet = PacketWrapper.create(packetType, ViaFabricPlus.api().userConnection());
+        var userConnection = ViaFabricPlus.api().userConnection();
+        if (userConnection == null) {
+            throw new IllegalStateException("No ViaVersion user connection (not connected to a server)");
+        }
+
+        var packet = PacketWrapper.create(packetType, userConnection);
         writer.accept(packet);
         packet.sendToServerRaw();
     }

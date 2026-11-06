@@ -44,15 +44,16 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.math.vector2f
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.ccbluex.liquidbounce.utils.text.codePointsToString
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Component
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.io.File
@@ -82,7 +83,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     // TSV: timestamp,debugOwnerId,name,value
     private var outputFile: File? = null
 
-    fun accepts(owner: DebuggedOwner) = titleFilter.matches(owner.debugDisplayName.string)
+    fun accepts(owner: DebuggedOwner) = titleFilter.matches(owner.debugDisplayName.codePointsToString())
 
     private fun writeLine(
         time: Long,
@@ -142,7 +143,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 var posX = 300
                 var posY = 500
 
-                fontRenderer.draw("Graph".asPlainText()) {
+                fontRenderer.draw("Graph".withFormat()) {
                     x = posX.toFloat()
                     y = posY.toFloat()
                     shadow = true
@@ -234,7 +235,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
          *   Parameter Name: Parameter Value
          *   Parameter Name: Parameter Value
          */
-        val textList = mutableListOf<Component>()
+        val textList = mutableListOf<FormattedCharSequence>()
 
         val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
@@ -247,10 +248,10 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 val parameterName = debuggedParameter.name
                 val parameterCapture = debugParameters[debuggedParameter] ?: continue
                 val duration = (currentTime - parameterCapture.time) / 1000
-                textList += textOf(
-                    "$parameterName: ".asPlainText(ChatFormatting.WHITE),
-                    parameterCapture.value.toString().asPlainText(ChatFormatting.GREEN),
-                    " [${duration}s ago]".asPlainText(ChatFormatting.GRAY),
+                textList += FormattedCharSequence.composite(
+                    "$parameterName: ".withFormat(ChatFormatting.WHITE),
+                    parameterCapture.value.toString().withFormat(ChatFormatting.GREEN),
+                    " [${duration}s ago]".withFormat(ChatFormatting.GRAY),
                 )
             }
         }
@@ -259,7 +260,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             val vanillaScale = fontRenderer.scaleToVanillaFont
 
             // Draw
-            fontRenderer.draw("Debugging".asPlainText()) {
+            fontRenderer.draw("Debugging".withFormat()) {
                 x = 120f
                 y = 22f
                 shadow = true
@@ -335,8 +336,8 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = line.position.subtract(normalizedDirection.scale(100.0))
-            this.to = line.position.add(normalizedDirection.scale(100.0))
+            this.from = line.position.fma(-100.0, normalizedDirection)
+            this.to = line.position.fma(100.0, normalizedDirection)
         }
 
         context(env: WorldRenderEnvironment)

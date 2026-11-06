@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.ccbluex.liquidbounce.utils.world.anyMatched
-import net.ccbluex.liquidbounce.utils.world.findBlocksIntersects
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.core.BlockPos
@@ -190,6 +189,12 @@ val ClientInput.initial: Input
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
+
+/**
+ * @see Entity.getDisplayName
+ */
+val Entity.simpleDisplayName
+    get() = this.team?.getFormattedName(this.name) ?: this.name
 
 val InteractionHand.opposite: InteractionHand
     get() = if (this === InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
@@ -604,7 +609,8 @@ fun LivingEntity.getDamageFromExplosion(
     entityBoundingBox: AABB? = null,
     damageSource: DamageSource? = null,
 ): Float {
-    if (this.distanceToSqr(pos) > damageDistance) {
+    val distSqr = this.distanceToSqr(pos)
+    if (distSqr > damageDistance) {
         return 0f
     }
 
@@ -622,13 +628,10 @@ fun LivingEntity.getDamageFromExplosion(
             ServerExplosion.getSeenPercent(pos, this)
         }
 
-        val distanceDecay = 1.0 - (sqrt(this.distanceToSqr(pos)) / explosionRange.toDouble())
+        val distanceDecay = 1.0 - (sqrt(distSqr) / explosionRange.toDouble())
         val pre1 = exposure.toDouble() * distanceDecay
 
         val preprocessedDamage = (pre1 * pre1 + pre1) / 2.0 * 7.0 * explosionRange.toDouble() + 1.0
-        if (preprocessedDamage == 0.0) {
-            return 0f
-        }
 
         val actualDamageSource = damageSource
             ?: DamageSource(this.level().damageSources().explosion(null).typeHolder(), pos)
@@ -644,7 +647,7 @@ fun LivingEntity.getDamageFromExplosion(
  * @see net.minecraft.world.level.ServerExplosion.getSeenPercent
  */
 @Suppress("NestedBlockDepth")
-fun LivingEntity.getExposureToExplosion(
+private fun LivingEntity.getExposureToExplosion(
     source: Vec3,
     exclude: Collection<BlockPos>?,
     include: BlockPos?,
@@ -661,9 +664,9 @@ fun LivingEntity.getExposureToExplosion(
         this
     )
 
-    val stepX = 1.0 / ((entityBoundingBox1.maxX - entityBoundingBox1.minX) * 2.0 + 1.0)
-    val stepY = 1.0 / ((entityBoundingBox1.maxY - entityBoundingBox1.minY) * 2.0 + 1.0)
-    val stepZ = 1.0 / ((entityBoundingBox1.maxZ - entityBoundingBox1.minZ) * 2.0 + 1.0)
+    val stepX = 1.0 / fma(entityBoundingBox1.xsize, 2.0, 1.0)
+    val stepY = 1.0 / fma(entityBoundingBox1.ysize, 2.0, 1.0)
+    val stepZ = 1.0 / fma(entityBoundingBox1.zsize, 2.0, 1.0)
 
     val offsetX = (1.0 - floor(1.0 / stepX) * stepX) / 2.0
     val offsetZ = (1.0 - floor(1.0 / stepZ) * stepZ) / 2.0
@@ -744,7 +747,7 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
-private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+private val HEALTH_KEYWORDS = arrayOf("❤", "HP", "Health", "Здоровья", "Здоровье")
 
 fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
@@ -868,7 +871,7 @@ fun AABB.isOnMagmaBlock(): Boolean {
 
     // Scan the blocks in the bottom layer of the expanded box with the vanilla block scan API,
     // keeping the per-block collision shape check from the original implementation.
-    return world.findBlocksIntersects(expandedBox.setMaxY(expandedBox.minY))
+    return world.findBlocksIn(expandedBox.setMaxY(expandedBox.minY))
         .filterState { it.block is MagmaBlock }
         .anyMatched { pos, state ->
             val shape = state.getCollisionShape(world, pos)

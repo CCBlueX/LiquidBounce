@@ -112,31 +112,31 @@
     {:else if textComponent}
         {#if textComponent.text}
             {#if !textComponent.text.includes("§")}
-                <span class="text" class:bold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
-                      class:italic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
-                      class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
-                      class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                <span class="text" class:bold={textComponent.bold ?? inheritedBold}
+                      class:italic={textComponent.italic ?? inheritedItalic}
+                      class:underlined={textComponent.underlined ?? inheritedUnderlined}
+                      class:strikethrough={textComponent.strikethrough ?? inheritedStrikethrough}
                       class:allow-preformatting={allowPreformatting}
                       class:monospace={preFormattingMonospace && allowPreformatting}
-                      style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
+                      style="color: {translateColor(textComponent.color ?? inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
             {:else}
                 <svelte:self {allowPreformatting} {preFormattingMonospace} {fontSize}
-                             inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
-                             inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
-                             inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
-                             inheritedUnderlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
-                             inheritedStrikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                             inheritedColor={textComponent.color ?? inheritedColor}
+                             inheritedBold={textComponent.bold ?? inheritedBold}
+                             inheritedItalic={textComponent.italic ?? inheritedItalic}
+                             inheritedUnderlined={textComponent.underlined ?? inheritedUnderlined}
+                             inheritedStrikethrough={textComponent.strikethrough ?? inheritedStrikethrough}
                              textComponent={convertLegacyCodes(textComponent.text)}/>
             {/if}
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
                 <svelte:self {allowPreformatting} {preFormattingMonospace} {fontSize}
-                             inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
-                             inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
-                             inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
-                             inheritedUnderlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
-                             inheritedStrikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                             inheritedColor={textComponent.color ?? inheritedColor}
+                             inheritedBold={textComponent.bold ?? inheritedBold}
+                             inheritedItalic={textComponent.italic ?? inheritedItalic}
+                             inheritedUnderlined={textComponent.underlined ?? inheritedUnderlined}
+                             inheritedStrikethrough={textComponent.strikethrough ?? inheritedStrikethrough}
                              textComponent={e}/>
             {/each}
         {/if}

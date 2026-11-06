@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -66,7 +66,7 @@ object VelocityHylex : VelocityMode("Hylex") {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent> {
         val shouldJump = player.hurtTime > 5
         val canJump = player.onGround()
 

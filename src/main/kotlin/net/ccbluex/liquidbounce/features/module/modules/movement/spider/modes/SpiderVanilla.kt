@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
 internal object SpiderVanilla : Mode("Vanilla") {
@@ -30,7 +31,7 @@ internal object SpiderVanilla : Mode("Vanilla") {
     override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.horizontalCollision) {
             player.deltaMovement.y = motion.toDouble()
         }

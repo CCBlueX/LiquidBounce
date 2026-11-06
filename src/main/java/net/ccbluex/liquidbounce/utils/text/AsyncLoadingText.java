@@ -57,7 +57,7 @@ public record AsyncLoadingText(
 
     @Override
     public Component get() {
-        if (delegate().isActive()) {
+        if (!delegate().isCompleted()) {
             return onLoading().get();
         }
 

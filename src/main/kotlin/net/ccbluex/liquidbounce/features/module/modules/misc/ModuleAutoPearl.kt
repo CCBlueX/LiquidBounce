@@ -39,10 +39,12 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EntitySpawnReason
@@ -186,7 +188,7 @@ object ModuleAutoPearl : ClientModule(
     }
 
     private fun canTrigger(pearl: ThrownEnderpearl): Boolean {
-        if (Limits.enabled && Limits.angle < RotationUtil.crosshairAngleToEntity(pearl)) {
+        if (Limits.enabled && Mth.cos(Limits.angle.toDouble().toRadians()) > RotationUtil.crosshairCosToEntity(pearl)) {
             return false
         }
 
