@@ -160,6 +160,9 @@ inline fun <T> Iterable<T>.mapToJsonArray(transform: (T) -> JsonElement?): JsonA
 
 fun Iterable<String>.toJsonArray(): JsonArray = mapToJsonArray(::JsonPrimitive)
 
+@JvmName("toJsonArrayOfElements")
+fun Iterable<JsonElement?>.toJsonArray(): JsonArray = mapToJsonArray { it }
+
 /**
  * Unlike [JsonObject.get] followed by `asString` and friends, these return `null` for an absent key
  * instead of throwing.
