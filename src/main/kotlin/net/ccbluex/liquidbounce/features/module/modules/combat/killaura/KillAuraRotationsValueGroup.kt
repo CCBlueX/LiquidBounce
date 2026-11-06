@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.client.player
-import kotlin.math.roundToInt
 
 object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatSpecific = true) {
 
@@ -41,14 +39,7 @@ object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatS
     }
 
     fun dynamicSpeedDivisor(ticksUntilAttack: Int): Float {
-        return if (ticksUntilAttack > 0) {
-            ticksUntilAttack.toFloat()
-        } else {
-            player.getCurrentItemAttackStrengthDelay()
-                .roundToInt()
-                .toFloat()
-                .coerceAtLeast(1f)
-        }
+        return ticksUntilAttack.coerceAtLeast(1).toFloat()
     }
 
 }
