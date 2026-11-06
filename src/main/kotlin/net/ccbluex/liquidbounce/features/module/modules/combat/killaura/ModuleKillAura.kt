@@ -74,6 +74,8 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.Vec3
+import kotlin.math.sqrt
 
 /**
  * KillAura module
@@ -347,7 +349,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         range: Float,
         wallsRange: Float
     ): Boolean {
-        val (rotation, _) = findRotation(entity, range, wallsRange) ?: return false
+        val result = findRotation(entity, range, wallsRange) ?: return false
+        val rotation = result.rotation
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
@@ -377,20 +380,47 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             considerInventory = !ignoreOpenInventory
         )
 
-        val finalTarget = if (rotations.rotationTiming == DYNAMIC) {
-            val divisor = rotations.dynamicSpeedDivisor(clicker.ticksUntilAttack)
-            debugParameter("Dynamic Divisor") { divisor }
-            baseTarget.copy(speed = baseTarget.speed / divisor)
-        } else {
-            baseTarget
+        val speedMultiplier = when {
+            result.lazyHitPoint != null -> {
+                val curveInput = computeLazyCurveInput(entity, result.lazyHitPoint)
+                val multiplier = rotations.lazyRotation.speed.transform(curveInput) / 100f
+                debugParameter("Lazy Speed Multiplier") { multiplier }
+                multiplier
+            }
+
+            rotations.rotationTiming == DYNAMIC -> {
+                val divisor = rotations.dynamicSpeedDivisor(clicker.ticksUntilAttack)
+                debugParameter("Dynamic Divisor") { divisor }
+                1f / divisor
+            }
+
+            else -> 1f
         }
 
         RotationManager.setRotationTarget(
-            finalTarget,
+            baseTarget.copy(speed = baseTarget.speed * speedMultiplier),
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleKillAura
         )
         return true
+    }
+
+    /**
+     * Returns a 0..100 value where 0 means the crosshair is at the edge of the hitbox
+     * and 100 means it is exactly at the hitbox center.
+     */
+    private fun computeLazyCurveInput(entity: Entity, hitPoint: Vec3): Float {
+        val box = entity.boundingBox
+        val center = box.center
+        val sx = box.maxX - box.minX
+        val sy = box.maxY - box.minY
+        val sz = box.maxZ - box.minZ
+        val halfDiagonal = sqrt(sx * sx + sy * sy + sz * sz) / 2.0
+        if (halfDiagonal <= 0.0) {
+            return 0f
+        }
+        val normalizedDistance = (hitPoint.distanceTo(center) / halfDiagonal).coerceIn(0.0, 1.0)
+        return ((1.0 - normalizedDistance) * 100.0).toFloat().coerceIn(0f, 100f)
     }
 
     /**
@@ -401,8 +431,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *
      *  @return The best spot to attack the entity
      */
-    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationWithVector? {
-        if (rotations.lazyRotation) {
+    private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationResult? {
+        var lazyHitPoint: Vec3? = null
+
+        if (rotations.lazyRotation.enabled) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
             val currentHit = isLookingAtEntity(
                 fromEntity = player,
@@ -414,11 +446,14 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             if (currentHit != null) {
                 debugParameter("Lazy Rotation") { true }
-                return RotationWithVector(currentRotation, currentHit.location)
+                lazyHitPoint = currentHit.location
+            } else {
+                debugParameter("Lazy Rotation") { false }
             }
+        } else {
+            debugParameter("Lazy Rotation") { false }
         }
 
-        debugParameter("Lazy Rotation") { false }
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 
@@ -436,8 +471,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             rotationPreference = rotationPreference
         )
 
-        return if (rotation == null && rotations.aimThroughWalls) {
-            val rotationThroughWalls = raytraceBox(
+        val finalRotation = if (rotation == null && rotations.aimThroughWalls) {
+            raytraceBox(
                 eyes = eyes,
                 box = point.box,
                 // Since [range] is squared, we need to square root
@@ -445,11 +480,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                 wallsRange = range.toDouble(),
                 rotationPreference = rotationPreference
             )
-
-            rotationThroughWalls
         } else {
             rotation
-        }
+        } ?: return null
+
+        return RotationResult(finalRotation.rotation, lazyHitPoint)
     }
 
     /**
@@ -476,6 +511,11 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             !ignoreOpenInventory && !simulateInventoryClosing
         return !isInventoryBlockingAttack
     }
+
+    private data class RotationResult(
+        val rotation: Rotation,
+        val lazyHitPoint: Vec3?
+    )
 
     enum class RaycastMode(override val tag: String) : Tagged {
         TRACE_NONE("None"),
