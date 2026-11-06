@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.DYNAMIC
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup.KillAuraRotationTiming.SNAP
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.TRACE_ALL
@@ -370,12 +371,22 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             }
         }
 
+        val baseTarget = rotations.toRotationTarget(
+            rotation,
+            entity,
+            considerInventory = !ignoreOpenInventory
+        )
+
+        val finalTarget = if (rotations.rotationTiming == DYNAMIC) {
+            val divisor = rotations.dynamicSpeedDivisor(clicker.ticksUntilAttack)
+            debugParameter("Dynamic Divisor") { divisor }
+            baseTarget.copy(speed = baseTarget.speed / divisor)
+        } else {
+            baseTarget
+        }
+
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(
-                rotation,
-                entity,
-                considerInventory = !ignoreOpenInventory
-            ),
+            finalTarget,
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleKillAura
         )
