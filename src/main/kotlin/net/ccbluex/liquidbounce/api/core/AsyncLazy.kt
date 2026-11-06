@@ -58,6 +58,21 @@ class AsyncLazy<T>(
         }
     }
 
+    /**
+     * The cached value when initialization has already completed, or `null` otherwise.
+     *
+     * Unlike [get] and [getValue] this neither waits for an in-flight attempt nor starts a new one, so it is safe
+     * to call from a thread that an initialization depends on. A failed attempt is also reported as `null`.
+     */
+    fun getOrNull(): T? {
+        val current = deferred.value ?: return null
+        if (!current.isCompleted) {
+            return null
+        }
+
+        return runCatching { current.getCompleted() }.getOrNull()
+    }
+
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
         // Block on current thread if not called within a coroutine
         return runBlocking { get() }

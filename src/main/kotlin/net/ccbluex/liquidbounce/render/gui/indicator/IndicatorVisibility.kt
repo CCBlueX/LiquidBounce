@@ -17,27 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.api.interceptors
+package net.ccbluex.liquidbounce.render.gui.indicator
 
-import okhttp3.CacheControl
-import okhttp3.Interceptor
-import okhttp3.Response
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 
-class CacheBlacklistInterceptor(
-    val blacklistedHosts: Set<String>,
-) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        if (request.url.host in blacklistedHosts) {
-            val newRequest = request.newBuilder()
-                .cacheControl(cacheControl)
-                .build()
-            return chain.proceed(newRequest)
-        }
-        return chain.proceed(request)
-    }
-
-    companion {
-        private val cacheControl = CacheControl.Builder().noCache().noStore().build()
-    }
+/**
+ * Where an indicator is drawn.
+ *
+ * [OFFSCREEN] covers targets outside the viewport as well as targets behind the camera, which have no projection to
+ * test at all.
+ */
+enum class IndicatorVisibility(override val tag: String) : Tagged {
+    IN_VIEW("InView"),
+    OFFSCREEN("Offscreen"),
 }

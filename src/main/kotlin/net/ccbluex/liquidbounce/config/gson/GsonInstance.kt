@@ -111,6 +111,13 @@ val publicGson: Gson = GsonBuilder()
     .create()
 
 /**
+ * This GSON instance is used for request and response bodies of our APIs.
+ */
+internal val apiGson: Gson = GsonBuilder()
+    .registerCommonTypeAdapters()
+    .create()
+
+/**
  * This GSON instance is used for interop communication.
  */
 internal val interopGson: Gson = GsonBuilder()

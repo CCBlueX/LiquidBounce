@@ -92,6 +92,15 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val Glow = "glow"("shaders/glow/glow.frag")
 
         @JvmField
+        val ItemChamsEffects = "item_chams_effects"("shaders/item_chams/effects.frag")
+
+        @JvmField
+        val ItemChamsRecolor = "item_chams_recolor"("shaders/item_chams/recolor.frag")
+
+        @JvmField
+        val ItemChamsTrail = "item_chams_trail"("shaders/item_chams/trail.frag")
+
+        @JvmField
         val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
 
         @JvmField

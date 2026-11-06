@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.api.models.auth
 
-import okhttp3.Headers
-
 /**
  * Contains the access token and the refresh token.
  */
@@ -28,4 +26,6 @@ data class OAuthSession(
     val refreshToken: String,
 )
 
-fun Headers.Builder.addAuth(session: OAuthSession) = add("Authorization", "Bearer ${session.accessToken}")
+/** Value for a `@Header("Authorization")` parameter. */
+val OAuthSession.authorization: String
+    get() = "Bearer $accessToken"
