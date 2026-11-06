@@ -74,6 +74,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -407,8 +408,14 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     /**
-     * Returns a 0..100 value where 0 means the look ray grazes the hitbox boundary
-     * and 100 means the look ray passes exactly through the hitbox center.
+     * Returns a 0..100 value where 0 means the crosshair is at the silhouette edge of the hitbox
+     * (in any direction) and 100 means the look ray passes exactly through the hitbox center.
+     *
+     * The perpendicular offset of the look ray from the hitbox center is normalized per axis
+     * in the view plane: the horizontal component is divided by the box's projected half-extent
+     * along the camera-right axis, the vertical by the projected half-extent along the camera-up
+     * axis. The two normalized components are then combined with an elliptical distance, so the
+     * result is 0 at the edge in every direction regardless of the hitbox's aspect ratio.
      */
     private fun computeLazyCurveInput(entity: Entity, currentRotation: Rotation, eyes: Vec3): Float {
         val box = entity.boundingBox
@@ -416,8 +423,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val hx = (box.maxX - box.minX) * 0.5
         val hy = (box.maxY - box.minY) * 0.5
         val hz = (box.maxZ - box.minZ) * 0.5
-        val halfDiagonal = sqrt(hx * hx + hy * hy + hz * hz)
-        if (halfDiagonal <= 1e-9) {
+        if (hx <= 1e-9 && hy <= 1e-9 && hz <= 1e-9) {
             return 0f
         }
 
@@ -427,6 +433,22 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val dirY = -sin(pitchRad)
         val dirZ = cos(yawRad) * cos(pitchRad)
 
+        var rightX = -dirZ
+        var rightZ = dirX
+        val rightLen = sqrt(rightX * rightX + rightZ * rightZ)
+        if (rightLen <= 1e-9) {
+            rightX = 1.0
+            rightZ = 0.0
+        } else {
+            rightX /= rightLen
+            rightZ /= rightLen
+        }
+        val rightY = 0.0
+
+        val upX = -rightZ * dirY
+        val upY = rightZ * dirX - rightX * dirZ
+        val upZ = rightX * dirY
+
         val toCenterX = center.x - eyes.x
         val toCenterY = center.y - eyes.y
         val toCenterZ = center.z - eyes.z
@@ -435,10 +457,20 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val perpX = toCenterX - dirX * proj
         val perpY = toCenterY - dirY * proj
         val perpZ = toCenterZ - dirZ * proj
-        val perpDist = sqrt(perpX * perpX + perpY * perpY + perpZ * perpZ)
 
-        val normalized = (perpDist / halfDiagonal).coerceIn(0.0, 1.0)
-        return ((1.0 - normalized) * 100.0).toFloat().coerceIn(0f, 100f)
+        val h = perpX * rightX + perpY * rightY + perpZ * rightZ
+        val v = perpX * upX + perpY * upY + perpZ * upZ
+
+        val rightExtent = hx * abs(rightX) + hy * abs(rightY) + hz * abs(rightZ)
+        val upExtent = hx * abs(upX) + hy * abs(upY) + hz * abs(upZ)
+        if (rightExtent <= 1e-9 || upExtent <= 1e-9) {
+            return 0f
+        }
+
+        val hNorm = h / rightExtent
+        val vNorm = v / upExtent
+        val elliptical = sqrt(hNorm * hNorm + vNorm * vNorm).coerceIn(0.0, 1.0)
+        return ((1.0 - elliptical) * 100.0).toFloat().coerceIn(0f, 100f)
     }
 
     /**
