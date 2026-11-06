@@ -3,6 +3,7 @@
     import {fly} from "svelte/transition";
     import {mapToColor} from "../../../util/color_utils";
     import {itemTextureUrl} from "../../../integration/rest";
+    import type {HudBlockCounterSettings} from "../components";
 
     export let settings: { [name: string]: any };
 

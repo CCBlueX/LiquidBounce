@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.api.thirdparty.OPENAI_BASE_URL
-import net.ccbluex.liquidbounce.api.thirdparty.OpenAiApi
+import net.ccbluex.liquidbounce.api.thirdparty.ai.AiChatClient
+import net.ccbluex.liquidbounce.api.thirdparty.ai.AiProtocol
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -42,8 +42,13 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", ModuleCategories.MISC) 
         doNotIncludeAlways()
     }
 
-    private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)
-    private val openAiKey by text("OpenAiKey", "")
+    private val protocol by enumChoice("Protocol", AiProtocol.OPENAI_COMPATIBLE)
+
+    /**
+     * API root of the provider. When left blank, the default address of the selected [protocol] is used.
+     */
+    private val baseUrl by text("BaseUrl", "")
+    private val apiKey by text("ApiKey", "")
     private val model by text("Model", "gpt-4o-mini") // GPT 4O Mini should be enough for this
     private val delayResponse by intRange("ReactionTime", 1000..5000, 0..10000,
         "ms")
@@ -83,8 +88,8 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", ModuleCategories.MISC) 
     private val prompt by text("Prompt", defaultPrompt)
 
     override fun onEnabled() {
-        if (openAiKey.isBlank()) {
-            chat("§cPlease enter your OpenAI key in the module settings.")
+        if (apiKey.isBlank()) {
+            chat("§cPlease enter your API key in the module settings.")
             enabled = false
             return
         }
@@ -159,8 +164,14 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", ModuleCategories.MISC) 
 
         val answer = withContext(Dispatchers.IO) {
             runCatching {
-                // Create new AI instance with OpenAI key
-                val ai = OpenAiApi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+                // Create new AI client with the configured provider and key
+                val ai = AiChatClient(
+                    protocol = protocol,
+                    baseUrl = baseUrl,
+                    apiKey = apiKey,
+                    model = model,
+                    systemPrompt = prompt.replace("{SERVER_NAME}", serverName)
+                )
 
                 ai.requestNewAnswer(question).trimEnd {
                     // Remove dot on the end of answer

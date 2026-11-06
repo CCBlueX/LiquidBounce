@@ -35,7 +35,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.util.Util
 import java.time.LocalDateTime
 
@@ -101,12 +103,12 @@ object CommandClientConfigSubcommand {
 
     private fun CmdI18n.backup(configs: Set<Config>): Int {
         val effectiveConfigs = configs.ifEmpty { defaultConfigs }
-        val formattedNames = effectiveConfigs.joinToString(", ") { config ->
-            config.name.toLowerCamelCase()
+        val formattedNames = effectiveConfigs.joinToText(DEFAULT_SEPARATOR) { config ->
+            variable(config.name.toLowerCamelCase())
         }
 
         runCatching {
-            chat(regular(t("config.backup.backingUp", variable(formattedNames))))
+            chat(regular(t("config.backup.backingUp", formattedNames)))
             for (config in effectiveConfigs) {
                 ConfigSystem.store(config)
             }
@@ -150,13 +152,13 @@ object CommandClientConfigSubcommand {
     @Suppress("CognitiveComplexMethod")
     private fun CmdI18n.reset(configs: Set<Config>): Int {
         val effectiveConfigs = configs.ifEmpty { defaultConfigs }
-        val formattedNames = effectiveConfigs.joinToString(", ") { config ->
-            config.name.toLowerCamelCase()
+        val formattedNames = effectiveConfigs.joinToText(DEFAULT_SEPARATOR) { config ->
+            variable(config.name.toLowerCamelCase())
         }
 
         AutoConfig.withLoading {
             runCatching {
-                chat(regular(t("config.reset.resetting", variable(formattedNames))))
+                chat(regular(t("config.reset.resetting", formattedNames)))
 
                 for (config in effectiveConfigs) {
                     // TODO: We could straight up use configurable.restore(), however, we

@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -35,20 +35,20 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  */
 object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
 
-    val speed by float("Speed", 0.32f, 0.1f..0.4f)
+    private val speed by float("Speed", 0.32f, 0.1f..0.4f)
     private val onlyInVehicle by boolean("OnlyInVehicle", false)
     private val disableOnSetback by boolean("DisableOnSetback", true)
 
     private var noClipSet = false
 
     @Suppress("unused")
-    private val handleGameTick = tickHandler {
+    private val handleGameTick = handler<GameTickEvent> {
         if (paused()) {
             if (noClipSet) {
                 onDisabled()
             }
 
-            return@tickHandler
+            return@handler
         }
 
         noClipSet = true

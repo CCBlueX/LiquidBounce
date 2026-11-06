@@ -20,81 +20,102 @@
 package net.ccbluex.liquidbounce.render.gui
 
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.test.Test
 
 class GuiOverlapRearrangerTest {
 
     private data class TestRearrangeable(override var bounds: BoundingBox2f) : GuiRearrangeable
 
     @Test
-    fun `rearrange mutable list keeps non-overlap geometry`() {
-        val elements = mutableListOf(
+    fun `elements that do not overlap keep their bounds`() {
+        val elements = listOf(
             TestRearrangeable(BoundingBox2f(60f, 60f, 90f, 90f)),
             TestRearrangeable(BoundingBox2f(-20f, -20f, 0f, 0f)),
             TestRearrangeable(BoundingBox2f(20f, 20f, 40f, 40f)),
         )
-        val originalBounds = elements.map { it.bounds }.toSet()
+        val originalBounds = elements.map { it.bounds }
 
-        GuiOverlapRearranger().rearrange(elements)
+        GuiOverlapRearranger.rearrange(elements)
 
-        assertEquals(originalBounds, elements.map { it.bounds }.toSet())
-        assertNoOverlaps(elements)
+        assertEquals(originalBounds, elements.map { it.bounds })
     }
 
     @Test
-    fun `rearrange mutable list resolves simple overlap`() {
-        val elements = mutableListOf(
-            TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)),
-            TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)),
-        )
-
-        GuiOverlapRearranger().rearrange(elements)
-
-        assertNoOverlaps(elements)
-    }
-
-    @Test
-    fun `rearrange mutable list resolves chain overlap`() {
-        val elements = mutableListOf(
+    fun `a chain of overlaps is resolved`() {
+        val elements = listOf(
             TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)),
             TestRearrangeable(BoundingBox2f(8f, 0f, 18f, 10f)),
             TestRearrangeable(BoundingBox2f(16f, 0f, 26f, 10f)),
         )
 
-        GuiOverlapRearranger(maxIter = 16).rearrange(elements)
+        GuiOverlapRearranger.rearrange(elements)
 
         assertNoOverlaps(elements)
     }
 
     @Test
+    fun `elements keep the order they are given, even when they almost coincide`() {
+        // These used to swap places on the slightest camera movement, because the layout order was derived from the
+        // positions and a one pixel difference flipped it.
+        val first = TestRearrangeable(BoundingBox2f(0f, 100f, 50f, 110f))
+        val second = TestRearrangeable(BoundingBox2f(0f, 101f, 50f, 111f))
+
+        GuiOverlapRearranger.rearrange(listOf(first, second))
+
+        assertEquals(100f, first.bounds.yMin, "the first element keeps its place")
+        assertEquals(110f, second.bounds.yMin, "the second one is pushed below it")
+    }
+
+    @Test
+    fun `a pile at the same spot separates completely`() {
+        val elements = List(12) { TestRearrangeable(BoundingBox2f(10f, 10f, 60f, 20f)) }
+
+        GuiOverlapRearranger.rearrange(elements)
+
+        assertNoOverlaps(elements)
+    }
+
+    @Test
+    fun `elements only move vertically`() {
+        val elements = listOf(
+            TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)),
+            TestRearrangeable(BoundingBox2f(2f, 2f, 12f, 12f)),
+        )
+
+        GuiOverlapRearranger.rearrange(elements)
+
+        assertEquals(0f, elements[0].bounds.xMin)
+        assertEquals(2f, elements[1].bounds.xMin, "the column is kept")
+        assertNoOverlaps(elements)
+    }
+
+    @Test
     fun `rearrange handles empty and single element`() {
-        val rearranger = GuiOverlapRearranger()
-        val empty = mutableListOf<GuiRearrangeable>()
-        val single = mutableListOf<GuiRearrangeable>(TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)))
+        val empty = listOf<GuiRearrangeable>()
+        val single = listOf<GuiRearrangeable>(TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f)))
         val originalSingleBounds = single[0].bounds
 
-        rearranger.rearrange(empty)
-        rearranger.rearrange(single)
+        GuiOverlapRearranger.rearrange(empty)
+        GuiOverlapRearranger.rearrange(single)
 
         assertTrue(empty.isEmpty())
         assertEquals(originalSingleBounds, single[0].bounds)
     }
 
     @Test
-    fun `collection input mutates element bounds in place`() {
+    fun `bounds are mutated in place`() {
         val a = TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f))
         val b = TestRearrangeable(BoundingBox2f(0f, 0f, 10f, 10f))
-        val source = listOf<GuiRearrangeable>(a, b)
         val oldA = a.bounds
         val oldB = b.bounds
 
-        GuiOverlapRearranger().rearrange(source)
+        GuiOverlapRearranger.rearrange(listOf(a, b))
 
         assertTrue(a.bounds != oldA || b.bounds != oldB)
-        assertNoOverlaps(source)
+        assertNoOverlaps(listOf(a, b))
     }
 
     private fun assertNoOverlaps(elements: List<GuiRearrangeable>) {
@@ -106,4 +127,5 @@ class GuiOverlapRearrangerTest {
             }
         }
     }
+
 }

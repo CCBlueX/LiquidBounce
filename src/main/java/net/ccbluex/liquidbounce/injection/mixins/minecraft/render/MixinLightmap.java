@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
+import net.ccbluex.liquidbounce.common.LightmapOverride;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.state.LightmapRenderState;
@@ -47,7 +47,7 @@ public abstract class MixinLightmap {
         at = @At("RETURN")
     )
     private GpuTextureView lightmapOverride(GpuTextureView original) {
-        return ModuleItemChams.Lightmap.OVERRIDE.orElse(original);
+        return LightmapOverride.VALUE.orElse(original);
     }
 
     /**

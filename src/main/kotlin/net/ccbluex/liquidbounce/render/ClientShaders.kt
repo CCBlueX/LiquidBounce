@@ -92,6 +92,15 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         val Glow = "glow"("shaders/glow/glow.frag")
 
         @JvmField
+        val ItemChamsEffects = "item_chams_effects"("shaders/item_chams/effects.frag")
+
+        @JvmField
+        val ItemChamsRecolor = "item_chams_recolor"("shaders/item_chams/recolor.frag")
+
+        @JvmField
+        val ItemChamsTrail = "item_chams_trail"("shaders/item_chams/trail.frag")
+
+        @JvmField
         val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
 
         @JvmField
@@ -127,9 +136,7 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
     override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
 
-    override fun close() {
-        // NOOP
-    }
+    override fun close() = Unit
 
     companion object Source : ShaderSource {
         override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
@@ -139,9 +146,7 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
 
         override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
 
-        override fun close() {
-            // NOOP
-        }
+        override fun close() = Unit
     }
 
 }
