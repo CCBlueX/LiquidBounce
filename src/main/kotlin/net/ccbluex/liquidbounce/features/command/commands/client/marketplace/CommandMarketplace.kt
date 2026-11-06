@@ -33,8 +33,10 @@ object CommandMarketplace : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("marketplace") {
-            with(MarketplaceListCommand) { list() }
-            with(MarketplaceSearchCommand) { search() }
+            with(MarketplaceListCommand) {
+                list()
+                search()
+            }
             with(MarketplaceSubscribeCommand) { subscribe() }
             with(MarketplaceUnsubscribeCommand) { unsubscribe() }
             with(MarketplaceUpdateCommand) { update() }

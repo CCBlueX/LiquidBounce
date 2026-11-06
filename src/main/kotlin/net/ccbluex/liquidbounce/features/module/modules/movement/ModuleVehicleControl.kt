@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
@@ -27,7 +28,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSpearKill
+import net.ccbluex.liquidbounce.features.module.modules.combat.spearkill.ModuleSpearKill
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -74,10 +75,10 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
     }
 
     @Suppress("unused")
-    private val handleVehicleMovement = tickHandler {
+    private val handleVehicleMovement = handler<GameTickEvent> {
         val vehicle = player.controlledVehicle ?: run {
             wasInVehicle = false
-            return@tickHandler
+            return@handler
         }
 
         // Show explanation message
@@ -112,22 +113,12 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
             else -> 0.0
         }
 
-        val spearDashVelocity =
-            if (ModuleSpearKill.enabled) {
-                val dashSpeed = ModuleSpearKill.currentAttackVelocity
-                if (dashSpeed != 0.0) {
-                    ModuleSpearKill.currentAttackDirection.scale(dashSpeed)
-                } else {
-                    null
-                }
-            } else {
-                null
-            }
-
         // Vehicle control velocity
         val input = DirectionalInput(player.input)
         val movementYaw = getMovementDirectionOfInput(vehicle.yRot, input)
-        vehicle.deltaMovement = spearDashVelocity
+        vehicle.deltaMovement = ModuleSpearKill
+            .takeIf { it.enabled }
+            ?.currentChargeAttackMovement
             ?: vehicle.deltaMovement
                 .copy(y = verticalSpeed)
                 .withStrafe(yaw = movementYaw, speed = horizontalSpeed)

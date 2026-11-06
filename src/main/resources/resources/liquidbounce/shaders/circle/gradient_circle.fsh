@@ -27,13 +27,13 @@ void main() {
     float aa = max(fwidth(dist), 1e-4);
 
     float dOuter = dist - 1.0;
-    float outerAlpha = smoothstep(0.0, -aa, dOuter);
+    float outerAlpha = 1.0 - smoothstep(-aa, 0.0, dOuter);
 
     float innerRatio = clamp(vInnerRatio, 0.0, 1.0);
     float innerAlpha = 1.0;
     if (innerRatio > 0.0) {
         float dInner = innerRatio - dist;
-        innerAlpha = smoothstep(0.0, -aa, dInner);
+        innerAlpha = 1.0 - smoothstep(-aa, 0.0, dInner);
     }
 
     float coverage = outerAlpha * innerAlpha;

@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.doubles.DoubleLongPair
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockIntentProvider
 import net.ccbluex.liquidbounce.utils.block.collidingRegion
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.math.iterate
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.overlapVolume
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.EntityDimensions
@@ -66,17 +68,15 @@ abstract class TrapPlanner<T>(
     ): List<BlockPos> {
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
-        val normalizedStartBB =
-            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -blockPos.z.toDouble())
-        val normalizedEndBB = normalizedStartBB.move(
-            velocity.x * ticksToLookAhead,
-            0.0,
-            velocity.z * ticksToLookAhead
-        )
+        val normalizedStartBB = dims.makeBoundingBox(pos) - blockPos
+        val lookAhead = velocity.multiply(ticksToLookAhead.toDouble(), 0.0, ticksToLookAhead.toDouble())
 
-        if (normalizedEndBB.size > 30) {
+        // A target that teleported, or whose last position is still stale, would make the searched region explode.
+        if (lookAhead.horizontalDistance() > 30.0) {
             return BlockPosOffsets.NO_OFFSET.offsets
         }
+
+        val normalizedEndBB = normalizedStartBB.move(lookAhead.x, 0.0, lookAhead.z)
 
         return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
     }
@@ -86,24 +86,14 @@ abstract class TrapPlanner<T>(
         orderedOffsets: List<BlockPos>,
         eyePos: Vec3,
     ): Comparator<BlockPos> {
-        val priorityByPos = Long2IntOpenHashMap(orderedOffsets.size)
+        val priorityByPos = Object2IntOpenHashMap<BlockPos>(orderedOffsets.size)
         priorityByPos.defaultReturnValue(Int.MAX_VALUE)
         orderedOffsets.forEachIndexed { index, offset ->
-            priorityByPos.putIfAbsent(origin.offset(offset).asLong(), index)
+            priorityByPos.putIfAbsent(origin.offset(offset), index)
         }
 
         val eyeDistanceComparator = BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(eyePos)
-
-        return Comparator { first, second ->
-            val firstRank = priorityByPos[first.asLong()]
-            val secondRank = priorityByPos[second.asLong()]
-
-            if (firstRank != secondRank) {
-                secondRank.compareTo(firstRank)
-            } else {
-                eyeDistanceComparator.compare(first, second)
-            }
-        }
+        return Comparator.comparingInt(priorityByPos).reversed().thenComparing(eyeDistanceComparator)
     }
 
     private fun findOffsetsBetween(
@@ -112,9 +102,12 @@ abstract class TrapPlanner<T>(
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
-        val offsets = mutableListOf<DoubleLongPair>()
+        class ScoredOffset(val offset: BlockPos, val overlap: Double)
 
-        startBox.collidingRegion.iterate().forEach { offset ->
+        val offsets = ArrayList<ScoredOffset>()
+
+        // The target's body now and after the look-ahead; blocks it only passes over in between are dropped below.
+        startBox.minmax(endBox).collidingRegion.iterate().forEach { offset ->
             val bp = offsetPos.offset(offset)
 
             val bb = AABB(offset)
@@ -133,13 +126,13 @@ abstract class TrapPlanner<T>(
                 return@forEach
             }
 
-            val intersect = startBox.intersect(bb).size + endBox.intersect(bb).size * 0.5
+            val overlap = startBox.overlapVolume(bb) + endBox.overlapVolume(bb) * 0.5
 
-            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
+            offsets.add(ScoredOffset(offset.immutable, overlap))
         }
 
-        offsets.sortByDescending { it.leftDouble() }
+        offsets.sortByDescending { it.overlap }
 
-        return offsets.map { BlockPos.of(it.rightLong()) }
+        return offsets.map { it.offset }
     }
 }

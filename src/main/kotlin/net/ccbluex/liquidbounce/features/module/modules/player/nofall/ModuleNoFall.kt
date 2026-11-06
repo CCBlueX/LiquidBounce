@@ -74,7 +74,7 @@ object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
         )
     ).apply(::tagBy)
 
-    private val notConditions by multiEnumChoice<NotCondition>("Not")
+    private val notConditions by multiEnumChoice("Not", NotCondition.entries)
 
     override val running: Boolean
         get() = when {

@@ -28,6 +28,10 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
+/**
+ * Iterates the blocks of this box. The yielded [BlockPos] is reused between iterations, so copy it
+ * (`.immutable`) before storing.
+ */
 fun BoundingBox.iterate(): Iterable<BlockPos> =
     BlockPos.betweenClosed(minX(), minY(), minZ(), maxX(), maxY(), maxZ())
 
