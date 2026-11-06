@@ -233,14 +233,8 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         val s = player.getAttackStrengthScale(0.5f)
         
         val baseDamage = player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
-        val enchantDamage = EnchantmentHelper.getDamageBonus(player.mainHandItem, target.type).toFloat()
         
-        var damage = baseDamage * (0.2f + s * s * 0.8f) + enchantDamage * s
-
-        val strength = player.getEffect(MobEffects.DAMAGE_BOOST)
-        if (strength != null) {
-            damage += 3.0f * (strength.amplifier + 1)
-        }
+        var damage = baseDamage * (0.2f + s * s * 0.8f)
 
         val isCrit = player.fallDistance > 0.0f && !player.onGround() && !player.onClimbable() && 
                      !player.isInWater && !player.hasEffect(MobEffects.BLINDNESS) && !player.isPassenger && 
@@ -249,6 +243,9 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         if (isCrit) {
             damage *= 1.5f
         }
+        
+        val enchantDamage = EnchantmentHelper.getDamageBonus(player.mainHandItem, target.type).toFloat()
+        damage += enchantDamage * s
 
         val armor = target.getAttributeValue(Attributes.ARMOR).toFloat()
         val toughness = target.getAttributeValue(Attributes.ARMOR_TOUGHNESS).toFloat()
