@@ -53,7 +53,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -75,6 +74,8 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.Vec3
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
@@ -381,8 +382,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         )
 
         val speedMultiplier = when {
-            result.lazyHitPoint != null -> {
-                val curveInput = computeLazyCurveInput(entity, result.lazyHitPoint)
+            result.lazyRotation != null -> {
+                val curveInput = computeLazyCurveInput(entity, result.lazyRotation, player.eyePosition)
                 val multiplier = rotations.lazyRotation.speed.transform(curveInput) / 100f
                 debugParameter("Lazy Speed Multiplier") { multiplier }
                 multiplier
@@ -406,21 +407,38 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     }
 
     /**
-     * Returns a 0..100 value where 0 means the crosshair is at the edge of the hitbox
-     * and 100 means it is exactly at the hitbox center.
+     * Returns a 0..100 value where 0 means the look ray grazes the hitbox boundary
+     * and 100 means the look ray passes exactly through the hitbox center.
      */
-    private fun computeLazyCurveInput(entity: Entity, hitPoint: Vec3): Float {
+    private fun computeLazyCurveInput(entity: Entity, currentRotation: Rotation, eyes: Vec3): Float {
         val box = entity.boundingBox
         val center = box.center
-        val sx = box.maxX - box.minX
-        val sy = box.maxY - box.minY
-        val sz = box.maxZ - box.minZ
-        val halfDiagonal = sqrt(sx * sx + sy * sy + sz * sz) / 2.0
-        if (halfDiagonal <= 0.0) {
+        val hx = (box.maxX - box.minX) * 0.5
+        val hy = (box.maxY - box.minY) * 0.5
+        val hz = (box.maxZ - box.minZ) * 0.5
+        val halfDiagonal = sqrt(hx * hx + hy * hy + hz * hz)
+        if (halfDiagonal <= 1e-9) {
             return 0f
         }
-        val normalizedDistance = (hitPoint.distanceTo(center) / halfDiagonal).coerceIn(0.0, 1.0)
-        return ((1.0 - normalizedDistance) * 100.0).toFloat().coerceIn(0f, 100f)
+
+        val yawRad = Math.toRadians(currentRotation.yaw.toDouble())
+        val pitchRad = Math.toRadians(currentRotation.pitch.toDouble())
+        val dirX = -sin(yawRad) * cos(pitchRad)
+        val dirY = -sin(pitchRad)
+        val dirZ = cos(yawRad) * cos(pitchRad)
+
+        val toCenterX = center.x - eyes.x
+        val toCenterY = center.y - eyes.y
+        val toCenterZ = center.z - eyes.z
+
+        val proj = toCenterX * dirX + toCenterY * dirY + toCenterZ * dirZ
+        val perpX = toCenterX - dirX * proj
+        val perpY = toCenterY - dirY * proj
+        val perpZ = toCenterZ - dirZ * proj
+        val perpDist = sqrt(perpX * perpX + perpY * perpY + perpZ * perpZ)
+
+        val normalized = (perpDist / halfDiagonal).coerceIn(0.0, 1.0)
+        return ((1.0 - normalized) * 100.0).toFloat().coerceIn(0f, 100f)
     }
 
     /**
@@ -432,7 +450,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
      *  @return The best spot to attack the entity
      */
     private fun findRotation(entity: Entity, range: Float, wallsRange: Float): RotationResult? {
-        var lazyHitPoint: Vec3? = null
+        var lazyRotation: Rotation? = null
 
         if (rotations.lazyRotation.enabled) {
             val currentRotation = RotationManager.currentRotation ?: player.rotation
@@ -446,7 +464,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
             if (currentHit != null) {
                 debugParameter("Lazy Rotation") { true }
-                lazyHitPoint = currentHit.location
+                lazyRotation = currentRotation
             } else {
                 debugParameter("Lazy Rotation") { false }
             }
@@ -484,7 +502,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             rotation
         } ?: return null
 
-        return RotationResult(finalRotation.rotation, lazyHitPoint)
+        return RotationResult(finalRotation.rotation, lazyRotation)
     }
 
     /**
@@ -514,7 +532,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     private data class RotationResult(
         val rotation: Rotation,
-        val lazyHitPoint: Vec3?
+        val lazyRotation: Rotation?
     )
 
     enum class RaycastMode(override val tag: String) : Tagged {
