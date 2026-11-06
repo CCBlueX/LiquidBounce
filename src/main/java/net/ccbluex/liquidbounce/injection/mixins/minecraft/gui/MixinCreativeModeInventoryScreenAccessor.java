@@ -17,33 +17,26 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import kotlin.NotImplementedError;
-import net.minecraft.network.chat.*;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@NullMarked
-@Mixin(Style.class)
-public interface MixinStyleAccessor {
+import java.util.Collection;
 
-    @Invoker("<init>")
-    static Style create(
-        @Nullable TextColor color,
-        @Nullable Integer shadowColor,
-        @Nullable Boolean bold,
-        @Nullable Boolean italic,
-        @Nullable Boolean underlined,
-        @Nullable Boolean strikethrough,
-        @Nullable Boolean obfuscated,
-        @Nullable ClickEvent clickEvent,
-        @Nullable HoverEvent hoverEvent,
-        @Nullable String insertion,
-        @Nullable FontDescription font
-    ) {
-        throw new NotImplementedError();
+@Mixin(CreativeModeInventoryScreen.class)
+public interface MixinCreativeModeInventoryScreenAccessor {
+
+    @Accessor("selectedTab")
+    static CreativeModeTab getSelectedTab() {
+        throw new AssertionError();
     }
+
+    @Invoker("refreshCurrentTabContents")
+    void invokeRefreshCurrentTabContents(Collection<ItemStack> displayList);
+
 }

@@ -17,15 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.authlib;
+package net.ccbluex.liquidbounce.api.interceptors
 
-import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
-import com.mojang.authlib.services.MinecraftServicesSessionService;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import okhttp3.CacheControl
+import okhttp3.Interceptor
+import okhttp3.Response
+import java.util.function.Predicate
 
-@Mixin(MinecraftServicesSessionService.class)
-public interface MixinMinecraftServicesSessionServiceAccessor {
-    @Accessor(remap = false)
-    MinecraftServicesDiscoveryService getDiscoveryService();
+class SkipCacheInterceptor(
+    val condition: Predicate<in String>,
+) : Interceptor {
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        if (condition.test(request.url.host)) {
+            val newRequest = request.newBuilder()
+                .cacheControl(cacheControl)
+                .build()
+            return chain.proceed(newRequest)
+        }
+        return chain.proceed(request)
+    }
+
+    companion {
+        private val cacheControl = CacheControl.Builder().noCache().noStore().build()
+    }
 }

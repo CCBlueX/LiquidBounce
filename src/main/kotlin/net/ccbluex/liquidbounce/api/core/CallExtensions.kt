@@ -23,22 +23,31 @@ import okhttp3.Callback
 import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.CompletableFuture
+import java.util.function.BiConsumer
 
 /** Enqueues this call and forwards cancellation of the returned future to it. */
 internal fun Call.enqueueAsFuture(): CompletableFuture<Response> {
     val future = CompletableFuture<Response>()
-    future.whenComplete { _, _ ->
-        if (future.isCancelled) cancel()
-    }
-    enqueue(object : Callback {
-        override fun onResponse(call: Call, response: Response) {
-            // A response can arrive after cancellation; nobody owns its body in that case.
-            if (!future.complete(response)) response.close()
-        }
-
-        override fun onFailure(call: Call, e: IOException) {
-            future.completeExceptionally(e)
-        }
-    })
+    val callback = FutureCallback(future, this)
+    future.whenComplete(callback)
+    this.enqueue(callback)
     return future
+}
+
+private class FutureCallback(
+    private val future: CompletableFuture<Response>,
+    private val call: Call,
+) : Callback, BiConsumer<Any?, Any?> {
+    override fun onResponse(call: Call, response: Response) {
+        // A response can arrive after cancellation; nobody owns its body in that case.
+        if (!future.complete(response)) response.close()
+    }
+
+    override fun onFailure(call: Call, e: IOException) {
+        future.completeExceptionally(e)
+    }
+
+    override fun accept(t: Any?, u: Any?) {
+        if (future.isCancelled) call.cancel()
+    }
 }

@@ -48,7 +48,11 @@ public final class XRayBlockRenderContext {
         return isRenderingTransparentBackground() ? ChunkSectionLayer.TRANSLUCENT : original;
     }
 
-    public static void renderTransparentBackground(int alpha, Runnable render) {
+    /**
+     * Runs [render] in the transparent background scope when XRay applies to the block being rendered.
+     */
+    public static void renderIfActive(BlockState state, Runnable render) {
+        int alpha = ModuleXRay.INSTANCE.transparentBackgroundAlpha(state);
         if (alpha >= 255) {
             render.run();
             return;
@@ -57,17 +61,6 @@ public final class XRayBlockRenderContext {
         ScopedValue.where(BACKGROUND_ALPHA, alpha).run(render);
     }
 
-    /**
-     * Runs [render] in the transparent background scope when XRay applies to the block being rendered.
-     */
-    public static void renderIfActive(boolean active, BlockState state, Runnable render) {
-        if (!active) {
-            render.run();
-            return;
-        }
-
-        renderTransparentBackground(ModuleXRay.INSTANCE.transparentBackgroundAlpha(state), render);
-    }
     public static void applyAlpha(QuadInstance quadInstance) {
         if (!isRenderingTransparentBackground()) {
             return;

@@ -41,7 +41,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.commands.SharedSuggestionProvider
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
@@ -92,7 +94,7 @@ internal fun CmdI18n.single(input: String, matches: List<MarketplaceItem>): Mark
     0 -> throw CommandException(t("error.notFound", variable(input)))
     1 -> matches.single()
     else -> throw CommandException(
-        t("error.ambiguous", variable(input), variable(matches.joinToString(", ") { quoted(it.address) }))
+        t("error.ambiguous", variable(input), matches.joinToText(DEFAULT_SEPARATOR) { variable(quoted(it.address)) })
     )
 }
 
@@ -128,7 +130,7 @@ internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
     return names.map { name ->
         tags.find { it.name.equals(name, ignoreCase = true) }?.id
             ?: throw CommandException(
-                t("error.unknownTag", variable(name), variable(tags.joinToString(", ") { it.name }))
+                t("error.unknownTag", variable(name), tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })
             )
     }
 }
@@ -140,8 +142,8 @@ internal fun CmdI18n.reportInstalled(result: ConfigTracker.LoadResult) {
         return
     }
 
-    val names = result.installed.joinToString(", ") { it.name }
-    chat(regular(t("load.installed", variable(names))))
+    val names = result.installed.joinToText(DEFAULT_SEPARATOR) { variable(it.name) }
+    chat(regular(t("load.installed", names)))
     if (result.restartRequired) {
         chat(regular(t("load.restart")))
     }

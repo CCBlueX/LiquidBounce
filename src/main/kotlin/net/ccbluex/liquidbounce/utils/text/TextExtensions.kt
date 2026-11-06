@@ -23,8 +23,7 @@ package net.ccbluex.liquidbounce.utils.text
 import com.google.common.base.CaseFormat
 import com.google.common.net.HostAndPort
 import com.google.common.net.InetAddresses
-import it.unimi.dsi.fastutil.chars.CharOpenHashSet
-import net.ccbluex.fastutil.unmodifiable
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
@@ -33,16 +32,20 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
 import net.minecraft.network.chat.ComponentSerialization
+import net.minecraft.network.chat.ComponentUtils
 import net.minecraft.network.chat.FontDescription
 import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.contents.ObjectContents
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.util.StringDecomposer
+import net.minecraft.world.item.component.ResolvableProfile
 import java.util.Optional
 import java.util.function.Function
 import java.util.function.UnaryOperator
@@ -54,6 +57,16 @@ inline fun String.stripMinecraftColorCodes(): String =
     ChatFormatting.stripFormatting(this)!!
 
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
+
+/**
+ * A [Component] that renders this profile's head through the font, so it lines up with the surrounding text.
+ */
+fun ResolvableProfile.asPlayerHead(
+    hat: Boolean = false,
+    fallback: Component? = null,
+): MutableComponent = MutableComponent.create(
+    ObjectContents(PlayerSprite(this, hat), Optional.ofNullable(fallback))
+)
 
 /**
  * Returns a [MutableComponent] from the receiver.
@@ -77,7 +90,7 @@ inline fun String.withFormat(style: Style = Style.EMPTY): FormattedCharSequence 
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
 /**
- * Returns an immutable [Component] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.withFormat(formatting: ChatFormatting): FormattedCharSequence = PlainText.of(this, formatting)
 
@@ -113,44 +126,25 @@ inline fun buildText(builderAction: TextBuilder.() -> Unit): Component {
     return builder.build()
 }
 
-fun <T> Collection<T>.joinToText(
-    separator: Component,
-    prefix: Component? = null,
-    postfix: Component? = null,
-    transform: Function<in T, out Component>,
-): Component {
-    if (isEmpty()) {
-        return PlainText.EMPTY
-    }
-
-    val iterator = iterator()
-    val offset = if (prefix == null) 0 else 1
-    var arraySize = this.size * 2 - 1
-    if (prefix != null) arraySize++
-    if (postfix != null) arraySize++
-
-    return Array(arraySize) { i ->
-        when {
-            i == 0 && prefix != null -> prefix
-            i == arraySize - 1 && postfix != null -> postfix
-            i % 2 == offset -> transform.apply(iterator.next())
-            else -> separator
-        }
-    }.asText()
-}
-
 /**
  * Joins a list of [String] into a single [Component] with the given [separator].
  */
 @JvmName("stringsJoinToText")
 fun Collection<String>.joinToText(separator: Component): Component =
-    joinToText(separator, transform = Function(PlainText::of))
+    ComponentUtils.formatList(this, separator, PlainText::of)
+
+/**
+ * Joins a list of [String] into a single [Component] with the given [separator].
+ */
+@JvmName("objectsJoinToText")
+inline fun <T : Any> Collection<T>.joinToText(separator: Component, formatter: Function<T, Component>): Component =
+    ComponentUtils.formatList(this, separator, formatter)
 
 /**
  * Joins a list of [Component] into a single [Component] with the given [separator].
  */
-fun Collection<Component>.joinToText(separator: Component): Component =
-    joinToText(separator, transform = Function.identity())
+inline fun Collection<Component>.joinToText(separator: Component): Component =
+    ComponentUtils.formatList(this, separator)
 
 inline fun FormattedCharSequence.codePointsToString(): String =
     AppenderCharSink.codePointsToString(this)
@@ -234,11 +228,17 @@ fun TranslatableContents.toTranslatedString(): String = buildString {
     }
 }
 
-fun FormattedText.asFormattedCharSequence() = FormattedCharSequence { output ->
-    StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
-}
+fun FormattedText.asFormattedCharSequence(): FormattedCharSequence =
+    (this as? Component)?.visualOrderText ?: FormattedCharSequence { output ->
+        StringDecomposer.iterateFormatted(this, Style.EMPTY, output)
+    }
 
-private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
+@Suppress("ComplexCondition")
+private fun isColorCodeChar(char: Char): Boolean =
+    char in '0'..'9'
+        || char in 'a'..'f' || char in 'A'..'F'
+        || char in 'k'..'o' || char in 'K'..'O'
+        || char == 'r' || char == 'R'
 
 /**
  * Translate alt color codes to minecraft color codes
@@ -246,7 +246,7 @@ private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOo
 fun String.translateColorCodes(): String {
     val chars = toCharArray()
     for (i in 0 until chars.lastIndex) {
-        if (chars[i] == '&' && COLOR_CODE_CHARS.contains(chars[i + 1])) {
+        if (chars[i] == '&' && isColorCodeChar(chars[i + 1])) {
             chars[i] = '§'
             chars[i + 1] = chars[i + 1].lowercaseChar()
         }
@@ -355,6 +355,7 @@ fun String.hideSensitiveAddress(): String {
     return if (idx == -1) newHost else newHost + substring(idx)
 }
 
+@ValueClassCandidate
 @JvmRecord
 data class ColoredChar(val char: Char, val color: TextColor)
 

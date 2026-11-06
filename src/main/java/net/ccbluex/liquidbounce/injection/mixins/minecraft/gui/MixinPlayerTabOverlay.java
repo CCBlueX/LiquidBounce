@@ -154,7 +154,7 @@ public abstract class MixinPlayerTabOverlay {
         if (ModuleBetterTab.INSTANCE.getRunning() && accurateLatency.getRunning()) {
             var textRenderer = Minecraft.getInstance().font;
 
-            var latency = Mth.clamp(entry.getLatency(), 0, 9999);
+            var latency = Math.clamp(entry.getLatency(), 0, 9999);
             var color = latency < 150 ? 0xFF00E970 : latency < 300 ? 0xFFE7D020 : 0xFFD74238;
             var text = FormattedCharSequence.forward(latency + (accurateLatency.getSuffix() ? "ms" : ""), Style.EMPTY);
             context.text(textRenderer, text, x + width - textRenderer.width(text), y, color);

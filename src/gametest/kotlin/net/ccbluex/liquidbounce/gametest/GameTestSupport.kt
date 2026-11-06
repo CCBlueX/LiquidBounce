@@ -21,7 +21,10 @@ package net.ccbluex.liquidbounce.gametest
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.TitleScreen
+import org.apache.commons.lang3.function.FailableConsumer
+import org.apache.commons.lang3.function.FailableFunction
 
 // LiquidBounce holds a TaskProgressScreen until its startup tasks (e.g. the DJL natives) finish
 private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
@@ -37,9 +40,13 @@ fun ClientGameTestContext.waitForClient() {
 /**
  * Runs [block] on the client thread; the game only allows touching it there.
  */
-fun ClientGameTestContext.onClient(block: () -> Unit) = runOnClient<RuntimeException> { block() }
+fun ClientGameTestContext.onClient(
+    block: FailableConsumer<Minecraft, RuntimeException>
+) = runOnClient<RuntimeException>(block)
 
-fun <T> ClientGameTestContext.fromClient(block: () -> T): T = computeOnClient<T, RuntimeException> { block() }
+fun <T> ClientGameTestContext.fromClient(
+    block: FailableFunction<Minecraft, T, RuntimeException>
+): T = computeOnClient(block)
 
 /**
  * Runs a client command, without the prefix.

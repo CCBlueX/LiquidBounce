@@ -79,6 +79,7 @@
     display: flex;
     column-gap: 15px;
     justify-content: space-between;
+    min-height: 14px; // Text component height
   }
 
   .header {
