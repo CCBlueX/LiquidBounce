@@ -35,10 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.locale.Language
 import net.minecraft.network.chat.FormattedText
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.Style
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.util.StringDecomposer
-import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -194,14 +190,6 @@ class ClientLanguage(private val translations: Map<String, String>) : Language()
 
     override fun isDefaultRightToLeft() = false
 
-    override fun getVisualOrder(text: FormattedText) = FormattedCharSequence { visitor ->
-        text.visit({ style, string ->
-            if (StringDecomposer.iterateFormatted(string, style, visitor)) {
-                Optional.empty()
-            } else {
-                FormattedText.STOP_ITERATION
-            }
-        }, Style.EMPTY).isPresent
-    }
+    override fun getVisualOrder(text: FormattedText) = Language.DEFAULT_INSTANCE.getVisualOrder(text)
 
 }

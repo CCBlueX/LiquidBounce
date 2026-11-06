@@ -43,12 +43,12 @@ import kotlin.time.Duration
  * it will be retried up to [maxRetries] times.
  * @return A [RetryingJob] object.
  */
-inline fun <T : Any> CoroutineScope.retrying(
+fun <T : Any> CoroutineScope.retrying(
     interval: Duration,
     name: String = "data",
     maxRetries: Int = Int.MAX_VALUE,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    crossinline producer: suspend CoroutineScope.() -> T,
+    producer: suspend CoroutineScope.() -> T,
 ) : RetryingJob<T> {
     val stateFlow = MutableStateFlow<RetryingJob.State<T>>(RetryingJob.State.Init)
     val producerJob = launch(

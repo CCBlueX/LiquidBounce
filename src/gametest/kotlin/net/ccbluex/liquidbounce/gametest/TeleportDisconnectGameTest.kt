@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.gametest
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
@@ -34,7 +33,7 @@ class TeleportDisconnectGameTest : FabricClientGameTest {
 
         try {
             context.worldBuilder().create().use {
-                context.onClient {
+                context.onClient { mc ->
                     ModuleTeleport.enabled = false
                     ModuleTeleport.settings.getValue("FunctionAfterTeleports").setByString("2")
                     val player = checkNotNull(mc.player)
@@ -53,7 +52,7 @@ class TeleportDisconnectGameTest : FabricClientGameTest {
                 check(context.fromClient { !ModuleTeleport.enabled }) { "Joining reactivated the old teleport" }
 
                 // A fresh request still works in the new connection.
-                context.onClient {
+                context.onClient { mc ->
                     val player = checkNotNull(mc.player)
                     ModuleTeleport.indicateTeleport(12.0, player.y, 12.0)
                     check(ModuleTeleport.enabled)

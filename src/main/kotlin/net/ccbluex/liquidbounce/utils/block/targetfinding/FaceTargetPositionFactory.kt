@@ -214,8 +214,8 @@ object CenterTargetPositionFactory : FaceTargetPositionFactory {
  *
  * The face center can be occluded by the block itself when only a small part of the face is visible
  * from the player's eyes. In that case the click point (and therefore the rotation / reach checks)
- * would be wrong, so fall back to sampling the face for the first visible point. If nothing is
- * visible, the center is kept so wall-range placements keep working.
+ * would be wrong, so fall back to sampling the face for the visible point closest to the center. If
+ * nothing is visible, the center is kept so wall-range placements keep working.
  */
 object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory {
     override fun producePositionOnFace(
@@ -231,17 +231,40 @@ object ClickableCenterTargetPositionFactory : FaceTargetPositionFactory {
         }
     }
 
-    private val FACE_SAMPLE_PROPORTIONS = doubleArrayOf(0.05, 0.1, 0.175, 0.3, 0.5, 0.7, 0.825, 0.9, 0.95)
+    /**
+     * Spacings to sample the face with, tried in order. The coarse grid is tried first; the finer one is only
+     * reached when nothing on the coarse grid is visible.
+     */
+    private val FACE_SAMPLE_SPACINGS = doubleArrayOf(0.4, 0.2)
 
+    /**
+     * Finds the visible point closest to the face center.
+     *
+     * Closeness to the center matters more than the order the grid is walked in: a click point near an edge is
+     * far more likely to be rejected by the server, so every candidate of a spacing is evaluated instead of
+     * returning the first visible one.
+     */
     private fun findVisiblePointOnFace(face: AlignedFace, targetPos: BlockPos, eyePos: Vec3): Vec3? {
-        for (a in FACE_SAMPLE_PROPORTIONS) {
-            for (b in FACE_SAMPLE_PROPORTIONS) {
-                val point = face.samplePointOnFace(a, b)
+        val center = face.center
+
+        for (spacing in FACE_SAMPLE_SPACINGS) {
+            var bestPoint: Vec3? = null
+            var bestDistance = Double.MAX_VALUE
+
+            face.forEachSamplePoint(spacing) { point ->
                 if (VisibilityPredicate.Outline.isVisible(eyePos, point + targetPos)) {
-                    return point
+                    val distance = point.distanceToSqr(center)
+                    if (distance < bestDistance) {
+                        bestDistance = distance
+                        bestPoint = point
+                    }
                 }
+                true
             }
+
+            bestPoint?.let { return it }
         }
+
         return null
     }
 

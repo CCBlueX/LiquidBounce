@@ -19,63 +19,61 @@
 
 package net.ccbluex.liquidbounce.render.gui
 
-import kotlin.math.abs
+import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 
-class GuiOverlapRearranger(
-    private val maxIter: Int = 16,
-) {
-    init {
-        require(maxIter > 0) { "maxIter must be greater than zero." }
-    }
+/**
+ * Pushes overlapping GUI elements apart so that they stay readable.
+ *
+ * Elements are laid out in the order they are given: the first one keeps its position and every later one is pushed
+ * down until it clears whatever it ran into. Only the vertical axis is used, so an element never leaves the column it
+ * belongs to.
+ *
+ * The order is the caller's on purpose. Deriving it from the positions, as sorting by y centre does, reverses
+ * whenever two elements sit within a pixel of each other, which made stacked tags flip up and down on the slightest
+ * camera movement. A caller that wants a specific element to keep its place simply puts it first.
+ *
+ * TODO: pushing down is unbounded, so a dense pile stacks past the bottom of the screen. Clamping would need the
+ *  screen rectangle, and no caller has enough elements for it to matter yet.
+ */
+object GuiOverlapRearranger {
 
-    @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
-    fun rearrange(elements: Collection<GuiRearrangeable>) {
+    fun rearrange(elements: List<GuiRearrangeable>) {
         if (elements.size <= 1) {
             return
         }
 
-        val sorted = elements.toTypedArray()
-        sorted.sortWith { a, b ->
-            val ay = a.bounds.yCenter
-            val by = b.bounds.yCenter
-            when {
-                ay != by -> ay.compareTo(by)
-                else -> a.bounds.xCenter.compareTo(b.bounds.xCenter)
-            }
+        val placed = ArrayList<GuiRearrangeable>(elements.size)
+        for (element in elements) {
+            element.bounds = settle(element.bounds, placed)
+            placed += element
         }
+    }
 
-        var iter = 0
-        while (iter++ < maxIter) {
-            var moved = false
+    /**
+     * Moves [bounds] down until it collides with none of [placed].
+     *
+     * Pushing past the lowest blocker rather than the first one found guarantees progress, since the top edge then
+     * strictly increases and that blocker is cleared outright. With finitely many blockers, this terminates.
+     */
+    private fun settle(bounds: BoundingBox2f, placed: List<GuiRearrangeable>): BoundingBox2f {
+        var result = bounds
 
-            for (i in 0 until sorted.size) {
-                for (j in i + 1 until sorted.size) {
-                    val a = sorted[i]
-                    val b = sorted[j]
-                    val aBounds = a.bounds
-                    val bBounds = b.bounds
+        while (true) {
+            var lowestBlocker = Float.NaN
 
-                    val ax = aBounds.xCenter
-                    val ay = aBounds.yCenter
-                    val bx = bBounds.xCenter
-                    val by = bBounds.yCenter
-                    val dx = (aBounds.width + bBounds.width) * 0.5f - abs(ax - bx)
-                    val dy = (aBounds.height + bBounds.height) * 0.5f - abs(ay - by)
-
-                    if (dx > 0f && dy > 0f) {
-                        b.bounds = if (dx < dy) {
-                            bBounds.offset(if (ax < bx) dx else -dx, 0f)
-                        } else {
-                            bBounds.offset(0f, if (ay < by) dy else -dy)
-                        }
-                        moved = true
-                    }
+            for (element in placed) {
+                val other = element.bounds
+                if (other intersects result && (lowestBlocker.isNaN() || other.yMax > lowestBlocker)) {
+                    lowestBlocker = other.yMax
                 }
             }
 
-            if (!moved) {
-                break
+            if (lowestBlocker.isNaN()) {
+                return result
             }
+
+            result = BoundingBox2f(result.xMin, lowestBlocker, result.xMax, lowestBlocker + result.height)
         }
     }
+
 }

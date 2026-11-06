@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
@@ -40,10 +41,13 @@ import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.level.block.BedBlock
+import net.minecraft.world.phys.AABB
+import kotlin.math.max
 
 object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategories.WORLD) {
 
@@ -52,20 +56,19 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
-    private fun blockHardness(slot: HotbarItemSlot): Float =
-        (slot.itemStack.item as BlockItem).block.defaultDestroyTime()
-
-    private val blockSlotComparator =
-        compareByDescending<HotbarItemSlot> { blockHardness(it) == -1f }
-            .thenByDescending { blockHardness(it) }
-            .then(ItemSlot.PREFER_MORE_ITEM)
-            .then(HotbarItemSlot.PREFER_NEARBY)
+    private val blockSlotComparator = ComparatorChain<HotbarItemSlot>(
+        Comparator.comparing({
+            (it.itemStack.item as BlockItem).block
+        }, UnbreakableFirst),
+        ItemSlot.PREFER_MORE_ITEM,
+        HotbarItemSlot.PREFER_NEARBY,
+    )
 
     // Layer(ASC) Center Distance(DESC)
     private val placementTargetComparator = Comparator
         .comparingInt(IntLongPair::leftInt)
         .thenComparingDouble {
-            player.eyePosition.distanceToCenterSqr(it.rightLong())
+            -player.eyePosition.distanceToCenterSqr(it.rightLong())
         }
 
     private fun findBestBlockSlot(): HotbarItemSlot? {
@@ -85,25 +88,25 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.gui.screen() is AbstractContainerScreen<*>) {
+        if (!placer.canAct()) {
             return@handler
         }
 
-        if (!placer.ignoreUsingItem && player.isUsingItem) {
-            return@handler
-        }
-
+        // The placer knows nothing about this option, so an empty queue is the only way to hold back
+        // placements while the player is not sneaking.
         if (requiresSneak && !player.isShiftKeyDown) {
+            placer.clear()
             return@handler
         }
 
         placer.slotFinder.apply(null) ?: return@handler
 
         val eyesPos = player.eyePosition
-        val rangeSq = placer.range * placer.range
+        val placementRange = max(placer.range, placer.wallRange)
+        val rangeSq = placementRange.toDouble().sq()
 
         // The bed that need to be defended may be already covered, so we search further
-        val bedBlocks = eyesPos.searchBlocksInCuboid(placer.range + maxLayers + 1) { pos, state ->
+        val bedBlocks = eyesPos.searchBlocksInCuboid(placementRange + maxLayers + 1) { pos, state ->
             val block = state.block
             when {
                 block !is BedBlock -> false
@@ -114,14 +117,19 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
         // Get the closest bed block
         val (blockPos, state) = bedBlocks.minByOrNull {
             (blockPos, _) -> blockPos.distToCenterSqr(eyesPos)
-        } ?: return@handler
+        } ?: run {
+            // No bed left to defend, so the previous queue must not keep being placed.
+            placer.clear()
+            return@handler
+        }
 
         val placementPositions = blockPos.searchBedLayer(state, maxLayers)
             .filterTo(mutableListOf()) { (_, pos) ->
-                eyesPos.distanceToCenterSqr(pos) <= rangeSq
+                AABB(BlockPos.of(pos)).distanceToSqr(eyesPos) <= rangeSq
             }
 
         if (placementPositions.isEmpty()) {
+            placer.clear()
             return@handler
         }
 
