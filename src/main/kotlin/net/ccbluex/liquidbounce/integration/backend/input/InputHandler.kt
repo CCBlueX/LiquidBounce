@@ -18,9 +18,12 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.input
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
 /**
  * Interface for browsers that can handle input events
  */
+@AddonApi
 interface InputHandler {
 
     /**

@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.utils.text.withFormat
+import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
@@ -90,7 +92,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
 
             particles += Particle(
                 System.currentTimeMillis(),
-                FORMATTER.format(delta),
+                FORMATTER.format(delta).withFormat(),
                 color,
                 entity.boundingBox.center.add(entity.knownMovement),
             )
@@ -182,6 +184,6 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     }
 
     @JvmRecord
-    private data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3)
+    private data class Particle(val startTime: Long, val text: FormattedCharSequence, val color: Color4b, val pos: Vec3)
 
 }

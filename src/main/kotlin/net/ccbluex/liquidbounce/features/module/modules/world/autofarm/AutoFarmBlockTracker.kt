@@ -23,8 +23,24 @@ import net.ccbluex.liquidbounce.utils.block.state
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
+import java.util.function.Predicate
 
-object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>() {
+object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>(),
+    Predicate<BlockState> {
+    override val shouldCallRecordBlockOnChunkUpdate: Boolean
+        get() = false
+
+    /**
+     * [net.minecraft.world.level.chunk.ChunkAccess.findBlocks] filters whole sections through
+     * [net.minecraft.world.level.chunk.LevelChunkSection.maybeHas] before touching any block.
+     */
+    override fun chunkUpdate(chunk: LevelChunk) {
+        chunk.findBlocks(this) { pos, state ->
+            getStateFor(pos, state)?.let { track(pos, it) }
+        }
+    }
+
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {
         return when {
             pos.readyForHarvest(state) -> AutoFarmTrackedState.ReadyForHarvest
@@ -66,6 +82,8 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             }
         }
     }
+
+    override fun test(state: BlockState): Boolean = state.isAutoFarmCandidate()
 
 }
 

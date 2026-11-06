@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
+import net.ccbluex.liquidbounce.utils.text.toText
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -212,10 +213,13 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
                     val entryWithDecoration: Component = PlayerTeam.formatNameForTeam(team, entryName)
                     val entryValue: Component = scoreboardEntry.formatValue(numberFormat)
 
-                    SidebarEntry(entryWithDecoration.sanitizeForeignInput(), entryValue.sanitizeForeignInput())
+                    SidebarEntry(
+                        entryWithDecoration.sanitizeForeignInput().toText(),
+                        entryValue.sanitizeForeignInput().toText(),
+                    )
                 }.asList()
 
-            return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
+            return ScoreboardData(objective.displayName.sanitizeForeignInput().toText(), sidebarEntries)
         }
     }
 

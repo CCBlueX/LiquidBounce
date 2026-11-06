@@ -456,7 +456,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return false
         }
 
-        val criticalHitAllowed = target == null || player.isFallFlying || criticalsSelectionMode.isCriticalHit(target)
+        val criticalHitAllowed = target == null || player.isFallFlying || criticalsSelectionMode.isCriticalHit()
         if (!criticalHitAllowed) {
             return false
         }
