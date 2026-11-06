@@ -117,11 +117,11 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
 
     private val placer = tree(BlockPlacer(
         "Placing",
-        ModuleCrystalAura,
+        this,
         Priority.IMPORTANT_FOR_USAGE_2,
         slotFinder = { _ ->
             Slots.OffhandWithHotbar.findSlot(Items.OBSIDIAN) ?: Slots.OffhandWithHotbar.findSlot(Items.BEDROCK)
-        }
+        },
     ))
 
     var currentTarget: PlacementPositionCandidate? = null

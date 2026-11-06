@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -75,14 +74,14 @@ private fun Route.deleteProxy() = delete {
 
 // GET /api/v1/client/proxies
 private fun Route.getProxies() = get {
-    call.respond(JsonArray().apply {
-        ProxyManager.proxies.forEachIndexed { index, proxy ->
-            add(interopGson.toJsonTree(proxy).asJsonObject.apply {
+    call.respond(
+        ProxyManager.proxies.mapIndexed { index, proxy ->
+            interopGson.toJsonTree(proxy).asJsonObject.apply {
                 addProperty("id", index)
                 addProperty("type", (proxy.type ?: Proxy.Type.SOCKS5).toString())
-            })
+            }
         }
-    })
+    )
 }
 
 // POST /api/v1/client/proxies/add

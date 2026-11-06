@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.math.bottomCenter
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -152,8 +151,6 @@ object ScaffoldMovementPlanner {
         }
     }
 
-    private val offsetsToTry = doubleArrayOf(0.301, 0.0, -0.301)
-
     /**
      * Find the support block reference the player is currently standing on.
      * It samples nearby blocks below the player, ranks them by support surface height, hitbox overlap area, and
@@ -180,15 +177,14 @@ object ScaffoldMovementPlanner {
     }
 
     private fun collectSupportCandidates(): Map<BlockPos, SupportCandidate> {
-        // [offsetsToTry] makes the result map has up to 4 entries
+        val box = player.boundingBox
+        val supportY = Mth.floor(box.minY) - 1
+        // The player's box is narrower than a block, so each axis covers at most two block columns.
         val candidates = Object2ObjectArrayMap<BlockPos, SupportCandidate>()
 
-        for (xOffset in offsetsToTry) {
-            for (zOffset in offsetsToTry) {
-                val blockPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
-
-                if (candidates.containsKey(blockPos)) continue
-
+        for (x in Mth.floor(box.minX)..Mth.floor(box.maxX)) {
+            for (z in Mth.floor(box.minZ)..Mth.floor(box.maxZ)) {
+                val blockPos = BlockPos(x, supportY, z)
                 val collisionShape = blockPos.state?.getCollisionShape(world, blockPos) ?: continue
 
                 if (!collisionShape.isEmpty) {

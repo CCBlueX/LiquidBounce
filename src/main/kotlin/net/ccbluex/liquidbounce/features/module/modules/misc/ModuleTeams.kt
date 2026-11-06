@@ -93,8 +93,10 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
     /**
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
+     *
+     * Shared with modules that filter teammates out instead of not attacking them.
      */
-    private fun isInClientPlayersTeam(entity: LivingEntity) =
+    internal fun isInClientPlayersTeam(entity: LivingEntity) =
         matches.matchesAny(entity) || checkArmor(entity)
 
     /**

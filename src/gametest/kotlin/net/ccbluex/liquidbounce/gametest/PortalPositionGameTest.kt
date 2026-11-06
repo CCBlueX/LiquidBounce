@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.PortalMode
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
@@ -44,13 +44,13 @@ class PortalPositionGameTest : FabricClientGameTest {
             context.worldBuilder().create().use { world ->
                 world.server.runCommand("gamemode creative @a")
                 context.waitFor({ client -> client.player?.hasInfiniteMaterials() == true }, 200)
-                context.onClient {
+                context.onClient { mc ->
                     ModuleAutoBuild.enabled = false
                     ModuleAutoBuild.settings.getValue("Mode").setByString("Portal")
                     checkNotNull(mc.player).setItemInHand(
                         InteractionHand.MAIN_HAND, ItemStack(Items.OBSIDIAN, 64)
                     )
-                    fillSurroundings(Blocks.STONE.defaultBlockState())
+                    fillSurroundings(mc, Blocks.STONE.defaultBlockState())
 
                     // Call the mode directly too: Value.set logs listener exceptions instead of propagating them.
                     PortalMode.enabled()
@@ -82,11 +82,11 @@ class PortalPositionGameTest : FabricClientGameTest {
     }
 
     private fun assertImmediateRetry(context: ClientGameTestContext) {
-        context.onClient {
+        context.onClient { mc ->
             // Leave an invalid attempt's disable queued, then immediately start a valid attempt.
             ModuleAutoBuild.enabled = true
             ModuleAutoBuild.enabled = false
-            fillSurroundings(Blocks.AIR.defaultBlockState())
+            fillSurroundings(mc, Blocks.AIR.defaultBlockState())
             ModuleAutoBuild.enabled = true
             check(ModuleAutoBuild.enabled) { "A valid portal site could not be enabled" }
             check(!ModuleAutoBuild.placer.isDone()) { "A valid site did not queue frame blocks" }
@@ -101,7 +101,7 @@ class PortalPositionGameTest : FabricClientGameTest {
         }
     }
 
-    private fun fillSurroundings(state: BlockState) {
+    private fun fillSurroundings(mc: Minecraft, state: BlockState) {
         val level = checkNotNull(mc.level)
         val center = checkNotNull(mc.player).blockPosition()
         for (pos in BlockPos.betweenClosed(center.offset(-3, -1, -3), center.offset(3, 4, 3))) {

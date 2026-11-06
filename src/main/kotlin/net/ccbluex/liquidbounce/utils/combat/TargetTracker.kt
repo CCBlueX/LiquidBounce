@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType.INT
 import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.types.mapReadOnly
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
 import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
@@ -36,9 +37,10 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.NeutralMob
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
@@ -103,16 +105,13 @@ open class TargetSelector(
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
 
-    @Suppress("unused", "UnusedPrivateProperty")
     private val priority by multiEnumChoice(
         name = "Priority",
         default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
         canBeNone = false,
-    ).onChanged { set ->
-        comparator = ComparatorChain(comparisonFunctions = set.toTypedArray())
+    ).mapReadOnly { set ->
+        ComparatorChain(comparators = set.toTypedArray())
     }
-
-    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE
 
     /**
      * Counts available targets.
@@ -137,7 +136,7 @@ open class TargetSelector(
             return entities
         }
 
-        entities.sortWith(this.comparator)
+        entities.sortWith(this.priority)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -151,7 +150,7 @@ open class TargetSelector(
             && entity.hurtTime <= hurtTime
             && validateRange(entity)
             && entity.shouldBeAttacked()
-            && fov >= RotationUtil.crosshairAngleToEntity(entity)
+            && (fov >= 180f || Mth.cos(fov.toDouble().toRadians()) <= RotationUtil.crosshairCosToEntity(entity))
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true
@@ -198,7 +197,6 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
             when (entity) {
                 is Player -> 0
                 is Enemy -> 1
-                is NeutralMob if entity.persistentAngerTarget == player.uuid -> 2
                 else -> Int.MAX_VALUE
             }
 
@@ -227,7 +225,7 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
      */
     DIRECTION("Direction") {
         override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
-            RotationUtil.crosshairAngleToEntity(o1) compareTo RotationUtil.crosshairAngleToEntity(o2)
+            RotationUtil.crosshairCosToEntity(o2) compareTo RotationUtil.crosshairCosToEntity(o1)
     },
 
     /**

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.input.KeyEvent
 
 /**
  * Snaptap module
@@ -68,24 +67,24 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
         val keyboardForward = mc.options.keyUp
         val keyboardBack = mc.options.keyDown
 
-        val keyEvent = KeyEvent(event.keyCode, event.scanCode, event.mods)
+        val key = event.key
         val pressed = event.isPressed
         val released = event.isReleased
 
         when {
-            keyboardLeft.matches(keyEvent) -> {
+            keyboardLeft.matches(key) -> {
                 if (pressed) { horizontal.onPress(false) }
                 else if (released) { horizontal.onRelease(false) }
             }
-            keyboardRight.matches(keyEvent) -> {
+            keyboardRight.matches(key) -> {
                 if (pressed) { horizontal.onPress(true) }
                 else if (released) { horizontal.onRelease(true) }
             }
-            keyboardBack.matches(keyEvent) -> {
+            keyboardBack.matches(key) -> {
                 if (pressed) { vertical.onPress(false) }
                 else if (released) { vertical.onRelease(false) }
             }
-            keyboardForward.matches(keyEvent) -> {
+            keyboardForward.matches(key) -> {
                 if (pressed) { vertical.onPress(true) }
                 else if (released) { vertical.onRelease(true) }
             }
