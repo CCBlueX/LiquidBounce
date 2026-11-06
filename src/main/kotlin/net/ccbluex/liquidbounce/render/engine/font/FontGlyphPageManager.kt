@@ -28,6 +28,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
@@ -40,37 +41,37 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 
 class FontGlyphPageManager(
-    registeredFaces: Collection<FontFace>,
+    private val registeredFonts: Set<FontFace>,
     private val primaryFace: FontFace,
     private val fallbackFonts: List<FontFace> = emptyList()
 ) : EventListener, AutoCloseable {
 
-    private val registeredFonts = registeredFaces.toSet()
+    init {
+        require(primaryFace in registeredFonts) { "Primary font $primaryFace is not registered" }
+    }
+
     private val staticPage = ArrayList<StaticGlyphPage>()
     private val staticGlyphs = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<GlyphDescriptor>>()
+    private val resolvedFonts = Object2ObjectOpenHashMap<FontId, Int2ObjectOpenHashMap<FontId?>>()
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
-        fontHeight = ceil(primaryFace.plainStyle.height * 2.0F).toInt()
+        fontHeight = ceil(primaryFace.plainMetrics.height * 2.0F).toInt()
     )
-    private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
-        this.dynamicPage
-    )
+    private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(this.dynamicPage)
 
-    private val fallbackGlyphs: Map<FontFace, GlyphDescriptor>
-    private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<GlyphIdentifier, GlyphDescriptor>()
+    private val fallbackGlyphs: Map<FontId, GlyphDescriptor>
+    private val dynamicallyLoadedGlyphs = Object2ObjectOpenHashMap<FontGlyph, GlyphDescriptor>()
     private val closed = AtomicBoolean(false)
     private val staticPagesLock = Any()
     private var commonHanWarmupJob: Job? = null
 
     init {
-        require(primaryFace in registeredFonts) { "Primary font $primaryFace is not registered" }
-
         val eagerGlyphs = FontCharacterSet.createEagerGlyphs(registeredFonts, primaryFace, fallbackFonts)
         registerStaticPages(StaticGlyphPage.createGlyphPages(eagerGlyphs))
 
         val primaryFallback = requireNotNull(staticGlyphs[primaryFace.plainStyle]?.get('?'.code)) {
             "Primary font $primaryFace has no fallback glyph"
         }
-        fallbackGlyphs = registeredFonts.associateWith { font ->
+        fallbackGlyphs = registeredFonts.associateBy({ it.plainStyle }) { font ->
             staticGlyphs[font.plainStyle]?.get('?'.code) ?: primaryFallback
         }
 
@@ -81,12 +82,10 @@ class FontGlyphPageManager(
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
         this.dynamicFontManager.update().forEach { update ->
-            val key = GlyphIdentifier(update.descriptor.renderInfo.codepoint, update.font)
-
             if (!update.removed) {
-                dynamicallyLoadedGlyphs.put(key, update.descriptor)
+                dynamicallyLoadedGlyphs[update.key] = update.descriptor
             } else {
-                dynamicallyLoadedGlyphs.remove(key)
+                dynamicallyLoadedGlyphs.remove(update.key)
             }
         }
     }
@@ -159,13 +158,33 @@ class FontGlyphPageManager(
         val requestedFont = font.style(style) ?: font.plainStyle
         staticGlyphs[requestedFont]?.get(codepoint)?.let { return it }
 
-        val resolvedFont = resolveFont(font, fallbackFonts, style, codepoint) ?: return null
+        val resolvedFont = resolveFontCached(font, requestedFont, style, codepoint) ?: return null
         findResolvedStaticGlyph(font, resolvedFont, codepoint)?.let { return it }
 
         val fontGlyph = FontGlyph(codepoint, resolvedFont)
-        val glyphIdentifier = GlyphIdentifier(fontGlyph)
         this.dynamicFontManager.requestGlyph(fontGlyph)
-        return this.dynamicallyLoadedGlyphs[glyphIdentifier]
+        return this.dynamicallyLoadedGlyphs[fontGlyph]
+    }
+
+    /**
+     * [resolveFont] answers the same request the same way every time, but costs a Java2D glyph lookup
+     * under [GlyphPage.fontRasterizationLock], which the background rasterizer holds as well. Text
+     * misses the static pages on every frame it is drawn, so the answer is remembered here; `null`
+     * marks a codepoint no configured font can rasterize.
+     */
+    private fun resolveFontCached(
+        requestedFace: FontFace,
+        requestedFont: FontId,
+        style: @FontStyle Int,
+        codepoint: Int,
+    ): FontId? {
+        val matchedFonts = resolvedFonts.computeIfAbsent(requestedFont) { Int2ObjectOpenHashMap() }
+
+        if (!matchedFonts.containsKey(codepoint)) {
+            matchedFonts[codepoint] = resolveFont(requestedFace, fallbackFonts, style, codepoint)
+        }
+
+        return matchedFonts[codepoint]
     }
 
     private fun findResolvedStaticGlyph(
@@ -178,7 +197,7 @@ class FontGlyphPageManager(
         .firstNotNullOfOrNull { staticGlyphs[it]?.get(codepoint) }
 
     fun getFallbackGlyph(font: FontFace): GlyphDescriptor {
-        return fallbackGlyphs[font] ?: error("Font $font is not registered")
+        return fallbackGlyphs[font.plainStyle] ?: error("Font $font is not registered")
     }
 
     override fun close() {
@@ -195,12 +214,21 @@ class FontGlyphPageManager(
             this.staticPage.clear()
         }
         this.dynamicallyLoadedGlyphs.clear()
+        this.resolvedFonts.clear()
     }
 
 }
 
-class GlyphDescriptor(val page: GlyphPage, val renderInfo: GlyphRenderInfo)
+@ValueClassCandidate
+class GlyphDescriptor(val page: GlyphPage, val renderInfo: RasterizedGlyph)
 
+/**
+ * The font that has to rasterize [codepoint] in [style]: [requestedFace] itself when it covers the
+ * codepoint, otherwise the first fallback face that does.
+ *
+ * Fallback faces are only ever warmed with plain glyphs, so they are asked for their plain style
+ * regardless of [style] - a styled one would resolve to a font no glyph page holds.
+ */
 internal fun resolveFont(
     requestedFace: FontFace,
     fallbackFaces: List<FontFace>,
@@ -215,7 +243,7 @@ internal fun resolveFont(
 
         fallbackFaces.asSequence()
             .filter { it !== requestedFace }
-            .map { it.style(style) ?: it.plainStyle }
+            .map(FontFace::plainStyle)
             .firstOrNull { it.awtFont.canDisplay(codepoint) }
     }
 }

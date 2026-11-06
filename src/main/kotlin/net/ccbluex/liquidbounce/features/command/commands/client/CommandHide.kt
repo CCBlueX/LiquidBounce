@@ -34,10 +34,10 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ComponentUtils
 
 /**
  * Hide Command
@@ -64,7 +64,7 @@ object CommandHide : CommandRegistrar {
 
                         chat(
                             t("hide.moduleHidden",
-                                hiddenModules.map { variable(it.name) }.joinToText(", ".asPlainText())
+                                hiddenModules.joinToText(ComponentUtils.DEFAULT_SEPARATOR) { variable(it.name) }
                             ),
                             metadata = MessageMetadata(id = "CHide#info")
                         )
@@ -88,7 +88,7 @@ object CommandHide : CommandRegistrar {
 
                         chat(
                             t("unhide.moduleUnhidden",
-                                unhiddenModules.map { variable(it.name) }.joinToText(", ".asPlainText())
+                                unhiddenModules.joinToText(ComponentUtils.DEFAULT_SEPARATOR) { variable(it.name) }
                             ),
                             metadata = MessageMetadata(id = "CHide#info")
                         )

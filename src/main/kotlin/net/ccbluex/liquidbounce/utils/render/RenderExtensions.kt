@@ -39,6 +39,7 @@ import com.mojang.renderpearl.api.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
+import it.unimi.dsi.fastutil.ints.IntArrays
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -134,25 +135,66 @@ inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
 inline fun GpuBufferSlice.copyFrom(source: GpuBufferSlice) =
     gpuDevice.createCommandEncoder().copyToBuffer(source, this)
 
-@Suppress("LongParameterList")
-inline fun GpuTexture.write(
+/**
+ * Creates a 2D texture matching the size and channel layout of this image.
+ *
+ * @param upload whether the pixel data is written to the texture right away
+ */
+@JvmOverloads
+fun NativeImage.createGpuTexture(
+    labelGetter: Supplier<String>? = null,
+    usage: @GpuTexture.Usage Int = 0,
+    upload: Boolean = false,
+): GpuTexture {
+    val texture = gpuDevice.createTexture(
+        labelGetter,
+        GpuTexture.USAGE_COPY_DST or usage,
+        format().toGpuFormat(),
+        width, height,
+        1, 1,
+    )
+
+    if (upload) {
+        try {
+            gpuDevice.createCommandEncoder().writeToTexture(texture, this)
+        } catch (throwable: Throwable) {
+            texture.close()
+            throw throwable
+        }
+    }
+
+    return texture
+}
+
+private fun NativeImage.Format.toGpuFormat(): GpuFormat = when (this) {
+    NativeImage.Format.RGBA -> GpuFormat.RGBA8_UNORM
+    NativeImage.Format.RGB -> GpuFormat.RGB8_UNORM
+    NativeImage.Format.LUMINANCE -> GpuFormat.R8_UNORM
+    NativeImage.Format.LUMINANCE_ALPHA -> GpuFormat.RG8_UNORM
+}
+
+/**
+ * Uploads rows `[y, y + height)` of [source] into the same rows of this texture.
+ *
+ * Only whole rows can be written: the official write API takes the source row pitch from the copy
+ * width, so a narrower sub-rectangle would be read with the wrong stride.
+ */
+fun GpuTexture.writeRows(
     source: NativeImage,
+    y: Int,
+    height: Int,
     mipLevel: Int = 0,
     depthOrLayer: Int = 0,
-    destX: Int = 0,
-    destY: Int = 0,
-    width: Int = getWidth(mipLevel),
-    height: Int = getHeight(mipLevel),
-    sourceX: Int = 0,
-    sourceY: Int = 0,
 ) {
-    val commandEncoder = gpuDevice.createCommandEncoder()
-    val slice = commandEncoder.transientMemory()
-        .uploadStaging(source.pixelBytes, 1L, GpuBuffer.USAGE_COPY_SRC)
-    commandEncoder.copyBufferToTexture(
-        slice, sourceX, sourceY, source.width, source.height,
-        this, destX, destY, width, height,
-        mipLevel,depthOrLayer,
+    val width = getWidth(mipLevel)
+    require(source.width == width) {
+        "Source image width (${source.width}) must match the texture width ($width)"
+    }
+
+    val bytes = source.pixelBytes
+    bytes.position(y * (bytes.capacity() / source.height))
+    gpuDevice.createCommandEncoder().writeToTexture(
+        this, bytes, mipLevel, depthOrLayer, 0, y, width, height
     )
 }
 
@@ -293,18 +335,6 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
     return future
 }
 
-fun DynamicTexture.uploadRect(
-    mipLevel: Int,
-    x: Int, y: Int,
-    width: Int, height: Int,
-) = this.texture.write(
-    source = this.pixels!!,
-    mipLevel, depthOrLayer = 0,
-    x, y,
-    width, height,
-    x, y,
-)
-
 fun NativeImage.toBufferedImage(): BufferedImage {
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
 
@@ -343,7 +373,7 @@ fun BufferedImage.copyToNativeImage(
     targetY: Int = 0,
     width: Int = this.width,
     height: Int = this.height,
-    scratchBuffer: IntArray = IntArray(0),
+    scratchBuffer: IntArray = IntArrays.EMPTY_ARRAY,
 ): IntArray {
     require(!target.isClosed) { "Target image is closed" }
     require(target.format() == NativeImage.Format.RGBA) { "Target image must use RGBA format" }
@@ -418,7 +448,7 @@ private fun copyArgbRows(
 /**
  * Should be called from main thread.
  */
-fun NativeImage.registerTexture(identifier: Identifier): DynamicTexture {
+fun NativeImage.registerTexture(identifier: Identifier): AbstractTexture {
     val texture = asTexture(identifier::toString)
     mc.textureManager.register(identifier, texture)
     return texture
@@ -443,14 +473,14 @@ fun File.readNativeImage(): NativeImage =
 
 inline fun NativeImage.asTexture(
     name: String = "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})",
-) = DynamicTexture(Suppliers.ofInstance(name), this)
+): AbstractTexture = DynamicTexture(Suppliers.ofInstance(name), this)
 
 @JvmOverloads
 fun NativeImage.asTexture(
     nameSupplier: Supplier<String> = Supplier {
         "Texture NativeImage@${this.hashCode().toString(16)} (${this.width}x${this.height})"
     },
-) = DynamicTexture(nameSupplier, this)
+): AbstractTexture = DynamicTexture(nameSupplier, this)
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)

@@ -354,6 +354,7 @@
   "liquidbounce.command.serverinfo.transactionDifferences": "Transaction Differences: [%s]",
   "liquidbounce.command.serverinfo.transactions": "Transactions: [%s]",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
+  "liquidbounce.command.skull.invalidName": "%s is not a valid player name.",
   "liquidbounce.command.skull.mustBeCreative": "Creative mode required!",
   "liquidbounce.command.skull.name.description": "Name of the player.",
   "liquidbounce.command.skull.noEmptySlot": "There are no empty slots in your inventory.",
@@ -485,6 +486,7 @@
   "liquidbounce.module.autoBuild.messages.noFlintAndSteel": "No flint-and-steel found, disabling...",
   "liquidbounce.module.autoBuild.messages.noObsidian": "No obsidian found, disabling...",
   "liquidbounce.module.autoBuild.messages.noPosition": "No possible position found, disabling...",
+  "liquidbounce.module.autoBuild.messages.igniteTimeout": "The portal could not be ignited, disabling...",
   "liquidbounce.module.autoChatGame.description": "Uses OpenAI to play chat games.",
   "liquidbounce.module.autoClicker.description": "Clicks automatically when holding down the attack button.",
   "liquidbounce.module.autoConfig.description": "Automatically applies the correct config for the server you are playing on.",
@@ -823,7 +825,6 @@
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.zoom.description": "Allows you to make everything in your world appear smaller or bigger.",
   "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "Therefore falling back to %s angle smoothing.",
-  "liquidbounce.tooltip.clickToCopy": "Click to copy",
   "liquidbounce.unsupportedDeepLearning": "The AI engine has not been initialized. Your system might not be supported.",
   "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client for Minecraft."
 }

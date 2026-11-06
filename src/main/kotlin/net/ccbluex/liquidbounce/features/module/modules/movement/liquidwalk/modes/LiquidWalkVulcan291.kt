@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.mod
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
@@ -40,7 +41,7 @@ internal object LiquidWalkVulcan291 : Mode("Vulcan291") {
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         // It DOES NOT bypass with Lava - do not use [player.isInFluid].
         if (player.isInsideWaterOrBubbleColumn) {
             // One tick speed-up for extra speed

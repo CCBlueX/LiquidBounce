@@ -17,12 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.text
+package net.ccbluex.liquidbounce.render.gui.indicator
 
-import net.minecraft.network.chat.Style
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.client.gui.GuiGraphicsExtractor
 
-inline fun Style.with(block: StyleBuilder.() -> Unit): Style =
-    StyleBuilder(this).apply(block).build()
+/**
+ * Draws no arrow at all, for indicators that only want their tag placed on the screen.
+ */
+object NoneIndicatorStyle : IndicatorStyle {
 
-inline fun style(block: StyleBuilder.() -> Unit): Style =
-    Style.EMPTY.with(block)
+    override val length: Float = 0.0F
+
+    override fun extract(ctx: GuiGraphicsExtractor, color: Color4b) = Unit
+
+}

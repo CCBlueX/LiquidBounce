@@ -32,13 +32,13 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.math.BY_Y
 import net.ccbluex.liquidbounce.utils.math.BY_Y_DESC
@@ -48,6 +48,7 @@ import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.util.Mth
+import net.minecraft.world.level.block.Block
 import kotlin.random.Random
 
 /**
@@ -200,16 +201,19 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
         }
     }
 
+    private val COMPARATOR: Comparator<Pair<*, Block>> =
+        Comparator.comparing({ it.second }, UnbreakableFirst)
+
     @JvmStatic
     private fun slotFinder(pos: BlockPos?): HotbarItemSlot? {
-        val blockSlots = Slots.OffhandWithHotbar.mapNotNull {
+        val blockSlots = HotbarItemSlot.entries.mapNotNull {
             it to (it.itemStack.getBlock()?.takeIf { b -> filter(b, blocks) } ?: return@mapNotNull null)
         }
 
         return if (pos in blockList) {
-            blockSlots.maxByOrNull { (_, block) -> block.defaultDestroyTime() }
+            blockSlots.minWithOrNull(COMPARATOR)
         } else {
-            blockSlots.minByOrNull { (_, block) -> block.defaultDestroyTime() }
+            blockSlots.maxWithOrNull(COMPARATOR)
         }?.first
     }
 

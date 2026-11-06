@@ -23,14 +23,15 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.toTextureProperty
-import net.minecraft.client.renderer.texture.DynamicTexture
+import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
+import net.minecraft.client.renderer.texture.AbstractTexture
 
 sealed class TextureMode(name: String) : Mode(name) {
 
-    abstract val texture: DynamicTexture?
+    abstract val texture: AbstractTexture?
 
     class Custom(override val parent: ModeValueGroup<*>) : TextureMode("Custom") {
-        override val texture by file("File", supportedExtensions = setOf("png")).toTextureProperty(this)
+        override val texture by file("File", supportedExtensions = PNG_AND_JPG).toTextureProperty(this)
     }
 
     class Builtin<T : Builtin.Preset>(
@@ -44,7 +45,7 @@ sealed class TextureMode(name: String) : Mode(name) {
         override val texture get() = mode.get().texture
 
         interface Preset : Tagged {
-            val texture: DynamicTexture?
+            val texture: AbstractTexture?
         }
     }
 
