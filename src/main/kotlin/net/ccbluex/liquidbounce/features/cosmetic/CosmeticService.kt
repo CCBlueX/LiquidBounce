@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 
 /**
@@ -64,13 +63,21 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
     internal val carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     internal val lastUpdate = Chronometer()
-    private val refreshing = AtomicBoolean()
+
+    private class RefreshCallbacks(val done: Runnable, val onFailure: Runnable)
+
+    private enum class RefreshStart { STARTED, QUEUED, NOT_NEEDED }
+
+    private val refreshLock = Any()
+    private var refreshing = false
+    private val waiting = ArrayList<RefreshCallbacks>()
 
     /**
      * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
      * and then call out [done], or [onFailure] if the API did not provide them.
      * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
      *
+     * A call made while a refresh is running is resumed with the outcome of that refresh.
      * An attempt that failed waits for the REFRESH_DELAY as well, so an API that does not answer
      * is not asked again for every cosmetic lookup.
      */
@@ -85,40 +92,69 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
         onFailure: Runnable,
         done: Runnable,
     ): Job? {
-        // Check if there is not another task running which could conflict.
-        if (refreshing.get()) {
-            return null
-        }
+        val callbacks = RefreshCallbacks(done, onFailure)
 
-        // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-        if (!force && !lastUpdate.hasElapsed(REFRESH_DELAY)) {
-            // Call out done immediate because there is no refresh required at the moment
-            done.run()
-            return null
-        }
-
-        if (!refreshing.compareAndSet(false, true)) {
-            return null
+        when (tryStartRefresh(force, callbacks)) {
+            RefreshStart.QUEUED -> return null
+            RefreshStart.NOT_NEEDED -> {
+                done.run()
+                return null
+            }
+            RefreshStart.STARTED -> {}
         }
 
         return withScope {
             var refreshed = false
+            var cancelled = false
 
             try {
                 carriers = load()
                 refreshed = true
             } catch (e: CancellationException) {
+                cancelled = true
                 throw e
             } catch (e: Throwable) {
                 logger.error("Failed to refresh cape carriers due to error.", e)
             } finally {
-                // Reset timer and start once again
-                lastUpdate.reset()
-                refreshing.set(false)
+                finishRefresh(refreshed, cancelled, runOnMain)
             }
+        }
+    }
 
-            // Call out whether the carriers were refreshed
-            runOnMain.accept(if (refreshed) done else onFailure)
+    /**
+     * Starts a refresh for [callbacks] when one is due. A call made while another
+     * refresh is running is queued and resumed with its outcome instead.
+     */
+    private fun tryStartRefresh(force: Boolean, callbacks: RefreshCallbacks): RefreshStart =
+        synchronized(refreshLock) {
+            when {
+                refreshing -> {
+                    waiting += callbacks
+                    RefreshStart.QUEUED
+                }
+                // No refresh is required before the REFRESH_DELAY has passed
+                !force && !lastUpdate.hasElapsed(REFRESH_DELAY) -> RefreshStart.NOT_NEEDED
+                else -> {
+                    refreshing = true
+                    waiting += callbacks
+                    RefreshStart.STARTED
+                }
+            }
+        }
+
+    private fun finishRefresh(refreshed: Boolean, cancelled: Boolean, runOnMain: Consumer<Runnable>) {
+        // A cancelled refresh did not ask the API, so it does not delay the next one
+        if (!cancelled) {
+            lastUpdate.reset()
+        }
+
+        val resumed = synchronized(refreshLock) {
+            refreshing = false
+            waiting.toList().also { waiting.clear() }
+        }
+
+        runOnMain.accept {
+            resumed.forEach { (if (refreshed) it.done else it.onFailure).run() }
         }
     }
 

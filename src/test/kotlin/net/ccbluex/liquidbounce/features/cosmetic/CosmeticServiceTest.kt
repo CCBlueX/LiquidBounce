@@ -87,10 +87,25 @@ class CosmeticServiceTest {
         val running = assertNotNull(refresh(force = true) { release.await(); setOf("carrier") })
 
         assertNull(refresh(force = true) { throw AssertionError("A second refresh was started") })
+        assertEquals(0, done.get())
 
         release.complete(Unit)
         running.join()
-        assertEquals(1, done.get())
+
+        // The call made during the refresh is resumed with its outcome
+        assertEquals(2, done.get())
+    }
+
+    @Test
+    fun `a call made during a failing refresh is resumed with the failure`() = runBlocking {
+        val release = CompletableDeferred<Unit>()
+        val running = assertNotNull(refresh(force = true) { release.await(); throw IOException("offline") })
+        assertNull(refresh(force = true) { throw AssertionError("A second refresh was started") })
+
+        release.complete(Unit)
+        running.join()
+        assertEquals(2, failed.get())
+        assertEquals(0, done.get())
     }
 
     @Test
@@ -102,10 +117,11 @@ class CosmeticServiceTest {
         })
         started.await()
         cancelled.cancelAndJoin()
-        assertEquals(0, failed.get())
+        assertEquals(1, failed.get())
         assertEquals(0, done.get())
 
-        assertNotNull(refresh(force = true) { setOf("carrier") }).join()
+        // The cancelled refresh did not start the delay, so a lookup still refreshes
+        assertNotNull(refresh(force = false) { setOf("carrier") }).join()
         assertEquals(1, done.get())
     }
 
