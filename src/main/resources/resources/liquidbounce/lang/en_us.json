@@ -610,6 +610,7 @@
   "liquidbounce.module.flagCheck.messages.forceRotate": "Force-Rotate",
   "liquidbounce.module.flagCheck.messages.invalid": "Invalid",
   "liquidbounce.module.flagCheck.messages.lagback": "LagBack",
+  "liquidbounce.module.flagCheck.messages.mitigation": "Combat Mitigation: %s",
   "liquidbounce.module.fly.description": "Allows you to fly in survival mode.",
   "liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage": "You have been hurt, boosting..",
   "liquidbounce.module.fly.messages.cubecraft20thAprBoostUsage": "Fly only works through damage abuse. Wait a few seconds until you're ready to fly on a round start!",
