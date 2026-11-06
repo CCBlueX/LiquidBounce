@@ -118,10 +118,10 @@ object MarketplaceConfigs {
         ).items
 
     /**
-     * How commands name an item: `author/name`, or its id while the author is unknown.
+     * How commands name an item: `author/name`, or its name while the author is unknown.
      */
     val MarketplaceItem.address: String
-        get() = author?.let { "$it/$name" } ?: id.toString()
+        get() = author?.let { "$it/$name" } ?: name
 
     /**
      * The best ranked config for [address], featured ones first.

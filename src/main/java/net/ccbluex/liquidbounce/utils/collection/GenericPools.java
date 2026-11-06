@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.collection;
 
 import net.ccbluex.fastutil.Pool;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,4 +40,8 @@ public final class GenericPools {
     public static final Pool<HashMap> HASH_MAP = Pool.create(HashMap::new, HashMap::clear);
 
     public static final Pool<HashSet> HASH_SET = Pool.create(HashSet::new, HashSet::clear);
+
+    public static final Pool<FloatArrayList> FLOAT_LIST = Pool.create(FloatArrayList::new, FloatArrayList::clear);
+
+    public static final Pool<IntArrayList> INT_LIST = Pool.create(IntArrayList::new, IntArrayList::clear);
 }

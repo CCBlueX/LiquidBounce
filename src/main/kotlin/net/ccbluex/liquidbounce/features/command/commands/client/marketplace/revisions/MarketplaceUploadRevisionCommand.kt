@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.re
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
+import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 /**
@@ -80,7 +82,8 @@ object MarketplaceUploadRevisionCommand {
             MarketplaceApi.createMarketplaceItemRevision(
                 clientAccount.takeSession(),
                 id,
-                file,
+                file.name,
+                file.asRequestBody(HttpClient.MediaTypes.OCTET_STREAM),
                 version,
                 changelog,
                 dependencies

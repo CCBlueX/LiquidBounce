@@ -32,7 +32,7 @@ import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-import static net.ccbluex.liquidbounce.lang.LanguageKt.translation;
+import static net.ccbluex.liquidbounce.utils.client.ClientChat.CLICK_TO_COPY;
 import static net.ccbluex.liquidbounce.utils.io.ClipboardUtilsKt.clipboardCopyAction;
 
 @NullMarked
@@ -54,12 +54,7 @@ public abstract class MixinScreenshot {
             .append(original)
             .append(PlainText.SPACE)
             .append(PlainText.of("[", ChatFormatting.GRAY))
-            .append(
-                ClientChat.onClickRun(
-                    translation("liquidbounce.tooltip.clickToCopy").withStyle(ChatFormatting.GRAY),
-                    copyAction
-                )
-            )
+            .append(ClientChat.onClickRun(CLICK_TO_COPY.copy(), copyAction))
             .append(PlainText.of("]", ChatFormatting.GRAY));
     }
 

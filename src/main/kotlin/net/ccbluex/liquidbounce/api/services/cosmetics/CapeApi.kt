@@ -20,12 +20,22 @@ package net.ccbluex.liquidbounce.api.services.cosmetics
 
 import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 
-object CapeApi : BaseApi(config.apiEndpointV1) {
+object CapeApi {
+
+    private val service = config.retrofitApiV1.create<Service>()
+
     /**
      * Request a cape by name and return the cape texture as [NativeImage].
      */
-    suspend fun getCape(name: String) =
-        get<NativeImage>("/cape/name/$name")
+    suspend fun getCape(name: String) = service.cape(name)
+
+    internal interface Service {
+        @GET("cape/name/{name}")
+        suspend fun cape(@Path("name") name: String): NativeImage
+    }
+
 }

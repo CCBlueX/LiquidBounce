@@ -212,10 +212,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         }
     }
 
-    @Suppress("detekt:EmptyFunctionBlock")
-    override fun extractBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) {
-
-    }
+    override fun extractBackground(context: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, delta: Float) = Unit
 
     override fun onClose() {
         ModuleDroneControl.enabled = false
