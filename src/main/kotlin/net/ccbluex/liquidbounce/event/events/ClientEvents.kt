@@ -263,3 +263,6 @@ object UserLoggedInEvent : Event(), WebSocketEvent
 
 @Tag("userLoggedOut")
 object UserLoggedOutEvent : Event(), WebSocketEvent
+
+@Tag("configTrackerChange")
+object ConfigTrackerChangeEvent : Event(), WebSocketEvent

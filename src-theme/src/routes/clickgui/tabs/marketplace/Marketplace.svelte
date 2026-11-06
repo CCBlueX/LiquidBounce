@@ -9,12 +9,16 @@
     import Notice from "../../common/Notice.svelte";
     import ListRow from "../../common/ListRow.svelte";
     import ItemAction from "./ItemAction.svelte";
+    import TrackerMenu from "./list/TrackerMenu.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
     import ItemDetail from "./detail/ItemDetail.svelte";
     import LoadDialog from "./loading/LoadDialog.svelte";
+    import ConfigDialog from "./publishing/ConfigDialog.svelte";
     import {
         applyMarketplaceTheme,
+        changeConfigTracker,
         getClientUser,
+        getConfigTracker,
         getCurrentServer,
         getInstalledMarketplaceItems,
         getMarketplaceConfigs,
@@ -30,6 +34,8 @@
         updateMarketplaceItem
     } from "../../../../integration/rest";
     import type {
+        ClientUser,
+        ConfigTracker,
         MarketplaceConfig,
         MarketplaceInstalledItem,
         MarketplaceItem,
@@ -44,6 +50,7 @@
         itemBadges,
         reports,
         reviews,
+        trackingName,
         typeName,
         UNKNOWN_PACK,
         UNKNOWN_SERVER,
@@ -76,7 +83,8 @@
 
     let currentServer = $state<string | undefined>();
     let autoConfigOnlyFeatured = $state(false);
-    let loggedIn = $state(false);
+    let tracker = $state<ConfigTracker | null>(null);
+    let user = $state<ClientUser | null>(null);
     let tagOptions = $state<string[]>([]);
 
     let configs = $state<MarketplaceConfig[]>([]);
@@ -94,20 +102,22 @@
 
     let view = $state<{ kind: "browse" } | { kind: "config" | "item"; id: number }>({kind: "browse"});
 
+    const loggedIn = $derived(user !== null);
     const configTab = $derived(type === "Configs");
     const server = $derived(onServer ? currentServer : undefined);
     const filtered = $derived(search.trim() !== "" || (configTab && (featuredOnly || !!server || tags.length > 0)));
 
     onMount(async () => {
-        await Promise.all([refreshServer(), refreshAutoConfig(), refreshUser()]);
+        await Promise.all([refreshServer(), refreshAutoConfig(), refreshTracker(), refreshUser()]);
         await reload();
     });
 
+    listen("configTrackerChange", refreshTracker);
     listen("userLoggedIn", refreshAccount);
     listen("userLoggedOut", refreshAccount);
 
     async function refreshAccount() {
-        await refreshUser();
+        await Promise.all([refreshUser(), refreshTracker()]);
         await reload();
     }
 
@@ -126,7 +136,15 @@
     }
 
     async function refreshUser() {
-        loggedIn = (await getClientUser().catch(() => null)) !== null;
+        user = await getClientUser().catch(() => null);
+    }
+
+    async function refreshTracker() {
+        tracker = await getConfigTracker().catch(() => null);
+        configs = configs.map(config => ({
+            ...config,
+            tracking: tracker && config.id === tracker.id ? tracker.state : "None"
+        }));
     }
 
     async function fetchPage(page: number) {
@@ -264,6 +282,10 @@
         }
     }
 
+    async function changeTracker(action: "revert" | "restore" | "detach") {
+        tracker = await changeConfigTracker(action).catch(() => tracker);
+    }
+
     async function itemAction(item: MarketplaceItem, action: () => Promise<unknown>) {
         if (busy !== null) {
             return;
@@ -319,7 +341,7 @@
     <div class="marketplace" use:typing>
         {#if view.kind === "config"}
             {#key view.id}
-                <ConfigDetail id={view.id} {loggedIn} onback={back} onopen={open}/>
+                <ConfigDetail id={view.id} {loggedIn} {tracker} onback={back} onopen={open}/>
             {/key}
         {:else if view.kind === "item"}
             {#key view.id}
@@ -332,8 +354,15 @@
                        placeholder={configTab ? "Search or paste a share code" : `Search ${type.toLowerCase()}`}/>
                 <SegmentedControl options={["Top", "New"]} value={sort} onchange={changeSort}/>
                 <div class="spacer"></div>
+                {#if configTab && tracker && (tracker.state !== "None" || tracker.backup)}
+                    <TrackerMenu {tracker} {loggedIn} online={!offline}
+                                 onchange={changeTracker}
+                                 onopen={() => tracker && open("config", tracker.id)}/>
+                {/if}
                 {#if !loggedIn}
                     <PillButton title="Log in" primary onclick={login}/>
+                {:else if configTab && !offline}
+                    <PillButton title="Publish..." onclick={() => dialog.set({kind: "publish"})}/>
                 {/if}
             </div>
 
@@ -362,8 +391,12 @@
                             <PillButton title="Retry" primary onclick={reload}/>
                         {/snippet}
                     </Notice>
-                    {#if installed.length > 0}
+                    {#if (tracker && tracker.state !== "None") || installed.length > 0}
                         <div class="section"><SectionLabel text="On this client"/></div>
+                        {#if tracker && tracker.state !== "None"}
+                            <ListRow image={tracker.image ?? UNKNOWN_SERVER} active address={tracker.address}
+                                     badges={[trackingName(tracker.state)]} subtitle="Config"/>
+                        {/if}
                         {#each installed as item (item.id)}
                             <ListRow image={UNKNOWN_PACK} title={item.name} subtitle={typeName(item.type)}/>
                         {/each}
@@ -386,10 +419,10 @@
                         {/snippet}
                         <ListRow image={config.image ?? UNKNOWN_SERVER} address={config.address} subtitle={configLine(config)}
                                  badges={[
-                                     ...configBadges(config, config.overlayOn && `Overlay on ${config.overlayOn}`),
+                                     ...configBadges(config, config.tracking, config.overlayOn && `Overlay on ${config.overlayOn}`),
                                      ...config.tags
                                  ]}
-                                 onclick={() => open("config", config.id)}
+                                 active={config.tracking !== "None"} onclick={() => open("config", config.id)}
                                  hover={loggedIn ? reportButtons : undefined}>
                             {#snippet meta()}
                                 <span class="reports">{reports(config.works, config.fails)}</span>
@@ -462,6 +495,7 @@
     </div>
 
     <LoadDialog/>
+    <ConfigDialog {tracker} user={user?.nickname ?? user?.name} tags={tagOptions} onopen={id => open("config", id)}/>
 </ScaledClickGuiContent>
 
 <style lang="scss">
