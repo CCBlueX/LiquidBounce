@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.mod
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.collidesWithAnythingElse
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.standingOnWater
@@ -61,7 +61,7 @@ internal object LiquidWalkNoCheatPlus : Mode("NoCheatPlus") {
         }
     }
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.box.isBlockAtPosition { it is LiquidBlock } && !mc.options.keyShift.isDown) {
             player.deltaMovement.y = 0.08
         }

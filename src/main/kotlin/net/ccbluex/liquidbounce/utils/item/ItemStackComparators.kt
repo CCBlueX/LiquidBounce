@@ -28,10 +28,11 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
+import java.util.Comparator.comparingDouble
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-fun Comparator<ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
+fun Comparator<in ItemStack>.asHolderComparator(): Comparator<ItemStackHolder> =
     Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
 
 fun comparingEnchantmentLevel(key: ResourceKey<Enchantment>): Comparator<ItemStack> =
@@ -77,9 +78,9 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
  */
 object PreferWalkableBlocks : Comparator<ItemStack> {
     private val chain = ComparatorChain<Block>(
-        compareBy { it.friction.toDouble() },
-        compareBy { abs(it.jumpFactor - 1.0) },
-        compareBy { abs(it.speedFactor - 1.0) },
+        comparingDouble { it.friction.toDouble() },
+        comparingDouble { abs(it.jumpFactor - 1.0) },
+        comparingDouble { abs(it.speedFactor - 1.0) },
     )
 
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
