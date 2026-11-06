@@ -91,8 +91,6 @@ accessible method net/minecraft/client/Camera setPosition (Lnet/minecraft/world/
 
 accessible method net/minecraft/client/multiplayer/MultiPlayerGameMode startPrediction (Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/multiplayer/prediction/PredictiveAction;)V
 
-accessible field net/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen selectedTab Lnet/minecraft/world/item/CreativeModeTab;
-
 accessible field net/minecraft/client/renderer/PostChain passes Ljava/util/List;
 
 accessible field net/minecraft/network/Connection channel Lio/netty/channel/Channel;
@@ -123,12 +121,6 @@ mutable field net/minecraft/network/protocol/common/ClientboundPingPacket id I
 accessible field net/minecraft/world/entity/WalkAnimationState position F
 
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
-
-accessible field net/minecraft/client/gui/components/ChatComponent allMessages Ljava/util/List;
-accessible field net/minecraft/client/gui/components/ChatComponent trimmedMessages Ljava/util/List;
-accessible method net/minecraft/client/gui/components/ChatComponent logChatMessage (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
-accessible method net/minecraft/client/gui/components/ChatComponent addMessageToDisplayQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
-accessible method net/minecraft/client/gui/components/ChatComponent addMessageToQueue (Lnet/minecraft/client/multiplayer/chat/GuiMessage;)V
 
 accessible method net/minecraft/network/chat/TextColor <init> (ILjava/lang/String;)V
 
@@ -186,3 +178,5 @@ accessible field net/minecraft/client/gui/GuiGraphicsExtractor scissorStack Lnet
 accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Lnet/minecraft/client/renderer/state/gui/GuiRenderState;
 
 accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComponentType (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/component/DataComponentType;
+
+accessible field net/minecraft/client/sounds/SoundManager registry Ljava/util/Map;

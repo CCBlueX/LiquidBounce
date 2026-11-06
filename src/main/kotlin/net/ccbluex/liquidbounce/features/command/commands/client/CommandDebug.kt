@@ -20,17 +20,19 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.asForm
-import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
+import net.ccbluex.liquidbounce.config.gson.util.mapToJsonArray
+import net.ccbluex.liquidbounce.config.gson.util.toJsonArray
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.register
@@ -67,7 +69,7 @@ object CommandDebug : CommandRegistrar {
     override fun register(dispatcher: com.mojang.brigadier.CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("debug") {
             execSuspend {
-                chat("§7Collecting debug information...")
+                chat("Collecting debug information...".asPlainText(ChatFormatting.GRAY))
 
                 val buffer = okio.Buffer()
 
@@ -149,22 +151,18 @@ object CommandDebug : CommandRegistrar {
 
         addProperty("config", autoConfigPaste)
 
-        add("activeModules", JsonArray().apply {
-            ModuleManager.filter { it.running }.forEach { module ->
-                add(JsonPrimitive(module.name))
-            }
+        add("activeModules", ModuleManager.filter { it.running }.mapToJsonArray { module ->
+            JsonPrimitive(module.name)
         })
 
-        add("addons", JsonArray().apply {
-            AddonManager.addons.forEach { addon ->
-                add(JsonObject().apply {
-                    addProperty("id", addon.id)
-                    addProperty("name", addon.displayName)
-                    addProperty("version", addon.version)
-                    addProperty("authors", addon.authors.joinToString(", "))
-                    addProperty("state", addon.state.name)
-                    addProperty("modules", addon.registeredModules.size)
-                })
+        add("addons", AddonManager.addons.mapToJsonArray { addon ->
+            JsonObject().apply {
+                addProperty("id", addon.id)
+                addProperty("name", addon.displayName)
+                addProperty("version", addon.version)
+                add("authors", addon.authors.toJsonArray())
+                addProperty("state", addon.state.name)
+                addProperty("modules", addon.registeredModules.size)
             }
         })
 
@@ -175,10 +173,10 @@ object CommandDebug : CommandRegistrar {
      * Uploads the given content to the CCBlueX Paste API
      * and returns the URL of the paste.
      */
-    private suspend fun uploadToPaste(content: String): String {
+    private suspend fun uploadToPaste(content: String): String = withContext(Dispatchers.IO) {
         val form = "content=$content"
-        return HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
-                .parse<String>()
+        HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
+                .body.string()
     }
 
 }

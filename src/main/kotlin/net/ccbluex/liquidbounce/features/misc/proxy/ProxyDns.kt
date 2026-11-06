@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.misc.proxy
 
 import com.google.common.net.InetAddresses
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.api.core.parse
+import net.ccbluex.liquidbounce.api.core.bodyAsJson
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress
 import net.minecraft.client.multiplayer.resolver.ServerAddress
@@ -41,7 +41,7 @@ object ProxyDns {
 
     private val logger = clientLogger("ProxyDns")
 
-    private const val DOH_URL = "https://cloudflare-dns.com/dns-query"
+    private val DOH_URL = "https://cloudflare-dns.com/dns-query".toHttpUrl()
     private const val SRV = 33
     private const val DEFAULT_PORT = 25565
 
@@ -71,13 +71,13 @@ object ProxyDns {
     }
 
     private fun lookupSrv(proxy: Proxy, host: String): ServerAddress? {
-        val url = DOH_URL.toHttpUrl().newBuilder()
+        val url = DOH_URL.newBuilder()
             .addQueryParameter("name", "_minecraft._tcp.$host")
             .addQueryParameter("type", "SRV")
             .build()
         val request = Request.Builder().url(url).header("Accept", "application/dns-json").build()
 
-        val answers = proxy.httpClient().newCall(request).execute().parse<JsonObject>()["Answer"]?.asJsonArray
+        val answers = proxy.httpClient().newCall(request).execute().bodyAsJson<JsonObject>()["Answer"]?.asJsonArray
         val record = answers?.map { it.asJsonObject }?.firstOrNull { it["type"].asInt == SRV } ?: return null
 
         // priority weight port target, as JNDI hands it to vanilla

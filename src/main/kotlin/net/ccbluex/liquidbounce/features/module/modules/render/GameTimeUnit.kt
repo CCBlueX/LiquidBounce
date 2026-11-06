@@ -16,10 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-package net.ccbluex.liquidbounce.render.engine.font
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import java.text.DecimalFormat
 
-@JvmRecord
-data class GlyphIdentifier(val codepoint: Int, val font: FontId) {
-    constructor(fontGlyph: FontGlyph) : this(fontGlyph.codepoint, fontGlyph.font)
+enum class GameTimeUnit(
+    override val tag: String,
+) : Tagged {
+    TICKS("Ticks") {
+        override fun format(ticks: Int): String = ticks.toString()
+    },
+    SECONDS("Seconds") {
+        private val format = DecimalFormat("0.#s")
+        override fun format(ticks: Int): String = format.format(ticks * 0.05)
+    };
+
+    abstract fun format(ticks: Int): String
+
 }
