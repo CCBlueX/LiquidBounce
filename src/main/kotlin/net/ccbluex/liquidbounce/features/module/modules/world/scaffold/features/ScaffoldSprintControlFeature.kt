@@ -88,8 +88,6 @@ object ScaffoldSprintControlFeature : ToggleableValueGroup(ModuleScaffold, "Spri
     private val sprintHandler = handler<SprintEvent>(
         priority = EventPriorityConvention.MODEL_STATE
     ) { event ->
-        val willPlace = false
-
         // Movement Tick will affect the client-side sprint state,
         // while we also apply it to Input to count as pressing the Sprint-Key
         if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
