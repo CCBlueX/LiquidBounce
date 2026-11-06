@@ -16,6 +16,7 @@
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import HudEditor from "./tabs/hud_editor/HudEditor.svelte";
     import Marketplace from "./tabs/marketplace/Marketplace.svelte";
+    import {isTextEntry} from "../../util/utils";
     import {persistentDataLoaded, setItem} from "../../integration/persistent_storage";
 
     const TAB_KEY = "clickgui.tab";
@@ -50,6 +51,24 @@
             activeTab = stored;
         }
         tabRestored = true;
+    }
+
+    /**
+     * The client has to know whether the user is typing, otherwise key presses
+     * that are meant for a text field are also handled as game input - see
+     * `ModuleClickGui.isInSearchBar`.
+     *
+     * Focus events bubble, so tracking them here covers every text field of the
+     * ClickGUI, including the ones rendered by the HUD editor.
+     */
+    async function handleFocusIn(event: FocusEvent) {
+        await setTyping(isTextEntry(event.target));
+    }
+
+    async function handleFocusOut(event: FocusEvent) {
+        // `relatedTarget` is the element that receives the focus, so moving
+        // from one text field to another does not report a pause in typing.
+        await setTyping(isTextEntry(event.relatedTarget));
     }
 
     function applyValues(configurable: ConfigurableSetting) {
@@ -89,6 +108,8 @@
         applyValues(e.configurable);
     });
 </script>
+
+<svelte:window onfocusin={handleFocusIn} onfocusout={handleFocusOut}/>
 
 <div
         class="tabbed-clickgui"

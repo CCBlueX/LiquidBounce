@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.marketplace.autoconfig
 
 import com.google.gson.JsonObject
+import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.HttpClient
@@ -55,8 +57,10 @@ import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
-import java.security.MessageDigest
+import java.io.Reader
 
 /**
  * Tracks the marketplace config the client runs.
@@ -123,7 +127,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      */
     val chain: List<Step>
         get() = chainText.split(',').filter(String::isNotEmpty).map { step ->
-            val (itemId, revisionId) = step.split(':').map(String::toInt)
+            val (itemId, revisionId) = step.split(':').mapToIntArray(String::toInt)
             Step(itemId, revisionId)
         }
 
@@ -228,8 +232,8 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * Applies a config that does not come from the marketplace. It stops tracking but keeps
      * the backup.
      */
-    suspend fun loadExternal(source: String, modules: Collection<ValueGroup> = emptyList()) {
-        val config = publicGson.newJsonReader(source.reader()).use { it.parseTree().asJsonObject }
+    suspend fun loadExternal(source: CharSequence, modules: Collection<ValueGroup> = emptyList()) {
+        val config = publicGson.newJsonReader(Reader.of(source)).use { it.parseTree().asJsonObject }
 
         withContext(Dispatchers.Main) {
             apply(listOf(config), modules)
@@ -478,51 +482,50 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         changelog: String?,
         subset: Subset?
     ): MarketplaceItemRevision {
-        val file = File.createTempFile("marketplace_config", ".json")
-        try {
-            withContext(Dispatchers.Main) {
-                file.bufferedWriter().use { writer ->
-                    if (subset == null) {
-                        AutoConfig.serializeAutoConfig(writer)
-                    } else {
-                        AutoConfig.serializeAutoConfig(
-                            writer,
-                            modules = subset.modules,
-                            includeSpoofers = subset.spoofers
-                        )
-                    }
+        val settings = withContext(Dispatchers.Main) {
+            val buffer = FastByteArrayOutputStream()
+            buffer.writer().use { writer ->
+                if (subset == null) {
+                    AutoConfig.serializeAutoConfig(writer)
+                } else {
+                    AutoConfig.serializeAutoConfig(
+                        writer,
+                        modules = subset.modules,
+                        includeSpoofers = subset.spoofers
+                    )
                 }
             }
-
-            val revision = MarketplaceApi.createMarketplaceItemRevision(
-                session,
-                itemId,
-                file,
-                version = LiquidBounce.clientVersion,
-                changelog = changelog,
-                includesBinds = false
-            )
-
-            file.copyTo(cacheFile(itemId, revision.id), overwrite = true)
-            return revision
-        } finally {
-            file.delete()
+            buffer.toByteArray()
         }
+
+        val revision = MarketplaceApi.createMarketplaceItemRevision(
+            session,
+            itemId,
+            "config.json",
+            settings.toRequestBody(HttpClient.MediaTypes.OCTET_STREAM),
+            version = LiquidBounce.clientVersion,
+            changelog = changelog,
+            includesBinds = false
+        )
+
+        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.writeBytes(settings)
+        return revision
     }
 
     private suspend fun revisionFile(itemId: Int, revisionId: Int): File {
         val file = cacheFile(itemId, revisionId)
         if (!file.exists()) {
             file.parentFile.mkdirs()
-            val part = File(file.parentFile, "${file.name}.part")
+            val part = file.resolveSibling("${file.name}.part")
             HttpClient.download(MarketplaceApi.downloadRevision(itemId, revisionId), part)
             check(part.renameTo(file)) { "Failed to store revision $revisionId" }
         }
         return file
     }
 
-    private fun readConfig(file: File): JsonObject =
+    private suspend fun readConfig(file: File): JsonObject = withContext(Dispatchers.IO) {
         publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
+    }
 
     /**
      * Backs up the current settings unless a backup exists, then applies [configs] in order. A
@@ -578,19 +581,13 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * A hash per module and one for the spoofers. Export metadata such as date and server
      * would make every snapshot differ, so it stays out.
      */
-    private fun snapshot(): Map<String, String> {
-        val hashes = linkedMapOf<String, String>()
+    private fun snapshot(): Map<String, String> = buildMap {
         ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig, publicGson)
             .asJsonObject["value"].asJsonArray.forEach { module ->
-                hashes[module.asJsonObject["name"].asString] = sha256(module.toString())
+                this[module.asJsonObject["name"].asString] = sha256Hex(module.toString())
             }
-        hashes[SPOOFERS] = sha256(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
-        return hashes
+        this[SPOOFERS] = sha256Hex(ConfigSystem.serializeValueGroup(SpooferManager, publicGson).toString())
     }
-
-    private fun sha256(text: String) = MessageDigest.getInstance("SHA-256")
-        .digest(text.toByteArray())
-        .joinToString("") { "%02x".format(it) }
 
     private fun encodeHashes(hashes: Map<String, String>) = publicGson.toJson(hashes)
 

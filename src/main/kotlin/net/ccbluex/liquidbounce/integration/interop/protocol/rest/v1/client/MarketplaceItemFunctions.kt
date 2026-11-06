@@ -150,7 +150,7 @@ private fun Route.postUpdate() = post("/update") {
             is UpdateResult.Updated -> marketplaceCommand.t(
                 "update.success",
                 variable(id.toString()),
-                variable(result.revisionId.toString())
+                variable(result.revision.version)
             ) to NotificationEvent.Severity.SUCCESS
             is UpdateResult.NoUpdate ->
                 marketplaceCommand.t("update.noUpdate", variable(id.toString())) to NotificationEvent.Severity.INFO

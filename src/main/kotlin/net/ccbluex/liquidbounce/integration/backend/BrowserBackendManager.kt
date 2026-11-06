@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.global.GlobalManager
-import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.backends.external.ExternalSystemBrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
@@ -46,8 +45,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser.backend")
 var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
     ?: false
-val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
-    "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
+@AddonApi
+val isBrowserSkipped get() = isBrowserDisabled || browserBackend == "none"
 
 object BrowserBackendManager : EventListener {
 
@@ -56,8 +55,6 @@ object BrowserBackendManager : EventListener {
     val isInitialized: Boolean
         get() = backend?.isInitialized ?: false
     var backend: BrowserBackend? = null
-
-    private const val DEFAULT_BACKEND = "cef"
 
     private val providers = linkedMapOf<String, BrowserBackendProvider>()
 
@@ -70,12 +67,8 @@ object BrowserBackendManager : EventListener {
     var pendingSelection: CompletableDeferred<BrowserBackendProvider>? = null
         private set
 
+    // Chromium comes from the bundled CEF add-on
     init {
-        registerBackend(BrowserBackendProvider(
-            DEFAULT_BACKEND,
-            "Chromium",
-            "The browser LiquidBounce comes with (Chromium)."
-        ) { CefBrowserBackend() })
         registerBackend(BrowserBackendProvider(
             "external",
             "System browser",
@@ -97,6 +90,7 @@ object BrowserBackendManager : EventListener {
 
     fun init() {
         PersistentLocalStorage
+        GlobalBrowserSettings.createBackendChoice(selectableBackends)
     }
 
     /**
@@ -111,6 +105,12 @@ object BrowserBackendManager : EventListener {
 
         if (browserBackend == "none") {
             logger.warn("Environment variable 'LB_BROWSER_BACKEND' is set to 'none'.")
+            isBrowserDisabled = true
+            return
+        }
+
+        if (browserBackend == null && selectableBackends.isEmpty()) {
+            logger.warn("No browser backend is available.")
             isBrowserDisabled = true
             return
         }
@@ -130,7 +130,7 @@ object BrowserBackendManager : EventListener {
             val picked = selection.await()
             pendingSelection = null
 
-            GlobalBrowserSettings.backendId = picked.id
+            GlobalBrowserSettings.backendChoice.set(picked)
             ConfigSystem.store(GlobalManager)
             // Within the task, so the loading screen stays until the backend's tasks exist
             mc.submit { use(picked, taskManager) }.await()
@@ -146,8 +146,8 @@ object BrowserBackendManager : EventListener {
         }
 
         val selectable = selectableBackends
-        if (selectable.size <= 1) {
-            return selectable.firstOrNull() ?: providers.getValue(DEFAULT_BACKEND)
+        if (selectable.size == 1) {
+            return selectable.single()
         }
 
         val shiftHeld = InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) ||
@@ -157,7 +157,7 @@ object BrowserBackendManager : EventListener {
             return null
         }
 
-        return selectable.firstOrNull { it.id == GlobalBrowserSettings.backendId }
+        return GlobalBrowserSettings.backendChoice.get() as? BrowserBackendProvider
     }
 
     private fun use(provider: BrowserBackendProvider, taskManager: TaskManager) {
@@ -180,10 +180,6 @@ object BrowserBackendManager : EventListener {
         val browserBackend = backend ?: return
         browserBackend.start()
 
-        if (isBrowserAccelerationDisabled) {
-            logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
-        }
-        GlobalBrowserSettings
         EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")
     }

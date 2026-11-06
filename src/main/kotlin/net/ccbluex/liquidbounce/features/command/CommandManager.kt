@@ -84,6 +84,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils
 import java.util.Locale
 import java.util.TreeMap
 import java.util.concurrent.CompletableFuture
@@ -386,7 +387,7 @@ object CommandManager : EventListener {
                 net.ccbluex.liquidbounce.utils.text.textOf(
                     node.name.asPlainText(),
                     " (".asPlainText(ChatFormatting.DARK_GRAY),
-                    aliases.joinToText(", ".asPlainText(ChatFormatting.DARK_GRAY)),
+                    aliases.joinToText(ComponentUtils.DEFAULT_SEPARATOR),
                     ")".asPlainText(ChatFormatting.DARK_GRAY),
                 )
             }
