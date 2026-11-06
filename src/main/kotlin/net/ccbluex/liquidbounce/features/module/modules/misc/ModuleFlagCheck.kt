@@ -61,7 +61,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
     private var notification by boolean("Notification", false)
     private var invalidAttributes by boolean("InvalidAttributes", false)
 
-    private object ResetFlags : ToggleableValueGroup(ModuleFlagCheck, "ResetFlags", true) {
+    private object ResetFlags : ToggleableValueGroup(this, "ResetFlags", true) {
 
         private val afterSeconds by int("After", 30, 1..300, "s")
 
@@ -77,7 +77,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         val tolerance by float("Tolerance", 0.5f, 0.001f..2.0f)
     }
 
-    private object Render : ToggleableValueGroup(ModuleFlagCheck, "Render", true) {
+    private object Render : ToggleableValueGroup(this, "Render", true) {
 
         private val notInFirstPerson by boolean("NotInFirstPerson", true)
         private val renderTime by int("Alive", 1000, 0..3000, "ms")
@@ -183,24 +183,23 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
 
     @Suppress("unused")
     private val repeatable = handler<GameTickEvent> {
-        // 1. Combat Mitigation (Стоит первым, чтобы не блокироваться return@handler)
         val target = combatTarget
-        if (target == null || player.tickCount - attackTick > 20) {
-            combatTarget = null
-        } else if (target.hurtTime > 0) {
-            val actualDamage = healthBeforeHit - (target.health + target.absorptionAmount)
-            
-            // Защита от спама: если у врага 0 брони (сервер скрыл), а урон ожидается большой - пропускаем.
-            val isAttributeHidden = target.getAttributeValue(Attributes.ARMOR) == 0.0 && expectedDamage > 5.0f
-            
-            if (!isAttributeHidden && actualDamage > 0.1f && actualDamage < (expectedDamage - CombatMitigation.tolerance)) {
-                flagCount.incrementAndGet()
-                alert(AlertReason.MITIGATION, "Exp: ${"%.2f".format(expectedDamage)}, Got: ${"%.2f".format(actualDamage)}")
+        if (target != null) {
+            if (player.tickCount - attackTick > 5) {
+                combatTarget = null
+            } else if (target.hurtTime == 10) {
+                val actualDamage = healthBeforeHit - (target.health + target.absorptionAmount)
+                
+                val isAttributeHidden = target.getAttributeValue(Attributes.ARMOR) == 0.0 && expectedDamage > 5.0f
+                
+                if (!isAttributeHidden && actualDamage > 0.1f && actualDamage < (expectedDamage - CombatMitigation.tolerance)) {
+                    flagCount.incrementAndGet()
+                    alert(AlertReason.MITIGATION, "Exp: ${"%.2f".format(expectedDamage)}, Got: ${"%.2f".format(actualDamage)}")
+                }
+                combatTarget = null
             }
-            combatTarget = null
         }
 
-        // 2. Original InvalidAttributes logic (Восстановлено полностью)
         if (!invalidAttributes) {
             return@handler
         }
@@ -232,6 +231,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
 
     private fun calculateExpectedDamage(target: LivingEntity): Float {
         var damage = player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
+        damage *= player.getAttackStrengthScale(0.5f)
         damage += EnchantmentHelper.getDamageBonus(player.mainHandItem, target.type).toFloat()
 
         val strength = player.getEffect(MobEffects.DAMAGE_BOOST)
