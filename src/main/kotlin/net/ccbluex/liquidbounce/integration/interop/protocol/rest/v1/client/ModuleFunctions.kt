@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.ApplicationCall
@@ -59,11 +58,7 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
 
 // GET /api/v1/client/modules
 private fun Route.getModules() = get {
-    val mods = JsonArray(ModuleManager.size)
-    for (module in ModuleManager) {
-        mods.add(module.toJsonObject())
-    }
-    call.respond(mods)
+    call.respond(ModuleManager.map { it.toJsonObject() })
 }
 
 // GET /api/v1/client/module/{name}
@@ -100,8 +95,9 @@ private fun Route.getSettings() = get {
 private fun Route.putSettings() = put {
     val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
+    val request = call.receiveText()
     withContext(Dispatchers.Main) {
-        ConfigSystem.deserializeValueGroup(module, call.receiveText())
+        ConfigSystem.deserializeValueGroup(module, request)
         ConfigSystem.store(modulesConfig)
     }
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
@@ -153,14 +149,14 @@ private data class ModuleRequest(val name: String) {
 
 // GET /api/v1/client/modules/categories
 private fun Route.getCategories() = get("/categories") {
-    call.respond(JsonArray().apply {
-        ModuleCategories.entries.forEach { category ->
-            add(JsonObject().apply {
+    call.respond(
+        ModuleCategories.entries.map { category ->
+            JsonObject().apply {
                 addProperty("name", category.tag)
                 addProperty("icon", category.icon?.let { "${ClientInteropServer.url}/api/v1/client/resource?id=$it" })
-            })
+            }
         }
-    })
+    )
 }
 
 internal fun Route.moduleRoutes() {
