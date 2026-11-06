@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
@@ -47,8 +48,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import org.jspecify.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -67,13 +68,13 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     public abstract Identifier getTextureLocation(S state);
 
     @Unique
-    private @Nullable Pair<Rotation, Rotation> getOverwriteRotation(ModuleRotations.BodyPart bodyPart) {
-        if (ModuleRotations.INSTANCE.getRunning() && ModuleRotations.INSTANCE.isPartAllowed(bodyPart)) {
-            var rotation = ModuleRotations.INSTANCE.getModelRotation();
-            var prevRotation = ModuleRotations.INSTANCE.getPrevModelRotation();
+    private @Nullable Pair<Rotation, Rotation> getOverwriteRotation(RotationManager.BodyPart bodyPart) {
+        if (RotationManager.INSTANCE.getRunning() && RotationManager.INSTANCE.isPartAllowed(bodyPart)) {
+            var rotation = RotationManager.INSTANCE.getCurrentRotation();
+            var lastRotation = RotationManager.INSTANCE.getLastRotation();
 
-            if (rotation != null && prevRotation != null) {
-                return new Pair<>(prevRotation, rotation);
+            if (rotation != null && lastRotation != null) {
+                return new Pair<>(lastRotation, rotation);
             }
         }
 
@@ -86,7 +87,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.BODY);
+        var overwriteRotation = getOverwriteRotation(RotationManager.BodyPart.BODY);
         if (overwriteRotation != null) {
             return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
         }
@@ -100,7 +101,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
+        var overwriteRotation = getOverwriteRotation(RotationManager.BodyPart.HEAD);
         if (overwriteRotation != null) {
             return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().yRot(), overwriteRotation.getSecond().yRot());
         }
@@ -114,7 +115,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
             return original;
         }
 
-        var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
+        var overwriteRotation = getOverwriteRotation(RotationManager.BodyPart.HEAD);
         if (overwriteRotation != null) {
             return Mth.rotLerp(tickDelta, overwriteRotation.getFirst().xRot(), overwriteRotation.getSecond().xRot());
         }

@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.animations
+package net.ccbluex.liquidbounce.features.global.viewmodel
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
@@ -28,7 +28,14 @@ import net.minecraft.util.Mth
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.HumanoidArm
 
-object SwingAnimations : ToggleableValueGroup(ModuleAnimations, "SwingAnimations", false) {
+/**
+ * Affects item animations. It allows the user to customize the animation.
+ * If you are looking forward to contribute to this module, please name your animation with a reasonable name.
+ * Do not name them after clients or yourself.
+ * Please credit from where you got the animation from and make sure they are willing to contribute.
+ * If they are not willing to contribute, please do not add the animation to this module.
+ */
+object SwingAnimations : ToggleableValueGroup(GlobalSettingsViewModel, "SwingAnimations", false) {
 
     val mode by enumChoice("Mode", Mode.Spin)
 
