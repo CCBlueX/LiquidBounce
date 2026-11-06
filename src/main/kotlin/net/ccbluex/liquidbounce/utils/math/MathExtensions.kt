@@ -41,6 +41,16 @@ inline fun Float.fastCos() = toDouble().fastCos()
 inline fun Double.fastCos() = Mth.cos(this)
 
 /**
+ * @return [this] + [a] * [b]
+ */
+inline fun Float.fma(a: Float, b: Float) = Math.fma(a, b, this)
+
+/**
+ * @return [this] + [a] * [b]
+ */
+inline fun Double.fma(a: Double, b: Double) = Math.fma(a, b, this)
+
+/**
  * Rounds the given number to the specified decimal place (the first by default).
  * For additional info see [RoundingMode#HALF_UP].
  *

@@ -19,25 +19,17 @@
 
 package net.ccbluex.liquidbounce.integration.backend.browser
 
-import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendProvider
-import net.ccbluex.liquidbounce.integration.backend.isBrowserAccelerationDisabled
-import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
 
-object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
+object GlobalBrowserSettings : ValueGroup("GuiRenderer") {
 
     /**
      * Quality setting that controls the rendering resolution.
@@ -65,30 +57,6 @@ object GlobalBrowserSettings : ValueGroup("GuiRenderer"), EventListener {
      */
     internal fun createBackendChoice(backends: List<BrowserBackendProvider>) {
         backendChoice = enumChoice("Backend", AskBackend, linkedSetOf<Tagged>(AskBackend).apply { addAll(backends) })
-    }
-
-    /**
-     * Uses GPU acceleration for rendering the browser.
-     */
-    var accelerated: Value<Boolean>? = null
-        private set
-
-    @Suppress("unused")
-    private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
-        val accelerationFlags = backend?.accelerationFlags ?: BrowserAccelerationFlags.UNSUPPORTED
-
-        if (!isBrowserAccelerationDisabled && accelerationFlags.isSupported) {
-            accelerated = if (accelerationFlags.isBeta) {
-                boolean("AcceleratedPaint(BETA)", false)
-            } else {
-                boolean("AcceleratedPaint", true)
-            }.onChanged {
-                mc.execute {
-                    ScreenManager.restart()
-                    mc.updateTitle()
-                }
-            }
-        }
     }
 
 }

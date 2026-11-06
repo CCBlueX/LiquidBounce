@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -57,6 +58,7 @@ import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.EyeOfEnder
 import net.minecraft.world.item.Items
@@ -64,9 +66,7 @@ import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import kotlin.math.hypot
-
-private const val RAY_RENDER_LENGTH = 2048.0
+import java.util.Comparator.comparingDouble
 
 /**
  * Stronghold finder module.
@@ -82,6 +82,8 @@ object ModuleStrongholdFinder : ClientModule(
     ModuleCategories.WORLD,
     aliases = listOf("Triangulation")
 ) {
+
+    private const val RAY_RENDER_LENGTH = 2048.0
 
     private val sigma by float("Sigma", 0.03f, 0.005f..0.20f, "°").onChanged {
         onEstimatorSettingsChanged()
@@ -255,7 +257,7 @@ object ModuleStrongholdFinder : ClientModule(
                 withPositionRelativeToCamera {
                     for ((start, angleDeg) in measurements) {
                         val direction = Vec3.directionFromRotation(0f, angleDeg)
-                        val end = start.add(direction.scale(RAY_RENDER_LENGTH))
+                        val end = start.fma(RAY_RENDER_LENGTH, direction)
 
                         drawLine(
                             start,
@@ -384,7 +386,7 @@ object ModuleStrongholdFinder : ClientModule(
                     && it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) <= maxSpawnDistanceSqr
             }
             .minWithOrNull(
-                compareBy<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
+                comparingDouble<PendingThrow> { it.throwPosition.horizontalDistanceToSqr(packet.x, packet.z) }
                     .thenComparingInt { nowTick - it.tick }
             ) ?: return
 
@@ -444,7 +446,7 @@ object ModuleStrongholdFinder : ClientModule(
 
             val deltaX = target.x - start.x
             val deltaZ = target.z - start.z
-            val horizontalLength = hypot(deltaX, deltaZ)
+            val horizontalLength = Mth.length(deltaX, deltaZ)
             if (horizontalLength > 1e-6) {
                 val markerEnd = Vec3(
                     start.x + deltaX / horizontalLength * 2.0,

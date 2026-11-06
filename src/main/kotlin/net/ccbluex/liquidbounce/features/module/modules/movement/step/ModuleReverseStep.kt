@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -68,7 +69,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
         initiatedJump = true
     }
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.deltaMovement.y > 0.0) {
             initiatedJump = true
         } else if (player.onGround()) {
@@ -83,10 +84,10 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
         private val ticks by int("Ticks", 20, 1..40, "ticks")
         private val simulateFalling by boolean("SimulateFalling", false)
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (!initiatedJump && !player.onGround() && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@tickHandler
+                    return@handler
                 }
 
                 val simInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput.NONE)
@@ -129,10 +130,10 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
 
         private val factor by float("Factor", 1.0F, 0.1F..5.0F)
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (!initiatedJump && !player.onGround() && player.deltaMovement.y < 0.0 && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@tickHandler
+                    return@handler
                 }
 
                 player.deltaMovement = player.deltaMovement.multiply(0.0, factor.toDouble(), 0.0)
@@ -148,10 +149,10 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
 
         private val motion by float("Motion", 1.0F, 0.1F..5.0F)
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (!initiatedJump && !player.onGround() && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@tickHandler
+                    return@handler
                 }
 
                 player.deltaMovement.y = -motion.toDouble()

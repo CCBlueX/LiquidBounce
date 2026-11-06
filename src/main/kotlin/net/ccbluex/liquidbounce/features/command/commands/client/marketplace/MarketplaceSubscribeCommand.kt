@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
 /**
  * Subscribe to marketplace item
@@ -70,7 +72,7 @@ object MarketplaceSubscribeCommand {
         chat(regular(t("subscribe.success", variable(item.address))))
         val needed = installed.filter { it.id != itemId }
         if (needed.isNotEmpty()) {
-            chat(regular(t("subscribe.dependencies", variable(needed.joinToString(", ") { it.name }))))
+            chat(regular(t("subscribe.dependencies", needed.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
     }
 

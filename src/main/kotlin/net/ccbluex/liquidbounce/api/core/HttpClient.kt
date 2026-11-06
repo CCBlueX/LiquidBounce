@@ -18,27 +18,28 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import com.mojang.blaze3d.platform.NativeImage
-import kotlinx.coroutines.CoroutineExceptionHandler
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
+import net.ccbluex.liquidbounce.api.converters.BufferConverterFactory
+import net.ccbluex.liquidbounce.api.converters.NativeImageConverterFactory
 import net.ccbluex.liquidbounce.api.interceptors.DefaultHeaderInterceptor
+import net.ccbluex.liquidbounce.api.interceptors.SkipCacheInterceptor
+import net.ccbluex.liquidbounce.api.interceptors.whenUrl
 import net.ccbluex.liquidbounce.api.thirdparty.mojang.MojangApiClient
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.config.gson.apiGson
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.readNativeImage
-import net.minecraft.ReportedException
+import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
 import okhttp3.Cache
 import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.Dispatcher
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -46,39 +47,27 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.coroutines.executeAsync
-import okio.BufferedSource
-import okio.sink
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.File
 import java.io.IOException
-import java.io.InputStream
-import java.io.Reader
-import java.net.HttpURLConnection
 import java.util.Locale
-import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 val renderScope = CoroutineScope(
-    Dispatchers.Main + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is ReportedException) {
-            ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
-        }
-    }
+    Dispatchers.Main + SupervisorJob() + CommonCoroutineExceptionHandler.Default
 )
 
 val ioScope = CoroutineScope(
-    Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is ReportedException) {
-            ErrorHandler.fatal(throwable, additionalMessage = "IO scope")
-        }
-    }
+    Dispatchers.IO + SupervisorJob() + CommonCoroutineExceptionHandler.Default
 )
 
-fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch { block() }
+fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch(block = block)
 
 object HttpClient {
 
@@ -87,12 +76,7 @@ object HttpClient {
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
-    /**
-     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have [Headers.EMPTY]
-     */
-    @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
-    @JvmField
-    val EMPTY_HEADERS = Headers.Builder().build()
+    private fun String.isLocalHost() = this == "localhost" || this == "127.0.0.1"
 
     object MediaTypes {
         @JvmField
@@ -135,8 +119,8 @@ object HttpClient {
                 logger.error("Failed to initialize cache directory for HTTP client", e)
             }
         }
-        .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
-        .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
+        .addInterceptor(DefaultHeaderInterceptor(HttpHeaders.UserAgent) { DEFAULT_AGENT })
         .proxy(java.net.Proxy.NO_PROXY)
         .build()
 
@@ -145,22 +129,22 @@ object HttpClient {
      */
     private val clientHttpApiInterceptor = Interceptor { chain ->
         val request = chain.request()
-        try {
-            val response = chain.proceed(request)
-
-            if (response.isSuccessful) {
-                response
-            } else {
-                // Response is not successful (code is not 2xx)
-                throw HttpException(
-                    enumValueOf(request.method),
-                    request.url.toString(), response.code, response.body.string()
-                )
-            }
+        val response = try {
+            chain.proceed(request)
         } catch (e: IOException) {
             // Failed to request
             logger.error("Failed to execute request ${request.method} ${request.url})", e)
             throw e
+        }
+
+        if (response.isSuccessful) {
+            response
+        } else {
+            // Response is not successful (code is not 2xx), its body becomes the exception's content
+            throw HttpException(
+                enumValueOf(request.method),
+                request.url.toString(), response.code, response.body.string()
+            )
         }
     }
 
@@ -170,6 +154,21 @@ object HttpClient {
     @get:JvmStatic
     val client = defaultClient.newBuilder()
         .addInterceptor(clientHttpApiInterceptor)
+        // Credentials are scoped to the hosts they belong to. Registered as network interceptors, so they
+        // are re-evaluated for every redirect hop and cannot follow a redirect to a foreign host.
+        .addNetworkInterceptor(
+            DefaultHeaderInterceptor(ApiConfig.SESSION_TOKEN_HEADER) {
+                checkNotNull(ApiConfig.initializedConfig) { "API config is not initialized yet" }.sessionToken
+            }.whenUrl { url ->
+                val config = ApiConfig.initializedConfig
+                config != null && url.host == config.url.host
+            }
+        )
+        .addNetworkInterceptor(
+            DefaultHeaderInterceptor(HttpHeaders.Cookie, {
+                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
+            }, false).whenUrl { it.host.isLocalHost() && it.port == ClientInteropServer.PORT }
+        )
         .build()
 
     @get:JvmStatic
@@ -192,7 +191,7 @@ object HttpClient {
             .url(url)
             .method(method.name, body)
             .headers(Headers.Builder().apply(headers).build())
-            .header("User-Agent", agent)
+            .header(HttpHeaders.UserAgent, agent)
             .build()
 
         return if (progressListener == null) {
@@ -211,29 +210,12 @@ object HttpClient {
         agent: String = DEFAULT_AGENT,
         progressListener: OkHttpProgressInterceptor.ProgressListener? = null
     ) = withContext(Dispatchers.IO) {
-        request(url, HttpMethod.GET, agent, progressListener = progressListener).toFile(file)
+        request(url, HttpMethod.GET, agent, progressListener = progressListener).bodyToFile(file)
     }
 
-    // For Java and JS
+    /** For Java and JS. Cancelling the returned future also cancels the HTTP call. */
     @JvmStatic
-    fun Call.sendAsync(): CompletableFuture<Response> {
-        val future = CompletableFuture<Response>().exceptionally { throwable ->
-            if (throwable is CancellationException) this.cancel()
-            throw throwable
-        }
-        this.enqueue(
-            object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    if (!future.complete(response)) response.close()
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    future.completeExceptionally(e)
-                }
-            }
-        )
-        return future
-    }
+    fun Call.sendAsync(): CompletableFuture<Response> = enqueueAsFuture()
 
 }
 
@@ -242,67 +224,17 @@ enum class HttpMethod {
 }
 
 /**
- * Parse body from [Response].
+ * Retrofit over [HttpClient.client] for one of our APIs.
  *
- * If [T] is one of following types, it should be closed after using:
- * [InputStream] / [BufferedSource] / [Reader]
+ * Response bodies are read and converted in the OkHttp callback (see [retrofit2.OkHttpCall.enqueue]),
+ * so awaiting a call never reads or deserializes a body on the caller's thread.
  */
-inline fun <reified T> Response.parse(): T {
-    return when (T::class.java) {
-        String::class.java -> body.string() as T
-        Unit::class.java -> close() as T
-        InputStream::class.java -> body.byteStream() as T
-        BufferedSource::class.java -> body.source() as T
-        Reader::class.java -> body.charStream() as T
-        NativeImage::class.java -> body.source().readNativeImage() as T
-        else -> body.charStream().readJson<T>()
-    }
-}
+internal fun apiRetrofit(baseUrl: String): Retrofit = Retrofit.Builder()
+    .baseUrl(if (baseUrl.endsWith('/')) baseUrl else "$baseUrl/")
+    .callFactory(HttpClient.client)
+    .addConverterFactory(ScalarsConverterFactory.create())
+    .addConverterFactory(BufferConverterFactory)
+    .addConverterFactory(NativeImageConverterFactory)
+    .addConverterFactory(GsonConverterFactory.create(apiGson))
+    .build()
 
-/**
- * Read all UTF-8 lines from [BufferedSource] as an [Iterator].
- *
- * When there are no more lines to read, the source is closed automatically.
- */
-fun BufferedSource.utf8Lines(): Iterator<String> =
-    object : AbstractIterator<String>() {
-        override fun computeNext() {
-            val nextLine = readUtf8Line()
-            if (nextLine != null) {
-                setNext(nextLine)
-            } else {
-                close()
-                done()
-            }
-        }
-    }
-
-/**
- * Save response body to file.
- */
-fun Response.toFile(file: File) = use { response ->
-    file.sink().use(response.body.source()::readAll)
-}
-
-fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)
-
-class HttpException(val method: HttpMethod, val url: String, val code: Int, val content: String)
-    : Exception("${method.name} $url failed with code $code: $content")
-
-/**
- * The [HttpException] behind this. OkHttp hands one thrown by an interceptor of an async call on
- * wrapped in an [IOException].
- */
-val Throwable.httpException: HttpException?
-    get() = this as? HttpException
-        ?: cause as? HttpException
-        ?: suppressed.firstNotNullOfOrNull { it as? HttpException }
-
-/**
- * [block]'s result, `null` when the server answers 404.
- */
-internal inline fun <T> orNotFound(block: () -> T): T? = try {
-    block()
-} catch (e: Exception) {
-    if (e.httpException?.code == HttpURLConnection.HTTP_NOT_FOUND) null else throw e
-}

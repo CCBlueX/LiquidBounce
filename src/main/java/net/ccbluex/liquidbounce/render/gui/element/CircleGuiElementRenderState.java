@@ -24,7 +24,6 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.util.Mth;
 import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 
@@ -49,7 +48,7 @@ public record CircleGuiElementRenderState(
 
     @Override
     public void buildVertices(VertexConsumer vertices) {
-        int encodedInnerRatio = Math.round(Mth.clamp(innerRatio(), 0.0f, 1.0f) * INNER_RATIO_SCALE);
+        int encodedInnerRatio = Math.round(Math.clamp(innerRatio(), 0.0f, 1.0f) * INNER_RATIO_SCALE);
         float x0 = x() - radius();
         float y0 = y() - radius();
         float x1 = x() + radius();

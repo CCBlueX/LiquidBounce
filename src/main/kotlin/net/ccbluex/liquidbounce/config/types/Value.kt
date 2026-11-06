@@ -235,7 +235,7 @@ open class Value<T : Any>(
         var currT = t
         runCatching {
             listeners.forEach {
-                currT = it.apply(t)
+                currT = it.apply(currT)
             }
 
             if (isImmutable) {

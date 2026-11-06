@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
@@ -300,23 +299,8 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val scanCode = event.scanCode
-
         if (inGame) {
             return@handler
-        }
-
-        // F12 to toggle GPU acceleration
-        if (event.isPressed && scanCode == InputConstants.KEY_F12) {
-            val backend = BrowserBackendManager.backend ?: return@handler
-            if (!backend.accelerationFlags.isSupported) {
-                logger.warn("GPU acceleration is not supported by the current browser backend.")
-                return@handler
-            }
-
-            val accelerated = GlobalBrowserSettings.accelerated ?: return@handler
-            accelerated.set(!accelerated.get())
-            logger.info("GPU acceleration is now ${if (accelerated.get()) "enabled" else "disabled"}.")
         }
 
         // CTRL + 2x SHIFT to toggle basic mode

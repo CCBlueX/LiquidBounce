@@ -19,20 +19,20 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.item.mapSavedData
 import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.core.component.DataComponents
+import net.minecraft.core.component.DataComponents.MAP_ID
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.world.item.MapItem
 import net.minecraft.world.level.saveddata.maps.MapId
-import java.util.Locale
 import java.util.UUID
 import kotlin.math.absoluteValue
 
@@ -76,7 +76,7 @@ object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
     }
 
     val repeatable =
-        tickHandler {
+        handler<GameTickEvent> {
             assassinModeBs(player, world)
         }
 
@@ -86,29 +86,28 @@ object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
     ) {
         val equippedItem = player.inventory.getItem(3)
 
-        val item = equippedItem?.item
-
-        if (item !is MapItem) {
+        if (equippedItem.item !is MapItem) {
             // reset lastMap when map was removed (no longer in game)
             lastMap = null
             return
         }
 
-        val mapId = equippedItem.get(DataComponents.MAP_ID)
-        val mapState = mapId?.let { world.getMapData(it) } ?: return
+        val mapId = equippedItem[MAP_ID] ?: return
 
         if (mapId == lastMap) {
             return
         }
 
+        val mapState = equippedItem.mapSavedData(world) ?: return
+
         lastMap = mapId
 
         val outs = MurderMysteryFontDetection.readContractLine(mapState)
 
-        val s = outs.split(' ').toTypedArray()
+        val s = outs.split(' ').ifEmpty { return }.first()
 
-        if (s.isNotEmpty() && s[0].startsWith("NAME:")) {
-            val target = s[0].substring("NAME:".length).lowercase(Locale.getDefault()).trim()
+        if (s.startsWith("NAME:")) {
+            val target = s.substring("NAME:".length).lowercase().trim()
             val targetPlayer = findPlayerWithClosestName(target, player)
 
             if (targetPlayer != null) {
@@ -139,7 +138,7 @@ object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
     }
 
     override fun shouldAttack(entity: AbstractClientPlayer): Boolean {
-        // This person is either our assasin or our target. Attack them.
+        // This person is either our assassin or our target. Attack them.
         return this.getPlayerType(entity) == PlayerType.MURDERER
     }
 

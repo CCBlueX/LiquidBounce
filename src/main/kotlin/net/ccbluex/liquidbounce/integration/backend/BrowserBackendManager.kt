@@ -46,9 +46,6 @@ val browserBackend = env("LB_BROWSER_BACKEND", "net.ccbluex.liquidbounce.browser
 var isBrowserDisabled = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
     ?: false
 @AddonApi
-val isBrowserAccelerationDisabled = env("LB_BROWSER_DISABLE_ACCELERATION",
-    "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
-@AddonApi
 val isBrowserSkipped get() = isBrowserDisabled || browserBackend == "none"
 
 object BrowserBackendManager : EventListener {
@@ -183,10 +180,6 @@ object BrowserBackendManager : EventListener {
         val browserBackend = backend ?: return
         browserBackend.start()
 
-        if (isBrowserAccelerationDisabled) {
-            logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
-        }
-        GlobalBrowserSettings
         EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")
     }

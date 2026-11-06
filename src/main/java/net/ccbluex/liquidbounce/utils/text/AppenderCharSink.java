@@ -30,10 +30,12 @@ public record AppenderCharSink(StringBuilder builder) implements FormattedCharSi
 
     public static String codePointsToString(final FormattedCharSequence input) {
         var sink = POOL.borrow();
-        input.accept(sink);
-        var str = sink.builder.toString();
-        POOL.recycle(sink);
-        return str;
+        try {
+            input.accept(sink);
+            return sink.builder.toString();
+        } finally {
+            POOL.recycle(sink);
+        }
     }
 
     public AppenderCharSink() {
