@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream
-import it.unimi.dsi.fastutil.io.FastBufferedOutputStream
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
@@ -100,9 +99,9 @@ private fun ArchiveInputStream<*>.extractTo(folder: Path) = use { ais ->
         }
 
         destDir.createDirectoryNoFollow(destDir.relativize(target.parent ?: destDir))
-        FastBufferedOutputStream(
-            target.outputStream(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)
-        ).use { ais.transferTo(it) }
+        target.outputStream(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS).use {
+            ais.transferTo(it)
+        }
     }
 }
 

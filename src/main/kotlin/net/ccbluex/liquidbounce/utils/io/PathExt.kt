@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
@@ -52,6 +53,7 @@ import kotlin.io.path.inputStream
  * @throws java.nio.file.DirectoryNotEmptyException if [target] is a non-empty directory
  * @throws SecurityException if the security manager denies the operation
  */
+@AddonApi
 @Throws(IOException::class)
 fun Path.atomicMoveTo(target: Path): Path {
     return try {
@@ -76,6 +78,32 @@ private fun Path.replaceExisting(target: Path, cause: IOException): Path =
         e.addSuppressed(cause)
         throw e
     }
+
+/**
+ * Writes this file through [writer], which receives a temporary sibling path, and moves the result
+ * over this file only once the write succeeded, so a failed write leaves this file untouched.
+ *
+ * The temporary file only survives a failed cleanup, which is reported as a suppressed exception.
+ *
+ * @throws IOException if writing, the move, or the cleanup of the temporary file fails
+ */
+@AddonApi
+@Throws(IOException::class)
+inline fun Path.atomicWrite(writer: (Path) -> Unit) {
+    val tempPath = Files.createTempFile(parent, "$fileName.", ".tmp")
+    try {
+        writer(tempPath)
+        tempPath.atomicMoveTo(this)
+    } catch (failure: Throwable) {
+        // A failed cleanup must not hide why the write failed.
+        try {
+            Files.deleteIfExists(tempPath)
+        } catch (cleanup: IOException) {
+            failure.addSuppressed(cleanup)
+        }
+        throw failure
+    }
+}
 
 private fun Path.readAsBase64(output: OutputStream) {
     this.inputStream().use { input ->

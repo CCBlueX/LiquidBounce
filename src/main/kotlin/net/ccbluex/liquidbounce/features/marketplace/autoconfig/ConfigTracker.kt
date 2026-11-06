@@ -55,10 +55,12 @@ import net.ccbluex.liquidbounce.features.marketplace.installDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.codec.digest.DigestUtils.sha256Hex
 import java.io.File
 import java.io.Reader
+import kotlin.io.path.writeBytes
 
 /**
  * Tracks the marketplace config the client runs.
@@ -488,7 +490,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             includesBinds = false
         )
 
-        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.writeBytes(settings)
+        cacheFile(itemId, revision.id).apply { parentFile.mkdirs() }.toPath().atomicWrite { it.writeBytes(settings) }
         return revision
     }
 

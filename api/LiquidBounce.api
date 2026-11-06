@@ -2042,6 +2042,11 @@ public final class net/ccbluex/liquidbounce/utils/inventory/Slots : java/util/Li
 	public fun toArray ([Ljava/lang/Object;)[Ljava/lang/Object;
 }
 
+public final class net/ccbluex/liquidbounce/utils/io/PathExtKt {
+	public static final fun atomicMoveTo (Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;
+	public static final fun atomicWrite (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;)V
+}
+
 public final class net/ccbluex/liquidbounce/utils/kotlin/EventPriorityConvention {
 	public static final field CRITICAL_MODIFICATION S
 	public static final field FINAL_DECISION S
