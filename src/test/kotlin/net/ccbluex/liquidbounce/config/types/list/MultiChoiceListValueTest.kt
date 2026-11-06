@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import java.util.EnumSet
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -149,6 +150,19 @@ class MultiChoiceListValueTest {
 
         assertEquals(listOf(Choice.C, Choice.B, Choice.A), value.get().toList())
         assertEquals(setOf(Choice.A), defaults)
+    }
+
+    @Test
+    fun `copies keep enum sets as enum sets`() {
+        val value = value(EnumSet.of(Choice.A))
+        val published = mutableListOf(value.get())
+
+        value.toggle(Choice.B); published += value.get()
+        value.deserializeFrom(Gson(), JsonParser.parseString("[\"C\"]")); published += value.get()
+        value.restore(); published += value.get()
+
+        assertTrue(published.all { it is EnumSet<*> })
+        assertEquals(setOf(Choice.A), value.get())
     }
 
     @Test

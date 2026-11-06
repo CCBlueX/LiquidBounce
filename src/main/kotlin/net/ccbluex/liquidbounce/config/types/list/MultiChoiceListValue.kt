@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged.Companion.makeLookupTable
+import java.util.EnumSet
 import java.util.SequencedSet
 import java.util.SortedSet
 import java.util.TreeSet
@@ -115,7 +116,12 @@ class MultiChoiceListValue<T : Tagged>(
     }
 
     private fun copyActive(active: MutableSet<T> = get()): MutableSet<T> {
-        return if (active is SortedSet<T>) TreeSet(active) else LinkedHashSet(active)
+        return when (active) {
+            // Callers cast enum-backed selections back to EnumSet, so keep the concrete type
+            is EnumSet<*> -> active.clone() as MutableSet<T>
+            is SortedSet<T> -> TreeSet(active)
+            else -> LinkedHashSet(active)
+        }
     }
 
     fun toggle(value: T): Boolean {
