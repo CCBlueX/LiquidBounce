@@ -94,9 +94,13 @@ object ConfigSetCommand {
         description: String? = null,
         details: MarketplaceApi.ItemDetails = MarketplaceApi.ItemDetails(),
     ) {
-        requireOwnTracked()
-
-        val session = session()
+        // Visibility stays with the owner; everything else is open to editors.
+        val session = if (details.visibility != null) {
+            requireOwnTracked()
+            session()
+        } else {
+            requireEditableTracked()
+        }
         val updated = request {
             val item = MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session)
             MarketplaceApi.updateMarketplaceItem(
