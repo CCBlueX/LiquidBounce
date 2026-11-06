@@ -25,12 +25,15 @@ import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
-import net.ccbluex.liquidbounce.features.module.modules.movement.*;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
@@ -363,7 +366,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
     private int hookSwingSpeed(int duration) {
-        var animations = ModuleAnimations.INSTANCE;
+        var animations = GlobalSettingsViewModel.INSTANCE;
         return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
     }
 

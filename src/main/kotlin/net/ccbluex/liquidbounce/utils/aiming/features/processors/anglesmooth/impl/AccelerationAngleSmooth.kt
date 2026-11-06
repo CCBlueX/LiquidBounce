@@ -119,7 +119,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         currentRotation: Rotation,
         targetRotation: Rotation
     ): Rotation {
-        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevRotation = RotationManager.lastRotation ?: player.lastRotation
 
         val prevDiff = prevRotation.rotationDeltaTo(currentRotation)
         val diff = currentRotation.rotationDeltaTo(targetRotation)
@@ -144,7 +144,7 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
     }
 
     override fun calculateTicks(currentRotation: Rotation, targetRotation: Rotation): Int {
-        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevRotation = RotationManager.lastRotation ?: player.lastRotation
         val prevDiff = prevRotation.rotationDeltaTo(currentRotation)
         val diff = currentRotation.rotationDeltaTo(targetRotation)
 

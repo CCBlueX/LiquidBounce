@@ -24,9 +24,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
+import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.SwingAnimations;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
 import net.ccbluex.liquidbounce.utils.render.FirstPersonShieldTint;
@@ -52,7 +52,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(FirstPersonHandsAndItemsRenderer.class)
@@ -90,7 +93,7 @@ public abstract class MixinFirstPersonHandsAndItems {
     ) {
         AbstractClientPlayer player = Minecraft.getInstance().player;
 
-        if (player == null || !ModuleAnimations.INSTANCE.getRunning() || !SwingAnimations.INSTANCE.getEnabled() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        if (player == null || !GlobalSettingsViewModel.INSTANCE.getRunning() || !SwingAnimations.INSTANCE.getEnabled() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
             return;
         }
 
@@ -107,10 +110,10 @@ public abstract class MixinFirstPersonHandsAndItems {
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
     private void hookRenderFirstPersonItem(
         PlayerRenderState playerState, FirstPersonHandsAndItemsRenderState state, float partialTicks, float xRot, InteractionHand hand, float attack, ItemStack itemStack, float inverseArmHeight, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-        if (ModuleAnimations.INSTANCE.getRunning()) {
+        if (GlobalSettingsViewModel.INSTANCE.getRunning()) {
             var isInBothHands = InteractionHand.MAIN_HAND == hand && itemStack.has(DataComponents.MAP_ID) && state.offHandItem.isEmpty();
-            ModuleAnimations.MainHand mainHand = ModuleAnimations.MainHand.INSTANCE;
-            ModuleAnimations.OffHand offHand = ModuleAnimations.OffHand.INSTANCE;
+            var mainHand = GlobalSettingsViewModel.MainHand.INSTANCE;
+            var offHand = GlobalSettingsViewModel.OffHand.INSTANCE;
             if (isInBothHands && mainHand.getRunning() && offHand.getRunning()) {
                 liquid_bounce$applyTransformations(poseStack,
                         (mainHand.getMainHandX() + offHand.getOffHandX()) / 2f,
@@ -146,12 +149,12 @@ public abstract class MixinFirstPersonHandsAndItems {
         if (ItemCategorizationsKt.isSword(itemStack) && liquid_bounce$getEntity(playerState) instanceof Player player) {
             var arm = hand == InteractionHand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
 
-            if (ModuleAnimations.INSTANCE.getRunning()) {
-                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveMode();
+            if (GlobalSettingsViewModel.INSTANCE.getRunning()) {
+                var activeChoice = GlobalSettingsViewModel.INSTANCE.getBlockAnimationChoice().getActiveMode();
                 activeChoice.transform(poseStack, arm, inverseArmHeight, attack);
             } else {
                 // Default animation
-                ModuleAnimations.OneSevenAnimation.INSTANCE.transform(poseStack, arm, inverseArmHeight, attack);
+                GlobalSettingsViewModel.OneSevenAnimation.INSTANCE.transform(poseStack, arm, inverseArmHeight, attack);
             }
         }
     }
@@ -169,7 +172,7 @@ public abstract class MixinFirstPersonHandsAndItems {
             ordinal = 3
     ), index = 2)
     private float injectIgnoreBlocking(float equipProgress) {
-        if (ModuleAnimations.EquipOffset.INSTANCE.getRunning() && ModuleAnimations.EquipOffset.INSTANCE.getIgnoreBlocking()) {
+        if (GlobalSettingsViewModel.EquipOffset.INSTANCE.getRunning() && GlobalSettingsViewModel.EquipOffset.INSTANCE.getIgnoreBlocking()) {
             return 0.0F;
         }
 
@@ -178,7 +181,7 @@ public abstract class MixinFirstPersonHandsAndItems {
 
     @ModifyArg(method = "applyItemArmTransform", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(FFF)V"), index = 1)
     private float injectDisableEquipOffset(float y) {
-        if (ModuleAnimations.INSTANCE.getRunning() && !ModuleAnimations.EquipOffset.INSTANCE.getRunning()) {
+        if (GlobalSettingsViewModel.INSTANCE.getRunning() && !GlobalSettingsViewModel.EquipOffset.INSTANCE.getRunning()) {
             return ITEM_POS_Y;
         }
         return y;

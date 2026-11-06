@@ -17,34 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render.animations
+package net.ccbluex.liquidbounce.features.global.viewmodel
 
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant.player
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.HumanoidArm
 import org.joml.Quaternionf
 
 /**
- * Animations module
- *
- * This module affects item animations. It allows the user to customize the animation.
- * If you are looking forward to contribute to this module, please name your animation with a reasonable name.
- * Do not name them after clients or yourself.
- * Please credit from where you got the animation from and make sure they are willing to contribute.
- * If they are not willing to contribute, please do not add the animation to this module.
+ * Changes how our view model looks. The view model is our POV-view only.
  */
 @Suppress("MagicNumber")
-object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, aliases = listOf("ViewModel")) {
+object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
 
     init {
         tree(MainHand)
@@ -78,10 +73,15 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
      * of a sword.
      * This choice is only used when the [ModuleSwordBlock] module is enabled.
      */
+    init {
+        SwingAnimations
+    }
 
-    val swingAnimation = SwingAnimations
-    val blockAnimationChoice = choices(
-        "BlockingAnimation", OneSevenAnimation, arrayOf(
+    val blockAnimationChoice = modes(
+        this,
+        "BlockingAnimation",
+        OneSevenAnimation,
+        arrayOf(
             OneSevenAnimation,
             PushdownAnimation,
             SigmaAnimation,
@@ -92,7 +92,8 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
     )
 
     object EquipOffset : ToggleableValueGroup(this, "EquipOffset", true) {
-        private val ignore by multiEnumChoice("Ignore",
+        private val ignore by multiEnumChoice(
+            "Ignore",
             Ignores.BLOCKING,
             Ignores.PLACE
         )
@@ -315,7 +316,7 @@ object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, al
             )
             matrices.rotate(rot1)
 
-            matrices.translate(if(arm == HumanoidArm.RIGHT) -1f else -2f, translateY, 0f)
+            matrices.translate(if (arm == HumanoidArm.RIGHT) -1f else -2f, translateY, 0f)
 
         }
     }

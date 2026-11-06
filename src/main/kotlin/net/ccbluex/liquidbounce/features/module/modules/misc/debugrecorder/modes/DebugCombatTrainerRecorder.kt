@@ -81,7 +81,7 @@ object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<Combat
                 val target = target ?: return@tickUntil true
 
                 val next = RotationManager.currentRotation ?: player.rotation
-                val current = RotationManager.previousRotation ?: player.lastRotation
+                val current = RotationManager.lastRotation ?: player.lastRotation
                 val previous = previous.apply {
                     previous = current
                 }

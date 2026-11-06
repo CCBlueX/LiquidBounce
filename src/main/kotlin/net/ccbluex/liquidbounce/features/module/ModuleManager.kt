@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
-import net.ccbluex.liquidbounce.features.module.modules.world.automobheal.AutoMobHeal
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoShoot
@@ -132,6 +132,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSnapTap
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSneak
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
@@ -140,7 +141,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTridentBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSnapTap
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -158,6 +158,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.Mo
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoFish
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoRespawn
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
@@ -177,15 +178,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReplenish
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleSmartEat
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoCrafter
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autodeposit.ModuleAutoDeposit
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAutoF5
@@ -198,7 +197,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
-import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDamageParticles
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
@@ -209,7 +207,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemTags
-import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNewChunks
@@ -222,7 +219,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProphuntESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProtectionZones
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRadar
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera
@@ -231,19 +227,21 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTNTTimer
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTracers
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleVoidESP
-import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
 import net.ccbluex.liquidbounce.features.module.modules.render.cameraclip.ModuleCameraClip
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
+import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
+import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
+import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAirPlace
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
@@ -264,12 +262,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleSurround
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleTimer
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
+import net.ccbluex.liquidbounce.features.module.modules.world.automobheal.AutoMobHeal
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
-import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -623,7 +621,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModulePotionSpoof,
 
             // Render
-            ModuleAnimations,
             ModuleAntiBlind,
             ModuleBetterInventory,
             ModuleBlockESP,
@@ -662,7 +659,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
             ModuleRadar,
-            ModuleRotations,
             ModuleSilentHotbar,
             ModuleStorageESP,
             ModuleTNTTimer,
