@@ -34,7 +34,16 @@ object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatS
     enum class KillAuraRotationTiming(override val tag: String) : Tagged {
         NORMAL("Normal"),
         SNAP("Snap"),
-        ON_TICK("OnTick")
+        ON_TICK("OnTick"),
+        DYNAMIC("Dynamic")
+    }
+
+    /**
+     * Speed curve is `base / ticksUntilAttack`, so it rises steeply only in the last couple of ticks
+     * (e.g. 50% at 2 ticks out, 100% at 1 tick and on the click tick) rather than linearly.
+     */
+    fun dynamicSpeedDivisor(ticksUntilAttack: Int): Float {
+        return ticksUntilAttack.coerceAtLeast(1).toFloat()
     }
 
 }
