@@ -121,7 +121,12 @@ private fun Route.postClipboardProxy() = post("/clipboard") {
         try {
             val clipboardText = mc.keyboardHandler.clipboard
             if (clipboardText.isBlank()) {
-                throw IllegalArgumentException("Clipboard is empty. Copy a proxy address before importing.")
+                // Nothing to import is a user mistake, not a failure worth a stack trace
+                EventManager.callEvent(ProxyCheckResultEvent(
+                    null,
+                    error = "Clipboard is empty. Copy a proxy address before importing."
+                ))
+                return@execute
             }
 
             val proxy = try {
