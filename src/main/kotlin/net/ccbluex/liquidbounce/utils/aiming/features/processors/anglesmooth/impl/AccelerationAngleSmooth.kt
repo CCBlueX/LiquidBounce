@@ -75,10 +75,15 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         }
     }
 
+    private inner class Friction : ToggleableValueGroup(this, "Friction", false) {
+        val factor by float("Factor", 0.15f, 0.0f..1.0f)
+    }
+
     private val dynamicAcceleration = tree(DynamicAccel())
     private val accelerationError = tree(AccelerationError())
     private val constantError = tree(ConstantError())
     private val sigmoidDeceleration = tree(SigmoidDeceleration())
+    private val friction = tree(Friction())
 
     private val errorProviders: Pair<ErrorProvider, ErrorProvider>
         get() {
@@ -209,9 +214,14 @@ class AccelerationAngleSmooth(parent: ModeValueGroup<*>) : AngleSmooth("Accelera
         val yawAccel = calculateAcceleration(diff.deltaYaw, prevDiff.deltaYaw, accRangeYaw, decelerationFactor)
         val pitchAccel = calculateAcceleration(diff.deltaPitch, prevDiff.deltaPitch, accRangePitch, decelerationFactor)
 
+        val rawYawDiff = prevDiff.deltaYaw + yawAccel + yawErrorProvider.getError(yawAccel)
+        val rawPitchDiff = prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(pitchAccel)
+
+        val frictionFactor = 1.0f - (if (friction.enabled) friction.factor else 0.0f)
+
         return Vec2(
-            prevDiff.deltaYaw + yawAccel + yawErrorProvider.getError(yawAccel),
-            prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(pitchAccel)
+            rawYawDiff * frictionFactor,
+            rawPitchDiff * frictionFactor
         )
     }
 
