@@ -98,6 +98,7 @@ export interface CurveSetting extends Setting<Vec2[]> {
         range: Range;
     }
     tension: number;
+    defaultPoints: Vec2[];
 }
 
 export interface BlocksSetting extends Setting<string[]> {
