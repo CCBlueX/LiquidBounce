@@ -230,16 +230,22 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
     }
 
     private fun calculateExpectedDamage(target: LivingEntity): Float {
-        var damage = player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
-        damage *= player.getAttackStrengthScale(0.5f)
-        damage += EnchantmentHelper.getDamageBonus(player.mainHandItem, target.type).toFloat()
+        val s = player.getAttackStrengthScale(0.5f)
+        
+        val baseDamage = player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
+        val enchantDamage = EnchantmentHelper.getDamageBonus(player.mainHandItem, target.type).toFloat()
+        
+        var damage = baseDamage * (0.2f + s * s * 0.8f) + enchantDamage * s
 
         val strength = player.getEffect(MobEffects.DAMAGE_BOOST)
         if (strength != null) {
             damage += 3.0f * (strength.amplifier + 1)
         }
 
-        val isCrit = player.fallDistance > 0.0f && !player.onGround() && !player.onClimbable() && !player.isInWater && !player.hasEffect(MobEffects.BLINDNESS) && !player.isPassenger
+        val isCrit = player.fallDistance > 0.0f && !player.onGround() && !player.onClimbable() && 
+                     !player.isInWater && !player.hasEffect(MobEffects.BLINDNESS) && !player.isPassenger && 
+                     s > 0.9f && !player.isSprinting
+                     
         if (isCrit) {
             damage *= 1.5f
         }
