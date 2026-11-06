@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.setInventoryItemCreative
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
+import net.minecraft.util.StringUtil
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.ResolvableProfile
@@ -43,6 +44,7 @@ import java.util.UUID
  * Allows you to create a player skull item with a specified name.
  */
 object CommandItemSkull : MinecraftShortcuts, CommandRegistrar {
+    @Suppress("ThrowsCount")
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("skull") {
             requires { it.isIngame }
@@ -53,14 +55,17 @@ object CommandItemSkull : MinecraftShortcuts, CommandRegistrar {
                     }
 
                     val skullName = ctx.get(name)
+                    val skullId = runCatching { UUID.fromString(skullName) }.getOrNull()
+
+                    if (skullId == null && !StringUtil.isValidPlayerName(skullName)) {
+                        throw CommandException(t("invalidName", variable(skullName)))
+                    }
 
                     val itemStack = ItemStack(Items.PLAYER_HEAD)
                         .apply {
-                            val profile = runCatching { UUID.fromString(skullName) }
-                                .fold(
-                                    onSuccess = { ResolvableProfile.createUnresolved(it) },
-                                    onFailure = { ResolvableProfile.createUnresolved(skullName) }
-                                )
+                            val profile = skullId
+                                ?.let { ResolvableProfile.createUnresolved(it) }
+                                ?: ResolvableProfile.createUnresolved(skullName)
                             DataComponentPatch.builder()
                                 .set(DataComponents.PROFILE, profile)
                                 .build()

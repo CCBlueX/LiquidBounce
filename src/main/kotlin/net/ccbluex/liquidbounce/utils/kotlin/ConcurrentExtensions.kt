@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import kotlinx.coroutines.Job
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.util.Util
@@ -31,8 +30,6 @@ import kotlin.reflect.KProperty
 inline operator fun <T> ThreadLocal<T>.getValue(receiver: Any?, property: KProperty<*>): T = get()
 
 inline operator fun <T> ThreadLocal<T>.setValue(receiver: Any?, property: KProperty<*>, value: T) = set(value)
-
-suspend inline fun Array<out Job>.joinAll() = forEach { it.join() }
 
 /**
  * A [PreparableReloadListener] with a simplified async reload entry point.

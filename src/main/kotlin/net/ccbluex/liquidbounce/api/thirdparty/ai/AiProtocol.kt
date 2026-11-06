@@ -16,22 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.api.thirdparty.ai
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import java.text.DecimalFormat
 
-enum class TimeUnit(
+/**
+ * Wire protocols supported for AI chat completions.
+ *
+ * [defaultBaseUrl] is used when no base URL is configured, and it is the API root the
+ * protocol's endpoint paths are resolved against (it must end with a slash).
+ */
+enum class AiProtocol(
     override val tag: String,
+    val defaultBaseUrl: String,
 ) : Tagged {
-    TICKS("Ticks") {
-        override fun format(ticks: Int): String = ticks.toString()
-    },
-    SECONDS("Seconds") {
-        private val format = DecimalFormat("0.#s")
-        override fun format(ticks: Int): String = format.format(ticks * 0.05)
-    };
 
-    abstract fun format(ticks: Int): String
+    /**
+     * OpenAI Chat Completions protocol.
+     *
+     * Also served by DeepSeek, Moonshot/Kimi, Qwen, Zhipu, OpenRouter, Groq and Ollama's
+     * `/v1` compatibility endpoint - only the base URL, model and key have to be changed.
+     */
+    OPENAI_COMPATIBLE("OpenAiCompatible", "https://api.openai.com/v1/"),
+
+    /**
+     * Anthropic Messages protocol.
+     */
+    ANTHROPIC("Anthropic", "https://api.anthropic.com/v1/"),
 
 }

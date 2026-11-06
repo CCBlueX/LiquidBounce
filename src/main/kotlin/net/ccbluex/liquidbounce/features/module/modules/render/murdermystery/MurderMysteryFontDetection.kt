@@ -20,13 +20,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
+import net.ccbluex.liquidbounce.utils.item.MAP_SIZE
 import net.minecraft.world.level.material.MapColor
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData
-import java.awt.Color
+import java.util.BitSet
 
 object MurderMysteryFontDetection {
 
     private const val FILE_NAME = "hypixel_mm_letters.json"
+
+    /**
+     * Row of the map image the contract line is rendered on.
+     */
+    private const val CONTRACT_LINE_ROW = 105
+
+    private const val CONTRACT_LINE_HEIGHT = 7
 
     private val LETTER_MAP: Map<String, BooleanArray> = run {
         val stream =
@@ -38,21 +46,31 @@ object MurderMysteryFontDetection {
         stream.readJson<HashMap<String, BooleanArray>>()
     }
 
+    /**
+     * Whether the given packed map color is the background of the contract paper.
+     *
+     * The paper is drawn in [MapColor.WOOD] at various brightness levels, so only the color id is
+     * compared and the brightness bits are ignored.
+     *
+     * @see net.minecraft.world.level.material.MapColor.getPackedId
+     */
+    private fun isContractLineColor(packedColor: Byte): Boolean =
+        (packedColor.toInt() and 0xFF) shr 2 == MapColor.WOOD.id
+
     @Suppress("all")
     fun readContractLine(mapData: MapItemSavedData): String {
-        val rgb = extractBitmapFromMap(mapData)
-        val contractLine = filterContractLine(rgb)
+        val contractLine = filterContractLine(mapData)
 
         val output = StringBuilder()
 
         var lastNonEmptyScanline = -1
         var emptyScanlines = 0
 
-        for (x in 0 until 128) {
+        for (x in 0 until MAP_SIZE) {
             var isEmpty = true
 
-            for (y in 0 until 7) {
-                if (contractLine[128 * y + x] == -1) {
+            for (y in 0 until CONTRACT_LINE_HEIGHT) {
+                if (!contractLine[MAP_SIZE * y + x]) {
                     isEmpty = false
                     break
                 }
@@ -70,7 +88,7 @@ object MurderMysteryFontDetection {
                 var off: Int
 
                 val w = x - lastNonEmptyScanline
-                val h = 7
+                val h = CONTRACT_LINE_HEIGHT
 
                 val fingerPrint = BooleanArray(w * h)
 
@@ -80,11 +98,11 @@ object MurderMysteryFontDetection {
                     off = yOff
 
                     for (x1 in 0 until w) {
-                        fingerPrint[y1 * w + x1] = contractLine[off++] == -1
+                        fingerPrint[y1 * w + x1] = !contractLine[off++]
                     }
 
                     y1++
-                    yOff += 128
+                    yOff += MAP_SIZE
                 }
 
                 val letter = LETTER_MAP.entries.firstOrNull { (_, value1) ->
@@ -106,38 +124,16 @@ object MurderMysteryFontDetection {
         return outs
     }
 
-    private fun filterContractLine(rgb: IntArray): IntArray {
-        val contractLine = IntArray(128 * 7)
+    private fun filterContractLine(mapData: MapItemSavedData): BitSet {
+        val contractLine = BitSet(MAP_SIZE * CONTRACT_LINE_HEIGHT)
 
-        for (y in 0 until 7) {
-            for (x in 0 until 128) {
-                var newRGB = rgb[128 * 105 + y * 128 + x]
+        for (y in 0 until CONTRACT_LINE_HEIGHT) {
+            val rowOffset = (CONTRACT_LINE_ROW + y) * MAP_SIZE
 
-                newRGB =
-                    if (newRGB == Color(123, 102, 62).rgb || newRGB == Color(143, 119, 72).rgb) {
-                        0
-                    } else {
-                        -1
-                    }
-
-                contractLine[128 * y + x] = newRGB
+            for (x in 0 until MAP_SIZE) {
+                contractLine[MAP_SIZE * y + x] = isContractLineColor(mapData.colors[rowOffset + x])
             }
         }
         return contractLine
-    }
-
-    private fun extractBitmapFromMap(mapData: MapItemSavedData): IntArray {
-        val rgb = IntArray(128 * 128)
-
-        for (i in rgb.indices) {
-            val color = MapColor.getColorFromPackedId(mapData.colors[i].toInt())
-
-            val r = color and 0xFF
-            val g = (color ushr 8) and 0xFF
-            val b = (color ushr 16) and 0xFF
-
-            rgb[i] = Color(r, g, b).rgb
-        }
-        return rgb
     }
 }

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.state.BlockState
 
@@ -70,7 +69,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             )
         }
 
-        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
+        ModulePacketMine.swingMode.attackSwing()
 
         mineTarget.finished = true
     }

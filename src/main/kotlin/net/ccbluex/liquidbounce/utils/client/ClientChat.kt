@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
 import net.ccbluex.liquidbounce.interfaces.TextColorAddition
-import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.text.RunnableClickEvent
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -146,6 +145,9 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableC
     }
 }
 
+@JvmField
+val CLICK_TO_COPY: Component = Component.translatable("chat.copy.click")
+
 /**
  * Creates text with a copy-to-clipboard click event
  *
@@ -156,9 +158,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableC
  */
 fun MutableComponent.copyable(
     copyContent: String = this.string,
-    hover: HoverEvent? = HoverEvent.ShowText(
-        translation("liquidbounce.tooltip.clickToCopy")
-    )
+    hover: HoverEvent? = HoverEvent.ShowText(CLICK_TO_COPY)
 ): MutableComponent = apply {
     hover?.let(::onHover)
     onClick(ClickEvent.CopyToClipboard(copyContent))

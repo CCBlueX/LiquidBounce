@@ -56,23 +56,19 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.text.asPlayerHead
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clientTag
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.Filter
-import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.contents.ObjectContents
-import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.item.component.ResolvableProfile
 import java.util.TreeSet
 import kotlin.random.Random
@@ -222,9 +218,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
             resolvableProfile.resolveProfile(mc.services().profileResolver).await()
         }
 
-        val playerSpritePart = MutableComponent.create(
-            ObjectContents(PlayerSprite(resolvableProfile, false), optional())
-        ).copyable(copyContent = event.user.uuid.toString())
+        val playerSpritePart = resolvableProfile.asPlayerHead()
+            .copyable(copyContent = event.user.uuid.toString())
 
         val prefix = ChatMessageFormat.messagePrefix(event, playerSpritePart)
         val content = if (event.author?.highlight == true) {

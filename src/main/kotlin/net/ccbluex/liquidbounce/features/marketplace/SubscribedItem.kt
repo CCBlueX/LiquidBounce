@@ -129,7 +129,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     }
 
     /**
-     * Whether [getNewestRevisionId] has one, without waiting for an install of this item. `false`
+     * Whether [getNewestRevisionId] has one, without waiting for an installation of this item. `false`
      * while an install runs.
      */
     internal suspend fun hasUpdate(): Boolean {
@@ -209,16 +209,16 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             }
         }
 
-        try {
-            withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
+            try {
                 part.deleteRecursively()
                 // TODO: Check checksum
                 request(MarketplaceApi.downloadRevision(id, revisionId), HttpMethod.GET, progressListener = progress)
                     .use { response -> extractZip(response.body.byteStream(), part) }
+                part.rename(unpacked)
+            } finally {
+                part.deleteRecursively()
             }
-            part.rename(unpacked)
-        } finally {
-            part.deleteRecursively()
         }
         return unpacked
     }
@@ -242,7 +242,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             throw e
         }
 
-        itemDir.listFiles { file: File -> file.name.startsWith(".") }?.forEach { it.deleteRecursively() }
+        itemDir.listFiles { file: File -> file.name.startsWith('.') }?.forEach { it.deleteRecursively() }
     }
 
     internal suspend fun reload() {

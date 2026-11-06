@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine.font
+package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import java.awt.Dimension
