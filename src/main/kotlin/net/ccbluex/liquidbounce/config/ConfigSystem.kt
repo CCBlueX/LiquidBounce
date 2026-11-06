@@ -238,7 +238,7 @@ object ConfigSystem {
      * Serialize a config to a writer and close it
      */
     private fun serializeValueGroup(valueGroup: ValueGroup, writer: Writer, gson: Gson = fileGson) {
-        gson.newJsonWriter(writer).use {
+        writer.use {
             gson.toJson(valueGroup, ValueGroup::class.java, it)
         }
     }
