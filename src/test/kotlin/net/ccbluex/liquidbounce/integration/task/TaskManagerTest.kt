@@ -216,4 +216,25 @@ class TaskManagerTest {
         assertTrue(manager.getActiveTasks().isEmpty())
     }
 
+    @Test
+    fun `cancelling a task without a job completes all nested manual progress`() = runTest {
+        val manager = TaskManager(this)
+        val task = manager.createTask("Download")
+        val archive = task.getOrCreateTask("Archive")
+        val file = archive.getOrCreateTask("File")
+        file.progress = 0.25f
+        val unrelated = manager.createTask("Other")
+
+        manager.cancel("Missing")
+        assertFalse(task.isCompleted)
+        manager.cancel("Download")
+
+        assertTrue(file.isCompleted)
+        assertTrue(archive.isCompleted)
+        assertTrue(task.isCompleted)
+        assertEquals(1f, task.progress)
+        assertFalse(unrelated.isCompleted)
+        assertEquals(listOf(unrelated), manager.getActiveTasks())
+    }
+
 }

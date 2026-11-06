@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.render.engine.ItemChamsEffectRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
@@ -153,7 +154,18 @@ public abstract class MixinGameRenderer {
         FeatureRenderDispatcher instance, SubmitNodeStorage submitNodeStorage,
         Operation<FeatureRenderDispatcher.PreparedFrame> original
     ) {
-        return ModuleItemChams.Lightmap.doOverride(() -> original.call(instance, submitNodeStorage));
+        var frame =
+            ModuleItemChams.Lightmap.doOverride(() -> original.call(instance, submitNodeStorage));
+        ItemChamsEffectRenderer.capture(frame);
+        return frame;
+    }
+
+    /**
+     * Composes the ItemChams effect layer once the vanilla "Item in hand" pass has been closed.
+     */
+    @Inject(method = "renderItemInHand", at = @At("RETURN"))
+    private void composeItemChamsEffects(CallbackInfo ci) {
+        ItemChamsEffectRenderer.compositeIfNeeded(this.mainRenderTarget);
     }
 
     @Inject(

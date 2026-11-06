@@ -79,9 +79,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      */
     abstract fun isEmpty(): Boolean
 
-    open fun onUpdated() {
-        // NOP
-    }
+    open fun onUpdated() = Unit
 
     final override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
         val newState = this.getStateFor(pos, state)
@@ -95,9 +93,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
     }
 
-    override fun chunkUpdate(chunk: LevelChunk) {
-        // NOP
-    }
+    override fun chunkUpdate(chunk: LevelChunk) = Unit
 
     /**
      * This base implementation stores multiple [BlockPos] for each state [T].
@@ -146,7 +142,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         fun iterate(type: T): Sequence<BlockPos> {
-            val positions = stateAndPositions[type] ?: return emptySequence()
+            val positions = stateAndPositions[type] ?: return []
 
             return sequence {
                 val mutable = BlockPos.MutableBlockPos()

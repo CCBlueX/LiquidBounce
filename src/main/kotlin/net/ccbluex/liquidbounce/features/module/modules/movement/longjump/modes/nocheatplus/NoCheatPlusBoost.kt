@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.math.multiply
@@ -40,7 +40,7 @@ internal object NoCheatPlusBoost : Mode("NoCheatPlusBoost") {
 
     val ncpBoost by float("NCPBoost", 4.25f, 1f..10f)
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (ModuleLongJump.canBoost) {
             player.deltaMovement =
                 player.deltaMovement.multiply(factorX = ncpBoost, factorZ = ncpBoost)

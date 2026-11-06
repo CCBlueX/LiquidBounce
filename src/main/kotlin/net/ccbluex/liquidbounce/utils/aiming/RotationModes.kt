@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
@@ -31,7 +31,7 @@ import java.util.function.BooleanSupplier
 sealed class RotationMode(
     name: String,
     private val modeValueGroup: ModeValueGroup<RotationMode>,
-    val module: ClientModule,
+    val eventListener: EventListener,
 ) : Mode(name), MinecraftShortcuts {
 
     /**
@@ -59,13 +59,13 @@ sealed class RotationMode(
 
 class NormalRotationMode(
     modeValueGroup: ModeValueGroup<RotationMode>,
-    module: ClientModule,
+    eventListener: EventListener,
     val priority: Priority = Priority.IMPORTANT_FOR_USAGE_2,
 
     // some modules might want to aim even tho it was instantly executed because the player's rotation should not
     // snap back as the same rotation might be needed for the next action
     private val aimAfterInstantAction: Boolean = false
-) : RotationMode("Normal", modeValueGroup, module) {
+) : RotationMode("Normal", modeValueGroup, eventListener) {
 
     val rotations = tree(RotationsValueGroup(this))
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -75,7 +75,13 @@ class NormalRotationMode(
             onFinished.run()
             if (aimAfterInstantAction) {
                 mc.execute {
-                    RotationManager.setRotationTarget(rotation, !ignoreOpenInventory, rotations, priority, module)
+                    RotationManager.setRotationTarget(
+                        rotation,
+                        !ignoreOpenInventory,
+                        rotations,
+                        priority,
+                        eventListener
+                    )
                 }
             }
 
@@ -87,10 +93,10 @@ class NormalRotationMode(
                 rotation,
                 considerInventory = !ignoreOpenInventory,
                 valueGroup = rotations,
-                provider = module,
+                provider = eventListener,
                 priority = priority,
                 whenReached = RestrictedSingleUseAction(canExecute = isFinished, action = {
-                    PostRotationExecutor.addTask(module, postMove, task = onFinished, priority = true)
+                    PostRotationExecutor.addTask(eventListener, postMove, task = onFinished, priority = true)
                 })
             )
         }
@@ -98,8 +104,8 @@ class NormalRotationMode(
 
 }
 
-class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, module: ClientModule)
-    : RotationMode("None", modeValueGroup, module) {
+class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener: EventListener)
+    : RotationMode("None", modeValueGroup, eventListener) {
 
     val send by boolean("SendRotationPacket", false)
 
@@ -123,7 +129,7 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, module: Clien
             return
         }
 
-        PostRotationExecutor.addTask(module, postMove) { task() }
+        PostRotationExecutor.addTask(eventListener, postMove) { task() }
     }
 
 }

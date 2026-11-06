@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.integration.backend
 
 import kotlinx.coroutines.CompletableDeferred
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.screens.Screen
-import net.minecraft.network.chat.Component
 
 private const val BUTTON_WIDTH = 220
 private const val BUTTON_HEIGHT = 20
@@ -36,11 +37,10 @@ private const val ENTRY_HEIGHT = 44
 class BrowserSelectionScreen(
     private val backends: List<BrowserBackendProvider>,
     private val selection: CompletableDeferred<BrowserBackendProvider>,
-) : Screen(Component.literal("Choose a browser")) {
+) : Screen("Choose a browser".asPlainText()) {
 
-    private val subtitle = Component.literal("LiquidBounce shows its interface in a browser. Pick the one to use.")
-    private val hint = Component.literal("Hold Shift while the client starts to choose again.")
-        .withStyle(ChatFormatting.GRAY)
+    private val subtitle = "LiquidBounce shows its interface in a browser. Pick the one to use.".withFormat()
+    private val hint = "Hold Shift while the client starts to choose again.".withFormat(ChatFormatting.GRAY)
 
     private val top
         get() = height / 2 - backends.size * ENTRY_HEIGHT / 2
@@ -49,7 +49,7 @@ class BrowserSelectionScreen(
         val x = width / 2 - BUTTON_WIDTH / 2
         for ((index, backend) in backends.withIndex()) {
             addRenderableWidget(
-                Button.builder(Component.literal(backend.name)) {
+                Button.builder(backend.name.asPlainText()) {
                     selection.complete(backend)
                     mc.gui.setScreen(null)
                 }
@@ -68,7 +68,7 @@ class BrowserSelectionScreen(
 
         for ((index, backend) in backends.withIndex()) {
             val y = top + index * ENTRY_HEIGHT + BUTTON_HEIGHT + 4
-            context.centeredText(font, Component.literal(backend.description).withStyle(ChatFormatting.GRAY), cx, y, -1)
+            context.centeredText(font, backend.description.withFormat(ChatFormatting.GRAY), cx, y, -1)
         }
 
         context.centeredText(font, hint, cx, top + backends.size * ENTRY_HEIGHT + 8, -1)

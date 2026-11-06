@@ -577,8 +577,8 @@ class SimulatedPlayer(
         }
 
         onLanding()
-        val clampedX = Mth.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
-        val clampedZ = Mth.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
+        val clampedX = Math.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
+        val clampedZ = Math.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
         var clampedY = max(motion.y, -0.15000000596046448)
         if (clampedY < 0.0 && !pos.toBlockPos().state!!
                 .`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder
