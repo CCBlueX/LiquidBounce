@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import kotlin.math.abs
 
 /**
  * Short stop temporarily halts aiming at the target based on a specified rate.
@@ -32,7 +33,7 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
     : ToggleableValueGroup(owner, "ShortStop", false), RotationProcessor {
 
     private val rate = percentageChance("Rate", 3, 1..25)
-    
+
     private var stopDuration by intRange("Duration", 1..2, 1..5, "ticks")
 
     // Speed multiplier from 0.000 (0%) to 1.000 (100%)
@@ -58,14 +59,18 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
 
         return if (ticksElapsed < currentTransitionInDuration) {
             ticksElapsed++
-            
+
             if (speedMult == 0f) {
                 // 0 is the old logic: tiny random movement (effectively a short stop)
                 currentRotation.towardsLinear(targetRotation, (0.0f..0.1f).random(), (0.0f..0.1f).random())
             } else {
-                // Apply the speed multiplier to the current rotation delta
+                // Apply the speed multiplier to the absolute current rotation delta
                 val delta = currentRotation.rotationDeltaTo(targetRotation)
-                currentRotation.towardsLinear(targetRotation, delta.x * speedMult, delta.y * speedMult)
+                currentRotation.towardsLinear(
+                    targetRotation,
+                    abs(delta.x) * speedMult,
+                    abs(delta.y) * speedMult
+                )
             }
         } else {
             targetRotation
