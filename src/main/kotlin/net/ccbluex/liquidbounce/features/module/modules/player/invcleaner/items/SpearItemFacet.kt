@@ -43,8 +43,7 @@ class SpearItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
                 SECONDARY_VALUE_ESTIMATOR.asHolderComparator(),
                 PREFER_BETTER_DURABILITY,
                 PREFER_ENCHANTABLE,
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

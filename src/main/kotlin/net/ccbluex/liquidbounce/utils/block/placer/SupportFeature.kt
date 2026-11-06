@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.block.dijkstraShortestPath
 import net.ccbluex.liquidbounce.utils.block.hasAnySolidPlacementNeighbor
+import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.kotlin.toOrderedSet
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -42,7 +43,7 @@ import net.minecraft.core.Direction
  */
 class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Support", true) {
 
-    private val depth by int("Depth", 4, 1..12)
+    val depth by int("Depth", 4, 1..12)
     val delay by int("Delay", 500, 0..1000, "ms")
 
     // what block helping blocks can be, by default just "trash blocks", meaning very common blocks
@@ -60,6 +61,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
      */
     @Suppress("ComplexCondition")
     fun findSupport(targetPos: BlockPos): Set<BlockPos>? {
+        val targetPos = targetPos.immutable
         val shortestPath = dijkstraShortestPath(
             start = targetPos,
             isGoal = { pos -> pos.hasAnySolidPlacementNeighbor() && (pos == targetPos || placer.canClickPlace(pos)) },

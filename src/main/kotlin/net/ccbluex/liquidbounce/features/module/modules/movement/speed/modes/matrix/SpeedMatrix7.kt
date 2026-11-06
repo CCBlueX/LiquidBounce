@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -35,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 class SpeedMatrix7(parent : ModeValueGroup<*>) : SpeedBHopBase("Matrix7",parent) {
 
     @Suppress("unused")
-    private val tickHandle = tickHandler {
+    private val tickHandle = handler<GameTickEvent> {
         if (player.moving) {
             if (player.onGround()) {
                 player.deltaMovement.y = 0.419652

@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 object MarketplaceRevisionsCommand {
 
     fun CmdLiteralScope.revisions() {
-        with(MarketplaceListRevisionsCommand) { revisionsList() }
-        // Uploading revision is disabled until proven stable
-        // with(MarketplaceUploadRevisionCommand) { upload() }
+        literal("revisions") {
+            with(MarketplaceListRevisionsCommand) { revisionsList() }
+            // Uploading revision is disabled until proven stable
+            // with(MarketplaceUploadRevisionCommand) { upload() }
+        }
     }
 
 }

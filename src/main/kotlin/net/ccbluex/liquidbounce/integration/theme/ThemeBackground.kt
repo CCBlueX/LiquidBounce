@@ -57,7 +57,7 @@ sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
     /**
      * Returns false to let Minecraft render its default wallpaper.
      */
-    object Minecraft : ThemeBackground {
+    object None : ThemeBackground {
         override fun draw(
             context: GuiGraphicsExtractor,
             width: Int,
@@ -67,13 +67,11 @@ sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
             delta: Float
         ): Boolean = false // Show default Minecraft wallpaper
 
-        @Suppress("EmptyFunctionBlock")
-        override fun close() { }
+        override fun close() = Unit
     }
 
     /**
      * Background implementation that renders a static image texture.
-     * @param texture The image texture
      */
     class Image(
         private val metadata: ThemeMetadata,
@@ -171,19 +169,24 @@ sealed interface ThemeBackground : AutoCloseable, SimpleReloadListener {
 
         override fun close() {
             ubo.close()
+            compiledPipeline?.close()
+            compiledPipeline = null
             backgroundView?.close()
             background?.close()
         }
 
         override fun reload(taskExecutor: Executor, reloadExecutor: Executor): CompletableFuture<Void> {
             val generation = ++compileGeneration
+            compiledPipeline?.close()
             compiledPipeline = null
             return gpuDevice.compilePipeline(pipeline, shaderSource, taskExecutor)
                 .thenAcceptAsync({ pending ->
+                    val compiled = pending.finishCompile() ?: return@thenAcceptAsync
                     if (generation != compileGeneration) {
+                        compiled.close()
                         return@thenAcceptAsync
                     }
-                    compiledPipeline = pending.finishCompile() ?: return@thenAcceptAsync
+                    compiledPipeline = compiled
                 }, reloadExecutor)
         }
 

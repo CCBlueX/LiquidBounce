@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.browserBrowsers
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
 // GET /api/v1/client/browser
 private fun Route.getBrowserInfo() = get {
@@ -58,7 +57,7 @@ private fun Route.postBrowserNavigate() = post("/navigate") { with(call.receive<
 private data class Navigate(val url: String)
 
 // POST /api/v1/client/browser/close
-private fun Route.postBrowserClose() = post("/close") { withContext(Dispatchers.Minecraft) {
+private fun Route.postBrowserClose() = post("/close") { withContext(Dispatchers.Main) {
     if (mc.gui.screen() !is InternetExplorerScreen) {
         call.badRequest("No browser screen")
     } else {
@@ -117,7 +116,7 @@ private fun Route.postBrowserCloseTab() = post("/closeTab") {
         ?: call.badRequest("No browser screen")
     val browser = internetExplorerScreen.browserBrowser
         ?: call.badRequest("No browser tab")
-    withContext(Dispatchers.Minecraft) {
+    withContext(Dispatchers.Main) {
         browser.close()
         browserBrowsers.remove(browser)
     }

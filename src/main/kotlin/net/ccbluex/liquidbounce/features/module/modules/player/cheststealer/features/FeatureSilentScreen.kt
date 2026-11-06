@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -28,8 +27,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
@@ -49,7 +48,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
     val unlockCursor by boolean("UnlockCursor", false)
 
-    private val drawInventoryTag = object : ToggleableValueGroup(this, "DrawInventoryTag", enabled = true) {
+    private object DrawInventoryTag : ToggleableValueGroup(this, "DrawInventoryTag", enabled = true) {
 
         private val background = modes(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
@@ -86,18 +85,18 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
 
             val containerScreen = mc.gui.screen() as AbstractContainerScreen<*>
 
-            event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
+            ItemStackListRenderState(containerScreen.getSlotsInContainer().map { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })
                 .centerX(pos.x)
                 .centerY(pos.y)
                 .scale(scale)
                 .background(background.activeMode)
-                .draw()
+                .draw(event.context)
         }
     }
 
     init {
-        tree(drawInventoryTag)
+        tree(DrawInventoryTag)
     }
 
     var shouldHide = false
