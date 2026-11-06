@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.imp
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.InterpolationAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.LinearAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SmoothAngleSmooth
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.minecraft.world.entity.Entity
 
@@ -51,6 +52,7 @@ open class RotationsValueGroup(
         listOfNotNull(
             linearAngleSmooth,
             SigmoidAngleSmooth(it),
+            SmoothAngleSmooth(it),
             interpolationAngleSmooth,
             AccelerationAngleSmooth(it),
             if (combatSpecific) AiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null

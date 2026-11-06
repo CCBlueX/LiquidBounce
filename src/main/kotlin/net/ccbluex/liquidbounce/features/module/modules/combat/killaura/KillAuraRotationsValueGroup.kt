@@ -18,23 +18,51 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import org.joml.Vector2f
 
 object KillAuraRotationsValueGroup : RotationsValueGroup(ModuleKillAura, combatSpecific = true) {
 
     val rotationTiming by enumChoice("RotationTiming", KillAuraRotationTiming.NORMAL)
     val aimThroughWalls by boolean("ThroughWalls", false)
 
-    /**
-     * When enabled, if current rotation can still raytrace the target, skip rotating.
-     */
-    val lazyRotation by boolean("LazyRotation", false)
+    val lazyRotation = tree(LazyRotationConfig)
 
     enum class KillAuraRotationTiming(override val tag: String) : Tagged {
         NORMAL("Normal"),
         SNAP("Snap"),
-        ON_TICK("OnTick")
+        ON_TICK("OnTick"),
+        DYNAMIC("Dynamic")
+    }
+
+    /**
+     * Speed curve is `base / ticksUntilAttack`, so it rises steeply only in the last couple of ticks
+     * (e.g. 50% at 2 ticks out, 100% at 1 tick and on the click tick) rather than linearly.
+     */
+    fun dynamicSpeedDivisor(ticksUntilAttack: Int): Float {
+        return ticksUntilAttack.coerceAtLeast(1).toFloat()
+    }
+
+    object LazyRotationConfig : Configurable("LazyRotation") {
+
+        val enabled by boolean("Enabled", false)
+
+        val speed = curve(
+            "SpeedMultiplier",
+            mutableListOf(
+                Vector2f(0f, 100f),
+                Vector2f(25f, 70f),
+                Vector2f(50f, 45f),
+                Vector2f(75f, 25f),
+                Vector2f(100f, 15f),
+            ),
+            xAxis = "CenterProximity" axis 0f..100f,
+            yAxis = "SpeedMultiplier" axis 0f..100f,
+        )
+
     }
 
 }
