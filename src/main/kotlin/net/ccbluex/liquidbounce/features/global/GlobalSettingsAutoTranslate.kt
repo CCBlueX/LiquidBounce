@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
+import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.LibreTranslateApi
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import java.time.Duration
@@ -48,7 +49,8 @@ object GlobalSettingsAutoTranslate : ValueGroup(name = "AutoTranslate"), Transla
 
     private val providers = modes(this, "Provider", 0) {
         arrayOf(
-            GoogleTranslateApi(it)
+            GoogleTranslateApi(it),
+            LibreTranslateApi(it),
         )
     }
 

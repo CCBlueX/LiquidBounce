@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
@@ -83,10 +84,10 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
     // checks and start logic
     @Suppress("unused", "ComplexCondition")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (shouldNotOperate()) {
             needsToRestart = false
-            return@tickHandler
+            return@handler
         }
 
         val stop =
@@ -101,7 +102,7 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
                 ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
             )
             needsToRestart = false
-            return@tickHandler
+            return@handler
         }
 
         if (player.isFallFlying) {

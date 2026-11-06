@@ -171,7 +171,7 @@ fun LocalPlayer.clickBlockWithSlot(
     }
 
     if (actionResult.shouldSwingHand()) {
-        swingMode.swing(hand)
+        swingMode.interactSwing(hand)
     }
 
     if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
@@ -247,6 +247,7 @@ fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking
     val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)
     RotationManager.packetHandler.handler.accept(packetEvent)
+    PositionPacketSeparator.packetHandler.handler.accept(packetEvent)
     ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
     mc.connection?.connection?.send(packetEvent.packet, null)
 }

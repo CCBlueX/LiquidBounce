@@ -26,7 +26,7 @@ import com.viaversion.viaversion.protocols.v1_21_5to1_21_6.Protocol1_21_5To1_21_
 import net.ccbluex.liquidbounce.utils.client.player
 
 /**
- * https://github.com/ViaVersion/ViaFabricPlus/blob/56c4959000e68d77fd415b89af7a95478d825079/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinClientPlayerEntity.java#L251-L264
+ * https://github.com/ViaVersion/ViaFabricPlus/blob/8f96c699edc97db8a3fc58c1533e8cf41dd46aaf/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/v1_21_5/movement/MixinLocalPlayer.java#L118-L128
  */
 enum class PlayerSneakPacket(@JvmField val sneaking: Boolean) : LegacyPacket {
 

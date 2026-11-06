@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 interface BrowserBackend {
 
     val isInitialized: Boolean
-    var accelerationFlags: BrowserAccelerationFlags
     val browsers: List<Browser>
 
     /**

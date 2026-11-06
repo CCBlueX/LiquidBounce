@@ -21,10 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.fastutil.referenceArraySetOf
 import net.ccbluex.fastutil.referenceHashSetOf
-import net.ccbluex.liquidbounce.utils.item.isAxe
-import net.ccbluex.liquidbounce.utils.item.isHoe
-import net.ccbluex.liquidbounce.utils.item.isPickaxe
-import net.ccbluex.liquidbounce.utils.item.isShovel
+import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BoatItem
@@ -100,11 +97,7 @@ object MurderMysterySwordDetection {
         return when {
             item in KNOWN_NON_SWORD_ITEMS -> false
             item in KNOWN_SWORD_ITEMS -> true
-            itemStack.isSword -> true
-            itemStack.isPickaxe -> true
-            itemStack.isShovel -> true
-            itemStack.isAxe -> true
-            itemStack.isHoe -> true
+            itemStack.isSword || itemStack.isMiningTool -> true
             item is BoatItem -> true
             item is BlockItem -> this.KNOWN_SWORD_BLOCKS.contains(item.block)
             else -> false

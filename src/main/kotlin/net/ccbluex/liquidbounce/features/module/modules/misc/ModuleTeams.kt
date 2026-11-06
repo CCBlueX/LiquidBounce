@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
 import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.EquipmentSlotChoice
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -92,8 +93,10 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
     /**
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
+     *
+     * Shared with modules that filter teammates out instead of not attacking them.
      */
-    private fun isInClientPlayersTeam(entity: LivingEntity) =
+    internal fun isInClientPlayersTeam(entity: LivingEntity) =
         matches.matchesAny(entity) || checkArmor(entity)
 
     /**
@@ -118,8 +121,8 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
          * Checks if both names have the same color.
          */
         NAME_COLOR("NameColor", { suspected ->
-            val targetColor = player.displayName?.style?.color
-            val clientColor = suspected.displayName?.style?.color
+            val targetColor = player.simpleDisplayName.style.color
+            val clientColor = suspected.simpleDisplayName.style.color
 
             targetColor != null
                 && clientColor != null
@@ -130,19 +133,16 @@ object ModuleTeams : ClientModule("Teams", ModuleCategories.MISC) {
          * Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers.
          */
         PREFIX("Prefix", { suspected ->
-            val targetSplit = suspected.displayName
-                ?.string
-                ?.stripMinecraftColorCodes()
-                ?.split(' ', limit = 2)
+            val targetSplit = suspected.simpleDisplayName.string
+                .stripMinecraftColorCodes()
+                .split(' ', limit = 2)
 
-            val clientSplit = player.displayName
-                ?.string
-                ?.stripMinecraftColorCodes()
-                ?.split(' ', limit = 2)
+            val clientSplit = player.simpleDisplayName
+                .string
+                .stripMinecraftColorCodes()
+                .split(' ', limit = 2)
 
-            targetSplit != null
-                && clientSplit != null
-                && targetSplit.size > 1
+            targetSplit.size > 1
                 && clientSplit.size > 1
                 && targetSplit[0] == clientSplit[0]
         })

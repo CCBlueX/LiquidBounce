@@ -20,14 +20,12 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 /**
- * @param maxSize Maximum size of the cache. The best values are 2 to the power of [Int] like 64, 128, 256...
+ * @param maxSize Maximum number of entries to retain. Zero disables caching.
  */
-class LruCache<K, V>(maxSize: Int) : LinkedHashMap<K, V>(maxSize, 1f, true) {
-
-    private val removeAt = maxSize - 1
+class LruCache<K, V>(private val maxSize: Int) : LinkedHashMap<K, V>(maxSize, 1f, true) {
 
     override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>): Boolean {
-        return size > removeAt
+        return size > maxSize
     }
 
 }

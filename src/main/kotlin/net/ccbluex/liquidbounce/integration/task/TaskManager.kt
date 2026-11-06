@@ -61,14 +61,16 @@ class TaskManager(private val scope: CoroutineScope) {
         action: suspend (Task) -> T
     ): Task {
         val task = createTask(taskName)
-        scope.launch {
+        val job = scope.launch {
+            // The action can start before launch returns, e.g. with an unconfined dispatcher.
             task.job = coroutineContext[Job]
             task.progress = 0f
-
-            val result = action(task)
-            complete(taskName)
-            result
+            action(task)
         }
+        // Also expose the Job when the coroutine is cancelled before its body starts.
+        task.job = job
+        // Also runs on failure or cancellation, including cancellation before the action starts.
+        job.invokeOnCompletion { complete(task) }
         return task
     }
 
@@ -80,31 +82,25 @@ class TaskManager(private val scope: CoroutineScope) {
             return
         }
 
-        tasks[taskName]?.let { task ->
-            for (subTask in task.subTasks.values) {
-                subTask.progress = 1.0f
-                subTask.isCompleted = true
-            }
+        tasks[taskName]?.let(::complete)
+    }
 
-            task.progress = 1.0f
-            task.isCompleted = true
+    private fun complete(task: Task) {
+        for (subTask in task.subTasks.values) {
+            complete(subTask)
         }
+
+        task.progress = 1.0f
+        task.isCompleted = true
     }
 
     /**
-     * Cancels a task
+     * Cancels a task and finishes its progress tracking.
      */
     fun cancel(taskName: String) {
-        tasks[taskName]?.job?.cancel()
-
-        // Also cancel all subtasks
-        tasks[taskName]?.let { task ->
-            task.subTasks.values.forEach { subTask ->
-                subTask.job?.cancel()
-                subTask.isCompleted = true
-            }
-            task.isCompleted = true
-        }
+        val task = tasks[taskName] ?: return
+        task.job?.cancel()
+        complete(task)
     }
 
     /**
