@@ -87,7 +87,7 @@ object MarketplaceUpdateCommand {
 
             throw CommandException(
                 t("error.updateFailed",
-                    variable(item.id.toString()),
+                    variable(item.address),
                     variable(e.message ?: "Unknown error")
                 )
             )
@@ -99,14 +99,14 @@ object MarketplaceUpdateCommand {
             is UpdateResult.Updated -> chat(
                 regular(
                     t("update.success",
-                        variable(result.item.id.toString()),
-                        variable(result.revisionId.toString())
+                        variable(result.item.address),
+                        variable(result.revision.version)
                     )
                 ),
                 metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
             )
             is UpdateResult.NoUpdate -> chat(
-                regular(t("update.noUpdate", variable(result.item.id.toString()))),
+                regular(t("update.noUpdate", variable(result.item.address))),
                 metadata = MessageMetadata(id = "$MESSAGE_ID#${result.item.id}")
             )
             is UpdateResult.Incompatible -> chat(
@@ -116,7 +116,7 @@ object MarketplaceUpdateCommand {
             is UpdateResult.Failed -> chat(
                 markAsError(
                     t("error.updateFailed",
-                        variable(result.item.id.toString()),
+                        variable(result.item.address),
                         variable(result.error.message ?: "Unknown error")
                     )
                 ),

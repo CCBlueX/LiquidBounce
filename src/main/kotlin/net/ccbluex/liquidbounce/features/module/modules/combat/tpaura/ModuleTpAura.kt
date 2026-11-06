@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes.AStarMode
@@ -54,7 +54,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val wireframePlayer = WireframePlayer()
 
     @Suppress("unused")
-    private val attackRepeatable = tickHandler {
+    private val attackRepeatable = handler<GameTickEvent> {
         val position = desyncPlayerPosition ?: player.position()
 
         clicker.click {

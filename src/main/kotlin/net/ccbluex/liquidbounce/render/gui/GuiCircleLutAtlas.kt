@@ -21,18 +21,20 @@ package net.ccbluex.liquidbounce.render.gui
 
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.textures.FilterMode
+import com.mojang.renderpearl.api.textures.GpuTexture
 import it.unimi.dsi.fastutil.floats.Float2IntFunction
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.uploadRect
+import net.ccbluex.liquidbounce.utils.render.copyFrom
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.util.Mth
 
 /**
  * Shared LUT atlas used by GUI circle shader rendering.
  *
- * Each requested circle writes one row of angle->color values into a [DynamicTexture].
+ * Each requested circle writes one row of angle->color values into a [GpuTexture].
  * The shader then samples that row by index to reproduce the caller-provided [Float2IntFunction].
  */
 object GuiCircleLutAtlas {
@@ -42,14 +44,16 @@ object GuiCircleLutAtlas {
 
     private val sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR)
 
-    private var texture = DynamicTexture(
-        { "GuiCircleLutAtlas ${LUT_WIDTH}x$INITIAL_ROWS" },
-        NativeImage(LUT_WIDTH, INITIAL_ROWS, false),
-    )
-    private var pixels = requireNotNull(texture.pixels)
+    /**
+     * Single reused row, so allocating a LUT never requires keeping the whole atlas in host memory.
+     */
+    private val rowPixels = NativeImage(LUT_WIDTH, 1, false)
+
+    private var texture = createTexture(INITIAL_ROWS)
+    private var textureView = gpuDevice.createTextureView(texture)
+    private var textureSetup = TextureSetup.singleTexture(textureView, sampler)
     private var rows = INITIAL_ROWS
     private var nextRow = 0
-    private var textureSetup = TextureSetup.singleTexture(texture.textureView, sampler)
 
     /**
      * Result of one LUT allocation for a single circle draw.
@@ -76,9 +80,11 @@ object GuiCircleLutAtlas {
         val row = nextRow++
         for (x in 0 until LUT_WIDTH) {
             val angle = x.toFloat() / LUT_WIDTH.toFloat() * Mth.TWO_PI
-            pixels.setPixel(x, row, colorGetter.get(angle))
+            rowPixels.setPixel(x, 0, colorGetter.get(angle))
         }
-        texture.uploadRect(0, 0, row, LUT_WIDTH, 1)
+        gpuDevice.createCommandEncoder().writeToTexture(
+            texture, rowPixels.pixelBytes, 0, 0, 0, row, LUT_WIDTH, 1
+        )
 
         return Allocation(row, textureSetup)
     }
@@ -90,6 +96,14 @@ object GuiCircleLutAtlas {
         nextRow = 0
     }
 
+    private fun createTexture(rows: Int): GpuTexture = gpuDevice.createTexture(
+        { "GuiCircleLutAtlas ${LUT_WIDTH}x$rows" },
+        GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC or GpuTexture.USAGE_TEXTURE_BINDING,
+        GpuFormat.RGBA8_UNORM,
+        LUT_WIDTH, rows,
+        1, 1,
+    )
+
     private fun growRows(minRows: Int) {
         val oldRows = rows
         var newRows = oldRows
@@ -100,21 +114,12 @@ object GuiCircleLutAtlas {
         logger.info("GUI circle LUT atlas grown from $oldRows to $newRows rows")
 
         val oldTexture = texture
-        val oldPixels = pixels
-        val newPixels = NativeImage(LUT_WIDTH, newRows, false)
-        for (y in 0 until oldRows) {
-            for (x in 0 until LUT_WIDTH) {
-                newPixels.setPixel(x, y, oldPixels.getPixel(x, y))
-            }
-        }
-
-        texture = DynamicTexture(
-            { "GuiCircleLutAtlas ${LUT_WIDTH}x$newRows" },
-            newPixels,
-        )
-        pixels = requireNotNull(texture.pixels)
+        texture = createTexture(newRows)
+        texture.copyFrom(oldTexture)
+        textureView.close()
+        textureView = gpuDevice.createTextureView(texture)
+        textureSetup = TextureSetup.singleTexture(textureView, sampler)
         rows = newRows
-        textureSetup = TextureSetup.singleTexture(texture.textureView, sampler)
         oldTexture.close()
     }
 }

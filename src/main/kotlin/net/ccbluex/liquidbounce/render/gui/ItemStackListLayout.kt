@@ -40,9 +40,8 @@ internal object ItemStackListLayout {
 
     fun measureContent(state: ItemStackListRenderState): ContentDimensions {
         val textRenderer = mc.font
-        val size = if (state.useTexture) ITEM_STACK_SLOT_SIZE else ITEM_STACK_ITEM_SIZE
-        var width = size * minOf(state.stacks.size, state.rowLength)
-        var height = size * (state.stacks.size / state.rowLength +
+        var width = ITEM_STACK_SLOT_SIZE * minOf(state.stacks.size, state.rowLength)
+        var height = ITEM_STACK_SLOT_SIZE * (state.stacks.size / state.rowLength +
             if (state.stacks.size % state.rowLength != 0) 1 else 0)
 
         state.title?.let { title ->
@@ -55,8 +54,9 @@ internal object ItemStackListLayout {
 
     fun computeBounds(state: ItemStackListRenderState): BoundingBox2f {
         val dimensions = measureContent(state)
-        val w = (dimensions.width + state.backgroundMargin * 2f) * state.scale
-        val h = (dimensions.height + state.backgroundMargin * 2f) * state.scale
+        val padding = state.background.padding
+        val w = (dimensions.width + padding * 2f) * state.scale
+        val h = (dimensions.height + padding * 2f) * state.scale
         val halfW = w * 0.5f
         val halfH = h * 0.5f
         return BoundingBox2f(

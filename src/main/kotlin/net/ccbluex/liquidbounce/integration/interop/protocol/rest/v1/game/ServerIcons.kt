@@ -25,7 +25,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.services.servermedia.ServerMediaApi
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 import java.util.Base64
@@ -61,7 +60,7 @@ object ServerIcons {
 
     private suspend fun serverListFavicon(host: String): String? {
         val domain = host.rootDomain()
-        val favicon = withContext(Dispatchers.Minecraft) {
+        val favicon = withContext(Dispatchers.Main) {
             ActiveServerList.serverList.servers
                 .filter { it.ip.dropPort().rootDomain() == domain }
                 .firstNotNullOfOrNull { it.iconBytes }

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -38,13 +37,11 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     }
 
     if (!nametag.equipments.equipment.isEmpty) {
-        drawItemStackList(nametag.equipments.stacksView)
+        nametag.equipments.equipmentList
             .centerX(posX)
             .centerY(posY - NAMETAG_PADDING * nametag.scale)
             .scale(nametag.scale)
-            .itemStackRenderer(nametag.equipmentStackRenderer)
-            .rectBackground(Color4b.TRANSPARENT)
-            .draw()
+            .draw(this)
     }
 
     val fontRenderer = ModuleNametags.fontRenderer
@@ -55,8 +52,8 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     pose().translate(posX, posY)
     pose().scale(scale, scale)
 
-    val processedText = fontRenderer.process(nametag.text)
-    val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
+    val text = nametag.text
+    val textWidth = fontRenderer.getStringWidth(text, shadow = true)
 
     // Make the model view matrix center the text when rendering
     pose().translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
@@ -79,7 +76,7 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
     )
 
     // Text
-    fontRenderer.draw(processedText) {
+    fontRenderer.draw(text) {
         shadow = true
     }
 

@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -248,7 +247,7 @@ object ActiveServerList : EventListener {
      */
     suspend fun getLanServers(): List<JsonObject> {
         // Check for new/updated servers from vanilla detector — returns full list when dirty
-        val serverDatas = withContext(Dispatchers.Minecraft) {
+        val serverDatas = withContext(Dispatchers.Main) {
             lanServerList.takeDirtyServers()?.let { allServers ->
                 // Full replacement: stale servers are naturally removed when takeDirtyServers drops them
                 lanServers.clear()

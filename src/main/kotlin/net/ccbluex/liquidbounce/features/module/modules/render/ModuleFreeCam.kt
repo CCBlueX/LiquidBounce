@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -255,9 +255,16 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
             .with(Direction.Axis.Y, yAxisMovement * speed)
         ModuleDebug.debugParameter(this, "Velocity", velocity)
         PositionState.update(velocity)
+        if (!mc.mouseHandler.isMouseGrabbed) PositionState.rotation(0.0, 0.0)
 
         ModuleDebug.debugParameter(this, "Position", PositionState.pos)
         ModuleDebug.debugParameter(this, "Rotation", PositionState.rot)
+    }
+
+    @Suppress("unused")
+    private val mouseRotationHandler = handler<MouseRotationEvent> { event ->
+        PositionState.rotation(event.cursorDeltaX * 0.15f, event.cursorDeltaY * 0.15f)
+        event.cancelEvent()
     }
 
     @Suppress("unused")
@@ -287,12 +294,6 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         RotationManager.setRotationTarget(rotations.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
-    }
-
-    @Suppress("unused")
-    private val alwaysCancelOnHandler = handler<WorldChangeEvent> {
-        // If not, will get stuck when world change
-        enabled = false
     }
 
     fun applyCameraPosition(entity: Entity?, partialTicks: Float) {
