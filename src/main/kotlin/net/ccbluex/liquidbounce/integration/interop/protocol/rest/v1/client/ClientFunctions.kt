@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
@@ -98,7 +97,7 @@ private fun Route.putHudEditorState() = put("/hud-editor") {
     data class Request(val selected: Boolean)
     val selected = call.receive<Request>().selected
 
-    withContext(Dispatchers.Minecraft) {
+    withContext(Dispatchers.Main) {
         ModuleHud.hudEditorSelected = selected
     }
     call.respond(io.ktor.http.HttpStatusCode.NoContent)

@@ -25,15 +25,15 @@ import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.formatAsCapacity
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
-import net.minecraft.network.chat.Component
 import net.minecraft.util.ARGB
+import net.minecraft.util.FormattedCharSequence
 import java.text.DecimalFormat
 
 /**
@@ -67,7 +67,7 @@ class TaskProgressScreen(
         // Draw title
         context.text(
             font,
-            title.string.asPlainText(ChatFormatting.GOLD),
+            title.string.withFormat(ChatFormatting.GOLD),
             (cx - font.width(title.string) / 2).toInt(),
             yOffset,
             -1,
@@ -118,14 +118,14 @@ class TaskProgressScreen(
         poseStack.popMatrix()
     }
 
-    private fun getTaskLines(progress: Float): List<Component> {
+    private fun getTaskLines(progress: Float): List<FormattedCharSequence> {
         val activeTasks = taskManager.getActiveTasks()
         val speed = formatTotalSpeed(activeTasks)
 
         // Prepare text to display
-        val textLines = mutableListOf<Component>()
-        textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".asPlainText())
-        textLines.add(PlainText.EMPTY)
+        val textLines = mutableListOf<FormattedCharSequence>()
+        textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".withFormat())
+        textLines.add(FormattedCharSequence.EMPTY)
 
         activeTasks.take(3).forEach { task ->
             textLines.add(Pools.buildStringPooled {
@@ -134,11 +134,11 @@ class TaskProgressScreen(
                 append(percentFormat.format(task.progress * 100))
                 append('%')
                 append(formatTotalSpeed(listOf(task)))
-            }.asPlainText(ChatFormatting.GRAY))
+            }.withFormat(ChatFormatting.GRAY))
         }
 
         if (activeTasks.size > 3) {
-            textLines.add("... and ${activeTasks.size - 3} more tasks".asPlainText(ChatFormatting.GRAY))
+            textLines.add("... and ${activeTasks.size - 3} more tasks".withFormat(ChatFormatting.GRAY))
         }
         return textLines
     }

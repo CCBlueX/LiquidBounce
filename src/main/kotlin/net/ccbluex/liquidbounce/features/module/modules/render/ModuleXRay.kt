@@ -113,6 +113,7 @@ import net.minecraft.world.level.block.Blocks.WATER
 import net.minecraft.world.level.block.Blocks.WATER_CAULDRON
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.shapes.Shapes
+import java.util.function.Consumer
 
 /**
  * XRay module
@@ -121,18 +122,29 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * Command: [CommandXRay]
  */
+@Suppress("TooManyFunctions")
 object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
+
+    @Suppress("UNUSED_PARAMETER")
+    private val valueChangedReload = Consumer<Any?> {
+        if (!running) return@Consumer
+
+        mc.execute {
+            // Reload world renderer on block list change
+            mc.levelExtractor.allChanged()
+        }
+    }
 
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
-        .onChanged(::valueChangedReload)
+        .onChanged(valueChangedReload)
 
     // Only render blocks with non-solid blocks around
     private val exposedOnly by boolean("ExposedOnly", false)
-        .onChanged(::valueChangedReload)
+        .onChanged(valueChangedReload)
 
     val backgroundOpacity by int("BackgroundOpacity", 0, 0..255)
-        .onChanged(::valueChangedReload)
+        .onChanged(valueChangedReload)
 
     private val defaultBlocks = arrayOf<Block>(
         // Overworld ores
@@ -255,7 +267,7 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
             addAll(DYED_SHULKER_BOX)
             addAll(COPPER_CHEST)
         }
-    ).onChanged(::valueChangedReload)
+    ).onChanged(valueChangedReload)
 
     /**
      * Checks if the block should be rendered or not.
@@ -309,20 +321,15 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
             || !shouldRender(adjacentState, adjacentPos)
     }
 
-    fun shouldRender(state: BlockState, otherState: BlockState, side: Direction) = when {
+    fun modifyShouldRenderFace(original: Boolean, state: BlockState, otherState: BlockState, side: Direction) = when {
+        shouldRenderTransparentBackground(state) -> original
+
         state.block !in blocks -> false
 
         exposedOnly -> !state.skipRendering(otherState, side)
 
         else -> true
     }
-
-    fun modifyShouldRenderFace(original: Boolean, state: BlockState, otherState: BlockState, side: Direction) =
-        if (shouldRenderTransparentBackground(state)) {
-            original
-        } else {
-            shouldRender(state, otherState, side)
-        }
 
     /**
      * Resets the block list to the default values
@@ -332,22 +339,26 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
         blocks.addAll(defaultBlocks)
     }
 
+    /**
+     * Carries whether [renderActive] is true through a section build. Bound by the meshing mixins
+     * (`MixinChunkBuilderMeshingTask`, `MixinSectionCompiler`) around the whole build.
+     */
+    @JvmField
+    val RENDER_ACTIVE: ScopedValue<Boolean> = ScopedValue.newInstance()
+
+    /**
+     * Whether XRay applies here: the value captured by a meshing scope, or the live state outside a build.
+     * Sodium's face checks read their per block cache; this serves the fallback, vanilla and light paths.
+     */
+    @JvmStatic
+    fun renderActive(): Boolean = if (RENDER_ACTIVE.isBound()) RENDER_ACTIVE.get() else running
+
     override fun onEnabled() {
         mc.levelExtractor.allChanged()
     }
 
     override fun onDisabled() {
         mc.levelExtractor.allChanged()
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun valueChangedReload(it: Any) {
-        if (!running) return
-
-        mc.execute {
-            // Reload world renderer on block list change
-            mc.levelExtractor.allChanged()
-        }
     }
 
 }

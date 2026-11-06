@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -57,20 +56,20 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.forAllFaces
-import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.BreakingProgress
 import net.ccbluex.liquidbounce.utils.render.BreakingProgressRenderer
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -82,6 +81,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
+@Suppress("TooManyFunctions")
 object ModuleFucker : ClientModule(
     "Fucker",
     ModuleCategories.WORLD,
@@ -115,6 +115,7 @@ object ModuleFucker : ClientModule(
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG"))
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val action by enumChoice("Action", DestroyAction.DESTROY).apply(::tagBy)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
@@ -145,6 +146,12 @@ object ModuleFucker : ClientModule(
         return state.getDestroySpeed(world, pos).toDouble() / bestMiningSpeed.toDouble()
     }
 
+    private fun shapeDistSqr(pos: BlockPos, state: BlockState): Double {
+        return state.getShape(world, pos, CollisionContext.of(player))
+            .move(pos)
+            .distanceToSqr(player.eyePosition)
+    }
+
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
 
@@ -161,7 +168,6 @@ object ModuleFucker : ClientModule(
         return BreakingProgress.Provider.Default.breakingProgress(target.pos)
     }
 
-    private val targetPointProportions = doubleArrayOf(0.1, 0.3, 0.5, 0.7, 0.9)
     private const val MAX_SURROUNDING_PATH_BLOCKS = 8
     private const val RAYCAST_TARGET_EPSILON = 0.005
 
@@ -234,12 +240,12 @@ object ModuleFucker : ClientModule(
         // Use action should be used if the block is the same as the current target and the action is set to use.
         if (destroyerTarget.action == DestroyAction.USE) {
             if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult).shouldSwingHand()) {
-                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+                swingMode.interactSwing(InteractionHand.MAIN_HAND)
             }
 
             waitTicks(delay)
         } else {
-            doBreak(rayTraceResult, immediate = forceImmediateBreak)
+            doBreak(rayTraceResult, immediate = forceImmediateBreak, swingMode)
         }
     }
 
@@ -401,15 +407,24 @@ object ModuleFucker : ClientModule(
         val rangeSquared = range.toDouble().sq()
 
         fun createSurroundingPath(targetPoint: Vec3): SurroundingPath? {
-            val blocks = traceBlocksToTarget(target, eyePos, targetPoint)?.takeIf { it.isNotEmpty() } ?: return null
-            var resistance = 0.0
+            val blocks = traceBlocksToTarget(target, eyePos, targetPoint)?.takeUnless { it.isEmpty() } ?: return null
+            val firstBlock = blocks.first()
+            val firstBlockState = firstBlock.state?.takeUnless { it.isAir } ?: return null
 
-            for (pos in blocks) {
+            // The block we mine is the first blocker, not the target point behind it
+            val firstBlockDist = shapeDistSqr(firstBlock, firstBlockState)
+            if (firstBlockDist > rangeSquared) {
+                return null
+            }
+
+            var resistance = miningDuration(firstBlock, firstBlockState)
+
+            for (i in 1 until blocks.size) {
+                val pos = blocks[i]
                 val state = pos.state?.takeUnless { it.isAir } ?: return null
                 resistance += miningDuration(pos, state)
             }
 
-            val firstBlock = blocks.first()
             return SurroundingPath(
                 firstBlock = firstBlock,
                 blocks = blocks,
@@ -418,8 +433,8 @@ object ModuleFucker : ClientModule(
                     targetPoint = targetPoint,
                     resistance = resistance,
                     blockerCount = blocks.size,
-                    firstBlockDistanceToTarget = firstBlock.distToCenterSqr(targetPoint),
-                    firstBlockDistanceToEyes = firstBlock.distToCenterSqr(eyePos),
+                    firstBlockDistSqrToTarget = firstBlock.distToCenterSqr(targetPoint),
+                    firstBlockDistSqrToEyes = firstBlockDist,
                 )
             )
         }
@@ -434,20 +449,15 @@ object ModuleFucker : ClientModule(
         }
 
         targetShape.move(target).forAllFaces { side, minX, minY, minZ, maxX, maxY, maxZ ->
-            val face = AABB(minX, minY, minZ, maxX, maxY, maxZ)
-            for (a in targetPointProportions) {
-                for (b in targetPointProportions) {
-                    val targetPoint = face.samplePointOnSide(side, a, b)
-
-                    if (eyePos.distanceToSqr(targetPoint) <= rangeSquared) {
-                        val path = createSurroundingPath(targetPoint) ?: continue
-                        val currentBestPath = bestPath
-                        if (currentBestPath == null || currentBestPath >= path) {
-                            bestPath = path
-                        }
+            AlignedFace.get(side, minX, minY, minZ, maxX, maxY, maxZ)
+                .forEachSamplePoint(0.2) { targetPoint ->
+                    val path = createSurroundingPath(targetPoint) ?: return@forEachSamplePoint true
+                    val currentBestPath = bestPath
+                    if (currentBestPath == null || currentBestPath >= path) {
+                        bestPath = path
                     }
+                    true
                 }
-            }
         }
 
         return bestPath
@@ -458,7 +468,6 @@ object ModuleFucker : ClientModule(
         val end = targetPoint.add(direction)
         val clipContext = ClipContext(eyePos, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player)
         val ignoredBlocks = ArrayList<BlockPos>(MAX_SURROUNDING_PATH_BLOCKS)
-        val visited = LongOpenHashSet(MAX_SURROUNDING_PATH_BLOCKS)
         var reachedTarget = false
         var invalidPath = false
 
@@ -478,8 +487,7 @@ object ModuleFucker : ClientModule(
 
                 if (!reachedTarget) {
                     val state = blockPos.state
-                    invalidPath = !visited.add(blockPos.asLong()) ||
-                        state == null || state.isAir || state.isNotBreakable(blockPos) ||
+                    invalidPath = state == null || state.isAir || state.isNotBreakable(blockPos) ||
                         ignoredBlocks.size >= MAX_SURROUNDING_PATH_BLOCKS
                     if (!invalidPath) {
                         ignoredBlocks += blockPos
@@ -541,17 +549,18 @@ object ModuleFucker : ClientModule(
         val targetPoint: Vec3,
         val resistance: Double,
         val blockerCount: Int,
-        val firstBlockDistanceToTarget: Double,
-        val firstBlockDistanceToEyes: Double,
+        val firstBlockDistSqrToTarget: Double,
+        val firstBlockDistSqrToEyes: Double,
     ) : Comparable<SurroundingInfo> {
         override fun compareTo(other: SurroundingInfo): Int = SURROUNDING_INFO_COMPARATOR.compare(this, other)
     }
 
-    private val SURROUNDING_INFO_COMPARATOR = Comparator
-        .comparingDouble<SurroundingInfo> { it.resistance }
-        .thenComparingInt { it.blockerCount }
-        .thenComparingDouble { it.firstBlockDistanceToTarget }
-        .thenComparingDouble { it.firstBlockDistanceToEyes }
+    private val SURROUNDING_INFO_COMPARATOR = ComparatorChain<SurroundingInfo>(
+        Comparator.comparingDouble { it.resistance },
+        Comparator.comparingInt { it.blockerCount },
+        Comparator.comparingDouble { it.firstBlockDistSqrToTarget },
+        Comparator.comparingDouble { it.firstBlockDistSqrToEyes },
+    )
 
     private enum class DestroyAction(override val tag: String) : Tagged {
         DESTROY("Destroy"), USE("Use")
@@ -571,9 +580,9 @@ object ModuleFucker : ClientModule(
         get() {
             val block = this.getBlock()
             val cache = BlockPos.MutableBlockPos()
-            val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
+            val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNull {
                 val neighbor = cache.setWithOffset(this, it)
-                val state = neighbor.state ?: return@mapNotNullTo null
+                val state = neighbor.state ?: return@mapNotNull null
                 if (state.block !== block && !state.isAir) neighbor.immutable() to state else null
             }
 
@@ -585,9 +594,7 @@ object ModuleFucker : ClientModule(
             miningDuration(pos, state)
         }
         .thenComparingDouble { (pos, state) ->
-            state.getShape(world, pos, CollisionContext.of(player))
-                .move(pos)
-                .distanceToSqr(player.eyePosition)
+            shapeDistSqr(pos, state)
         }
 
 }

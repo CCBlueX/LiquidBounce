@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.config.gson
 
 import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import net.ccbluex.liquidbounce.config.gson.adapter.OptionalAdapter
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -79,4 +82,64 @@ class OptionalAdapterTest {
         val deserialized = gson.fromJson<Optional<String>>(json, object : TypeToken<Optional<String>>() {}.type)
         assertEquals(original, deserialized)
     }
+
+    @Test
+    fun `serialize Optional without an explicit type`() {
+        assertEquals("\"Hello\"", gson.toJson(Optional.of("Hello")))
+    }
+
+    @Test
+    fun `serialize empty Optional without an explicit type`() {
+        assertEquals("null", gson.toJson(Optional.empty<String>()))
+    }
+
+    @Test
+    fun `deserialize a raw Optional using the object adapter`() {
+        val optional = gson.fromJson("{\"message\":\"Hello\"}", Optional::class.java)
+
+        assertEquals(mapOf("message" to "Hello"), optional.get())
+    }
+
+    @Test
+    fun `deserialize null into a raw Optional`() {
+        val optional = gson.fromJson("null", Optional::class.java)
+
+        assertEquals(Optional.empty<Any>(), optional)
+    }
+
+    @Test
+    fun `empty Optional does not pass null to the element adapter`() {
+        val customGson = gsonWithNonNullStringAdapter()
+        val type = object : TypeToken<Optional<String>>() {}.type
+
+        assertEquals("null", customGson.toJson(Optional.empty<String>(), type))
+    }
+
+    @Test
+    fun `null Optional does not pass null to the element adapter`() {
+        val customGson = gsonWithNonNullStringAdapter()
+        val type = object : TypeToken<Optional<String>>() {}.type
+
+        assertEquals("null", customGson.toJson(null, type))
+    }
+
+    @Test
+    fun `present Optional uses the registered element adapter`() {
+        val customGson = gsonWithNonNullStringAdapter()
+        val type = object : TypeToken<Optional<String>>() {}.type
+
+        assertEquals("\"custom:Hello\"", customGson.toJson(Optional.of("Hello"), type))
+        assertEquals(Optional.of("Hello"), customGson.fromJson("\"custom:Hello\"", type))
+    }
+
+    private fun gsonWithNonNullStringAdapter() = GsonBuilder()
+        .registerTypeAdapterFactory(OptionalAdapter)
+        .registerTypeAdapter(String::class.java, object : TypeAdapter<String>() {
+            override fun write(sink: JsonWriter, value: String?) {
+                sink.value("custom:${requireNotNull(value)}")
+            }
+
+            override fun read(source: JsonReader): String = source.nextString().removePrefix("custom:")
+        })
+        .create()
 }

@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 
 object InstantNukerMode : Mode("Instant") {
 
@@ -53,7 +52,7 @@ object InstantNukerMode : Mode("Instant") {
             return@tickHandler
         }
 
-        val targets = areaMode.activeMode.lookupTargets(range, count = bps.random())
+        val targets = areaMode.activeMode.lookupTargets(range, limit = bps.random())
 
         if (targets.isEmpty()) {
             wasTarget = null
@@ -71,7 +70,7 @@ object InstantNukerMode : Mode("Instant") {
                 )
             }
 
-            swingMode.swing(InteractionHand.MAIN_HAND)
+            swingMode.attackSwing()
             wasTarget = pos
 
             if (!doNotStop) {

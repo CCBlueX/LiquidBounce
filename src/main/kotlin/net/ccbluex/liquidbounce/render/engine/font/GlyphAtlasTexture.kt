@@ -19,13 +19,15 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
+import it.unimi.dsi.fastutil.ints.IntArrays
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.render.write
+import net.ccbluex.liquidbounce.utils.render.createGpuTexture
+import net.ccbluex.liquidbounce.utils.render.writeRows
+import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.renderer.texture.AbstractTexture
 import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
@@ -44,64 +46,39 @@ class GlyphAtlasTexture(
     var pixels: NativeImage? = pixels
         private set
 
+    val textureSetup: TextureSetup
+
     init {
         require(pixels.format() == NativeImage.Format.LUMINANCE) {
             "Glyph atlas pixels must use LUMINANCE format"
         }
 
-        val device = gpuDevice
-        val gpuTexture = device.createTexture(
-            label,
-            GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING,
-            GpuFormat.R8_UNORM,
-            pixels.width,
-            pixels.height,
-            1,
-            1,
-        )
+        val gpuTexture = pixels.createGpuTexture(label, GpuTexture.USAGE_TEXTURE_BINDING, upload = true)
         texture = gpuTexture
         sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
-        textureView = device.createTextureView(gpuTexture)
-
-        try {
-            upload(pixels)
-        } catch (throwable: Throwable) {
-            close()
-            throw throwable
-        }
+        textureView = gpuDevice.createTextureView(gpuTexture)
 
         if (!retainPixels) {
             pixels.close()
             this.pixels = null
         }
+
+        this.textureSetup = TextureSetup.singleTexture(getTextureView(), getSampler())
     }
 
     fun upload() = upload(requireNotNull(pixels) { "Glyph atlas has no retained pixel data" })
 
-    @Suppress("LongParameterList")
-    fun uploadRect(
+    fun uploadRows(
         mipLevel: Int,
-        x: Int,
         y: Int,
-        width: Int,
         height: Int,
     ) {
         val pixels = requireNotNull(pixels) { "Glyph atlas has no retained pixel data" }
-        getTexture().write(
-            source = pixels,
-            mipLevel = mipLevel,
-            depthOrLayer = 0,
-            destX = x,
-            destY = y,
-            width = width,
-            height = height,
-            sourceX = x,
-            sourceY = y,
-        )
+        getTexture().writeRows(pixels, y, height, mipLevel)
     }
 
     private fun upload(source: NativeImage) {
-        getTexture().write(source, width = source.width, height = source.height)
+        gpuDevice.createCommandEncoder().writeToTexture(getTexture(), source)
     }
 
     override fun close() {
@@ -133,7 +110,7 @@ internal fun BufferedImage.copyCoverageToNativeImage(
     targetY: Int = 0,
     width: Int = this.width,
     height: Int = this.height,
-    scratchBuffer: IntArray = IntArray(0),
+    scratchBuffer: IntArray = IntArrays.EMPTY_ARRAY,
 ): IntArray {
     validateCoverageCopy(target, sourceX, sourceY, targetX, targetY, width, height)
 

@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.render.FontFace
+import net.ccbluex.liquidbounce.utils.io.readText
 import java.awt.Font
 
 internal object FontCharacterSet {
@@ -58,7 +59,7 @@ internal object FontCharacterSet {
     val commonHanCodepoints: IntArray by lazy(LazyThreadSafetyMode.PUBLICATION) {
         val text = requireNotNull(FontCharacterSet::class.java.getResourceAsStream(COMMON_HAN_RESOURCE)) {
             "Missing common Han character resource $COMMON_HAN_RESOURCE"
-        }.bufferedReader(Charsets.UTF_8).use { it.readText().trim() }
+        }.use { it.readText().trim() }
 
         val codepoints = text.codePoints().toArray()
         require(codepoints.size == COMMON_HAN_COUNT) {
@@ -85,7 +86,7 @@ internal object FontCharacterSet {
             destination = result,
             requestedFace = primaryFace,
             fallbackFaces = fallbackFaces,
-            styles = primaryFace.filledStyles.mapToIntArray { it.style },
+            styles = primaryFace.filledStyles.mapToIntArray { it.awtFont.style },
             codepoints = eagerCodepoints,
         )
 
@@ -120,7 +121,7 @@ internal object FontCharacterSet {
     ) {
         styles.forEach { style ->
             codepoints.forEach { codepoint ->
-                resolveStaticFont(requestedFace, fallbackFaces, style, codepoint)?.let { font ->
+                resolveFont(requestedFace, fallbackFaces, style, codepoint)?.let { font ->
                     destination.add(FontGlyph(codepoint, font))
                 }
             }
@@ -131,24 +132,7 @@ internal object FontCharacterSet {
         range.forEach(this::add)
     }
 
-    private fun resolveStaticFont(
-        requestedFace: FontFace,
-        fallbackFaces: List<FontFace>,
-        style: @FontStyle Int,
-        codepoint: Int,
-    ): FontId? = synchronized(GlyphPage.fontRasterizationLock) {
-        val requestedFont = requestedFace.style(style) ?: requestedFace.plainStyle
-        if (requestedFont.awtFont.canDisplay(codepoint)) {
-            return@synchronized requestedFont
-        }
-
-        fallbackFaces.asSequence()
-            .filter { it !== requestedFace }
-            .map(FontFace::plainStyle)
-            .firstOrNull { it.awtFont.canDisplay(codepoint) }
-    }
-
     private val FONT_GLYPH_COMPARATOR = Comparator.comparing<FontGlyph, String> { it.font.awtFont.fontName }
-        .thenComparingInt { it.font.style }
+        .thenComparingInt { it.font.awtFont.style }
         .thenComparingInt { it.codepoint }
 }

@@ -26,17 +26,16 @@ data class LineSegment(
     val end: Vec3,
 ) : LinearGeometry3 {
 
+    override val direction: Vec3 = end.subtract(start)
+
     init {
-        require(!end.subtract(start).isLikelyZero) {
+        require(!direction.isLikelyZero) {
             "Line segment must not have zero length, actual: $start -> $end"
         }
     }
 
     override val anchor: Vec3
         get() = start
-
-    override val direction: Vec3
-        get() = end.subtract(start)
 
     val length: Double
         get() = direction.length()
