@@ -32,6 +32,8 @@ import net.minecraft.client.renderer.fog.FogData
 import net.minecraft.client.renderer.state.LightmapRenderState
 import org.joml.Vector4fc
 
+private val accentColor = Color4b(0x46, 0x77, 0xFF)
+
 /**
  * CustomAmbience module
  *
@@ -54,16 +56,20 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
         val disableWorldFog by boolean("DisableWorldFog", false)
 
-        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", false) {
-            val color by color("Color", Color4b(47, 128, 255, 201))
+        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", true) {
+            val color by color("Color", accentColor.alpha(201))
         }
 
-        private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
+        init {
+            tree(FogColorOverride)
+        }
 
-        private val environmental by floatRange("Environmental", 0f..1024f, -16f..2048f)
+        private val backgroundColor by color("BackgroundColor", accentColor.alpha(201))
+
+        private val environmental by floatRange("Environmental", 5f..40f, -16f..2048f)
         private val renderDistance by floatRange("RenderDistance", 230f..256f, 0f..1024f)
-        private val skyEnd by float("SkyEnd", 256f, 0f..1024f)
-        private val cloudEnd by float("CloudEnd", 20480f, 0f..4096f)
+        private val skyEnd by float("SkyEnd", 40f, 0f..1024f)
+        private val cloudEnd by float("CloudEnd", 40f, 0f..4096f)
 
         /**
          * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog.MixinFogRenderer
@@ -93,7 +99,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
      */
-    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
+    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", true) {
         val mode = choices("Mode", 0) {
             arrayOf(EditorMode.SingleColor, EditorMode.Custom)
         }
@@ -105,7 +111,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
             abstract fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean
 
             object SingleColor : EditorMode("SingleColor") {
-                private val color by color("Color", Color4b.BLUE)
+                private val color by color("Color", accentColor)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
                     texture.clearColor(color)

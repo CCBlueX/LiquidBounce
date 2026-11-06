@@ -19,16 +19,19 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import org.joml.Vector4f;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FogRenderer.class)
 public abstract class MixinFogRenderer {
@@ -43,10 +46,10 @@ public abstract class MixinFogRenderer {
     }
 
     @Inject(
-        method = "updateBuffer(Lnet/minecraft/client/renderer/fog/FogData;)V",
-        at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/buffers/GpuBuffer;map(ZZ)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice$MappedView;")
+        method = "setupFog",
+        at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/fog/FogData;renderDistanceEnd:F", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER)
     )
-    private void editFogData(FogData fog, CallbackInfo ci) {
+    private void editFogData(CallbackInfoReturnable<FogData> cir, @Local FogData fog) {
         ModuleCustomAmbience.FogValueGroup.INSTANCE.modifyFogData(fog);
     }
 
