@@ -85,12 +85,10 @@ class DynamicFontCacheManager(
 
                     val bb = change.descriptor.renderInfo.atlasLocation?.pixelBoundingBox ?: continue
 
-                    this.dynamicGlyphPage.texture.uploadRect(
+                    this.dynamicGlyphPage.texture.uploadRows(
                         mipLevel = 0,
-                        x = bb.xMin.toInt(),
                         y = bb.yMin.toInt(),
-                        width = (bb.xMax - bb.xMin).toInt(),
-                        height = (bb.yMax - bb.yMin).toInt()
+                        height = (bb.yMax - bb.yMin).toInt(),
                     )
                 }
             }

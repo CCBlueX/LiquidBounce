@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.ccbluex.liquidbounce.utils.text.asFormattedCharSequence
 import net.ccbluex.liquidbounce.utils.text.codePointsToString
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -192,7 +191,7 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
  * 2. Applies [ModuleNameProtect] - if needed
  */
 fun Component.sanitizeForeignInput(): FormattedCharSequence =
-    ModuleNameProtect.wrap(this.asFormattedCharSequence())
+    ModuleNameProtect.wrap(this.visualOrderText)
 
 /**
  * Applies [ModuleNameProtect] - if needed

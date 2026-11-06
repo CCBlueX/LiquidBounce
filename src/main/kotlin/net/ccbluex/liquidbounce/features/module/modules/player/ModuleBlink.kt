@@ -162,8 +162,8 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
                 }
             }
 
-            notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
             if (autoDisable) {
+                notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)
                 enabled = false
             }
         }

@@ -16,28 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-package net.ccbluex.liquidbounce.api.interceptors
+import net.ccbluex.liquidbounce.config.types.list.Tagged
+import java.text.DecimalFormat
 
-import okhttp3.CacheControl
-import okhttp3.Interceptor
-import okhttp3.Response
+enum class GameTimeUnit(
+    override val tag: String,
+) : Tagged {
+    TICKS("Ticks") {
+        override fun format(ticks: Int): String = ticks.toString()
+    },
+    SECONDS("Seconds") {
+        private val format = DecimalFormat("0.#s")
+        override fun format(ticks: Int): String = format.format(ticks * 0.05)
+    };
 
-class CacheBlacklistInterceptor(
-    val blacklistedHosts: Set<String>,
-) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        if (request.url.host in blacklistedHosts) {
-            val newRequest = request.newBuilder()
-                .cacheControl(cacheControl)
-                .build()
-            return chain.proceed(newRequest)
-        }
-        return chain.proceed(request)
-    }
+    abstract fun format(ticks: Int): String
 
-    companion {
-        private val cacheControl = CacheControl.Builder().noCache().noStore().build()
-    }
 }

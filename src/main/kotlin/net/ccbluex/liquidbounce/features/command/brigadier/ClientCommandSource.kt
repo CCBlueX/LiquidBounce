@@ -24,6 +24,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
+import net.ccbluex.liquidbounce.utils.kotlin.orEmpty
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.commands.SharedSuggestionProvider
@@ -96,19 +97,19 @@ object ClientCommandSource : SharedSuggestionProvider {
 
     // Replicated from vanilla ClientSuggestionProvider.getOnlinePlayerNames.
     override fun getOnlinePlayerNames(): Collection<String> =
-        mc()?.connection?.onlinePlayers?.map { it.profile.name } ?: emptyList()
+        mc()?.connection?.onlinePlayers?.map { it.profile.name }.orEmpty()
 
     // Replicated from vanilla ClientSuggestionProvider.getAllTeams.
     override fun getAllTeams(): Collection<String> =
-        mc()?.connection?.scoreboard()?.teamNames ?: emptyList()
+        mc()?.connection?.scoreboard()?.teamNames.orEmpty()
 
     // Replicated from vanilla ClientSuggestionProvider.getAvailableSounds.
     override fun getAvailableSounds(): Stream<Identifier> =
-        mc()?.soundManager?.availableSounds?.stream() ?: Stream.empty()
+        mc()?.soundManager?.availableSounds?.stream().orEmpty()
 
     // Replicated from vanilla ClientSuggestionProvider.getAvailablePostEffects.
     override fun getAvailablePostEffects(): Stream<Identifier> =
-        mc()?.shaderManager?.availablePostEffects ?: Stream.empty()
+        mc()?.shaderManager?.availablePostEffects.orEmpty()
 
     /**
      * Server-driven custom tab completions require a request/response round-trip with a
@@ -119,11 +120,11 @@ object ClientCommandSource : SharedSuggestionProvider {
         Suggestions.empty()
 
     override fun levels(): Set<ResourceKey<Level>> =
-        mc()?.connection?.levels() ?: emptySet()
+        mc()?.connection?.levels().orEmpty()
 
     /**
      * Synced world registries when a level is loaded; otherwise the static builtin
-     * [RegistryAccess] (not [VanillaRegistries.createLookup], which is only a
+     * [RegistryAccess] (not [VanillaRegistries.createWorldLookup], which is only a
      * [HolderLookup.Provider] and is not a [RegistryAccess]).
      */
     override fun registryAccess(): RegistryAccess =

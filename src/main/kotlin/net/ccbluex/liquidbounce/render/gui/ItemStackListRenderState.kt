@@ -45,7 +45,7 @@ class ItemStackListRenderState(
 
     @JvmField var rowLength: Int = 9
 
-    @JvmField var background: ItemStackListBackground = ItemStackListBackground.Panel.DEFAULT
+    @JvmField var background: ItemStackListBackground = GuiPanel.DEFAULT
 
     @JvmField var itemStackRenderer: ItemStackListRenderer.SingleItemStackRenderer =
         ItemStackListRenderer.SingleItemStackRenderer.All

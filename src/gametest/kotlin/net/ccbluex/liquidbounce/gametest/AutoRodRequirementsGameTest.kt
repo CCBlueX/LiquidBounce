@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
@@ -52,8 +52,8 @@ class AutoRodRequirementsGameTest : FabricClientGameTest {
                 context.waitFor({ client -> client.player?.hasInfiniteMaterials() == true }, 200)
                 context.onClient {
                     blockers.forEach { it.enabled = false }
-                    ModuleAutoRod.settings.getValue("Requires").deserializeFrom(Gson(), JsonArray())
-                    ModuleAutoRod.settings.getValue("Ignore").deserializeFrom(Gson(), JsonArray())
+                    ModuleAutoRod.settings.getValue("Requires").deserializeFrom(GSON_DEFAULT, JsonArray())
+                    ModuleAutoRod.settings.getValue("Ignore").deserializeFrom(GSON_DEFAULT, JsonArray())
                     ModuleAutoRod.settings.getValue("MinHealth").setByString("10")
                     ModuleAutoRod.enabled = true
                     check(ModuleAutoRod.running)
@@ -111,18 +111,18 @@ class AutoRodRequirementsGameTest : FabricClientGameTest {
     private fun assertConfiguredGuards() {
         val player = checkNotNull(mc.player)
         val requires = ModuleAutoRod.settings.getValue("Requires")
-        requires.deserializeFrom(Gson(), JsonArray().apply { add("Weapon") })
+        requires.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("Weapon") })
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.STONE))
         assertAllowed(false, "the configured Weapon requirement")
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-        requires.deserializeFrom(Gson(), JsonArray())
+        requires.deserializeFrom(GSON_DEFAULT, JsonArray())
 
         val ignores = ModuleAutoRod.settings.getValue("Ignore")
-        ignores.deserializeFrom(Gson(), JsonArray().apply { add("HoldingConsumable") })
+        ignores.deserializeFrom(GSON_DEFAULT, JsonArray().apply { add("HoldingConsumable") })
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.APPLE))
         assertAllowed(false, "the configured HoldingConsumable ignore")
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack(Items.DIAMOND_SWORD))
-        ignores.deserializeFrom(Gson(), JsonArray())
+        ignores.deserializeFrom(GSON_DEFAULT, JsonArray())
     }
 
     private fun assertModuleGuards() {

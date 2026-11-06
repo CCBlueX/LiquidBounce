@@ -43,6 +43,18 @@ val AABB.vertices: Array<Vec3>
         Vec3(maxX, maxY, maxZ),
     )
 
+/**
+ * Volume of this box. [AABB] orders its bounds on construction, so the box [AABB.intersect] builds from two disjoint
+ * boxes is the gap between them and has a positive volume; use [overlapVolume] for how much two boxes share.
+ */
+val AABB.volume: Double get() = xsize * ysize * zsize
+
+/**
+ * Volume this box and [other] share, zero when they do not intersect.
+ */
+fun AABB.overlapVolume(other: AABB): Double =
+    if (intersects(other)) intersect(other).volume else 0.0
+
 // Box operators
 
 inline operator fun AABB.plus(offset: Position): AABB =
@@ -113,28 +125,6 @@ fun AABB.getNearestPointOnSide(from: Vec3, side: Direction): Vec3 {
     val nearest = getNearestPoint(from)
     return pointOnSide(nearest.x, nearest.y, nearest.z, side)
 }
-
-fun AABB.samplePointOnSide(side: Direction, a: Double, b: Double): Vec3 {
-    val spot = when (side) {
-        Direction.DOWN -> Vec3(a, 0.0, b)
-        Direction.UP -> Vec3(a, 1.0, b)
-        Direction.NORTH -> Vec3(a, b, 0.0)
-        Direction.SOUTH -> Vec3(a, b, 1.0)
-        Direction.WEST -> Vec3(0.0, a, b)
-        Direction.EAST -> Vec3(1.0, a, b)
-    }
-
-    return pointAtProportion(spot.x, spot.y, spot.z)
-}
-
-fun AABB.pointAtProportion(p: Double): Vec3 =
-    pointAtProportion(p, p, p)
-
-fun AABB.pointAtProportion(pX: Double, pY: Double, pZ: Double): Vec3 = Vec3(
-    Math.fma(xsize, pX, minX),
-    Math.fma(ysize, pY, minY),
-    Math.fma(zsize, pZ, minZ),
-)
 
 private fun AABB.pointOnSide(x: Double, y: Double, z: Double, side: Direction): Vec3 =
     when (side) {

@@ -161,7 +161,7 @@ abstract class Mode @JvmOverloads constructor(
      * we handle the events.
      */
     override val running: Boolean
-        get() = super.running && isSelected
+        get() = isSelected && super.running
 
     override fun parent() = this.parent.eventListener
 

@@ -1444,6 +1444,14 @@ public final class net/ccbluex/liquidbounce/render/gui/ItemStackListRenderer : n
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/render/gui/indicator/IndicatorRenderer : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public final class net/ccbluex/liquidbounce/utils/aiming/PostRotationExecutor : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
@@ -1460,10 +1468,10 @@ public final class net/ccbluex/liquidbounce/utils/aiming/RotationManager : net/c
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;ILnet/ccbluex/liquidbounce/features/module/ClientModule;)V
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
-	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
-	public static synthetic fun setRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationManager;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;ILnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/RotationTarget;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;)V
+	public final fun setRotationTarget (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;)V
+	public static synthetic fun setRotationTarget$default (Lnet/ccbluex/liquidbounce/utils/aiming/RotationManager;Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;ZLnet/ccbluex/liquidbounce/utils/aiming/RotationsValueGroup;Lnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/event/EventListener;Lnet/ccbluex/liquidbounce/utils/client/RestrictedSingleUseAction;ILjava/lang/Object;)V
 }
 
 public final class net/ccbluex/liquidbounce/utils/aiming/RotationTarget {
@@ -1525,6 +1533,7 @@ public final class net/ccbluex/liquidbounce/utils/aiming/data/Rotation : java/la
 	public static final fun lookingAt (Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;)Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public final fun normalize ()Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;
 	public final fun pitch ()F
+	public final fun rotationDeltaLengthSqrTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
 	public final fun rotationDeltaLengthTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)F
 	public final fun rotationDeltaTo (Lnet/ccbluex/liquidbounce/utils/aiming/data/Rotation;)Lnet/ccbluex/liquidbounce/utils/aiming/data/RotationDelta;
 	public final fun toQuaternion ()Lorg/joml/Quaternionf;
@@ -1592,17 +1601,19 @@ public final class net/ccbluex/liquidbounce/utils/block/ChunkScanner : net/ccblu
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/utils/block/SwingMode : java/lang/Enum, java/util/function/Consumer, net/ccbluex/liquidbounce/config/types/list/Tagged {
+public final class net/ccbluex/liquidbounce/utils/block/SwingMode : java/lang/Enum, net/ccbluex/liquidbounce/config/types/list/Tagged {
+	public static final field Companion Lnet/ccbluex/liquidbounce/utils/block/SwingMode$Companion;
 	public static final field DO_NOT_HIDE Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_BOTH Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_CLIENT Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static final field HIDE_SERVER Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
-	public synthetic fun accept (Ljava/lang/Object;)V
-	public fun accept (Lnet/minecraft/world/InteractionHand;)V
+	public static final field INTERACT_CHOICES Ljava/util/Set;
+	public final fun attackSwing ()V
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getServerSwing ()Z
 	public fun getTag ()Ljava/lang/String;
 	public fun getTagAliases ()Ljava/util/List;
+	public final fun interactSwing (Lnet/minecraft/world/InteractionHand;)V
 	public final fun swing (Lnet/minecraft/world/InteractionHand;)V
 	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/utils/block/SwingMode;
 	public static fun values ()[Lnet/ccbluex/liquidbounce/utils/block/SwingMode;

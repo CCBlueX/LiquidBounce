@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed.doOptimizationsPreventJump
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet.Companion.COMPARING_LUNGE_AND_SPEED
-import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -38,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.roundToInt
 
@@ -81,7 +79,6 @@ abstract class SpeedBHopBase(name: String, override val parent: ModeValueGroup<*
 
 class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAttack", parent) {
 
-    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val holdTime by intRange("HoldTime", 1..1, 1..20, "ticks")
     private val onGround by boolean("OnGround", true)
     private val ignoreHunger by boolean("IgnoreHunger", false)
@@ -114,7 +111,6 @@ class SpeedPiercingAttack(parent: ModeValueGroup<*>) : SpeedBHopBase("PiercingAt
 
         SilentHotbar.selectSlotSilently(this, slot, ticksUntilReset = holdTime.random())
         interaction.piercingAttack(slot.itemStack.attackAnimation, piercingWeapon)
-        swingMode.swing(InteractionHand.MAIN_HAND)
 
         if (waitForCooldown) {
             waitTicks((20.0 / slot.itemStack.attackSpeed).roundToInt())

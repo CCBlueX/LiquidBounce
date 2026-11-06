@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.sorting
 
+/**
+ * This class is recommended to be used when size of [comparators] is greater than 3.
+ * Or else, [Comparator.then] is a better choice. (It is a linked-chain)
+ */
 class ComparatorChain<T>(private vararg val comparators: Comparator<in T>) : Comparator<T> {
 
     override fun compare(o1: T, o2: T): Int {
