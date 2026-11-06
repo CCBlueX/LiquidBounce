@@ -421,8 +421,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         val drawVectorDot = vectorDot.a > 0
 
         if (drawVectorLine || drawVectorDot) {
-            val currentRotation = RotationManager.currentRotation ?: return@handler
-            val previousRotation = RotationManager.lastRotation ?: currentRotation
+            val currentRotation = currentRotation ?: return@handler
+            val previousRotation = lastRotation ?: currentRotation
 
             val interpolatedRotationVec = previousRotation.directionVector
                 .lerp(currentRotation.directionVector, event.partialTicks.toDouble())
