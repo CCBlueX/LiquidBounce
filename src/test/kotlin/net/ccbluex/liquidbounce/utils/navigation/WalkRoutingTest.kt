@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
+import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
@@ -255,6 +256,20 @@ class WalkRoutingTest {
             val breaks = result.value.steps.flatMap { it.breaks }
             assertTrue(breaks.none { world.getBlockState(it.above()).`is`(Blocks.GRAVEL) })
         }
+    }
+
+    @Test
+    fun `a point resting on farmland is reached`() {
+        val world = TestNavigationWorld.flat().fill(5, 0, -1, 7, 0, 1, Blocks.FARMLAND.defaultBlockState())
+        val item = Vec3(6.7, 0.9375, 0.8)
+        val search = WalkRouteSearch(world.terrain(), feet(0, 1, 0), NearGoal(item, 0.75), abilities(), LIMITS)
+        var result = search.advance()
+        while (result == RouteResult.Searching) {
+            result = search.advance()
+        }
+
+        val path = completePath(result)
+        assertTrue(path.end.distanceTo(item) <= 0.75, "the path ends at ${path.end}, away from $item")
     }
 
 }

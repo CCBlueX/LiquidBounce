@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.route
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
@@ -126,11 +127,14 @@ class BlockGoal(val positions: Collection<BlockPos>) : NavigationGoal {
 }
 
 /**
- * Feet within [radius] of [center], measured from the bottom center of the feet block.
+ * Feet within [radius] of [center], measured from the center of the feet block and, vertically, from the block
+ * holding [center], as feet on a partial block such as farmland rest below its top.
  */
 data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
 
     override val ends: Collection<Vec3> = listOf(center)
+
+    private val centerY = Mth.floor(center.y)
 
     override fun isGoal(x: Int, y: Int, z: Int) = feetDistance(x, y, z) <= radius
 
@@ -138,7 +142,7 @@ data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
 
     private fun feetDistance(x: Int, y: Int, z: Int): Double {
         val dx = x + 0.5 - center.x
-        val dy = y - center.y
+        val dy = (y - centerY).toDouble()
         val dz = z + 0.5 - center.z
         return sqrt(dx * dx + dy * dy + dz * dz)
     }
