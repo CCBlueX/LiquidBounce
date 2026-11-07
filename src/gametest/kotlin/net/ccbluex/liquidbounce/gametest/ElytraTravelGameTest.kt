@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -28,11 +29,12 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * `.goto` with an elytra over long distances: cruising with rockets from one floating platform to another far over
- * the void of the End, climbing over a pillar on the way, and arriving unhurt.
+ * the void of the End, climbing over a pillar on the way, and bouncing along the Nether roof with ElytraRecast,
+ * faster than sprinting. Both arrive unhurt.
  */
 class ElytraTravelGameTest : FabricClientGameTest {
 
-    private val modules = listOf(ModuleAutoWalk)
+    private val modules = listOf(ModuleAutoWalk, ModuleElytraRecast)
 
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
@@ -46,6 +48,7 @@ class ElytraTravelGameTest : FabricClientGameTest {
                 server.runCommand("item replace entity @a armor.chest with elytra")
 
                 checkEndCruise(context, server)
+                checkRoofBounce(context, server)
             }
         } finally {
             context.onClient {
@@ -91,6 +94,28 @@ class ElytraTravelGameTest : FabricClientGameTest {
     }
 
     /**
+     * The natural roof of the Nether, flat bedrock with its top at y 127.
+     */
+    private fun checkRoofBounce(context: ClientGameTestContext, server: TestServerContext) {
+        server.runCommand("clear @a firework_rocket")
+        val start = Vec3(0.5, ROOF, 0.5)
+        server.runCommand("execute in minecraft:the_nether run tp @a ${start.x} ${start.y} ${start.z} -90 0")
+        context.waitFor({ client -> client.player?.position()?.distanceToSqr(start)?.let { it < 0.01 } == true }, 200)
+        context.waitTicks(LOAD_TICKS)
+        context.onClient { ModuleElytraRecast.enabled = true }
+
+        val goal = Vec3(BOUNCE_DISTANCE + 0.5, ROOF, 0.5)
+        val began = context.fromClient { it.level!!.gameTime }
+        val bounced = goto(context, server, goal, "along the roof", BOUNCE_TICKS) { it.isFallFlying }
+        val ticks = context.fromClient { it.level!!.gameTime } - began
+        check(bounced) { "Crossed the roof without the elytra" }
+
+        val speed = BOUNCE_DISTANCE / (ticks / TICKS_PER_SECOND)
+        println("Bounced $BOUNCE_DISTANCE blocks in $ticks ticks, $speed blocks per second")
+        check(speed > MIN_BOUNCE_SPEED) { "Bounced at only $speed blocks per second" }
+    }
+
+    /**
      * Goes to [goal] with `.goto` within [ticks]; true if [flying] held on the way.
      */
     private fun goto(
@@ -130,9 +155,14 @@ class ElytraTravelGameTest : FabricClientGameTest {
         const val PILLAR = 475
         const val LOW = 100
         const val RISE = 10
+        const val ROOF = 128.0
+        const val BOUNCE_DISTANCE = 400.0
+        const val MIN_BOUNCE_SPEED = 12.0
+        const val TICKS_PER_SECOND = 20.0
         const val LOAD_TICKS = 60
         const val SETTLE_TICKS = 10
         const val CRUISE_TICKS = 1600
+        const val BOUNCE_TICKS = 1600
         const val ARRIVAL = 1.5
     }
 

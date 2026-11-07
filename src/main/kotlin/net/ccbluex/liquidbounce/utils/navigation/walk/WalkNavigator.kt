@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideNavigator
+import net.ccbluex.liquidbounce.utils.navigation.flight.RoofBounce
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -90,6 +91,7 @@ class WalkNavigator(
     private val follower = WalkFollower(actions)
     private val flight = FlightNavigator(this, view)
     private val glide = GlideNavigator(this, view)
+    private val bounce = RoofBounce(this, view)
     private val ride = RideNavigator(this, view) { walkSettings.maxLength }
 
     private val avoid = LongOpenHashSet()
@@ -222,7 +224,9 @@ class WalkNavigator(
             direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
         }
 
-        if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius)) {
+        if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
+            bounce(event, goal)
+        ) {
             return false
         }
 
@@ -270,6 +274,7 @@ class WalkNavigator(
 
         if (!flight.isActive) {
             glide.halt()
+            bounce.halt()
             stopWalking()
         }
 
@@ -293,6 +298,23 @@ class WalkNavigator(
         }
         steeringTarget = null
         sprintWanted = glide.sprint
+        return true
+    }
+
+    /**
+     * Bounces along a flat floor with an elytra and ElytraRecast while that is faster; false to walk.
+     */
+    private fun bounce(event: MovementInputEvent, goal: Vec3): Boolean {
+        val wasBouncing = bounce.isActive
+        if (!bounce.navigate(event, goal, walkSettings.captureGlide(), frameYaw())) {
+            return false
+        }
+
+        if (!wasBouncing) {
+            stopWalking()
+        }
+        steeringTarget = null
+        sprintWanted = true
         return true
     }
 
@@ -580,6 +602,7 @@ class WalkNavigator(
     private fun standBy() {
         flight.halt()
         glide.halt()
+        bounce.halt()
         planner.cancel()
         follower.clear()
         actions.idle()
@@ -601,6 +624,7 @@ class WalkNavigator(
         ride.halt()
         flight.halt()
         glide.halt()
+        bounce.halt()
         stopWalking()
     }
 
