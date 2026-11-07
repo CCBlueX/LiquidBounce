@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.AutoFarmAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
@@ -30,19 +32,20 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
  * AutoWalk walks the way the player faces around a wall, to a `.goto` destination around a closed room and up to a
- * `.follow` player, AutoFarm walks onto an item to pick it up, and Fucker's AutoWalk bridges over to a bed and breaks
- * it.
+ * `.follow` player, AutoFarm walks onto an item to pick it up, Fucker's AutoWalk bridges over to a bed and breaks it,
+ * and KillAura's FightBot walks around a fence to hit a husk.
  */
 @Suppress("TooManyFunctions")
 class AutoWalkGameTest : FabricClientGameTest {
 
-    private val modules = listOf(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker)
+    private val modules = listOf(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker, ModuleKillAura)
 
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
@@ -66,6 +69,7 @@ class AutoWalkGameTest : FabricClientGameTest {
                 checkFollow(context, server, y)
                 checkFarmItem(context, server, y)
                 checkBed(context, server, y)
+                checkFightBot(context, server, y)
             }
         } finally {
             context.onClient {
@@ -243,6 +247,36 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
     }
 
+    /**
+     * Far from the husk, FightBot walks up to it instead of keeping away while the weapon recharges.
+     */
+    private fun checkFightBot(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+        server.runCommand("fill 50 $y 4 50 $y 12 oak_fence")
+        server.runCommand("summon husk 56.5 $y 8.5 {NoAI:1b,PersistenceRequired:1b}")
+        moveTo(context, server, Vec3(44.5, y.toDouble(), 8.5))
+        context.onClient {
+            KillAuraFightBot.enabled = true
+            ModuleKillAura.enabled = true
+        }
+
+        try {
+            repeat(FIGHT_TICKS) {
+                val hit = server.computeOnServer<Boolean, RuntimeException> { s ->
+                    s.overworld().allEntities.any { it is Husk && it.health < it.maxHealth }
+                }
+                if (hit) {
+                    return
+                }
+                context.waitTick()
+            }
+            val position = context.fromClient { checkNotNull(it.player).position() }
+            error("FightBot did not hit the husk within $FIGHT_TICKS ticks, stopped at $position")
+        } finally {
+            context.onClient { ModuleKillAura.enabled = false }
+            server.runCommand("kill @e[type=husk]")
+        }
+    }
+
     private fun unhurt(server: TestServerContext, what: String, block: () -> Unit) {
         val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
         block()
@@ -290,6 +324,7 @@ class AutoWalkGameTest : FabricClientGameTest {
         const val SPRINT_TICKS = 200
         const val FOLLOW_TICKS = 300
         const val FOLLOW_DISTANCE = 3.5
+        const val FIGHT_TICKS = 400
     }
 
 }

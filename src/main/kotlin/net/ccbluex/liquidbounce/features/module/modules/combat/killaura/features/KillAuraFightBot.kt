@@ -152,7 +152,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(
 
         // Otherwise handle combat movement
         val combatTarget = context.combatTarget ?: return null
-        return if (runawayOnCooldown && !clicker.willClickAt()) {
+        return if (runawayOnCooldown && !combatTarget.outOfDistance && !clicker.willClickAt()) {
             calculateRunawayPosition(context, combatTarget)
         } else {
             calculateAttackPosition(context, combatTarget)
