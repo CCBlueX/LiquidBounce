@@ -52,7 +52,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.chat.ServerLocation
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -292,7 +291,6 @@ object LiquidBounce : EventListener {
         FriendManager
         InventoryManager
         EnderChestInventoryTracker
-        ServerLocation
         ActiveServerList
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)

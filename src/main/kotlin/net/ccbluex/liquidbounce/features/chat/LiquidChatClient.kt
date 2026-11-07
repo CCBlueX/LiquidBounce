@@ -196,7 +196,7 @@ object LiquidChatClient {
         logger.info("Logging in with LiquidBounce Account...")
         stateChange(ClientChatStateChange.State.LOGGING_IN)
         when (val result = session.loginAccount(accessToken, GlobalSettingsClientChat.allowMessages)) {
-            LoginResult.Success -> loggedIn(session)
+            LoginResult.Success -> loggedIn()
             is LoginResult.Refused -> if (result.error.code == ErrorCode.LoginFailed) {
                 logger.info("LiquidBounce Account login failed, falling back to Mojang...")
                 return false
@@ -230,7 +230,7 @@ object LiquidChatClient {
         }
 
         when (result) {
-            LoginResult.Success -> loggedIn(session)
+            LoginResult.Success -> loggedIn()
             is LoginResult.Refused -> EventManager.callEvent(
                 ClientChatErrorEvent(translateError(result.error), result.error.code.code)
             )
@@ -238,12 +238,11 @@ object LiquidChatClient {
         }
     }
 
-    private fun loggedIn(session: AxochatSession) {
+    private fun loggedIn() {
         isLoggedIn = true
         loggedInAt = TimeSource.Monotonic.markNow()
         announcedAuthFailure = false
         stateChange(ClientChatStateChange.State.LOGGED_IN)
-        GlobalSettingsClientChat.sendSettings(session)
         if (!announcedLogin) {
             announcedLogin = true
             announce("states.loggedIn", NotificationEvent.Severity.INFO)
@@ -260,7 +259,7 @@ object LiquidChatClient {
             is Clientbound.ChatMessage -> EventManager.callEvent(ClientChatMessageEvent(
                 LegacyUser(packet.author.name, packet.author.uuid),
                 packet.content,
-                chatGroupOf(packet.target),
+                chatGroupOf(packet.channel),
                 packet.channel,
                 packet.author,
                 packet.id,
@@ -293,9 +292,8 @@ private suspend fun joinServer(serverId: String) = withContext(Dispatchers.IO) {
     mc.services.sessionService.joinServer(mc.user.profileId, mc.user.accessToken, serverId)
 }
 
-private fun chatGroupOf(channel: Channel?) = when (channel) {
-    Channel.Server, is Channel.Watched -> ClientChatMessageEvent.ChatGroup.SERVER_CHAT
-    is Channel.User -> ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT
+private fun chatGroupOf(channel: Channel) = when (channel) {
+    is Channel.Direct -> ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT
     else -> ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT
 }
 

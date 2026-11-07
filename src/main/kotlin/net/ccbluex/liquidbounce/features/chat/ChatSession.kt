@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
-import net.ccbluex.axochat.user.UserRef
 import java.util.concurrent.ConcurrentHashMap
 
 object ChatSession {
@@ -33,7 +32,7 @@ object ChatSession {
     var self: Author? = null
         private set
 
-    private val users = ConcurrentHashMap<String, UserRef>()
+    private val users = ConcurrentHashMap<String, Author>()
 
     private val recentMessages = object : LinkedHashMap<Long, String>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
@@ -45,9 +44,9 @@ object ChatSession {
 
     fun nameOf(id: String): String = users[id]?.name ?: id.take(8)
 
-    fun userOf(id: String): UserRef? = users[id]
+    fun userOf(id: String): Author? = users[id]
 
-    fun findUser(reference: String): UserRef? =
+    fun findUser(reference: String): Author? =
         users[reference] ?: users.values.firstOrNull { it.name.equals(reference, true) }
 
     fun knownNames(accounts: Boolean = false): Collection<String> = users.values
@@ -62,11 +61,11 @@ object ChatSession {
         when (packet) {
             is Clientbound.Welcome -> {
                 self = packet.user
-                users[packet.user.id] = packet.user.toUserRef()
+                users[packet.user.id] = packet.user
             }
 
             is Clientbound.ChatMessage -> {
-                users[packet.author.id] = packet.author.toUserRef()
+                users[packet.author.id] = packet.author
                 synchronized(recentMessages) {
                     recentMessages[packet.id] = packet.author.id
                 }

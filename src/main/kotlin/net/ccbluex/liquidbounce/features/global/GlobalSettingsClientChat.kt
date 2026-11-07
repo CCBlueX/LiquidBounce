@@ -24,7 +24,6 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeoutOrNull
-import net.ccbluex.axochat.AxochatSession
 import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.config.types.Value
@@ -83,8 +82,12 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
-    internal val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
-    private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
+    // the server only takes it at login
+    internal val allowMessages by boolean("AllowMessages", true).onChanged {
+        if (LiquidChatClient.isLoggedIn) {
+            restartIfRunning()
+        }
+    }
 
     private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
@@ -118,7 +121,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         val packet = when {
             session.isModern -> Serverbound.ChatMessage(channel, message)
             channel == Channel.Global -> Serverbound.Message(message)
-            channel is Channel.User -> Serverbound.PrivateMessage(channel.user, message)
+            channel is Channel.Direct -> Serverbound.PrivateMessage(channel.user, message)
             else -> null
         }
         if (packet == null) {
@@ -127,7 +130,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
 
         session.send(packet)
-        if (!session.isModern && channel is Channel.User) {
+        if (!session.isModern && channel is Channel.Direct) {
             // v1 servers do not echo direct messages
             val prefix = ChatMessageFormat.directMessagePrefix(channel.user.asPlainText(ChatFormatting.BLUE))
             writeChat(prefix, regular(message))
@@ -147,12 +150,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     init {
         CommandManager.register(::registerChatWriteCommand)
-    }
-
-    internal fun sendSettings(session: AxochatSession? = LiquidChatClient.session) {
-        if (session != null && LiquidChatClient.isLoggedIn && session.isModern) {
-            session.send(Serverbound.Settings(allowMessages = allowMessages, serverChat = serverChat))
-        }
     }
 
     override fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> =

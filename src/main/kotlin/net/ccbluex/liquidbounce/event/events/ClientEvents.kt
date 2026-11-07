@@ -20,10 +20,12 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.user.Author
 import net.ccbluex.axochat.user.LegacyUser
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -141,9 +143,10 @@ class ClientChatMessageEvent(
     val message: String,
     val chatGroup: ChatGroup,
     /**
-     * `null` on protocol v1, as are [author] and [id].
+     * `null` on protocol 1, as are [author] and [id]. The theme tells channels apart by [chatGroup].
      */
-    val channel: String? = null,
+    @field:ProtocolExclude
+    val channel: Channel? = null,
     val author: Author? = null,
     val id: Long? = null,
 ) : Event(), WebSocketEvent {
@@ -153,9 +156,6 @@ class ClientChatMessageEvent(
 
         @SerializedName("private")
         PRIVATE_CHAT("PrivateChat"),
-
-        @SerializedName("server")
-        SERVER_CHAT("ServerChat"),
     }
 }
 

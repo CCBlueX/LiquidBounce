@@ -53,17 +53,9 @@ object CommandLiquidChat : CommandRegistrar {
                 argument("user", ClientStringArgumentType.word(), chatAccounts) { user ->
                     argument("message", StringArgumentType.greedyString()) { message ->
                         exec { ctx ->
-                            GlobalSettingsClientChat.send(Channel.User(ctx.get(user)), ctx.get(message))
+                            GlobalSettingsClientChat.send(Channel.Direct(ctx.get(user)), ctx.get(message))
                             1
                         }
-                    }
-                }
-            }
-            literal("server") {
-                argument("message", StringArgumentType.greedyString()) { message ->
-                    exec { ctx ->
-                        GlobalSettingsClientChat.send(Channel.Server, ctx.get(message))
-                        1
                     }
                 }
             }
