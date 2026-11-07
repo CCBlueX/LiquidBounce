@@ -170,7 +170,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     ) {
         val shouldFilterHeldFishingRod = otherPlayer.fishing != null &&
             activeTrajectoryOther &&
-            TrajectoryType.FishingBobber in trajectoryTypes
+            TrajectoryType.FISHING_BOBBER in trajectoryTypes
 
         val (trajectoryShotDescriptors, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
             if (shouldFilterHeldFishingRod && stack.item is FishingRodItem) {

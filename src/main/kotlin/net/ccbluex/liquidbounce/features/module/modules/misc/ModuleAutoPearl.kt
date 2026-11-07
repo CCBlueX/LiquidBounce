@@ -213,7 +213,7 @@ object ModuleAutoPearl : ClientModule(
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             simulationOwner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
-            trajectoryType = TrajectoryType.EnderPearl,
+            trajectoryType = TrajectoryType.ENDER_PEARL,
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
@@ -234,7 +234,7 @@ object ModuleAutoPearl : ClientModule(
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
-            trajectoryType = TrajectoryType.EnderPearl,
+            trajectoryType = TrajectoryType.ENDER_PEARL,
             type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult

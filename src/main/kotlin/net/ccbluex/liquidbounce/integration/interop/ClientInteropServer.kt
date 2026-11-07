@@ -64,12 +64,12 @@ object ClientInteropServer {
     val isSkipping = env("LB_INTEROP_SKIP", "net.ccbluex.liquidbounce.interop.skip")?.toBoolean()
         ?: false
 
-    var PORT = env("LB_INTEROP_PORT", "net.ccbluex.liquidbounce.interop.port")?.toIntOrNull()
+    var port = env("LB_INTEROP_PORT", "net.ccbluex.liquidbounce.interop.port")?.toIntOrNull()
         ?: ServerSocket(0).use { socket -> socket.localPort }
     val AUTH_CODE: String = env("LB_INTEROP_AUTH_CODE", "net.ccbluex.liquidbounce.interop.authCode")
         ?: RandomStringUtils.secure().nextAlphanumeric(16)
 
-    val url get() = "http://127.0.0.1:$PORT"
+    val url get() = "http://127.0.0.1:$port"
 
     suspend fun start() {
         if (isSkipping) {
@@ -79,7 +79,7 @@ object ClientInteropServer {
 
         val authCode = AUTH_CODE
 
-        this.PORT = startServer(this.PORT, authCode)
+        this.port = startServer(this.port, authCode)
 
         // Register events with @WebSocketEvent annotation
         SocketEventListener.registerAll()
