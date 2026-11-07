@@ -50,6 +50,14 @@ class CustomSharedMinecraftScreen(
         }
     }
 
+    override fun shouldCloseOnEsc() = ScreenManager.escapeKeptBy !== this
+
+    override fun removed() {
+        if (ScreenManager.escapeKeptBy === this) {
+            ScreenManager.escapeKeptBy = null
+        }
+    }
+
     /**
      * Disable [Screen.extractBlurredBackground]
      */
