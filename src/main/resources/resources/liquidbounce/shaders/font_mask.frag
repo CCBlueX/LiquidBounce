@@ -43,8 +43,35 @@ float coverage() {
     return sum / (footprint.x * footprint.y);
 }
 
+#ifdef TEXT_CONTRAST
+float srgbToLinear(float c) {
+    return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4);
+}
+
+float linearToSrgb(float c) {
+    return c <= 0.0031308 ? c * 12.92 : 1.055 * pow(c, 1.0 / 2.4) - 0.055;
+}
+
+// Skia's mask gamma (SkMaskGamma.cpp): the coverage that, blended as usual, gives what blending in
+// linear light would against a background guessed as the opposite luminance of the text, plus a
+// contrast boost that fades out for bright text.
+float maskGamma(float coverage, vec3 color) {
+    // SkComputeLuminance, cut to the 3 bits Skia keys its tables by. With 7 steps src never equals dst.
+    float src = floor(dot(round(color * 255.0), vec3(54.0, 183.0, 19.0)) / 8192.0) / 7.0;
+    float dst = 1.0 - src;
+    float linDst = srgbToLinear(dst);
+
+    float srca = coverage + (1.0 - coverage) * TEXT_CONTRAST * linDst * coverage;
+    float blended = linearToSrgb(srgbToLinear(src) * srca + (1.0 - srca) * linDst);
+    return (blended - dst) / (src - dst);
+}
+#endif
+
 void main() {
     float alpha = coverage();
+#ifdef TEXT_CONTRAST
+    alpha = maskGamma(alpha, vertexColor.rgb);
+#endif
     vec4 color = vec4(vertexColor.rgb, vertexColor.a * alpha);
     if (color.a == 0.0) {
         discard;
