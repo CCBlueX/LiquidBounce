@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -140,6 +141,7 @@ object Timer : EventListener, ValueGroup("Timer") {
         } finally {
             warping = false
         }
+        debugParameter("Warped") { count }
         return count
     }
 
@@ -154,10 +156,12 @@ object Timer : EventListener, ValueGroup("Timer") {
             return@handler
         }
 
-        if (holds.getActiveRequestValue() != null) {
+        val holding = holds.getActiveRequestValue() != null
+        if (holding) {
             event.cancelEvent()
         }
         holds.tick()
+        debugParameter("Holding") { holding }
     }
 
     @Suppress("unused")
@@ -172,6 +176,8 @@ object Timer : EventListener, ValueGroup("Timer") {
         }
 
         balance = balance.coerceIn(-maxBalance.toFloat(), maxBalance.toFloat())
+        debugParameter("Balance") { balance }
+        debugParameter("Speed") { frameSpeed }
     }
 
     /**

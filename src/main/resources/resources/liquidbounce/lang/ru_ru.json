@@ -572,7 +572,6 @@
   "liquidbounce.module.timeShift.description": "Использует механики Minecraft 1.8 для быстрой регенерации и удаления отрицательных эффектов, таких как огонь и яд.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "ПРЕДУПРЕЖДЕНИЕ: Time Shift (Regen, Zoot, и т.д.) поддерживается только на сервере Minecraft версии 1.8! Однако, версия вашего клиента может быть выше (1.17+), чтобы обойти это ограничение.",
   "liquidbounce.module.timer.description": "Изменяет скорость работы игры (на стороне клиента).",
-  "liquidbounce.module.timerRange.description": "Ускоряет игровое время, когда вы находитесь в радиусе действия врага.",
   "liquidbounce.module.tntTimer.description": "Подсвечивает активные TNT.",
   "liquidbounce.module.totemEffect.description": "Эффект при использовании тотема игроками",
   "liquidbounce.module.tpAura.description": "Автоматически телепортирует и атакует врагов вокруг.",

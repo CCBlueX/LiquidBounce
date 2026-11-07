@@ -506,7 +506,6 @@
   "liquidbounce.module.timeShift.description": "Minecraft 1.8 mekaniklerini istismar ederek daha hızlı yenilenme sağlar ve ateş, zehir gibi olumsuz durumları kaldırır.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "UYARI: Time Shift (Yenilenme, Zoot vb.) sadece 1.8 Minecraft sunucularında desteklenir! Ancak istemci sürümünüz (1.17+) daha yüksek olabilir ve aşmak için kullanılabilir.",
   "liquidbounce.module.timer.description": "Oyunun çalışma hızını değiştirir.",
-  "liquidbounce.module.timerRange.description": "Bir düşmanın menziline girildiğinde oyun süresini hızlandırır.",
   "liquidbounce.module.tntTimer.description": "Aktif TNT’leri öne çıkarır.",
   "liquidbounce.module.totemEffect.description": "Oyuncular totem kullandığında bir efekt oluşturur.",
   "liquidbounce.module.tpAura.description": "Etrafınızdaki düşmanlara otomatik olarak teleport olur ve saldırır.",

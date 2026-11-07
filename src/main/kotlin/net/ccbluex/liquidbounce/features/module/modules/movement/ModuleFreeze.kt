@@ -28,27 +28,18 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
-import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
-import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -72,7 +63,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         .apply { tagBy(this) }
     private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.FLAG))
     private val notification by boolean("Notification", false)
-    private val balanceWarp by boolean("BalanceWarp", false)
 
     private enum class DisableOn(
         override val tag: String,
@@ -84,14 +74,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         IN_LIQUID("InLiquid", { player.isInLiquid }),
         VOID("Void", { player.y <= player.level().minY }),
         ON_USE_ITEM("OnUseItem", { player.isUsingItem }),
-    }
-
-    override fun onDisabled() {
-        if (balanceWarp) {
-            // A flag disables from the network thread
-            mc.execute { Timer.warp(Int.MAX_VALUE) }
-        }
-        super.onDisabled()
     }
 
     private fun notifyAndDisable(reason: DisableOn) {
@@ -115,44 +97,6 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         // Acts as timer = 0 replacement
         if (modes.activeMode !== TickMovement) {
             Timer.hold(this@ModuleFreeze)
-        }
-    }
-
-    @Suppress("unused")
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val ticks = Timer.balance.toInt()
-        if (!balanceWarp || ticks <= 0) {
-            return@handler
-        }
-
-        // Create a simulated player from the client player, as we cannot use the player simulation cache
-        // since we are going to modify the player's yaw and pitch
-        val directionalInput = DirectionalInput(mc.options)
-
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
-                directionalInput,
-                mc.options.keyJump.isPressedOnAny,
-                mc.options.keySprint.isPressedOnAny || player.isSprinting,
-                mc.options.keyShift.isPressedOnAny
-            )
-        )
-
-        // Alter the simulated player's yaw and pitch to match the camera
-        simulatedPlayer.yRot = event.camera.yRot()
-        simulatedPlayer.xRot = event.camera.xRot()
-
-        // Create a cache for the simulated player
-        val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
-        val cachedPositions = simulatedPlayerCache
-            .getSnapshotsBetween(0 until ticks)
-
-        event.renderEnvironment {
-            drawLineStrip(
-                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).argb,
-                positions = MutableVertexList(cachedPositions.size)
-                    .addAllRelativeToCamera(cachedPositions, camera) { it.pos },
-            )
         }
     }
 

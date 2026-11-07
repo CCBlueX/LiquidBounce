@@ -33,7 +33,7 @@ import kotlin.math.abs
 
 /**
  * The balance follows the ticks the server saw: held back ticks and a slow timer earn it, warped ticks and a fast
- * timer spend it, and a setback clears it before Freeze can warp.
+ * timer spend it, and a setback clears it.
  */
 class TimerBalanceGameTest : FabricClientGameTest {
 
@@ -48,7 +48,7 @@ class TimerBalanceGameTest : FabricClientGameTest {
                 context.waitTicks(SETTLE_TICKS)
                 check(balance(context) == 0f) { "Plain ticks moved the balance to ${balance(context)}" }
 
-                assertFreezeEarnsAndWarps(context)
+                assertHoldEarnsAndWarpSpends(context)
                 assertTimerIsAccounted(context)
                 assertSetbackClears(context, world)
             }
@@ -62,11 +62,8 @@ class TimerBalanceGameTest : FabricClientGameTest {
         }
     }
 
-    private fun assertFreezeEarnsAndWarps(context: ClientGameTestContext) {
-        context.onClient {
-            ModuleFreeze.settings.getValue("BalanceWarp").setByString("true")
-            ModuleFreeze.enabled = true
-        }
+    private fun assertHoldEarnsAndWarpSpends(context: ClientGameTestContext) {
+        context.onClient { ModuleFreeze.enabled = true }
         val start = playerTicks(context)
 
         context.waitTicks(FROZEN_TICKS)
@@ -79,10 +76,12 @@ class TimerBalanceGameTest : FabricClientGameTest {
         context.waitTicks(max)
         check(balance(context) == max.toFloat()) { "The balance grew past its maximum to ${balance(context)}" }
 
-        context.onClient { ModuleFreeze.enabled = false }
-        context.waitTick()
-        val ran = playerTicks(context) - start
-        check(ran == max + 1) { "Disabling Freeze ran $ran ticks instead of warping $max" }
+        val warped = context.fromClient {
+            ModuleFreeze.enabled = false
+            Timer.warp(Int.MAX_VALUE)
+        }
+        check(warped == max) { "Warped $warped ticks instead of the $max ticks of balance" }
+        check(playerTicks(context) - start == max) { "${playerTicks(context) - start} ticks ran during the warp" }
         check(balance(context) == 0f) { "Warping left ${balance(context)} balance" }
     }
 
@@ -119,13 +118,9 @@ class TimerBalanceGameTest : FabricClientGameTest {
         context.waitTicks(FROZEN_TICKS)
         check(balance(context) >= FROZEN_TICKS) { "Freeze earned only ${balance(context)} before the setback" }
 
-        val start = playerTicks(context)
         world.server.runCommand("tp @a ~ ~ ~")
-        val waited = context.waitFor({ !ModuleFreeze.enabled }, SETTLE_TIMEOUT_TICKS)
+        context.waitFor({ !ModuleFreeze.enabled }, SETTLE_TIMEOUT_TICKS)
         context.waitTick()
-
-        val ran = playerTicks(context) - start
-        check(ran <= waited + 1) { "Freeze warped after the setback, $ran ticks ran in ${waited + 1}" }
         check(balance(context) == 0f) { "The setback left ${balance(context)} balance" }
     }
 

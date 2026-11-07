@@ -576,7 +576,6 @@
   "liquidbounce.module.timeShift.description": "Missbraucht die Mechanik von Minecraft 1.8, um eine schnellere Regeneration zu ermöglichen und negative Statuseffekte wie Feuer und Gift zu entfernen.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "ACHTUNG: Time Shift (Regen, Zoot usw.) wird nur auf 1.8 Minecraft Server unterstützt! Allerdings kann deine Client-Version höher als (1.17+) sein, um dies zu umgehen.",
   "liquidbounce.module.timer.description": "Ändert die Geschwindigkeit, mit der das Spiel läuft.",
-  "liquidbounce.module.timerRange.description": "Beschleunigt die Spielzeit, wenn man sich in der Reichweite eines Feindes befindet.",
   "liquidbounce.module.tntTimer.description": "Zeigt einen Timer an, wann das TNT explodieren wird.",
   "liquidbounce.module.totemEffect.description": "Rendert einen Effekt, wenn Spieler ein Totem benutzen.",
   "liquidbounce.module.tpAura.description": "Teleportiert und greift automatisch Feinde in deiner Umgebung an.",

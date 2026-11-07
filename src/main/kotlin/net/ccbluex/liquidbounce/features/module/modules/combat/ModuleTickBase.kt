@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,6 +39,7 @@ import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -43,158 +47,242 @@ import kotlin.math.min
 /**
  * TickBase
  *
- * Calls tick function to speed up, when needed
+ * Spends the timer balance to reach an enemy earlier, either by warping ticks or by speeding up the timer.
  */
-internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
+internal object ModuleTickBase : ClientModule(
+    "TickBase",
+    ModuleCategories.COMBAT,
+    aliases = listOf("TimerRange")
+) {
 
-    private val mode by enumChoice("Mode", TickBaseMode.PAST)
+    private val modes = choices("Mode", HoldFirst, arrayOf(HoldFirst, WarpFirst, TimerBoost))
         .apply { tagBy(this) }
-    private val call by enumChoice("Call", TickBaseCall.GAME)
-
-    /**
-     * The range defines where we want to tickbase into. The first value is the minimum range, which we can
-     * tick into, and the second value is the range where we cannot tickbase at all.
-     */
-    private val range by floatRange("Range", 2.5f..4f, 0f..8f)
-
-    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
-    private val pause by int("Pause", 0, 0..20, "ticks")
-    private val cooldown by int("Cooldown", 0, 0..100, "ticks")
-    private val forceGround by boolean("ForceGround", false)
-    private val lineColor by color("Line", Color4b.WHITE)
-        .doNotIncludeAlways()
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
-    private val tickBuffer = ArrayList<TickData>()
+    /**
+     * Holds the ticks back first and runs them at once afterwards. Holding earns what the warp costs.
+     */
+    private object HoldFirst : WarpMode("HoldFirst", "Past", holdFirst = true)
 
-    override fun onDisabled() {
-        tickBuffer.clear()
-    }
+    /**
+     * Runs the ticks at once first and holds them back afterwards, which needs saved up balance.
+     */
+    private object WarpFirst : WarpMode("WarpFirst", "Future", holdFirst = false)
 
-    @Suppress("unused")
-    private val tickHandler = tickHandler {
-        // We do not want this module to conflict with blink
-        if (player.vehicle != null || ModuleBlink.running || tickBuffer.isEmpty()) {
-            return@tickHandler
+    private open class WarpMode(name: String, alias: String, private val holdFirst: Boolean) :
+        Mode(name, listOf(alias)) {
+
+        override val parent: ModeValueGroup<*>
+            get() = modes
+
+        private val call by enumChoice("Call", TickBaseCall.GAME)
+
+        /**
+         * The range defines where we want to tickbase into. The first value is the minimum range, which we can
+         * tick into, and the second value is the range where we cannot tickbase at all.
+         */
+        private val range by floatRange("Range", 2.5f..4f, 0f..8f)
+
+        private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
+        private val pause by int("Pause", 0, 0..20, "ticks")
+        private val cooldown by int("Cooldown", 0, 0..100, "ticks")
+        private val forceGround by boolean("ForceGround", false)
+        private val lineColor by color("Line", Color4b.WHITE)
+            .doNotIncludeAlways()
+
+        private val tickBuffer = ArrayList<TickData>()
+
+        override fun disable() {
+            tickBuffer.clear()
         }
 
-        val nearbyEnemy = world.findEnemy(0f, range.endInclusive) ?: return@tickHandler
-        val currentDistance = player.position().distanceToSqr(nearbyEnemy.position())
-        val rangeSq = range.start.sq()..range.endInclusive.sq()
-
-        // Find the best tick that is able to hit the target and is not too far away from the player, as well as
-        // able to crit the target
-        var possibleTicks = tickBuffer
-            .withIndex()
-            .filter { (_, tick) ->
-                val distSq = tick.position.distanceToSqr(nearbyEnemy.position())
-                distSq < currentDistance && distSq in rangeSq
+        @Suppress("unused")
+        private val tickHandler = tickHandler {
+            // We do not want this module to conflict with blink
+            if (player.vehicle != null || ModuleBlink.running || tickBuffer.isEmpty()) {
+                return@tickHandler
             }
 
-        if (forceGround) {
-            possibleTicks = possibleTicks.filter { (_, tick) ->
-                tick.onGround
+            val nearbyEnemy = world.findEnemy(0f, range.endInclusive) ?: return@tickHandler
+            val currentDistance = player.position().distanceToSqr(nearbyEnemy.position())
+            val rangeSq = range.start.sq()..range.endInclusive.sq()
+
+            // Find the best tick that is able to hit the target and is not too far away from the player, as well as
+            // able to crit the target
+            var possibleTicks = tickBuffer
+                .withIndex()
+                .filter { (_, tick) ->
+                    val distSq = tick.position.distanceToSqr(nearbyEnemy.position())
+                    distSq < currentDistance && distSq in rangeSq
+                }
+
+            if (forceGround) {
+                possibleTicks = possibleTicks.filter { (_, tick) ->
+                    tick.onGround
+                }
             }
-        }
 
-        val criticalTick = possibleTicks.firstOrNull { (_, tick) ->
-            tick.fallDistance > 0.0f
-        }
+            val criticalTick = possibleTicks.firstOrNull { (_, tick) ->
+                tick.fallDistance > 0.0f
+            }
 
-        val (bestTick, _) = criticalTick ?: possibleTicks.firstOrNull() ?: return@tickHandler
+            val (bestTick, _) = criticalTick ?: possibleTicks.firstOrNull() ?: return@tickHandler
 
-        if (bestTick == 0) {
-            return@tickHandler
-        }
+            if (bestTick == 0) {
+                return@tickHandler
+            }
 
-        // We do not want to tickbase if killaura is not ready to attack
-        fun breakRequirement() = requiresKillAura && !(ModuleKillAura.running &&
-                ModuleKillAura.clicker.willClickAt(bestTick))
+            // We do not want to tickbase if killaura is not ready to attack
+            fun breakRequirement() = requiresKillAura && !(ModuleKillAura.running &&
+                    ModuleKillAura.clicker.willClickAt(bestTick))
 
-        if (breakRequirement()) {
-            return@tickHandler
-        }
+            if (breakRequirement()) {
+                return@tickHandler
+            }
 
-        when (mode) {
-            TickBaseMode.PAST -> {
-                val skip = bestTick + pause
-                Timer.hold(this@ModuleTickBase, skip)
-                waitTicks(skip)
+            debugParameter("Recommended Skip") { bestTick }
+
+            if (holdFirst) {
+                val hold = bestTick + pause
+                Timer.hold(this@WarpMode, hold)
+                waitTicks(hold)
                 Timer.warp(bestTick) { call.tick() }
+            } else {
+                var warped = 0
 
-                debugParameter("Recommended Skip") { bestTick }
-            }
-
-            TickBaseMode.FUTURE -> {
-                var totalSkipped = 0
-
-                while (totalSkipped < bestTick && Timer.warp(1) { call.tick() } == 1) {
-                    totalSkipped++
+                while (warped < bestTick && Timer.warp(1) { call.tick() } == 1) {
+                    warped++
 
                     if (breakRequirement()) {
                         break
                     }
                 }
 
-                debugParameter("Total Skipped") { totalSkipped }
-                debugParameter("Recommended Skip") { bestTick }
+                debugParameter("Total Skipped") { warped }
 
-                val skip = totalSkipped + pause
-                Timer.hold(this@ModuleTickBase, skip)
-                waitTicks(skip)
+                val hold = warped + pause
+                Timer.hold(this@WarpMode, hold)
+                waitTicks(hold)
+            }
+
+            waitTicks(cooldown)
+        }
+
+        @Suppress("unused")
+        private val inputHandler = handler<MovementInputEvent> {
+            // We do not want this module to conflict with blink
+            if (player.vehicle != null || ModuleBlink.running) {
+                return@handler
+            }
+
+            tickBuffer.clear()
+
+            // Holding the ticks back first earns what running them costs
+            val available = when {
+                !holdFirst -> Timer.balance.toInt()
+                Timer.balance >= 0f -> Timer.maxBalance
+                else -> 0
+            }
+            val ticks = min(maxTicksAtATime, available)
+            if (ticks <= 0) {
+                return@handler
+            }
+
+            val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
+            val snapshots = simulatedPlayer.getSnapshotsBetween(0 until ticks)
+
+            tickBuffer.ensureCapacity(snapshots.size)
+            snapshots.mapTo(tickBuffer) { snapshot ->
+                TickData(
+                    snapshot.pos,
+                    snapshot.fallDistance,
+                    snapshot.velocity,
+                    snapshot.onGround
+                )
             }
         }
 
-        waitTicks(cooldown)
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (lineColor.a <= 0) {
+                return@handler
+            }
+
+            event.renderEnvironment {
+                drawLineStrip(
+                    argb = lineColor.argb,
+                    positions = MutableVertexList(tickBuffer.size)
+                        .addAllRelativeToCamera(tickBuffer, camera) { it.position }
+                )
+            }
+        }
+
     }
 
-    @Suppress("unused")
-    private val inputHandler = handler<MovementInputEvent> { event ->
-        // We do not want this module to conflict with blink
-        if (player.vehicle != null || ModuleBlink.running) {
-            return@handler
+    /**
+     * Runs the game slower while an enemy is near to save up balance, and faster once it is in range.
+     */
+    private object TimerBoost : Mode("Timer") {
+
+        override val parent: ModeValueGroup<*>
+            get() = modes
+
+        private val chance = percentageChance("Chance", 100f)
+
+        /**
+         * Boosts while an enemy is closer than the end, but keeps the normal speed once it is closer than the start.
+         */
+        private val range by floatRange("Range", 3f..3.5f, 0f..10f)
+        private val chargeRange by float("ChargeRange", 100f, 0f..500f)
+        private val chargeSpeed by float("ChargeSpeed", 0.9f, 0.1f..1f)
+        private val boostSpeed by float("BoostSpeed", 2f, 1f..10f)
+        private val recoverSpeed by float("RecoverSpeed", 0.95f, 0.1f..1f)
+        private val onlyOnGround by boolean("OnlyOnGround", false)
+
+        /**
+         * Set once boosting used up the balance, until the balance is full again.
+         */
+        private var exhausted = false
+
+        override fun enable() {
+            exhausted = false
         }
 
-        tickBuffer.clear()
+        @Suppress("unused")
+        private val tickHandler = tickHandler {
+            if (onlyOnGround && !player.onGround()) return@tickHandler
+            if (requiresKillAura && (!ModuleKillAura.running || ModuleKillAura.targetTracker.target == null)) {
+                return@tickHandler
+            }
 
-        val available = when (mode) {
-            // Holding the ticks back first earns what running them costs
-            TickBaseMode.PAST -> if (Timer.balance >= 0f) Timer.maxBalance else 0
-            TickBaseMode.FUTURE -> Timer.balance.toInt()
-        }
-        val ticks = min(maxTicksAtATime, available)
-        if (ticks <= 0) {
-            return@handler
-        }
-
-        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
-        val snapshots = simulatedPlayer.getSnapshotsBetween(0 until ticks)
-
-        tickBuffer.ensureCapacity(snapshots.size)
-        snapshots.mapTo(tickBuffer) { snapshot ->
-            TickData(
-                snapshot.pos,
-                snapshot.fallDistance,
-                snapshot.velocity,
-                snapshot.onGround
-            )
-        }
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (lineColor.a <= 0) {
-            return@handler
+            val speed = timerSpeed() ?: return@tickHandler
+            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase)
+            debugParameter("Exhausted") { exhausted }
         }
 
-        event.renderEnvironment {
-            drawLineStrip(
-                argb = lineColor.argb,
-                positions = MutableVertexList(tickBuffer.size)
-                    .addAllRelativeToCamera(tickBuffer, camera) { it.position }
-            )
+        private fun timerSpeed(): Float? {
+            if (world.findEnemy(0f, range.start) != null) {
+                return 1f
+            }
+
+            if (world.findEnemy(0f, chargeRange) == null || !chance.asBoolean) {
+                return null
+            }
+
+            if (world.findEnemy(0f, range.endInclusive) == null) {
+                return chargeSpeed
+            }
+
+            if (Timer.balance <= 0f) {
+                exhausted = true
+            } else if (Timer.balance >= Timer.maxBalance) {
+                exhausted = false
+            }
+
+            return if (exhausted) recoverSpeed else boostSpeed
         }
+
     }
 
     @JvmRecord
@@ -204,11 +292,6 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
         val velocity: Vec3,
         val onGround: Boolean
     )
-
-    private enum class TickBaseMode(override val tag: String) : Tagged {
-        PAST("Past"),
-        FUTURE("Future")
-    }
 
     @Suppress("unused")
     private enum class TickBaseCall(
