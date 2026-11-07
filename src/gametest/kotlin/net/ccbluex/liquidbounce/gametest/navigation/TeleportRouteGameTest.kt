@@ -17,11 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.gametest
+package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
+import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
@@ -54,6 +57,9 @@ class TeleportRouteGameTest : FabricClientGameTest {
     private object Owner : EventListener
 
     override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
         context.waitForClient()
         val savedTpAura = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTpAura) }
 

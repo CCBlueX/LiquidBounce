@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.gametest
+package net.ccbluex.liquidbounce.gametest.navigation
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -28,6 +28,11 @@ import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
+import net.ccbluex.liquidbounce.gametest.command
+import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.suggest
+import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.world.level.levelgen.Heightmap
@@ -38,6 +43,9 @@ import kotlin.math.abs
 class TeleportCommandGameTest : FabricClientGameTest {
 
     override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
         context.waitForClient()
         check(context.fromClient { ModuleManager["Teleport"] == null }) { "The Teleport module is still registered" }
 

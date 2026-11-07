@@ -17,12 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.gametest
+package net.ccbluex.liquidbounce.gametest.navigation
 
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
+import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -51,6 +54,9 @@ import net.minecraft.world.phys.Vec3
 class TeleportReachGameTest : FabricClientGameTest {
 
     override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
         context.waitForClient()
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTeleportReach) }
 

@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.gametest
+package net.ccbluex.liquidbounce.gametest.navigation
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -29,6 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.AutoFarmA
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.FuckerAutoWalk
 import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
+import net.ccbluex.liquidbounce.gametest.command
+import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
@@ -50,6 +54,9 @@ class AutoWalkGameTest : FabricClientGameTest {
     private val modules = listOf(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker, ModuleKillAura)
 
     override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
         context.waitForClient()
         val saved = context.fromClient { modules.map { ConfigSystem.serializeValueGroup(it) } }
 

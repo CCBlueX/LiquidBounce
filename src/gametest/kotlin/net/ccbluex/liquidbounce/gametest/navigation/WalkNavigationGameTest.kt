@@ -17,9 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.gametest
+package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -66,6 +69,9 @@ class WalkNavigationGameTest : FabricClientGameTest {
     private lateinit var builder: Walker
 
     override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
         context.waitForClient()
         context.onClient {
             walker = Walker("TestWalker", build = false)
