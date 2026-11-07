@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.utils.client.BalanceValueGroup
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -59,6 +60,7 @@ internal object ModuleTickBase : ClientModule(
         .apply { tagBy(this) }
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
+    private val balance = tree(BalanceValueGroup(this))
 
     /**
      * Holds the ticks back first and runs them in one burst afterwards. Holding earns what the burst costs.
@@ -147,11 +149,11 @@ internal object ModuleTickBase : ClientModule(
                 val hold = bestTick + pause
                 Timer.hold(this@TickMode, hold)
                 waitTicks(hold)
-                Timer.burst(bestTick) { call.tick() }
+                Timer.burst(bestTick, balance.range) { call.tick() }
             } else {
                 var burst = 0
 
-                while (burst < bestTick && Timer.burst(1) { call.tick() } == 1) {
+                while (burst < bestTick && Timer.burst(1, balance.range) { call.tick() } == 1) {
                     burst++
 
                     if (breakRequirement()) {
@@ -180,9 +182,9 @@ internal object ModuleTickBase : ClientModule(
 
             // Holding the ticks back first earns what running them costs
             val available = if (holdFirst) {
-                Timer.maxBalance - Timer.minBalance
+                balance.range.last - balance.range.first
             } else {
-                Timer.spendableTicks
+                Timer.spendableTicks(balance.range)
             }
             val ticks = min(maxTicksAtATime, available)
             if (ticks <= 0) {
@@ -257,7 +259,7 @@ internal object ModuleTickBase : ClientModule(
             }
 
             val speed = timerSpeed() ?: return@tickHandler
-            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase)
+            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase, balance.range)
             debugParameter("Exhausted") { exhausted }
         }
 
@@ -274,9 +276,10 @@ internal object ModuleTickBase : ClientModule(
                 return chargeSpeed
             }
 
-            if (Timer.balance <= Timer.minBalance) {
+            val current = Timer.balanceWithin(balance.range)
+            if (current <= balance.range.first) {
                 exhausted = true
-            } else if (Timer.balance >= Timer.maxBalance) {
+            } else if (current >= balance.range.last) {
                 exhausted = false
             }
 

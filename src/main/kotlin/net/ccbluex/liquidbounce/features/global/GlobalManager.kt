@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewMode
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.Timer
 
 /**
  * Global Manager
@@ -38,7 +37,6 @@ object GlobalManager : Config("Settings") {
         // Managers
         tree(LanguageManager)
         tree(BlinkManager)
-        tree(Timer)
         tree(RotationManager)
 
         // Feature settings

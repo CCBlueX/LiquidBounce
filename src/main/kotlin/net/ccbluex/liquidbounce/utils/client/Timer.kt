@@ -18,10 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import kotlin.math.min
 
 /**
@@ -39,17 +36,10 @@ import kotlin.math.min
  *
  * Also keeps the timer balance of the session: how many ticks the client is behind the time the server saw pass.
  * Held back player ticks and a timer below 1 build it up, extra ticks and a timer above 1 spend it,
- * no matter which module caused them.
+ * no matter which module caused them. Modules spend it within their own limits, see [BalanceValueGroup].
  */
 @AddonApi
-object Timer : EventListener, ValueGroup("Timer") {
-
-    /**
-     * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
-     * run ahead. Holding back stops paying off at the end.
-     */
-    private val balanceRange by intRange("Balance", 0..20, -100..200, "ticks")
-    private val resetBalanceOnFlag by boolean("ResetBalanceOnFlag", true)
+object Timer : EventListener {
 
     private val requestHandler = RequestHandler<Float>()
     private val holds = RequestHandler<Unit>()
@@ -60,19 +50,11 @@ object Timer : EventListener, ValueGroup("Timer") {
     val timerSpeed: Float
         get() = requestHandler.getActiveRequestValue() ?: 1.0f
 
-    val minBalance: Int get() = balanceRange.first
-    val maxBalance: Int get() = balanceRange.last
-
     /**
      * Ticks the client is behind the server, negative once it runs ahead.
      */
     var balance = 0f
         private set
-
-    /**
-     * Extra ticks the balance can pay for right now.
-     */
-    val spendableTicks: Int get() = (balance - minBalance).toInt()
 
     /**
      * The speed the ticks of the current frame run at.
@@ -107,15 +89,35 @@ object Timer : EventListener, ValueGroup("Timer") {
     }
 
     /**
-     * Requests [timerSpeed] if the balance allows it. Faster than 1 needs balance above [minBalance],
-     * slower than 1 stops once the balance reaches [maxBalance].
+     * Clamps the balance into [range] before a module uses it. Balance saved up past the end is no use,
+     * and the start is as far as the module may run ahead.
+     */
+    fun balanceWithin(range: IntRange): Float {
+        balance = balance.coerceIn(range.first.toFloat(), range.last.toFloat())
+        return balance
+    }
+
+    /**
+     * Extra ticks the balance can pay for right now.
+     */
+    fun spendableTicks(range: IntRange) = (balanceWithin(range) - range.first).toInt()
+
+    /**
+     * Requests [timerSpeed] if the balance allows it. Faster than 1 needs balance above the start of [range],
+     * slower than 1 stops once the balance reaches its end.
      *
      * @return whether the speed was requested
      */
-    fun requestBalancedTimerSpeed(timerSpeed: Float, priority: Priority, provider: ClientModule): Boolean {
+    fun requestBalancedTimerSpeed(
+        timerSpeed: Float,
+        priority: Priority,
+        provider: ClientModule,
+        range: IntRange
+    ): Boolean {
+        val balance = balanceWithin(range)
         val allowed = when {
-            timerSpeed > 1f -> balance > minBalance
-            timerSpeed < 1f -> balance < maxBalance
+            timerSpeed > 1f -> balance > range.first
+            timerSpeed < 1f -> balance < range.last
             else -> true
         }
 
@@ -133,16 +135,16 @@ object Timer : EventListener, ValueGroup("Timer") {
     }
 
     /**
-     * Runs up to [ticks] extra ticks in one burst, as many as the balance covers.
+     * Runs up to [ticks] extra ticks in one burst, as many as the balance covers within [range].
      *
      * @return the ticks that ran
      */
-    fun burst(ticks: Int, tick: () -> Unit = { player.tick() }): Int {
+    fun burst(ticks: Int, range: IntRange, tick: () -> Unit = { player.tick() }): Int {
         if (mc.player == null) {
             return 0
         }
 
-        val count = min(ticks, spendableTicks)
+        val count = min(ticks, spendableTicks(range))
         if (count <= 0) {
             return 0
         }
@@ -155,6 +157,13 @@ object Timer : EventListener, ValueGroup("Timer") {
         }
         debugParameter("Burst") { count }
         return count
+    }
+
+    /**
+     * Clears the balance after a setback. Safe to call from the network thread.
+     */
+    fun resetBalance() {
+        mc.execute { balance = 0f }
     }
 
     @Suppress("unused")
@@ -187,19 +196,8 @@ object Timer : EventListener, ValueGroup("Timer") {
             balance -= 1f
         }
 
-        balance = balance.coerceIn(minBalance.toFloat(), maxBalance.toFloat())
         debugParameter("Balance") { balance }
         debugParameter("Speed") { frameSpeed }
-    }
-
-    /**
-     * Incoming packets arrive on the network thread.
-     */
-    @Suppress("unused")
-    private val flagHandler = handler<PacketEvent>(priority = FIRST_PRIORITY) { event ->
-        if (resetBalanceOnFlag && event.packet is ClientboundPlayerPositionPacket) {
-            mc.execute { balance = 0f }
-        }
     }
 
     @Suppress("unused")
