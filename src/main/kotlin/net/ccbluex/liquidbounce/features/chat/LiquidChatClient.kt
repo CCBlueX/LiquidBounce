@@ -62,7 +62,7 @@ private val KNOWN_ERRORS = setOf(
 class LiquidChatClient(private val allowMessages: () -> Boolean) {
 
     private val client = AxochatClient(
-        URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.liquidbounce.net:7886/ws")),
+        URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.liquidbounce.net/ws")),
         // the certificate of the chat server expired years ago
         HttpClient.defaultClient.newBuilder()
             .sslSocketFactory(trustingContext().socketFactory, TrustingManager)
