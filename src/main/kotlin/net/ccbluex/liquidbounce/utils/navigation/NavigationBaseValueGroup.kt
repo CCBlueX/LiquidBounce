@@ -19,36 +19,38 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
-import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
+import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
 import net.minecraft.world.phys.Vec3
 
 /**
- * Base class for navigation-related features that handles common movement functionality
+ * Base class for features that walk to a goal, with a [WalkNavigator] that aims with the feature's [rotations].
  */
 abstract class NavigationBaseValueGroup<T>(
     parent: EventListener? = null,
     name: String,
-    enabled: Boolean
+    enabled: Boolean,
+    rotations: RotationsValueGroup? = null,
+    allowBreak: Boolean = false,
+    allowPlace: Boolean = false,
+    allowParkour: Boolean = true,
+    showRoute: Boolean = true,
 ) : ToggleableValueGroup(parent, name, enabled) {
 
-    private val autoAction by multiEnumChoice("Auto", AutoAction.entries)
+    private val navigator = WalkNavigator(this, this, rotations, allowBreak, allowPlace, allowParkour, showRoute)
 
-    private inline val autoJump get() = AutoAction.JUMP in autoAction
-    private inline val autoSwim get() = AutoAction.SWIM in autoAction
-    private inline val autoSprint get() = AutoAction.SPRINT in autoAction
+    /**
+     * Whether a block is being mined or placed for the path.
+     */
+    protected val isActing: Boolean
+        get() = navigator.isActing
 
     /**
      * Creates context for navigation
@@ -63,47 +65,34 @@ abstract class NavigationBaseValueGroup<T>(
     protected abstract fun calculateGoalPosition(context: T): Vec3?
 
     /**
-     * Handles additional movement mechanics like swimming and jumping
+     * How close to the goal is close enough, in blocks.
+     */
+    protected open fun goalRadius(context: T): Double = DEFAULT_GOAL_RADIUS
+
+    /**
+     * Adds to the movement while walking straight on, such as jumping towards a target.
      *
      * @param event Movement input event to modify
      */
-    @Suppress("ComplexCondition")
-    protected open fun handleMovementAssist(event: MovementInputEvent, context: T) {
-        if ((autoSwim && player.isInWater) || (autoJump && player.horizontalCollision)) {
-            event.jump = true
-        }
-    }
-
-    /**
-     * Converts goal position into directional input
-     *
-     * @param currentInput Current directional input
-     * @param goal Target position to move towards
-     * @return Calculated directional input
-     */
-    private fun calculateDirectionalInput(currentInput: DirectionalInput, goal: Vec3): DirectionalInput {
-        val degrees = getDegreesRelativeToView(goal.subtract(player.position()), player.yRot)
-        return getDirectionalInputForDegrees(currentInput, degrees, deadAngle = 20.0F)
-    }
+    protected open fun handleMovementAssist(event: MovementInputEvent, context: T) = Unit
 
     /**
      * Gets rotation based on movement and target
      *
      * @return Movement rotation
      */
-    open fun getMovementRotation(): Rotation {
-        val movementYaw = player.getMovementDirectionOfInput()
-        val movementPitch = 0.0f
-
-        return Rotation(movementYaw, movementPitch)
-    }
+    open fun getMovementRotation(): Rotation = navigator.movementRotation()
 
     @Suppress("unused")
     private val inputHandler = handler<MovementInputEvent>(
         priority = CRITICAL_MODIFICATION
     ) { event ->
         val context = createNavigationContext()
-        val goal = calculateGoalPosition(context) ?: return@handler
+        val goal = calculateGoalPosition(context)
+        if (goal == null) {
+            navigator.halt()
+            return@handler
+        }
 
         ModuleDebug.debugGeometry(
             this,
@@ -111,31 +100,17 @@ abstract class NavigationBaseValueGroup<T>(
             ModuleDebug.DebuggedPoint(goal, Color4b.BLUE, size = 0.4)
         )
 
-        event.directionalInput = calculateDirectionalInput(event.directionalInput, goal)
-        handleMovementAssist(event, context)
-    }
-
-    @Suppress("unused")
-    private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (!autoSprint || !event.directionalInput.isMoving) {
-            return@handler
-        }
-
-        if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
-            event.sprint = true
+        if (navigator.navigate(event, goal, goalRadius(context))) {
+            handleMovementAssist(event, context)
         }
     }
 
-    @Suppress("unused")
-    private val autoJumpHandler = handler<AllowAutoJumpEvent> { event ->
-        if (autoJump) {
-            event.isAllowed = true
-        }
+    override fun onDisabled() {
+        navigator.reset()
     }
 
-    private enum class AutoAction(override val tag: String) : Tagged {
-        JUMP("Jump"),
-        SWIM("Swim"),
-        SPRINT("Sprint")
+    private companion object {
+        const val DEFAULT_GOAL_RADIUS = 1.0
     }
+
 }

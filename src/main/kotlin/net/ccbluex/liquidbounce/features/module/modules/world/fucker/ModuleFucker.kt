@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
+import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -88,7 +89,7 @@ object ModuleFucker : ClientModule(
     aliases = listOf("BedBreaker", "IdNuker"),
 ), BreakingProgress.Provider {
 
-    private val range by float("Range", 5F, 1F..6F)
+    internal val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         minOf(range, it)
     }
@@ -112,7 +113,11 @@ object ModuleFucker : ClientModule(
     }
 
     private val surroundings by boolean("Surroundings", true)
-    private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG"))
+    // Read by FuckerAutoWalk's tracker on the chunk scanner thread
+    private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").synchronized()).onChange {
+        FuckerAutoWalk.rescan()
+        it
+    }
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val action by enumChoice("Action", DestroyAction.DESTROY).apply(::tagBy)
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
@@ -128,7 +133,7 @@ object ModuleFucker : ClientModule(
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     // Rotation
-    private val rotations = tree(RotationsValueGroup(this))
+    internal val rotations = tree(RotationsValueGroup(this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
             defaultColor = Color4b(255, 0, 0, 90)
@@ -137,6 +142,10 @@ object ModuleFucker : ClientModule(
     private val progressRenderer = targetRenderer.tree(
         BreakingProgressRenderer(targetRenderer, this)
     )
+
+    init {
+        tree(FuckerAutoWalk)
+    }
 
     private val availableToolSlots
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.HotbarAndInventory else Slots.Hotbar
@@ -154,6 +163,9 @@ object ModuleFucker : ClientModule(
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+
+    internal val hasTarget: Boolean
+        get() = currentTarget != null
 
     override fun breakingProgress(): BreakingProgress? {
         val target = currentTarget?.takeIf { it.action == DestroyAction.DESTROY } ?: return null
@@ -298,14 +310,19 @@ object ModuleFucker : ClientModule(
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state ->
-            when (val block = state.block) {
-                !in targets -> false
-                is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
-                else -> true
-            }
-        }.map { it.first }
+        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state -> isTarget(pos, state) }
+            .map { it.first }
     }
+
+    internal fun isTarget(pos: BlockPos, state: BlockState): Boolean {
+        return when (val block = state.block) {
+            !in targets -> false
+            is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
+            else -> true
+        }
+    }
+
+    internal fun isTargetBlock(state: BlockState) = state.block in targets
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
         val currentTarget = currentTarget ?: return

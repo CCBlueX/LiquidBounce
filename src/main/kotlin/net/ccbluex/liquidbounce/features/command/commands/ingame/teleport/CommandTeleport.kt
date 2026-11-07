@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.module.teleport
+package net.ccbluex.liquidbounce.features.command.commands.ingame.teleport
 
 import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.command.arguments.Vec3ArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 
 /**
  * Teleport Command
@@ -34,9 +34,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
  *
  * Accepts vanilla coordinate semantics: absolute (`100 64 -200`), relative to the
  * player (`~ ~ ~`, `~5 ~-2 ~`) and local to the look direction (`^ ^ ^5`). An optional
- * trailing boolean (`true`/`yes`/`on`) replaces Y with the module's HighTP amount.
+ * trailing boolean (`true`/`yes`/`on`) replaces Y with the HighTP amount from [GlobalSettingsTeleport].
  *
- * Module: [ModuleTeleport]
+ * Settings: [GlobalSettingsTeleport]
  */
 object CommandTeleport : CommandRegistrar {
 
@@ -48,12 +48,12 @@ object CommandTeleport : CommandRegistrar {
                     exec { ctx ->
                         val position = Vec3ArgumentType.getPosition(ctx, pos.name)
                         val y = if (ctx.get(highTp)) {
-                            ModuleTeleport.highTpAmount.toDouble()
+                            GlobalSettingsTeleport.highTpAmount.toDouble()
                         } else {
                             position.y
                         }
 
-                        ModuleTeleport.indicateTeleport(position.x, y, position.z)
+                        GlobalSettingsTeleport.teleport(position.x, y, position.z)
                         1
                     }
                 }

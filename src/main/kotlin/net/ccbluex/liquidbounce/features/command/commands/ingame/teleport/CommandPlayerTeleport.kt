@@ -16,19 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.module.teleport
+package net.ccbluex.liquidbounce.features.command.commands.ingame.teleport
 
 import com.mojang.brigadier.CommandDispatcher
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
-import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.WorldPlayerArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
-import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
+import net.minecraft.client.player.AbstractClientPlayer
 import kotlin.math.floor
 
 /**
@@ -36,16 +35,16 @@ import kotlin.math.floor
  *
  * Allows you to teleport.
  *
- * Module: [ModuleTeleport]
+ * Settings: [GlobalSettingsTeleport]
  */
 object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("playerteleport", aliases = listOf("playertp", "ptp")) {
             requires { it.isIngame }
-            argument("player", PlayerInfoArgumentType) { player ->
+            argument("player", WorldPlayerArgumentType) { player ->
                 optional("copy", ClientStringArgumentType.word(), default = null) { copy ->
                     exec { ctx ->
-                        teleportTo(ctx.get(player).profile.name, copy = ctx.get(copy) == "copy")
+                        teleportTo(ctx.get(player), copy = ctx.get(copy) == "copy")
                         1
                     }
                 }
@@ -53,12 +52,9 @@ object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
         }
     }
 
-    private fun CmdI18n.teleportTo(playerName: String, copy: Boolean) {
-        val target = world.players().find { it.gameProfile.name.equals(playerName, true) }
-            ?: throw CommandException(t("playerNotFound"))
-
-        val y = if (ModuleTeleport.highTp) {
-            ModuleTeleport.highTpAmount
+    private fun teleportTo(target: AbstractClientPlayer, copy: Boolean) {
+        val y = if (GlobalSettingsTeleport.highTp) {
+            GlobalSettingsTeleport.highTpAmount
         } else {
             target.y
         }
@@ -71,7 +67,7 @@ object CommandPlayerTeleport : MinecraftShortcuts, CommandRegistrar {
             return
         }
 
-        ModuleTeleport.indicateTeleport(target.x, y.toDouble(), target.z)
+        GlobalSettingsTeleport.teleport(target.x, y.toDouble(), target.z)
     }
 
 }

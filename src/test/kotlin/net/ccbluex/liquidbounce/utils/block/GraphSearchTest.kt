@@ -24,6 +24,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class GraphSearchTest {
 
@@ -304,5 +305,33 @@ class GraphSearchTest {
         )
 
         assertNull(result)
+    }
+
+    @Test
+    fun `advancing in slices finds the same path as one call`() {
+        val graph = mapOf(
+            "S" to listOf(WeightedEdge("A", 1.0), WeightedEdge("B", 4.0)),
+            "A" to listOf(WeightedEdge("B", 1.0), WeightedEdge("C", 5.0)),
+            "B" to listOf(WeightedEdge("C", 1.0)),
+            "C" to listOf(WeightedEdge("G", 1.0)),
+        )
+        fun search() = AStarSearch(
+            start = "S",
+            isGoal = { it == "G" },
+            neighbors = { graph[it].orEmpty() },
+            heuristic = objectDoubleMapOf(),
+        )
+
+        val whole = assertNotNull(search().advance(Int.MAX_VALUE))
+
+        val sliced = search()
+        var slices = 0
+        while (!sliced.isFinished) {
+            assertTrue(sliced.advance(1) == null || sliced.isFinished)
+            slices++
+        }
+
+        assertEquals(whole, sliced.result)
+        assertEquals(sliced.iterations, slices)
     }
 }
