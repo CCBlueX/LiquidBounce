@@ -515,9 +515,11 @@ public final class net/ccbluex/liquidbounce/event/events/RefreshArrayListEvent :
 	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
-public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
 	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
 	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/TagEntityEvent : net/ccbluex/liquidbounce/event/Event {
