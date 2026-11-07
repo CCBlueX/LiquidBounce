@@ -38,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
+import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -85,6 +87,7 @@ class WalkNavigator(
     private val planner = RoutePlanner<WalkPath>(this) { NavigationTerrain(it, opensDoors = true) }
     private val actions = WalkActions(this, this.rotations)
     private val follower = WalkFollower(actions)
+    private val flight = FlightNavigator(this, view)
 
     private val avoid = LongOpenHashSet()
     private var avoidVersion = 0
@@ -216,6 +219,15 @@ class WalkNavigator(
             direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
         }
 
+        // Goals a plain walk reaches are walked to unless the player flies already.
+        val flightAbilities = walkSettings.captureFlight()?.takeUnless { direct && !it.isFlying }
+        if (flightAbilities != null) {
+            fly(event, goal, radius, flightAbilities)
+            return false
+        } else if (flight.isActive) {
+            flight.halt()
+        }
+
         if (direct) {
             steerDirectly(event, goal)
             return true
@@ -233,6 +245,16 @@ class WalkNavigator(
 
         planIfNeeded(goal, radius, position)
         return plainWalk
+    }
+
+    private fun fly(event: MovementInputEvent, goal: Vec3, radius: Double, abilities: FlightAbilities) {
+        if (!flight.isActive) {
+            halt()
+        }
+
+        flight.navigate(event, goal, radius, walkSettings.maxLength, abilities, frameYaw())
+        steeringTarget = flight.target
+        sprintWanted = flight.sprint
     }
 
     private fun steerDirectly(event: MovementInputEvent, goal: Vec3) {
@@ -521,6 +543,7 @@ class WalkNavigator(
         follower.clear()
         actions.idle()
         view.clear()
+        flight.halt()
         pathGoal = null
         requestedGoal = null
         requestedStage = null

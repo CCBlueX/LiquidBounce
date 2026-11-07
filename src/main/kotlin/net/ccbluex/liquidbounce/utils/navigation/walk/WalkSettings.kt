@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
@@ -51,6 +52,7 @@ class WalkSettings(
     private val allowParkour by values.boolean("AllowParkour", allowParkour)
     private val maxFall by values.int("MaxFall", 3, 0..20, "blocks")
     private val pathRange by values.int("PathRange", 64, 16..128, "blocks")
+    private val allowFly by values.boolean("AllowFly", true)
 
     /**
      * Longest route searched, in blocks along the path.
@@ -93,6 +95,11 @@ class WalkSettings(
             air = player.airSupply,
         )
     }
+
+    /**
+     * How the player can fly now, or null when it walks. Call on the render thread.
+     */
+    fun captureFlight(): FlightAbilities? = if (allowFly) FlightAbilities.capture() else null
 
     private companion object {
         const val VANILLA_SAFE_FALL = 3
