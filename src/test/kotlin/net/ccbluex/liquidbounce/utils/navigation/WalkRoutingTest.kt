@@ -110,20 +110,11 @@ class WalkRoutingTest {
     private fun WalkPath.moves() = steps.map { it.move }.toSet()
 
     @Test
-    fun `flat goal is reached with a complete path`() {
-        val path = completePath(search(TestNavigationWorld.flat(), feet(0, 1, 0), BlockPos(10, 1, 0)))
-
-        assertEquals(BlockPos(0, 1, 0), path.steps.first().from)
-        assertEquals(BlockPos(10, 1, 0), path.steps.last().to)
-        assertEquals(feet(10, 1, 0), path.end)
-        assertTrue(path.steps.all { it.breaks.isEmpty() && it.places.isEmpty() })
-    }
-
-    @Test
     fun `walls are walked around`() {
         val world = TestNavigationWorld.flat().fill(5, 1, -5, 5, 2, 5)
         val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
 
+        assertEquals(feet(10, 1, 0), path.end)
         assertTrue(path.steps.none { it.to.x == 5 && abs(it.to.z) <= 5 })
         assertTrue(path.steps.all { it.breaks.isEmpty() && it.places.isEmpty() })
     }
@@ -138,18 +129,13 @@ class WalkRoutingTest {
     }
 
     @Test
-    fun `drops of three blocks are taken`() {
-        val world = TestNavigationWorld.flat().fill(-40, 1, -40, 0, 3, 40)
-        val path = completePath(search(world, feet(-2, 4, 0), BlockPos(5, 1, 0)))
+    fun `drops of three blocks are taken, of five onto ground refused`() {
+        fun cliff(height: Int) = TestNavigationWorld.flat().fill(-40, 1, -40, 0, height, 40)
 
+        val path = completePath(search(cliff(3), feet(-2, 4, 0), BlockPos(5, 1, 0)))
         assertTrue(path.steps.any { it.move == WalkMove.FALL && it.from.y - it.to.y == 3 })
-    }
 
-    @Test
-    fun `drops of five blocks onto ground are refused`() {
-        val world = TestNavigationWorld.flat().fill(-40, 1, -40, 0, 5, 40)
-
-        assertFalse(isComplete(search(world, feet(-2, 6, 0), BlockPos(5, 1, 0))))
+        assertFalse(isComplete(search(cliff(5), feet(-2, 6, 0), BlockPos(5, 1, 0))))
     }
 
     @Test
@@ -268,29 +254,21 @@ class WalkRoutingTest {
     }
 
     @Test
-    fun `gaps one and a half blocks high are crouched through`() {
+    fun `gaps one and a half blocks high are crouched through, one block high walked around`() {
         val slab = Blocks.STONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP)
-        val world = TestNavigationWorld.flat()
+        fun wall() = TestNavigationWorld.flat()
             .fill(5, 1, -20, 5, 3, 20)
             .set(5, 1, 0, AIR)
-            .set(5, 2, 0, slab)
-        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
-
         val gap = BlockPos(5, 1, 0)
+
+        val path = completePath(search(wall().set(5, 2, 0, slab), feet(0, 1, 0), BlockPos(10, 1, 0)))
         val crouched = path.steps.filter { it.from == gap || it.to == gap }
         assertEquals(2, crouched.size, "the path should lead through the gap")
         assertTrue(crouched.all { it.sneak })
         assertTrue(path.steps.none { it.sneak && it.from != gap && it.to != gap })
-    }
 
-    @Test
-    fun `gaps one block high are walked around`() {
-        val world = TestNavigationWorld.flat()
-            .fill(5, 1, -20, 5, 3, 20)
-            .set(5, 1, 0, AIR)
-        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
-
-        assertTrue(path.steps.none { it.to == BlockPos(5, 1, 0) })
+        val low = completePath(search(wall(), feet(0, 1, 0), BlockPos(10, 1, 0)))
+        assertTrue(low.steps.none { it.to == gap })
     }
 
     @Test
@@ -335,12 +313,9 @@ class WalkRoutingTest {
     }
 
     @Test
-    fun `flooded tunnels longer than the air lasts are not swum through`() {
+    fun `flooded tunnels longer than the air lasts are swum through only past air pockets`() {
         assertFalse(isComplete(search(pools(30), feet(-23, 1, 0), BlockPos(22, 1, 0))))
-    }
 
-    @Test
-    fun `air pockets on the way let longer flooded tunnels be swum through`() {
         val world = pools(30).set(-6, -2, 0, AIR).set(6, -2, 0, AIR)
         val path = completePath(search(world, feet(-23, 1, 0), BlockPos(22, 1, 0)))
 
@@ -373,12 +348,19 @@ class WalkRoutingTest {
     }
 
     @Test
-    fun `short detours around soul sand are preferred`() {
-        val soulSand = Blocks.SOUL_SAND.defaultBlockState()
-        val world = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, soulSand)
-        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+    fun `soul sand is walked around while ice is crossed like plain ground`() {
+        val plain = completePath(search(TestNavigationWorld.flat(), feet(0, 1, 0), BlockPos(10, 1, 0)))
 
-        assertTrue(path.steps.none { world.getBlockState(it.to) == soulSand })
+        val soulSand = Blocks.SOUL_SAND.defaultBlockState()
+        val sandWorld = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, soulSand)
+        val sand = completePath(search(sandWorld, feet(0, 1, 0), BlockPos(10, 1, 0)))
+        assertTrue(sand.steps.none { sandWorld.getBlockState(it.to) == soulSand })
+
+        val ice = Blocks.ICE.defaultBlockState()
+        val iceWorld = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, ice)
+        val path = completePath(search(iceWorld, feet(0, 1, 0), BlockPos(10, 1, 0)))
+        assertTrue(path.steps.any { iceWorld.getBlockState(it.to.below()) == ice })
+        assertEquals(plain.cost, path.cost, 1.0E-9)
     }
 
     @Test
@@ -393,17 +375,6 @@ class WalkRoutingTest {
         assertTrue(WalkMove.ASCEND in path.moves())
 
         assertFalse(isComplete(search(world(Blocks.HONEY_BLOCK.defaultBlockState()), start, goal)))
-    }
-
-    @Test
-    fun `ice is crossed like plain ground`() {
-        val ice = Blocks.ICE.defaultBlockState()
-        val world = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, ice)
-        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
-        val plain = completePath(search(TestNavigationWorld.flat(), feet(0, 1, 0), BlockPos(10, 1, 0)))
-
-        assertTrue(path.steps.any { world.getBlockState(it.to.below()) == ice })
-        assertEquals(plain.cost, path.cost, 1.0E-9)
     }
 
     private fun TestNavigationWorld.door(x: Int, z: Int, block: Block) = apply {

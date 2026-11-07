@@ -68,20 +68,15 @@ class ElytraTravelTest {
     }
 
     @Test
-    fun `a flat open roof is a bounce line`() {
-        val world = TestNavigationWorld.flat()
-        val line = RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
+    fun `a flat open roof is a bounce line, a wall, a step or a hole ahead ends it`() {
+        val line = RoofBounce.bounceLine(TestNavigationWorld.flat().terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
         assertNotNull(line)
         assertEquals(24.0, line.x - 0.5, 1.0E-6)
-    }
 
-    @Test
-    fun `a wall, a step or a hole ahead ends the bounce line`() {
         val wall = TestNavigationWorld.flat().fill(10, 1, -2, 10, 3, 2)
         val step = TestNavigationWorld.flat().fill(10, 1, -2, 12, 1, 2)
         val hole = TestNavigationWorld.flat().set(12, 0, 0, AIR)
         val low = TestNavigationWorld.flat().fill(10, 3, -2, 12, 3, 2)
-
         for (world in listOf(wall, step, hole, low)) {
             assertNull(RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0))
         }

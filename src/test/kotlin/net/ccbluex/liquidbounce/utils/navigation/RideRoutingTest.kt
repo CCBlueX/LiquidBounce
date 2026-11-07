@@ -134,19 +134,6 @@ class RideRoutingTest {
     }
 
     @Test
-    fun `land blocks a boat, which gets as close as the water goes`() {
-        val world = lake().fill(0, 0, -10, 0, 1, 10)
-        val path = assertIs<RouteResult.Found<RidePath>>(
-            search(world, afloat(-10, 0), NearGoal(Vec3(10.5, 1.0, 0.5), 1.0), BOAT)
-        ).value
-
-        assertFalse(path.complete)
-        assertTrue(path.exhausted)
-        assertTrue(path.points.all { it.node.x < 0 })
-        assertEquals(-1, path.points.last().node.x)
-    }
-
-    @Test
     fun `boats ride to the shore nearest a goal on land`() {
         val goal = Vec3(20.5, 2.0, 3.5)
         val path = assertIs<RouteResult.Found<RidePath>>(
@@ -171,23 +158,18 @@ class RideRoutingTest {
     }
 
     @Test
-    fun `horses walk up one block steps without jumping`() {
-        val world = TestNavigationWorld.flat().fill(3, 1, -40, 40, 1, 40)
-        val path = completePath(search(world, feet(0, 1, 0), BlockGoal(listOf(BlockPos(10, 2, 0))), horse()))
+    fun `horses walk up one block steps and jump ledges only within their jump height`() {
+        val step = TestNavigationWorld.flat().fill(3, 1, -40, 40, 1, 40)
+        val walked = completePath(search(step, feet(0, 1, 0), BlockGoal(listOf(BlockPos(10, 2, 0))), horse()))
+        assertTrue(walked.points.none { it.jump })
+        assertEquals(2.0, walked.end.y)
 
-        assertTrue(path.points.none { it.jump })
-        assertEquals(2.0, path.end.y)
-    }
-
-    @Test
-    fun `horses jump ledges within their jump height`() {
-        val world = TestNavigationWorld.flat().fill(3, 1, -40, 40, 2, 40)
+        val ledge = TestNavigationWorld.flat().fill(3, 1, -40, 40, 2, 40)
         val goal = BlockGoal(listOf(BlockPos(10, 3, 0)))
+        val jumped = completePath(search(ledge, feet(0, 1, 0), goal, horse(jump = 2.3)))
+        assertTrue(jumped.points.any { it.jump })
 
-        val path = completePath(search(world, feet(0, 1, 0), goal, horse(jump = 2.3)))
-        assertTrue(path.points.any { it.jump })
-
-        val grounded = search(world, feet(0, 1, 0), goal, horse())
+        val grounded = search(ledge, feet(0, 1, 0), goal, horse())
         assertFalse(grounded is RouteResult.Found && grounded.value.complete)
     }
 

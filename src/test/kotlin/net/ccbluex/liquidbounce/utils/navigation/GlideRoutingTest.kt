@@ -68,17 +68,6 @@ class GlideRoutingTest {
     }
 
     @Test
-    fun `goals far below and ahead are glided to`() {
-        val goal = feet(70, 1, 0)
-        val result = glide(towerWorld(40), feet(0, 41, 0), goal, GLIDER)
-
-        val path = assertIs<RouteResult.Found<GlidePath>>(result).value
-        assertEquals(1.0, path.landing.y, 1.0E-6, "the glide lands at ${path.landing}")
-        assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
-        assertEquals(0, path.rockets)
-    }
-
-    @Test
     fun `goals close below a high take-off are glided to by circling down`() {
         val goal = feet(40, 1, 0)
         val result = glide(towerWorld(58), feet(0, 59, 0), goal, GLIDER)
@@ -93,6 +82,7 @@ class GlideRoutingTest {
         val goal = feet(70, 1, 0)
 
         val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, feet(0, 41, 0), goal, GLIDER)).value
+        assertEquals(1.0, path.landing.y, 1.0E-6, "the glide lands at ${path.landing}")
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
     }
 

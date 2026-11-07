@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.navigation
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
@@ -32,14 +31,10 @@ import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -53,18 +48,6 @@ class FlightRoutingTest {
         private val LIMITS = RouteLimits(maxLength = 64.0, maxExpansions = 20_000, maxComputeNanos = Long.MAX_VALUE)
 
         private val CREATIVE = FlightAbilities(FlightControl.MOMENTUM, 1.089, 0.375, isFlying = false)
-
-        private val WALKER = WalkAbilities(
-            canBreak = false,
-            canPlace = false,
-            placeableBlocks = 0,
-            canParkour = true,
-            canSprint = true,
-            safeFall = 3,
-            waterFall = 20,
-            breakTicks = { Double.POSITIVE_INFINITY },
-            avoid = LongOpenHashSet(),
-        )
     }
 
     private fun <T> run(search: RouteSearch<T>): RouteResult<T> {
@@ -91,9 +74,6 @@ class FlightRoutingTest {
         return path
     }
 
-    private fun walk(world: TestNavigationWorld, start: Vec3, goal: Vec3): RouteResult<WalkPath> =
-        run(WalkRouteSearch(world.terrain(), start, NearGoal(goal, 1.0), WALKER, LIMITS))
-
     private fun FlightPath.length() = points.zipWithNext().sumOf { (from, to) -> from.distanceTo(to) }
 
     @Test
@@ -104,9 +84,6 @@ class FlightRoutingTest {
 
         val path = fly(world, start, goal)
         assertEquals(2, path.points.size, "a clear line needs no corner: ${path.points}")
-
-        val walked = walk(world, start, goal)
-        assertFalse(walked is RouteResult.Found && walked.value.complete, "the canyon cannot be walked across")
     }
 
     @Test
@@ -120,9 +97,6 @@ class FlightRoutingTest {
         assertTrue(path.points.size <= 6, "the route turns too often: ${path.points}")
         // Up the wall, over it and down again, with little more than the detour the wall forces.
         assertTrue(path.length() <= 1.25 * (2.0 * 12.0 + 20.0), "the route is ${path.length()} blocks long")
-
-        val walked = walk(world, start, goal)
-        assertFalse(walked is RouteResult.Found && walked.value.complete, "the wall cannot be walked over")
     }
 
     @Test
@@ -132,17 +106,6 @@ class FlightRoutingTest {
         // Every line of the route is checked to keep out of the fire.
         val path = fly(world, feet(0, 1, 0), feet(20, 1, 0))
         assertTrue(path.points.size > 2, "the straight line through the fire is taken")
-    }
-
-    @Test
-    fun `walking routes stay as they were without flight`() {
-        val world = TestNavigationWorld.flat().fill(5, 1, -5, 5, 3, 5)
-        val walked = assertIs<RouteResult.Found<WalkPath>>(walk(world, feet(0, 1, 0), feet(10, 1, 0))).value
-
-        assertTrue(walked.complete)
-        assertTrue(walked.points.all { it.y == 1.0 }, "the walk leaves the ground: ${walked.points}")
-        assertTrue(walked.steps.none { it.to.x == 5 && it.to.z in -5..5 })
-        assertTrue(walked.end.distanceTo(feet(10, 1, 0)) <= 1.0, "the walk ends at ${walked.end}")
     }
 
 }

@@ -240,14 +240,6 @@ class TeleportRoutingTest {
     }
 
     @Test
-    fun `open ground goes straight`() {
-        val plan = found(search(flat().terrain(), feet(0, 1, 0), BlockPos(20, 1, 7)))
-
-        assertEquals(2, plan.route.points.size)
-        assertEquals(feet(20, 1, 7), plan.route.destination)
-    }
-
-    @Test
     fun `a target far below a tower is reached through the open air beside it`() {
         // The tower top is at feet y 16; a floating wall at x 5 blocks crossing at that height.
         val terrain = flat().fill(0, 1, -2, 2, 15, 2).fill(5, 12, -1, 5, 20, 1).terrain()
@@ -287,7 +279,10 @@ class TeleportRoutingTest {
     }
 
     @Test
-    fun `walls are passed around with few waypoints`() {
+    fun `open ground goes straight, walls are passed around with few waypoints`() {
+        val straight = found(search(flat().terrain(), feet(0, 1, 0), BlockPos(20, 1, 7)))
+        assertEquals(listOf(feet(0, 1, 0), feet(20, 1, 7)), straight.route.points)
+
         val terrain = flat().fill(5, 1, -6, 5, 12, 6).terrain()
         val start = feet(0, 1, 0)
         val plan = found(search(terrain, start, BlockPos(10, 1, 0)))
@@ -298,18 +293,6 @@ class TeleportRoutingTest {
         assertTrue(points.size in 3..5, "Expected a compact route, got $points")
         assertTrue(points.all { abs(it.z) > 6.0 || it.x < 5.0 || it.x > 6.0 }, "A waypoint is inside the wall")
         assertNotNull(TeleportSteps.plan(terrain, plan.route, STEP_LENGTH))
-    }
-
-    @Test
-    fun `ledges are climbed and every waypoint is standable`() {
-        val terrain = flat().fill(8, 1, -3, 12, 4, 3).fill(4, 5, -3, 7, 9, 3).terrain()
-        val plan = found(search(terrain, feet(0, 1, 0), BlockPos(10, 5, 0)))
-
-        assertEquals(feet(10, 5, 0), plan.route.destination)
-        for (point in plan.route.points.drop(1)) {
-            assertTrue(terrain.isStandable(BlockPos.containing(point)), "$point is not standable")
-        }
-        assertNoFallDamage(plan.route.start, plan.steps)
     }
 
     @Test

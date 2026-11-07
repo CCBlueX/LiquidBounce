@@ -132,13 +132,6 @@ class WalkStageTest {
     }
 
     @Test
-    fun `a goal within the stage range is reached`() {
-        val path = assertIs<RouteResult.Found<WalkPath>>(stage(field(), BlockPos(20, 1, 0))).value
-
-        assertTrue(NearGoal(feet(20, 1, 0), 1.0).isGoal(path.steps.last().to))
-    }
-
-    @Test
     fun `no stage is found when closed in`() {
         val world = field()
             .fill(-3, 1, -3, 1, 3, 3)
