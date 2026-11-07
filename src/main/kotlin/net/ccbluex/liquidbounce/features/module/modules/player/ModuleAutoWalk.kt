@@ -52,7 +52,9 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
      * Walks to [position] and turns off on arrival.
      */
     fun goTo(position: Vec3) {
-        Goto.destination = BlockPos.containing(position)
+        val block = BlockPos.containing(position)
+        // A BlockPos would no longer load from configs, which read the setting as a Vec3i
+        Goto.destination = Vec3i(block.x, block.y, block.z)
         modes.setByString(Goto.tag)
         enabled = true
     }

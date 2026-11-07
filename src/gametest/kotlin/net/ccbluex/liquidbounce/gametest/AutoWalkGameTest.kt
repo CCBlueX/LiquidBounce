@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.gametest
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFightBot
@@ -151,6 +153,26 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
         val position = context.fromClient { checkNotNull(it.player).position() }
         check(position.distanceTo(destination) <= 1.1) { "AutoWalk turned off at $position, not at $destination" }
+
+        val loaded = context.fromClient {
+            val json = ConfigSystem.serializeValueGroup(ModuleAutoWalk)
+            val saved = checkNotNull(json.destination()) { "No Destination in the AutoWalk config" }
+            saved.addProperty("x", saved["x"].asInt + 1)
+            ConfigSystem.deserializeValueGroup(ModuleAutoWalk, json)
+            ConfigSystem.serializeValueGroup(ModuleAutoWalk).destination()?.get("x")?.asInt
+        }
+        check(loaded == BlockPos.containing(destination).x + 1) { "A config did not load the Goto destination" }
+    }
+
+    /**
+     * The value object of the `Destination` setting somewhere in [this] config.
+     */
+    private fun JsonElement.destination(): JsonObject? = when {
+        isJsonArray -> asJsonArray.firstNotNullOfOrNull { it.destination() }
+        !isJsonObject -> null
+        asJsonObject["name"]?.takeIf { it.isJsonPrimitive }?.asString == "Destination" ->
+            asJsonObject["value"]?.takeIf { it.isJsonObject }?.asJsonObject
+        else -> asJsonObject.entrySet().firstNotNullOfOrNull { it.value.destination() }
     }
 
     /**
