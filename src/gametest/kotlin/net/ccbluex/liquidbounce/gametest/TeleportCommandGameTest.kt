@@ -89,6 +89,8 @@ class TeleportCommandGameTest : FabricClientGameTest {
                     before to player.y
                 }
                 check(abs(after - before - 2.0) < EPSILON) { "vclip moved from $before to $after" }
+
+                checkPlayerTeleport(context, groundY)
             }
         } finally {
             context.onClient {
@@ -131,6 +133,23 @@ class TeleportCommandGameTest : FabricClientGameTest {
         }
         check(ModuleManager.associate { it.name to it.enabled } == enabledBefore) {
             "Loading a stale config changed other modules"
+        }
+    }
+
+    /**
+     * Players in the world are found by name even when the tab list does not show them, such as a fake player.
+     */
+    private fun checkPlayerTeleport(context: ClientGameTestContext, groundY: Double) {
+        val twin = Vec3(14.5, groundY, 6.5)
+        context.command("teleport ${twin.x} ${twin.y} ${twin.z}")
+        context.command("fakeplayer spawn Twin")
+        context.command("teleport 8.5 $groundY 8.5")
+        try {
+            check(context.suggest(".playerteleport Tw").contains("Twin")) { "The fake player was not suggested" }
+            context.command("playerteleport Twin")
+            context.waitFor({ client -> client.player?.position()?.near(twin) == true }, 20)
+        } finally {
+            context.command("fakeplayer clear")
         }
     }
 

@@ -245,7 +245,6 @@
   "liquidbounce.command.panic.panicFailed": "关闭模块失败，详情请查看日志。",
   "liquidbounce.command.ping.description": "查看你的延迟。",
   "liquidbounce.command.ping.pingCheck": "你的延迟是: %s ms。",
-  "liquidbounce.command.playerteleport.playerNotFound": "在你的世界中未找到该玩家。",
   "liquidbounce.command.remoteview.description": "允许你查看其他玩家的视角。",
   "liquidbounce.command.remoteview.off.alreadyOff": "你没有在远程查看任何人的视角。",
   "liquidbounce.command.remoteview.off.off": "成功停止远程查看 %s 的视角。",

@@ -244,7 +244,6 @@
   "liquidbounce.command.panic.panicFailed": "Failed to disable modules. Check the log for details.",
   "liquidbounce.command.ping.description": "查看你的延遲。",
   "liquidbounce.command.ping.pingCheck": "你的延遲是: %s ms。",
-  "liquidbounce.command.playerteleport.playerNotFound": "Player was not found in your world.",
   "liquidbounce.command.remoteview.description": "允許你查看其他玩家的視角。",
   "liquidbounce.command.remoteview.off.alreadyOff": "你沒有在遠端查看任何人的視角。",
   "liquidbounce.command.remoteview.off.off": "成功停止遠端查看 %s 的視角。",

@@ -320,7 +320,6 @@
   "liquidbounce.command.panic.panicFailed": "Failed to disable modules. Check the log for details.",
   "liquidbounce.command.ping.description": "Checks your ping.",
   "liquidbounce.command.ping.pingCheck": "Your ping is %sms.",
-  "liquidbounce.command.playerteleport.playerNotFound": "Player was not found in your world.",
   "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",
   "liquidbounce.command.remoteview.off.alreadyOff": "You are not remote viewing anyone.",
   "liquidbounce.command.remoteview.off.off": "Successfully stopped remote viewing %s.",

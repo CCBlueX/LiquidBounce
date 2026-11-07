@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
-import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
+import net.ccbluex.liquidbounce.features.command.arguments.WorldPlayerArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
@@ -36,9 +36,9 @@ object CommandFollow : CommandRegistrar {
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("follow") {
             requires { it.isIngame }
-            argument("player", PlayerInfoArgumentType) { player ->
+            argument("player", WorldPlayerArgumentType) { player ->
                 exec { ctx ->
-                    ModuleAutoWalk.follow(ctx.get(player).profile.name)
+                    ModuleAutoWalk.follow(ctx.get(player).gameProfile.name)
                     1
                 }
             }

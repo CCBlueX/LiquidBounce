@@ -35,9 +35,11 @@ import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
- * AutoWalk walks the way the player faces around a wall and to a `.goto` destination around a closed room, AutoFarm
- * walks onto an item to pick it up, and Fucker's AutoWalk bridges over to a bed and breaks it.
+ * AutoWalk walks the way the player faces around a wall, to a `.goto` destination around a closed room and up to a
+ * `.follow` player, AutoFarm walks onto an item to pick it up, and Fucker's AutoWalk bridges over to a bed and breaks
+ * it.
  */
+@Suppress("TooManyFunctions")
 class AutoWalkGameTest : FabricClientGameTest {
 
     private val modules = listOf(ModuleAutoWalk, ModuleAutoFarm, ModuleFucker)
@@ -61,6 +63,7 @@ class AutoWalkGameTest : FabricClientGameTest {
                 checkDirection(context, server, y)
                 checkGoto(context, server, y)
                 checkSprint(context, server, y)
+                checkFollow(context, server, y)
                 checkFarmItem(context, server, y)
                 checkBed(context, server, y)
             }
@@ -172,6 +175,29 @@ class AutoWalkGameTest : FabricClientGameTest {
         check(sprinting * 2 >= ticks) { "Sprinted for only $sprinting of $ticks ticks" }
     }
 
+    /**
+     * `.follow` walks up to a player the tab list does not show.
+     */
+    private fun checkFollow(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+        val twin = Vec3(16.5, y.toDouble(), 8.5)
+        moveTo(context, server, twin)
+        context.command("fakeplayer spawn Twin")
+        moveTo(context, server, Vec3(2.5, y.toDouble(), 8.5))
+
+        try {
+            context.command("follow Twin")
+            check(context.fromClient { ModuleAutoWalk.enabled }) { ".follow did not turn AutoWalk on" }
+            unhurt(server, "following") {
+                awaitClient(context, FOLLOW_TICKS, "Did not walk up to the followed player") {
+                    it.distanceTo(twin) <= FOLLOW_DISTANCE
+                }
+            }
+        } finally {
+            context.onClient { ModuleAutoWalk.enabled = false }
+            context.command("fakeplayer clear")
+        }
+    }
+
     private fun checkFarmItem(context: ClientGameTestContext, server: TestServerContext, y: Int) {
         moveTo(context, server, Vec3(4.5, y.toDouble(), 12.5))
         server.runCommand(
@@ -262,6 +288,8 @@ class AutoWalkGameTest : FabricClientGameTest {
         const val STILL = 0.02
         const val MAX_STOPS = 3
         const val SPRINT_TICKS = 200
+        const val FOLLOW_TICKS = 300
+        const val FOLLOW_DISTANCE = 3.5
     }
 
 }
