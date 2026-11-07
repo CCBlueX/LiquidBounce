@@ -55,6 +55,21 @@ class ResourceTaskTest {
     }
 
     @Test
+    fun `speed drops to zero while the download stalls`() {
+        var now = 0L
+        val task = ResourceTask("model.onnx") { Instant.ofEpochMilli(now) }
+
+        now = 1_000
+        task.update(1_000_000, 4_000_000, false)
+        now = 2_000
+        assertEquals(1_000_000L, task.speed)
+
+        // No progress callback arrives while the connection hangs
+        now = 2_100
+        assertEquals(0L, task.speed)
+    }
+
+    @Test
     fun `a restarted download resets the sample instead of reporting a bogus speed`() {
         var now = 0L
         val task = ResourceTask("model.onnx") { Instant.ofEpochMilli(now) }

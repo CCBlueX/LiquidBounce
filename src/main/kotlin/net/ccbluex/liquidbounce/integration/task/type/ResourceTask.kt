@@ -43,12 +43,19 @@ class ResourceTask internal constructor(
 
     /**
      * Read speed in bytes per second, sampled over [SAMPLE_INTERVAL_MS] instead of averaged over
-     * the whole task lifetime, so stalls and speed changes are actually visible.
+     * the whole task lifetime. Drops to 0 once no data arrived for two sample intervals.
      */
-    @Volatile
-    var speed = 0L
-        private set
+    val speed: Long
+        get() = if (lastSampleTime.until(clock.instant(), ChronoUnit.MILLIS) > 2 * SAMPLE_INTERVAL_MS) {
+            0L
+        } else {
+            sampledSpeed
+        }
 
+    @Volatile
+    private var sampledSpeed = 0L
+
+    @Volatile
     private var lastSampleTime = clock.instant()
     private var lastSampleBytes = 0L
 
@@ -58,15 +65,15 @@ class ResourceTask internal constructor(
         val elapsed = lastSampleTime.until(now, ChronoUnit.MILLIS)
 
         when {
-            done -> speed = 0L
+            done -> sampledSpeed = 0L
             // A retried or resumed download restarts the byte counter, so restart sampling too
             bytesRead < lastSampleBytes -> {
-                speed = 0L
+                sampledSpeed = 0L
                 lastSampleTime = now
                 lastSampleBytes = bytesRead
             }
             elapsed >= SAMPLE_INTERVAL_MS -> {
-                speed = (bytesRead - lastSampleBytes) * 1000L / elapsed
+                sampledSpeed = (bytesRead - lastSampleBytes) * 1000L / elapsed
                 lastSampleTime = now
                 lastSampleBytes = bytesRead
             }
