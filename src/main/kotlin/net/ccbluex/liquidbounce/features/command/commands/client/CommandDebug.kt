@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
-import net.ccbluex.liquidbounce.api.core.asForm
+import net.ccbluex.liquidbounce.api.core.bodyAsJson
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
@@ -49,8 +49,12 @@ import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Style
+import okhttp3.FormBody
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import java.net.URI
 import java.util.EnumSet
+import kotlin.io.path.div
 
 /**
  * Debug Command to collect information about the client
@@ -58,9 +62,13 @@ import java.util.EnumSet
  * with their issues.
  *
  * This command will create a JSON file with all the information
- * and send it to the CCBlueX Paste API.
+ * and upload it together with the latest log to logs.liquidbounce.net.
  */
 object CommandDebug : CommandRegistrar {
+
+    private const val LOG_API = "https://logs.liquidbounce.net/api/1/log"
+    private const val MAX_LOG_BYTES = 10L * 1024 * 1024
+    private const val MAX_LOG_LINES = 25000
 
     private val gson = GsonBuilder()
         .setPrettyPrinting()
@@ -77,27 +85,37 @@ object CommandDebug : CommandRegistrar {
                     serializeAutoConfig(it)
                 }
                 val autoConfig = buffer.readUtf8()
-                val autoConfigPaste = uploadToPaste(autoConfig)
+                val autoConfigPaste = uploadLog(autoConfig)
                 buffer.clear()
 
-                val debugJson = createDebugJson(autoConfigPaste)
+                val logPaste = withContext(Dispatchers.IO) { readLatestLog() }?.let { uploadLog(it) }
+
+                val debugJson = createDebugJson(autoConfigPaste, logPaste)
                 buffer.outputStream().writer().use {
                     gson.toJson(debugJson, it)
                 }
-                val paste = uploadToPaste(buffer.readUtf8())
+                val paste = uploadLog(buffer.readUtf8())
                 buffer.clear()
 
                 chat(
                     "Debug information has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
                     paste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(paste))),
                 )
+
+                if (logPaste != null) {
+                    chat(
+                        "Latest log has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
+                        logPaste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(logPaste))),
+                    )
+                }
             }
         }
     }
 
     @Suppress("LongMethod")
     private fun createDebugJson(
-        autoConfigPaste: String
+        autoConfigPaste: String,
+        logPaste: String?
     ) = JsonObject().apply {
         add("client", JsonObject().apply {
             addProperty("name", LiquidBounce.CLIENT_NAME)
@@ -150,6 +168,7 @@ object CommandDebug : CommandRegistrar {
         })
 
         addProperty("config", autoConfigPaste)
+        addProperty("log", logPaste)
 
         add("activeModules", ModuleManager.filter { it.running }.mapToJsonArray { module ->
             JsonPrimitive(module.name)
@@ -170,13 +189,36 @@ object CommandDebug : CommandRegistrar {
     }
 
     /**
-     * Uploads the given content to the CCBlueX Paste API
-     * and returns the URL of the paste.
+     * Reads the end of `logs/latest.log` that fits into the limits of the log API,
+     * or returns null when there is no log file.
      */
-    private suspend fun uploadToPaste(content: String): String = withContext(Dispatchers.IO) {
-        val form = "content=$content"
-        HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
-                .body.string()
+    private fun readLatestLog(): String? {
+        val path = (mc.gameDirectory.toPath() / "logs" / "latest.log").toOkioPath()
+        val size = FileSystem.SYSTEM.metadataOrNull(path)?.size ?: return null
+        val skipped = (size - MAX_LOG_BYTES).coerceAtLeast(0L)
+        var content = FileSystem.SYSTEM.read(path) {
+            skip(skipped)
+            readUtf8(size - skipped)
+        }
+
+        if (skipped > 0) {
+            // Drop the line that was cut off
+            content = content.substringAfter('\n')
+        }
+
+        return content.lineSequence().toList().takeLast(MAX_LOG_LINES).joinToString("\n")
     }
+
+    /**
+     * Uploads the given content to the log API and returns the URL of the log.
+     */
+    private suspend fun uploadLog(content: String): String = withContext(Dispatchers.IO) {
+        val body = FormBody.Builder().add("content", content).build()
+        val response = HttpClient.request(LOG_API, HttpMethod.POST, body = body).bodyAsJson<LogResponse>()
+        check(response.success && response.url != null) { "Failed to upload log: ${response.error}" }
+        response.url
+    }
+
+    private class LogResponse(val success: Boolean, val url: String?, val error: String?)
 
 }
