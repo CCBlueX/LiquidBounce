@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.GlideNavigator
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
+import net.ccbluex.liquidbounce.utils.navigation.ride.RideNavigator
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
@@ -60,7 +61,7 @@ import kotlin.math.sqrt
  * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
  * everything else is pathfound, opening doors and gates on the way and breaking and placing blocks when allowed;
  * goals farther than half the path range or in chunks not loaded are walked to in stages, and unreachable goals are
- * walked as close as possible.
+ * walked as close as possible. A boat or mount the player rides is driven there instead, see [RideNavigator].
  *
  * Its settings go into [values]; it acts while [owner] runs. Blocks are aimed at with the [rotations] of the feature
  * it walks for, or with its own when the feature has none.
@@ -89,6 +90,7 @@ class WalkNavigator(
     private val follower = WalkFollower(actions)
     private val flight = FlightNavigator(this, view)
     private val glide = GlideNavigator(this, view)
+    private val ride = RideNavigator(this, view) { walkSettings.maxLength }
 
     private val avoid = LongOpenHashSet()
     private var avoidVersion = 0
@@ -208,7 +210,7 @@ class WalkNavigator(
         val position = player.position()
         updateAvoid(goal)
 
-        if (position.distanceTo(goal) <= radius) {
+        if (player.rootVehicle.position().distanceTo(goal) <= radius) {
             stop(event)
             view.done()
             return false
@@ -220,7 +222,7 @@ class WalkNavigator(
             direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
         }
 
-        if (fly(event, goal, radius) || glide(event, goal, radius)) {
+        if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius)) {
             return false
         }
 
@@ -241,6 +243,18 @@ class WalkNavigator(
 
         planIfNeeded(goal, radius, position)
         return plainWalk
+    }
+
+    /**
+     * Drives the vehicle the player rides, or gets off it; false when the player rides nothing.
+     */
+    private fun rideVehicle(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
+        if (!ride.navigate(event, goal, radius)) {
+            return false
+        }
+
+        standBy()
+        return true
     }
 
     /**
@@ -561,9 +575,30 @@ class WalkNavigator(
     }
 
     /**
-     * Stops walking, flying and gliding until the next [navigate]; for ticks without a goal.
+     * Drops walking, flying and gliding while the player rides, keeping the route the ride shows.
+     */
+    private fun standBy() {
+        flight.halt()
+        glide.halt()
+        planner.cancel()
+        follower.clear()
+        actions.idle()
+        pathGoal = null
+        requestedGoal = null
+        requestedStage = null
+        followsStage = false
+        directGoal = null
+        steeringTarget = null
+        sprintWanted = false
+        straight = false
+        direct = false
+    }
+
+    /**
+     * Stops walking, riding, flying and gliding until the next [navigate]; for ticks without a goal.
      */
     fun halt() {
+        ride.halt()
         flight.halt()
         glide.halt()
         stopWalking()

@@ -195,7 +195,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }
             }
 
-            if (player.position().distanceTo(goal) > radius) {
+            if (player.rootVehicle.position().distanceTo(goal) > radius) {
                 return goal
             }
 
