@@ -17,8 +17,7 @@
       "net.ccbluex.liquidbounce.gametest.TeleportDisconnectGameTest",
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
-      "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
-      "net.ccbluex.liquidbounce.gametest.TimerBalanceGameTest"
+      "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest"
     ]
   },
   "depends": {
