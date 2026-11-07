@@ -99,8 +99,8 @@ abstract class GlyphPage {
             max(gpuDevice.deviceInfo.limits().maxTextureSizeForFormat(GpuFormat.R8_UNORM), 1024)
         }
 
-        @JvmStatic
-        protected val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
+        @JvmField
+        internal val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
 
         /** Java2D's native font scaler is shared by static and dynamic atlas generation. */
         @JvmField
