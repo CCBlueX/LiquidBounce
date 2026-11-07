@@ -332,7 +332,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         val baseUrlWithFragment = "$baseUrl/?${AuthConfig.AUTH_CODE_PARAM}=" +
             "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
-            if (origin.external) add("port=${ClientInteropServer.PORT}")
+            if (origin.external) add("port=${ClientInteropServer.port}")
             if (markAsStatic) add("static")
         }.joinToString("&")
 
