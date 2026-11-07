@@ -60,6 +60,11 @@ object Timer : EventListener {
      * The speed the ticks of the current frame run at.
      */
     private var frameSpeed = 1f
+
+    /**
+     * Extra ticks still to run, see [burst].
+     */
+    private var burstTicks = 0
     private var bursting = false
 
     /**
@@ -135,28 +140,41 @@ object Timer : EventListener {
     }
 
     /**
-     * Runs up to [ticks] extra ticks in one burst, as many as the balance covers within [range].
+     * Runs up to [ticks] extra game ticks right after the current one, as many as the balance covers within
+     * [range]. They run through the tick loop of the frame like the ticks of a faster timer, only all at once.
      *
-     * @return the ticks that ran
+     * @return the ticks that will run
      */
-    fun burst(ticks: Int, range: IntRange, tick: () -> Unit = { player.tick() }): Int {
+    fun burst(ticks: Int, range: IntRange): Int {
         if (mc.player == null) {
             return 0
         }
 
-        val count = min(ticks, spendableTicks(range))
+        val count = min(ticks, spendableTicks(range) - burstTicks)
         if (count <= 0) {
             return 0
         }
 
-        bursting = true
-        try {
-            repeat(count) { tick() }
-        } finally {
-            bursting = false
-        }
+        burstTicks += count
         debugParameter("Burst") { count }
         return count
+    }
+
+    /**
+     * Bound of the tick loop of a frame, checked before each tick: lets the [burst] ticks run once the [ticks]
+     * the frame advanced by are done.
+     *
+     * @param index the tick the loop is about to run
+     */
+    fun frameTicks(ticks: Int, index: Int): Int {
+        bursting = false
+        if (index < ticks || burstTicks <= 0) {
+            return ticks
+        }
+
+        burstTicks--
+        bursting = true
+        return index + 1
     }
 
     /**
@@ -173,7 +191,8 @@ object Timer : EventListener {
 
     @Suppress("unused")
     private val holdHandler = handler<PlayerTickEvent>(priority = FIRST_PRIORITY) { event ->
-        if (bursting) {
+        // Held ticks after a burst only start once the burst ran
+        if (bursting || burstTicks > 0) {
             return@handler
         }
 
@@ -203,6 +222,7 @@ object Timer : EventListener {
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         balance = 0f
+        burstTicks = 0
         holds.clear()
     }
 

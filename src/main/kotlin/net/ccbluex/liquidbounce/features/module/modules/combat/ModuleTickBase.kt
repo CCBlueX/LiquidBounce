@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -77,8 +76,6 @@ internal object ModuleTickBase : ClientModule(
 
         override val parent: ModeValueGroup<*>
             get() = modes
-
-        private val call by enumChoice("Call", TickBaseCall.GAME)
 
         /**
          * The range defines where we want to tickbase into. The first value is the minimum range, which we can
@@ -149,11 +146,11 @@ internal object ModuleTickBase : ClientModule(
                 val hold = bestTick + pause
                 Timer.hold(this@TickMode, hold)
                 waitTicks(hold)
-                Timer.burst(bestTick, balance.range) { call.tick() }
+                Timer.burst(bestTick, balance.range)
             } else {
                 var burst = 0
 
-                while (burst < bestTick && Timer.burst(1, balance.range) { call.tick() } == 1) {
+                while (burst < bestTick && Timer.burst(1, balance.range) == 1) {
                     burst++
 
                     if (breakRequirement()) {
@@ -295,32 +292,5 @@ internal object ModuleTickBase : ClientModule(
         val velocity: Vec3,
         val onGround: Boolean
     )
-
-    @Suppress("unused")
-    private enum class TickBaseCall(
-        override val tag: String,
-        private val tick: Runnable
-    ) : Tagged {
-
-        /**
-         * Runs a full game tick.
-         *
-         * TODO: Cancel full game ticks after this,
-         *   not just the player ticks.
-         */
-        GAME("Game", { mc.tick() }),
-
-        /**
-         * This will NOT update the game tick,
-         * but only the player tick - that means
-         * e.g. Rotation Manager will not update either.
-         *
-         * This was the previous default behavior of the TickBase,
-         * so it is kept for compatibility reasons.
-         */
-        PLAYER("Player", { player.tick() });
-
-        fun tick() = tick.run()
-    }
 
 }
