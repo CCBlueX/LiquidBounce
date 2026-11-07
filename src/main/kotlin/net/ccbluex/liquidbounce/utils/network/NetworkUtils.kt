@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Switc
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -249,7 +248,6 @@ fun sendPacketSilently(packet: Packet<*>) {
     val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)
     RotationManager.packetHandler.handler.accept(packetEvent)
     PositionPacketSeparator.packetHandler.handler.accept(packetEvent)
-    Timer.packetHandler.handler.accept(packetEvent)
     ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
     mc.connection?.connection?.send(packetEvent.packet, null)
 }

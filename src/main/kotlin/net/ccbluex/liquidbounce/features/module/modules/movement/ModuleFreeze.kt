@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
@@ -87,16 +87,26 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         enabled = false
     }
 
-    private val tickHandler = handler<GameTickEvent> {
+    override fun onEnabled() {
+        holdTicks()
+    }
+
+    // Runs every frame, since no game tick runs while frozen
+    @Suppress("unused")
+    private val frameHandler = handler<GameRenderTaskQueueEvent> {
         for (reason in disableOn) {
             if (reason.trigger?.asBoolean ?: continue) {
                 notifyAndDisable(reason)
             }
         }
 
-        // Acts as timer = 0 replacement
+        holdTicks()
+    }
+
+    // Acts as timer = 0 replacement
+    private fun holdTicks() {
         if (modes.activeMode !== TickMovement) {
-            Timer.hold(this@ModuleFreeze)
+            Timer.hold(this, Int.MAX_VALUE)
         }
     }
 

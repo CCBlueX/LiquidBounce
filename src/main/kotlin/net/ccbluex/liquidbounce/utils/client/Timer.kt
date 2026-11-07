@@ -20,30 +20,23 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.min
 
 /**
  * Global minecraft timer.
  *
  * Also keeps the timer balance of the session: how many ticks the client is behind the time the server saw pass.
- * Held back player ticks and a timer below 1 build it up, extra ticks and a timer above 1 spend it,
+ * Held back ticks and a timer below 1 build it up, extra ticks and a timer above 1 spend it,
  * no matter which module caused them. Modules spend it within their own limits, see [balanceWithin].
- *
- * A held back tick sends no tick end either, see [packetHandler].
  */
 @AddonApi
 object Timer : EventListener {
@@ -80,21 +73,16 @@ object Timer : EventListener {
         private set
 
     /**
-     * Whether the last player tick was held back. Its interpolated values are then still those of the tick before,
-     * so the player is drawn as it is instead of replaying that tick every frame.
+     * Whether the last tick was held back. Its interpolated values are then still those of the tick before,
+     * so the game is drawn as it is instead of replaying that tick every frame.
      */
     var isHeld = false
         private set
 
     /**
-     * Set by a held player tick until its game tick ends.
+     * Ticks the tick loop of the current frame runs, see [frameTicks].
      */
-    private var dropTickEnd = false
-
-    /**
-     * Whether a movement packet went out since the last tick end, which the next one then has to close.
-     */
-    private var movedSinceTickEnd = false
+    private var frameEnd = 0
 
     /**
      * Scales the ticks a frame advances by the requested speed.
@@ -162,7 +150,8 @@ object Timer : EventListener {
     }
 
     /**
-     * Holds back the player ticks of the next [ticks] ticks, as long as [provider] is running.
+     * Holds back the next [ticks] game ticks, as long as [provider] is running. Nothing ticks while held, and no
+     * tick end goes out either, so the server sees lag.
      */
     fun hold(provider: EventListener, ticks: Int = 1) {
         holds.request(RequestHandler.Request(ticks, 0, provider, Unit))
@@ -190,20 +179,45 @@ object Timer : EventListener {
     }
 
     /**
-     * Bound of the tick loop of a frame, checked before each tick: lets the [burst] ticks run once the [ticks]
-     * the frame advanced by are done.
+     * Bound of the tick loop of a frame, checked before each tick. Of the [ticks] the frame advanced by, the ones
+     * a [hold] covers do not run, and the [burst] ticks run in front of the others once no hold is left.
      *
      * @param index the tick the loop is about to run
      */
     fun frameTicks(ticks: Int, index: Int): Int {
-        bursting = false
-        if (index < ticks || burstTicks <= 0) {
-            return ticks
+        if (index == 0) {
+            frameEnd = ticks
         }
 
-        burstTicks--
-        bursting = true
-        return index + 1
+        holdTicks(index)
+
+        bursting = burstTicks > 0 && holds.getActiveRequestValue() == null
+        if (bursting) {
+            burstTicks--
+            frameEnd++
+        }
+
+        if (index < frameEnd) {
+            isHeld = false
+        }
+        return frameEnd
+    }
+
+    /**
+     * Drops the ticks left in the frame a hold covers. Their time passed without running them.
+     */
+    private fun holdTicks(index: Int) {
+        var held = 0
+        while (index < frameEnd && holds.getActiveRequestValue() != null) {
+            holds.tick()
+            frameEnd--
+            held++
+        }
+
+        if (held > 0) {
+            balance += held / frameSpeed
+            isHeld = true
+        }
     }
 
     /**
@@ -219,30 +233,13 @@ object Timer : EventListener {
     }
 
     @Suppress("unused")
-    private val holdHandler = handler<PlayerTickEvent>(priority = FIRST_PRIORITY) { event ->
-        // Held ticks after a burst only start once the burst ran
-        if (bursting || burstTicks > 0) {
-            return@handler
-        }
-
-        val holding = holds.getActiveRequestValue() != null
-        if (holding) {
-            event.cancelEvent()
-        }
-        holds.tick()
-        debugParameter("Holding") { holding }
-    }
-
-    @Suppress("unused")
     private val balanceHandler = handler<PlayerTickEvent>(priority = READ_FINAL_STATE) { event ->
         // A tick of the frame took 1 / speed ticks of real time, while a burst one took none
         if (!bursting) {
             balance += 1f / frameSpeed
         }
 
-        isHeld = event.isCancelled
-        dropTickEnd = isHeld
-        if (!isHeld) {
+        if (!event.isCancelled) {
             balance -= 1f
         }
 
@@ -255,32 +252,7 @@ object Timer : EventListener {
         balance = 0f
         burstTicks = 0
         isHeld = false
-        dropTickEnd = false
-        movedSinceTickEnd = false
         holds.clear()
-    }
-
-    /**
-     * Anticheats such as Grim count a tick end without a movement packet before it as a tick, so a held tick
-     * still sending it would earn no balance. Without movement in between, a dropped tick end looks like lag.
-     * Also called for silently sent packets, whose tick ends it leaves alone.
-     */
-    internal val packetHandler = handler<PacketEvent>(priority = OBJECTION_AGAINST_EVERYTHING) { event ->
-        if (event.origin != TransferOrigin.OUTGOING) {
-            return@handler
-        }
-
-        when (event.packet) {
-            is ServerboundMovePlayerPacket -> movedSinceTickEnd = true
-            is ServerboundClientTickEndPacket -> {
-                if (dropTickEnd && !movedSinceTickEnd && event.original && !event.isCancelled) {
-                    event.cancelEvent()
-                } else {
-                    movedSinceTickEnd = false
-                }
-                dropTickEnd = false
-            }
-        }
     }
 
 }

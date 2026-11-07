@@ -263,11 +263,12 @@ internal object ModuleTickBase : ClientModule(
 
             val charged = Timer.balance.toInt().coerceIn(0, maxBalance)
 
-            // Holding first runs the delay before the burst, so the player covers it at the normal speed
-            val lead = if (holdFirst) delay.random() else 0
-            val path = snapshotsFromNow().take(lead + maxTicks + 1).toList()
+            // The current tick still runs. Holding first then runs the delay and the tick the burst follows,
+            // so the player covers them at the normal speed
+            val walk = if (holdFirst) delay.random() + 2 else 1
+            val path = snapshotsFromNow().take(walk + maxTicks + 1).toList()
             val hitAt = hitPointFrom()
-            val ticks = ticksToHit(path, hitAt, charged, lead)
+            val ticks = ticksToHit(path, hitAt, walk)
             val hit = ticks?.let { hitAt(path[it].eyes()) }?.takeIf(::requirementsMet)
             TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit)
 
@@ -284,32 +285,29 @@ internal object ModuleTickBase : ClientModule(
 
             busy = true
             try {
-                boost(ticks - lead, charged, lead)
+                boost(ticks - walk, charged, walk)
             } finally {
                 busy = false
             }
         }
 
         /**
-         * Bursts [ticks] ticks and holds back the ticks the [charged] balance does not cover, with the [lead] or
-         * a random delay between. The burst ticks count towards the waited ticks as well, and a hold starts with
-         * the tick it is requested in.
+         * Bursts [ticks] ticks and holds back the ticks the [charged] balance does not cover, with the delay
+         * between. Held ticks do not count towards the waited ticks, the burst ticks do.
          */
-        private suspend fun boost(ticks: Int, charged: Int, lead: Int) {
+        private suspend fun boost(ticks: Int, charged: Int, walk: Int) {
             if (holdFirst) {
-                val owed = max(0, ticks - charged)
-                Timer.hold(this, owed)
-                waitTicks(owed + lead)
+                Timer.hold(this, max(0, ticks - charged))
+                waitTicks(walk - 1)
                 val burst = Timer.burst(ticks, 0..maxBalance + maxTicks)
                 TickBaseVisuals.clear()
                 waitTicks(burst + cooldown.random())
             } else {
                 val burst = Timer.burst(ticks, -maxTicks..maxBalance)
                 TickBaseVisuals.clear()
-                val owed = max(0, burst - charged)
-                waitTicks(burst + 1 + delay.random())
-                Timer.hold(this, owed)
-                waitTicks(owed + cooldown.random())
+                waitTicks(burst + delay.random())
+                Timer.hold(this, max(0, burst - charged))
+                waitTicks(1 + cooldown.random())
             }
         }
 
@@ -319,22 +317,15 @@ internal object ModuleTickBase : ClientModule(
         }
 
         /**
-         * The tick of [path] to land the hit on, preferring a critical one, with [lead] normal ticks before the
+         * The tick of [path] to land the hit on, preferring a critical one, with [walk] normal ticks before the
          * burst. Null when no hit lands on [path], or one lands by just walking without a critical hit to wait for.
          */
-        private fun ticksToHit(
-            path: List<SimulatedPlayerSnapshot>,
-            hitAt: (Vec3) -> Vec3?,
-            charged: Int,
-            lead: Int
-        ): Int? {
+        private fun ticksToHit(path: List<SimulatedPlayerSnapshot>, hitAt: (Vec3) -> Vec3?, walk: Int): Int? {
             val inRange = path.indices.filter { hitAt(path[it].eyes()) != null }
             val first = inRange.firstOrNull() ?: return null
 
-            // Holding first delays the hit by the ticks it holds
-            val landing = inRange.filter { tick ->
-                tick > lead && killAuraClicksAt(if (holdFirst) tick + max(0, tick - lead - charged) else tick)
-            }
+            // The n-th game tick from now moves the player to path[n + 1], held ticks are no game ticks
+            val landing = inRange.filter { tick -> tick > walk && killAuraClicksAt(tick - 1) }
             val critical = if (prefersCritical) {
                 landing.firstOrNull { !path[it].onGround && path[it].fallDistance > 0.0 }
             } else {
@@ -343,7 +334,7 @@ internal object ModuleTickBase : ClientModule(
 
             return when {
                 critical != null -> critical
-                first <= lead -> null
+                first <= walk -> null
                 else -> landing.firstOrNull()
             }
         }
