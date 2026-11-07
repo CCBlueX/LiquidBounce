@@ -46,10 +46,6 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import java.net.URI
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
 private const val MALFORMED_LOG_LENGTH = 200
 
@@ -62,11 +58,9 @@ private val KNOWN_ERRORS = setOf(
 class LiquidChatClient(private val allowMessages: () -> Boolean) {
 
     private val client = AxochatClient(
-        URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.liquidbounce.net/ws")),
-        // the certificate of the chat server expired years ago
-        HttpClient.defaultClient.newBuilder()
-            .sslSocketFactory(trustingContext().socketFactory, TrustingManager)
-            .build(),
+        URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.ccbluex.net/ws")),
+        // the API client's interceptor rejects the 101 of the websocket upgrade
+        HttpClient.defaultClient,
         malformed = { logger.warn("Malformed LiquidChat packet: {}", it.take(MALFORMED_LOG_LENGTH)) },
     )
 
@@ -247,14 +241,4 @@ private fun translateError(packet: Clientbound.Error): String {
 
     val key = "liquidbounce.liquidchat.error.${code.replaceFirstChar(Char::lowercaseChar)}"
     return translation(key, packet.details ?: "").string
-}
-
-private fun trustingContext(): SSLContext = SSLContext.getInstance("TLS").apply {
-    init(null, arrayOf(TrustingManager), SecureRandom())
-}
-
-private object TrustingManager : X509TrustManager {
-    override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
-    override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
-    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
 }
