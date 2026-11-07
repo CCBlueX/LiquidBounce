@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.BoundingBox2s
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import org.lwjgl.sdl.SDLVideo
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Dimension
@@ -150,6 +149,13 @@ abstract class GlyphPage {
 
             // Enable font antialiasing
             atlasGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+            // Draw with the same context the glyphs were measured with. Grayscale AA with fractional metrics loads
+            // glyphs unhinted, so FreeType never reaches its autohinter, whose HarfBuzz calls crash once LWJGL's
+            // FreeType is loaded. Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
+            atlasGraphics.setRenderingHint(
+                RenderingHints.KEY_FRACTIONALMETRICS,
+                RenderingHints.VALUE_FRACTIONALMETRICS_ON
+            )
 
             val glyphsByFont = glyphsToRender.groupBy { it.fontGlyph.font }
 
@@ -190,19 +196,7 @@ abstract class GlyphPage {
                 val baselineX = pendingGlyph.atlasLocation.x - pendingGlyph.pixelXMin + DEFAULT_PADDING
                 val baselineY = pendingGlyph.atlasLocation.y - pendingGlyph.pixelYMin + DEFAULT_PADDING
 
-                when (SDLVideo.SDL_GetCurrentVideoDriver()) {
-                    "x11" -> {
-                        // Java2D's X11 bitmap glyph path can crash in FreeType; rendering the same outline avoids it.
-                        // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
-                        atlasGraphics.fill(
-                            atlasGraphics.font.createGlyphVector(fontRendererContext, character)
-                                .getGlyphOutline(0, baselineX.toFloat(), baselineY.toFloat())
-                        )
-                    }
-                    else -> {
-                        atlasGraphics.drawString(character, baselineX, baselineY)
-                    }
-                }
+                atlasGraphics.drawString(character, baselineX, baselineY)
             }
         }
 
