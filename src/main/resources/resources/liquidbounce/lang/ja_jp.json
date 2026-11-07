@@ -418,7 +418,6 @@
   "liquidbounce.module.regen.description": "体力の回復速度が大幅に向上します。",
   "liquidbounce.module.replenish.description": "アイテム数がしきい値を下回ると、インベントリからホットバーを自動的に補充します。",
   "liquidbounce.module.reportHelper.description": "報告を自動的に開始し、確認操作を代行します。",
-  "liquidbounce.module.resetVL.description": "欠陥のあるアンチチートの違反レベルをリセットします。",
   "liquidbounce.module.resourceSpoof.description": "サーバーにリソースパックを受け入れたように見せます。",
   "liquidbounce.module.reverseStep.description": "ブロックを降りる速度が速くなります。",
   "liquidbounce.module.richPresence.description": "discordのステータスにこのクライアントの情報を表示させます。",

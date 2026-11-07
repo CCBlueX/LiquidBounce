@@ -464,7 +464,6 @@
   "liquidbounce.module.regen.description": "Regenera vida mais rapido.",
   "liquidbounce.module.replenish.description": "Reabastece automaticamente sua hotbar com itens do inventário quando a quantidade cai abaixo de um certo limite.",
   "liquidbounce.module.reportHelper.description": "Inicia automaticamente um report e o confirma por você.",
-  "liquidbounce.module.resetVL.description": "Reseta as violações de anticheat em anticheats com falhas.",
   "liquidbounce.module.resourceSpoof.description": "Faz parecer ao servidor que você aceitou um pacote de recursos.",
   "liquidbounce.module.reverseStep.description": "Faz você descer blocos mais rápido.",
   "liquidbounce.module.richPresence.description": "Exibe informações sobre o cliente no rich presence do seu Discord.",

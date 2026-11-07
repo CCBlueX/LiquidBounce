@@ -474,7 +474,6 @@
   "liquidbounce.module.reach.description": "Vergroot je reikwijdte.",
   "liquidbounce.module.replenish.description": "Vult automatisch je hotbar bij vanuit je inventaris als het aantal te laag wordt.",
   "liquidbounce.module.reportHelper.description": "Start automatisch een rapportage en bevestigt deze voor je.",
-  "liquidbounce.module.resetVL.description": "Reset anticheat-violations op bepaalde buggy anticheats.",
   "liquidbounce.module.resourceSpoof.description": "Doet alsof je het resourcepack van de server hebt geaccepteerd.",
   "liquidbounce.module.reverseStep.description": "Laat je sneller naar beneden stappen.",
   "liquidbounce.module.richPresence.description": "Toont informatie over de client in je Discord Rich Presence.",

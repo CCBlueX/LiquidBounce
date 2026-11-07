@@ -455,7 +455,6 @@
   "liquidbounce.module.reach.description": "Daha uzağa ulaşmanızı sağlar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
   "liquidbounce.module.reportHelper.description": "Sizin için otomatik olarak bir şikayet başlatır ve onaylar.",
-  "liquidbounce.module.resetVL.description": "Hatalı hile karşıtlarda ihlal kayıtlarını sıfırlar.",
   "liquidbounce.module.resourceSpoof.description": "Sunucuya kaynak paketini kabul etmiş gibi görünmenizi sağlar.",
   "liquidbounce.module.reverseStep.description": "Bloklardan daha hızlı inmenizi sağlar.",
   "liquidbounce.module.richPresence.description": "İstemci bilgilerini Discord zengin varlığınızda gösterir.",
