@@ -22,12 +22,15 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
+import net.ccbluex.liquidbounce.utils.navigation.flight.GlideControl
+import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePhysics
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePath
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -92,6 +95,23 @@ class GlideRoutingTest {
         val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, start, goal, ROCKETEER)).value
         assertTrue(path.rockets > 0, "the glide needs no rocket")
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
+    }
+
+    @Test
+    fun `far too high above the goal it sinks without firing rockets`() {
+        val goal = Vec3(0.5, 90.0, 0.5)
+        val control = GlideControl(goal, rockets = 8, rocketTicks = 20)
+        var position = Vec3(20.5, 250.0, 0.5)
+        var velocity = Vec3(-1.5, 0.0, 0.0)
+
+        repeat(200) {
+            val input = control.steer(position, velocity)
+            assertFalse(input.fireRocket, "fired a rocket at $position, ${position.y - goal.y} above the goal")
+            velocity = GlidePhysics.step(velocity, input.yaw, input.pitch, input.boosted)
+            position = position.add(velocity)
+        }
+        assertEquals(8, control.rockets)
+        assertTrue(position.y < 250.0 - 40.0, "only sank to ${position.y}")
     }
 
 }

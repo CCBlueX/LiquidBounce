@@ -105,8 +105,8 @@ internal object GlidePhysics {
  * one fired still pushing for [boostTicks].
  *
  * Every tick it tries a range of pitches held until touch-down and takes the one that lands just short of the goal
- * with a vertical speed that does no harm. Too high, it circles the goal while sinking slowly; too low or too far,
- * it fires a rocket and climbs towards a point above the goal while it pushes.
+ * with a vertical speed that does no harm. Too high, it circles the goal while sinking slowly, diving while far
+ * above it; too low or too far, it fires a rocket and climbs towards a point above the goal while it pushes.
  */
 class GlideControl(
     private val goal: Vec3,
@@ -157,8 +157,10 @@ class GlideControl(
 
         var yaw = bearing
         var pitch = bestPitch
+        // No pitch comes down within the horizon: far too high, which no rocket helps with.
+        val overhead = bestError == Double.POSITIVE_INFINITY && position.y > goal.y
         val missed = bestError > TOLERANCE
-        val fire = missed && bestAlong < 0.0 && boostTicks == 0 && rockets > 0
+        val fire = missed && !overhead && bestAlong < 0.0 && boostTicks == 0 && rockets > 0
         if (fire) {
             rockets--
             boostTicks = rocketTicks
@@ -169,6 +171,9 @@ class GlideControl(
             boostTicks--
             val aim = goal.y + CLIMB_ABOVE + distance * CLIMB_SLOPE - position.y
             pitch = (-Math.toDegrees(atan2(aim, distance))).toFloat().coerceIn(MIN_CLIMB_PITCH, MAX_CLIMB_PITCH)
+        } else if (overhead) {
+            yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
+            pitch = SPIRAL
         } else if (missed && bestAlong > 0.0) {
             yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
             pitch = PARACHUTE
@@ -211,6 +216,11 @@ class GlideControl(
         private const val TOLERANCE = 3.0
         private const val ORBIT_TURN = 90f
         private const val PARACHUTE = -45f
+
+        /**
+         * Looking down while circling far above the goal, to come down fast.
+         */
+        private const val SPIRAL = 30f
         private const val CLIMB_ABOVE = 4.0
         private const val CLIMB_SLOPE = 0.15
         private const val MIN_CLIMB_PITCH = -40f
