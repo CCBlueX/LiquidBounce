@@ -3,6 +3,12 @@
   "name": "LiquidBounce",
   "version": "0.1.0",
   "authors": ["CCBlueX"],
+  "splash": {
+    "animation": "splash/animation.json",
+    "background": "#181a1b",
+    "text": "#ffffff",
+    "accent": "#4677ff"
+  },
   "colors": {
     "Accent": "#4677ff",
     "Tint": "#000000"

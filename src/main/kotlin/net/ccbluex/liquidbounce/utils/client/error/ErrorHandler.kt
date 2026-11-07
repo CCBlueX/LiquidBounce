@@ -41,6 +41,8 @@ import kotlin.io.path.div
 import kotlin.math.min
 import kotlin.system.exitProcess
 
+internal const val ISSUE_URL = "https://github.com/CCBlueX/LiquidBounce/issues/new?template=bug_report.yml"
+
 private val MAX_STACKTRACE_LINES = when (Util.getPlatform()) {
     WINDOWS -> 3
     else -> 1
@@ -73,13 +75,26 @@ class ErrorHandler private constructor(
             ErrorHandler(error, finalQuickFix, additionalMessage, finalNeedToReport).apply {
                 logger.error("An error occurred!", error)
 
-                if (buildAndShowMessage()) {
-                    browseUrl("https://github.com/CCBlueX/LiquidBounce/issues/new?template=bug_report.yml")
+                if (System.getenv("CI").isNullOrEmpty()) {
+                    val report = ErrorReport(error, additionalMessage)
+                    ErrorScreen.takeOver(report, quickFixText(), finalNeedToReport, ::exitWithMessage)
                 }
-
-                exitProcess(1)
+                exitWithMessage()
             }
         }
+    }
+
+    private fun exitWithMessage(): Nothing {
+        if (buildAndShowMessage()) {
+            browseUrl(ISSUE_URL)
+        }
+        exitProcess(1)
+    }
+
+    private fun quickFixText(): String? {
+        quickFix ?: return null
+        quickFix()
+        return builder.toString().trimEnd().also { builder.setLength(0) }
     }
 
     private inline val title get() = "${LiquidBounce.CLIENT_NAME} Nextgen"

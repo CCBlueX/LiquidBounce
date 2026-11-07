@@ -109,6 +109,10 @@ object FontManager {
     const val DEFAULT_FONT_SIZE: Float = 43f
 
     private var _glyphManager: FontGlyphPageManager? = null
+
+    /** False until the client's start has created the glyph manager, and for good when that failed. */
+    val isLoaded get() = _glyphManager != null
+
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */

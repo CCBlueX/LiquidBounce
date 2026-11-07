@@ -75,6 +75,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
@@ -538,7 +539,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen(translation("liquidbounce.splash.loadingLibraries"), taskManager))
         }
     }
 
