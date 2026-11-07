@@ -136,7 +136,7 @@ inline operator fun MutableComponent.plusAssign(other: Component) {
  */
 fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableComponent {
     return text.foldIndexed("".asText()) { index, newText, char ->
-        val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
+        val factor = if (text.length > 1) index / (text.length - 1.0F) else 0.0F
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(

@@ -467,7 +467,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     val renderColor = baseColor.interpolateTo(
                         Color4b.RED.alpha(color.a),
-                        damageFlashStrength.toDouble()
+                        damageFlashStrength
                     )
 
                     drawHeart(worldPos, targetPos, renderColor, heartSlot.fill)
