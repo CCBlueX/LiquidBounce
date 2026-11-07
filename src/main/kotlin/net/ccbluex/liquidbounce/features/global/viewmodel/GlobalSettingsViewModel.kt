@@ -126,11 +126,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
     )
 
     object EquipOffset : ToggleableValueGroup(this, "EquipOffset", true) {
-        private val ignore by multiEnumChoice(
-            "Ignore",
-            Ignores.BLOCKING,
-            Ignores.PLACE
-        )
+        private val ignore by multiEnumChoice<Ignores>("Ignore")
 
         val ignoreBlocking get() = Ignores.BLOCKING in ignore
         val ignorePlace get() = Ignores.PLACE in ignore
