@@ -25,7 +25,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
-import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimations;
+import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimationMode;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
@@ -93,16 +93,12 @@ public abstract class MixinFirstPersonHandsAndItems {
     ) {
         AbstractClientPlayer player = Minecraft.getInstance().player;
 
-        if (player == null || !GlobalSettingsViewModel.INSTANCE.getRunning() || !SwingAnimations.INSTANCE.getEnabled() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)) {
+        if (player == null || !GlobalSettingsViewModel.INSTANCE.getRunning() || arm != player.getMainArm() || ModuleSwordBlock.shouldAnimateSwordBlock(player)
+            || !(GlobalSettingsViewModel.INSTANCE.getSwingAnimation().getActiveMode() instanceof SwingAnimationMode swingAnimation)) {
             return;
         }
 
-        SwingAnimations.INSTANCE.onRenderItem(
-            player,
-            InteractionHand.MAIN_HAND,
-            animation,
-            poseStack
-        );
+        swingAnimation.transform(poseStack, arm, animation);
 
         ci.cancel();
     }

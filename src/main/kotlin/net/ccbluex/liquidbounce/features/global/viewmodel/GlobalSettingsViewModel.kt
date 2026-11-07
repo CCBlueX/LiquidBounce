@@ -23,6 +23,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -46,7 +47,6 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         tree(MainHand)
         tree(OffHand)
         tree(EquipOffset)
-        tree(SwingAnimations)
         tree(SwingDuration)
     }
 
@@ -90,15 +90,27 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         }
     }
 
-    /**
-     * A choice that allows the user to choose the animation that will be used during the blocking
-     * of a sword.
-     * This choice is only used when the [ModuleSwordBlock] module is enabled.
-     */
-    init {
-        SwingAnimations
+    val swingAnimation = modes(this, "SwingAnimation") {
+        arrayOf(
+            NoneMode(it),
+            SwingAnimationMode.Swipe,
+            SwingAnimationMode.Spin,
+            SwingAnimationMode.Hook,
+            SwingAnimationMode.Dash,
+            SwingAnimationMode.Tap,
+            SwingAnimationMode.Inject,
+            SwingAnimationMode.Slap,
+            SwingAnimationMode.Akrien,
+            SwingAnimationMode.Smooth,
+            SwingAnimationMode.Power,
+            SwingAnimationMode.Feast
+        )
     }
 
+    /**
+     * A choice that allows the user to choose the animation that will be used during the blocking
+     * of a sword. This choice is only used when the [ModuleSwordBlock] module is enabled.
+     */
     val blockAnimationChoice = modes(
         this,
         "BlockingAnimation",
