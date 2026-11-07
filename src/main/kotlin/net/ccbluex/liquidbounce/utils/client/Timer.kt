@@ -20,15 +20,20 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.min
 
 /**
@@ -37,6 +42,8 @@ import kotlin.math.min
  * Also keeps the timer balance of the session: how many ticks the client is behind the time the server saw pass.
  * Held back player ticks and a timer below 1 build it up, extra ticks and a timer above 1 spend it,
  * no matter which module caused them. Modules spend it within their own limits, see [balanceWithin].
+ *
+ * A held back tick sends no tick end either, see [packetHandler].
  */
 @AddonApi
 object Timer : EventListener {
@@ -78,6 +85,16 @@ object Timer : EventListener {
      */
     var isHeld = false
         private set
+
+    /**
+     * Set by a held player tick until its game tick ends.
+     */
+    private var dropTickEnd = false
+
+    /**
+     * Whether a movement packet went out since the last tick end, which the next one then has to close.
+     */
+    private var movedSinceTickEnd = false
 
     /**
      * Scales the ticks a frame advances by the requested speed.
@@ -224,6 +241,7 @@ object Timer : EventListener {
         }
 
         isHeld = event.isCancelled
+        dropTickEnd = isHeld
         if (!isHeld) {
             balance -= 1f
         }
@@ -237,7 +255,32 @@ object Timer : EventListener {
         balance = 0f
         burstTicks = 0
         isHeld = false
+        dropTickEnd = false
+        movedSinceTickEnd = false
         holds.clear()
+    }
+
+    /**
+     * Anticheats such as Grim count a tick end without a movement packet before it as a tick, so a held tick
+     * still sending it would earn no balance. Without movement in between, a dropped tick end looks like lag.
+     * Also called for silently sent packets, whose tick ends it leaves alone.
+     */
+    internal val packetHandler = handler<PacketEvent>(priority = OBJECTION_AGAINST_EVERYTHING) { event ->
+        if (event.origin != TransferOrigin.OUTGOING) {
+            return@handler
+        }
+
+        when (event.packet) {
+            is ServerboundMovePlayerPacket -> movedSinceTickEnd = true
+            is ServerboundClientTickEndPacket -> {
+                if (dropTickEnd && !movedSinceTickEnd && event.original && !event.isCancelled) {
+                    event.cancelEvent()
+                } else {
+                    movedSinceTickEnd = false
+                }
+                dropTickEnd = false
+            }
+        }
     }
 
 }
