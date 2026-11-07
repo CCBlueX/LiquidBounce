@@ -62,7 +62,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     private val disableOn by multiEnumChoice("DisableOn", enumSetAllOf<DisableOn>())
     private val avoidBrokenBlocks by boolean("AvoidBrokenBlocks", true)
     private val brokenBlockWindow by int("BrokenBlockWindow", 1000, 0..10000, "ms")
-    private val placeOrder by enumChoice("PlaceOrder", Order.Normal)
+    private val placeOrder by enumChoice("PlaceOrder", Order.NORMAL)
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val blocks by blocks("Blocks", blockSortedSetOf())
 
@@ -73,7 +73,7 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
 
     private enum class Order(override val tag: String) : Tagged {
 
-        Normal("Normal") {
+        NORMAL("Normal") {
             override fun positions(): Array<BlockPos> {
                 val playerHeight = Mth.ceil(player.bbHeight)
                 val result = ObjectArraySet<BlockPos>(10)
@@ -90,25 +90,25 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
             }
         },
 
-        Random("Random") {
+        RANDOM("Random") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.shuffle()
                 return array
             }
         },
 
-        BottomTop("BottomTop") {
+        BOTTOM_TOP("BottomTop") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.sortWith(Vec3i.BY_Y)
                 return array
             }
         },
 
-        TopBottom("TopBottom") {
+        TOP_BOTTOM("TopBottom") {
             override fun positions(): Array<BlockPos> {
-                val array = Normal.positions()
+                val array = NORMAL.positions()
                 array.sortWith(Vec3i.BY_Y_DESC)
                 return array
             }

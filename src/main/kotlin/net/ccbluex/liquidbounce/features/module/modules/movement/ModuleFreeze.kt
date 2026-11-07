@@ -70,7 +70,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
     private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary, TickMovement))
         .apply { tagBy(this) }
-    private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.Flag))
+    private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.FLAG))
     private val notification by boolean("Notification", false)
     private val balance by boolean("BalanceWarp", false)
 
@@ -78,12 +78,12 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         override val tag: String,
         val trigger: BooleanSupplier?,
     ) : Tagged {
-        Flag("Flag", null),
-        OnGround("OnGround", { player.onGround() }),
-        OnMovementInput("OnMovementInput", { player.input.keyPresses.anyHorizontal }),
-        InLiquid("InLiquid", { player.isInLiquid }),
-        Void("Void", { player.y <= player.level().minY }),
-        OnUseItem("OnUseItem", { player.isUsingItem }),
+        FLAG("Flag", null),
+        ON_GROUND("OnGround", { player.onGround() }),
+        ON_MOVEMENT_INPUT("OnMovementInput", { player.input.keyPresses.anyHorizontal }),
+        IN_LIQUID("InLiquid", { player.isInLiquid }),
+        VOID("Void", { player.y <= player.level().minY }),
+        ON_USE_ITEM("OnUseItem", { player.isUsingItem }),
     }
 
     // todo: use global balance system
@@ -181,8 +181,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is ClientboundPlayerPositionPacket) {
             missedOutTick = 0
-            if (DisableOn.Flag in disableOn) {
-                notifyAndDisable(DisableOn.Flag)
+            if (DisableOn.FLAG in disableOn) {
+                notifyAndDisable(DisableOn.FLAG)
             }
         }
     }
