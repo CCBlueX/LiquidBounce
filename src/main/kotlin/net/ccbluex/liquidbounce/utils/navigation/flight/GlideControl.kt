@@ -106,13 +106,15 @@ internal object GlidePhysics {
  *
  * Every tick it tries a range of pitches held until touch-down and takes the one that lands just short of the goal
  * with a vertical speed that does no harm. Too high, it circles the goal while sinking slowly, diving while far
- * above it; too low or too far, it fires a rocket and climbs towards a point above the goal while it pushes.
+ * above it; too low or too far, it fires a rocket and climbs towards a point above the goal while it pushes. With an
+ * [approach], it keeps as high as it can until that close to the goal, over ridges the direct glide would clip.
  */
 class GlideControl(
     private val goal: Vec3,
     rockets: Int,
     private val rocketTicks: Int,
     boostTicks: Int = 0,
+    private val approach: Double = 0.0,
 ) : GlideSteering {
 
     /**
@@ -135,32 +137,18 @@ class GlideControl(
         val dz = goal.z - position.z
         val distance = sqrt(dx * dx + dz * dz)
         val bearing = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
-        val unitX = if (distance > MIN_DISTANCE) dx / distance else 0.0
-        val unitZ = if (distance > MIN_DISTANCE) dz / distance else 1.0
+        sweepPitches(position, velocity, bearing, distance, dx, dz)
 
-        var bestError = Double.POSITIVE_INFINITY
-        var bestPitch = 0f
-        var bestAlong = Double.NEGATIVE_INFINITY
-        for (pitch in PITCHES) {
-            val touchdown = predict(position, velocity, bearing, pitch) ?: continue
-            val along = (touchdown.x - goal.x) * unitX + (touchdown.z - goal.z) * unitZ
-            var error = abs(along + SHORT_OF_GOAL)
-            if (touchdown.y < SAFE_SINK) {
-                error += UNSAFE
-            }
-            if (error < bestError) {
-                bestError = error
-                bestPitch = pitch
-                bestAlong = along
-            }
+        if (approach > 0.0 && distance > approach && boostTicks == 0 && sweep.farthestAlong >= 0.0) {
+            return GlideInput(bearing, sweep.farthestPitch, fireRocket = false, boosted = false)
         }
 
         var yaw = bearing
-        var pitch = bestPitch
+        var pitch = sweep.bestPitch
         // No pitch comes down within the horizon: far too high, which no rocket helps with.
-        val overhead = bestError == Double.POSITIVE_INFINITY && position.y > goal.y
-        val missed = bestError > TOLERANCE
-        val fire = missed && !overhead && bestAlong < 0.0 && boostTicks == 0 && rockets > 0
+        val overhead = sweep.bestError == Double.POSITIVE_INFINITY && position.y > goal.y
+        val missed = sweep.bestError > TOLERANCE
+        val fire = missed && !overhead && sweep.bestAlong < 0.0 && boostTicks == 0 && rockets > 0
         if (fire) {
             rockets--
             boostTicks = rocketTicks
@@ -174,11 +162,56 @@ class GlideControl(
         } else if (overhead) {
             yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
             pitch = SPIRAL
-        } else if (missed && bestAlong > 0.0) {
+        } else if (missed && sweep.bestAlong > 0.0) {
             yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
             pitch = PARACHUTE
         }
         return GlideInput(yaw, pitch, fire, boosted)
+    }
+
+    private val sweep = PitchSweep()
+
+    /**
+     * Finds the pitch, held towards [bearing], that touches down just short of the goal unhurt, and the one that
+     * touches down farthest along the way to it.
+     */
+    private fun sweepPitches(position: Vec3, velocity: Vec3, bearing: Float, distance: Double, dx: Double, dz: Double) {
+        val unitX = if (distance > MIN_DISTANCE) dx / distance else 0.0
+        val unitZ = if (distance > MIN_DISTANCE) dz / distance else 1.0
+        sweep.reset()
+        for (pitch in PITCHES) {
+            val touchdown = predict(position, velocity, bearing, pitch) ?: continue
+            val along = (touchdown.x - goal.x) * unitX + (touchdown.z - goal.z) * unitZ
+            var error = abs(along + SHORT_OF_GOAL)
+            if (touchdown.y < SAFE_SINK) {
+                error += UNSAFE
+            }
+            if (error < sweep.bestError) {
+                sweep.bestError = error
+                sweep.bestPitch = pitch
+                sweep.bestAlong = along
+            }
+            if (along > sweep.farthestAlong) {
+                sweep.farthestAlong = along
+                sweep.farthestPitch = pitch
+            }
+        }
+    }
+
+    private class PitchSweep {
+        var bestError = Double.POSITIVE_INFINITY
+        var bestPitch = 0f
+        var bestAlong = Double.NEGATIVE_INFINITY
+        var farthestPitch = 0f
+        var farthestAlong = Double.NEGATIVE_INFINITY
+
+        fun reset() {
+            bestError = Double.POSITIVE_INFINITY
+            bestPitch = 0f
+            bestAlong = Double.NEGATIVE_INFINITY
+            farthestPitch = 0f
+            farthestAlong = Double.NEGATIVE_INFINITY
+        }
     }
 
     /**

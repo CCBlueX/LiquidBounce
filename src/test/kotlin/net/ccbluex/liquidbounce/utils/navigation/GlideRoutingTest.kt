@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePhysics
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePath
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -75,6 +76,37 @@ class GlideRoutingTest {
         assertEquals(1.0, path.landing.y, 1.0E-6, "the glide lands at ${path.landing}")
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
         assertEquals(0, path.rockets)
+    }
+
+    @Test
+    fun `goals close below a high take-off are glided to by circling down`() {
+        val goal = feet(40, 1, 0)
+        val result = glide(towerWorld(58), feet(0, 59, 0), goal, GLIDER)
+
+        val path = assertIs<RouteResult.Found<GlidePath>>(result).value
+        assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
+    }
+
+    @Test
+    fun `ridges under the direct glide line are crossed high and circled down after`() {
+        val world = towerWorld(40).fill(30, 1, -40, 36, 30, 40)
+        val goal = feet(70, 1, 0)
+
+        val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, feet(0, 41, 0), goal, GLIDER)).value
+        assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
+    }
+
+    @Test
+    fun `slow touch-downs brushing a step at the goal still land`() {
+        val world = towerWorld(40).fill(-10, 1, -40, 100, 1, 40).set(70, 1, 0, Blocks.AIR.defaultBlockState())
+        val goal = feet(70, 1, 0)
+
+        val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, feet(0, 41, 0), goal, GLIDER)).value
+        val landing = path.landing
+        assertTrue(
+            Vec3(landing.x, goal.y, landing.z).distanceTo(goal) <= 3.0 && landing.y - goal.y <= 1.0,
+            "the glide lands at $landing, away from $goal",
+        )
     }
 
     @Test

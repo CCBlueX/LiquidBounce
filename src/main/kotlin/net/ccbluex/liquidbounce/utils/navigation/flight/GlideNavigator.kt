@@ -122,7 +122,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
                 // A glide found for where the player stood a moment ago is searched again.
                 if (player.onGround() && player.position().distanceTo(found.start) <= START_TOLERANCE) {
                     path = found
-                    steering = GlideControl(goal, found.rockets, abilities.rocketTicks)
+                    steering = GlideControl(goal, found.rockets, abilities.rocketTicks, approach = found.approach)
                     this.goal = goal
                     flightTicks = 0
                     hasGlided = false
