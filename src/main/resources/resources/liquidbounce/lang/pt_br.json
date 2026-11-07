@@ -360,6 +360,7 @@
   "liquidbounce.module.holeEsp.description": "Mostra lugares seguros para crystal pvp.",
   "liquidbounce.module.holeFiller.description": "Preenche automaticamente pontos seguros para PvP de crystal.",
   "liquidbounce.module.hud.description": "Mostra o hud do client.",
+  "liquidbounce.module.interceptElytra.description": "Lança cargas de vento em jogadores de elytra para interceptá-los e derrubá-los do ar.",
   "liquidbounce.module.inventoryCleaner.description": "Automaticamente joga items inuteis fora.",
   "liquidbounce.module.inventoryCleaner.value.cleanList.description": "Lista de limpeza.",
   "liquidbounce.module.inventoryCleaner.value.delay.description": "Atraso entre limpezas.",
