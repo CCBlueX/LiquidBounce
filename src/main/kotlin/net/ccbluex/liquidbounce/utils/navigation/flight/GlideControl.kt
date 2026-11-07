@@ -33,6 +33,13 @@ import kotlin.math.sqrt
 class GlideInput(val yaw: Float, val pitch: Float, val fireRocket: Boolean, val boosted: Boolean)
 
 /**
+ * Steers a glide one tick at a time.
+ */
+fun interface GlideSteering {
+    fun steer(position: Vec3, velocity: Vec3): GlideInput
+}
+
+/**
  * Elytra flight as the game moves it, one tick at a time.
  */
 internal object GlidePhysics {
@@ -94,13 +101,19 @@ internal object GlidePhysics {
 }
 
 /**
- * Glides to [goal], feet on the ground there, with [rockets] rockets that each push for [rocketTicks] ticks.
+ * Glides to [goal], feet on the ground there, with [rockets] rockets that each push for [rocketTicks] ticks, the last
+ * one fired still pushing for [boostTicks].
  *
  * Every tick it tries a range of pitches held until touch-down and takes the one that lands just short of the goal
  * with a vertical speed that does no harm. Too high, it circles the goal while sinking slowly; too low or too far,
  * it fires a rocket and climbs towards a point above the goal while it pushes.
  */
-class GlideControl(private val goal: Vec3, rockets: Int, private val rocketTicks: Int) {
+class GlideControl(
+    private val goal: Vec3,
+    rockets: Int,
+    private val rocketTicks: Int,
+    boostTicks: Int = 0,
+) : GlideSteering {
 
     /**
      * Rockets left to fire.
@@ -111,13 +124,13 @@ class GlideControl(private val goal: Vec3, rockets: Int, private val rocketTicks
     /**
      * Ticks the last rocket still pushes.
      */
-    var boostTicks = 0
+    var boostTicks = boostTicks
         private set
 
     /**
      * Decides the next tick at [position] moving with [velocity].
      */
-    fun steer(position: Vec3, velocity: Vec3): GlideInput {
+    override fun steer(position: Vec3, velocity: Vec3): GlideInput {
         val dx = goal.x - position.x
         val dz = goal.z - position.z
         val distance = sqrt(dx * dx + dz * dz)
