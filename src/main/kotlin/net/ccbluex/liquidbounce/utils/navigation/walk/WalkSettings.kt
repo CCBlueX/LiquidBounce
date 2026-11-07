@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
+import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
@@ -53,6 +54,8 @@ class WalkSettings(
     private val maxFall by values.int("MaxFall", 3, 0..20, "blocks")
     private val pathRange by values.int("PathRange", 64, 16..128, "blocks")
     private val allowFly by values.boolean("AllowFly", true)
+    private val allowElytra by values.boolean("AllowElytra", true)
+    private val elytraRockets by values.boolean("ElytraRockets", true)
 
     /**
      * Longest route searched, in blocks along the path.
@@ -100,6 +103,11 @@ class WalkSettings(
      * How the player can fly now, or null when it walks. Call on the render thread.
      */
     fun captureFlight(): FlightAbilities? = if (allowFly) FlightAbilities.capture() else null
+
+    /**
+     * How the player can glide now, or null without a usable elytra. Call on the render thread.
+     */
+    fun captureGlide(): GlideAbilities? = if (allowElytra) GlideAbilities.capture(elytraRockets) else null
 
     private companion object {
         const val VANILLA_SAFE_FALL = 3

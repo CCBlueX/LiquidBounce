@@ -38,8 +38,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
+import net.ccbluex.liquidbounce.utils.navigation.flight.GlideNavigator
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -88,6 +88,7 @@ class WalkNavigator(
     private val actions = WalkActions(this, this.rotations)
     private val follower = WalkFollower(actions)
     private val flight = FlightNavigator(this, view)
+    private val glide = GlideNavigator(this, view)
 
     private val avoid = LongOpenHashSet()
     private var avoidVersion = 0
@@ -219,13 +220,8 @@ class WalkNavigator(
             direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
         }
 
-        // Goals a plain walk reaches are walked to unless the player flies already.
-        val flightAbilities = walkSettings.captureFlight()?.takeUnless { direct && !it.isFlying }
-        if (flightAbilities != null) {
-            fly(event, goal, radius, flightAbilities)
+        if (fly(event, goal, radius) || glide(event, goal, radius)) {
             return false
-        } else if (flight.isActive) {
-            flight.halt()
         }
 
         if (direct) {
@@ -247,14 +243,43 @@ class WalkNavigator(
         return plainWalk
     }
 
-    private fun fly(event: MovementInputEvent, goal: Vec3, radius: Double, abilities: FlightAbilities) {
+    /**
+     * Flies this tick when the player can; false to walk. Goals a plain walk reaches are walked to unless the player
+     * flies already.
+     */
+    private fun fly(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
+        val abilities = walkSettings.captureFlight()?.takeUnless { direct && !it.isFlying }
+        if (abilities == null) {
+            flight.halt()
+            return false
+        }
+
         if (!flight.isActive) {
-            halt()
+            glide.halt()
+            stopWalking()
         }
 
         flight.navigate(event, goal, radius, walkSettings.maxLength, abilities, frameYaw())
         steeringTarget = flight.target
         sprintWanted = flight.sprint
+        return true
+    }
+
+    /**
+     * Glides this tick when an elytra glide is under way or was just found; false to walk.
+     */
+    private fun glide(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
+        val wasGliding = glide.isActive
+        if (!glide.navigate(event, goal, radius, walkSettings.captureGlide(), direct, frameYaw())) {
+            return false
+        }
+
+        if (!wasGliding) {
+            stopWalking()
+        }
+        steeringTarget = null
+        sprintWanted = glide.sprint
+        return true
     }
 
     private fun steerDirectly(event: MovementInputEvent, goal: Vec3) {
@@ -536,14 +561,19 @@ class WalkNavigator(
     }
 
     /**
-     * Stops walking until the next [navigate]; for ticks without a goal.
+     * Stops walking, flying and gliding until the next [navigate]; for ticks without a goal.
      */
     fun halt() {
+        flight.halt()
+        glide.halt()
+        stopWalking()
+    }
+
+    private fun stopWalking() {
         planner.cancel()
         follower.clear()
         actions.idle()
         view.clear()
-        flight.halt()
         pathGoal = null
         requestedGoal = null
         requestedStage = null

@@ -31,7 +31,8 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * `.goto` flies where walking cannot go: a creative player across a canyon into the void and over a wall wider
- * than the searched area, and a survival player with the Vanilla mode of Fly onto a pillar.
+ * than the searched area, a survival player with the Vanilla mode of Fly onto a pillar, and a survival player with
+ * an elytra from the top of a tower down to the ground far away, unhurt.
  */
 class FlightNavigationGameTest : FabricClientGameTest {
 
@@ -52,6 +53,7 @@ class FlightNavigationGameTest : FabricClientGameTest {
 
                 checkCreative(context, server, y)
                 checkFlyModule(context, server, y)
+                checkElytra(context, server, y)
             }
         } finally {
             context.onClient {
@@ -71,6 +73,7 @@ class FlightNavigationGameTest : FabricClientGameTest {
         server.runCommand("fill 10 ${y - 4} -30 19 ${y - 1} 30 air")
         server.runCommand("fill 40 $y -30 40 ${y + 11} 30 stone")
         server.runCommand("fill 60 $y 10 62 ${y + 8} 12 stone")
+        server.runCommand("fill 0 $y -52 2 ${y + 39} -50 stone")
     }
 
     private fun checkCreative(context: ClientGameTestContext, server: TestServerContext, y: Int) {
@@ -107,6 +110,36 @@ class FlightNavigationGameTest : FabricClientGameTest {
         check(onGround && position.y >= y + 9.0) { "Did not land on the pillar, but at $position" }
         val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
         check(after >= health) { "Flying onto the pillar hurt the player from $health to $after" }
+    }
+
+    private fun checkElytra(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+        server.runCommand("item replace entity @a armor.chest with elytra")
+        moveTo(context, server, Vec3(1.5, y + 40.0, -50.5))
+        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
+
+        val destination = Vec3(71.5, y.toDouble(), -50.5)
+        context.command("goto ${destination.x} ${destination.y} ${destination.z}")
+        var glided = false
+        repeat(GOTO_TICKS) {
+            val (arrived, gliding) = context.fromClient { mc ->
+                !ModuleAutoWalk.enabled to checkNotNull(mc.player).isFallFlying
+            }
+            glided = glided || gliding
+            if (arrived) {
+                val position = context.fromClient { checkNotNull(it.player).position() }
+                check(position.distanceTo(destination) <= ARRIVAL) { "AutoWalk stopped at $position" }
+                check(glided) { "Got down from the tower without gliding" }
+
+                val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
+                check(after >= health) { "Gliding down hurt the player from $health to $after" }
+                return
+            }
+            context.waitTick()
+        }
+
+        val position = context.fromClient { checkNotNull(it.player).position() }
+        context.onClient { ModuleAutoWalk.enabled = false }
+        error("Did not glide to $destination within $GOTO_TICKS ticks, stopped at $position")
     }
 
     /**
