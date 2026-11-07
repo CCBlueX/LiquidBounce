@@ -90,6 +90,7 @@ class WalkSettings(
             waterFall = WATER_FALL,
             breakTicks = if (allowBreak) BreakTimes.capture() else { _ -> Double.POSITIVE_INFINITY },
             avoid = LongOpenHashSet(avoid),
+            air = player.airSupply,
         )
     }
 

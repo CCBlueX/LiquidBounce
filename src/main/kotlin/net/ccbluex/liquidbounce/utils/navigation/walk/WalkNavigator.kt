@@ -129,8 +129,8 @@ class WalkNavigator(
         get() = actions.isActive
 
     /**
-     * Where the walk heads: the aim at a block being mined, placed or opened, else the way to the next point, else
-     * the direction of the movement input.
+     * Where the walk heads: the aim at a block being mined, placed or opened, else the way to the next point, pitched
+     * towards it under water, else the direction of the movement input.
      */
     fun movementRotation(): Rotation {
         actions.rotation?.let { return it }
@@ -141,12 +141,13 @@ class WalkNavigator(
             return Rotation(player.getMovementDirectionOfInput(), 0f)
         }
 
-        return Rotation(delta.yaw, 0f)
+        return if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, 0f)
     }
 
     /**
      * Turns the head the way the walk goes, so the keys press forward under movement correction and the player can
-     * sprint. Mining and placing aim themselves, and any other feature that rotates takes over.
+     * sprint; under water also up or down, so the swimming pose swims there. Mining and placing aim themselves, and
+     * any other feature that rotates takes over.
      */
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
@@ -161,7 +162,7 @@ class WalkNavigator(
         }
 
         RotationManager.setRotationTarget(
-            Rotation(delta.yaw, player.xRot),
+            if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, player.xRot),
             valueGroup = this.rotations,
             priority = Priority.NOT_IMPORTANT,
             provider = owner,
@@ -265,7 +266,7 @@ class WalkNavigator(
         }
 
         steeringTarget = follower.target
-        sprintWanted = follower.sprint && !event.sneak
+        sprintWanted = follower.sprint && (!event.sneak || follower.dive)
 
         view.breaks = follower.remainingBreaks
         view.places = follower.remainingPlaces

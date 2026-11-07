@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import net.ccbluex.liquidbounce.utils.block.AStarSearch
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
 import net.ccbluex.liquidbounce.utils.navigation.route.NavigationGoal
@@ -51,6 +52,12 @@ class WalkRouteSearch(
     private var startNode = BlockPos.containing(start)
     private var search: AStarSearch<BlockPos>? = null
     private var computeNanos = 0L
+
+    /**
+     * Moves in a row with the head under water on the best path to each expanded node.
+     */
+    private val dives = Long2IntOpenHashMap()
+    private val maxDive = WalkWater.dive(WalkWater.MAX_AIR)
 
     var result: RouteResult<WalkPath> = RouteResult.Searching
         private set
@@ -112,12 +119,31 @@ class WalkRouteSearch(
     }
 
     private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
+        val dive = diveLength(node)
         val edges = ArrayList<WeightedEdge<BlockPos>>()
         moves.forEach(node) { to, _, cost, _, _, _ ->
+            // Out of air, the only way on under water is straight up.
+            val upwards = to.x == node.x && to.z == node.z && to.y > node.y
+            if (dive >= maxDive && !upwards && moves.isUnderwater(to)) {
+                return@forEach
+            }
             val penalty = if (abilities.avoid.contains(to.asLong())) WalkCosts.AVOID else 0.0
             edges += WeightedEdge(to, cost + penalty)
         }
         return edges
+    }
+
+    /**
+     * Moves in a row with the head under water that end at [node]; the start counts the air already used.
+     */
+    private fun diveLength(node: BlockPos): Int {
+        val dive = when {
+            !moves.isUnderwater(node) -> 0
+            node == startNode -> maxDive - WalkWater.dive(abilities.air)
+            else -> (search?.previous(node)?.let { dives.get(it.asLong()) } ?: 0) + 1
+        }
+        dives.put(node.asLong(), dive)
+        return dive
     }
 
     /**

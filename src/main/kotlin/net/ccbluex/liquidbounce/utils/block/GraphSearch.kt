@@ -117,6 +117,11 @@ class AStarSearch<T>(
     }
 
     /**
+     * The node the best known path to [node] comes from; null for the start and nodes not reached yet.
+     */
+    fun previous(node: T): T? = previous[node]
+
+    /**
      * The path to the explored node with the smallest heuristic, or null if no node beats the start.
      */
     fun closestPath(): ShortestPath<T>? {

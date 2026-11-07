@@ -94,6 +94,11 @@ class WalkStep(
      * not fall down.
      */
     val sneak: Boolean = false,
+
+    /**
+     * Whether the move ends with the head under water, so it is swum towards [feet] in three dimensions.
+     */
+    val underwater: Boolean = false,
 )
 
 /**
@@ -151,6 +156,11 @@ class WalkAbilities(
      * Feet blocks the walker got stuck at; moves into them cost extra.
      */
     val avoid: LongSet,
+
+    /**
+     * Ticks of air the walker has left.
+     */
+    val air: Int = WalkWater.MAX_AIR,
 )
 
 /**
@@ -163,6 +173,7 @@ object WalkCosts {
     const val CLIMB_UP = 20.0 / 2.35
     const val CLIMB_DOWN = 20.0 / 3.0
     const val SNEAK = 20.0 / 1.295
+    const val SPRINT_SWIM = 20.0 / 3.918
     const val PLACE = 20.0
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0

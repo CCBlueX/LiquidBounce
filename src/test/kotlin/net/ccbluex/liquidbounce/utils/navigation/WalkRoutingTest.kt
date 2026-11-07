@@ -308,6 +308,47 @@ class WalkRoutingTest {
         assertTrue(path.steps.all { it.to.y == 11 })
     }
 
+    /**
+     * Ground down to y = -6 with a wall across it at x -1..1 and a pool four blocks deep on each side of the wall,
+     * joined by a flooded tunnel one block high and [length] blocks long along their bottom.
+     */
+    private fun pools(length: Int): TestNavigationWorld {
+        val water = Blocks.WATER.defaultBlockState()
+        val west = -length / 2
+        val east = west + length - 1
+        return TestNavigationWorld()
+            .fill(-40, -6, -40, 40, 0, 40)
+            .fill(-1, 1, -40, 1, 4, 40)
+            .fill(west - 5, -3, -2, west - 1, 0, 2, water)
+            .fill(east + 1, -3, -2, east + 5, 0, 2, water)
+            .fill(west, -3, 0, east, -3, 0, water)
+    }
+
+    @Test
+    fun `flooded tunnels one block high are swum through`() {
+        val path = completePath(search(pools(8), feet(-12, 1, 0), BlockPos(11, 1, 0)))
+
+        val tunnel = path.steps.filter { it.to.y == -3 && it.to.x in -4..3 }
+        assertEquals(8, tunnel.size, "the path should lead through the tunnel")
+        assertTrue(tunnel.all { it.underwater && it.move == WalkMove.SWIM })
+        assertTrue(path.steps.none { it.underwater && it.to.y > 0 })
+    }
+
+    @Test
+    fun `flooded tunnels longer than the air lasts are not swum through`() {
+        assertFalse(isComplete(search(pools(30), feet(-23, 1, 0), BlockPos(22, 1, 0))))
+    }
+
+    @Test
+    fun `air pockets on the way let longer flooded tunnels be swum through`() {
+        val world = pools(30).set(-6, -2, 0, AIR).set(6, -2, 0, AIR)
+        val path = completePath(search(world, feet(-23, 1, 0), BlockPos(22, 1, 0)))
+
+        val pockets = path.steps.filter { it.to == BlockPos(-6, -3, 0) || it.to == BlockPos(6, -3, 0) }
+        assertEquals(2, pockets.size, "the path should lead through both air pockets")
+        assertTrue(pockets.none { it.underwater })
+    }
+
     @Test
     fun `straight walks along deep drops are refused`() {
         val high = TestNavigationWorld.flat().fill(0, 10, 0, 10, 10, 0)

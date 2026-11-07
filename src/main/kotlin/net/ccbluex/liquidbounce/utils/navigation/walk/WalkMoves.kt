@@ -57,6 +57,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     private val maxGap = if (abilities.canSprint) 3 else 2
     private val maxDrop = max(abilities.safeFall, abilities.waterFall) + 1
     private val halfWidth = terrain.width / 2.0
+    private val swim = WalkWater(terrain, abilities.canSprint)
 
     private val breaks = ArrayList<BlockPos>(3)
     private val places = ArrayList<BlockPos>(1)
@@ -95,7 +96,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
             if (target == to && (current == null || cost < current.cost)) {
                 best = WalkStep(
                     from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost,
-                    isSneaking(from, to, move),
+                    isSneaking(from, to, move), isUnderwater(to),
                 )
             }
         }
@@ -414,11 +415,18 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         emit(x, y - 1, z, WalkMove.DOWNWARD, ticks + WalkCosts.BREAK_OVERHEAD + WalkCosts.fall(1), sink)
     }
 
+    /**
+     * Swims into the water block [tx] [ty] [tz]; sprinting along under water, which only a swimmer coming from water
+     * can do, also where the swimming pose is needed.
+     */
     private fun swimInto(tx: Int, ty: Int, tz: Int, sink: MoveSink) {
-        if (isWater(tx, ty, tz)) {
-            begin()
-            emit(tx, ty, tz, WalkMove.SWIM, WalkCosts.SWIM, sink)
+        if (!isWater(tx, ty, tz) || swim.isLow(tx, ty, tz) && !isWater(origin.x, origin.y, origin.z)) {
+            return
         }
+
+        begin()
+        val sprints = abilities.canSprint && ty == origin.y && swim.isSubmerged(tx, ty, tz)
+        emit(tx, ty, tz, WalkMove.SWIM, if (sprints) WalkCosts.SPRINT_SWIM else WalkCosts.SWIM, sink)
     }
 
     private fun swimOut(from: BlockPos, tx: Int, tz: Int, sink: MoveSink) {
@@ -500,6 +508,12 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         }
         return false
     }
+
+    /**
+     * Whether [pos] is in water with no air for the head.
+     */
+    fun isUnderwater(pos: BlockPos) =
+        isWater(pos.x, pos.y, pos.z) && swim.isSubmerged(pos.x, pos.y, pos.z)
 
     private fun begin() {
         breaks.clear()
@@ -595,7 +609,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     private fun isSolid(x: Int, y: Int, z: Int) =
         terrain.isKnown(x, y, z) && !terrain.isHazard(x, y, z) && !terrain.shape(x, y, z).isEmpty
 
-    private fun isWater(x: Int, y: Int, z: Int) = terrain.isWater(x, y, z) && isBodyClear(x, y, z)
+    private fun isWater(x: Int, y: Int, z: Int) = swim.fits(x, y, z)
 
     private fun isClimb(x: Int, y: Int, z: Int) = terrain.isClimbable(x, y, z) && isBodyClear(x, y, z)
 

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.tags.FluidTags
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -89,6 +90,12 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         private set
 
     /**
+     * Whether the movement of this tick swims under water towards [target], which also lies higher or lower.
+     */
+    var dive = false
+        private set
+
+    /**
      * Whether the movement of this tick is a plain walk other features may add to, such as an extra jump.
      */
     var isPlainWalk = false
@@ -116,6 +123,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         index = 0
         target = null
         sprint = false
+        dive = false
         isPlainWalk = false
         remainingBreaks = emptyList()
         remainingPlaces = emptyList()
@@ -145,6 +153,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     fun tick(event: MovementInputEvent, frameYaw: Float): FollowState {
         target = null
         sprint = false
+        dive = false
         isPlainWalk = false
 
         advance()
@@ -241,6 +250,11 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     }
 
     private fun move(event: MovementInputEvent, frameYaw: Float, step: WalkStep) {
+        if (step.underwater) {
+            swim(event, frameYaw, step)
+            return
+        }
+
         val position = player.position()
         val feet = step.feet
         val horizontal = horizontalDistance(position, feet)
@@ -267,6 +281,29 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         }
 
         isPlainWalk = (step.move == WalkMove.TRAVERSE || step.move == WalkMove.DIAGONAL) && !step.sneak
+    }
+
+    /**
+     * Swims towards the step: sprinting, which under water turns into the swimming pose that also fits through gaps
+     * one block high, jumping to rise and sneaking to sink. Before going under, it breathes until the air is full.
+     */
+    private fun swim(event: MovementInputEvent, frameYaw: Float, step: WalkStep) {
+        if (!player.isEyeInFluid(FluidTags.WATER) && player.airSupply < player.maxAirSupply) {
+            standStill(event)
+            idleTicks = 0
+            return
+        }
+
+        val position = player.position()
+        val target = step.feet.add(0.0, SWIM_LEVEL, 0.0)
+        val rise = target.y - position.y
+
+        this.target = target
+        dive = true
+        sprint = true
+        event.directionalInput = centerInput(position, target, frameYaw)
+        event.jump = rise > SWIM_TOLERANCE
+        event.sneak = rise < -SWIM_TOLERANCE
     }
 
     private fun centerInput(position: Vec3, feet: Vec3, frameYaw: Float): DirectionalInput =
@@ -369,6 +406,13 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         const val REACH_VERTICAL = 0.6
         const val CENTER_TOLERANCE = 0.1
         const val RISE_MARGIN = 0.01
+
+        /**
+         * Height above the feet block a swimmer heads for, the middle of the room a swimming player has in a gap one
+         * block high.
+         */
+        const val SWIM_LEVEL = 0.2
+        const val SWIM_TOLERANCE = 0.15
         const val JUMP_REACH = 1.5
         const val OFF_PATH = 1.5
         const val FALL_BELOW = 1.0
