@@ -371,6 +371,7 @@
   "liquidbounce.module.clickTp.messages.success": "Teleportiert nach %s, %s, %s",
   "liquidbounce.module.clientSpoofer.description": "Verfälscht die Client deines Spiel-Clients mit einer anderen.",
   "liquidbounce.module.clip.description": "Ermöglicht das umgehen von Blöcken.",
+  "liquidbounce.module.clutch.description": "Platziert automatisch einen Block unter dir, wenn du in die Leere fällst.",
   "liquidbounce.module.clip.messages.whoosh": "Zack!",
   "liquidbounce.module.combineMobs.description": "Kombiniert beengte Entities.",
   "liquidbounce.module.consoleSpammer.description": "Spamt die Konsole des Servers mit Fehlermeldungen zu.",

@@ -300,6 +300,7 @@
   "liquidbounce.module.clickTp.description": "Телепортує вас до блока, на який ви дивитеся, під час натискання MIDDLE_CLICK. Працює лише на античиті Vulcan 286.",
   "liquidbounce.module.clientSpoofer.description": "Підміняє назву вашого ігрового клієнта на іншу.",
   "liquidbounce.module.clip.description": "Дозволяє проходити крізь блоки.",
+  "liquidbounce.module.clutch.description": "Автоматично ставить блок під вами при падінні в безодню.",
   "liquidbounce.module.combineMobs.description": "Об'єднує сутності, які скупчилися.",
   "liquidbounce.module.consoleSpammer.description": "Опис спамера консолі",
   "liquidbounce.module.criticals.description": "Автоматично наносить критичний урон при кожному ударі по сутності.",

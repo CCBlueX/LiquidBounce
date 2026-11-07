@@ -304,6 +304,7 @@
   "liquidbounce.module.clickTp.messages.success": "%s, %s, %s konumuna teleport oldunuz",
   "liquidbounce.module.clientSpoofer.description": "Oyun istemci markanızı başka bir şeymiş gibi gösterir.",
   "liquidbounce.module.clip.description": "Blokların içinden geçmenizi sağlar.",
+  "liquidbounce.module.clutch.description": "Boşluğa düşerken otomatik olarak altına bir blok yerleştirir.",
   "liquidbounce.module.clip.messages.whoosh": "Vınn!",
   "liquidbounce.module.combineMobs.description": "Sıkışmış varlıkları birleştirir.",
   "liquidbounce.module.consoleSpammer.description": "Sunucunun konsolunu hata mesajlarıyla spam yapar.",
