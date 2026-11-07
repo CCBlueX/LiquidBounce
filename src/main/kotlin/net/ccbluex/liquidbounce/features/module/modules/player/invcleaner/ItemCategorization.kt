@@ -108,11 +108,8 @@ enum class ItemType(
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2),
 
     /**
-     * A dedicated slot for the best Knockback item (e.g. a Knockback stick for sending players into
-     * the void). Intentionally a LOW allocation priority and NOT a [ItemFunction.WEAPON_LIKE], so a
-     * real weapon is still picked as the main weapon first, while a separate, lesser Knockback item
-     * is still kept and sorted into its own slot rather than thrown away. Only the single best
-     * Knockback item is kept ([oneIsSufficient]); worse Knockback items are discarded.
+     * Not [ItemFunction.WEAPON_LIKE] and below the weapon types, so the main weapon is picked first and a separate
+     * knockback item (e.g. a knockback stick) still gets its own slot.
      */
     KNOCKBACK(true, allocationPriority = Priority.NORMAL),
     BOW(true),
@@ -218,15 +215,18 @@ class ItemCategorization(
     private val armorComparator: ArmorComparator
 
     /**
-     * The highest Knockback level among real weapons (swords, spears, maces, axes) in the inventory.
-     * A dedicated "best knockback" item is only worth keeping if it knocks back *harder* than the
-     * weapon we would already be holding — otherwise it is redundant and should be thrown out.
+     * Knockback of the best real weapon, which is the one kept as main weapon. A dedicated knockback item has to
+     * knock back harder than it.
      */
-    private val maxWeaponKnockback: Int =
+    private val mainWeaponKnockback: Int =
         availableItems.asSequence()
-            .map { it.itemStack }
-            .filter { it.isSword || it.isSpear || it.item is MaceItem || it.isAxe }
-            .maxOfOrNull { it.getEnchantment(Enchantments.KNOCKBACK) }
+            .filter { slot ->
+                val stack = slot.itemStack
+                stack.isSword || stack.isSpear || stack.item is MaceItem || stack.isAxe
+            }
+            .map(::WeaponItemFacet)
+            .maxOrNull()
+            ?.itemStack?.getEnchantment(Enchantments.KNOCKBACK)
             ?: 0
 
     init {
@@ -260,11 +260,7 @@ class ItemCategorization(
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
-            // Anything with Knockback can serve as a dedicated "best knockback" item (e.g. a stick
-            // with Knockback II for sending players into the void) — but only if it knocks back
-            // harder than the weapon we already keep. A spare item with the same (or lower) Knockback
-            // as our main weapon is redundant, so we don't keep it in a dedicated slot.
-            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > maxWeaponKnockback) {
+            if (itemStack.getEnchantment(Enchantments.KNOCKBACK) > mainWeaponKnockback) {
                 add(KnockbackItemFacet(slot))
             }
 

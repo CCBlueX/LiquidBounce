@@ -26,14 +26,7 @@ import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.enchantment.Enchantments
 
 /**
- * Represents an item purely by its Knockback enchantment level, regardless of what kind of item it
- * is (a stick with Knockback II, a sword with Knockback, etc.).
- *
- * This lets the inventory cleaner keep the single best Knockback item — useful for knocking players
- * into the void — while still throwing away worse Knockback items. It deliberately uses a low
- * allocation priority (see [ItemType.KNOCKBACK]) so that a real weapon (e.g. a Knockback sword) is
- * still placed first as the player's main weapon, and a separate, lesser Knockback item (e.g. a
- * Knockback stick) is kept and sorted into its own slot rather than being discarded.
+ * Any item ranked by its Knockback level, e.g. a knockback stick for sending players into the void.
  */
 class KnockbackItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
