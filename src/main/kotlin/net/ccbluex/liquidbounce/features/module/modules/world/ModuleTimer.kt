@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.BalanceValueGroup
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -111,7 +111,15 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
         private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..20f)
 
         private val normalizeDuringCombat by boolean("NormalizeDuringCombat", true)
-        private val balance = tree(BalanceValueGroup(this))
+
+        /**
+         * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
+         * run ahead. Slowing down stops paying off at the end.
+         */
+        private val balance by intRange("Balance", 0..20, -100..200, "ticks")
+
+        @Suppress("unused")
+        private val balanceReset = balanceReset()
 
         val repeatable = handler<GameTickEvent> {
             if (normalizeDuringCombat && CombatManager.isInCombat) {
@@ -124,7 +132,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
                 mc.gui.screen() is InventoryScreen || mc.gui.screen() is ContainerScreen -> return@handler
                 else -> slowSpeed
             }
-            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer, balance.range)
+            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer, balance)
         }
 
     }

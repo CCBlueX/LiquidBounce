@@ -25,18 +25,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
- * The limits a module spends the session's [Timer.balance] within.
+ * Clears the session's [Timer.balance] after a setback while a module spending it runs, as a value of the module.
  */
-class BalanceValueGroup(private val parent: EventListener) : ValueGroup("Balance"), EventListener {
+class BalanceReset internal constructor(owner: ValueGroup, private val parent: EventListener) : EventListener {
 
     override fun parent() = parent
 
-    /**
-     * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
-     * run ahead. Holding back stops paying off at the end.
-     */
-    val range by intRange("Range", 0..20, -100..200, "ticks")
-    private val resetOnFlag by boolean("ResetOnFlag", true)
+    private val resetOnFlag by owner.boolean("ResetBalanceOnFlag", true)
 
     @Suppress("unused")
     private val flagHandler = handler<PacketEvent> { event ->
@@ -46,3 +41,5 @@ class BalanceValueGroup(private val parent: EventListener) : ValueGroup("Balance
     }
 
 }
+
+fun <T> T.balanceReset() where T : ValueGroup, T : EventListener = BalanceReset(this, this)

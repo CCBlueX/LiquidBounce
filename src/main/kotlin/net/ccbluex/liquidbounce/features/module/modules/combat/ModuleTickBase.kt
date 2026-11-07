@@ -38,8 +38,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
-import net.ccbluex.liquidbounce.utils.client.BalanceValueGroup
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -70,7 +70,15 @@ internal object ModuleTickBase : ClientModule(
 
     private val chance = percentageChance("Chance", 100f)
     private val cooldown by intRange("Cooldown", 0..0, 0..100, "ticks")
-    private val balance = tree(BalanceValueGroup(this))
+
+    /**
+     * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
+     * run ahead. Holding back stops paying off at the end.
+     */
+    private val balance by intRange("Balance", 0..20, -100..200, "ticks")
+
+    @Suppress("unused")
+    private val balanceReset = balanceReset()
 
     /**
      * Whether [chance] lets us take the current chance to hit earlier, rolled once until the chance is gone.
@@ -120,9 +128,9 @@ internal object ModuleTickBase : ClientModule(
 
             // Holding the ticks back first earns what running them costs
             val available = if (holdFirst) {
-                balance.range.last - balance.range.first
+                balance.last - balance.first
             } else {
-                Timer.spendableTicks(balance.range)
+                Timer.spendableTicks(balance)
             }
             val maxTicks = min(maxTicksAtATime, available)
             if (maxTicks <= 0) {
@@ -146,9 +154,9 @@ internal object ModuleTickBase : ClientModule(
             if (holdFirst) {
                 Timer.hold(this@TickMode, ticks)
                 waitTicks(ticks)
-                waitTicks(Timer.burst(ticks, balance.range) + cooldown.random())
+                waitTicks(Timer.burst(ticks, balance) + cooldown.random())
             } else {
-                val burst = Timer.burst(ticks, balance.range)
+                val burst = Timer.burst(ticks, balance)
                 Timer.hold(this@TickMode, burst)
                 waitTicks(burst * 2 + cooldown.random())
             }
@@ -231,7 +239,7 @@ internal object ModuleTickBase : ClientModule(
             if (onlyOnGround && !player.onGround()) return@tickHandler
 
             val speed = timerSpeed() ?: return@tickHandler
-            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase, balance.range)
+            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase, balance)
         }
 
         private fun timerSpeed(): Float? {
@@ -277,7 +285,7 @@ internal object ModuleTickBase : ClientModule(
                 return 0
             }
 
-            val ticks = Timer.spendableTicks(balance.range) / (1f - 1f / boostSpeed)
+            val ticks = Timer.spendableTicks(balance) / (1f - 1f / boostSpeed)
             return min(ticks.toInt(), MAX_BOOST_TICKS)
         }
 

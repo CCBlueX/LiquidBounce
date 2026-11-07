@@ -36,7 +36,7 @@ import kotlin.math.min
  *
  * Also keeps the timer balance of the session: how many ticks the client is behind the time the server saw pass.
  * Held back player ticks and a timer below 1 build it up, extra ticks and a timer above 1 spend it,
- * no matter which module caused them. Modules spend it within their own limits, see [BalanceValueGroup].
+ * no matter which module caused them. Modules spend it within their own limits, see [balanceWithin].
  */
 @AddonApi
 object Timer : EventListener {
