@@ -19,14 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.user.UserRef
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.ChatFormatting
@@ -54,11 +59,10 @@ object ChatMessageFormat {
 
     fun messagePrefix(event: ClientChatMessageEvent, playerSprite: Component): Component {
         val author = event.author
-        val channel = event.channel
+        val channel = event.channel?.let(Channel::parse)
 
-        if (author != null && channel != null && ChatSession.isSelf(author.id)
-            && channel.startsWith(ChatSession.USER_PREFIX)) {
-            val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
+        if (author != null && channel is Channel.User && ChatSession.isSelf(author.id)) {
+            val receiver = channel.user
             val name = ChatSession.userOf(receiver)?.let { displayName(it, ChatFormatting.BLUE) }
                 ?: ChatSession.nameOf(receiver).asPlainText(ChatFormatting.BLUE)
             return directMessagePrefix(name)
@@ -82,7 +86,7 @@ object ChatMessageFormat {
                 val user = author.toUserRef()
                 displayName(user, nameColor)
                     .onHover(HoverEvent.ShowText(translation("liquidbounce.liquidchat.action.hover")))
-                    .onClickRun { ChatActions.userActions(user) }
+                    .onClickRun { userActions(user) }
             }
         }
 
@@ -111,8 +115,7 @@ object ChatMessageFormat {
         val (name, color) = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.SERVER_CHAT -> {
                 // staff watching every server see where a message comes from
-                val watched = event.channel?.takeIf { it.startsWith(ChatSession.WATCHED_PREFIX) }
-                    ?.removePrefix(ChatSession.WATCHED_PREFIX)
+                val watched = (event.channel?.let(Channel::parse) as? Channel.Watched)?.address
                 (watched ?: translation("liquidbounce.liquidchat.channel.server").string) to ChatFormatting.DARK_AQUA
             }
             else -> return null
@@ -128,5 +131,35 @@ object ChatMessageFormat {
     )
 
     fun directMessagePrefix(receiver: Component) = bracketed("[→ ", receiver, "] ")
+
+    private fun suggestion(text: MutableComponent, color: ChatFormatting, command: String): Component {
+        val click = ClickEvent.SuggestCommand(CommandManager.GlobalSettings.prefix + command)
+        return Component.literal(" [").withStyle(ChatFormatting.DARK_GRAY)
+            .append(text.withStyle(color).onClick(click))
+            .append(Component.literal("]").withStyle(ChatFormatting.DARK_GRAY))
+    }
+
+    /**
+     * Direct messages are between LiquidBounce Accounts only.
+     */
+    private fun userActions(user: UserRef) {
+        GlobalSettingsClientChat.notice(
+            buildText {
+                this += displayName(user)
+                if (user.isAccount && ChatSession.isAccount) {
+                    this += suggestion(
+                        translation("liquidbounce.liquidchat.action.message"),
+                        ChatFormatting.AQUA,
+                        "lc msg ${user.name} ",
+                    )
+                }
+                this += suggestion(
+                    translation("liquidbounce.liquidchat.action.report"),
+                    ChatFormatting.YELLOW,
+                    "lc report ${user.name} ",
+                )
+            }
+        )
+    }
 
 }

@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
 import net.ccbluex.axochat.user.LegacyUser
 import net.ccbluex.liquidbounce.annotations.Tag
@@ -162,9 +161,6 @@ class ClientChatMessageEvent(
 
 @Tag("clientChatError")
 class ClientChatErrorEvent(val error: String, val code: String? = null) : Event(), WebSocketEvent
-
-@Tag("clientChatPacket")
-class ClientChatPacketEvent(val packet: Clientbound) : Event()
 
 @Tag("accountManagerMessage")
 class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent

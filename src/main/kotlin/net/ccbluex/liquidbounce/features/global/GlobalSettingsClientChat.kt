@@ -22,37 +22,27 @@ package net.ccbluex.liquidbounce.features.global
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import net.ccbluex.axochat.LoginResult
-import net.ccbluex.axochat.protocol.ErrorCode
+import net.ccbluex.axochat.AxochatSession
+import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.protocol.Serverbound
-import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
-import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.chat.LiquidChatClient
 import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
-import net.ccbluex.liquidbounce.features.chat.ChatSession
+import net.ccbluex.liquidbounce.features.chat.LiquidChatClient
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -61,7 +51,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clientTag
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -71,14 +60,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.component.ResolvableProfile
 import java.util.TreeSet
-import kotlin.random.Random
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
-
-private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
-private val STABLE_SESSION = 1.minutes
 
 object GlobalSettingsClientChat : ToggleableValueGroup(
     name = "ClientChat",
@@ -101,10 +83,9 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
-    private val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
+    internal val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
     private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
 
-    val chatClient = LiquidChatClient { allowMessages }
     private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
@@ -116,8 +97,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
      */
     fun checkLoggedIn(): Boolean {
         val reason = when {
-            !chatClient.isConnected -> "liquidbounce.liquidchat.notConnected"
-            !chatClient.isLoggedIn -> "liquidbounce.liquidchat.notLoggedIn"
+            LiquidChatClient.session?.isOpen != true -> "liquidbounce.liquidchat.notConnected"
+            !LiquidChatClient.isLoggedIn -> "liquidbounce.liquidchat.notLoggedIn"
             else -> return true
         }
 
@@ -127,17 +108,28 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     fun notice(message: Component) = writeChat(PlainText.EMPTY, message)
 
-    fun send(channel: String, message: String) {
-        if (!checkLoggedIn()) {
+    fun send(channel: Channel, message: String) {
+        val session = LiquidChatClient.session
+        if (!checkLoggedIn() || session == null) {
             return
         }
 
-        if (!chatClient.sendMessage(channel, message)) {
+        // v1 only knows global and direct messages
+        val packet = when {
+            session.isModern -> Serverbound.ChatMessage(channel, message)
+            channel == Channel.Global -> Serverbound.Message(message)
+            channel is Channel.User -> Serverbound.PrivateMessage(channel.user, message)
+            else -> null
+        }
+        if (packet == null) {
             notice(translation("liquidbounce.liquidchat.requiresV2").withStyle(ChatFormatting.GRAY))
-        } else if (!chatClient.isModern && channel.startsWith(ChatSession.USER_PREFIX)) {
+            return
+        }
+
+        session.send(packet)
+        if (!session.isModern && channel is Channel.User) {
             // v1 servers do not echo direct messages
-            val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
-            val prefix = ChatMessageFormat.directMessagePrefix(receiver.asPlainText(ChatFormatting.BLUE))
+            val prefix = ChatMessageFormat.directMessagePrefix(channel.user.asPlainText(ChatFormatting.BLUE))
             writeChat(prefix, regular(message))
         }
     }
@@ -146,7 +138,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         dispatcher.register("chat") {
             argument("message", StringArgumentType.greedyString()) { message ->
                 exec { ctx ->
-                    send(ChatSession.GLOBAL, ctx.get(message))
+                    send(Channel.Global, ctx.get(message))
                     1
                 }
             }
@@ -157,56 +149,47 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         CommandManager.register(::registerChatWriteCommand)
     }
 
-    private fun sendSettings() {
-        if (chatClient.isLoggedIn && chatClient.isModern) {
-            chatClient.sendPacket(Serverbound.Settings(allowMessages = allowMessages, serverChat = serverChat))
+    internal fun sendSettings(session: AxochatSession? = LiquidChatClient.session) {
+        if (session != null && LiquidChatClient.isLoggedIn && session.isModern) {
+            session.send(Serverbound.Settings(allowMessages = allowMessages, serverChat = serverChat))
         }
     }
 
-    override fun onEnabled() {
-        eventListenerScope.launch {
-            chatClient.connect()
+    override fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> =
+        super.onEnabledValueRegistration(value).onChanged { enabled ->
+            // also outside of a world, unlike onEnabled and onDisabled
+            if (enabled) {
+                LiquidChatClient.start()
+            } else {
+                LiquidChatClient.stop()
+                filteredNames.clear()
+            }
         }
-    }
-
-    override fun onDisabled() {
-        chatClient.disconnect()
-        filteredNames.clear()
-    }
 
     @Suppress("unused")
     private val shutdownHandler = handler<ClientShutdownEvent> {
-        chatClient.disconnect()
-    }
-
-    private var reconnectAttempts = 0
-
-    @Volatile
-    private var loggedInAt: TimeMark? = null
-
-    @Suppress("unused")
-    private val repeatable = tickHandler(Dispatchers.IO) {
-        if (chatClient.isConnected) {
-            // a session that drops right after login keeps backing off instead of reconnecting every few seconds
-            if (chatClient.isLoggedIn && loggedInAt?.let { it.elapsedNow() >= STABLE_SESSION } == true) {
-                reconnectAttempts = 0
-            }
-            delay(5.seconds)
-            return@tickHandler
-        }
-
-        if (reconnectAttempts > 0) {
-            // Exponential backoff with jitter, so a server restart is not hit by every client at once
-            val backoff = (2.seconds * (1 shl (reconnectAttempts - 1).coerceAtMost(6))).coerceAtMost(2.minutes)
-            delay(backoff * Random.nextDouble(0.75, 1.25))
-        }
-        reconnectAttempts++
-        chatClient.connect()
+        LiquidChatClient.stop()
     }
 
     @Suppress("unused")
-    private val sessionChange = suspendHandler<SessionEvent>(behavior = CancelPrevious) {
-        chatClient.reconnect()
+    private val sessionChange = handler<SessionEvent> {
+        restartIfRunning()
+    }
+
+    @Suppress("unused")
+    private val accountChange = handler<UserLoggedInEvent> {
+        restartIfRunning()
+    }
+
+    @Suppress("unused")
+    private val accountRemoval = handler<UserLoggedOutEvent> {
+        restartIfRunning()
+    }
+
+    private fun restartIfRunning() {
+        if (running) {
+            LiquidChatClient.restart()
+        }
     }
 
     @Suppress("unused")
@@ -245,16 +228,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    @Suppress("unused")
-    private val accountChange = suspendHandler<UserLoggedInEvent>(behavior = CancelPrevious) {
-        chatClient.reconnect()
-    }
-
-    @Suppress("unused")
-    private val accountRemoval = suspendHandler<UserLoggedOutEvent>(behavior = CancelPrevious) {
-        chatClient.reconnect()
-    }
-
     /**
      * Connection errors carry no code and are left to the notifications.
      */
@@ -262,96 +235,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
     private val handleError = handler<ClientChatErrorEvent> { event ->
         if (event.code != null) {
             notice(event.error.asText().withStyle(ChatFormatting.RED))
-        }
-    }
-
-    private suspend fun login() {
-        // at startup the stored account loads alongside; logging in without it would pick the Minecraft identity
-        withTimeoutOrNull(ACCOUNT_RESTORE_TIMEOUT) { ClientAccountManager.restored.await() }
-        val account = ClientAccountManager.clientAccount
-        val accessToken = if (chatClient.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
-            runCatching { account.takeSession().accessToken.value }
-                .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
-                .getOrNull()
-        } else {
-            null
-        }
-
-        if (accessToken != null) {
-            logger.info("Logging in with LiquidBounce Account...")
-            when (val result = chatClient.loginAccount(accessToken)) {
-                LoginResult.Success -> {
-                    // a cracked session has no access token to join the session server with
-                    if (mc.user.accessToken.length > 1) {
-                        chatClient.proveMinecraft()
-                    }
-                    return
-                }
-                is LoginResult.Refused -> if (result.error.code != ErrorCode.LoginFailed) {
-                    return
-                }
-                LoginResult.Closed -> return
-            }
-            logger.info("LiquidBounce Account login failed, falling back to Mojang...")
-        }
-
-        logger.info("Logging in with the Minecraft account...")
-        chatClient.loginMojang()
-    }
-
-    // a connection that keeps failing or getting reset must not raise a notification per attempt
-    private var announcedLogin = false
-    private var announcedAuthFailure = false
-
-    @Suppress("unused")
-    private val handleStateChange = suspendHandler<ClientChatStateChange>(behavior = CancelPrevious) {
-        when (it.state) {
-            ClientChatStateChange.State.CONNECTED -> {
-                // outside this handler, which the login's own state changes would cancel
-                eventListenerScope.launch {
-                    chatClient.negotiate()
-                    login()
-                }
-            }
-            ClientChatStateChange.State.LOGGED_IN -> {
-                loggedInAt = TimeSource.Monotonic.markNow()
-                announcedAuthFailure = false
-                sendSettings()
-                if (!announcedLogin) {
-                    announcedLogin = true
-                    notification(
-                        "LiquidChat",
-                        translation("liquidbounce.liquidchat.states.loggedIn"),
-                        NotificationEvent.Severity.INFO
-                    )
-                }
-            }
-            ClientChatStateChange.State.DISCONNECTED -> {
-                val stable = loggedInAt?.let { mark -> mark.elapsedNow() >= STABLE_SESSION } == true
-                loggedInAt = null
-                // a session reset right after login stays announced as online until one lasts again
-                if (announcedLogin && stable) {
-                    announcedLogin = false
-                    notification(
-                        "LiquidChat",
-                        translation("liquidbounce.liquidchat.states.disconnected"),
-                        NotificationEvent.Severity.INFO
-                    )
-                }
-            }
-            ClientChatStateChange.State.AUTHENTICATION_FAILED -> {
-                logger.warn("Failed authentication to LiquidChat")
-                if (!announcedAuthFailure) {
-                    announcedAuthFailure = true
-                    notification(
-                        "LiquidChat",
-                        translation("liquidbounce.liquidchat.authenticationFailed"),
-                        NotificationEvent.Severity.ERROR
-                    )
-                }
-            }
-
-            else -> {} // do not bother
         }
     }
 
@@ -368,5 +251,11 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
      */
     override val running
         get() = !isDestructed && enabled
+
+    init {
+        if (enabled) {
+            LiquidChatClient.start()
+        }
+    }
 
 }

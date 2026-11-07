@@ -40,9 +40,6 @@ object ServerLocation : EventListener {
 
     private var sent: Serverbound.Location? = null
 
-    private val client
-        get() = GlobalSettingsClientChat.chatClient
-
     @Suppress("unused")
     private val worldHandler = handler<WorldChangeEvent> {
         pending = true
@@ -67,7 +64,8 @@ object ServerLocation : EventListener {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (!pending || !client.isLoggedIn || !client.isModern) {
+        val session = LiquidChatClient.session
+        if (!pending || session == null || !LiquidChatClient.isLoggedIn || !session.isModern) {
             return@handler
         }
 
@@ -75,7 +73,7 @@ object ServerLocation : EventListener {
         val packet = Serverbound.Location(currentServer())
         if (packet != sent) {
             sent = packet
-            client.sendPacket(packet)
+            session.send(packet)
         }
     }
 

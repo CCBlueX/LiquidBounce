@@ -23,28 +23,14 @@ package net.ccbluex.liquidbounce.features.chat
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
 import net.ccbluex.axochat.user.UserRef
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import java.util.concurrent.ConcurrentHashMap
 
-object ChatSession : EventListener {
-
-    const val GLOBAL = "global"
-    const val SERVER = "server"
-    const val USER_PREFIX = "user/"
-    const val WATCHED_PREFIX = "server/"
+object ChatSession {
 
     private const val REMEMBERED_MESSAGES = 256
 
     @Volatile
     var self: Author? = null
-        private set
-
-    @Volatile
-    var settings: Clientbound.Settings? = null
         private set
 
     private val users = ConcurrentHashMap<String, UserRef>()
@@ -72,15 +58,13 @@ object ChatSession : EventListener {
         recentMessages.entries.lastOrNull { it.value == userId }?.key
     }
 
-    @Suppress("unused")
-    private val packetHandler = handler<ClientChatPacketEvent> { event ->
-        when (val packet = event.packet) {
+    internal fun update(packet: Clientbound) {
+        when (packet) {
             is Clientbound.Welcome -> {
                 self = packet.user
                 users[packet.user.id] = packet.user.toUserRef()
             }
 
-            is Clientbound.Settings -> settings = packet
             is Clientbound.ChatMessage -> {
                 users[packet.author.id] = packet.author.toUserRef()
                 synchronized(recentMessages) {
@@ -92,17 +76,11 @@ object ChatSession : EventListener {
         }
     }
 
-    @Suppress("unused")
-    private val stateHandler = handler<ClientChatStateChange> { event ->
-        if (event.state == ClientChatStateChange.State.DISCONNECTED) {
-            self = null
-            settings = null
-            synchronized(recentMessages) {
-                recentMessages.clear()
-            }
+    internal fun reset() {
+        self = null
+        synchronized(recentMessages) {
+            recentMessages.clear()
         }
     }
-
-    override fun parent() = GlobalSettingsClientChat
 
 }

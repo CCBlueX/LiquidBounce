@@ -49,7 +49,6 @@ import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerDataEvent
@@ -232,7 +231,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClientChatStateChange::class.java,
     ClientChatMessageEvent::class.java,
     ClientChatErrorEvent::class.java,
-    ClientChatPacketEvent::class.java,
     WorldChangeEvent::class.java,
     AccountManagerMessageEvent::class.java,
     AccountManagerAdditionResultEvent::class.java,

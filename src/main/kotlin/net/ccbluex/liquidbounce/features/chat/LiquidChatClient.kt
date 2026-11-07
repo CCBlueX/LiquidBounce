@@ -17,45 +17,60 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
 package net.ccbluex.liquidbounce.features.chat
 
 import com.mojang.authlib.exceptions.InvalidCredentialsException
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.axochat.AxochatClient
 import net.ccbluex.axochat.AxochatSession
+import net.ccbluex.axochat.Backoff
 import net.ccbluex.axochat.LoginResult
 import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.protocol.ErrorCode
-import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.axochat.protocol.SuccessReason
 import net.ccbluex.axochat.user.LegacyUser
 import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatPacketEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.minecraft.ChatFormatting
 import java.net.URI
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 private const val MALFORMED_LOG_LENGTH = 200
+private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
 
-private val KNOWN_ERRORS = setOf(
-    "NotSupported", "LoginFailed", "NotLoggedIn", "AlreadyLoggedIn", "MojangRequestMissing", "NotPermitted",
-    "NotBanned", "Banned", "RateLimited", "PrivateMessageNotAccepted", "EmptyMessage", "MessageTooLong",
-    "InvalidCharacter", "InvalidId", "Internal", "UnknownUser", "UnknownChannel", "Muted", "AccountRequired",
-)
+private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
 
-class LiquidChatClient(private val allowMessages: () -> Boolean) {
+object LiquidChatClient {
 
     private val client = AxochatClient(
         URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.ccbluex.net/ws")),
@@ -64,136 +79,179 @@ class LiquidChatClient(private val allowMessages: () -> Boolean) {
         malformed = { logger.warn("Malformed LiquidChat packet: {}", it.take(MALFORMED_LOG_LENGTH)) },
     )
 
+    private val backoff = Backoff()
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    @Volatile
-    private var session: AxochatSession? = null
+    private var connection: Job? = null
 
     @Volatile
-    private var isConnecting = false
-
-    // a login reports its own refusal; the same error must not show as a chat error too
-    @Volatile
-    private var authenticating = false
-
-    val isConnected: Boolean
-        get() = session?.isOpen == true
+    var session: AxochatSession? = null
+        private set
 
     @Volatile
     var isLoggedIn = false
         private set
 
-    val isModern: Boolean
-        get() = session?.isModern == true
+    // a login reports its own refusal; the same error must not show as a chat error too
+    @Volatile
+    private var authenticating = false
 
-    suspend fun connect() {
-        if (isConnecting || isConnected) {
-            return
+    // a connection that keeps failing or getting reset must not raise a notification per attempt
+    private var announcedLogin = false
+    private var announcedAuthFailure = false
+    private var loggedInAt: TimeMark? = null
+
+    @Synchronized
+    fun start() {
+        if (connection?.isActive != true) {
+            restart()
         }
-
-        EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTING))
-        isConnecting = true
-        isLoggedIn = false
-        try {
-            val session = client.connect()
-            this.session = session
-            scope.launch(start = CoroutineStart.UNDISPATCHED) { session.packets.collect(::handle) }
-            scope.launch {
-                session.closed.await()
-                if (this@LiquidChatClient.session === session) {
-                    this@LiquidChatClient.session = null
-                    isLoggedIn = false
-                    EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
-                }
-            }
-            EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTED))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            EventManager.callEvent(ClientChatErrorEvent(e.localizedMessage ?: e.message ?: e.javaClass.name))
-        } finally {
-            isConnecting = false
-        }
-    }
-
-    fun disconnect() {
-        val session = session
-        this.session = null
-        isConnecting = false
-        isLoggedIn = false
-        if (session != null) {
-            session.close()
-            EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
-        }
-    }
-
-    suspend fun reconnect() {
-        disconnect()
-        connect()
-    }
-
-    suspend fun negotiate(): Int = session?.negotiate() ?: 1
-
-    suspend fun loginAccount(accessToken: String): LoginResult = authenticate {
-        EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-        it.loginAccount(accessToken, allowMessages())
-    }
-
-    suspend fun loginMojang(): LoginResult {
-        EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-        val result = try {
-            authenticate { it.loginMojang(mc.user.name, mc.user.profileId, allowMessages(), ::joinServer) }
-        } catch (e: InvalidCredentialsException) {
-            logger.warn("Could not join the session server for LiquidChat", e)
-            EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.AUTHENTICATION_FAILED))
-            return LoginResult.Closed
-        }
-        if (result is LoginResult.Refused) {
-            EventManager.callEvent(ClientChatErrorEvent(translateError(result.error), result.error.code.code))
-        }
-        return result
     }
 
     /**
-     * Cracked sessions cannot join the session server and stay unproven.
+     * Replaces the connection, as a new Minecraft session or account logs in differently.
      */
-    suspend fun proveMinecraft(): LoginResult = try {
-        authenticate { it.proveMinecraft(mc.user.name, mc.user.profileId, ::joinServer) }
-    } catch (e: InvalidCredentialsException) {
-        logger.info("Could not prove the Minecraft session to LiquidChat", e)
-        LoginResult.Closed
+    @Synchronized
+    fun restart() {
+        val previous = connection
+        connection = scope.launch {
+            previous?.cancelAndJoin()
+            stateChange(ClientChatStateChange.State.CONNECTING)
+            client.keepConnected(backoff, failed = {
+                EventManager.callEvent(ClientChatErrorEvent(it.localizedMessage ?: it.message ?: it.javaClass.name))
+            }) { connected(this) }
+        }
     }
 
-    private suspend fun authenticate(login: suspend (AxochatSession) -> LoginResult): LoginResult {
-        val session = session ?: return LoginResult.Closed
-        authenticating = true
-        return try {
+    @Synchronized
+    fun stop() {
+        // kept, so a following start waits for the cancelled connection to finish
+        connection?.cancel()
+        session?.close()
+    }
+
+    private suspend fun connected(session: AxochatSession) = coroutineScope {
+        if (!GlobalSettingsClientChat.running) {
+            // self-destructed; the session closes and the connection ends
+            stop()
+            return@coroutineScope
+        }
+
+        launch(start = CoroutineStart.UNDISPATCHED) { session.incoming().collect(::handle) }
+        this@LiquidChatClient.session = session
+        try {
+            stateChange(ClientChatStateChange.State.CONNECTED)
+            session.negotiate()
             login(session)
+            session.closed.await()
+        } finally {
+            disconnected()
+        }
+    }
+
+    private fun disconnected() {
+        session = null
+        isLoggedIn = false
+        ChatSession.reset()
+        stateChange(ClientChatStateChange.State.DISCONNECTED)
+
+        val stable = loggedInAt?.let { it.elapsedNow() >= backoff.reset } == true
+        loggedInAt = null
+        // a session reset right after login stays announced as online until one lasts again
+        if (announcedLogin && stable) {
+            announcedLogin = false
+            announce("states.disconnected", NotificationEvent.Severity.INFO)
+        }
+    }
+
+    private suspend fun login(session: AxochatSession) {
+        // at startup the stored account loads alongside; logging in without it would pick the Minecraft identity
+        withTimeoutOrNull(ACCOUNT_RESTORE_TIMEOUT) { ClientAccountManager.restored.await() }
+        val account = ClientAccountManager.clientAccount
+        val accessToken = if (session.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
+            runCatching { account.takeSession().accessToken.value }
+                .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
+                .getOrNull()
+        } else {
+            null
+        }
+
+        authenticating = true
+        try {
+            if (accessToken != null && loginAccount(session, accessToken)) {
+                return
+            }
+            logger.info("Logging in with the Minecraft account...")
+            loginMojang(session)
         } finally {
             authenticating = false
         }
     }
 
     /**
-     * @return false if the channel needs protocol v2; v1 only knows global and direct messages
+     * @return false to fall back to the Minecraft account
      */
-    fun sendMessage(channel: String, message: String): Boolean {
-        val target = Channel.parse(channel)
-        val packet = when {
-            isModern -> Serverbound.ChatMessage(channel, message)
-            target == Channel.Global -> Serverbound.Message(message)
-            target is Channel.User -> Serverbound.PrivateMessage(target.user, message)
-            else -> return false
+    private suspend fun loginAccount(session: AxochatSession, accessToken: String): Boolean {
+        logger.info("Logging in with LiquidBounce Account...")
+        stateChange(ClientChatStateChange.State.LOGGING_IN)
+        when (val result = session.loginAccount(accessToken, GlobalSettingsClientChat.allowMessages)) {
+            LoginResult.Success -> loggedIn(session)
+            is LoginResult.Refused -> if (result.error.code == ErrorCode.LoginFailed) {
+                logger.info("LiquidBounce Account login failed, falling back to Mojang...")
+                return false
+            }
+            LoginResult.Closed -> {}
         }
-        sendPacket(packet)
+
+        // a cracked session has no access token to join the session server with
+        if (isLoggedIn && mc.user.accessToken.length > 1) {
+            try {
+                session.proveMinecraft(mc.user.name, mc.user.profileId, ::joinServer)
+            } catch (e: InvalidCredentialsException) {
+                logger.info("Could not prove the Minecraft session to LiquidChat", e)
+            }
+        }
         return true
     }
 
-    fun sendPacket(packet: Serverbound) {
-        session?.send(packet)
+    private suspend fun loginMojang(session: AxochatSession) {
+        stateChange(ClientChatStateChange.State.LOGGING_IN)
+        val result = try {
+            session.loginMojang(mc.user.name, mc.user.profileId, GlobalSettingsClientChat.allowMessages, ::joinServer)
+        } catch (e: InvalidCredentialsException) {
+            logger.warn("Could not join the session server for LiquidChat", e)
+            stateChange(ClientChatStateChange.State.AUTHENTICATION_FAILED)
+            if (!announcedAuthFailure) {
+                announcedAuthFailure = true
+                announce("authenticationFailed", NotificationEvent.Severity.ERROR)
+            }
+            return
+        }
+
+        when (result) {
+            LoginResult.Success -> loggedIn(session)
+            is LoginResult.Refused -> EventManager.callEvent(
+                ClientChatErrorEvent(translateError(result.error), result.error.code.code)
+            )
+            LoginResult.Closed -> {}
+        }
+    }
+
+    private fun loggedIn(session: AxochatSession) {
+        isLoggedIn = true
+        loggedInAt = TimeSource.Monotonic.markNow()
+        announcedAuthFailure = false
+        stateChange(ClientChatStateChange.State.LOGGED_IN)
+        GlobalSettingsClientChat.sendSettings(session)
+        if (!announcedLogin) {
+            announcedLogin = true
+            announce("states.loggedIn", NotificationEvent.Severity.INFO)
+        }
     }
 
     private fun handle(packet: Clientbound) {
+        ChatSession.update(packet)
         when (packet) {
             is Clientbound.Message -> EventManager.callEvent(ClientChatMessageEvent(packet.authorInfo, packet.content,
                 ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT))
@@ -210,18 +268,26 @@ class LiquidChatClient(private val allowMessages: () -> Boolean) {
             is Clientbound.Error -> if (!authenticating) {
                 EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code.code))
             }
-            is Clientbound.Success -> if (packet.reason == SuccessReason.Login) {
-                isLoggedIn = true
-                EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGED_IN))
+            is Clientbound.Punished -> GlobalSettingsClientChat.notice(regular(translation(
+                "liquidbounce.liquidchat.punished.${packet.kind}",
+                packet.reason,
+                packet.expires?.let { timeFormat.format(Instant.ofEpochMilli(it)) }
+                    ?: translation("liquidbounce.liquidchat.punished.permanent").string,
+            )).withStyle(ChatFormatting.RED))
+            is Clientbound.Success -> if (packet.reason == SuccessReason.Report) {
+                GlobalSettingsClientChat.notice(regular(translation("liquidbounce.liquidchat.success.report")))
             }
 
             else -> {}
         }
-
-        EventManager.callEvent(ClientChatPacketEvent(packet))
     }
 
 }
+
+private fun stateChange(state: ClientChatStateChange.State) = EventManager.callEvent(ClientChatStateChange(state))
+
+private fun announce(key: String, severity: NotificationEvent.Severity) =
+    notification("LiquidChat", translation("liquidbounce.liquidchat.$key"), severity)
 
 private suspend fun joinServer(serverId: String) = withContext(Dispatchers.IO) {
     mc.services.sessionService.joinServer(mc.user.profileId, mc.user.accessToken, serverId)
@@ -233,12 +299,12 @@ private fun chatGroupOf(channel: Channel?) = when (channel) {
     else -> ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT
 }
 
-private fun translateError(packet: Clientbound.Error): String {
-    val code = packet.code.code
-    if (code !in KNOWN_ERRORS) {
-        return listOfNotNull(code, packet.details).joinToString(": ")
-    }
-
+private fun translateError(error: Clientbound.Error): String {
+    val code = error.code.code
     val key = "liquidbounce.liquidchat.error.${code.replaceFirstChar(Char::lowercaseChar)}"
-    return translation(key, packet.details ?: "").string
+    return if (LanguageManager.hasFallbackTranslation(key)) {
+        translation(key, error.details ?: "").string
+    } else {
+        listOfNotNull(code, error.details).joinToString(": ")
+    }
 }
