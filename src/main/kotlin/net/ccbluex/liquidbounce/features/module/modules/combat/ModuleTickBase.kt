@@ -20,8 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -33,10 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironment
-import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
@@ -44,20 +41,25 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerSnapshot
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.max
 import kotlin.math.min
 
 /**
  * TickBase
  *
- * Spends the timer balance to reach an enemy earlier, either by bursting ticks or by speeding up the timer.
+ * Saves up timer balance near an enemy and spends it to reach the enemy earlier, by speeding up the timer or by
+ * bursting ticks.
  */
 internal object ModuleTickBase : ClientModule(
     "TickBase",
@@ -65,20 +67,36 @@ internal object ModuleTickBase : ClientModule(
     aliases = listOf("TimerRange")
 ) {
 
-    private val modes = choices("Mode", HoldFirst, arrayOf(HoldFirst, BurstFirst, TimerBoost))
+    private val modes = choices("Mode", TimerBoost, arrayOf(TimerBoost, HoldFirst, BurstFirst))
         .apply { tagBy(this) }
 
+    /**
+     * What has to be met to spend the balance. Saving it up does not depend on it.
+     */
+    private val requires by multiEnumChoice("Requires", Requirement.KILLAURA)
     private val chance = percentageChance("Chance", 100f)
     private val cooldown by intRange("Cooldown", 0..0, 0..100, "ticks")
 
     /**
-     * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
-     * run ahead. Holding back stops paying off at the end.
+     * Charging slows the game down while an enemy is near, until the balance reaches [maxBalance].
      */
-    private val balance by intRange("Balance", 0..20, -100..200, "ticks")
+    private val maxBalance by int("MaxBalance", 3, 0..40, "ticks")
+    private val chargeRange by float("ChargeRange", 50f, 0f..500f)
+    private val chargeSpeed by float("ChargeSpeed", 0.9f, 0.1f..1f)
+    private val chargeWhileUsingItem by boolean("ChargeWhileUsingItem", false)
 
     @Suppress("unused")
     private val balanceReset = balanceReset()
+
+    init {
+        tree(TickBaseVisuals)
+    }
+
+    /**
+     * The balance charging saves up.
+     */
+    internal val balance
+        get() = 0..maxBalance
 
     /**
      * Whether [chance] lets us take the current chance to hit earlier, rolled once until the chance is gone.
@@ -89,138 +107,53 @@ internal object ModuleTickBase : ClientModule(
 
     override fun onDisabled() {
         rolled = null
+        TickBaseVisuals.clear()
+    }
+
+    @Suppress("unused")
+    private val speedHandler = handler<GameTickEvent> {
+        val speed = modes.activeMode.timerSpeed() ?: chargingSpeed() ?: return@handler
+        Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase)
     }
 
     /**
-     * Holds the ticks back first and runs them in one burst afterwards. Holding earns what the burst costs.
+     * Charges while an enemy is near but out of reach. Plain [Timer.requestTimerSpeed], since clamping the balance
+     * would drop what [BurstFirst] still has to pay back.
      */
-    private object HoldFirst : TickMode("HoldFirst", "Past", holdFirst = true)
+    private fun chargingSpeed() = chargeSpeed.takeIf {
+        chargeSpeed < 1f && Timer.balance < maxBalance &&
+            (chargeWhileUsingItem || !player.isUsingItem) &&
+            world.findEnemy(0f, chargeRange) != null &&
+            hitPointFrom()(player.eyePosition) == null
+    }
 
-    /**
-     * Runs the ticks in one burst first and holds them back afterwards, which needs spendable balance.
-     */
-    private object BurstFirst : TickMode("BurstFirst", "Future", holdFirst = false)
-
-    private open class TickMode(name: String, alias: String, private val holdFirst: Boolean) :
-        Mode(name, listOf(alias)) {
+    private sealed class BoostMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
 
         override val parent: ModeValueGroup<*>
             get() = modes
 
-        private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
-        private val lineColor by color("Line", Color4b.WHITE)
-            .doNotIncludeAlways()
-
-        private var path = emptyList<SimulatedPlayerSnapshot>()
+        /**
+         * The speed this mode needs the game at this tick, null to leave it to charging.
+         */
+        abstract fun timerSpeed(): Float?
 
         override fun disable() {
-            path = emptyList()
-        }
-
-        @Suppress("unused")
-        private val tickHandler = tickHandler {
-            path = emptyList()
-
-            // We do not want this module to conflict with blink
-            if (player.vehicle != null || ModuleBlink.running) {
-                return@tickHandler
-            }
-
-            // Holding the ticks back first earns what running them costs
-            val available = if (holdFirst) {
-                balance.last - balance.first
-            } else {
-                Timer.spendableTicks(balance)
-            }
-            val maxTicks = min(maxTicksAtATime, available)
-            if (maxTicks <= 0) {
-                return@tickHandler
-            }
-
-            path = snapshotsFromNow().take(maxTicks + 1).toList()
-            val ticks = ticksToHit()
-            if (ticks == null) {
-                rolled = null
-                return@tickHandler
-            }
-
-            if (!rollChance()) {
-                return@tickHandler
-            }
-            rolled = null
-            debugParameter("Ticks") { ticks }
-
-            // The burst ticks count towards the waited ticks as well
-            if (holdFirst) {
-                Timer.hold(this@TickMode, ticks)
-                waitTicks(ticks)
-                waitTicks(Timer.burst(ticks, balance) + cooldown.random())
-            } else {
-                val burst = Timer.burst(ticks, balance)
-                Timer.hold(this@TickMode, burst)
-                waitTicks(burst * 2 + cooldown.random())
-            }
-        }
-
-        /**
-         * The ticks to burst so that a hit lands on the last of them, preferring a critical one.
-         * Null when no hit lands on [path], or one lands right away without a critical hit to wait for.
-         */
-        private fun ticksToHit(): Int? {
-            val hits = hitCheck()
-            val inRange = path.indices.filter { hits(path[it].eyes()) }
-
-            // Holding first delays the burst by the ticks it holds
-            val landing = inRange.filter { killAuraClicksAt(if (holdFirst) it * 2 else it) }
-            val critical = if (prefersCritical) {
-                landing.firstOrNull { !path[it].onGround && path[it].fallDistance > 0.0 }
-            } else {
-                null
-            }
-
-            val ticks = when {
-                critical != null -> critical
-                inRange.firstOrNull() == 0 -> return null
-                else -> landing.firstOrNull() ?: return null
-            }
-            return ticks.takeIf { it > 0 }
-        }
-
-        @Suppress("unused")
-        private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (lineColor.a <= 0) {
-                return@handler
-            }
-
-            event.renderEnvironment {
-                drawLineStrip(
-                    argb = lineColor.argb,
-                    positions = MutableVertexList(path.size)
-                        .addAllRelativeToCamera(path, camera) { it.pos }
-                )
-            }
+            TickBaseVisuals.clear()
         }
 
     }
 
     /**
-     * Runs the game slower while an enemy is near to save up balance, and faster once the balance reaches a hit.
+     * Speeds the game up once the balance reaches a hit.
      */
-    private object TimerBoost : Mode("Timer") {
+    private object TimerBoost : BoostMode("Timer") {
 
         /**
          * Longer boosts are not worth simulating every tick.
          */
         private const val MAX_BOOST_TICKS = 100
 
-        override val parent: ModeValueGroup<*>
-            get() = modes
-
-        private val chargeRange by float("ChargeRange", 100f, 0f..500f)
-        private val chargeSpeed by float("ChargeSpeed", 0.9f, 0.1f..1f)
-        private val chargeWhileUsingItem by boolean("ChargeWhileUsingItem", false)
-        private val boostSpeed by float("BoostSpeed", 2f, 1f..10f)
-        private val onlyOnGround by boolean("OnlyOnGround", false)
+        private val boostSpeed by float("BoostSpeed", 5f, 1f..10f)
 
         private var boosting = false
         private var cooldownTicks = 0
@@ -230,23 +163,18 @@ internal object ModuleTickBase : ClientModule(
             cooldownTicks = 0
         }
 
-        @Suppress("unused")
-        private val tickHandler = tickHandler {
+        override fun timerSpeed(): Float? {
             if (cooldownTicks > 0) {
                 cooldownTicks--
             }
 
-            if (onlyOnGround && !player.onGround()) return@tickHandler
-
-            val speed = timerSpeed() ?: return@tickHandler
-            Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTickBase, balance)
-        }
-
-        private fun timerSpeed(): Float? {
-            val ticks = ticksToHit()
+            val (path, hit) = planBoost()
+            val ticks = if (hit != null) path.lastIndex else null
+            val target = hit?.takeIf(::requirementsMet)
+            TickBaseVisuals.show(path, ticks.takeIf { target != null }, target)
             debugParameter("Ticks To Hit") { ticks }
 
-            val boost = ticks != null && ticks > 0 && cooldownTicks <= 0 && rollChance()
+            val boost = ticks != null && ticks > 0 && target != null && cooldownTicks <= 0 && rollChance()
             if (boosting && !boost) {
                 cooldownTicks = cooldown.random()
             }
@@ -258,22 +186,28 @@ internal object ModuleTickBase : ClientModule(
 
             return when {
                 boost -> boostSpeed
+                // A boost ending in reach goes back to the normal speed right away
                 ticks == 0 -> 1f
-                (chargeWhileUsingItem || !player.isUsingItem) && world.findEnemy(0f, chargeRange) != null ->
-                    chargeSpeed
                 else -> null
             }
         }
 
         /**
-         * The ticks until a hit lands within the boost the balance pays for.
+         * The positions of the boost the balance pays for, up to the hit landing on the last, and that hit.
          */
-        private fun ticksToHit(): Int? {
-            val hits = hitCheck()
-            return snapshotsFromNow()
-                .take(boostTicks() + 1)
-                .indexOfFirst { hits(it.eyes()) }
-                .takeIf { it >= 0 }
+        private fun planBoost(): Pair<List<Vec3>, Vec3?> {
+            val hitAt = hitPointFrom()
+            val path = ArrayList<Vec3>()
+
+            for (snapshot in snapshotsFromNow().take(boostTicks() + 1)) {
+                path += snapshot.pos
+                val hit = hitAt(snapshot.eyes())
+                if (hit != null) {
+                    return path to hit
+                }
+            }
+
+            return path to null
         }
 
         /**
@@ -291,20 +225,170 @@ internal object ModuleTickBase : ClientModule(
 
     }
 
+    /**
+     * Runs the ticks in one burst. What the charged balance does not cover is held back right before.
+     */
+    private object HoldFirst : BurstMode("HoldFirst", "Past", holdFirst = true)
+
+    /**
+     * Runs the ticks in one burst. What the charged balance does not cover is held back right after.
+     */
+    private object BurstFirst : BurstMode("BurstFirst", "Future", holdFirst = false)
+
+    private open class BurstMode(name: String, alias: String, private val holdFirst: Boolean) :
+        BoostMode(name, listOf(alias)) {
+
+        private val maxTicks by int("MaxTicks", 4, 1..20, "ticks", aliases = listOf("MaxTicksAtATime"))
+
+        /**
+         * Ticks the game runs normally between holding back and bursting.
+         */
+        private val delay by intRange("Delay", 0..0, 0..20, "ticks")
+
+        /**
+         * Set while bursting and paying for it, when the game has to run at the normal speed.
+         */
+        private var busy = false
+
+        override fun timerSpeed() = 1f.takeIf { busy }
+
+        @Suppress("unused")
+        private val tickHandler = tickHandler {
+            TickBaseVisuals.clear()
+
+            // We do not want this module to conflict with blink
+            if (player.vehicle != null || ModuleBlink.running) {
+                return@tickHandler
+            }
+
+            val charged = Timer.balance.toInt().coerceIn(0, maxBalance)
+
+            // Holding first runs the delay before the burst, so the player covers it at the normal speed
+            val lead = if (holdFirst) delay.random() else 0
+            val path = snapshotsFromNow().take(lead + maxTicks + 1).toList()
+            val hitAt = hitPointFrom()
+            val ticks = ticksToHit(path, hitAt, charged, lead)
+            val hit = ticks?.let { hitAt(path[it].eyes()) }?.takeIf(::requirementsMet)
+            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit)
+
+            if (ticks == null || hit == null) {
+                rolled = null
+                return@tickHandler
+            }
+
+            if (!rollChance()) {
+                return@tickHandler
+            }
+            rolled = null
+            debugParameter("Ticks") { ticks }
+
+            busy = true
+            try {
+                boost(ticks - lead, charged, lead)
+            } finally {
+                busy = false
+            }
+        }
+
+        /**
+         * Bursts [ticks] ticks and holds back the ticks the [charged] balance does not cover, with the [lead] or
+         * a random delay between. The burst ticks count towards the waited ticks as well, and a hold starts with
+         * the tick it is requested in.
+         */
+        private suspend fun boost(ticks: Int, charged: Int, lead: Int) {
+            if (holdFirst) {
+                val owed = max(0, ticks - charged)
+                Timer.hold(this, owed)
+                waitTicks(owed + lead)
+                val burst = Timer.burst(ticks, 0..maxBalance + maxTicks)
+                TickBaseVisuals.clear()
+                waitTicks(burst + cooldown.random())
+            } else {
+                val burst = Timer.burst(ticks, -maxTicks..maxBalance)
+                TickBaseVisuals.clear()
+                val owed = max(0, burst - charged)
+                waitTicks(burst + 1 + delay.random())
+                Timer.hold(this, owed)
+                waitTicks(owed + cooldown.random())
+            }
+        }
+
+        override fun disable() {
+            busy = false
+            super.disable()
+        }
+
+        /**
+         * The tick of [path] to land the hit on, preferring a critical one, with [lead] normal ticks before the
+         * burst. Null when no hit lands on [path], or one lands by just walking without a critical hit to wait for.
+         */
+        private fun ticksToHit(
+            path: List<SimulatedPlayerSnapshot>,
+            hitAt: (Vec3) -> Vec3?,
+            charged: Int,
+            lead: Int
+        ): Int? {
+            val inRange = path.indices.filter { hitAt(path[it].eyes()) != null }
+            val first = inRange.firstOrNull() ?: return null
+
+            // Holding first delays the hit by the ticks it holds
+            val landing = inRange.filter { tick ->
+                tick > lead && killAuraClicksAt(if (holdFirst) tick + max(0, tick - lead - charged) else tick)
+            }
+            val critical = if (prefersCritical) {
+                landing.firstOrNull { !path[it].onGround && path[it].fallDistance > 0.0 }
+            } else {
+                null
+            }
+
+            return when {
+                critical != null -> critical
+                first <= lead -> null
+                else -> landing.firstOrNull()
+            }
+        }
+
+    }
+
+    @Suppress("unused")
+    private enum class Requirement(override val tag: String) : Tagged {
+        KILLAURA("KillAura"),
+        LOOKING_AT("LookingAt"),
+        CLICK("Click"),
+        ON_GROUND("OnGround");
+
+        fun meets(hit: Vec3) = when (this) {
+            KILLAURA -> ModuleKillAura.running && ModuleKillAura.targetTracker.target != null
+            LOOKING_AT -> player.eyePosition.let { eyes ->
+                enemyUnderCrosshair(eyes, player.lookAngle, eyes.distanceTo(hit) + LOOK_MARGIN) != null
+            }
+            CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(CLICK_MILLIS)
+            ON_GROUND -> player.onGround()
+        }
+    }
+
+    /**
+     * Past the hit, as it lands on the surface of the hitbox.
+     */
+    private const val LOOK_MARGIN = 1.0
+    private const val CLICK_MILLIS = 250L
+
+    private fun requirementsMet(hit: Vec3) = requires.all { it.meets(hit) }
+
     private val prefersCritical
         get() = ModuleCriticals.running ||
             ModuleKillAura.running && ModuleKillAura.criticalsSelectionMode != CriticalsSelectionMode.IGNORE
 
     /**
-     * Whether a hit from the given eyes lands: on the target of KillAura or Aimbot, otherwise on an enemy
-     * under the crosshair.
+     * Where a hit from the given eyes lands: on the target of KillAura or Aimbot, otherwise on an enemy under the
+     * crosshair. Null when it misses.
      */
-    private fun hitCheck(): (Vec3) -> Boolean {
+    private fun hitPointFrom(): (Vec3) -> Vec3? {
         val killAuraTarget = ModuleKillAura.targetTracker.target?.takeIf { ModuleKillAura.running }
         if (killAuraTarget != null) {
             val range = ModuleKillAura.range.interactionRange.toDouble()
             val wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
-            return { eyes -> killAuraTarget.boundingBox.isInRange(eyes, range, wallsRange) }
+            return { eyes -> killAuraTarget.boundingBox.hitPoint(eyes, range, wallsRange) }
         }
 
         val range = if (ModuleReach.running) {
@@ -315,17 +399,18 @@ internal object ModuleTickBase : ClientModule(
 
         val aimbotTarget = ModuleAimbot.targetTracker.target?.takeIf { ModuleAimbot.running }
         if (aimbotTarget != null) {
-            return { eyes -> aimbotTarget.boundingBox.isInRange(eyes, range, 0.0) }
+            return { eyes -> aimbotTarget.boundingBox.hitPoint(eyes, range, 0.0) }
         }
 
         val direction = player.lookAngle
-        return { eyes -> isEnemyUnderCrosshair(eyes, direction, range) }
+        return { eyes -> enemyUnderCrosshair(eyes, direction, range) }
     }
 
-    private fun AABB.isInRange(eyes: Vec3, range: Double, wallsRange: Double) =
-        distanceToSqr(eyes) <= range.sq() && canSeeBox(eyes, this, range, wallsRange)
+    private fun AABB.hitPoint(eyes: Vec3, range: Double, wallsRange: Double) = getNearestPoint(eyes).takeIf {
+        it.distanceToSqr(eyes) <= range.sq() && canSeeBox(eyes, this, range, wallsRange)
+    }
 
-    private fun isEnemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Boolean {
+    private fun enemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Vec3? {
         val end = eyes.fma(range, direction)
         val hit = ProjectileUtil.getEntityHitResult(
             player,
@@ -334,9 +419,9 @@ internal object ModuleTickBase : ClientModule(
             AABB(eyes, end).inflate(1.0),
             EntitySelector.CAN_BE_PICKED.and { it.shouldBeAttacked() },
             range.sq()
-        ) ?: return false
+        ) ?: return null
 
-        return hasLineOfSight(eyes, hit.location)
+        return hit.location.takeIf { hasLineOfSight(eyes, it) }
     }
 
     /**
@@ -351,6 +436,6 @@ internal object ModuleTickBase : ClientModule(
      */
     private fun snapshotsFromNow() = PlayerSimulationCache.getSimulationForLocalPlayer().simulate().drop(1)
 
-    private fun SimulatedPlayerSnapshot.eyes() = pos.add(0.0, player.getEyeHeight(player.pose).toDouble(), 0.0)
+    private fun SimulatedPlayerSnapshot.eyes() = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
 
 }

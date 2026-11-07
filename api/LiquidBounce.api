@@ -1788,6 +1788,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun frameTicks (II)I
 	public final fun getBalance ()F
+	public final fun getBursting ()Z
 	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z

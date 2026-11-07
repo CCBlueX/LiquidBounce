@@ -65,7 +65,12 @@ object Timer : EventListener {
      * Extra ticks still to run, see [burst].
      */
     private var burstTicks = 0
-    private var bursting = false
+
+    /**
+     * Whether the current tick is an extra one of a [burst].
+     */
+    var bursting = false
+        private set
 
     /**
      * Scales the ticks a frame advances by the requested speed.
