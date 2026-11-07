@@ -21,30 +21,24 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
 import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferMoreBlocksFuzzy
 import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.item.PreferWalkableBlocks
 import net.ccbluex.liquidbounce.utils.item.asHolderComparator
-import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
         private val COMPARATOR =
             ComparatorChain<BlockItemFacet>(
-                // First, usability gates: a non-favourable block (slab, slime, entity block...) or a
-                // non-full-cube must never be kept over a normal full block, regardless of count.
                 PreferFavourableBlocks.asHolderComparator(),
                 PreferFullCubeBlocks.asHolderComparator(),
-                // Then COUNT — among usable full-cube blocks the fullest stack wins. This is what stops a
-                // big stack of glass (full cube, favourable) being ignored for a tiny stack of a "nicer"
-                // block like stone, just because glass is not a redstone conductor. Glass — stained or
-                // not — is a normal scaffolding block here.
-                PreferMoreBlocksFuzzy().asHolderComparator(),
-                // Soft quality preferences only break ties between similarly-sized usable stacks.
+                // Sorted descending, so a big stack of glass beats a few blocks of stone
+                PreferStackSize.PREFER_FEWER.asHolderComparator(),
                 PreferSolidBlocks.asHolderComparator(),
                 PreferWalkableBlocks.asHolderComparator(),
                 PreferAverageHardBlocks(neutralRange = true).asHolderComparator(),
