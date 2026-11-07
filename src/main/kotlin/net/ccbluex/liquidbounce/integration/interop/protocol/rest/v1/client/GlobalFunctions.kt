@@ -36,7 +36,7 @@ private fun Route.getGlobalConfig() = get {
 
 // PUT /api/v1/client/global
 private fun Route.putGlobalConfig() = put {
-    ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText().reader())
+    ConfigSystem.deserializeValueGroup(GlobalManager, call.receiveText())
     ConfigSystem.store(GlobalManager)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }

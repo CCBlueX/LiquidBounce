@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 
 class ExpiringList<E> private constructor(
     val owner: EventListener,
-    private val list: ArrayDeque<TickedValue<E>>,
+    private val list: ArrayList<TickedValue<E>>,
 ) : Collection<TickedValue<E>> by list {
 
     class TickedValue<T>(val value: T, val expiration: Int)
@@ -35,7 +35,7 @@ class ExpiringList<E> private constructor(
         @JvmStatic
         @JvmName("create")
         fun <E> EventListener.ExpiringList(): ExpiringList<E> {
-            return ExpiringList(this, ArrayDeque())
+            return ExpiringList(this, ArrayList())
         }
     }
 
@@ -44,9 +44,8 @@ class ExpiringList<E> private constructor(
     private val tickHandler = owner.handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         tick++
 
-        while (list.isNotEmpty() && list.first().expiration <= tick) {
-            list.removeFirst()
-        }
+        // Lifetimes may change between insertions, so deadlines need not follow insertion order.
+        list.removeIf { it.expiration <= tick }
     }
 
     fun clear() = list.clear()

@@ -20,18 +20,14 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
-import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
-import net.ccbluex.liquidbounce.features.command.CommandExecutor
-import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
+import net.ccbluex.liquidbounce.features.command.preset.pageNavigation
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.minecraft.ChatFormatting
 
@@ -50,7 +46,8 @@ object ConfigListCommand {
                     }
                     header(t("list.header"), t("list.page", response.pagination.current, response.pagination.pages))
                     printItems(response.items)
-                    pageNavigation(response)
+                    pageNavigation(response.pagination.current, response.pagination.pages) { "config list $it" }
+                        ?.let { chat(it, metadata = plain) }
                 }
             }
         }
@@ -88,29 +85,6 @@ object ConfigListCommand {
             )
             details(item)?.let { chat(it, metadata = plain) }
         }
-    }
-
-    private fun CmdI18n.pageNavigation(response: PaginatedResponse<MarketplaceItem>) {
-        val (current, pages) = response.pagination.current to response.pagination.pages
-        if (pages <= 1) {
-            return
-        }
-
-        fun arrow(symbol: String, page: Int) = if (page in 1..pages) {
-            variable(symbol).onClickRun {
-                runCatching { CommandManager.execute("config list $page") }
-                    .onFailure(CommandExecutor::handleExceptions)
-            }
-        } else {
-            regular(symbol).withColor(ChatFormatting.DARK_GRAY)
-        }
-
-        chat(
-            arrow("«", current - 1)
-                .append(regular("  ${t("list.page", current, pages).string}  "))
-                .append(arrow("»", current + 1)),
-            metadata = plain
-        )
     }
 
 }

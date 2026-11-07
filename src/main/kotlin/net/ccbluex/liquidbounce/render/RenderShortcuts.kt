@@ -389,7 +389,7 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
     fun getColorForPos(x: Float, y: Float): Int {
         val dx = x - centerX
         val dy = y - centerY
-        val distRatio = (kotlin.math.sqrt(dx * dx + dy * dy) / outerRadius).coerceIn(0f, 1f)
+        val distRatio = (Mth.length(dx, dy) / outerRadius).coerceIn(0f, 1f)
 
         val t = when (distRatio <= effectiveRatio) {
             true -> 0.0

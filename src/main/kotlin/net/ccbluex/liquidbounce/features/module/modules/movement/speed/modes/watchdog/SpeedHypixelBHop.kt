@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -67,11 +67,11 @@ class SpeedHypixelBHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop",
 
     private var wasFlagged = false
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.onGround()) {
             // Strafe when on ground
             player.deltaMovement = player.deltaMovement.withStrafe()
-            return@tickHandler
+            return@handler
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {

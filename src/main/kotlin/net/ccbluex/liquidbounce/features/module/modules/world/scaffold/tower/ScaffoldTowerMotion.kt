@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.minecraft.stats.Stats
@@ -43,14 +43,14 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             jumpOffPosition = Double.NaN
-            return@tickHandler
+            return@handler
         }
 
         if (jumpOffPosition.isNaN()) {
-            return@tickHandler
+            return@handler
         }
 
         if (player.y > jumpOffPosition + triggerHeight) {

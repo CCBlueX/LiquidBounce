@@ -28,11 +28,11 @@ void main() {
     float alpha;
 
     if (vStrokeWidth > 0.0) {
-        float edge = smoothstep(0.0, -aa, d);
+        float edge = 1.0 - smoothstep(-aa, 0.0, d);
         float inner = smoothstep(-vStrokeWidth - aa, -vStrokeWidth + aa, d);
         alpha = edge * inner;
     } else {
-        alpha = smoothstep(0.0, -aa, d);
+        alpha = 1.0 - smoothstep(-aa, 0.0, d);
     }
 
     vec4 color = vColor * ColorModulator;

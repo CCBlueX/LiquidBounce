@@ -34,12 +34,9 @@ public abstract class MixinBlock {
 
     @ModifyReturnValue(method = "shouldRenderFace", at = @At("RETURN"))
     private static boolean injectXRay(boolean original, BlockState state, BlockState otherState, Direction side) {
-        var xRay = ModuleXRay.INSTANCE;
-        if (xRay.getRunning()) {
-            return xRay.modifyShouldRenderFace(original, state, otherState, side);
-        }
-
-        return original;
+        return ModuleXRay.renderActive()
+            ? ModuleXRay.INSTANCE.modifyShouldRenderFace(original, state, otherState, side)
+            : original;
     }
 
     /**

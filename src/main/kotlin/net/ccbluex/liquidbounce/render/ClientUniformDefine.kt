@@ -35,6 +35,18 @@ enum class ClientUniformDefine(val uboName: String, val size: Int) {
     MESH_BASE_BLOCK_POS("u_MeshBaseBlockPos", std140Size { ivec3 }),
     ROUNDED_RECT("u_RoundedRect", std140Size { vec2 + float }),
     HAND_ITEM_LIGHTMAP("ItemChamsData", std140Size { int + float + vec4 + float + vec4 + float + int }),
+    ITEM_CHAMS_EFFECTS(
+        "ItemChamsEffectData",
+        std140Size {
+            float + int
+            vec4 + repeat(6) { float }
+            vec4 + repeat(4) { float }
+            vec4 + repeat(3) { float }
+            vec4 + repeat(6) { float }
+            float + int
+            repeat(6) { float }
+        }
+    ),
     CHAMS("ChamsData", std140Size { vec2 + vec2 }),
     GUI_BLUR("BlurData", std140Size { float + float }),
     GUI_BLUR_KERNEL("BlurKernelData", std140Size { repeat(23) { vec4 } + int }),

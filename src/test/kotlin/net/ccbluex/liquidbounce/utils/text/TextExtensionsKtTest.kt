@@ -58,6 +58,12 @@ class TextExtensionsKtTest {
         assertEquals("", "".hideSensitiveAddress())
         assertEquals(":12345", ":12345".hideSensitiveAddress())
         assertEquals("<redacted>.liquidbounce.net:", "test.liquidbounce.net:".hideSensitiveAddress())
+
+        // Hosts resolve regardless of case and a trailing dot
+        assertEquals("<redacted>.liquidproxy.net", "Ab3xYz.EU-FRA.LiquidProxy.NET".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidproxy.net", "test.liquidproxy.net.".hideSensitiveAddress())
+        assertEquals("<redacted>.liquidbounce.net:25565", "Test.Socks.LiquidBounce.net.:25565".hideSensitiveAddress())
+        assertEquals("Example.com.", "Example.com.".hideSensitiveAddress())
     }
 
     @Test

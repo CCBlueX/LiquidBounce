@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -51,10 +51,15 @@ internal object VelocityHypixel : VelocityMode("Hypixel") {
     }
 
     @Suppress("unused")
-    private val gameHandler = tickHandler {
+    private val gameHandler = handler<GameTickEvent> {
         if (player.onGround()) {
             absorbedVelocity = false
         }
+    }
+
+    override fun disable() {
+        super.disable()
+        this.absorbedVelocity = false
     }
 
 }

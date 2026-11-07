@@ -20,22 +20,28 @@ package net.ccbluex.liquidbounce.api.services.auth
 
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_BASE_URL
-import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpException
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
 import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.models.auth.TokenResponse
+import okhttp3.RequestBody
+import retrofit2.create
+import retrofit2.http.Body
+import retrofit2.http.POST
 
 /**
  * API for OAuth authentication
  */
-object AuthenticationApi : BaseApi(AUTH_BASE_URL) {
+object AuthenticationApi {
+
+    private val service = apiRetrofit(AUTH_BASE_URL).create<Service>()
+
     suspend fun exchangeToken(
         clientId: String,
         code: String,
         codeVerifier: String,
         redirectUri: String
-    ) = post<TokenResponse>(
-        "/token/",
+    ) = service.token(
         ("client_id=$clientId&code=$code&code_verifier=$codeVerifier&" +
             "grant_type=authorization_code&redirect_uri=$redirectUri").asForm()
     )
@@ -43,10 +49,13 @@ object AuthenticationApi : BaseApi(AUTH_BASE_URL) {
     suspend fun refreshToken(
         clientId: String,
         refreshToken: String
-    ) = post<TokenResponse>(
-        "/token/",
-        "client_id=$clientId&refresh_token=$refreshToken&grant_type=refresh_token".asForm()
-    )
+    ) = service.token("client_id=$clientId&refresh_token=$refreshToken&grant_type=refresh_token".asForm())
+
+    internal interface Service {
+        @POST("token/")
+        suspend fun token(@Body body: RequestBody): TokenResponse
+    }
+
 }
 
 val HttpException.isInvalidGrant: Boolean

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
@@ -143,8 +144,8 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
 
             BlinkManager.flush(TransferOrigin.INCOMING)
 
-            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult).consumesAction()) {
-                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult).shouldSwingHand()) {
+                SwingMode.DO_NOT_HIDE.interactSwing(InteractionHand.MAIN_HAND)
             }
 
             if (RotationManager.serverRotation.pitch != 90f) {

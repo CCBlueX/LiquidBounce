@@ -19,16 +19,14 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.ints.IntArrays
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
-import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
-import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.render.engine.font.GlyphAtlasTexture
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
-import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
+import net.ccbluex.liquidbounce.render.engine.font.RasterizedGlyph
 import net.ccbluex.liquidbounce.render.engine.font.copyCoverageToNativeImage
 import net.ccbluex.liquidbounce.render.engine.font.toLuminanceNativeImage
 import java.awt.Dimension
@@ -41,8 +39,8 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         pixels = image.toLuminanceNativeImage(),
         retainPixels = true,
     )
-    private val glyphMap = Object2ObjectOpenHashMap<GlyphIdentifier, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
-    private var copyScratchBuffer = IntArray(0)
+    private val glyphMap = Object2ObjectOpenHashMap<FontGlyph, Pair<RasterizedGlyph, AtlasSliceHandle>>()
+    private var copyScratchBuffer = IntArrays.EMPTY_ARRAY
 
     private val allocator = DynamicAtlasAllocator(
         atlasSize,
@@ -50,8 +48,8 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
         Dimension(fontHeight / 3, fontHeight / 3)
     )
 
-    fun getGlyph(fontGlyph: FontGlyph): GlyphRenderInfo? {
-        return glyphMap[GlyphIdentifier(fontGlyph)]?.first
+    fun getGlyph(fontGlyph: FontGlyph): RasterizedGlyph? {
+        return glyphMap[fontGlyph]?.first
     }
 
     /**
@@ -59,69 +57,56 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
      *
      * @return A list of characters that could not be added
      */
-    fun tryAdd(c: Iterable<FontGlyph>): List<FontGlyph> {
-        val failed = ObjectArrayList<FontGlyph>()
+    fun tryAdd(glyphs: Iterable<FontGlyph>): Set<FontGlyph> {
+        val failed = ObjectOpenHashSet<FontGlyph>()
 
-        val changesToDo = c
-            .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier(glyphId)) }
+        val changesToDo = glyphs
+            .filter { glyphId -> !glyphMap.containsKey(glyphId) }
             .mapNotNull { fontGlyph ->
-                createCharacterCreationInfo(fontGlyph) ?: run {
+                createPendingGlyph(fontGlyph) ?: run {
                     failed.add(fontGlyph)
                     null
                 }
             }
-            .sortedByDescending { characterInfo ->
-                characterInfo.glyphMetrics.bounds2D.run { width * height }
+            .sortedByDescending { pendingGlyph ->
+                pendingGlyph.glyphMetrics.bounds2D.run { width * height }
             }
-            .mapNotNull { characterInfo ->
-                val atlasAllocation = allocator.allocate(characterInfo.atlasDimension)
+            .mapNotNull { pendingGlyph ->
+                val atlasAllocation = allocator.allocate(pendingGlyph.atlasDimension)
                 if (atlasAllocation == null) {
-                    failed.add(characterInfo.fontGlyph)
+                    failed.add(pendingGlyph.fontGlyph)
                     return@mapNotNull null
                 }
 
-                characterInfo.atlasLocation = atlasAllocation.pos
-                characterInfo to atlasAllocation
+                pendingGlyph.atlasLocation = atlasAllocation.pos
+                pendingGlyph to atlasAllocation
             }
 
         // Render the characters to the image
         renderGlyphs(this.image, changesToDo.map { it.first })
 
-        changesToDo.forEach { (generationInfo, slice) ->
-            val glyph = createGlyphFromGenerationInfo(generationInfo, atlasSize)
+        changesToDo.forEach { (pendingGlyph, slice) ->
+            val glyph = createRasterizedGlyph(pendingGlyph, atlasSize)
 
-            glyphMap.put(GlyphIdentifier(generationInfo.fontGlyph), glyph to slice)
+            glyphMap[pendingGlyph.fontGlyph] = glyph to slice
 
-            updateNativeTexture(generationInfo)
+            updateNativeTexture(pendingGlyph)
         }
 
         return failed
     }
 
-    fun free(glyphIdentifier: GlyphIdentifier): GlyphRenderInfo? {
-        val (renderInfo, sliceHandle) = this.glyphMap.remove(glyphIdentifier) ?: return null
+    fun free(glyph: FontGlyph): RasterizedGlyph? {
+        val (renderInfo, sliceHandle) = this.glyphMap.remove(glyph) ?: return null
 
         this.allocator.free(sliceHandle)
 
         return renderInfo
     }
 
-    /**
-     * Clears the allocator and uses optimized characters with optimized allocation order to reduce the amount of
-     * fragmentation.
-     *
-     * @return Removed chars
-     */
-    fun optimizeAtlas(): List<Pair<GlyphIdentifier, GlyphRenderInfo>> {
-        // Free everything, create a new allocator and use max(largestFontGlyph.height, medianFontGlyphHeight) as
-        // minimal vertical slice height and the dimensions of the smallest character is minDimension.
-
-        TODO()
-    }
-
-    private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo) {
-        val location = generationInfo.atlasLocation
-        val dimension = generationInfo.atlasDimension
+    private fun updateNativeTexture(pending: Companion.PendingGlyph) {
+        val location = pending.atlasLocation
+        val dimension = pending.atlasDimension
         copyScratchBuffer = image.copyCoverageToNativeImage(
             target = texture.pixels!!,
             sourceX = location.x,

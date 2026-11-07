@@ -93,7 +93,7 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
         }
 
         val next = RotationManager.currentRotation ?: player.rotation
-        val current = RotationManager.previousRotation ?: player.lastRotation
+        val current = RotationManager.lastRotation ?: player.lastRotation
         val previous = previous.apply {
             previous = current
         }

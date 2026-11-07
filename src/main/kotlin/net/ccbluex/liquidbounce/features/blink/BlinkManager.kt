@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.blink
 
-import com.google.common.collect.Queues
 import net.ccbluex.fastutil.filterIsInstance
 import net.ccbluex.fastutil.forEachIsInstance
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
@@ -76,7 +75,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 object BlinkManager : EventListener, ValueGroup("BlinkManager") {
 
-    val packetQueue: ConcurrentLinkedQueue<PacketSnapshot> = Queues.newConcurrentLinkedQueue()
+    val packetQueue = ConcurrentLinkedQueue<PacketSnapshot>()
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }

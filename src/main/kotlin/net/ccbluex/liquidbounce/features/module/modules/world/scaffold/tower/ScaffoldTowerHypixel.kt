@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -32,9 +33,9 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
     private var notifiedStationary = false
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0) {
-            return@tickHandler
+            return@handler
         }
 
         if (!isEqual1_8) {
@@ -59,7 +60,7 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
                     )
                 )
             }
-            return@tickHandler
+            return@handler
         }
 
         if (player.onGround()) {

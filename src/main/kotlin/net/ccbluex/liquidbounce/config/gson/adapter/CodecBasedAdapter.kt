@@ -40,7 +40,7 @@ import java.lang.reflect.Type
 /**
  * [Fabric Documentation](https://docs.fabricmc.net/1.21/develop/codecs)
  */
-class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
+class CodecBasedAdapter<T : Any>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
 
     private val jsonOps
         get() = (mc.level?.registryAccess() ?: RegistryAccess.EMPTY).createSerializationContext(JsonOps.INSTANCE)

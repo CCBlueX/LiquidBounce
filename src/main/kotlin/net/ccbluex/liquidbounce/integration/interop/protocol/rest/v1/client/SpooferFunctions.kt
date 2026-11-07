@@ -37,7 +37,7 @@ private fun Route.getSpooferConfig() = get {
 
 // PUT /api/v1/client/spoofer
 private fun Route.putSpooferConfig() = put {
-    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText().reader())
+    ConfigSystem.deserializeValueGroup(SpooferManager, call.receiveText())
     ConfigSystem.store(SpooferManager)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }

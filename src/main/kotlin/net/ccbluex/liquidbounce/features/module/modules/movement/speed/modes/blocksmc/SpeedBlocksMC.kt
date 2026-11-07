@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.bl
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.airTicks
@@ -58,10 +58,10 @@ class SpeedBlocksMC(override val parent: ModeValueGroup<*>) : Mode("BlocksMC") {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (ModuleScaffold.enabled && ModuleScaffold.isTowering) {
             state = 0
-            return@tickHandler
+            return@handler
         }
 
         if (player.onGround()) {

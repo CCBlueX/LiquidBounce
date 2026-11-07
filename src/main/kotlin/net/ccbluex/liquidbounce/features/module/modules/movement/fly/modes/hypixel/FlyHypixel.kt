@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypi
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -75,7 +76,7 @@ object FlyHypixel : Mode("Hypixel") {
     }
 
     @Suppress("unused")
-    private val timerHandler = tickHandler {
+    private val timerHandler = handler<GameTickEvent> {
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 

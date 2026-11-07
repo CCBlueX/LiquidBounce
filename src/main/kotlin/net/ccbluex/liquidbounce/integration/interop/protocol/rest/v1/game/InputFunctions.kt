@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.InputConstants
 import io.ktor.server.request.receive
@@ -44,14 +43,12 @@ private fun Route.getInputInfo() = get("/input") {
 // GET /api/v1/client/keybinds
 private fun Route.getKeybinds() = get("/keybinds") {
     call.respond(
-        JsonArray().apply {
-            for (key in mc.options.keyMappings) {
-                add(JsonObject().apply {
-                    addProperty("bindName", key.name)
-                    add("key", JsonObject().apply {
-                        addProperty("translationKey", key.saveString())
-                        addProperty("localized", key.translatedKeyMessage?.string)
-                    })
+        mc.options.keyMappings.map { key ->
+            JsonObject().apply {
+                addProperty("bindName", key.name)
+                add("key", JsonObject().apply {
+                    addProperty("translationKey", key.saveString())
+                    addProperty("localized", key.translatedKeyMessage?.string)
                 })
             }
         }

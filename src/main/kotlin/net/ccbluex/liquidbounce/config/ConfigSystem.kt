@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
 import java.io.File
 import java.io.Reader
@@ -225,14 +226,8 @@ object ConfigSystem {
             serializeValueGroup(config, bufferedWriter())
             logger.debug("Writing config ${config.loweredName}... done")
 
-            // Move temp file to final file
-            if (config.jsonFile.exists() && !config.jsonFile.delete()) {
-                error("Unable to delete old file for config ${config.loweredName}")
-            }
-
-            if (!renameTo(config.jsonFile)) {
-                error("Unable to rename temp file to final file for config ${config.loweredName}")
-            }
+            // Replace in one move, keeping the previous config until the new file is ready.
+            toPath().atomicMoveTo(config.jsonFile.toPath())
             logger.info("Successfully stored config '${config.loweredName}'.")
         }.onFailure {
             logger.error("Unable to store config ${config.loweredName}", it)
@@ -243,8 +238,8 @@ object ConfigSystem {
      * Serialize a config to a writer and close it
      */
     private fun serializeValueGroup(valueGroup: ValueGroup, writer: Writer, gson: Gson = fileGson) {
-        gson.newJsonWriter(writer).use {
-            gson.toJson(valueGroup, ValueGroup::class.javaObjectType, it)
+        writer.use {
+            gson.toJson(valueGroup, ValueGroup::class.java, it)
         }
     }
 
@@ -252,7 +247,13 @@ object ConfigSystem {
      * Serialize a config to a [JsonObject].
      */
     fun serializeValueGroup(valueGroup: ValueGroup, gson: Gson = fileGson): JsonObject =
-        gson.toJsonTree(valueGroup, ValueGroup::class.javaObjectType) as JsonObject
+        gson.toJsonTree(valueGroup, ValueGroup::class.java) as JsonObject
+
+    /**
+     * Deserialize a config from a [CharSequence]
+     */
+    fun deserializeValueGroup(valueGroup: ValueGroup, source: CharSequence, gson: Gson = fileGson) =
+        deserializeValueGroup(valueGroup, Reader.of(source), gson)
 
     /**
      * Deserialize a config from a reader, and close it

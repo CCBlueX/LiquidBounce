@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.nc
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -50,10 +50,10 @@ class SpeedNCP(parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
         private var ticksInAir = 0
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (player.onGround()) {
                 ticksInAir = 0
-                return@tickHandler
+                return@handler
             } else {
                 ticksInAir++
                 if (ticksInAir == onTick) {
@@ -77,7 +77,7 @@ class SpeedNCP(parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
             0.01f..10f)
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (player.moving) {
                 player.deltaMovement = player.deltaMovement.multiply(
                     factorX = 1f + (BOOST_CONSTANT * initialBoostMultiplier),
@@ -104,7 +104,7 @@ class SpeedNCP(parent: ModeValueGroup<*>) : SpeedBHopBase("NCP", parent) {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         val speedMultiplier = player.getEffect(MobEffects.SPEED)?.amplifier ?: 0
 
         if (player.moving) {

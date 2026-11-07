@@ -120,7 +120,7 @@ class AiAngleSmooth(
         }
 
         val entity = rotationTarget.entity as? LivingEntity
-        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevRotation = RotationManager.lastRotation ?: player.lastRotation
         val totalDelta = currentRotation.rotationDeltaTo(targetRotation)
         val velocityDelta = prevRotation.rotationDeltaTo(currentRotation)
 

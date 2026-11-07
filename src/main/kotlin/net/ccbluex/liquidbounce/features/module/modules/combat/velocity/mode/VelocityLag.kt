@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 
@@ -89,6 +90,11 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
         if (jumpReset && shouldJump && player.onGround() && player.isSprinting) {
+            if (LocalPlayerFallDamageTracker.isCurrentFallDamage) {
+                shouldJump = false
+                return@handler
+            }
+
             event.jump = true
             shouldJump = false
         }

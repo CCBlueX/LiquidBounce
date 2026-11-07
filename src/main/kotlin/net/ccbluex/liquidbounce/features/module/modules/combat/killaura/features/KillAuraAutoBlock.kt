@@ -61,6 +61,7 @@ import net.ccbluex.liquidbounce.utils.entity.useItemStrict
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.math.firstHit
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
@@ -120,7 +121,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
                 }
 
                 val eyes = target.eyePosition
-                val lookEnd = eyes.add(target.rotation.directionVector.scale(interactionRange))
+                val lookEnd = eyes.fma(interactionRange, target.rotation.directionVector)
                 val toleratedBox = player.box.inflate(tolerance.toDouble())
                 val hitPosition = toleratedBox.firstHit(eyes, lookEnd) ?: return@any false
                 val distance = eyes.distanceTo(hitPosition)

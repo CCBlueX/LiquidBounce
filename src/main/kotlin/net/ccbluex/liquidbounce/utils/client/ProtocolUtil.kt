@@ -113,7 +113,7 @@ val isNewerThanOrEquals1_16: Boolean
 /**
  * Offhand cannot be used as a SWAP target in any container on 1.15.2 and below.
  *
- * https://github.com/ViaVersion/ViaFabricPlus/blame/b03638ee999f658856e8284f135bcbf55fc596a8/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/interaction/container_clicking/MixinMultiPlayerGameMode.java#L101
+ * https://github.com/ViaVersion/ViaFabricPlus/blob/8f96c699edc97db8a3fc58c1533e8cf41dd46aaf/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/v1_15_2/MixinMultiPlayerGameMode.java#L67
  */
 val isOlderThanOrEqual1_15_2: Boolean
     get() = runCatching {
@@ -211,6 +211,14 @@ val isOlderThanOrEquals1_21_11: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_21_11
     }.onFailure {
         logger.error("Failed to check if the server is using 1.21.11", it)
+    }.getOrDefault(false)
+
+val isOlderThan26_3: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan26_3
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-26.3 protocol", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

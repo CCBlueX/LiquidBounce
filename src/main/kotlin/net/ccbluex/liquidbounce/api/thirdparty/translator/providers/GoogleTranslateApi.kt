@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce.api.thirdparty.translator.providers
 
 import com.google.gson.JsonArray
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
-import net.ccbluex.liquidbounce.api.core.parse
+import net.ccbluex.liquidbounce.api.core.bodyAsJson
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorMode
@@ -31,11 +33,6 @@ import net.ccbluex.liquidbounce.config.gson.util.string
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
-
-/**
- * @author MukjepScarlet
- */
 class GoogleTranslateApi(
     override val parent: ModeValueGroup<*>
 ) : TranslatorMode("Google") {
@@ -47,8 +44,8 @@ class GoogleTranslateApi(
         sourceLanguage: TranslateLanguage,
         targetLanguage: TranslateLanguage,
         text: String
-    ): TranslationResult {
-        val url = GOOGLE_API_URL.newBuilder()
+    ): TranslationResult = withContext(Dispatchers.IO) {
+        val url = baseUrl.newBuilder()
             .addQueryParameter("sl", sourceLanguage.literal)
             .addQueryParameter("tl", targetLanguage.literal)
             .addQueryParameter("q", text)
@@ -58,7 +55,7 @@ class GoogleTranslateApi(
         val response = HttpClient.request(
             url,
             method = HttpMethod.GET
-        )
+        ).bodyAsJson<JsonArray>()
 
         // 1. sl = "auto"
         // Model: [["$result", "$detectedLanguage"]]
@@ -70,8 +67,8 @@ class GoogleTranslateApi(
 
         // sl empty -> HTTP 400
         // tl empty | text empty -> result empty
-        return if (sourceLanguage is TranslateLanguage.Auto) {
-            val arr = response.parse<JsonArray>().array(0)!!
+        if (sourceLanguage is TranslateLanguage.Auto) {
+            val arr = response.array(0)!!
             val result = arr.string(0)!!
             val detectedLanguage = arr.string(1)!!
             TranslationResult.Success(
@@ -81,7 +78,7 @@ class GoogleTranslateApi(
                 toLanguage = targetLanguage,
             )
         } else {
-            val result = response.parse<JsonArray>().string(0)!!
+            val result = response.string(0)!!
             TranslationResult.Success(
                 origin = text,
                 translation = result,
@@ -89,5 +86,9 @@ class GoogleTranslateApi(
                 toLanguage = targetLanguage
             )
         }
+    }
+
+    companion {
+        private val baseUrl = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
     }
 }

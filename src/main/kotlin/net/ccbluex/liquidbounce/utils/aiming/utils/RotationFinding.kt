@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
-import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -38,16 +37,14 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.pointAtProportion
-import net.ccbluex.liquidbounce.utils.math.samplePointOnSide
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toSortedAabbs
 import net.ccbluex.liquidbounce.utils.raytracing.clip
@@ -63,6 +60,17 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.math.max
+import kotlin.math.sqrt
+
+/**
+ * Distance between sampled points when walking the surface of a hitbox or a block face.
+ */
+private const val SURFACE_SAMPLE_SPACING = 0.1
+
+/**
+ * Target number of points per face; a larger face widens the spacing rather than producing more points.
+ */
+private const val MAX_POINTS_PER_FACE = 100
 
 private val ITERATION_PROPORTIONS_LOOSE = doubleArrayOf(0.1, 0.5, 0.9)
 private val ITERATION_PROPORTIONS = doubleArrayOf(0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95)
@@ -150,30 +158,26 @@ fun canSeeUpperBlockSide(
     val y = pos.y + 0.99
     val minZ = pos.z.toDouble()
 
-    for (x in ITERATION_PROPORTIONS_LOOSE) {
-        for (z in ITERATION_PROPORTIONS_LOOSE) {
-            // skip because of out of range
-            val distanceSq = eyes.distanceToSqr(minX + x, y, minZ + z)
+    val topFace = AlignedFace(
+        Vec3(minX, y, minZ),
+        Vec3(minX + 1.0, y, minZ + 1.0),
+    )
 
-            if (distanceSq > rangeSquared) {
-                continue
-            }
+    return !topFace.forEachSamplePoint(ITERATION_PROPORTIONS_LOOSE) { vec3 ->
+        val distanceSq = eyes.distanceToSqr(vec3)
 
-            val vec3 = Vec3(minX + x, y, minZ + z)
-
-            // check if target is visible to eyes
-            val visible = player.isFacingBlock(eyes, vec3, pos, Direction.UP)
-
-            // skip because not visible in range
-            if (!visible && distanceSq > wallsRangeSquared) {
-                continue
-            }
-
-            return true
+        if (distanceSq > rangeSquared) {
+            return@forEachSamplePoint true
         }
-    }
 
-    return false
+        val visible = player.isFacingBlock(eyes, vec3, pos, Direction.UP)
+
+        if (!visible && distanceSq > wallsRangeSquared) {
+            return@forEachSamplePoint true
+        }
+
+        false
+    }
 }
 
 private open class BestRotationTracker(val comparator: Comparator<Rotation>, val ignoreVisibility: Boolean = false) {
@@ -330,21 +334,20 @@ internal fun raytraceBlockSideBoxes(
 
     for (box in boxes) {
         val boxWithOffset = box + offset
+        val face = AlignedFace.get(side, boxWithOffset)
 
-        for (a in ITERATION_PROPORTIONS) {
-            for (b in ITERATION_PROPORTIONS) {
-                val spot = boxWithOffset.samplePointOnSide(side, a, b)
-
-                bestRotationTracker.considerSpot(
-                    spot,
-                    boxWithOffset,
-                    eyes,
-                    visibilityPredicate,
-                    rangeSquared,
-                    wallsRangeSquared,
-                    spot,
-                )
-            }
+        // No early exit: any spot may still beat the best rotation found so far.
+        face.forEachSamplePoint(SURFACE_SAMPLE_SPACING) { spot ->
+            bestRotationTracker.considerSpot(
+                spot,
+                boxWithOffset,
+                eyes,
+                visibilityPredicate,
+                rangeSquared,
+                wallsRangeSquared,
+                spot,
+            )
+            true
         }
     }
 
@@ -537,16 +540,19 @@ private inline fun scanBoxPoints(
     box: AABB,
     fn: (Vec3) -> Unit,
 ) {
-    val isOutsideBox = projectPointsOnBox(eyes, box, maxPoints = 256, fn)
+    if (projectPointsOnBox(eyes, box, maxPoints = 256, fn)) {
+        return
+    }
 
-    // We cannot project points on something if we are inside the hitbox
-    if (!isOutsideBox) {
-        for (x in ITERATION_PROPORTIONS) {
-            for (y in ITERATION_PROPORTIONS) {
-                for (z in ITERATION_PROPORTIONS) {
-                    fn(box.pointAtProportion(x, y, z))
-                }
-            }
+    // Inside the hitbox: walk the surface instead. Points inside the box cannot tell us anything the surface
+    // does not, because the surface is where a ray from the eye first meets the box.
+    for (direction in Direction.entries) {
+        val face = AlignedFace.get(direction, box)
+        val spacing = max(SURFACE_SAMPLE_SPACING, sqrt(face.area / MAX_POINTS_PER_FACE))
+
+        face.forEachSamplePoint(spacing) { point ->
+            fn(point)
+            true
         }
     }
 }
@@ -571,32 +577,31 @@ fun raytraceUpperBlockSide(
     val bestRotationTracker = BestRotationTracker(rotationPreference)
 
     val proportions = rotationsNotToMatch?.let { ITERATION_PROPORTIONS_PRECISE } ?: ITERATION_PROPORTIONS
-    for (x in proportions) {
-        for (z in proportions) {
-            val vec3 = vec3d.add(x, 0.9, z)
+    val topFace = AlignedFace(
+        vec3d.add(0.0, 0.9, 0.0),
+        vec3d.add(1.0, 0.9, 1.0),
+    )
 
-            // skip because of out of range
-            val distance = eyes.distanceToSqr(vec3)
+    topFace.forEachSamplePoint(proportions) { vec3 ->
+        val distance = eyes.distanceToSqr(vec3)
 
-            if (distance > rangeSquared) {
-                continue
-            }
-
-            // check if target is visible to eyes
-            val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
-
-            // skip because not visible in range
-            if (!visible && distance > wallsRangeSquared) {
-                continue
-            }
-
-            val rotation = Rotation.lookingAt(point = vec3, from = eyes)
-            if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
-                continue
-            }
-
-            bestRotationTracker.considerRotation(RotationWithVector(rotation, vec3), visible)
+        if (distance > rangeSquared) {
+            return@forEachSamplePoint true
         }
+
+        val visible = player.isFacingBlock(eyes, vec3, expectedTarget, Direction.UP)
+
+        if (!visible && distance > wallsRangeSquared) {
+            return@forEachSamplePoint true
+        }
+
+        val rotation = Rotation.lookingAt(point = vec3, from = eyes)
+        if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
+            return@forEachSamplePoint true
+        }
+
+        bestRotationTracker.considerRotation(RotationWithVector(rotation, vec3), visible)
+        true
     }
 
     return bestRotationTracker.bestVisible ?: bestRotationTracker.bestInvisible
@@ -648,46 +653,44 @@ fun findClosestPointOnBlockInLineWithCrystal(
     val wallsRangeSquared = wallsRange.sq()
     val blockBB = FULL_BOX.move(expectedTarget)
 
-    val vec = expectedTarget.center
-    Direction.entries.forEach {
-        val vec3d = vec.relative(it, 0.5)
+    for (direction in Direction.entries) {
+        val face = AlignedFace.get(direction, blockBB)
 
-        val coordinate = eyes[it.axis]
-        if (notFacingAway && !blockBB.contains(eyes) && when (it.axisDirection) {
-            Direction.AxisDirection.NEGATIVE -> coordinate > blockBB.min(it.axis)
-            Direction.AxisDirection.POSITIVE -> coordinate < blockBB.max(it.axis)
-        }) {
-            return@forEach
+        val coordinate = eyes[direction.axis]
+        if (notFacingAway && !blockBB.contains(eyes) && when (direction.axisDirection) {
+                Direction.AxisDirection.NEGATIVE -> coordinate > blockBB.min(direction.axis)
+                Direction.AxisDirection.POSITIVE -> coordinate < blockBB.max(direction.axis)
+            }) {
+            continue
         }
 
-        range(-0.45..0.45 step 0.05, -0.45..0.45 step 0.05) { x, y ->
-            val vec3 = pointOnSide(it, x, y, vec3d)
-
+        face.forEachSamplePoint(ITERATION_PROPORTIONS_PRECISE) { vec3 ->
             val intersects = predictedCrystal.isHitByLine(eyes, vec3)
             if (bestIntersects && !intersects) {
-                return@range
+                return@forEachSamplePoint true
             }
 
             val distance = eyes.distanceToSqr(vec3)
 
             // skip if out of range or the current best is closer
             if (distance > rangeSquared || bestDistance <= distance && (!intersects || bestIntersects)) {
-                return@range
+                return@forEachSamplePoint true
             }
 
             // skip because not visible in range
-            if (distance > wallsRangeSquared && !player.isFacingBlock(eyes, vec3, expectedTarget, it)) {
-                return@range
+            if (distance > wallsRangeSquared && !player.isFacingBlock(eyes, vec3, expectedTarget, direction)) {
+                return@forEachSamplePoint true
             }
 
             val rotation = Rotation.lookingAt(point = vec3, from = eyes)
             if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
-                return@range
+                return@forEachSamplePoint true
             }
 
-            best = RotationWithVector(rotation, vec3) to it
+            best = RotationWithVector(rotation, vec3) to direction
             bestDistance = distance
             bestIntersects = intersects
+            true
         }
     }
 
@@ -725,12 +728,4 @@ private fun checkCurrentRotation(
     }
 
     return null
-}
-
-private fun pointOnSide(side: Direction, x: Double, y: Double, vec: Vec3): Vec3 {
-    return when (side) {
-        Direction.DOWN, Direction.UP -> vec.add(x, 0.0, y)
-        Direction.NORTH, Direction.SOUTH -> vec.add(x, y, 0.0)
-        Direction.WEST, Direction.EAST -> vec.add(0.0, x, y)
-    }
 }

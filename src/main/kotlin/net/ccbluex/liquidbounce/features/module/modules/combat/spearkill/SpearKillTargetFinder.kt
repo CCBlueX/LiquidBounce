@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
 import net.ccbluex.liquidbounce.utils.entity.useItem
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.world.entity.LivingEntity
@@ -40,7 +41,7 @@ internal object SpearKillTargetFinder {
 
     fun findTarget(maxTargetDistance: Float): Pair<LivingEntity, Double>? {
         val eye = player.eyePosition
-        val lookEnd = eye.add(player.lookAngle.scale(maxTargetDistance.toDouble()))
+        val lookEnd = eye.fma(maxTargetDistance.toDouble(), player.lookAngle)
         val lungeTarget = player.getAttackRangeWith(player.useItem).lungeTarget()
         var best: Pair<LivingEntity, Double>? = null
         var bestDistSq = Double.MAX_VALUE

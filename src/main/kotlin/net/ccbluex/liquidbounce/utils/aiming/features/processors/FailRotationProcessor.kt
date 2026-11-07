@@ -95,7 +95,7 @@ class FailRotationProcessor(owner: EventListener? = null)
         targetRotation: Rotation
     ): Rotation {
         return if (this.running && isInFailState) {
-            val prevRotation = RotationManager.previousRotation ?: return targetRotation
+            val prevRotation = RotationManager.lastRotation ?: return targetRotation
             val serverRotation = RotationManager.serverRotation
 
             val deltaYaw = (prevRotation.yaw - serverRotation.yaw) * failFactor

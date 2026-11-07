@@ -358,6 +358,8 @@ export interface Proxy {
     port: number;
     type: 'HTTP' | 'SOCKS5';
     forwardAuthentication: boolean;
+    proxyResourcePacks: boolean;
+    proxyDns: boolean;
     favorite: boolean;
     credentials: {
         username: string;

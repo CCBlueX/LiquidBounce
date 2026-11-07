@@ -22,8 +22,10 @@ package net.ccbluex.liquidbounce.features.command.commands.client.config
 
 import com.mojang.brigadier.suggestion.SuggestionProvider
 import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemVisibility
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
@@ -41,7 +43,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.commands.SharedSuggestionProvider
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import java.time.LocalDateTime
 
 internal val configSuggestions: SuggestionProvider<ClientCommandSource> = suggestions {
@@ -73,6 +77,24 @@ internal fun formatDate(dateTime: String): String =
 
 internal suspend fun session(): OAuthSession = ClientAccountManager.accountOrException().takeSession()
 
+/**
+ * The session when signed in. `null` means: use the public view.
+ */
+internal suspend fun sessionOrNull(): OAuthSession? {
+    if (ClientAccountManager.clientAccount == ClientAccount.EMPTY_ACCOUNT) {
+        return null
+    }
+
+    return try {
+        session()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        logger.warn("No marketplace session, using the public view", e)
+        null
+    }
+}
+
 internal suspend fun ownUserId(): String? {
     val account = ClientAccountManager.accountOrException()
     if (account.userInformation == null) {
@@ -82,7 +104,7 @@ internal suspend fun ownUserId(): String? {
 }
 
 internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
-    single(input, MarketplaceConfigs.find(input))
+    single(input, MarketplaceConfigs.find(input, sessionOrNull()))
 
 /**
  * The one item [input] names. A bare name that several authors use is refused with their
@@ -92,7 +114,7 @@ internal fun CmdI18n.single(input: String, matches: List<MarketplaceItem>): Mark
     0 -> throw CommandException(t("error.notFound", variable(input)))
     1 -> matches.single()
     else -> throw CommandException(
-        t("error.ambiguous", variable(input), variable(matches.joinToString(", ") { quoted(it.address) }))
+        t("error.ambiguous", variable(input), matches.joinToText(DEFAULT_SEPARATOR) { variable(quoted(it.address)) })
     )
 }
 
@@ -109,6 +131,29 @@ internal suspend fun CmdI18n.requireOwnTracked() {
     if (ownUserId() != ConfigTracker.itemUid) {
         throw CommandException(t("error.notOwner", variable(ConfigTracker.itemName)))
     }
+}
+
+/**
+ * Owner, anyone the API lets edit, or anyone signed in once the owner opened a public config to the community.
+ */
+internal fun MarketplaceItem.isEditableBy(userId: String?): Boolean = when {
+    userId == null || type != MarketplaceItemType.CONFIG -> false
+    uid == userId || canEdit -> true
+    else -> communityEditable && visibility == MarketplaceItemVisibility.PUBLIC
+}
+
+/**
+ * The session to publish the tracked config with, if the user may edit it.
+ */
+internal suspend fun CmdI18n.requireEditableTracked(): OAuthSession {
+    requireTracked()
+    val userId = request { ownUserId() }
+    val session = request { session() }
+    val item = request { MarketplaceApi.getMarketplaceItem(ConfigTracker.itemId, session) }
+    if (!item.isEditableBy(userId)) {
+        throw CommandException(t("error.notEditor", variable(item.name)))
+    }
+    return session
 }
 
 internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility =
@@ -128,7 +173,7 @@ internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
     return names.map { name ->
         tags.find { it.name.equals(name, ignoreCase = true) }?.id
             ?: throw CommandException(
-                t("error.unknownTag", variable(name), variable(tags.joinToString(", ") { it.name }))
+                t("error.unknownTag", variable(name), tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })
             )
     }
 }
@@ -140,8 +185,8 @@ internal fun CmdI18n.reportInstalled(result: ConfigTracker.LoadResult) {
         return
     }
 
-    val names = result.installed.joinToString(", ") { it.name }
-    chat(regular(t("load.installed", variable(names))))
+    val names = result.installed.joinToText(DEFAULT_SEPARATOR) { variable(it.name) }
+    chat(regular(t("load.installed", names)))
     if (result.restartRequired) {
         chat(regular(t("load.restart")))
     }

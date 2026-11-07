@@ -32,7 +32,6 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.AABB
 import kotlin.math.max
@@ -132,7 +131,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
 
         val swingMode = SubmoduleCrystalDestroyer.swingMode
         if (!swingAlways) {
-            swingMode.swing(InteractionHand.MAIN_HAND)
+            swingMode.attackSwing()
         }
 
         offsetRange.forEach { idOffset ->
@@ -145,7 +144,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
             }
 
             if (swingAlways) {
-                swingMode.swing(InteractionHand.MAIN_HAND)
+                swingMode.attackSwing()
             }
 
             network.send(ServerboundAttackPacket(id))

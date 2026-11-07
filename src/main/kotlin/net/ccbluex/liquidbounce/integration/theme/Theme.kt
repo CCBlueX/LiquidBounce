@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.platform.NativeImage
-import io.netty.handler.codec.http.HttpHeaderNames
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.api.core.BaseApi
+import net.ccbluex.liquidbounce.api.core.apiRetrofit
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -44,9 +44,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
 import net.ccbluex.liquidbounce.utils.text.capitalize
-import okhttp3.Headers
+import okio.Buffer
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 import java.io.File
-import java.io.InputStream
 import java.util.Locale
 
 /**
@@ -56,17 +58,28 @@ import java.util.Locale
  */
 @Suppress("TooManyFunctions")
 class Theme private constructor(val origin: Origin, url: String) :
-    BaseApi(
-        url.trimEnd('/'),
-        // DO NOT use headersOf(...) because LunarClient uses an outdated version of
-        // the OkHttp library.
-        defaultHeaders = Headers.Builder()
-            .add(
-                HttpHeaderNames.COOKIE.toString(),
-                "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}",
-            )
-            .build()
-    ), AutoCloseable, SimpleReloadListener.Sequenced {
+    AutoCloseable, SimpleReloadListener.Sequenced {
+
+    private val baseUrl = url.trimEnd('/')
+
+    private val service = apiRetrofit(baseUrl).create<Service>()
+
+    internal interface Service {
+        @GET("metadata.json")
+        suspend fun metadata(): ThemeMetadata
+
+        @GET("components/{name}.json")
+        suspend fun component(@Path("name") name: String): JsonHudComponentFactory
+
+        @GET("fonts/{font}")
+        suspend fun font(@Path("font") font: String): Buffer
+
+        @GET("backgrounds/{background}.frag")
+        suspend fun shader(@Path("background") background: String): String
+
+        @GET("backgrounds/{background}.png")
+        suspend fun background(@Path("background") background: String): NativeImage
+    }
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
         RESOURCE("resource", false),
@@ -81,7 +94,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private suspend fun loadMetadata() {
         try {
-            _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            _metadata = service.metadata().apply { checkNotNull() }
         } catch (e: Exception) {
             logger.error("Failed to load theme metadata", e)
             throw IllegalStateException("Failed to load theme metadata", e)
@@ -105,7 +118,7 @@ class Theme private constructor(val origin: Origin, url: String) :
     private suspend fun loadComponents() {
         val componentFactoryList = metadata.components.mapNotNull { name ->
             runCatching {
-                get<JsonHudComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
+                service.component(name.lowercase(Locale.US))
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull()
@@ -231,14 +244,15 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     private suspend fun loadFonts() {
         for (font in metadata.fonts) {
-            runCatching {
-                get<InputStream>("/fonts/$font").use { stream ->
-                    FontManager.queueFontFromStream(stream)
+            try {
+                val responseBody = service.font(font)
+                if (FontManager.queueFontFromBuffer(responseBody)) {
+                    logger.info("Loaded font $font for theme ${metadata.name}")
                 }
-
-                logger.info("Loaded font $font for theme ${metadata.name}")
-            }.onFailure {
-                logger.warn("Failed to load font $font for theme ${metadata.name}", it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to load font $font for theme ${metadata.name}", e)
             }
         }
     }
@@ -269,7 +283,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         val fragmentShader = runCatching {
-            get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
+            service.shader(background.name.lowercase(Locale.US))
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
@@ -299,7 +313,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         val image = runCatching {
-            get<NativeImage>("/backgrounds/${background.name}.png")
+            service.background(background.name)
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {

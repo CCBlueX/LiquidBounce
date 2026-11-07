@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
@@ -31,7 +32,7 @@ internal object VelocityAAC442 : VelocityMode("AAC4.4.2") {
     private val reduce by float("Reduce", 0.62f, 0f..1f)
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = handler<GameTickEvent> {
         if (player.hurtTime > 0 && !player.onGround()) {
             player.deltaMovement = player.deltaMovement.multiply(
                 factorX = reduce,

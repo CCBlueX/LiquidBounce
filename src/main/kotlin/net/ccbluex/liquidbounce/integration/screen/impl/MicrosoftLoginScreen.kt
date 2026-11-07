@@ -29,7 +29,7 @@ import net.minecraft.client.gui.screens.Screen
 import net.raphimc.minecraftauth.msa.service.impl.ExternalBrowserMsaAuthService
 
 /**
- * Hosts the Microsoft login page in a CEF browser.
+ * Hosts the Microsoft login page in the client's browser.
  *
  * MinecraftAuth ships a JavaFX web view for this, but we do not ship JavaFX, so
  * [ExternalBrowserMsaAuthService] lets the login run in the browser the client already has. The screen

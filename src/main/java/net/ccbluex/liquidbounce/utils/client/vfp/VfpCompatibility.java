@@ -236,6 +236,17 @@ public enum VfpCompatibility {
         }
     }
 
+    public boolean isOlderThan26_3() {
+        try {
+            var version = ViaFabricPlus.api().targetVersion();
+
+            return version.olderThan(ProtocolVersion.v26_3);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if 26.3", throwable);
+            return false;
+        }
+    }
+
     public boolean isOlderThanOrEqual1_11_1() {
         try {
             var version = ViaFabricPlus.api().targetVersion();

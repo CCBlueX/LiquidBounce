@@ -27,11 +27,14 @@ import java.util.concurrent.ConcurrentHashMap
  */
 open class Task(val name: String) {
 
+    @Volatile
     var progress: Float = 0f
         get() = if (subTasks.isNotEmpty()) calculateProgress() else field
+    @Volatile
     var isCompleted: Boolean = false
         get() = field && if (subTasks.isNotEmpty()) areAllSubTasksCompleted() else true
     var startTime: Long = System.currentTimeMillis()
+    @Volatile
     var job: Job? = null
     val subTasks = ConcurrentHashMap<String, Task>()
 

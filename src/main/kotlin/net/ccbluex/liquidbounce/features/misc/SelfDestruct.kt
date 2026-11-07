@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
@@ -47,6 +48,12 @@ object SelfDestruct {
 
     var isDestructed = false
 
+    private val clientModIds: Set<String>
+        get() = buildSet {
+            add("liquidbounce")
+            AddonManager.addons.forEach { add(it.id) }
+        }
+
     /**
      * Attempt to destruct the client
      */
@@ -55,10 +62,12 @@ object SelfDestruct {
         mc.schedule(::restoreVanilla)
 
         if (modMenuPresent) {
-            for (id in arrayOf("liquidbounce", "mcef")) {
+            for (id in clientModIds) {
                 ModMenuCompatibility.INSTANCE.removeModUnchecked(id)
             }
         }
+
+        HitFXRegistry.unregisterSounds()
 
         mc.gui.hud.chat.recentChat.removeIf {
             it.startsWith(CommandManager.GlobalSettings.prefix)
@@ -104,10 +113,7 @@ object SelfDestruct {
             ConfigSystem.rootFolder.deleteRecursively()
         }
 
-        val idsToWipe = buildSet {
-            add("liquidbounce")
-            AddonManager.addons.forEach { add(it.id) }
-        }
+        val idsToWipe = clientModIds
 
         FabricLoaderImpl.INSTANCE.allMods.filter {
             it.metadata.id in idsToWipe

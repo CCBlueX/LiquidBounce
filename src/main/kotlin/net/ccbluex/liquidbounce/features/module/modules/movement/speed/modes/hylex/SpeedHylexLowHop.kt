@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -37,7 +38,7 @@ class SpeedHylexLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop",
     private var airTicks = 0
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (player.onGround()) {
             airTicks = 0
             if (player.moving && player.horizontalSpeed < 0.32) {
@@ -48,7 +49,7 @@ class SpeedHylexLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop",
                     1.1
                 )
             }
-            return@tickHandler
+            return@handler
         }
         airTicks++
 

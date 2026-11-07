@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.in
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -41,7 +42,7 @@ class SpeedIntave14(parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14", paren
         private val strength by float("Strength", 0.27f, 0.01f..0.27f)
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (player.isSprinting && (player.onGround() || player.airTicks == 11)) {
                 player.deltaMovement = player.deltaMovement.withStrafe(strength = strength.toDouble())
             }
@@ -51,7 +52,7 @@ class SpeedIntave14(parent: ModeValueGroup<*>) : SpeedBHopBase("Intave14", paren
     private inner class AirBoost(parent: EventListener) : ToggleableValueGroup(parent, "AirBoost", true) {
 
         @Suppress("unused")
-        private val tickHandler = tickHandler {
+        private val tickHandler = handler<GameTickEvent> {
             if (player.deltaMovement.y > 0.003 && player.isSprinting) {
                 player.deltaMovement = player.deltaMovement.multiply(
                     factorX = 1f + (BOOST_CONSTANT * 0.25),

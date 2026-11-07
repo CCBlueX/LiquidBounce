@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatComponentAccessor
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -68,7 +69,7 @@ object AntiSpam : ToggleableValueGroup(ModuleBetterChat, "AntiSpam", true) {
             val text = event.applyChatDecoration.apply(event.textData)
             chatText.add(text)
 
-            val other = mc.gui.hud.chat.allMessages.find {
+            val other = (mc.gui.hud.chat as MixinChatComponentAccessor).allMessages.find {
                 (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
             }
 

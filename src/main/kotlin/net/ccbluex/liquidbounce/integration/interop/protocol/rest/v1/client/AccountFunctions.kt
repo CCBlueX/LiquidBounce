@@ -32,7 +32,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
+import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AccountManagerMessageEvent
@@ -51,7 +51,7 @@ private fun Route.getAccounts() = get {
             addProperty("id", i)
             addProperty("username", profile.name)
             addProperty("uuid", profile.id.toString())
-            addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
+            addProperty("avatar", ApiConfig.formatAvatarUrl(profile.id, profile.name))
             add("bans", interopGson.toJsonTree(account.bans))
             addProperty("type", account.service.tag)
             addProperty("favorite", account.favorite)
@@ -225,7 +225,7 @@ private fun Route.deleteAccount() = delete {
         val profile = account.profile ?: return@apply
         addProperty("username", profile.name)
         addProperty("uuid", profile.id.toString())
-        addProperty("avatar", formatAvatarUrl(profile.id, profile.name))
+        addProperty("avatar", ApiConfig.formatAvatarUrl(profile.id, profile.name))
 
         addProperty("type", account.service.tag)
     })

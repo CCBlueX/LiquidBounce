@@ -26,13 +26,13 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient.request
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
-import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -129,7 +129,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     }
 
     /**
-     * Whether [getNewestRevisionId] has one, without waiting for an install of this item. `false`
+     * Whether [getNewestRevisionId] has one, without waiting for an installation of this item. `false`
      * while an install runs.
      */
     internal suspend fun hasUpdate(): Boolean {
@@ -209,16 +209,16 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             }
         }
 
-        try {
-            withContext(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
+            try {
                 part.deleteRecursively()
                 // TODO: Check checksum
                 request(MarketplaceApi.downloadRevision(id, revisionId), HttpMethod.GET, progressListener = progress)
                     .use { response -> extractZip(response.body.byteStream(), part) }
+                part.rename(unpacked)
+            } finally {
+                part.deleteRecursively()
             }
-            part.rename(unpacked)
-        } finally {
-            part.deleteRecursively()
         }
         return unpacked
     }
@@ -242,7 +242,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             throw e
         }
 
-        itemDir.listFiles { file: File -> file.name.startsWith(".") }?.forEach { it.deleteRecursively() }
+        itemDir.listFiles { file: File -> file.name.startsWith('.') }?.forEach { it.deleteRecursively() }
     }
 
     internal suspend fun reload() {

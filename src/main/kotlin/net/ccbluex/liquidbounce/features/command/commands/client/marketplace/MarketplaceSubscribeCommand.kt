@@ -27,11 +27,14 @@ import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.features.marketplace.installWithDependencies
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
 /**
  * Subscribe to marketplace item
@@ -53,7 +56,7 @@ object MarketplaceSubscribeCommand {
         val itemId = item.id
 
         if (MarketplaceManager.isSubscribed(itemId)) {
-            chat(regular(t("subscribe.alreadySubscribed", variable(itemId.toString()))))
+            chat(regular(t("subscribe.alreadySubscribed", variable(item.address))))
             return
         }
 
@@ -64,12 +67,12 @@ object MarketplaceSubscribeCommand {
             }
 
             installedWith(item)
-        }.getOrElse { e -> throw CommandException(failureText(e, itemId)) }
+        }.getOrElse { e -> throw CommandException(failureText(e, item.address)) }
 
-        chat(regular(t("subscribe.success", variable(itemId.toString()))))
+        chat(regular(t("subscribe.success", variable(item.address))))
         val needed = installed.filter { it.id != itemId }
         if (needed.isNotEmpty()) {
-            chat(regular(t("subscribe.dependencies", variable(needed.joinToString(", ") { it.name }))))
+            chat(regular(t("subscribe.dependencies", needed.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
     }
 
@@ -84,12 +87,12 @@ object MarketplaceSubscribeCommand {
         return installed
     }
 
-    private fun CmdI18n.failureText(e: Throwable, itemId: Int) = if (e is NoCompatibleRevisionException) {
+    private fun CmdI18n.failureText(e: Throwable, address: String) = if (e is NoCompatibleRevisionException) {
         e.unavailable.text()
     } else {
         logger.error("Failed to subscribe to marketplace item", e)
         t("error.installFailed",
-            itemId,
+            variable(address),
             e.message ?: "Unknown error"
         )
     }

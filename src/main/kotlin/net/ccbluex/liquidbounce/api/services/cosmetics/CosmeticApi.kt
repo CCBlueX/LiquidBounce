@@ -19,16 +19,26 @@
 package net.ccbluex.liquidbounce.api.services.cosmetics
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
-import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
+import retrofit2.create
+import retrofit2.http.GET
+import retrofit2.http.Path
 import java.util.UUID
 
-object CosmeticApi : BaseApi(config.apiEndpointV3) {
+object CosmeticApi {
 
-    suspend fun getCarriers() =
-        get<Set<String>>("/cosmetics/carriers")
+    private val service = config.retrofitApiV3.create<Service>()
 
-    suspend fun getCarrierCosmetics(uuid: UUID) =
-        get<Set<Cosmetic>>("/cosmetics/carrier/$uuid")
+    suspend fun getCarriers() = service.carriers()
+
+    suspend fun getCarrierCosmetics(uuid: UUID) = service.carrierCosmetics(uuid.toString())
+
+    internal interface Service {
+        @GET("cosmetics/carriers")
+        suspend fun carriers(): Set<String>
+
+        @GET("cosmetics/carrier/{uuid}")
+        suspend fun carrierCosmetics(@Path("uuid") uuid: String): Set<Cosmetic>
+    }
 
 }

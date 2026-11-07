@@ -46,25 +46,21 @@ import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.ccbluex.liquidbounce.utils.text.asPlayerHead
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
-import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
-import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.contents.ObjectContents
-import net.minecraft.network.chat.contents.objects.PlayerSprite
 import net.minecraft.world.item.component.ResolvableProfile
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
@@ -205,9 +201,8 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
             resolvableProfile.resolveProfile(mc.services().profileResolver).await()
         }
 
-        val playerSpritePart = MutableComponent.create(
-            ObjectContents(PlayerSprite(resolvableProfile, false), optional())
-        ).copyable(copyContent = event.user.uuid.toString())
+        val playerSpritePart = resolvableProfile.asPlayerHead()
+            .copyable(copyContent = event.user.uuid.toString())
 
         fun namePart(formatting: ChatFormatting) =
             event.user.name.asPlainText(

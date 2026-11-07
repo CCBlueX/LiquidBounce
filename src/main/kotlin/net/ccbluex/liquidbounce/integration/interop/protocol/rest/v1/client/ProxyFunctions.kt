@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
-import com.google.gson.JsonArray
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -75,14 +74,14 @@ private fun Route.deleteProxy() = delete {
 
 // GET /api/v1/client/proxies
 private fun Route.getProxies() = get {
-    call.respond(JsonArray().apply {
-        ProxyManager.proxies.forEachIndexed { index, proxy ->
-            add(interopGson.toJsonTree(proxy).asJsonObject.apply {
+    call.respond(
+        ProxyManager.proxies.mapIndexed { index, proxy ->
+            interopGson.toJsonTree(proxy).asJsonObject.apply {
                 addProperty("id", index)
                 addProperty("type", (proxy.type ?: Proxy.Type.SOCKS5).toString())
-            })
+            }
         }
-    })
+    )
 }
 
 // POST /api/v1/client/proxies/add
@@ -94,9 +93,12 @@ private fun Route.postAddProxy() = post {
         val username: String,
         val password: String,
         val type: Proxy.Type,
-        val forwardAuthentication: Boolean
+        val forwardAuthentication: Boolean,
+        val proxyResourcePacks: Boolean,
+        val proxyDns: Boolean
     )
-    val (host, port, username, password, type, forwardAuthentication) = call.receive<ProxyRequest>()
+    val (host, port, username, password, type, forwardAuthentication, proxyResourcePacks, proxyDns) =
+        call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
         call.forbidden("No host")
@@ -106,7 +108,10 @@ private fun Route.postAddProxy() = post {
         call.forbidden("Illegal port")
     }
 
-    ProxyManager.validateProxy(Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication))
+    ProxyManager.validateProxy(Proxy(
+        host, port, Proxy.credentials(username, password), type, forwardAuthentication,
+        proxyResourcePacks, proxyDns
+    ))
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
 
@@ -148,9 +153,12 @@ private fun Route.postEditProxy() = post("/edit") {
         val type: Proxy.Type,
         val username: String,
         val password: String,
-        val forwardAuthentication: Boolean
+        val forwardAuthentication: Boolean,
+        val proxyResourcePacks: Boolean,
+        val proxyDns: Boolean
     )
-    val (id, host, port, type, username, password, forwardAuthentication) = call.receive<ProxyRequest>()
+    val (id, host, port, type, username, password, forwardAuthentication, proxyResourcePacks, proxyDns) =
+        call.receive<ProxyRequest>()
 
     if (host.isBlank()) {
         call.forbidden("No host")
@@ -160,7 +168,10 @@ private fun Route.postEditProxy() = post("/edit") {
         call.forbidden("Illegal port")
     }
 
-    val proxy = Proxy(host, port, Proxy.credentials(username, password), type, forwardAuthentication)
+    val proxy = Proxy(
+        host, port, Proxy.credentials(username, password), type, forwardAuthentication,
+        proxyResourcePacks, proxyDns
+    )
     ProxyManager.validateProxy(proxy, index = id)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }

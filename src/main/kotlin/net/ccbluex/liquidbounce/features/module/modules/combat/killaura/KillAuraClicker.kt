@@ -66,7 +66,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             ignoreOnShieldBreak && ModuleKillAura.targetTracker.target?.wouldBlockHit == true
                 && ModuleAutoWeapon.willShieldBreak -> true
             ignoreOnMaceSmash && ModuleAutoWeapon.willMaceSmash -> true
-            ignoreWhenExitingRange && predictExitingRange(1.0 + ticks.toDouble()) -> true
+            ignoreWhenExitingRange && ticks >= 0 && predictExitingRange(1.0 + ticks.toDouble()) -> true
             else -> false
         }
 

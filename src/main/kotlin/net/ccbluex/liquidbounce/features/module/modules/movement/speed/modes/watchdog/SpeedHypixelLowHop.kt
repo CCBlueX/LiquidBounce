@@ -19,9 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -43,7 +43,7 @@ class SpeedHypixelLowHop(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowH
     private var glide by boolean("Glide", false)
 
     @Suppress("unused")
-    val tickHandler = tickHandler {
+    val tickHandler = handler<GameTickEvent> {
         shouldStrafe = false
 
         if (player.onGround()) {

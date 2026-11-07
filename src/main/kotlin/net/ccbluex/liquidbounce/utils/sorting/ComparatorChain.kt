@@ -18,10 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.sorting
 
-class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<in T>) : Comparator<T> {
+/**
+ * This class is recommended to be used when size of [comparators] is greater than 3.
+ * Or else, [Comparator.then] is a better choice. (It is a linked-chain)
+ */
+class ComparatorChain<T>(private vararg val comparators: Comparator<in T>) : Comparator<T> {
 
     override fun compare(o1: T, o2: T): Int {
-        for (comparisonFunction in this.comparisonFunctions) {
+        for (comparisonFunction in this.comparators) {
             val comparisonResult = comparisonFunction.compare(o1, o2)
 
             if (comparisonResult != 0) {
@@ -32,26 +36,4 @@ class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<in T
         return 0
     }
 
-}
-
-/**
- * false first
- */
-@Deprecated(
-    message = "Use standard compareValuesBy instead",
-    replaceWith = ReplaceWith("compareValuesBy(a, b, cond)"),
-)
-inline fun <T> compareValueByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
-    return compareValuesBy(a, b, cond)
-}
-
-/**
- * false first
- */
-@Deprecated(
-    message = "Use standard compareBy instead",
-    replaceWith = ReplaceWith("compareBy(cond)"),
-)
-inline fun <T> compareByCondition(crossinline cond: (T) -> Boolean): Comparator<T> {
-    return compareBy(cond)
 }

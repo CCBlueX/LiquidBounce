@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -40,7 +40,7 @@ import net.minecraft.world.effect.MobEffects
 class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
     @Suppress("unused")
-    private val afterJumpHandler = tickHandler {
+    private val afterJumpHandler = handler<GameTickEvent> {
         if (player.moving && collidesBottomVertical() && !mc.options.keyJump.isDown) {
             val speedEffect = player.getEffect(MobEffects.SPEED)
             val isAffectedBySpeed = speedEffect != null && speedEffect.amplifier > 0

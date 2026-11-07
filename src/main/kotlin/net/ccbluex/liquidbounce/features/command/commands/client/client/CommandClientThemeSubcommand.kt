@@ -41,8 +41,10 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import java.net.URI
 
@@ -67,7 +69,7 @@ object CommandClientThemeSubcommand {
                         .append(variable(theme.metadata.version))
                         .append(regular(")"))
                         .append(regular(" by "))
-                        .append(variable(theme.metadata.authors.joinToString(separator = ", ")).copyable())
+                        .append(theme.metadata.authors.joinToText(DEFAULT_SEPARATOR) { variable(it).copyable() })
                         .append(regular(" from "))
                         .append(variable(theme.origin.tag))
                     ).onClick(

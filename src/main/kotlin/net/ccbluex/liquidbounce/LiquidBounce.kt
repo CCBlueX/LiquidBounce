@@ -55,7 +55,6 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
-import net.ccbluex.liquidbounce.features.creativetab.tabs.HeadsCreativeModeTab
 import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceItems
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -79,6 +78,8 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
+import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
+import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -93,7 +94,10 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
+import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -192,7 +196,7 @@ object LiquidBounce : EventListener {
      */
     @JvmStatic
     fun resourceToString(path: String): String =
-        resource(path).use { it.bufferedReader().readText() }
+        resource(path).use { it.readText() }
 
     /**
      * Initializes the client, called when
@@ -275,6 +279,8 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         BlinkManager
+        LocalPlayerFallDamageTracker
+        PositionPacketSeparator
         InteractionTracker
         CombatManager
         FriendManager
@@ -289,6 +295,8 @@ object LiquidBounce : EventListener {
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
+        ItemStackListRenderer
+        IndicatorRenderer
 
         AddonManager.discover()
     }
@@ -331,10 +339,6 @@ object LiquidBounce : EventListener {
                 CosmeticService.refreshCarriers(force = true) {
                     logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
                 }
-            }
-            launch {
-                // Download player heads
-                HeadsCreativeModeTab.heads.getFinalState()
             }
             launch {
                 MarketplaceConfigs.refresh()

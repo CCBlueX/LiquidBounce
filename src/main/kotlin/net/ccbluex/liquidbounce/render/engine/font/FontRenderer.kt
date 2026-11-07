@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.MinecraftTextProcessor.RecyclingProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.element.TextRunGuiElementRenderState
-import net.ccbluex.liquidbounce.render.setColor
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.util.ARGB
 import net.minecraft.util.FormattedCharSequence
@@ -66,14 +65,16 @@ class FontRenderer(
      */
     private val quad = FloatArray(8)
 
-    override val height: Float = font.plainStyle.height
+    private val metrics: TextMetrics = font.plainMetrics
 
-    private val ascent: Float = font.plainStyle.ascent
+    override val height: Float = metrics.height
 
-    private val underlineOffset: Float = font.plainStyle.underlineOffset
-    private val underlineThickness: Float = font.plainStyle.underlineThickness
-    private val strikethroughOffset: Float = font.plainStyle.strikethroughOffset
-    private val strikethroughThickness: Float = font.plainStyle.strikethroughThickness
+    private val ascent: Float = metrics.ascent
+
+    private val underlineOffset: Float = metrics.underlineOffset
+    private val underlineThickness: Float = metrics.underlineThickness
+    private val strikethroughOffset: Float = metrics.strikethroughOffset
+    private val strikethroughThickness: Float = metrics.strikethroughThickness
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
@@ -98,7 +99,7 @@ class FontRenderer(
         val processed = MinecraftTextProcessor.process(text, parameters.color)
         val glyphs = resolveGlyphs(processed)
         val scale = parameters.scale
-        val width = getStringWidth(processed, glyphs, parameters.shadow)
+        val width = getStringWidth(glyphs, parameters.shadow)
 
         val x = parameters.horizontalAnchor?.anchorToDrawX(
             x = parameters.x,
@@ -164,8 +165,6 @@ class FontRenderer(
         var underlineStartX: Float = Float.NaN
         var strikeThroughStartX: Float = Float.NaN
 
-        val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
-
         // 2D glyphs join a run of quads per atlas page instead of becoming one element each.
         var run: TextRunGuiElementRenderState? = null
 
@@ -220,11 +219,8 @@ class FontRenderer(
                 }
             }
 
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
-
-            x += layoutInfo.advanceX * scale
-            y += layoutInfo.advanceY * scale
+            x += glyph.renderInfo.advance.advanceX * scale
+            y += glyph.renderInfo.advance.advanceY * scale
         }
 
         if (!underlineStartX.isNaN()) {
@@ -243,32 +239,17 @@ class FontRenderer(
         shadow: Boolean
     ): Float {
         val processed = MinecraftTextProcessor.process(text, Color4b.WHITE)
-        val width = getStringWidth(processed, resolveGlyphs(processed), shadow)
+        val width = getStringWidth(resolveGlyphs(processed), shadow)
 
         MinecraftTextProcessor.TEXT_POOL.recycle(processed)
 
         return width
     }
 
-    private fun getStringWidth(
-        text: RecyclingProcessedText,
-        glyphs: List<GlyphDescriptor>,
-        shadow: Boolean,
-    ): Float {
-        if (text.chars.isEmpty()) {
-            return 0.0f
-        }
-
+    private fun getStringWidth(glyphs: List<GlyphDescriptor>, shadow: Boolean): Float {
         var x = 0.0f
 
-        val fallbackLayoutInfo = this.glyphManager.getFallbackGlyph(this.font).renderInfo.layoutInfo
-
-        text.forEachIndexed { index, processedChar ->
-            val layoutInfo =
-                if (!processedChar.obfuscated) glyphs[index].renderInfo.layoutInfo else fallbackLayoutInfo
-
-            x += layoutInfo.advanceX
-        }
+        glyphs.forEach { x += it.renderInfo.advance.advanceX }
 
         return if (shadow) {
             x + 2.0f
@@ -344,8 +325,8 @@ class FontRenderer(
 
         quad[0] = x + glyphBounds.xMin * scale
         quad[1] = y + glyphBounds.yMin * scale
-        quad[2] = x + (glyphBounds.xMin + atlasLocation.atlasWidth) * scale
-        quad[3] = y + (glyphBounds.yMin + atlasLocation.atlasHeight) * scale
+        quad[2] = x + (glyphBounds.xMin + atlasLocation.pixelWidth) * scale
+        quad[3] = y + (glyphBounds.yMin + atlasLocation.pixelHeight) * scale
 
         val uv = atlasLocation.uvCoordinatesOnTexture
         quad[4] = uv.min.u

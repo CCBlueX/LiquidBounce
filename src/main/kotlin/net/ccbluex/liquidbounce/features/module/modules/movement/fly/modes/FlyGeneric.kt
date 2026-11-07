@@ -127,7 +127,7 @@ internal object FlyCreative : Mode("Creative") {
         return true
     }
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         player.abilities.flyingSpeed =
             if (mc.options.keySprint.isDown && SprintSpeed.enabled) SprintSpeed.speed else speed
 
@@ -202,7 +202,7 @@ internal object FlyExplosion : Mode("Explosion") {
         super.enable()
     }
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (strafeSince > 0) {
             if (!player.onGround()) {
                 player.deltaMovement = player.deltaMovement.withStrafe(speed = strafeSince.toDouble())

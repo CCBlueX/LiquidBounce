@@ -42,8 +42,8 @@ open class Config(name: String, value: MutableCollection<Value<*>> = mutableList
         }
 
     /**
-     * We write to this temp file, we can safely rename [jsonTmpFile] to [jsonFile],
-     * to eliminate any chances of data loss.
+     * Serialization finishes here before [jsonFile] is replaced. The replacement is atomic
+     * when supported by the file system; otherwise it falls back to a replacing move.
      */
     val jsonTmpFile: File
         get() {

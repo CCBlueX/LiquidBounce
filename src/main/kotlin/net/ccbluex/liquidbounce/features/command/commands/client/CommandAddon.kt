@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.joinToText
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
 object CommandAddon : CommandRegistrar {
 
@@ -69,7 +71,7 @@ object CommandAddon : CommandRegistrar {
             return 1
         }
 
-        chat(regular(t("list.addons", variable(addons.joinToString(", ") { "${it.id} (${it.version})" }))))
+        chat(regular(t("list.addons", addons.joinToText(DEFAULT_SEPARATOR) { variable("${it.id} (${it.version})") })))
         reportPendingRestart()
         return 1
     }
@@ -84,7 +86,7 @@ object CommandAddon : CommandRegistrar {
         chat(regular(t("info.state", variable(addon.state.name))))
 
         if (addon.authors.isNotEmpty()) {
-            chat(regular(t("info.authors", variable(addon.authors.joinToString(", ")))))
+            chat(regular(t("info.authors", addon.authors.joinToText(DEFAULT_SEPARATOR, ::variable))))
         }
         if (addon.description.isNotBlank()) {
             chat(regular(t("info.about", variable(addon.description))))
@@ -106,7 +108,7 @@ object CommandAddon : CommandRegistrar {
             return
         }
 
-        chat(regular(t("list.restartRequired", variable(AddonManager.restartReasons.joinToString(", ")))))
+        chat(regular(t("list.restartRequired", AddonManager.restartReasons.joinToText(DEFAULT_SEPARATOR, ::variable))))
     }
 
 }

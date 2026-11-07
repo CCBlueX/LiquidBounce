@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -30,7 +31,7 @@ object InventoryMoveTimerFeature : ToggleableValueGroup(ModuleInventoryMove, "Ti
     private val speed by float("Speed", 1.0f, 0.1f..2.0f)
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_2, ModuleInventoryMove)
         }

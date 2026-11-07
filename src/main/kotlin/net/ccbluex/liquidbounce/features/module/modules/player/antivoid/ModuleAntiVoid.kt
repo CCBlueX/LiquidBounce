@@ -19,8 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
@@ -71,7 +72,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
      * Executes periodically to check if an anti-void action is required, and triggers it if necessary.
      */
     @Suppress("unused")
-    private val voidHandler = tickHandler {
+    private val voidHandler = handler<GameTickEvent> {
         // Analyzes if the player might be falling into the void soon.
         try {
             ShapeFlag.noShapeChange = true
@@ -90,11 +91,11 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
         debugParameter("SafePosition") { ModuleAntiVoid.rescuePosition }
 
         if (mode.activeMode.isExempt || !isLikelyFalling) {
-            return@tickHandler
+            return@handler
         }
 
         if (ModuleAntiVoid.rescuePosition == null) {
-            return@tickHandler
+            return@handler
         }
 
         val boundingBox = player.boundingBox.setMinY(voidThreshold.toDouble())

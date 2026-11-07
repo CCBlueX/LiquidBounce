@@ -246,7 +246,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
+    private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private object SimulatePlacementAttempts : ToggleableValueGroup(this, "SimulatePlacementAttempts", false) {
         val clicker = tree(Clicker(ModuleScaffold, mc.options.keyUse, null, maxCps = 100))

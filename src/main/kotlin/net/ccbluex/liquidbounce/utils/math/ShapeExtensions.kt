@@ -52,8 +52,22 @@ fun Iterable<VoxelShape>.anyNotEmpty(): Boolean = any { !it.isEmpty }
  */
 fun VoxelShape.boundsOrNull(): AABB? = if (isEmpty) null else bounds()
 
-fun VoxelShape.distanceToSqr(position: Vec3): Double =
-    this.closestPointTo(position).orElse(null)?.distanceToSqr(position) ?: Double.POSITIVE_INFINITY
+/**
+ * @see VoxelShape.closestPointTo
+ */
+fun VoxelShape.distanceToSqr(position: Vec3): Double {
+    if (this.isEmpty) return Double.POSITIVE_INFINITY
+
+    var distSqr = Double.POSITIVE_INFINITY
+    this.forAllBoxes { x1, y1, z1, x2, y2, z2 ->
+        val x = Math.clamp(position.x, x1, x2)
+        val y = Math.clamp(position.y, y1, y2)
+        val z = Math.clamp(position.z, z1, z2)
+        val currentDistSqr = position.distanceToSqr(x, y, z)
+        if (distSqr > currentDistSqr) distSqr = currentDistSqr
+    }
+    return distSqr
+}
 
 private val AABB_BIGGER_FIRST = Comparator.comparingDouble(AABB::getSize).reversed()
 

@@ -33,10 +33,13 @@ import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
+import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import java.time.LocalDate
@@ -103,10 +106,10 @@ private fun CmdI18n.vote(item: MarketplaceItem, works: Boolean): MutableComponen
 /**
  * The protocol the config was made on, green when it is the one in use and red when it is not.
  */
-internal fun protocolText(item: MarketplaceItem): MutableComponent? {
+internal fun protocolText(item: MarketplaceItem): Component? {
     val name = item.protocolName ?: return null
     val matches = item.protocolVersion == null || item.protocolVersion == protocolVersion.version
-    return name.asText().withStyle(if (matches) ChatFormatting.GREEN else ChatFormatting.RED)
+    return name.asPlainText(if (matches) ChatFormatting.GREEN else ChatFormatting.RED)
 }
 
 private const val DAYS_PER_WEEK = 7
@@ -138,9 +141,9 @@ internal fun CmdI18n.ago(dateTime: String): MutableComponent {
  */
 internal fun CmdI18n.details(item: MarketplaceItem): MutableComponent? {
     val parts = listOfNotNull(
-        item.targetServers?.takeIf { it.isNotEmpty() }?.let { variable(it.joinToString(", ")) },
+        item.targetServers?.takeIf { it.isNotEmpty() }?.joinToText(DEFAULT_SEPARATOR, ::variable),
         protocolText(item),
-        item.tags?.takeIf { it.isNotEmpty() }?.let { tags -> regular(tags.joinToString(", ") { it.name }) },
+        item.tags?.takeIf { it.isNotEmpty() }?.let { tags -> tags.joinToText(DEFAULT_SEPARATOR) { regular(it.name) } },
         item.updatedAt?.let { regular(t("list.updated", ago(it))) },
     )
     if (parts.isEmpty()) {
