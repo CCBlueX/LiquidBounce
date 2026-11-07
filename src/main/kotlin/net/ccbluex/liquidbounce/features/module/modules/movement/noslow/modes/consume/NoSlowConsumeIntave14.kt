@@ -31,7 +31,10 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  * tested on mineblaze.net
  */
 
-internal class NoSlowConsumeIntave14(override val parent: ModeValueGroup<*>) : Mode("Intave14") {
+internal class NoSlowConsumeIntave14(override val parent: ModeValueGroup<*>) : Mode(
+    "Intave-14.8.4",
+    aliases = listOf("Intave14"),
+) {
     private val mode by enumChoice("Mode", Mode.RELEASE)
 
     private fun releasePacket() {

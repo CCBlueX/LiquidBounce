@@ -41,7 +41,10 @@ import kotlin.math.floor
  * @anticheatVersion 30.06.2024
  * @testedOn cubecraft.net
  */
-class SpeedSentinelDamage(override val parent: ModeValueGroup<*>) : Mode("SentinelDamage") {
+class SpeedSentinelDamage(override val parent: ModeValueGroup<*>) : Mode(
+    "CubeCraft-2024-06-30",
+    aliases = listOf("SentinelDamage"),
+) {
 
     private val speed by float("Speed", 0.5f, 0.1f..5f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)

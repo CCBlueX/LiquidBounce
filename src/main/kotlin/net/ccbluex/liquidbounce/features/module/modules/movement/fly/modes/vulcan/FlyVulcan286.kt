@@ -43,7 +43,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn localhost
  * @note ONLY WORKS ON 1.13+ SERVERS
  */
-internal object FlyVulcan286 : Mode("Vulcan286-113") {
+internal object FlyVulcan286 : Mode("Vulcan-2.8.6-MC1.13", aliases = listOf("Vulcan286-113")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

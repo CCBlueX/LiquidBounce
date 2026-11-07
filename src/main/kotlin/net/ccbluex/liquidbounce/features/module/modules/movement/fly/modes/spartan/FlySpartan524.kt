@@ -34,7 +34,7 @@ import kotlin.math.sin
  * @testedOn minecraft.vagdedes.com
  * @note spartan flags less if your motion is stable, that's why we use PlayerMoveEvent
  */
-internal object FlySpartan524 : Mode("Spartan524") {
+internal object FlySpartan524 : Mode("Spartan-Phase524", aliases = listOf("Spartan524")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

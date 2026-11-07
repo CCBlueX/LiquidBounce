@@ -33,7 +33,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  *
  * @author XeContrast
  */
-internal object NoFallGrim2371 : NoFallMode("Grim2371-1.9+") {
+internal object NoFallGrim2371 : NoFallMode("Grim-2.3.71-MC1.9", aliases = listOf("Grim2371-1.9+")) {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {

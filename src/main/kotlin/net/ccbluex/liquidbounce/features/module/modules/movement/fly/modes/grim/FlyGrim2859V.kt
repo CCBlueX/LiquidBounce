@@ -37,7 +37,7 @@ import net.minecraft.world.phys.Vec3
  * @testedOn eu.loyisa.cn
  * @note Slow on high ping
  */
-internal object FlyGrim2859V : Mode("Grim2859-V") {
+internal object FlyGrim2859V : Mode("Grim-2.3.59", aliases = listOf("Grim2859-V")) {
 
     private val toggle by int("Toggle", 0, 0..100)
     private val timer by float("Timer", 0.446f, 0.1f..1f)

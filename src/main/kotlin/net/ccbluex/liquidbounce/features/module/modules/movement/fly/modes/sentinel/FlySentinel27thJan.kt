@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Thanks to icewormy3
  */
-internal object FlySentinel27thJan : Mode("Sentinel27thJan") {
+internal object FlySentinel27thJan : Mode("CubeCraft-2024-01-27", aliases = listOf("Sentinel27thJan")) {
 
     private val horizontalSpeed by floatRange("HorizontalSpeed", 0.33f..0.34f, 0.1f..1f)
 

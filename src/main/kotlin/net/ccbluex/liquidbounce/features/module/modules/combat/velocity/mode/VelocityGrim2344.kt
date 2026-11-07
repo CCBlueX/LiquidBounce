@@ -38,7 +38,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  *
  * https://github.com/GrimAnticheat/Grim/issues/1133
  */
-internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
+internal object VelocityGrim2344 : VelocityMode("Grim-2.3.44-MC1.17", aliases = listOf("Grim2344-117")) {
 
     private var alternativeBypass by boolean("AlternativeBypass", true)
 

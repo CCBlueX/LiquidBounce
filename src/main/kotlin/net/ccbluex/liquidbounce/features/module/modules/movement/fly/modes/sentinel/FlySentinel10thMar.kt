@@ -40,7 +40,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  *
  * Thanks to icewormy3
  */
-internal object FlySentinel10thMar : Mode("Sentinel10thMar") {
+internal object FlySentinel10thMar : Mode("CubeCraft-2024-03-10", aliases = listOf("Sentinel10thMar")) {
 
     private val jumpHeight by float("Height", 0.42f, 0.1f..1f)
     private val jumpSpeed by float("Speed", 0.35f, 0.1f..1f)

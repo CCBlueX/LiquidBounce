@@ -35,7 +35,7 @@ import net.minecraft.world.phys.Vec3
  * @anticheatVersion 2.8.9
  * @testedOn anticheat-test.com, eu.loyisa.cn
  */
-internal object VulcanLongJump : Mode("Vulcan289") {
+internal object VulcanLongJump : Mode("Vulcan-2.8.9", aliases = listOf("Vulcan289")) {
 
     override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode

@@ -28,7 +28,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @testedOn minecraft.vagdedes.com
  * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
  */
-internal object NoFallSpartan524Flag : NoFallMode("Spartan524Flag") {
+internal object NoFallSpartan524Flag : NoFallMode("Spartan-Phase524", aliases = listOf("Spartan524Flag")) {
 
     val repeatable = tickHandler {
         if (player.fallDistance > 2f) {

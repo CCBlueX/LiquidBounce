@@ -41,7 +41,7 @@ import net.minecraft.world.phys.Vec3
  * @note Few seconds cooldown to not flag. Requires 1.8 serverside
  * @author Nullable
  */
-internal object FlyVulcan286Teleport : Mode("Vulcan286-Teleport-18") {
+internal object FlyVulcan286Teleport : Mode("Vulcan-2.8.6-Teleport-MC1.8", aliases = listOf("Vulcan286-Teleport-18")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

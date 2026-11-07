@@ -32,7 +32,7 @@ import java.util.UUID
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : AntiBotMode("IntaveHeavy") {
+object IntaveHeavyAntiBotMode : AntiBotMode("Intave-2022-07-28", aliases = listOf("IntaveHeavy")) {
 
     private val suspectList = hashMapOf<UUID, SuspectInfo>()
     private val botList = objectHashSetOf<UUID>()

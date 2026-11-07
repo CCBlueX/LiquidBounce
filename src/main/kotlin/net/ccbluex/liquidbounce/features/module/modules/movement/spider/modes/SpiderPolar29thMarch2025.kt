@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.math.shrink
  * @testedOn pika.host
  * @anticheat Polar
  */
-internal object SpiderPolar29thMarch2025 : Mode("Polar-29.03.2025") {
+internal object SpiderPolar29thMarch2025 : Mode("Polar-2025-03-29", aliases = listOf("Polar-29.03.2025")) {
 
     override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes

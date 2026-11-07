@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
  * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
  * @testedOn eu.loyisa.cn
  */
-internal object NoCheatPlusBoost : Mode("NoCheatPlusBoost") {
+internal object NoCheatPlusBoost : Mode("NCP-3.16.1-Boost", aliases = listOf("NoCheatPlusBoost")) {
     override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 

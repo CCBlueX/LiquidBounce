@@ -37,7 +37,11 @@ import net.minecraft.world.effect.MobEffects
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase("VulcanGround286", parent) {
+class SpeedVulcanGround286(parent: ModeValueGroup<*>) : SpeedBHopBase(
+    "Vulcan-2.8.6-Ground",
+    parent,
+    listOf("VulcanGround286"),
+) {
 
     @Suppress("unused")
     private val afterJumpHandler = handler<GameTickEvent> {

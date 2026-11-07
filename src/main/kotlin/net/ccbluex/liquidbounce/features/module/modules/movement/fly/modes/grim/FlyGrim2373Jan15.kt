@@ -40,7 +40,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
  *   January 15, 2026
  * @testedOn test.ccbluex.net
  */
-object FlyGrim2373Jan15 : Mode("Grim2373Jan15") {
+object FlyGrim2373Jan15 : Mode("Grim-2.3.73", aliases = listOf("Grim2373Jan15")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import kotlin.random.Random
 
-object VelocityIntave : VelocityMode("Intave") {
+object VelocityIntave : VelocityMode("Intave-2026-10-02", aliases = listOf("Intave")) {
 
     private class ReduceOnAttack(parent: EventListener?) : ToggleableValueGroup(
         parent, "ReduceOnAttack",
