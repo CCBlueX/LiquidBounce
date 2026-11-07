@@ -64,7 +64,9 @@ class LiquidChatClient(private val allowMessages: () -> Boolean) {
     private val client = AxochatClient(
         URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.liquidbounce.net:7886/ws")),
         // the certificate of the chat server expired years ago
-        HttpClient.defaultClient.newBuilder().sslSocketFactory(trustingContext().socketFactory, TrustingManager).build(),
+        HttpClient.defaultClient.newBuilder()
+            .sslSocketFactory(trustingContext().socketFactory, TrustingManager)
+            .build(),
         malformed = { logger.warn("Malformed LiquidChat packet: {}", it.take(MALFORMED_LOG_LENGTH)) },
     )
 
