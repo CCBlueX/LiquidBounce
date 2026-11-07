@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import java.time.Instant
@@ -41,9 +42,7 @@ object ChatNotices : EventListener {
 
     private fun t(key: String, vararg args: Any?) = translation("liquidbounce.liquidchat.$key", *args)
 
-    private fun notice(vararg parts: Component) = GlobalSettingsClientChat.notice(
-        Component.empty().apply { parts.forEach(::append) }
-    )
+    private fun notice(vararg parts: Component) = GlobalSettingsClientChat.notice(parts.asText())
 
     private fun formatTime(millis: Long): String = timeFormat.format(Instant.ofEpochMilli(millis))
 

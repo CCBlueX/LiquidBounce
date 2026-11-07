@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.plus
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
@@ -59,7 +60,7 @@ object ChatMessageFormat {
             && channel.startsWith(ChatSession.USER_PREFIX)) {
             val receiver = channel.removePrefix(ChatSession.USER_PREFIX)
             val name = ChatSession.userOf(receiver)?.let { displayName(it, ChatFormatting.BLUE) }
-                ?: Component.literal(ChatSession.nameOf(receiver)).withStyle(ChatFormatting.BLUE)
+                ?: ChatSession.nameOf(receiver).asPlainText(ChatFormatting.BLUE)
             return directMessagePrefix(name)
         }
 
@@ -120,11 +121,11 @@ object ChatMessageFormat {
         return bracketed("[", name.asPlainText(color), "] ")
     }
 
-    private fun bracketed(open: String, name: Component, close: String) = listOf(
+    private fun bracketed(open: String, name: Component, close: String) = textOf(
         open.asPlainText(ChatFormatting.DARK_GRAY),
         name,
         close.asPlainText(ChatFormatting.DARK_GRAY),
-    ).asText()
+    )
 
     fun directMessagePrefix(receiver: Component) = bracketed("[→ ", receiver, "] ")
 

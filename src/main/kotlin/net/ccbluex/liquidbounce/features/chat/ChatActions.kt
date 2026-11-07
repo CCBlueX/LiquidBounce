@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.text.buildText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
@@ -44,14 +45,15 @@ object ChatActions {
      * Direct messages are between LiquidBounce Accounts only.
      */
     fun userActions(user: UserRef) {
-        val actions = mutableListOf<Component>()
-        if (user.isAccount && ChatSession.isAccount) {
-            actions += suggestion(t("action.message"), ChatFormatting.AQUA, "lc msg ${user.name} ")
-        }
-        actions += suggestion(t("action.report"), ChatFormatting.YELLOW, "lc report ${user.name} ")
-        GlobalSettingsClientChat.notice(Component.empty().append(ChatMessageFormat.displayName(user)).apply {
-            actions.forEach(::append)
-        })
+        GlobalSettingsClientChat.notice(
+            buildText {
+                this += ChatMessageFormat.displayName(user)
+                if (user.isAccount && ChatSession.isAccount) {
+                    this += suggestion(t("action.message"), ChatFormatting.AQUA, "lc msg ${user.name} ")
+                }
+                this += suggestion(t("action.report"), ChatFormatting.YELLOW, "lc report ${user.name} ")
+            }
+        )
     }
 
 }
