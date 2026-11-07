@@ -71,6 +71,7 @@ class NavigationTerrain(
     private val states = Long2ObjectOpenHashMap<BlockState>()
     private val shapes = Long2ObjectOpenHashMap<VoxelShape>()
     private val stands = Long2DoubleOpenHashMap()
+    private val crouchStands = Long2DoubleOpenHashMap()
 
     /**
      * Collision shapes of the closed blocks that count as open.
@@ -83,7 +84,7 @@ class NavigationTerrain(
 
     fun box(feet: Vec3): AABB = box(feet.x, feet.y, feet.z)
 
-    fun box(x: Double, y: Double, z: Double) =
+    fun box(x: Double, y: Double, z: Double, height: Double = this.height) =
         AABB(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth)
 
     /**
@@ -206,6 +207,20 @@ class NavigationTerrain(
     fun isStandable(feet: BlockPos) = !standHeight(feet.x, feet.y, feet.z).isNaN()
 
     /**
+     * Like [standHeight] for a crouching player, who also fits under a ceiling [CROUCH_HEIGHT] above the feet.
+     */
+    fun crouchHeight(x: Int, y: Int, z: Int): Double {
+        val key = BlockPos.asLong(x, y, z)
+        if (crouchStands.containsKey(key)) {
+            return crouchStands.get(key)
+        }
+
+        val height = computeStandHeight(x, y, z, minOf(height, CROUCH_HEIGHT))
+        crouchStands.put(key, height)
+        return height
+    }
+
+    /**
      * Where the feet rest when standing in [node], or null when the player cannot stand there.
      */
     fun feet(node: BlockPos): Vec3? {
@@ -324,6 +339,10 @@ class NavigationTerrain(
                 stands.remove(standKey)
                 cached = true
             }
+            if (crouchStands.containsKey(standKey)) {
+                crouchStands.remove(standKey)
+                cached = true
+            }
         }
 
         return cached
@@ -348,9 +367,10 @@ class NavigationTerrain(
         shapes.clear()
         stands.clear()
         closed.clear()
+        crouchStands.clear()
     }
 
-    private fun computeStandHeight(x: Int, y: Int, z: Int): Double {
+    private fun computeStandHeight(x: Int, y: Int, z: Int, bodyHeight: Double = height): Double {
         if (y > maxY || !isKnown(x, y, z) || !isKnown(x, y - 1, z)) {
             return Double.NaN
         }
@@ -362,7 +382,7 @@ class NavigationTerrain(
         }
 
         val top = if (below === FULL && at.isEmpty) y.toDouble() else partialTop(below, at, y)
-        return if (top.isNaN() || !isClear(box(x + 0.5, top, z + 0.5))) Double.NaN else top
+        return if (top.isNaN() || !isClear(box(x + 0.5, top, z + 0.5, bodyHeight))) Double.NaN else top
     }
 
     private fun partialTop(below: VoxelShape, at: VoxelShape, y: Int): Double {
@@ -420,6 +440,11 @@ class NavigationTerrain(
     companion object {
         const val PLAYER_WIDTH = 0.6
         const val PLAYER_HEIGHT = 1.8
+
+        /**
+         * Height of a crouching player.
+         */
+        const val CROUCH_HEIGHT = 1.5
 
         /**
          * Highest ledge the player walks onto without jumping.

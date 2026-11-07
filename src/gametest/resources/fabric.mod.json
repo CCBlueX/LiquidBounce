@@ -21,6 +21,7 @@
       "net.ccbluex.liquidbounce.gametest.WalkNavigationGameTest",
       "net.ccbluex.liquidbounce.gametest.AutoWalkGameTest",
       "net.ccbluex.liquidbounce.gametest.AutoWalkStagesGameTest",
+      "net.ccbluex.liquidbounce.gametest.WalkSneakGameTest",
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest"

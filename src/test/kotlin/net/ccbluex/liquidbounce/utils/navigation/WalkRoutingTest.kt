@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkMove
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
+import net.ccbluex.liquidbounce.utils.navigation.walk.isStraightWalkable
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Block
@@ -39,8 +40,10 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.DoorBlock
 import net.minecraft.world.level.block.FenceGateBlock
 import net.minecraft.world.level.block.LadderBlock
+import net.minecraft.world.level.block.SlabBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf
+import net.minecraft.world.level.block.state.properties.SlabType
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.test.Test
@@ -262,6 +265,56 @@ class WalkRoutingTest {
             val breaks = result.value.steps.flatMap { it.breaks }
             assertTrue(breaks.none { world.getBlockState(it.above()).`is`(Blocks.GRAVEL) })
         }
+    }
+
+    @Test
+    fun `gaps one and a half blocks high are crouched through`() {
+        val slab = Blocks.STONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP)
+        val world = TestNavigationWorld.flat()
+            .fill(5, 1, -20, 5, 3, 20)
+            .set(5, 1, 0, AIR)
+            .set(5, 2, 0, slab)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+
+        val gap = BlockPos(5, 1, 0)
+        val crouched = path.steps.filter { it.from == gap || it.to == gap }
+        assertEquals(2, crouched.size, "the path should lead through the gap")
+        assertTrue(crouched.all { it.sneak })
+        assertTrue(path.steps.none { it.sneak && it.from != gap && it.to != gap })
+    }
+
+    @Test
+    fun `gaps one block high are walked around`() {
+        val world = TestNavigationWorld.flat()
+            .fill(5, 1, -20, 5, 3, 20)
+            .set(5, 1, 0, AIR)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+
+        assertTrue(path.steps.none { it.to == BlockPos(5, 1, 0) })
+    }
+
+    @Test
+    fun `narrow bridges over deep drops are walked sneaking`() {
+        // Two platforms ten blocks over the ground, joined by a bridge one block wide.
+        val world = TestNavigationWorld.flat()
+            .fill(-3, 10, -3, 0, 10, 3)
+            .fill(1, 10, 0, 8, 10, 0)
+            .fill(9, 10, -3, 12, 10, 3)
+        val path = completePath(search(world, feet(-2, 11, 0), BlockPos(11, 11, 0)))
+
+        val bridge = path.steps.filter { it.to.x in 1..8 }
+        assertTrue(bridge.isNotEmpty() && bridge.all { it.sneak })
+        assertFalse(path.steps.first().sneak, "the middle of a platform is no edge")
+        assertTrue(path.steps.all { it.to.y == 11 })
+    }
+
+    @Test
+    fun `straight walks along deep drops are refused`() {
+        val high = TestNavigationWorld.flat().fill(0, 10, 0, 10, 10, 0)
+        assertFalse(isStraightWalkable(high.terrain(), feet(0, 11, 0), feet(10, 11, 0), 0.5, safeFall = 3))
+
+        val low = TestNavigationWorld.flat().fill(0, 1, 0, 10, 1, 0)
+        assertTrue(isStraightWalkable(low.terrain(), feet(0, 2, 0), feet(10, 2, 0), 0.5, safeFall = 3))
     }
 
     @Test

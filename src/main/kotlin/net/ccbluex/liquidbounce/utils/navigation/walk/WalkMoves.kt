@@ -25,6 +25,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.FallingBlock
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -80,7 +81,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     private var canJump = true
 
     fun isNode(x: Int, y: Int, z: Int) =
-        !terrain.standHeight(x, y, z).isNaN() || isWater(x, y, z) || isClimb(x, y, z)
+        !terrain.standHeight(x, y, z).isNaN() || isWater(x, y, z) || isClimb(x, y, z) || isCrouch(x, y, z)
 
     fun feet(pos: BlockPos) = Vec3(pos.x + 0.5, height(pos.x, pos.y, pos.z), pos.z + 0.5)
 
@@ -92,7 +93,10 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         forEach(from) { target, move, cost, breaks, places, opens ->
             val current = best
             if (target == to && (current == null || cost < current.cost)) {
-                best = WalkStep(from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost)
+                best = WalkStep(
+                    from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost,
+                    isSneaking(from, to, move),
+                )
             }
         }
         return best
@@ -113,6 +117,11 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         origin = node
         originHeight = height
         originStands = stands
+        if (isCrouch(x, y, z)) {
+            crouchMoves(node, height, sink)
+            return
+        }
+
         val floor = floorBlock(x, z, height)
         fromFloor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
         canJump = water || climb || floor.jumpFactor >= 1f
@@ -163,6 +172,12 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
             }
 
             isClimb(tx, y, tz) -> emit(tx, y, tz, WalkMove.TRAVERSE, walking(wet, tx, tz, y.toDouble()), sink)
+            isCrouch(tx, y, tz) -> {
+                if (terrain.crouchHeight(tx, y, tz) - height <= NavigationTerrain.STEP) {
+                    emit(tx, y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK, sink)
+                }
+            }
+
             else -> traverseChanging(from, height, standing, tx, tz, wet, sink)
         }
     }
@@ -430,6 +445,62 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         }
     }
 
+    /**
+     * Level moves out of a gap only a crouching player fits, where there is no room to jump.
+     */
+    private fun crouchMoves(from: BlockPos, height: Double, sink: MoveSink) {
+        begin()
+        for (i in 0 until 4) {
+            val tx = from.x + DX[i]
+            val tz = from.z + DZ[i]
+            val top = terrain.standHeight(tx, from.y, tz).takeUnless { it.isNaN() }
+                ?: terrain.crouchHeight(tx, from.y, tz)
+            if (!top.isNaN() && top - height <= NavigationTerrain.STEP) {
+                emit(tx, from.y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK, sink)
+            }
+        }
+    }
+
+    /**
+     * Whether the move has to be made sneaking: into, through or out of a gap only a crouching player fits, or
+     * walking level past a drop the player does not survive.
+     */
+    private fun isSneaking(from: BlockPos, to: BlockPos, move: WalkMove): Boolean {
+        if (isCrouch(from.x, from.y, from.z) || isCrouch(to.x, to.y, to.z)) {
+            return true
+        }
+        if (move != WalkMove.TRAVERSE && move != WalkMove.DIAGONAL ||
+            isWater(from.x, from.y, from.z) || isWater(to.x, to.y, to.z)) {
+            return false
+        }
+
+        val fromHeight = height(from.x, from.y, from.z)
+        val toHeight = height(to.x, to.y, to.z)
+        // Sneaking stops at every ledge higher than a step, the ones the move goes down included.
+        if (abs(toHeight - fromHeight) > NavigationTerrain.STEP) {
+            return false
+        }
+
+        return isNearDrop(from.x, from.y, from.z, fromHeight) || isNearDrop(to.x, to.y, to.z, toHeight)
+    }
+
+    /**
+     * Whether a player standing in [x] [y] [z] with the feet at [height] can walk off a side into a fall it does not
+     * survive.
+     */
+    private fun isNearDrop(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in 0 until 4) {
+            val nx = x + DX[i]
+            val nz = z + DZ[i]
+            val open = terrain.isPassable(nx, y, nz) && terrain.isPassable(nx, y + 1, nz) &&
+                floorTop(nx, y, nz).isNaN() && !terrain.isWater(nx, y, nz)
+            if (open && landing(nx, y - 1, nz, height) == null) {
+                return true
+            }
+        }
+        return false
+    }
+
     private fun begin() {
         breaks.clear()
         places.clear()
@@ -528,6 +599,10 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
     private fun isClimb(x: Int, y: Int, z: Int) = terrain.isClimbable(x, y, z) && isBodyClear(x, y, z)
 
+    private fun isCrouch(x: Int, y: Int, z: Int) =
+        terrain.standHeight(x, y, z).isNaN() && !terrain.crouchHeight(x, y, z).isNaN() &&
+            !terrain.isWater(x, y, z) && !terrain.isClimbable(x, y, z)
+
     private fun isBodyClear(x: Int, y: Int, z: Int) = terrain.isClear(terrain.box(x + 0.5, y.toDouble(), z + 0.5))
 
     private fun isColumnPassable(x: Int, fromY: Int, toY: Int, z: Int): Boolean {
@@ -549,6 +624,10 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         }
         if (isWater(x, y, z) || isClimb(x, y, z)) {
             return y.toDouble()
+        }
+        val crouch = terrain.crouchHeight(x, y, z)
+        if (!crouch.isNaN()) {
+            return crouch
         }
 
         val floor = floorTop(x, y, z)

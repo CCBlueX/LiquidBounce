@@ -88,6 +88,12 @@ class WalkStep(
      * Estimated duration in ticks.
      */
     val cost: Double,
+
+    /**
+     * Whether the move is made sneaking: through a gap only a crouching player fits, or past a drop the player must
+     * not fall down.
+     */
+    val sneak: Boolean = false,
 )
 
 /**
@@ -156,6 +162,7 @@ object WalkCosts {
     const val SWIM = 20.0 / 2.2
     const val CLIMB_UP = 20.0 / 2.35
     const val CLIMB_DOWN = 20.0 / 3.0
+    const val SNEAK = 20.0 / 1.295
     const val PLACE = 20.0
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0

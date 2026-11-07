@@ -210,7 +210,8 @@ class WalkNavigator(
         }
 
         if (player.onGround()) {
-            straight = isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius)
+            val terrain = NavigationTerrain(LiveWorld(world))
+            straight = isStraightWalkable(terrain, position, goal, radius, walkSettings.safeFall)
             direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
         }
 
@@ -319,7 +320,8 @@ class WalkNavigator(
         }
 
         val ahead = position.add(delta.scale(min(HEADWAY, length) / length))
-        return isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, ahead, HEADWAY_TOLERANCE)
+        val terrain = NavigationTerrain(LiveWorld(world))
+        return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, walkSettings.safeFall)
     }
 
     /**

@@ -59,6 +59,15 @@ class WalkSettings(
         get() = pathRange.toDouble()
 
     /**
+     * Highest drop onto ground, in blocks. MaxFall counts on top of a safe fall distance raised above the vanilla one.
+     */
+    val safeFall: Int
+        get() {
+            val safeFallDistance = floor(player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)).toInt()
+            return maxFall + max(0, safeFallDistance - VANILLA_SAFE_FALL)
+        }
+
+    /**
      * Captures the abilities for one search. Call on the render thread; the result is safe to read from any thread.
      */
     fun capture(avoid: LongSet): WalkAbilities {
@@ -71,16 +80,13 @@ class WalkSettings(
             0
         }
 
-        val safeFallDistance = floor(player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)).toInt()
-
         return WalkAbilities(
             canBreak = allowBreak,
             canPlace = allowPlace && placeableBlocks > 0,
             placeableBlocks = placeableBlocks,
             canParkour = allowParkour,
             canSprint = player.foodData.foodLevel > MIN_SPRINT_FOOD,
-            // MaxFall counts on top of a safe fall distance raised above the vanilla one.
-            safeFall = maxFall + max(0, safeFallDistance - VANILLA_SAFE_FALL),
+            safeFall = safeFall,
             waterFall = WATER_FALL,
             breakTicks = if (allowBreak) BreakTimes.capture() else { _ -> Double.POSITIVE_INFINITY },
             avoid = LongOpenHashSet(avoid),

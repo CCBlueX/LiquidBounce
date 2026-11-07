@@ -251,8 +251,8 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
         target = feet
         event.directionalInput = centerInput(position, feet, frameYaw)
-        event.sneak = false
-        sprint = true
+        event.sneak = step.sneak
+        sprint = !step.sneak
 
         event.jump = when (step.move) {
             WalkMove.PARKOUR -> onGround && wouldLeaveGround(event.directionalInput, frameYaw)
@@ -266,7 +266,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
             }
         }
 
-        isPlainWalk = step.move == WalkMove.TRAVERSE || step.move == WalkMove.DIAGONAL
+        isPlainWalk = (step.move == WalkMove.TRAVERSE || step.move == WalkMove.DIAGONAL) && !step.sneak
     }
 
     private fun centerInput(position: Vec3, feet: Vec3, frameYaw: Float): DirectionalInput =
