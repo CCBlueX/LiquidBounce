@@ -193,6 +193,17 @@ class WalkRoutingTest {
     }
 
     @Test
+    fun `leaning over the corner of a bridge, the path starts on the block holding the player`() {
+        // A bridge eight blocks up ending at x 5; the feet hang past its corner, held by the last block.
+        val world = TestNavigationWorld.flat().fill(0, 8, -1, 4, 8, 1).set(5, 8, 0, TestNavigationWorld.STONE)
+        val start = Vec3(6.29, 9.0, 1.29)
+
+        val path = completePath(search(world, start, BlockPos(9, 9, 0), abilities(canPlace = true)))
+        assertEquals(BlockPos(5, 9, 0), path.steps.first().from)
+        assertTrue(path.steps.all { it.to.y == 9 }, "the path leaves the bridge height: ${path.steps}")
+    }
+
+    @Test
     fun `three block cliffs are pillared up`() {
         val world = TestNavigationWorld.flat().fill(3, 1, -40, 40, 3, 40)
         val path = completePath(search(world, feet(0, 1, 0), BlockPos(6, 4, 0), abilities(canPlace = true)))

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -96,7 +97,7 @@ class WalkRouteSearch(
 
     /**
      * The block containing the feet, or the one above or below when the player stands on a partial block or is
-     * between blocks.
+     * between blocks, or the one beside whose edge holds the player up, as when leaning over it while bridging.
      */
     private fun startNode(): BlockPos {
         val node = BlockPos.containing(start)
@@ -104,8 +105,28 @@ class WalkRouteSearch(
             moves.isNode(node.x, node.y, node.z) -> node
             moves.isNode(node.x, node.y + 1, node.z) -> node.above()
             moves.isNode(node.x, node.y - 1, node.z) -> node.below()
-            else -> node
+            else -> heldBy(node) ?: node
         }
+    }
+
+    /**
+     * The node beside [node] under the player's footprint closest to the feet, if any.
+     */
+    private fun heldBy(node: BlockPos): BlockPos? {
+        var best: BlockPos? = null
+        var bestDistance = Double.MAX_VALUE
+        for (x in Mth.floor(start.x - HALF_WIDTH)..Mth.floor(start.x + HALF_WIDTH)) {
+            for (z in Mth.floor(start.z - HALF_WIDTH)..Mth.floor(start.z + HALF_WIDTH)) {
+                val dx = x + 0.5 - start.x
+                val dz = z + 0.5 - start.z
+                val distance = dx * dx + dz * dz
+                if ((x != node.x || z != node.z) && distance < bestDistance && moves.isNode(x, node.y, z)) {
+                    best = BlockPos(x, node.y, z)
+                    bestDistance = distance
+                }
+            }
+        }
+        return best
     }
 
     private fun continueSearch(search: AStarSearch<BlockPos>): RouteResult<WalkPath> {
@@ -168,6 +189,7 @@ class WalkRouteSearch(
 
     private companion object {
         const val MIN_PROGRESS = 1.0
+        const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
     }
 
 }
