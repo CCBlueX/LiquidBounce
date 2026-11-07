@@ -320,17 +320,6 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             PreferStackSize.PREFER_MORE,
             PreferAverageHardBlocks(neutralRange = false),
         )
-    @JvmField
-    val BLOCK_COMPARATOR_FOR_INVENTORY =
-        ComparatorChain(
-            PreferFavourableBlocks,
-            PreferSolidBlocks,
-            PreferFullCubeBlocks,
-            PreferWalkableBlocks,
-            PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.PREFER_FEWER,
-            PreferAverageHardBlocks(neutralRange = false),
-        )
 
     override fun onEnabled() {
         // Placement Y is the Y coordinate of the block below the player
