@@ -34,7 +34,7 @@ import kotlin.math.sqrt
 
 /**
  * A survival player walks through a course with the walking navigation: around a wall, through a closed room,
- * across a gap in the air and up a cliff, without taking damage.
+ * across a gap in the air, up a cliff and over soul sand and ice, without taking damage.
  */
 @Suppress("TooManyFunctions")
 class WalkNavigationGameTest : FabricClientGameTest {
@@ -87,6 +87,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
                 checkTunnel(context, server, y)
                 checkBridge(context, server, y)
                 checkPillar(context, server, y)
+                checkSurfaces(context, server, y)
             }
         } finally {
             context.onClient {
@@ -134,6 +135,20 @@ class WalkNavigationGameTest : FabricClientGameTest {
         val before = context.cobblestone()
         walk(context, server, builder, Vec3(48.5, y + 3.0, 2.5), 800, "up the cliff")
         check(context.cobblestone() < before) { "Climbed the cliff without pillaring" }
+    }
+
+    /**
+     * A roofed corridor in a stone block at x 0..16, z 24..36: east over soul sand, then north over ice.
+     */
+    private fun checkSurfaces(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+        server.runCommand("fill 0 ${y - 1} 24 16 ${y + 3} 36 stone")
+        server.runCommand("fill 1 $y 25 15 ${y + 2} 27 air")
+        server.runCommand("fill 13 $y 25 15 ${y + 2} 35 air")
+        server.runCommand("fill 3 ${y - 1} 25 11 ${y - 1} 27 soul_sand")
+        server.runCommand("fill 13 ${y - 1} 25 15 ${y - 1} 35 ice")
+
+        moveTo(context, server, Vec3(1.5, y.toDouble(), 26.5))
+        walk(context, server, walker, Vec3(14.5, y.toDouble(), 34.5), 600, "over soul sand and ice")
     }
 
     private fun walk(

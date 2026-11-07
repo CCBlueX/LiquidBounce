@@ -36,6 +36,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LadderBlock
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.test.Test
@@ -270,6 +271,40 @@ class WalkRoutingTest {
 
         val path = completePath(result)
         assertTrue(path.end.distanceTo(item) <= 0.75, "the path ends at ${path.end}, away from $item")
+    }
+
+    @Test
+    fun `short detours around soul sand are preferred`() {
+        val soulSand = Blocks.SOUL_SAND.defaultBlockState()
+        val world = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, soulSand)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+
+        assertTrue(path.steps.none { world.getBlockState(it.to) == soulSand })
+    }
+
+    @Test
+    fun `honey is no floor to jump up from`() {
+        fun world(floor: BlockState) = TestNavigationWorld.flat()
+            .fill(-40, 0, -40, 2, 0, 40, floor)
+            .fill(3, 1, -40, 40, 1, 40, Blocks.FARMLAND.defaultBlockState())
+        val start = Vec3(0.5, 0.875, 0.5)
+        val goal = BlockPos(10, 1, 0)
+
+        val path = completePath(search(world(Blocks.SOUL_SAND.defaultBlockState()), start, goal))
+        assertTrue(WalkMove.ASCEND in path.moves())
+
+        assertFalse(isComplete(search(world(Blocks.HONEY_BLOCK.defaultBlockState()), start, goal)))
+    }
+
+    @Test
+    fun `ice is crossed like plain ground`() {
+        val ice = Blocks.ICE.defaultBlockState()
+        val world = TestNavigationWorld.flat().fill(3, 0, -2, 7, 0, 2, ice)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+        val plain = completePath(search(TestNavigationWorld.flat(), feet(0, 1, 0), BlockPos(10, 1, 0)))
+
+        assertTrue(path.steps.any { world.getBlockState(it.to.below()) == ice })
+        assertEquals(plain.cost, path.cost, 1.0E-9)
     }
 
 }

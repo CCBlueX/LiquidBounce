@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.SlimeBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 
@@ -152,6 +154,15 @@ object WalkCosts {
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0
 
+    /**
+     * Up and down bounces after landing on a slime block.
+     */
+    private const val BOUNCES = 2
+    private const val PLAIN_FRICTION = 0.6f
+    private const val SLIME_SLOWDOWN = 0.4
+    private const val GROUND_DRAG = 0.91
+    private const val GROUND_ACCELERATION = 0.216
+
     private val fallTicks: DoubleArray = DoubleArray(257).also { ticks ->
         var distance = 0.0
         var velocity = 0.0
@@ -175,4 +186,35 @@ object WalkCosts {
      * Extra ticks of a jump compared to walking.
      */
     val JUMP = fall(2) - fall(1)
+
+    /**
+     * How many times longer walking over a floor of [block] takes than over plain ground: soul sand, honey and
+     * slime slow the player down. Slippery floors such as ice reach the same top speed, so they count as plain.
+     */
+    fun floorFactor(block: Block): Double {
+        var slowdown = block.speedFactor.toDouble()
+        if (block is SlimeBlock) {
+            slowdown *= SLIME_SLOWDOWN
+        }
+
+        return if (slowdown < 1.0) {
+            groundSpeed(PLAIN_FRICTION, 1.0) / groundSpeed(block.friction, slowdown)
+        } else {
+            1.0
+        }
+    }
+
+    /**
+     * Extra ticks of bouncing after a drop of [blocks] onto [block].
+     */
+    fun bounce(block: Block, blocks: Int) = if (block is SlimeBlock) 2 * BOUNCES * fall(blocks) else 0.0
+
+    /**
+     * Top ground speed relative to the movement speed on a floor of [friction] that scales the speed by [slowdown]
+     * every tick, after LivingEntity.travel: the speed gained per tick over the share lost.
+     */
+    private fun groundSpeed(friction: Float, slowdown: Double): Double {
+        val drag = friction * GROUND_DRAG
+        return GROUND_ACCELERATION / (drag * drag * drag) / (1.0 - slowdown * drag)
+    }
 }
