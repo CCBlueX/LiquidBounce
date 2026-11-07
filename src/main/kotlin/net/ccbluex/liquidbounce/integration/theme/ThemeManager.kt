@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -57,6 +58,7 @@ object ThemeManager : Config("theme") {
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
         mc.execute {
+            FontManager.updateThemeFont()
             ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.invalidate()
@@ -86,6 +88,9 @@ object ThemeManager : Config("theme") {
                 temporaryTheme = null
                 currentTheme = value.metadata.id
             }
+
+            // Switching to a remote theme can leave currentTheme unchanged
+            mc.execute(FontManager::updateThemeFont)
         }
 
     val isThemeExternal: Boolean
@@ -179,6 +184,7 @@ object ThemeManager : Config("theme") {
 
         ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
+            FontManager.updateThemeFont()
             ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.invalidate()

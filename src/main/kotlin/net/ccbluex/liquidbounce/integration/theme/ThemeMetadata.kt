@@ -33,7 +33,9 @@ data class ThemeMetadata(
     val components: List<String>,
     val fonts: List<String>,
     val backgrounds: List<Background>,
-    val values: List<JsonObject>? = null
+    val values: List<JsonObject>? = null,
+    /** Name of the loaded font face the client draws its own text with, such as `Inter Medium`. */
+    val nativeFont: String? = null,
 ) {
     @Suppress("RedundantRequireNotNullCall")
     fun checkNotNull() {
