@@ -139,10 +139,9 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     /**
      * Captures an entity model submission into the chams storage.
      *
-     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     * @return `true` when the submission was captured (and must be kept out of the main render target),
      *         `false` when the submission should keep flowing into the main render target.
      */
-    @Suppress("UnusedParameter")
     fun captureModel(
         model: net.minecraft.client.model.Model<*>,
         state: Any,
@@ -152,7 +151,6 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         overlayCoords: Int,
         tintedColor: Int,
         uvMapping: net.minecraft.client.renderer.texture.UvMapping?,
-        outlineColor: Int,
     ): Boolean {
         if (!captureTargeted(renderType)) return false
         captureDepth++
@@ -171,16 +169,14 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     /**
      * Captures an item submission into the chams storage.
      *
-     * @return `true` when the submission was captured (and the vanilla submission should be cancelled),
+     * @return `true` when the submission was captured (and must be kept out of the main render target),
      *         `false` when the submission should keep flowing into the main render target.
      */
-    @Suppress("UnusedParameter")
     fun captureItem(
         poseStack: com.mojang.blaze3d.vertex.PoseStack,
         displayContext: net.minecraft.world.item.ItemDisplayContext,
         lightCoords: Int,
         overlayCoords: Int,
-        outlineColor: Int,
         tintLayers: IntArray,
         quads: net.minecraft.client.resources.model.geometry.ItemQuads,
         foilType: net.minecraft.client.renderer.item.ItemStackRenderState.FoilType,
