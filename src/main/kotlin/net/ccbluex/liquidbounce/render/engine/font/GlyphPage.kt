@@ -48,11 +48,11 @@ data class RasterizedGlyph(
      */
     val codepoint: Int,
     /**
-     * The location of the Glyph on the sprite, may be null if the glyph is a whitespace
+     * The glyph's slot on the atlas, padding included. Null for whitespace.
      */
     val atlasLocation: GlyphAtlasLocation?,
     /**
-     * The bounds of the rendered glyph. Used for rendering.
+     * Bounds of the drawn quad relative to the pen position, the glyph plus its atlas padding.
      */
     val glyphBounds: BoundingBox2f,
     val advance: GlyphAdvance,
@@ -106,7 +106,11 @@ abstract class GlyphPage {
         @JvmField
         internal val fontRasterizationLock = Any()
 
-        protected const val DEFAULT_PADDING: Int = 1
+        /**
+         * Blank border around every glyph on the atlas. Glyph quads span it, so font_mask.frag can filter
+         * the glyph edges without its taps reaching the next glyph.
+         */
+        protected const val DEFAULT_PADDING: Int = 4
 
         /**
          * Used for the Font Atlas generation
@@ -206,17 +210,11 @@ abstract class GlyphPage {
             atlasDimensions: Dimension
         ): RasterizedGlyph {
             val atlasLocation = if (!it.glyphMetrics.isWhitespace) {
-                val x = it.atlasLocation.x.toFloat() + DEFAULT_PADDING
-                val y = it.atlasLocation.y.toFloat() + DEFAULT_PADDING
+                val x = it.atlasLocation.x.toFloat()
+                val y = it.atlasLocation.y.toFloat()
+                val slot = it.atlasDimension
 
-                val boundingBox = BoundingBox2f(
-                    x,
-                    y,
-                    x + it.pixelWidth,
-                    y + it.pixelHeight
-                )
-
-                GlyphAtlasLocation(boundingBox, atlasDimensions)
+                GlyphAtlasLocation(BoundingBox2f(x, y, x + slot.width, y + slot.height), atlasDimensions)
             } else {
                 null
             }
@@ -225,10 +223,10 @@ abstract class GlyphPage {
                 it.fontGlyph.codepoint,
                 atlasLocation = atlasLocation,
                 glyphBounds = BoundingBox2f(
-                    it.pixelXMin.toFloat(),
-                    it.pixelYMin.toFloat(),
-                    it.pixelXMax.toFloat(),
-                    it.pixelYMax.toFloat(),
+                    (it.pixelXMin - DEFAULT_PADDING).toFloat(),
+                    (it.pixelYMin - DEFAULT_PADDING).toFloat(),
+                    (it.pixelXMax + DEFAULT_PADDING).toFloat(),
+                    (it.pixelYMax + DEFAULT_PADDING).toFloat(),
                 ),
                 advance = GlyphAdvance(
                     advanceX = it.glyphMetrics.advanceX,

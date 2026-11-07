@@ -73,16 +73,12 @@ class DynamicFontCacheManager(
         return this.glyphPageLock.withLock {
             val changes = ObjectImmutableList(this.glyphPageChanges)
             this.glyphPageChanges.clear()
-            val requiredUpdateCount = changes.count { !it.removed }
 
-            if (requiredUpdateCount > 15) {
+            // Freed slots were cleared on the CPU side and go up as well
+            if (changes.size > 15) {
                 this.dynamicGlyphPage.texture.upload()
             } else {
                 for (change in changes) {
-                    if (change.removed) {
-                        continue
-                    }
-
                     val bb = change.descriptor.renderInfo.atlasLocation?.pixelBoundingBox ?: continue
 
                     this.dynamicGlyphPage.texture.uploadRows(
