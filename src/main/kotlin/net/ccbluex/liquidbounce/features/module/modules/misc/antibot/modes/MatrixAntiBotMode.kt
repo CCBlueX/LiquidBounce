@@ -33,7 +33,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import java.util.UUID
 
-object MatrixAntiBotMode : AntiBotMode("Matrix") {
+object MatrixAntiBotMode : AntiBotMode("Matrix-2021-10-18", aliases = listOf("Matrix")) {
 
     private val suspectList = objectHashSetOf<UUID>()
     private val botList = objectHashSetOf<UUID>()

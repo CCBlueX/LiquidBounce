@@ -26,7 +26,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.entity.player.Player
 import java.util.UUID
 
-object HorizonAntiBotMode : AntiBotMode("Horizon") {
+object HorizonAntiBotMode : AntiBotMode("Horizon-2021-10-18", aliases = listOf("Horizon")) {
 
     private val botList = objectHashSetOf<UUID>()
 

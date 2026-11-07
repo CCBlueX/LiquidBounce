@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
  * @testedOn anticheat-test.com
  * @note NA
  */
-internal object FlyVulcan277 : Mode("Vulcan277") {
+internal object FlyVulcan277 : Mode("Vulcan-2.7.7", aliases = listOf("Vulcan277")) {
 
     override val parent: ModeValueGroup<*>
         get() = modes

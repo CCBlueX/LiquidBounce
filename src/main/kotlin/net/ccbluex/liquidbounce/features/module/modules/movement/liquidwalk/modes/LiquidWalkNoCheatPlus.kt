@@ -41,7 +41,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @anticheatVersion 3.16.1-SNAPSHOT-sMD5NET-b115s
  * @testedOn eu.loyisa.cn and poke.sexy
  */
-internal object LiquidWalkNoCheatPlus : Mode("NoCheatPlus") {
+internal object LiquidWalkNoCheatPlus : Mode("NCP-3.16.1", aliases = listOf("NoCheatPlus")) {
 
     override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes

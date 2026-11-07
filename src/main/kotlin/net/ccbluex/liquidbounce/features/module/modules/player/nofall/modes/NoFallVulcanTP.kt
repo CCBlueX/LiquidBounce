@@ -29,7 +29,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  * @anticheatVersion 2.8.8
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcanTP : NoFallMode("VulcanTP288") {
+internal object NoFallVulcanTP : NoFallMode("Vulcan-2.8.8", aliases = listOf("VulcanTP288")) {
 
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 

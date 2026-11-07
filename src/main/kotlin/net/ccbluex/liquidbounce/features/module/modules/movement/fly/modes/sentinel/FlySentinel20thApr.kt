@@ -46,7 +46,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
  *
  * Thanks to the_bi11iona1re for making me aware that Sentinal folds to Verus Damage exploit.
  */
-internal object FlySentinel20thApr : Mode("Sentinel20thApr") {
+internal object FlySentinel20thApr : Mode("CubeCraft-2024-04-20", aliases = listOf("Sentinel20thApr")) {
 
     private val horizontalSpeed by float("HorizontalSpeed", 3.5f, 0.1f..10f)
     private val constantSpeed by boolean("ConstantSpeed", false)

@@ -42,7 +42,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * @testedOn eu.loyisa.cn
  */
 
-internal object NoCheatPlusBow : Mode("NoCheatPlusBow") {
+internal object NoCheatPlusBow : Mode("NCP-3.16.1-Bow", aliases = listOf("NoCheatPlusBow")) {
 
     override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode

@@ -28,7 +28,7 @@ import net.minecraft.core.BlockPos
  * Intave needs to improve their movement checks
  * works on intave 14.8.4
  */
-object NoWebIntave14 : NoWebMode("Intave14") {
+object NoWebIntave14 : NoWebMode("Intave-14.8.4", aliases = listOf("Intave14")) {
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
             if (player.onGround()) {

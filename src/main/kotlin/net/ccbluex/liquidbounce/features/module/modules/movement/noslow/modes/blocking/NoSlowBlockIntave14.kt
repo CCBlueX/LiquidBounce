@@ -32,7 +32,10 @@ import net.minecraft.world.phys.BlockHitResult
  * made for intave version 14.8.4
  */
 
-internal class NoSlowBlockIntave14(override val parent: ModeValueGroup<*>) : Mode("Intave14") {
+internal class NoSlowBlockIntave14(override val parent: ModeValueGroup<*>) : Mode(
+    "Intave-14.8.4",
+    aliases = listOf("Intave14"),
+) {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

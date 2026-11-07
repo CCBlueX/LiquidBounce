@@ -43,7 +43,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * @testedOn anticheat-test
  * @note it can rarely flag once | needs 1.9x or above
  */
-internal object FlyVerusB3869Flat : Mode("VerusB3896Flat") {
+internal object FlyVerusB3869Flat : Mode("Verus-b3896-Flat", aliases = listOf("VerusB3896Flat")) {
 
     private val timer by float("Timer", 5.0f, 1.0f..20.0f)
 

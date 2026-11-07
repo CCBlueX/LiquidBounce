@@ -180,7 +180,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author InspectorBoat (and translated by 1zuna)
      */
-    private object Vulcan286 : Mode("Vulcan286") {
+    private object Vulcan286 : Mode("Vulcan-2.8.6", aliases = listOf("Vulcan286")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -275,7 +275,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
     /**
      * does not seem to work above a certain y level for some reason
      */
-    private object Hypixel : Mode("Hypixel") {
+    private object Hypixel : Mode("Hypixel-2025-03-11", aliases = listOf("Hypixel")) {
 
         override val parent: ModeValueGroup<Mode>
             get() = modes

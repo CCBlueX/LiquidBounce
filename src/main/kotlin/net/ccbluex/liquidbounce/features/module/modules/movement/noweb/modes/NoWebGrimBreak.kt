@@ -31,7 +31,7 @@ import net.minecraft.world.level.block.Blocks
  * @anticheat Grim
  * @version 2.3.65
  */
-object NoWebGrimBreak : NoWebMode("Grim2365") {
+object NoWebGrimBreak : NoWebMode("Grim-2.3.65", aliases = listOf("Grim2365")) {
 
     // Needed to bypass BadPacketsX
     private val breakOnWorld by boolean("BreakOnWorld", true)

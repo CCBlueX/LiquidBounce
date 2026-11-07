@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec2
 import kotlin.math.cos
 import kotlin.math.sin
 
-class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("GrimCollide") {
+class SpeedGrimCollide(override val parent: ModeValueGroup<*>) : Mode("Grim-2.3.73", aliases = listOf("GrimCollide")) {
 
     private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
 
