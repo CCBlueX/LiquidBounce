@@ -127,11 +127,15 @@ class SessionEvent(
     val session: User,
 ) : Event(), WebSocketEvent
 
+/**
+ * Called before [screen] opens, `null` for none. Theme pages get it too; the cached in-game ClickGUI page learns
+ * from it when it is shown or hidden. A cancelled one never opens, or the client swaps it for a theme screen.
+ */
 @AddonApi
 @Tag("screen")
 class ScreenEvent(
     val screen: Screen?,
-) : CancellableEvent()
+) : CancellableEvent(), WebSocketEvent
 
 @AddonApi
 @Tag("chatSend")
