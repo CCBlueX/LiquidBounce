@@ -56,8 +56,11 @@ public abstract class MixinLoadingOverlay {
         textureManager.registerAndLoad(ClientLogoTexture.CLIENT_LOGO, new ClientLogoTexture());
     }
 
-    @Inject(method = "extractRenderState", at = @At("RETURN"))
-    private void render(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    /**
+     * Theme screens draw through this event; fired with the screen behind the overlay so the splash stays on top.
+     */
+    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;extractRenderStateWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", shift = At.Shift.AFTER))
+    private void hookScreenRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(context, delta));
     }
 

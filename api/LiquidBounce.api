@@ -515,9 +515,11 @@ public final class net/ccbluex/liquidbounce/event/events/RefreshArrayListEvent :
 	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
-public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
 	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
 	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/TagEntityEvent : net/ccbluex/liquidbounce/event/Event {
@@ -647,6 +649,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public final fun registerQuickFix (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun registerValueGroup (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
 	public fun toString ()Ljava/lang/String;
 	public fun unregister ()V
 	public final fun unregisterModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
@@ -2105,7 +2108,7 @@ public final class net/ccbluex/liquidbounce/utils/inventory/Slots : java/util/Li
 
 public final class net/ccbluex/liquidbounce/utils/io/PathExtKt {
 	public static final fun atomicMoveTo (Ljava/nio/file/Path;Ljava/nio/file/Path;)Ljava/nio/file/Path;
-	public static final fun atomicWrite (Ljava/nio/file/Path;Lkotlin/jvm/functions/Function1;)V
+	public static final fun atomicWrite (Ljava/nio/file/Path;Lorg/apache/commons/io/function/IOConsumer;)V
 }
 
 public final class net/ccbluex/liquidbounce/utils/kotlin/EventPriorityConvention {

@@ -110,6 +110,18 @@ object ClientRenderPipelines {
         withPrimitiveTopology(mode)
     }
 
+    /**
+     * Chromium on Windows blends text through Skia's mask gamma, sRGB with contrast 1 (`skia/BUILD.gn`).
+     * On Linux Skia skips it for grayscale text, and macOS text comes out of CoreText's own smoothing.
+     */
+    private fun RenderPipeline.Builder.fontMaskSnippet() {
+        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
+        withFragmentShader(ClientShaders.Fragment.FontMask)
+        if (Util.getPlatform() == Util.OS.WINDOWS) {
+            withShaderDefine("TEXT_CONTRAST", 1f)
+        }
+    }
+
     // Browsers paint with premultiplied alpha
     object BROWSER {
         @JvmField
@@ -182,8 +194,7 @@ object ClientRenderPipelines {
 
         @JvmField
         val FontMask = newPipeline("gui/font_mask") {
-            withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-            withFragmentShader(ClientShaders.Fragment.FontMask)
+            fontMaskSnippet()
         }
 
         @JvmStatic
@@ -352,8 +363,7 @@ object ClientRenderPipelines {
 
     @JvmField
     val FontMaskQuads = newPipeline("font_mask_quads") {
-        withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
-        withFragmentShader(ClientShaders.Fragment.FontMask)
+        fontMaskSnippet()
         withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
         withPrimitiveTopology(PrimitiveTopology.QUADS)
         forWorldRender()
