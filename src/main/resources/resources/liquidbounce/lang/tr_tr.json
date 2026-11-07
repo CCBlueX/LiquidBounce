@@ -260,6 +260,8 @@
   "liquidbounce.module.autoTrap.description": "Hedefleri otomatik olarak ateşe verir veya örümcek ağlarıyla tuzağa düşürür.",
   "liquidbounce.module.autoWalk.description": "Baktığınız yönde otomatik olarak yürümenizi sağlar.",
   "liquidbounce.module.autoWeapon.description": "Hızlı erişim çubuğunuzdaki en iyi silahı otomatik olarak seçer.",
+  "liquidbounce.module.autoWeapon.value.preferBlockingSword.description": "AutoBlock yalnızca tehlikedeyken blokladığında ve sen tehlikedeyken kılıcı tercih eder, böylece elinde bloklanabilir bir eşya olur.",
+  "liquidbounce.module.autoWeapon.value.prioritizeVoidKnockback.description": "Hedef boşluğun yanında durduğunda, onu kenardan itmek için Geri Tepme büyülü bir silahı tercih eder.",
   "liquidbounce.module.autoWindCharge.description": "Zıplama tuşuna basılıyken rüzgar yükleriyle sizi otomatik olarak hızlandırır.",
   "liquidbounce.module.avoidHazards.description": "Sizi olumsuz etkileyebilecek bloklara yürümenizi engeller.",
   "liquidbounce.module.backtrack.description": "Hedeflerin gecikmesini sağlar, böylece onlara daha etkili saldırabilirsiniz.",
