@@ -63,6 +63,8 @@ object MarketplaceConfigs {
         author: String? = null,
         targetServer: String? = null,
         featured: Boolean? = null,
+        sort: MarketplaceApi.Sort = MarketplaceApi.Sort.SCORE,
+        session: OAuthSession? = null,
     ) = MarketplaceApi.getMarketplaceItems(
         page = page,
         limit = limit,
@@ -75,8 +77,9 @@ object MarketplaceConfigs {
             featured = featured,
             tags = tags,
             targetServer = targetServer,
-            sort = MarketplaceApi.Sort.SCORE
-        )
+            sort = sort
+        ),
+        session = session
     )
 
     /**

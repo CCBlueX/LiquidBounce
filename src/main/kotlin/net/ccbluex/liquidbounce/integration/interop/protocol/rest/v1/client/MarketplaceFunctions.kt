@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 /**
  * Extract a required integer path parameter or respond with 403 Forbidden
  */
-private suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
+internal suspend fun ApplicationCall.requireId(parameter: String = "id"): Int {
     return parameters[parameter]?.toIntOrNull() ?: this.forbidden("Invalid $parameter: ${parameters[parameter]}")
 }
 

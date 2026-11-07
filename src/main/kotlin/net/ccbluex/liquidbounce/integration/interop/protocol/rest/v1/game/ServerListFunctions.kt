@@ -193,6 +193,16 @@ private fun Route.getLanServers() = get("/lan") {
     }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
 }
 
+// GET /api/v1/client/servers/current
+private fun Route.getCurrentServer() = get("/current") {
+    val server = mc.currentServer
+    if (server != null) {
+        call.respond(interopGson.toJsonTree(server))
+    } else {
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    }
+}
+
 object ActiveServerList : EventListener {
 
     internal val serverList = ServerList(mc).apply { load() }
@@ -368,6 +378,7 @@ fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == ad
 internal fun Route.serverListRoutes() = route("/servers") {
     getServers()
     getLanServers()
+    getCurrentServer()
     putAddServer()
     deleteServer()
     putEditServer()
