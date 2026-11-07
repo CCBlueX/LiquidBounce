@@ -1795,6 +1795,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public final fun getTimerSpeed ()F
 	public final fun hold (Lnet/ccbluex/liquidbounce/event/EventListener;I)V
 	public static synthetic fun hold$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;Lnet/ccbluex/liquidbounce/event/EventListener;IILjava/lang/Object;)V
+	public final fun isHeld ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;

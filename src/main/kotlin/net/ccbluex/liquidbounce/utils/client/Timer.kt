@@ -73,6 +73,13 @@ object Timer : EventListener {
         private set
 
     /**
+     * Whether the last player tick was held back. Its interpolated values are then still those of the tick before,
+     * so the player is drawn as it is instead of replaying that tick every frame.
+     */
+    var isHeld = false
+        private set
+
+    /**
      * Scales the ticks a frame advances by the requested speed.
      */
     fun scaleFrame(deltaTicks: Float): Float {
@@ -216,7 +223,8 @@ object Timer : EventListener {
             balance += 1f / frameSpeed
         }
 
-        if (!event.isCancelled) {
+        isHeld = event.isCancelled
+        if (!isHeld) {
             balance -= 1f
         }
 
@@ -228,6 +236,7 @@ object Timer : EventListener {
     private val worldChangeHandler = handler<WorldChangeEvent> {
         balance = 0f
         burstTicks = 0
+        isHeld = false
         holds.clear()
     }
 

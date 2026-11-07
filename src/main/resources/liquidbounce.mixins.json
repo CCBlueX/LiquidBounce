@@ -131,6 +131,7 @@
     "minecraft.render.MixinFont",
     "minecraft.render.MixinFramerateLimitTracker",
     "minecraft.render.MixinGameRenderer",
+    "minecraft.render.MixinLevelExtractor",
     "minecraft.render.MixinLevelRenderer",
     "minecraft.render.MixinLightmap",
     "minecraft.render.MixinLightmapRenderStateExtractor",

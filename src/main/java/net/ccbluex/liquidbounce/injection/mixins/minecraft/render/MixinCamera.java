@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
+import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -233,6 +234,15 @@ public abstract class MixinCamera {
         event.update(minecraft, entity);
 
         EventManager.INSTANCE.callEvent(event);
+    }
+
+    /**
+     * Like an entity frozen by the tick rate manager, a held back player is drawn as it is. In between two ticks it
+     * would replay the tick before every frame, which shakes the bobbing and the hurt tilt.
+     */
+    @ModifyReturnValue(method = "getCameraEntityPartialTicks", at = @At("RETURN"))
+    private float hookHeldTickPartialTicks(float original) {
+        return this.entity == this.minecraft.player && Timer.INSTANCE.isHeld() ? 1f : original;
     }
 
     /**
