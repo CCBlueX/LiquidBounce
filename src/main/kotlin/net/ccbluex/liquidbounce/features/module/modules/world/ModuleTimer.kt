@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -29,14 +28,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
-import kotlin.math.abs
-import kotlin.math.ceil
 
 /**
  * Timer module
@@ -114,75 +110,30 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
         private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..20f)
         private val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..20f)
 
-        private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60, "ticks")
-        private var boostCapable = 0
-
-        // basically timer balance
-        private val accountTimerValue by boolean("AccountTimerValues", true)
-
         private val normalizeDuringCombat by boolean("NormalizeDuringCombat", true)
         private val allowNegative by boolean("AllowNegative", false)
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             if (normalizeDuringCombat && CombatManager.isInCombat) {
                 Timer.requestTimerSpeed(1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
-                return@tickHandler
+                return@handler
             }
 
-            if (boostCapable < 0) {
-                val ticks = abs(boostCapable)
-                Timer.requestTimerSpeed(
-                    slowSpeed,
-                    Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleTimer,
-                    resetAfterTicks = ticks
-                )
-
-                notification(
-                    "Timer", "Slowing down for $ticks ticks",
-                    NotificationEvent.Severity.INFO
-                )
-                boostCapable = 0
-                waitTicks(ticks)
-            }
-
-            if (!player.moving) {
-                if (mc.gui.screen() is InventoryScreen || mc.gui.screen() is ContainerScreen) {
-                    boostCapable = 0
-                    return@tickHandler
+            when {
+                !player.moving -> {
+                    if (mc.gui.screen() !is InventoryScreen && mc.gui.screen() !is ContainerScreen) {
+                        Timer.requestBalancedTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
+                    }
                 }
 
-                Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
+                // Borrows balance that is paid back once out of combat and scaffold
+                allowNegative && (CombatManager.isInCombat || ModuleScaffold.running) ->
+                    Timer.requestTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
 
-                val addition = if (accountTimerValue) (1 / slowSpeed).toInt() else 1
-                boostCapable = (boostCapable + addition).coerceAtMost(timeBoostTicks)
-            } else {
-                val speedUp = boostCapable > 0 ||
-                        (allowNegative && (CombatManager.isInCombat || ModuleScaffold.running))
+                Timer.balance < 0f ->
+                    Timer.requestBalancedTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
 
-                if (!speedUp) {
-                    return@tickHandler
-                }
-
-                val ticks = if (boostCapable > 0) boostCapable else timeBoostTicks
-                val speedUpTicks = if (accountTimerValue) ceil(ticks / boostSpeed).toInt() else ticks
-
-                if (speedUpTicks == 0) {
-                    return@tickHandler
-                }
-
-                Timer.requestTimerSpeed(
-                    boostSpeed,
-                    Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleTimer,
-                    resetAfterTicks = speedUpTicks
-                )
-                notification(
-                    "Timer", "Boosted for $speedUpTicks ticks",
-                    NotificationEvent.Severity.INFO
-                )
-                boostCapable -= ticks
-                waitTicks(speedUpTicks)
+                else -> Timer.requestBalancedTimerSpeed(boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
             }
         }
 

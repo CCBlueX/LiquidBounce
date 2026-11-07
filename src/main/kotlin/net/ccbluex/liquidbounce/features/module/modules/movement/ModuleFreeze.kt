@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.network.UseItemPacketRotation
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
@@ -72,7 +72,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         .apply { tagBy(this) }
     private val disableOn by multiEnumChoice("DisableOn", enumSetOf(DisableOn.FLAG))
     private val notification by boolean("Notification", false)
-    private val balance by boolean("BalanceWarp", false)
+    private val balanceWarp by boolean("BalanceWarp", false)
 
     private enum class DisableOn(
         override val tag: String,
@@ -86,27 +86,11 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         ON_USE_ITEM("OnUseItem", { player.isUsingItem }),
     }
 
-    // todo: use global balance system
-    private var missedOutTick = 0
-    private var warpInProgress = false
-
-    override fun onEnabled() {
-        missedOutTick = 0
-        super.onEnabled()
-    }
-
     override fun onDisabled() {
-        if (balance) {
-            warpInProgress = true
-            while (missedOutTick > 0) {
-                // todo: does not run module tick if running at game tick layer
-                player.tick()
-                missedOutTick--
-            }
-            warpInProgress = false
+        if (balanceWarp) {
+            // A flag disables from the network thread
+            mc.execute { Timer.warp(Int.MAX_VALUE) }
         }
-
-        missedOutTick = 0
         super.onDisabled()
     }
 
@@ -127,22 +111,17 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                 notifyAndDisable(reason)
             }
         }
-    }
 
-    /**
-     * Acts as timer = 0 replacement
-     */
-    @Suppress("unused")
-    private val moveHandler = handler<PlayerTickEvent> { event ->
-        if (warpInProgress || modes.activeMode === TickMovement) return@handler
-
-        event.cancelEvent()
-        missedOutTick++
+        // Acts as timer = 0 replacement
+        if (modes.activeMode !== TickMovement) {
+            Timer.hold(this@ModuleFreeze)
+        }
     }
 
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
-        if (!balance || missedOutTick < 0 || warpInProgress) {
+        val ticks = Timer.balance.toInt()
+        if (!balanceWarp || ticks <= 0) {
             return@handler
         }
 
@@ -166,7 +145,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
         // Create a cache for the simulated player
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
         val cachedPositions = simulatedPlayerCache
-            .getSnapshotsBetween(0 until this.missedOutTick)
+            .getSnapshotsBetween(0 until ticks)
 
         event.renderEnvironment {
             drawLineStrip(
@@ -179,11 +158,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is ClientboundPlayerPositionPacket) {
-            missedOutTick = 0
-            if (DisableOn.FLAG in disableOn) {
-                notifyAndDisable(DisableOn.FLAG)
-            }
+        if (event.packet is ClientboundPlayerPositionPacket && DisableOn.FLAG in disableOn) {
+            notifyAndDisable(DisableOn.FLAG)
         }
     }
 

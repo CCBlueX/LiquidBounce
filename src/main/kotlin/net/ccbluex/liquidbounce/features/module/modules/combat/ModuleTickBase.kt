@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -35,10 +33,10 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 
@@ -59,10 +57,7 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
      */
     private val range by floatRange("Range", 2.5f..4f, 0f..8f)
 
-    private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
-    private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
     private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
-    private val pauseOnFlag by boolean("PauseOfFlag", true)
     private val pause by int("Pause", 0, 0..20, "ticks")
     private val cooldown by int("Cooldown", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
@@ -71,31 +66,10 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
-    private var ticksToSkip = 0
-
-    @Volatile
-    private var tickBalance = 0f
-    private var reachedTheLimit = false
-
     private val tickBuffer = ArrayList<TickData>()
 
     override fun onDisabled() {
-        ticksToSkip = 0
-        tickBalance = 0f
-        reachedTheLimit = false
         tickBuffer.clear()
-    }
-
-    @Suppress("unused")
-    private val playerTickHandler = handler<PlayerTickEvent> { event ->
-        // We do not want this module to conflict with blink
-        if (player.vehicle != null || ModuleBlink.running) {
-            return@handler
-        }
-
-        if (ticksToSkip-- > 0) {
-            event.cancelEvent()
-        }
     }
 
     @Suppress("unused")
@@ -144,24 +118,18 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
 
         when (mode) {
             TickBaseMode.PAST -> {
-                ticksToSkip = bestTick + pause
-                waitTicks(ticksToSkip)
-
-                repeat(bestTick) {
-                    call.tick()
-                    tickBalance -= 1
-                }
+                val skip = bestTick + pause
+                Timer.hold(this@ModuleTickBase, skip)
+                waitTicks(skip)
+                Timer.warp(bestTick) { call.tick() }
 
                 debugParameter("Recommended Skip") { bestTick }
-                ticksToSkip = 0
             }
 
             TickBaseMode.FUTURE -> {
                 var totalSkipped = 0
 
-                for (i in 0 until bestTick) {
-                    call.tick()
-                    tickBalance -= 1
+                while (totalSkipped < bestTick && Timer.warp(1) { call.tick() } == 1) {
                     totalSkipped++
 
                     if (breakRequirement()) {
@@ -172,9 +140,9 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
                 debugParameter("Total Skipped") { totalSkipped }
                 debugParameter("Recommended Skip") { bestTick }
 
-                ticksToSkip = totalSkipped + pause
-                waitTicks(ticksToSkip)
-                ticksToSkip = 0
+                val skip = totalSkipped + pause
+                Timer.hold(this@ModuleTickBase, skip)
+                waitTicks(skip)
             }
         }
 
@@ -190,24 +158,18 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
 
         tickBuffer.clear()
 
-        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
-
-        if (tickBalance <= 0) {
-            reachedTheLimit = true
+        val available = when (mode) {
+            // Holding the ticks back first earns what running them costs
+            TickBaseMode.PAST -> if (Timer.balance >= 0f) Timer.maxBalance else 0
+            TickBaseMode.FUTURE -> Timer.balance.toInt()
         }
-        if (tickBalance * 2 > balanceMaxValue) {
-            reachedTheLimit = false
-        }
-        if (tickBalance <= balanceMaxValue) {
-            tickBalance += balanceRecoveryIncrement
-        }
-
-        if (reachedTheLimit) {
+        val ticks = min(maxTicksAtATime, available)
+        if (ticks <= 0) {
             return@handler
         }
 
-        val tickRange = 0 until min(tickBalance.toInt(), maxTicksAtATime)
-        val snapshots = simulatedPlayer.getSnapshotsBetween(tickRange)
+        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
+        val snapshots = simulatedPlayer.getSnapshotsBetween(0 until ticks)
 
         tickBuffer.ensureCapacity(snapshots.size)
         snapshots.mapTo(tickBuffer) { snapshot ->
@@ -232,14 +194,6 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
                 positions = MutableVertexList(tickBuffer.size)
                     .addAllRelativeToCamera(tickBuffer, camera) { it.position }
             )
-        }
-    }
-
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> {
-        // Stops when you got flagged
-        if (it.packet is ClientboundPlayerPositionPacket && pauseOnFlag) {
-            tickBalance = 0f
         }
     }
 

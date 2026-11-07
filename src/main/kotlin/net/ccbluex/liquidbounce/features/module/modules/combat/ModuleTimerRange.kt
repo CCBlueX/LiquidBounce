@@ -19,17 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.utils.percentageChance
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * TimerRange module
@@ -40,25 +36,23 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
 
     private val chance = percentageChance("Chance", 100f)
-    private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
     private val normalSpeed by float("NormalSpeed", 0.9F, 0.1F..10F)
     private val inRangeSpeed by float("InRangeSpeed", 0.95F, 0.1F..10F)
-    private val balanceLimitSpeed by float("BalanceLimitSpeed", 0.99F, 0.1F..1F)
     private val boostSpeed by float("BoostTimer", 2F, 0.1F..10F).apply { tagBy(this) }
-    private val balanceRecoveryIncrement by float("BalanceRecoveryIncrement", 1f, 1f..10f)
     private val distanceToSpeedUp by float("DistanceToSpeedUp", 3.5f, 0f..10f)
     private val distanceToPause by float("DistanceToPause", 3f, 0f..10f)
     private val distanceToStartWorking by float("DistanceToStartWorking", 100f, 0f..500f)
-    private val pauseOnFlag by boolean("PauseOnFlag", true)
     private val onlyOnGround by boolean("OnlyOnGround", false)
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
-    private var reachedTheLimit = false
-    private var balanceTimer = 0f
+    /**
+     * Set once boosting used up the balance, until the balance is full again.
+     */
+    private var exhausted = false
 
     override fun onEnabled() {
-        balanceTimer = timerBalanceLimit
+        exhausted = false
         super.onEnabled()
     }
 
@@ -68,24 +62,8 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
             return@tickHandler
         }
 
-        val newTimerSpeed = updateTimerSpeed()
-
-        if (newTimerSpeed != null) {
-            Timer.requestTimerSpeed(newTimerSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
-        }
-
-        val balanceChange = timerSpeed / balanceRecoveryIncrement - 1
-        if ((balanceTimer > 0 || balanceChange > 0) && (balanceTimer < timerBalanceLimit * 2 || balanceChange < 0)) {
-            balanceTimer += balanceChange
-        }
-
-        if (balanceTimer <= timerBalanceLimit) {
-            Timer.requestTimerSpeed(balanceLimitSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
-        }
-
-        if (balanceTimer <= 0) {
-            reachedTheLimit = false
-        }
+        val speed = updateTimerSpeed() ?: return@tickHandler
+        Timer.requestBalancedTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
     }
 
     private fun updateTimerSpeed(): Float? {
@@ -101,20 +79,13 @@ object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
             return normalSpeed
         }
 
-        return if (balanceTimer < timerBalanceLimit * 2 && !reachedTheLimit) {
-            boostSpeed
-        } else {
-            reachedTheLimit = true
-
-            inRangeSpeed
+        if (Timer.balance <= 0f) {
+            exhausted = true
+        } else if (Timer.balance >= Timer.maxBalance) {
+            exhausted = false
         }
-    }
 
-    val packetHandler = handler<PacketEvent> {
-        if (it.packet is ClientboundPlayerPositionPacket && pauseOnFlag) {
-            balanceTimer = timerBalanceLimit * 2
-        }
-        // Stops speeding up when you get flagged
+        return if (exhausted) inRangeSpeed else boostSpeed
     }
 
 }
