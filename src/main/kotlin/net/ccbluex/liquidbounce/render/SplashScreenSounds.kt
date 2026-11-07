@@ -44,23 +44,19 @@ object SplashScreenSounds {
     }
 
     /**
-     * Start times are set so each sound's peak lands on its frame: the riser ends at the impact.
+     * Start times are set so each sound's peak lands on its frame: the swell and the tone meet
+     * where the wordmark starts to show, the tick where the badge arrives.
      */
     private val CUES = arrayOf(
-        Cue(150f, "fall", 0.22f),
-        Cue(440f, "impact", 1.1f),
-        Cue(775f, "hop", 0.8f),
-        Cue(880f, "slide", 0.16f),
-        // BOUNCE badge hitting its spot
-        Cue(1330f, "pop", 0.6f),
-        Cue(1592f, "pop", 0.35f),
-        Cue(1722f, "pop", 0.2f),
+        Cue(120f, "swell", 0.6f),
+        Cue(590f, "tone", 0.7f),
+        Cue(960f, "tick", 0.9f),
     )
 
     /**
      * Played when the overlay starts fading into the menu.
      */
-    private val OUTRO = Cue(0f, "out", 0.35f)
+    private val OUTRO = Cue(0f, "out", 0.25f)
 
     /**
      * Cues this far behind the playhead are dropped, e.g. when the intro speeds up to finish.
