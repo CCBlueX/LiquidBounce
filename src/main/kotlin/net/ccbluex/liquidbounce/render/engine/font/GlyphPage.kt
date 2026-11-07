@@ -149,6 +149,13 @@ abstract class GlyphPage {
 
             // Enable font antialiasing
             atlasGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+            // Draw with the same context the glyphs were measured with. Grayscale AA with fractional metrics loads
+            // glyphs unhinted, so FreeType never reaches its autohinter, whose HarfBuzz calls crash once LWJGL's
+            // FreeType is loaded. Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
+            atlasGraphics.setRenderingHint(
+                RenderingHints.KEY_FRACTIONALMETRICS,
+                RenderingHints.VALUE_FRACTIONALMETRICS_ON
+            )
 
             val glyphsByFont = glyphsToRender.groupBy { it.fontGlyph.font }
 
@@ -189,13 +196,7 @@ abstract class GlyphPage {
                 val baselineX = pendingGlyph.atlasLocation.x - pendingGlyph.pixelXMin + DEFAULT_PADDING
                 val baselineY = pendingGlyph.atlasLocation.y - pendingGlyph.pixelYMin + DEFAULT_PADDING
 
-                // Java2D's bitmap glyph path can resolve into LWJGL's bundled FreeType instead of the system one and
-                // crash there; rendering the same outline avoids it.
-                // Fixes https://github.com/CCBlueX/LiquidBounce/issues/9056
-                atlasGraphics.fill(
-                    atlasGraphics.font.createGlyphVector(fontRendererContext, character)
-                        .getGlyphOutline(0, baselineX.toFloat(), baselineY.toFloat())
-                )
+                atlasGraphics.drawString(character, baselineX, baselineY)
             }
         }
 
