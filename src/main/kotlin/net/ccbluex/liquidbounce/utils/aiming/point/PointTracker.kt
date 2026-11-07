@@ -98,7 +98,7 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
                     Color4b.MAGENTA
                 } else {
                     Color4b.GREEN.interpolateTo(Color4b.RED, percentage)
-                }.fade(1.0f - percentage.toFloat())
+                }.fade(1.0f - percentage)
                 ModuleDebug.DebuggedPoint(point, color, 0.05)
             })
         }
@@ -136,11 +136,11 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
     // For debug visuals
     private fun calculateDistancePercentage(point: Vec3, eyes: Vec3, bestHitVector: Vec3,
                                             worstHitVector: Vec3
-    ): Double {
+    ): Float {
         val pointDistance = point.distanceTo(eyes)
         val bestDistance = bestHitVector.distanceTo(eyes)
         val worstDistance = worstHitVector.distanceTo(eyes)
-        return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).coerceIn(0.0, 1.0)
+        return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).toFloat().coerceIn(0.0F, 1.0F)
     }
 
 }

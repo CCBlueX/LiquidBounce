@@ -1433,6 +1433,8 @@ public final class net/ccbluex/liquidbounce/render/engine/type/Color4b : java/la
 	public fun hashCode ()I
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;D)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;DDDD)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;F)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun isTransparent ()Z
 	public static final fun ofHSB (FFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public static final fun ofHSB (FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
