@@ -187,8 +187,10 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         override fun goal(): Vec3? {
             val destination = destination
             if (destination != goalOf) {
-                goalOf = destination
-                goal = Vec3.atBottomCenterOf(feetAt(BlockPos(destination.x, destination.y, destination.z)))
+                val pos = BlockPos(destination.x, destination.y, destination.z)
+                goal = Vec3.atBottomCenterOf(feetAt(pos))
+                // Whether the destination is the ground to stand on is only known once its chunk is loaded.
+                goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }
             }
 
             if (player.position().distanceTo(goal) > radius) {

@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
+import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
@@ -55,8 +56,8 @@ import kotlin.math.sqrt
 
 /**
  * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
- * everything else is pathfound, breaking and placing blocks when allowed; unreachable goals are walked as close
- * as possible.
+ * everything else is pathfound, breaking and placing blocks when allowed; goals farther than half the path range or
+ * in chunks not loaded are walked to in stages, and unreachable goals are walked as close as possible.
  *
  * Its settings go into [values]; it acts while [owner] runs. Blocks are aimed at with the [rotations] of the feature
  * it walks for, or with its own when the feature has none.
@@ -106,6 +107,13 @@ class WalkNavigator(
      */
     private var pathGoal: Vec3? = null
     private var requestedGoal: Vec3? = null
+
+    /**
+     * The goal of the running search when it looks for a stage on the way to a goal beyond its range, and whether
+     * the followed path ends at such a stage.
+     */
+    private var requestedStage: NearGoal? = null
+    private var followsStage = false
 
     private var straight = false
     private var direct = false
@@ -287,8 +295,8 @@ class WalkNavigator(
         }
 
         when {
-            searching -> view.pending(player.position(), goal, planner.preview)
             failed -> view.invalid()
+            searching -> view.pending(player.position(), goal, planner.preview)
             else -> view.done()
         }
         return false
@@ -378,6 +386,7 @@ class WalkNavigator(
             return
         }
 
+        followsStage = requestedStage.let { it != null && !it.isGoal(path.steps.last().to) }
         pathGoal = requestedGoal
         settledAt = null
         follower.follow(path, startIndex)
@@ -414,10 +423,11 @@ class WalkNavigator(
 
         val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
         val finishedShort = path != null && follower.isFinished
+        val nearStage = path != null && followsStage && horizontalDistance(position, path.end) < STAGE_LEAD
         val urgent = stuck || leftPath
 
         val settled = settledAt.let { it != null && ticks - it < SETTLE_TICKS }
-        val needed = (path == null && !settled) || goalMoved || offPath || finishedShort || stuck
+        val needed = (path == null && !settled) || goalMoved || offPath || finishedShort || stuck || nearStage
         if (!needed || ticks < retryAt) {
             return
         }
@@ -431,20 +441,36 @@ class WalkNavigator(
         stuck = false
     }
 
+    /**
+     * Searches a path to [goal], or, when it is out of range or not loaded, to the next stage on the way to it.
+     */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
         val nearGoal = NearGoal(goal, radius)
         val maxLength = walkSettings.maxLength
-        val region = nearGoal.region(start, maxLength, VERTICAL_MARGIN)
+        // A stage with its detours stays within the path range.
+        val stageRange = maxLength / 2.0
+        val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
+        val region = if (staged) {
+            StageGoal.region(start, stageRange, VERTICAL_MARGIN)
+        } else {
+            nearGoal.region(start, maxLength, VERTICAL_MARGIN)
+        }
         val abilities = walkSettings.capture(avoid)
         val limits = RouteLimits(maxLength)
 
-        planner.request(SearchKey(BlockPos.containing(start), nearGoal, avoidVersion), region) { terrain ->
-            WalkRouteSearch(terrain, start, nearGoal, abilities, limits)
+        val key = SearchKey(BlockPos.containing(start), nearGoal, avoidVersion, staged)
+        planner.request(key, region) { terrain ->
+            val searchGoal = if (staged) StageGoal(nearGoal, start, stageRange, terrain) else nearGoal
+            WalkRouteSearch(terrain, start, searchGoal, abilities, limits)
         }
 
+        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
+            failed = false
+        }
         requestedGoal = goal
+        requestedStage = nearGoal.takeIf { staged }
         lastRequest = ticks
-        if (follower.path == null) {
+        if (follower.path == null && !failed) {
             view.pending(start, goal)
         }
     }
@@ -493,6 +519,8 @@ class WalkNavigator(
         view.clear()
         pathGoal = null
         requestedGoal = null
+        requestedStage = null
+        followsStage = false
         directGoal = null
         steeringTarget = null
         sprintWanted = false
@@ -514,7 +542,7 @@ class WalkNavigator(
             get() = listOfNotNull(directGoal)
     }
 
-    private data class SearchKey(val start: BlockPos, val goal: NearGoal, val avoidVersion: Int)
+    private data class SearchKey(val start: BlockPos, val goal: NearGoal, val avoidVersion: Int, val staged: Boolean)
 
     private companion object {
         const val MIN_STEER_DISTANCE_SQR = 1.0E-4
@@ -530,6 +558,11 @@ class WalkNavigator(
         const val HEADWAY_TOLERANCE = 0.75
         const val AVOID_GOAL_CHANGE = 8.0
         const val AVOID_TICKS = 600
+
+        /**
+         * Blocks before the end of a stage at which the next stage is searched, so the walk goes on without a stop.
+         */
+        const val STAGE_LEAD = 12.0
 
         fun horizontalDistance(a: Vec3, b: Vec3): Double {
             val dx = a.x - b.x

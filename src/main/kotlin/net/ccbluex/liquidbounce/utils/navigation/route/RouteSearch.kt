@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.route
 
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -145,6 +146,61 @@ data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
         val dy = (y - centerY).toDouble()
         val dz = z + 0.5 - center.z
         return sqrt(dx * dx + dy * dy + dz * dz)
+    }
+
+}
+
+/**
+ * [goal], or a stage on the way to it for goals beyond the searched area: feet at least [range] blocks from [start]
+ * horizontally or next to blocks [terrain] does not know, at least [MIN_PROGRESS] blocks closer to [goal] than
+ * [start]. As the search heads for [goal], the first stage it reaches has the cheapest estimated way on to [goal];
+ * as every stage gets closer, consecutive stages never lead back.
+ *
+ * [distance] measures to [goal], so it can be more than the distance to the nearest stage.
+ */
+class StageGoal(
+    val goal: NavigationGoal,
+    private val start: Vec3,
+    private val range: Double,
+    private val terrain: NavigationTerrain,
+) : NavigationGoal {
+
+    private val maxStageDistance = goal.distance(BlockPos.containing(start)) - MIN_PROGRESS
+
+    override val ends: Collection<Vec3>
+        get() = goal.ends
+
+    override fun isGoal(x: Int, y: Int, z: Int) =
+        goal.isGoal(x, y, z) || isStage(x, y, z) && goal.distance(x, y, z) <= maxStageDistance
+
+    override fun distance(x: Int, y: Int, z: Int) = goal.distance(x, y, z)
+
+    private fun isStage(x: Int, y: Int, z: Int): Boolean {
+        val dx = x + 0.5 - start.x
+        val dz = z + 0.5 - start.z
+        return dx * dx + dz * dz >= range * range ||
+            !terrain.isKnown(x + 1, y, z) || !terrain.isKnown(x - 1, y, z) ||
+            !terrain.isKnown(x, y, z + 1) || !terrain.isKnown(x, y, z - 1)
+    }
+
+    companion object {
+        private const val MIN_PROGRESS = 2.0
+
+        /**
+         * Every block a stage search from [start] with [range] can pass, with at most [verticalMargin] blocks
+         * above or below.
+         */
+        fun region(start: Vec3, range: Double, verticalMargin: Int) =
+            NavigationRegion.around(start, emptyList(), range, verticalMargin)
+
+        /**
+         * Whether [goal] is farther than [range] from [start] or in blocks [world] does not know, so a walk there
+         * goes in stages.
+         */
+        fun isNeeded(world: NavigationWorld, start: Vec3, goal: Vec3, range: Double): Boolean {
+            val feet = BlockPos.containing(goal)
+            return start.distanceTo(goal) > range || !world.isKnown(feet.x, feet.y, feet.z)
+        }
     }
 
 }
