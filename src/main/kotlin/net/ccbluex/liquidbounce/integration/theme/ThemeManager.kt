@@ -91,6 +91,7 @@ object ThemeManager : Config("theme") {
 
             // Switching to a remote theme can leave currentTheme unchanged
             mc.execute(FontManager::updateThemeFont)
+            mc.execute(ThemeSounds::sync)
         }
 
     val isThemeExternal: Boolean
@@ -181,6 +182,7 @@ object ThemeManager : Config("theme") {
         }
 
         includedTheme?.let { theme -> themes += theme }
+        mc.execute(ThemeSounds::sync)
 
         ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
