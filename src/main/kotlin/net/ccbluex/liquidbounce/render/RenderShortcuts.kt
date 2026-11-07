@@ -392,8 +392,8 @@ fun WorldRenderEnvironment.drawSquareTextureGradient(
         val distRatio = (Mth.length(dx, dy) / outerRadius).coerceIn(0f, 1f)
 
         val t = when (distRatio <= effectiveRatio) {
-            true -> 0.0
-            else -> ((distRatio - effectiveRatio) / (1.0 - effectiveRatio)).coerceIn(0.0, 1.0)
+            true -> 0.0f
+            else -> ((distRatio - effectiveRatio) / (1.0f - effectiveRatio)).coerceIn(0.0f, 1.0f)
         }
 
         return innerColor.interpolateTo(outerColor, t).argb

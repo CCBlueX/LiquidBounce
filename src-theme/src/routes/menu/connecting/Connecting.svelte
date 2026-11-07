@@ -2,7 +2,7 @@
     import {onMount} from "svelte";
     import {getConnectionDetails, getGameWindow} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
-    import type {ConnectionDetails} from "../../../integration/types";
+    import type {ConnectionDetails, GameWindow} from "../../../integration/types";
     import type {ConnectionDetailsEvent} from "../../../integration/events";
 
     interface Part {
@@ -11,11 +11,12 @@
     }
 
     let details: ConnectionDetails | null = $state(null);
-    let scaledHeight = $state(0);
+    let gameWindow: GameWindow | null = $state(null);
     let innerHeight = $state(0);
 
-    // One GUI pixel, so the line sits under the vanilla status text at any GUI scale
-    const guiPixel = $derived(innerHeight / scaledHeight);
+    // One GUI pixel and the GUI row under the status text, which the client draws at height / 2 - 80
+    const guiPixel = $derived(gameWindow ? innerHeight / gameWindow.height * gameWindow.scaleFactor : 0);
+    const top = $derived(gameWindow ? (Math.floor(gameWindow.scaledHeight / 2) - 62) * guiPixel : 0);
     const parts = $derived(details ? sentence(details) : []);
 
     function sentence({remoteAddress, serverAddress, proxy}: ConnectionDetails): Part[] {
@@ -35,27 +36,28 @@
         ];
     }
 
-    async function updateScaledHeight() {
-        scaledHeight = (await getGameWindow()).scaledHeight;
+    async function updateGameWindow() {
+        gameWindow = await getGameWindow();
     }
+
+    listen("scaleFactorChange", updateGameWindow);
 
     listen("connectionDetails", (event: ConnectionDetailsEvent) => {
         details = event.details;
     });
 
     onMount(async () => {
-        await updateScaledHeight();
+        await updateGameWindow();
         const current = await getConnectionDetails();
         // An event received while fetching is newer
         details ??= current;
     });
 </script>
 
-<svelte:window bind:innerHeight onresize={updateScaledHeight}/>
+<svelte:window bind:innerHeight onresize={updateGameWindow}/>
 
-{#if details && scaledHeight}
-    <div class="connection-details"
-         style="top: calc(50% - {32 * guiPixel}px); font-size: {Math.max(12, 4 * guiPixel)}px">
+{#if details && gameWindow}
+    <div class="connection-details" style="top: {top}px; font-size: {Math.max(12, 4 * guiPixel)}px">
         {#each parts as part}<span class:value={part.value}>{part.text}</span>{/each}
     </div>
 {/if}

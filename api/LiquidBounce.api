@@ -515,9 +515,11 @@ public final class net/ccbluex/liquidbounce/event/events/RefreshArrayListEvent :
 	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
-public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
 	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
 	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/TagEntityEvent : net/ccbluex/liquidbounce/event/Event {
@@ -654,6 +656,14 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 }
 
 public final class net/ccbluex/liquidbounce/features/blink/BlinkManager : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/chat/ServerLocation : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -1423,6 +1433,8 @@ public final class net/ccbluex/liquidbounce/render/engine/type/Color4b : java/la
 	public fun hashCode ()I
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;D)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;DDDD)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;F)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun isTransparent ()Z
 	public static final fun ofHSB (FFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public static final fun ofHSB (FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
