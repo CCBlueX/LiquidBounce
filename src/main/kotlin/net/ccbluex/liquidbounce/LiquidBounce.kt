@@ -77,6 +77,7 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.atlas.EntityImageAtlas
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.gui.indicator.IndicatorRenderer
@@ -295,6 +296,7 @@ object LiquidBounce : EventListener {
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
+        EntityImageAtlas
         ItemStackListRenderer
         IndicatorRenderer
 

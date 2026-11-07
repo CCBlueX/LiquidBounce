@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -42,8 +41,9 @@ sealed class EspMode(
     final override val parent
         get() = modes
 
-    fun shouldRender(entity: Entity?): Boolean {
-        return entity != null && entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq()
+    fun shouldRender(entity: LivingEntity): Boolean {
+        return ModuleESP.shouldRender(entity) &&
+            entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq()
     }
 
     sealed class BoxBased(name: String) : EspMode(name) {
