@@ -38,7 +38,7 @@ import kotlin.math.sin
  */
 internal object HatsOrbs : HatsMode("Orbs") {
 
-    val color by color("color", Color4b(0, 0, 255, 125))
+    val color by color("color", Color4b.LIQUID_BOUNCE.alpha(125))
 
     private object HatOrbsSettings : ValueGroup("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)

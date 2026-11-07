@@ -32,8 +32,6 @@ import net.minecraft.client.renderer.fog.FogData
 import net.minecraft.client.renderer.state.LightmapRenderState
 import org.joml.Vector4fc
 
-private val accentColor = Color4b(0x46, 0x77, 0xFF)
-
 /**
  * CustomAmbience module
  *
@@ -57,14 +55,14 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         val disableWorldFog by boolean("DisableWorldFog", false)
 
         object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", true) {
-            val color by color("Color", accentColor.alpha(201))
+            val color by color("Color", Color4b.LIQUID_BOUNCE.alpha(201))
         }
 
         init {
             tree(FogColorOverride)
         }
 
-        private val backgroundColor by color("BackgroundColor", accentColor.alpha(201))
+        private val backgroundColor by color("BackgroundColor", Color4b.LIQUID_BOUNCE.alpha(201))
 
         private val environmental by floatRange("Environmental", 5f..40f, -16f..2048f)
         private val renderDistance by floatRange("RenderDistance", 230f..256f, 0f..1024f)
@@ -111,7 +109,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
             abstract fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean
 
             object SingleColor : EditorMode("SingleColor") {
-                private val color by color("Color", accentColor)
+                private val color by color("Color", Color4b.LIQUID_BOUNCE)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
                     texture.clearColor(color)
@@ -121,8 +119,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
             object Custom : EditorMode("Custom") {
                 private val blockLightTint by color("BlockLightTint", Color4b.WHITE.alpha(0))
-                private val skyLightColor by color("SkyLightColor", Color4b.BLUE.alpha(0))
-                private val ambientColor by color("AmbientColor", Color4b.BLUE.alpha(0))
+                private val skyLightColor by color("SkyLightColor", Color4b.LIQUID_BOUNCE.alpha(0))
+                private val ambientColor by color("AmbientColor", Color4b.LIQUID_BOUNCE.alpha(0))
                 private val nightVisionColor by color("NightVisionColor", Color4b.WHITE.alpha(0))
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
@@ -147,7 +145,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     }
 
     object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {
-        val color by color("Color", Color4b.BLUE)
+        val color by color("Color", Color4b.LIQUID_BOUNCE)
     }
 
     init {

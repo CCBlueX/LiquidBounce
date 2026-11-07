@@ -225,7 +225,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     trajectoryType = shotDescriptor.trajectoryType,
                     colorSource = shotDescriptor.colorSource,
                 ),
-                blockHitColor = Color4b(0, 160, 255, 150),
+                blockHitColor = Color4b.LIQUID_BOUNCE.alpha(150),
                 entityHitColor = Color4b.RED.alpha(100),
                 lineWidth = lineWidth,
             )

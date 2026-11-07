@@ -73,7 +73,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
         tree(physicalSettings)
     }
 
-    private val color by color("Color", Color4b.RED)
+    private val color by color("Color", Color4b.LIQUID_BOUNCE)
     private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
     private val particles = mutableListOf<Particle>()
     private val chronometer = Chronometer()
