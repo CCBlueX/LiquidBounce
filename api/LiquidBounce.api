@@ -647,6 +647,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun registerMode (Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/Mode;)V
 	public final fun registerModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public final fun registerQuickFix (Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;)Lnet/ccbluex/liquidbounce/utils/client/error/QuickFix;
+	public final fun registerValueGroup (Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;)Lnet/ccbluex/liquidbounce/config/types/group/ValueGroup;
 	public fun toString ()Ljava/lang/String;
 	public fun unregister ()V
 	public final fun unregisterModules ([Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.minecraft.world.entity.ai.attributes.Attributes
 
-sealed class NoFallMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
+abstract class NoFallMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
     final override val parent: ModeValueGroup<*>
         get() = ModuleNoFall.modes
 
