@@ -302,7 +302,6 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             // and the currentRotation setter updates lastRotation during the same tick.
             val baseRotation = changeLookBaseRotation ?: lastRotation ?: currentRotation
             val interpolated = baseRotation.interpolateTo(currentRotation, partialTicks)
-            
             player.setRotation(interpolated)
         }
     }
