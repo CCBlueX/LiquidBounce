@@ -45,8 +45,8 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * AutoWalk walks the way the player faces around a wall, to a `.goto` destination around a closed room and up to a
- * `.follow` player, AutoFarm walks onto an item to pick it up, Fucker's AutoWalk bridges over to a bed and breaks it,
- * and KillAura's FightBot walks around a fence to hit a husk.
+ * `.follow` player, AutoFarm walks onto an item to pick it up, Fucker's AutoWalk bridges over to a bed and then a
+ * dragon egg and breaks both, and KillAura's FightBot walks around a fence to hit a husk.
  */
 @Suppress("TooManyFunctions")
 class AutoWalkGameTest : FabricClientGameTest {
@@ -77,7 +77,7 @@ class AutoWalkGameTest : FabricClientGameTest {
                 checkSprint(context, server, y)
                 checkFollow(context, server, y)
                 checkFarmItem(context, server, y)
-                checkBed(context, server, y)
+                checkFuckerTargets(context, server, y)
                 checkFightBot(context, server, y)
             }
         } finally {
@@ -91,9 +91,9 @@ class AutoWalkGameTest : FabricClientGameTest {
     }
 
     /**
-     * A wall at x 10, a closed stone room at x 22..28 and two floating islands at x 32..34 and 40..42 with a bed on
-     * the second. Along z -18..-12 runs an uneven lane: a hill four blocks high with a pillar on top, a ditch, a
-     * wall and slabs. The ground floor is stone at y - 1.
+     * A wall at x 10, a closed stone room at x 22..28 and three floating islands at x 32..34, 40..42 and 48..50 with
+     * a bed on the second and a dragon egg on the third. Along z -18..-12 runs an uneven lane: a hill four blocks high
+     * with a pillar on top, a ditch, a wall and slabs. The ground floor is stone at y - 1.
      */
     private fun buildCourse(server: TestServerContext, y: Int) {
         server.runCommand("fill 0 $y -20 60 ${y + 14} 20 air")
@@ -104,6 +104,8 @@ class AutoWalkGameTest : FabricClientGameTest {
         server.runCommand("fill 40 ${y + 8} -1 42 ${y + 8} 1 stone")
         server.runCommand("setblock 41 ${y + 9} 0 red_bed[part=foot,facing=east]")
         server.runCommand("setblock 42 ${y + 9} 0 red_bed[part=head,facing=east]")
+        server.runCommand("fill 48 ${y + 8} -1 50 ${y + 8} 1 stone")
+        server.runCommand("setblock 49 ${y + 9} 0 dragon_egg")
 
         for (step in 0..3) {
             server.runCommand("fill ${6 + step} ${y + step} -18 ${20 - step} ${y + step} -12 stone")
@@ -257,22 +259,33 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
     }
 
-    private fun checkBed(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+    private fun checkFuckerTargets(context: ClientGameTestContext, server: TestServerContext, y: Int) {
         moveTo(context, server, Vec3(33.5, y + 9.0, 0.5))
         context.onClient {
             FuckerAutoWalk.enabled = true
             ModuleFucker.enabled = true
         }
 
-        unhurt(server, "walking to the bed") {
-            repeat(800) {
-                if (server.countBlocks(BlockPos(41, y + 9, 0), BlockPos(42, y + 9, 0)) == 0) {
-                    return@unhurt
+        try {
+            // The bed first, being closer; hitting the egg teleports it away.
+            for ((target, from, to) in listOf(
+                Triple("bed", BlockPos(41, y + 9, 0), BlockPos(42, y + 9, 0)),
+                Triple("dragon egg", BlockPos(49, y + 9, 0), BlockPos(49, y + 9, 0)),
+            )) {
+                unhurt(server, "walking to the $target") {
+                    repeat(800) {
+                        if (server.countBlocks(from, to) == 0) {
+                            return@unhurt
+                        }
+                        context.waitTick()
+                    }
+                    val position = context.fromClient { checkNotNull(it.player).position() }
+                    error("The $target was not hit within 800 ticks, stopped at $position")
                 }
-                context.waitTick()
             }
-            val position = context.fromClient { checkNotNull(it.player).position() }
-            error("The bed was not broken within 800 ticks, stopped at $position")
+        } finally {
+            context.onClient { ModuleFucker.enabled = false }
+            server.runCommand("fill 30 ${y - 1} -20 60 ${y + 14} 20 air replace dragon_egg")
         }
     }
 

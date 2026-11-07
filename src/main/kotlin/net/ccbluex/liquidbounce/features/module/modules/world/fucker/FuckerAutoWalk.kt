@@ -18,15 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
-import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
+import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.Vec3
+import java.util.function.Predicate
 
 /**
- * Walks to the closest bed among the targets while nothing is in range, bridging and tunneling as needed.
+ * Walks to the closest of Fucker's targets while nothing is in range, bridging and tunneling as needed.
  */
 object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
     ModuleFucker,
@@ -35,20 +41,27 @@ object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
     rotations = ModuleFucker.rotations,
     allowBreak = true,
     allowPlace = true,
-), BedBlockTracker.Subscriber {
+) {
 
-    private val bedRange by float("BedRange", 64f, 8f..256f)
-
-    override val maxLayers: Int
-        get() = 1
+    private val targetRange by float("TargetRange", 64f, 8f..256f)
 
     override fun onEnabled() {
-        BedBlockTracker.subscribe(this)
+        ChunkScanner.subscribe(TargetTracker)
     }
 
     override fun onDisabled() {
-        BedBlockTracker.unsubscribe(this)
+        ChunkScanner.unsubscribe(TargetTracker)
         super.onDisabled()
+    }
+
+    /**
+     * Finds the targets again after Fucker's target list changed.
+     */
+    fun rescan() {
+        if (running) {
+            ChunkScanner.unsubscribe(TargetTracker)
+            ChunkScanner.subscribe(TargetTracker)
+        }
     }
 
     override fun createNavigationContext() = Unit
@@ -59,8 +72,8 @@ object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
         }
 
         val position = player.position()
-        val maxDistanceSq = bedRange.sq().toDouble()
-        return BedBlockTracker.allPositions()
+        val maxDistanceSq = targetRange.sq().toDouble()
+        return TargetTracker.allPositions()
             .filter { pos -> pos.state?.let { ModuleFucker.isTarget(pos, it) } == true }
             .map { it.center }
             .filter { it.distanceToSqr(position) <= maxDistanceSq }
@@ -68,5 +81,21 @@ object FuckerAutoWalk : NavigationBaseValueGroup<Unit>(
     }
 
     override fun goalRadius(context: Unit) = (ModuleFucker.range - 1.0).coerceAtLeast(1.0)
+
+    private object TargetTracker : AbstractBlockLocationTracker.BlockPos2State<Block>(), Predicate<BlockState> {
+        override val shouldCallRecordBlockOnChunkUpdate: Boolean
+            get() = false
+
+        override fun chunkUpdate(chunk: LevelChunk) {
+            chunk.findBlocks(this) { pos, state ->
+                track(pos, state.block)
+            }
+        }
+
+        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
+            if (test(state)) state.block else null
+
+        override fun test(state: BlockState) = !state.isAir && ModuleFucker.isTargetBlock(state)
+    }
 
 }
