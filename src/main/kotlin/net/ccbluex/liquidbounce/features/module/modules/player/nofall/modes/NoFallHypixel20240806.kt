@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object NoFallHypixel20240806 : NoFallMode("HypixelPacket") {
 
     private val void by boolean("OverVoid", false)

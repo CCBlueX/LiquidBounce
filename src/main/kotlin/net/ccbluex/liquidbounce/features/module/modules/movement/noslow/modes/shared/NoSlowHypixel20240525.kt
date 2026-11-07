@@ -34,6 +34,7 @@ import java.util.function.Predicate
  * Tested on Watchdog-AntiCheat (hypixel.net)
  * Confirmed to be working on 25th of May 2024
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal class NoSlowHypixel20240525(
     parent: EventListener? = null,
     actionFilter: Predicate<ItemUseAnimation> = Predicates.alwaysTrue(),

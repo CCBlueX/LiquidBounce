@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object NoFallBlocksMC20250719 : NoFallMode("BlocksMC") {
 
     private var shouldClip = false

@@ -39,6 +39,7 @@ import net.minecraft.world.effect.MobEffects
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHypixel20231212(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBHop", parent) {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)

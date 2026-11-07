@@ -256,6 +256,8 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEME
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
+
         private val hypixel by boolean("Hypixel", false)
 
         // Event handler for player movement

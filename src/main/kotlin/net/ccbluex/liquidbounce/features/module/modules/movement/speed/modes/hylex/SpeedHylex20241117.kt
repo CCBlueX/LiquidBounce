@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHylex20241117(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
     private var airTicks = 0

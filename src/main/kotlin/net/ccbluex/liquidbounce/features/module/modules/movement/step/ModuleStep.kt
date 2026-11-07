@@ -225,6 +225,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
      *
      * @author @liquidsquid1
      */
+    @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
     private object BlocksMC : Mode("BlocksMC") {
 
         override val parent: ModeValueGroup<Mode>

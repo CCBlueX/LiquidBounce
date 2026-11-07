@@ -51,6 +51,7 @@ import net.minecraft.world.phys.Vec3
  *
  * @author 1zuna <marco@ccbluex.net>
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 object FlyBlocksMC20240309 : Mode("NcpClip") {
 
     private val speed by float("Speed", 7.5f, 2f..10f)

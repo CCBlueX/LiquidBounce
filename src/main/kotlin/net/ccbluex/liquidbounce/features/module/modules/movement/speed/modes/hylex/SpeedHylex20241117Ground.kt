@@ -30,6 +30,7 @@ import net.minecraft.world.effect.MobEffects
  * Works because of a silly exemption from Hylex
  * @author @liquidsquid1
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHylex20241117Ground(override val parent: ModeValueGroup<*>) : Mode("HylexGround") {
 
     private var groundTicks = 0

@@ -41,6 +41,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  *
  * @note Tested in Bedwars, Skywars. Pretty much flagless
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object FlyHycraft20240515 : Mode("HycraftDamage") {
 
     override val parent: ModeValueGroup<*>

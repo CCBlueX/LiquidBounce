@@ -122,6 +122,7 @@ object CriticalsPacket : Mode("Packet") {
         LOW("Low"),
         DOWN("Down"),
         GRIM("Grim-2.3.59", listOf("Grim")),
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
         BLOCKSMC("BlocksMC"),
     }
 }

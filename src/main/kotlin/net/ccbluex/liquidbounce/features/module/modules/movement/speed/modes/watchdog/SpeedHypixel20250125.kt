@@ -34,6 +34,7 @@ import net.minecraft.world.effect.MobEffects
  * @anticheatVersion 25.01.25
  * @testedOn hypixel.net
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHypixel20250125(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
     companion {

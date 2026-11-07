@@ -42,6 +42,7 @@ import kotlin.math.round
  * @author liquidsquid1
  */
 
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedBlocksMC20241123(override val parent: ModeValueGroup<*>) : Mode("BlocksMC") {
 
     private var roundStrafeYaw by boolean("RoundStrafeYaw", false)

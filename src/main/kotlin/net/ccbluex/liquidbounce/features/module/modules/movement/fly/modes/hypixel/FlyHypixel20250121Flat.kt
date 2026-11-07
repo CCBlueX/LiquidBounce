@@ -40,6 +40,7 @@ import kotlin.random.Random
  * @testedOn hypixel.net
  * @author @liquidsquid1
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 object FlyHypixel20250121Flat : Mode("HypixelFlat") {
 
     override val parent: ModeValueGroup<*>

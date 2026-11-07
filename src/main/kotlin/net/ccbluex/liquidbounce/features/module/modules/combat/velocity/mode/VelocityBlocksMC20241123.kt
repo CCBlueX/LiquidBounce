@@ -28,6 +28,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * BlocksMC velocity
  * @author liquidsquid1
  */
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object VelocityBlocksMC20241123 : VelocityMode("BlocksMC") {
 
     @Suppress("unused")

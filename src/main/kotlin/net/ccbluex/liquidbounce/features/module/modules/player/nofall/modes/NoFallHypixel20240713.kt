@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object NoFallHypixel20240713 : NoFallMode("Hypixel") {
 
     private var doJump = false

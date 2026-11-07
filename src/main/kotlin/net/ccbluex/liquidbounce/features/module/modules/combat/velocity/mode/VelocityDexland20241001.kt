@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.math.multiply
 
+@Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object VelocityDexland20241001 : VelocityMode("Dexland") {
 
     private val hReduce by float("HReduce", 0.3f, 0f..1f)

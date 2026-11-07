@@ -173,6 +173,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
          * Similar to FALLING, but only when a certain velocity is triggered and after
          * 2 jumps
          */
+        @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
         HYPIXEL("Hypixel", { blockPos ->
             if (player.deltaMovement.y == -0.15233518685055708 && jumps >= 2) {
                 jumps = 0
