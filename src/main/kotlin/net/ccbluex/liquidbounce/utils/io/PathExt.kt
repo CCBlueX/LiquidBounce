@@ -89,8 +89,8 @@ private fun Path.replaceExisting(target: Path, cause: IOException): Path =
  */
 @AddonApi
 @Throws(IOException::class)
-inline fun Path.atomicWrite(writer: (Path) -> Unit) {
-    val tempPath = Files.createTempFile(parent, "$fileName.", ".tmp")
+fun Path.atomicWrite(writer: (Path) -> Unit) {
+    val tempPath = Files.createTempFile(toAbsolutePath().parent, "$fileName.", ".tmp")
     try {
         writer(tempPath)
         tempPath.atomicMoveTo(this)
