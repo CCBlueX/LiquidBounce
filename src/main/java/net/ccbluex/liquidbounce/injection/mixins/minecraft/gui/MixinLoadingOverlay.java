@@ -27,14 +27,17 @@ import net.ccbluex.liquidbounce.common.ClientLogoTexture;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
+import net.ccbluex.liquidbounce.render.SplashScreenRenderer;
+import net.ccbluex.liquidbounce.render.SplashScreenSounds;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.Util;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -43,7 +46,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.function.IntSupplier;
 
 /**
- * LiquidBounce Splash Screen
+ * LiquidBounce Splash Screen: the logo mark drops in, splashes and bounces into place.
  */
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
@@ -51,9 +54,31 @@ public abstract class MixinLoadingOverlay {
     @Unique
     private static final IntSupplier CLIENT_ARGB = () -> ARGB.color(255, 24, 26, 27);
 
+    /**
+     * Once loading is done, the overlay stays opaque for this long before it fades out.
+     */
+    @Unique
+    private static final long FADE_OUT_DELAY = 1000L;
+
+    @Shadow
+    private long fadeOutStart;
+
+    @Shadow
+    private float currentProgress;
+
+    @Unique
+    private long lastFrame = -1L;
+
+    @Unique
+    private float playhead;
+
+    @Unique
+    private boolean outroStarted;
+
     @Inject(method = "registerTextures", at = @At("RETURN"))
     private static void initializeTexture(TextureManager textureManager, CallbackInfo ci) {
         textureManager.registerAndLoad(ClientLogoTexture.CLIENT_LOGO, new ClientLogoTexture());
+        SplashScreenSounds.INSTANCE.load();
     }
 
     /**
@@ -82,33 +107,44 @@ public abstract class MixinLoadingOverlay {
             return;
         }
 
-        int screenWidth = graphics.guiWidth();
-        int screenHeight = graphics.guiHeight();
+        float time = advancePlayhead();
 
-        float scaleFactor = Math.min(screenWidth * 0.4f / ClientLogoTexture.WIDTH, screenHeight * 0.25f / ClientLogoTexture.HEIGHT);
+        // Vanilla fades the overlay out during the second after FADE_OUT_DELAY
+        float outro = fadeOutStart > -1L ? Math.clamp((Util.getMillis() - fadeOutStart - FADE_OUT_DELAY) / 1000.0F, 0.0F, 1.0F) : 0.0F;
+        if (outro > 0.0F && !outroStarted) {
+            outroStarted = true;
+            SplashScreenSounds.INSTANCE.playOutro();
+        }
 
-        int displayWidth = (int)(ClientLogoTexture.WIDTH * scaleFactor);
-        int displayHeight = (int)(ClientLogoTexture.HEIGHT * scaleFactor);
+        SplashScreenRenderer.INSTANCE.render(graphics, time, currentProgress, ARGB.alphaFloat(color), outro);
+    }
 
-        int x = (screenWidth - displayWidth) / 2;
-        int y = (screenHeight - displayHeight) / 2;
+    @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;extractProgressBar(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIIIF)V"))
+    private boolean drawProgressBar(LoadingOverlay instance, GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, float fade) {
+        return SelfDestruct.INSTANCE.isDestructed();
+    }
 
-        // TODO: Draw as SVG instead of PNG
-        graphics.blit(
-            ClientRenderPipelines.GUI.SmoothTexture,
-                ClientLogoTexture.CLIENT_LOGO,
-                x,
-                y,
-                0.0F,
-                0.0F,
-                displayWidth,
-                displayHeight,
-                ClientLogoTexture.WIDTH,
-                ClientLogoTexture.HEIGHT,
-                ClientLogoTexture.WIDTH,
-                ClientLogoTexture.HEIGHT,
-                color
-        );
+    /**
+     * Plays the intro in real time; loading never waits for it. When loading finishes first,
+     * the rest of the intro speeds up to end before the overlay fades out.
+     */
+    @Unique
+    private float advancePlayhead() {
+        long now = Util.getMillis();
+        if (lastFrame == -1L) {
+            lastFrame = now;
+        }
+
+        float delta = Math.min(now - lastFrame, 100L);
+        if (fadeOutStart > -1L) {
+            long timeLeft = Math.max(fadeOutStart + FADE_OUT_DELAY - now, 1L);
+            delta *= Math.max(1.0F, (SplashScreenRenderer.LENGTH - playhead) / timeLeft);
+        }
+        float previous = playhead;
+        playhead = Math.min(playhead + delta, SplashScreenRenderer.LENGTH);
+        lastFrame = now;
+        SplashScreenSounds.INSTANCE.play(previous, playhead);
+        return playhead;
     }
 
     @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/LoadingOverlay;BRAND_BACKGROUND:Ljava/util/function/IntSupplier;", opcode = Opcodes.GETSTATIC))

@@ -45,6 +45,25 @@ enum class Easing(override val tag: String) : Tagged {
     EXPONENTIAL_OUT("ExponentialOut") {
         override fun transform(x: Float) = if (x == 1f) 1f else 1f - 2f.pow(-10f * x)
     },
+    BACK_OUT("BackOut") {
+        override fun transform(x: Float): Float {
+            val c = 1.70158f
+            val u = x - 1f
+            return 1f + (c + 1f) * u * u * u + c * u * u
+        }
+    },
+    BOUNCE_OUT("BounceOut") {
+        override fun transform(x: Float): Float {
+            val n = 7.5625f
+            val d = 2.75f
+            return when {
+                x < 1f / d -> n * x * x
+                x < 2f / d -> (x - 1.5f / d).let { n * it * it + 0.75f }
+                x < 2.5f / d -> (x - 2.25f / d).let { n * it * it + 0.9375f }
+                else -> (x - 2.625f / d).let { n * it * it + 0.984375f }
+            }
+        }
+    },
     NONE("None") {
         override fun transform(x: Float) = 1f
 
