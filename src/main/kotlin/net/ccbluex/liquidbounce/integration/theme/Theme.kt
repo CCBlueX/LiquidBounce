@@ -79,6 +79,9 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         @GET("backgrounds/{background}.png")
         suspend fun background(@Path("background") background: String): NativeImage
+
+        @GET("sounds/{name}.ogg")
+        suspend fun sound(@Path("name") name: String): Buffer
     }
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
@@ -257,10 +260,34 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
+    /** The files of [ThemeMetadata.sounds] by name, registered by [ThemeSounds]. */
+    var sounds: Map<String, ByteArray> = emptyMap()
+        private set
+
+    private suspend fun loadSounds() {
+        sounds = buildMap {
+            for (name in metadata.sounds.orEmpty()) {
+                if (ThemeSounds.soundId(metadata.id, name) == null) {
+                    logger.warn("Sound $name of theme ${metadata.name} has no valid id")
+                    continue
+                }
+
+                try {
+                    put(name, service.sound(name).readByteArray())
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.warn("Failed to load sound $name for theme ${metadata.name}", e)
+                }
+            }
+        }
+    }
+
     private suspend fun loadAll() = apply {
         loadMetadata()
         loadComponents()
         loadFonts()
+        loadSounds()
     }
 
     var backgroundShader: ThemeBackground? = null

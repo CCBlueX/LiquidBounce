@@ -42,7 +42,7 @@ import kotlin.math.ceil
 
 class FontGlyphPageManager(
     private val registeredFonts: Set<FontFace>,
-    private val primaryFace: FontFace,
+    internal val primaryFace: FontFace,
     private val fallbackFonts: List<FontFace> = emptyList()
 ) : EventListener, AutoCloseable {
 

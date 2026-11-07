@@ -95,7 +95,10 @@ object HttpClient {
         val OCTET_STREAM = "application/octet-stream".toMediaType()
     }
 
-    private val defaultClient = OkHttpClient.Builder()
+    /**
+     * Without the API interceptors, which reject non-2xx answers such as a WebSocket upgrade.
+     */
+    internal val defaultClient = OkHttpClient.Builder()
         .dispatcher(
             Dispatcher(
                 Executors.newThreadPerTaskExecutor(

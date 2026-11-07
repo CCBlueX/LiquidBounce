@@ -180,3 +180,4 @@ accessible field net/minecraft/client/gui/GuiGraphicsExtractor guiRenderState Ln
 accessible method net/minecraft/world/item/enchantment/EnchantmentHelper getComponentType (Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/core/component/DataComponentType;
 
 accessible field net/minecraft/client/sounds/SoundManager registry Ljava/util/Map;
+accessible field net/minecraft/client/sounds/SoundManager soundCache Ljava/util/Map;

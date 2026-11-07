@@ -43,8 +43,6 @@ import net.minecraft.util.ARGB
 import org.joml.Vector2f
 import java.util.function.Supplier
 
-private val lightAccent = Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.3)
-
 /**
  * Module ItemChams
  *
@@ -56,6 +54,8 @@ private val lightAccent = Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.3
  * @author ccetl
  */
 object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
+
+    private val lightAccent = Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.3F)
 
     object Lightmap : ToggleableValueGroup(this, "Lightmap", true) {
         private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186)).markDirtyOnChanged()

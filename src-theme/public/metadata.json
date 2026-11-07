@@ -21,6 +21,7 @@
     "hud",
     "inventory",
     "container",
+    "connecting",
     "disconnected",
     "browser"
   ],
@@ -57,6 +58,7 @@
     "Inter-SemiBold.ttf",
     "Inter-Thin.ttf"
   ],
+  "nativeFont": "Inter Medium",
   "backgrounds": [
     {
       "name": "background",

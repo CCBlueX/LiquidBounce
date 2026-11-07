@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.io
 
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import org.apache.commons.io.function.IOConsumer
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
@@ -89,10 +90,10 @@ private fun Path.replaceExisting(target: Path, cause: IOException): Path =
  */
 @AddonApi
 @Throws(IOException::class)
-fun Path.atomicWrite(writer: (Path) -> Unit) {
+fun Path.atomicWrite(writer: IOConsumer<Path>) {
     val tempPath = Files.createTempFile(toAbsolutePath().parent, "$fileName.", ".tmp")
     try {
-        writer(tempPath)
+        writer.accept(tempPath)
         tempPath.atomicMoveTo(this)
     } catch (failure: Throwable) {
         // A failed cleanup must not hide why the write failed.
