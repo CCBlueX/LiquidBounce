@@ -17,6 +17,7 @@
     import {onMount} from "svelte";
     import {notification} from "../common/header/notification_store";
     import {isAnniversary} from "../../../util/utils";
+    import {escapeLayer} from "../../../integration/escape";
 
     let regularButtonsShown = true;
     let clientButtonsShown = false;
@@ -49,6 +50,9 @@
             }, 750);
         }
     }
+
+    const layer = escapeLayer(toggleButtons);
+    $: layer.setOpen(clientButtonsShown);
 </script>
 
 <div class="title-screen">
