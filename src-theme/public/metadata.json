@@ -57,6 +57,7 @@
     "Inter-SemiBold.ttf",
     "Inter-Thin.ttf"
   ],
+  "nativeFont": "Inter Medium",
   "backgrounds": [
     {
       "name": "background",
