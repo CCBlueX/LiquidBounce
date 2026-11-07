@@ -41,6 +41,7 @@ object GlobalManager : Config("Settings") {
 
         // Feature settings
         tree(GlobalSettingsTarget)
+        tree(GlobalSettingsTeleport)
         tree(GlobalSettingsRichPresence)
         tree(GlobalSettingsClientChat)
         tree(GlobalSettingsAutoTranslate)

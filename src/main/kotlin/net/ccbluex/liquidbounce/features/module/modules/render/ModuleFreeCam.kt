@@ -124,7 +124,14 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
     /**
      * Navigation configuration for the FreeCam module
      */
-    private object Navigation : NavigationBaseValueGroup<Unit>(ModuleFreeCam, "Navigation", false) {
+    private object Navigation : NavigationBaseValueGroup<Unit>(
+        ModuleFreeCam,
+        "Navigation",
+        false,
+        rotations = rotations,
+        allowBreak = true,
+        allowPlace = true,
+    ) {
 
         private val controlKey by key("Key", InputConstants.KEY_LCONTROL)
 
@@ -150,6 +157,10 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
                 null
             }
         }
+
+        override fun goalRadius(context: Unit) = GOAL_RADIUS
+
+        private const val GOAL_RADIUS = 1.5
 
     }
 

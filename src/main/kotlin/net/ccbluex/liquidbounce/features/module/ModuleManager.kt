@@ -59,7 +59,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAbortBreaking
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClip
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDamage
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleExtendedFirework
@@ -74,6 +73,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleResetVL
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleSleepWalker
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTimeShift
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleVehicleOneHit
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleYggdrasilSignatureFix
@@ -136,7 +136,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSneak
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTridentBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
@@ -502,9 +501,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleVehicleOneHit,
             ModuleServerCrasher,
             ModuleDupe,
-            ModuleClickTp,
+            ModuleTeleportReach,
             ModuleTimeShift,
-            ModuleTeleport,
             ModulePhase,
             ModuleYggdrasilSignatureFix,
 
