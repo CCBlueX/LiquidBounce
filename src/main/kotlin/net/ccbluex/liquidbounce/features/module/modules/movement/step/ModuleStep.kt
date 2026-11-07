@@ -53,7 +53,7 @@ import net.minecraft.stats.Stats
 
 object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
 
-    private val modes = choices("Mode", Instant, arrayOf(
+    internal val modes = choices("Mode", Instant, arrayOf(
         Instant,
         Legit,
         Vulcan286,
