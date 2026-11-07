@@ -167,7 +167,7 @@ object HttpClient {
         .addNetworkInterceptor(
             DefaultHeaderInterceptor(HttpHeaders.Cookie, {
                 "${AuthConfig.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
-            }, false).whenUrl { it.host.isLocalHost() && it.port == ClientInteropServer.PORT }
+            }, false).whenUrl { it.host.isLocalHost() && it.port == ClientInteropServer.port }
         )
         .build()
 
