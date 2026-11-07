@@ -522,7 +522,6 @@
   "liquidbounce.module.disabler.messages.grimSpectateEnableMessage": "在重生期间——当你具有飞行能力时，启用此禁用器。你应该能够飞行和破坏方块，在此期间不能攻击其他玩家。你需要尽快关闭它，否则你将连接超时。",
   "liquidbounce.module.disabler.messages.grimSpectateMessage": "你被服务器检测了！现在应该关闭Disabler模块。",
   "liquidbounce.module.disabler.messages.info": "请检查Disabler模块的配置，确保其为服务器或反作弊正确配置。 否则，该模块不仅无法正常工作，甚至可能会导致你被服务器检测。",
-  "liquidbounce.module.disabler.messages.minibloxProtocol": "Miniblox disabler仅适用于 ViaFabricPlus 协议 1.8.X.",
   "liquidbounce.module.disabler.messages.vulcanRiptideMessage": "为了绕过Vulcan的移动检查，你需要在副手持有一个附魔了激流的三叉戟。",
   "liquidbounce.module.droneControl.description": "打开一个控制面板，用弓箭瞄准并射击目标。",
   "liquidbounce.module.dupe.description": "尝试利用漏洞自动复制物品栏中的物品。",

@@ -22,43 +22,12 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.world.effect.MobEffects
 
 object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", false) {
 
     private val speed by float("Speed", 0.247f, 0.0f..5.0f)
-    private val hypixel by boolean("Hypixel", false)
     private val onlyOnGround by boolean("OnlyOnGround", false)
-
-    private var moveTicks = 0
-
-    override fun onEnabled() {
-        moveTicks = 0
-        super.onEnabled()
-    }
-
-    override fun onDisabled() {
-        if (!hypixel) {
-            return
-        }
-        player.deltaMovement = player.deltaMovement.multiply(
-            0.5,
-            1.0,
-            0.5
-        )
-        super.onDisabled()
-    }
-
-    @Suppress("unused")
-    private val moveTickHandler = handler<GameTickEvent> {
-        if (player.moving) {
-            moveTicks++
-            return@handler
-        }
-        moveTicks = 0
-    }
 
     @Suppress("unused")
     private val strafeHandler = handler<GameTickEvent> {
@@ -66,20 +35,6 @@ object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", fa
             return@handler
         }
 
-        if (hypixel) {
-            var speed = 0.207
-
-            if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: -1) >= 0) {
-                speed = 0.295
-            }
-
-            if (player.tickCount % 20 == 0 || moveTicks <= 7) {
-                speed = 0.09800000190734863
-            }
-
-            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
-        } else {
-            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
-        }
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
     }
 }

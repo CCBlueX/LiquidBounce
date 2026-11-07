@@ -22,27 +22,21 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
-import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
-import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stats.Stats
 
 /**
@@ -57,7 +51,6 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         Instant,
         Legit,
         Vulcan286,
-        BlocksMC,
         Hypixel
     )).apply { tagBy(this) }
 
@@ -216,60 +209,6 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
             super.disable()
         }
 
-
-    }
-
-    /**
-     * BlocksMC Step
-     * for 1.9+
-     *
-     * @author @liquidsquid1
-     */
-    @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
-    private object BlocksMC : Mode("BlocksMC") {
-
-        override val parent: ModeValueGroup<Mode>
-            get() = modes
-
-        private var baseTimer by float("BaseTimer", 3.0f, 0.1f..5.0f)
-        private var recoveryTimer by float("RecoveryTimer", 0.6f, 0.1f..5.0f)
-
-        private var stepping = false
-
-        @Suppress("unused")
-        private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
-            if (player.canStep(1.0) && !stepping) {
-                event.jump = true
-
-                stepping = true
-                Timer.requestTimerSpeed(baseTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 3)
-                player.deltaMovement.y = 0.42
-                waitTicks(1)
-                player.deltaMovement.y = 0.33
-                waitTicks(1)
-                player.deltaMovement.y = 0.25
-                waitTicks(2)
-                player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.281)
-                player.deltaMovement.y -= player.y % 1.0
-                Timer.requestTimerSpeed(recoveryTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 2)
-                stepping = false
-            }
-        }
-
-        @Suppress("unused")
-        private val fakeLagHandler = handler<BlinkPacketEvent> { event ->
-            if (event.origin == TransferOrigin.OUTGOING && stepping) {
-                event.action = BlinkManager.Action.QUEUE
-            }
-        }
-
-        override fun disable() {
-            stepping = false
-            super.disable()
-        }
-
-        override val running: Boolean
-            get() = super.running && !ModuleSpeed.running
 
     }
 
