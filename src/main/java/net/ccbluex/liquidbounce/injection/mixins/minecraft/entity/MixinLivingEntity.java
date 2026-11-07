@@ -364,10 +364,30 @@ public abstract class MixinLivingEntity extends MixinEntity {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, itemStack));
     }
 
-    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
-    private int hookSwingSpeed(int duration) {
-        var animations = GlobalSettingsViewModel.INSTANCE;
-        return animations.getRunning() && liquid_bounce$isClientPlayer() ? animations.getSwingDuration() : duration;
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"))
+    private int hookSwingDurationItem(int duration) {
+        return liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreItem()
+            ? SwingAnimation.DEFAULT.duration() : duration;
+    }
+
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/effect/MobEffectUtil;hasDigSpeed(Lnet/minecraft/world/entity/LivingEntity;)Z"))
+    private boolean hookSwingDurationHaste(boolean hasDigSpeed) {
+        return hasDigSpeed && !(liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreHaste());
+    }
+
+    @ModifyExpressionValue(method = "getModifiedSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hasEffect(Lnet/minecraft/core/Holder;)Z"))
+    private boolean hookSwingDurationMiningFatigue(boolean hasMiningFatigue) {
+        return hasMiningFatigue && !(liquid_bounce$tweaksSwingDuration() && GlobalSettingsViewModel.SwingDuration.INSTANCE.getIgnoreMiningFatigue());
+    }
+
+    @ModifyReturnValue(method = "getModifiedSwingDuration", at = @At("RETURN"))
+    private int hookSwingDuration(int duration) {
+        return liquid_bounce$tweaksSwingDuration() ? GlobalSettingsViewModel.SwingDuration.INSTANCE.scale(duration) : duration;
+    }
+
+    @Unique
+    private boolean liquid_bounce$tweaksSwingDuration() {
+        return GlobalSettingsViewModel.SwingDuration.INSTANCE.getRunning() && liquid_bounce$isClientPlayer();
     }
 
     @Inject(method = "swing", at = @At(value = "HEAD"), cancellable = true)

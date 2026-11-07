@@ -23,6 +23,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.HumanoidArm
 import org.joml.Quaternionf
+import kotlin.math.roundToInt
 
 /**
  * Changes how our view model looks. The view model is our POV-view only.
@@ -45,7 +47,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         tree(MainHand)
         tree(OffHand)
         tree(EquipOffset)
-        tree(SwingAnimations)
+        tree(SwingDuration)
     }
 
     object MainHand : ToggleableValueGroup(this, "MainHand", false) {
@@ -66,17 +68,49 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
-    val swingDuration by int("SwingDuration", 6, 1..20)
+    /**
+     * Scales the vanilla swing duration, which depends on the held item, Haste and Mining Fatigue.
+     */
+    object SwingDuration : ToggleableValueGroup(this, "SwingDuration", false) {
+        private val multiplier by float("Multiplier", 1f, 0.1f..3f, "x")
+        private val ignore by multiEnumChoice<Ignores>("Ignore")
+
+        val ignoreItem get() = Ignores.ITEM in ignore
+        val ignoreHaste get() = Ignores.HASTE in ignore
+        val ignoreMiningFatigue get() = Ignores.MINING_FATIGUE in ignore
+
+        fun scale(duration: Int) = (duration * multiplier).roundToInt().coerceAtLeast(1)
+
+        private enum class Ignores(
+            override val tag: String
+        ) : Tagged {
+            ITEM("Item"),
+            HASTE("Haste"),
+            MINING_FATIGUE("MiningFatigue")
+        }
+    }
+
+    val swingAnimation = modes(this, "SwingAnimation") {
+        arrayOf(
+            NoneMode(it),
+            SwingAnimationMode.Swipe,
+            SwingAnimationMode.Spin,
+            SwingAnimationMode.Hook,
+            SwingAnimationMode.Dash,
+            SwingAnimationMode.Tap,
+            SwingAnimationMode.Inject,
+            SwingAnimationMode.Slap,
+            SwingAnimationMode.Akrien,
+            SwingAnimationMode.Smooth,
+            SwingAnimationMode.Power,
+            SwingAnimationMode.Feast
+        )
+    }
 
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
-     * of a sword.
-     * This choice is only used when the [ModuleSwordBlock] module is enabled.
+     * of a sword. This choice is only used when the [ModuleSwordBlock] module is enabled.
      */
-    init {
-        SwingAnimations
-    }
-
     val blockAnimationChoice = modes(
         this,
         "BlockingAnimation",
