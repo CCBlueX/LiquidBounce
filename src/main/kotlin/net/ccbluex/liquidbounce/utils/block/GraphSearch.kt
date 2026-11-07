@@ -59,30 +59,90 @@ fun <T> aStarShortestPath(
 ): ShortestPath<T>? {
     require(maxIterations > 0) { "maxIterations must be positive." }
 
-    val gScores = Object2DoubleOpenHashMap<T>().apply {
+    return AStarSearch(start, isGoal, neighbors, heuristic, maxCost).advance(maxIterations)
+}
+
+/**
+ * A* search that can be advanced in slices, so one search can be spread over several calls.
+ *
+ * Not thread-safe: advance it from one thread at a time.
+ */
+class AStarSearch<T>(
+    private val start: T,
+    private val isGoal: Predicate<T>,
+    private val neighbors: Function<T, Iterable<WeightedEdge<T>>>,
+    private val heuristic: ToDoubleFunction<T>,
+    private val maxCost: Double = Double.POSITIVE_INFINITY,
+) {
+
+    private val gScores = Object2DoubleOpenHashMap<T>().apply {
         defaultReturnValue(Double.POSITIVE_INFINITY)
         put(start, 0.0)
     }
-    val previous = Object2ObjectOpenHashMap<T, T>()
+    private val previous = Object2ObjectOpenHashMap<T, T>()
+    private val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore }).apply {
+        add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
+    }
 
-    val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore })
-    queue.add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
-
+    /**
+     * Nodes polled so far.
+     */
     var iterations = 0
-    while (queue.isNotEmpty()) {
-        iterations++
-        if (iterations > maxIterations) {
-            break
+        private set
+
+    var result: ShortestPath<T>? = null
+        private set
+
+    private var closest: QueueEntry<T>? = null
+    private var closestHeuristic = Double.POSITIVE_INFINITY
+
+    /**
+     * True once a path was found or no node is left to explore.
+     */
+    val isFinished: Boolean
+        get() = result != null || queue.isEmpty()
+
+    /**
+     * Polls at most [maxIterations] nodes and returns the path once it is known.
+     */
+    fun advance(maxIterations: Int): ShortestPath<T>? {
+        var budget = maxIterations
+        while (result == null && budget > 0 && queue.isNotEmpty()) {
+            budget--
+            iterations++
+            expand(queue.poll())
         }
 
-        val current = queue.poll()
+        return result
+    }
+
+    /**
+     * The path to the explored node with the smallest heuristic, or null if no node beats the start.
+     */
+    fun closestPath(): ShortestPath<T>? {
+        val closest = closest ?: return null
+        if (closest.node == start) {
+            return null
+        }
+
+        return ShortestPath(reconstructPath(start, closest.node, previous), closest.gScore)
+    }
+
+    private fun expand(current: QueueEntry<T>) {
         val bestCurrentG = gScores.getDouble(current.node)
         if (current.gScore > bestCurrentG || current.gScore > maxCost) {
-            continue
+            return
+        }
+
+        val currentHeuristic = current.fScore - current.gScore
+        if (currentHeuristic < closestHeuristic) {
+            closest = current
+            closestHeuristic = currentHeuristic
         }
 
         if (isGoal.test(current.node)) {
-            return ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
+            result = ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
+            return
         }
 
         for ((node, cost) in neighbors.apply(current.node)) {
@@ -106,7 +166,6 @@ fun <T> aStarShortestPath(
         }
     }
 
-    return null
 }
 
 private fun <T> reconstructPath(

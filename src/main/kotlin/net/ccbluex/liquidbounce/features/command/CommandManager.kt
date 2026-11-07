@@ -52,6 +52,8 @@ import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.Com
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCoordinates
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandFollow
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandGoto
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandPing
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandRemoteView
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandSay
@@ -65,13 +67,13 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.Comman
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemStack
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandMapImage
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandPlayerTeleport
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandTeleport
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
@@ -160,6 +162,8 @@ object CommandManager : EventListener {
         register(CommandBind)
         register(CommandAutoAccount)
         register(CommandCenter)
+        register(CommandGoto)
+        register(CommandFollow)
         register(CommandHelp)
         register(CommandRemoteView)
         register(CommandDebug)
