@@ -114,6 +114,9 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     var lastRotation: Rotation? = null
         private set
 
+    // Tick-stable base for CHANGE_LOOK interpolation to prevent speed damping
+    private var changeLookBaseRotation: Rotation? = null
+
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
 
@@ -150,6 +153,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         currentRotation = null
         playerRotation = null
         lastRotation = null
+        changeLookBaseRotation = null
         actualServerRotation = Rotation.ZERO
         theoreticalServerRotation = Rotation.ZERO
     }
@@ -265,7 +269,16 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
                 currentRotation = null
                 previousRotationTarget = null
+                changeLookBaseRotation = null
             } else {
+                if (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
+                    // Capture the rotation from the end of the previous tick before it gets overwritten.
+                    // This ensures a stable interpolation base throughout the current tick.
+                    changeLookBaseRotation = currentRotation ?: playerRotation
+                } else {
+                    changeLookBaseRotation = null
+                }
+
                 currentRotation = rotation
                 previousRotationTarget = activeRotationTarget
 
@@ -282,10 +295,14 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-            val playerRotation = playerRotation ?: return
             val currentRotation = currentRotation ?: return
 
-            val interpolated = playerRotation.interpolateTo(currentRotation, partialTicks)
+            // Use a tick-stable interpolation base to prevent speed damping.
+            // lastRotation is unsafe here because MouseRotationEvent assigns currentRotation,
+            // and the currentRotation setter updates lastRotation during the same tick.
+            val baseRotation = changeLookBaseRotation ?: lastRotation ?: currentRotation
+            val interpolated = baseRotation.interpolateTo(currentRotation, partialTicks)
+            
             player.setRotation(interpolated)
         }
     }
