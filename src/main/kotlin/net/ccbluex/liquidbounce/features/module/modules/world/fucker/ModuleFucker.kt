@@ -88,7 +88,7 @@ object ModuleFucker : ClientModule(
     aliases = listOf("BedBreaker", "IdNuker"),
 ), BreakingProgress.Provider {
 
-    private val range by float("Range", 5F, 1F..6F)
+    internal val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         minOf(range, it)
     }
@@ -128,7 +128,7 @@ object ModuleFucker : ClientModule(
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     // Rotation
-    private val rotations = tree(RotationsValueGroup(this))
+    internal val rotations = tree(RotationsValueGroup(this))
     private val targetRenderer = tree(
         PlacementRenderer("TargetRendering", true, this,
             defaultColor = Color4b(255, 0, 0, 90)
@@ -137,6 +137,10 @@ object ModuleFucker : ClientModule(
     private val progressRenderer = targetRenderer.tree(
         BreakingProgressRenderer(targetRenderer, this)
     )
+
+    init {
+        tree(FuckerAutoWalk)
+    }
 
     private val availableToolSlots
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.HotbarAndInventory else Slots.Hotbar
@@ -154,6 +158,9 @@ object ModuleFucker : ClientModule(
 
     private var currentTarget: DestroyerTarget? = null
     private var oldTarget: DestroyerTarget? = null
+
+    internal val hasTarget: Boolean
+        get() = currentTarget != null
 
     override fun breakingProgress(): BreakingProgress? {
         val target = currentTarget?.takeIf { it.action == DestroyAction.DESTROY } ?: return null
@@ -298,13 +305,16 @@ object ModuleFucker : ClientModule(
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state ->
-            when (val block = state.block) {
-                !in targets -> false
-                is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
-                else -> true
-            }
-        }.map { it.first }
+        return player.eyePosition.searchBlocksInRangeSorted(range) { pos, state -> isTarget(pos, state) }
+            .map { it.first }
+    }
+
+    internal fun isTarget(pos: BlockPos, state: BlockState): Boolean {
+        return when (val block = state.block) {
+            !in targets -> false
+            is BedBlock if isSelfBedMode.activeMode.isSelfBed(block, pos) -> false
+            else -> true
+        }
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {

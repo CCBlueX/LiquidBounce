@@ -80,6 +80,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     // The ticks to wait after interacting with something
     private val interactDelay by intRange("InteractDelay", 2..3, 1..15, "ticks")
 
+    private val fortune by boolean("UseFortune", true)
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
     private object AutoPlaceCrops : ToggleableValueGroup(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
@@ -100,16 +101,17 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
         }
     }
 
-    private val fortune by boolean("UseFortune", true)
-
     init {
-        tree(AutoFarmAutoWalk)
         tree(AutoPlaceCrops)
         tree(AutoUseBoneMeal)
-        tree(AutoFarmVisualizer)
     }
 
     internal val rotations = tree(RotationsValueGroup(this))
+
+    init {
+        tree(AutoFarmAutoWalk)
+        tree(AutoFarmBlockESP)
+    }
 
     private fun swapToSlotWithFortune() {
         if (!fortune) {

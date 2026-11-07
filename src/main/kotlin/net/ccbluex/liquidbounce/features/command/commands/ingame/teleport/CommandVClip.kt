@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.module.teleport
+package net.ccbluex.liquidbounce.features.command.commands.ingame.teleport
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.FloatArgumentType
@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -46,7 +46,7 @@ import kotlin.math.abs
  *
  * Allows you to clip through blocks.
  *
- * Module: [ModuleTeleport]
+ * Settings: [GlobalSettingsTeleport]
  */
 object CommandVClip : CommandRegistrar {
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
@@ -58,7 +58,7 @@ object CommandVClip : CommandRegistrar {
                     exec { ctx ->
                         val dy = ctx.get(distance)
 
-                        ModuleTeleport.indicateTeleport(getX(), getY() + dy, getZ())
+                        GlobalSettingsTeleport.teleport(getX(), getY() + dy, getZ())
                         1
                     }
                 }
@@ -114,7 +114,7 @@ object CommandVClip : CommandRegistrar {
                 }
 
                 // teleport
-                ModuleTeleport.indicateTeleport(getX(), getY() + dy, getZ())
+                GlobalSettingsTeleport.teleport(getX(), getY() + dy, getZ())
                 return
             }
         }
