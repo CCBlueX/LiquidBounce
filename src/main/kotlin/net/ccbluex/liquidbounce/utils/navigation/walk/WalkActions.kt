@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.interactBlock
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
@@ -52,12 +53,14 @@ import net.ccbluex.liquidbounce.utils.item.getDestroySpeedWithEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.HitResult
 
 /**
- * Mines and places the blocks a walking path changes: aims in [RotationUpdateEvent], acts in [GameTickEvent] once the
- * server has the aim.
+ * Mines, places and opens the blocks a walking path changes: aims in [RotationUpdateEvent], acts in [GameTickEvent]
+ * once the server has the aim.
  */
+@Suppress("TooManyFunctions")
 class WalkActions(
     private val owner: EventListener,
     private val rotations: RotationsValueGroup,
@@ -69,6 +72,9 @@ class WalkActions(
     var placing: BlockPos? = null
         private set
 
+    var opening: BlockPos? = null
+        private set
+
     /**
      * The aim of the current action, null while there is nothing to aim at.
      */
@@ -77,12 +83,14 @@ class WalkActions(
 
     private var placeReady = false
     private var placement: PlacementPlan? = null
+    private var useCooldown = 0
 
     val isActive: Boolean
-        get() = breaking != null || placing != null
+        get() = breaking != null || placing != null || opening != null
 
     fun mine(pos: BlockPos) {
         clearPlacing()
+        clearOpening()
         if (breaking != pos) {
             stopMining()
             breaking = pos
@@ -94,6 +102,7 @@ class WalkActions(
      */
     fun place(pos: BlockPos, ready: Boolean) {
         stopMining()
+        clearOpening()
         if (placing != pos) {
             placement = null
             placing = pos
@@ -101,9 +110,19 @@ class WalkActions(
         placeReady = ready
     }
 
+    /**
+     * Opens the door, trapdoor or fence gate at [pos] by using it.
+     */
+    fun open(pos: BlockPos) {
+        stopMining()
+        clearPlacing()
+        opening = pos
+    }
+
     fun idle() {
         stopMining()
         clearPlacing()
+        clearOpening()
     }
 
     private fun stopMining() {
@@ -130,6 +149,13 @@ class WalkActions(
         SilentHotbar.resetSlot(this)
     }
 
+    private fun clearOpening() {
+        if (opening != null) {
+            opening = null
+            rotation = null
+        }
+    }
+
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         rotation = null
@@ -137,7 +163,7 @@ class WalkActions(
 
         val reach = player.blockInteractionRange()
 
-        breaking?.let { pos ->
+        (breaking ?: opening)?.let { pos ->
             val state = world.getBlockState(pos)
             val aim = raytraceBlockRotation(player.eyePosition, pos, state, reach, reach) ?: return@handler
             aim(aim.rotation)
@@ -170,8 +196,17 @@ class WalkActions(
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        if (useCooldown > 0) {
+            useCooldown--
+        }
+
         breaking?.let { pos ->
             breakTick(pos)
+            return@handler
+        }
+
+        opening?.let { pos ->
+            openTick(pos)
             return@handler
         }
 
@@ -200,6 +235,20 @@ class WalkActions(
 
         if (hit.type == HitResult.Type.BLOCK && hit.blockPos == pos) {
             doBreak(hit)
+        }
+    }
+
+    private fun openTick(pos: BlockPos) {
+        val state = world.getBlockState(pos)
+        if (useCooldown > 0 || state.getOptionalValue(BlockStateProperties.OPEN).orElse(true)) {
+            return
+        }
+
+        val hit = raytraceBlock(player.blockInteractionRange(), RotationManager.serverRotation, pos, state) ?: return
+        if (hit.type == HitResult.Type.BLOCK && hit.blockPos == pos) {
+            interactBlock(hit)
+            // The server gets time to answer before another use, which would close the block again.
+            useCooldown = USE_COOLDOWN_TICKS
         }
     }
 
@@ -232,6 +281,7 @@ class WalkActions(
     private val worldChangeHandler = handler<WorldChangeEvent> {
         breaking = null
         placing = null
+        opening = null
         placement = null
         placeReady = false
         rotation = null
@@ -241,6 +291,7 @@ class WalkActions(
 
     private companion object {
         const val SLOT_RESET_TICKS = 2
+        const val USE_COOLDOWN_TICKS = 10
     }
 
 }

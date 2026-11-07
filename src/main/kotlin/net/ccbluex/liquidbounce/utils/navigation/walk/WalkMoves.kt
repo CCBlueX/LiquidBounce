@@ -30,13 +30,21 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 internal fun interface MoveSink {
-    fun accept(to: BlockPos, move: WalkMove, cost: Double, breaks: List<BlockPos>, places: List<BlockPos>)
+    fun accept(
+        to: BlockPos,
+        move: WalkMove,
+        cost: Double,
+        breaks: List<BlockPos>,
+        places: List<BlockPos>,
+        opens: List<BlockPos>,
+    )
 }
 
 /**
  * The moves out of a feet block. Moves only look at [terrain], so a node always yields the same moves.
  *
- * A node reached by breaking or placing is not standable in [terrain]; it counts as standing on its floor.
+ * A node reached by breaking or placing is not standable in [terrain]; it counts as standing on its floor. Doors the
+ * terrain counts as open are opened on the way, see [NavigationTerrain.opensDoors].
  *
  * Not thread-safe: use it from one thread at a time.
  */
@@ -51,7 +59,15 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
     private val breaks = ArrayList<BlockPos>(3)
     private val places = ArrayList<BlockPos>(1)
+    private val opens = ArrayList<BlockPos>(1)
     private var breakCost = 0.0
+
+    /**
+     * The node the moves start from, its feet height and whether it is standable in [terrain].
+     */
+    private var origin = BlockPos.ZERO
+    private var originHeight = 0.0
+    private var originStands = true
 
     /**
      * Floor factor of the node the moves start from, see [WalkCosts.floorFactor].
@@ -73,10 +89,10 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
      */
     fun step(from: BlockPos, to: BlockPos): WalkStep? {
         var best: WalkStep? = null
-        forEach(from) { target, move, cost, breaks, places ->
+        forEach(from) { target, move, cost, breaks, places, opens ->
             val current = best
             if (target == to && (current == null || cost < current.cost)) {
-                best = WalkStep(from, to, move, feet(to), breaks.toList(), places.toList(), cost)
+                best = WalkStep(from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost)
             }
         }
         return best
@@ -91,8 +107,12 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         val z = node.z
         val water = isWater(x, y, z)
         val climb = isClimb(x, y, z)
-        val standing = !terrain.standHeight(x, y, z).isNaN() || !water && !climb
+        val stands = !terrain.standHeight(x, y, z).isNaN()
+        val standing = stands || !water && !climb
         val height = height(x, y, z)
+        origin = node
+        originHeight = height
+        originStands = stands
         val floor = floorBlock(x, z, height)
         fromFloor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
         canJump = water || climb || floor.jumpFactor >= 1f
@@ -136,7 +156,8 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         when {
             !top.isNaN() -> {
                 val jump = jumpCost(top - height)
-                if (jump == 0.0 || !jump.isNaN() && hasJumpRoom(from, tx, tz)) {
+                val fits = jump == 0.0 || !jump.isNaN() && hasJumpRoom(from, tx, tz)
+                if (fits && canCross(from, tx, tz, max(height, top))) {
                     emit(tx, y, tz, WalkMove.TRAVERSE, walking(wet, tx, tz, top) + jump, sink)
                 }
             }
@@ -226,7 +247,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
         val cornersClear = terrain.isPassable(x + dx, y, z) && terrain.isPassable(x + dx, y + 1, z) &&
             terrain.isPassable(x, y, z + dz) && terrain.isPassable(x, y + 1, z + dz)
-        if (!cornersClear) {
+        if (!cornersClear || !canCross(from, x + dx, z + dz, max(height, top))) {
             return
         }
 
@@ -246,7 +267,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         val top = terrain.standHeight(tx, ty, tz)
         if (!top.isNaN()) {
             val jump = jumpCost(top - height)
-            if (!jump.isNaN()) {
+            if (!jump.isNaN() && canCross(from, tx, tz, top)) {
                 emit(tx, ty, tz, WalkMove.ASCEND, walking(false, tx, tz, top) + jump + breakCost, sink)
             }
             return
@@ -274,6 +295,10 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
         begin()
         if (!clear(tx, y + 1, tz, from) || !clear(tx, y, tz, from)) {
+            return
+        }
+
+        if (breaks.isEmpty() && !canCross(from, tx, tz, height)) {
             return
         }
 
@@ -411,8 +436,23 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         breakCost = 0.0
     }
 
-    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, sink: MoveSink) =
-        sink.accept(BlockPos(x, y, z), move, cost, breaks, places)
+    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, sink: MoveSink) {
+        opens.clear()
+        if (terrain.opensDoors) {
+            val from = terrain.box(origin.x + 0.5, originHeight, origin.z + 0.5)
+            terrain.closedIn(from.minmax(terrain.box(x + 0.5, height(x, y, z), z + 0.5)), from, opens)
+        }
+
+        sink.accept(BlockPos(x, y, z), move, cost + opens.size * WalkCosts.OPEN, breaks, places, opens)
+    }
+
+    /**
+     * Whether the body gets over the edge between [from] and the block next to it at [tx] [tz] with the feet at
+     * [height]. Thin blocks on the edge, such as closed doors, are in the way. Moves out of a node the terrain does
+     * not have yet, as it is reached by breaking or placing, are not checked.
+     */
+    private fun canCross(from: BlockPos, tx: Int, tz: Int, height: Double) = !originStands ||
+        terrain.isClear(terrain.box((from.x + tx) / 2.0 + 0.5, height, (from.z + tz) / 2.0 + 0.5))
 
     /**
      * Whether the cell is passable or can be broken; a broken cell is added to the move.

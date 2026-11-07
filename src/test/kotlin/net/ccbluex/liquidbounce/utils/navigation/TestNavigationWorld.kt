@@ -49,7 +49,7 @@ class TestNavigationWorld(
 
     fun set(x: Int, y: Int, z: Int, state: BlockState) = fill(x, y, z, x, y, z, state)
 
-    fun terrain() = NavigationTerrain(this)
+    fun terrain(opensDoors: Boolean = false) = NavigationTerrain(this, opensDoors = opensDoors)
 
     override fun isKnown(x: Int, y: Int, z: Int) = y >= minY && y <= maxY && known(x, z)
 

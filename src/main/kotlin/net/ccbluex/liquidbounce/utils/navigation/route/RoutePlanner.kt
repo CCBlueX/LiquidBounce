@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -38,9 +39,12 @@ import java.util.concurrent.CompletableFuture
 /**
  * Runs route searches for one owner off the game thread, one slice per [poll]. Each search reads a copy of its
  * region, so the world can change while it runs; a change only restarts the search when the search had looked
- * at the changed block.
+ * at the changed block. The copy is read through the terrain [newTerrain] makes.
  */
-class RoutePlanner<T>(private val owner: EventListener) : EventListener {
+class RoutePlanner<T>(
+    private val owner: EventListener,
+    private val newTerrain: (NavigationWorld) -> NavigationTerrain = ::NavigationTerrain,
+) : EventListener {
 
     private var key: Any? = null
     private var region: NavigationRegion? = null
@@ -134,7 +138,7 @@ class RoutePlanner<T>(private val owner: EventListener) : EventListener {
             return
         }
 
-        val terrain = NavigationTerrain(SectionCache.capture(level, region))
+        val terrain = newTerrain(SectionCache.capture(level, region))
         this.terrain = terrain
         search = factory.create(terrain)
         result = RouteResult.Searching

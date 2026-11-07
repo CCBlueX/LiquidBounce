@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
@@ -37,7 +38,7 @@ enum class FollowState {
     WALKING,
 
     /**
-     * Breaking or placing a block of the current step.
+     * Breaking, placing or opening a block of the current step.
      */
     ACTING,
 
@@ -53,7 +54,7 @@ enum class FollowState {
 }
 
 /**
- * Walks a [WalkPath] step by step through movement input, mining and placing with [actions] on the way.
+ * Walks a [WalkPath] step by step through movement input, mining, placing and opening with [actions] on the way.
  */
 @Suppress("TooManyFunctions")
 class WalkFollower(private val actions: WalkActions) : RouteProgress {
@@ -155,6 +156,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
         val pendingBreak = step.breaks.firstOrNull { !isCleared(it) }
         val pendingPlace = step.places.firstOrNull { !isPlaced(it) }
+        val pendingOpen = step.opens.firstOrNull { !isOpen(it) }
         return when {
             pendingBreak != null -> {
                 standStill(event)
@@ -165,6 +167,14 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
             pendingPlace != null -> {
                 place(event, frameYaw, step, pendingPlace)
                 act(pendingPlace, step)
+            }
+
+            pendingOpen != null -> {
+                standStill(event)
+                // Climbing on keeps the player at a hatch above.
+                event.jump = player.isInWater || player.onClimbable()
+                actions.open(pendingOpen)
+                act(pendingOpen, step)
             }
 
             else -> walk(event, frameYaw, step)
@@ -297,7 +307,9 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     }
 
     private fun isReached(step: WalkStep, next: WalkStep?): Boolean {
-        if (step.breaks.any { !isCleared(it) } || step.places.any { !isPlaced(it) }) {
+        val pending = step.breaks.any { !isCleared(it) } || step.places.any { !isPlaced(it) } ||
+            step.opens.any { !isOpen(it) }
+        if (pending) {
             return false
         }
 
@@ -334,6 +346,12 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     private fun isCleared(pos: BlockPos) = world.getBlockState(pos).getCollisionShape(world, pos).isEmpty
 
     private fun isPlaced(pos: BlockPos) = !world.getBlockState(pos).canBeReplaced()
+
+    /**
+     * Whether the door, trapdoor or fence gate at [pos] is open; anything else that took its place counts as open.
+     */
+    private fun isOpen(pos: BlockPos) =
+        world.getBlockState(pos).getOptionalValue(BlockStateProperties.OPEN).orElse(true)
 
     override val isMoving: Boolean
         get() = path != null && !isFinished

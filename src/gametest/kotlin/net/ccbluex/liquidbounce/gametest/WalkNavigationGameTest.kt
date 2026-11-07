@@ -27,6 +27,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -34,7 +35,8 @@ import kotlin.math.sqrt
 
 /**
  * A survival player walks through a course with the walking navigation: around a wall, through a closed room,
- * across a gap in the air, up a cliff and over soul sand and ice, without taking damage.
+ * across a gap in the air, up a cliff, over soul sand and ice and through a door and a fence gate, without taking
+ * damage.
  */
 @Suppress("TooManyFunctions")
 class WalkNavigationGameTest : FabricClientGameTest {
@@ -88,6 +90,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
                 checkBridge(context, server, y)
                 checkPillar(context, server, y)
                 checkSurfaces(context, server, y)
+                checkDoors(context, server, y)
             }
         } finally {
             context.onClient {
@@ -149,6 +152,30 @@ class WalkNavigationGameTest : FabricClientGameTest {
 
         moveTo(context, server, Vec3(1.5, y.toDouble(), 26.5))
         walk(context, server, walker, Vec3(14.5, y.toDouble(), 34.5), 600, "over soul sand and ice")
+    }
+
+    /**
+     * A roofed corridor in a stone block at x 20..40, z 28..32, closed by walls with a closed oak door at x 26 and a
+     * closed oak fence gate at x 32.
+     */
+    private fun checkDoors(context: ClientGameTestContext, server: TestServerContext, y: Int) {
+        server.runCommand("fill 20 ${y - 1} 28 40 ${y + 3} 32 stone")
+        server.runCommand("fill 21 $y 29 39 ${y + 2} 31 air")
+        server.runCommand("fill 26 $y 29 26 ${y + 2} 31 stone")
+        server.runCommand("fill 32 $y 29 32 ${y + 2} 31 stone")
+        server.runCommand("setblock 26 $y 30 oak_door[facing=east,half=lower]")
+        server.runCommand("setblock 26 ${y + 1} 30 oak_door[facing=east,half=upper]")
+        server.runCommand("setblock 32 $y 30 oak_fence_gate[facing=east]")
+        server.runCommand("setblock 32 ${y + 1} 30 air")
+
+        moveTo(context, server, Vec3(22.5, y.toDouble(), 30.5))
+        walk(context, server, walker, Vec3(37.5, y.toDouble(), 30.5), 600, "through a door and a fence gate")
+        for (pos in listOf(BlockPos(26, y, 30), BlockPos(32, y, 30))) {
+            val open = server.computeOnServer<Boolean, RuntimeException> {
+                it.overworld().getBlockState(pos).getValue(BlockStateProperties.OPEN)
+            }
+            check(open) { "The way through $pos was not opened" }
+        }
     }
 
     private fun walk(

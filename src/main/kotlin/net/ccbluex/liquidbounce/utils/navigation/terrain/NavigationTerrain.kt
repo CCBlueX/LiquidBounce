@@ -27,7 +27,12 @@ import net.minecraft.util.Mth
 import net.minecraft.world.level.block.BaseFireBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -48,6 +53,10 @@ enum class DestinationCheck {
  * Block lookups for route searches, cached per block until [invalidate] or [clear]. Unknown blocks and hazards
  * count as solid.
  *
+ * With [opensDoors], closed doors, fence gates and trapdoors a player opens by hand count as open; [closedIn] tells
+ * which a move has to open. A closed trapdoor stays closed when it is a floor: it counts as open only with a ladder
+ * or vine below it or without room to stand on it.
+ *
  * Not thread-safe: use it from one thread at a time.
  */
 @Suppress("TooManyFunctions")
@@ -55,12 +64,18 @@ class NavigationTerrain(
     val world: NavigationWorld,
     val width: Double = PLAYER_WIDTH,
     val height: Double = PLAYER_HEIGHT,
+    val opensDoors: Boolean = false,
 ) {
 
     private val halfWidth = width / 2.0
     private val states = Long2ObjectOpenHashMap<BlockState>()
     private val shapes = Long2ObjectOpenHashMap<VoxelShape>()
     private val stands = Long2DoubleOpenHashMap()
+
+    /**
+     * Collision shapes of the closed blocks that count as open.
+     */
+    private val closed = Long2ObjectOpenHashMap<VoxelShape>()
 
     val minY: Int get() = world.minY
 
@@ -93,14 +108,76 @@ class NavigationTerrain(
         shapes.get(key)?.let { return it }
 
         val state = state(x, y, z)
+        val pos = BlockPos(x, y, z)
         val shape = when {
             !isKnown(x, y, z) || isHazard(state) -> Shapes.block()
-            else -> state.getCollisionShape(world, BlockPos(x, y, z))
+            countsOpen(state, x, y, z) -> {
+                closed.put(key, state.getCollisionShape(world, pos))
+                state.setValue(BlockStateProperties.OPEN, true).getCollisionShape(world, pos)
+            }
+
+            else -> state.getCollisionShape(world, pos)
         }
 
         shapes.put(key, shape)
         return shape
     }
+
+    /**
+     * Adds the closed doors, fence gates and trapdoors that count as open and that a body moving through [box] from
+     * [from] would collide with to [opens] unless already there, a door by its lower half. Blocks [from] already
+     * collides with must have been opened before.
+     */
+    fun closedIn(box: AABB, from: AABB, opens: MutableList<BlockPos>) {
+        if (!opensDoors) {
+            return
+        }
+
+        for (x in Mth.floor(box.minX + EPSILON)..Mth.floor(box.maxX - EPSILON)) {
+            for (z in Mth.floor(box.minZ + EPSILON)..Mth.floor(box.maxZ - EPSILON)) {
+                for (y in Mth.floor(box.minY + EPSILON) - 1..Mth.floor(box.maxY - EPSILON)) {
+                    val closedShape = closedShape(x, y, z)
+                    if (closedShape != null && closedShape.intersects(x, y, z, box) &&
+                        !closedShape.intersects(x, y, z, from)) {
+                        addOpen(x, y, z, opens)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun closedShape(x: Int, y: Int, z: Int): VoxelShape? {
+        shape(x, y, z)
+        return closed.get(BlockPos.asLong(x, y, z))
+    }
+
+    private fun addOpen(x: Int, y: Int, z: Int, opens: MutableList<BlockPos>) {
+        val upper = state(x, y, z).getOptionalValue(BlockStateProperties.DOUBLE_BLOCK_HALF)
+            .map { it == DoubleBlockHalf.UPPER }.orElse(false)
+        val pos = BlockPos(x, if (upper) y - 1 else y, z)
+        if (pos !in opens) {
+            opens += pos
+        }
+    }
+
+    private fun countsOpen(state: BlockState, x: Int, y: Int, z: Int): Boolean {
+        if (!opensDoors || state.getOptionalValue(BlockStateProperties.OPEN).orElse(true)) {
+            return false
+        }
+
+        return when (val block = state.block) {
+            is DoorBlock -> block.type().canOpenByHand()
+            is FenceGateBlock -> true
+            is TrapDoorBlock -> block.type.canOpenByHand() && !isFloor(x, y, z)
+            else -> false
+        }
+    }
+
+    private fun isFloor(x: Int, y: Int, z: Int) = state(x, y - 1, z).block !in CLIMBABLE &&
+        isEmpty(x, y + 1, z) && isEmpty(x, y + 2, z)
+
+    private fun isEmpty(x: Int, y: Int, z: Int) =
+        state(x, y, z).getCollisionShape(world, BlockPos(x, y, z)).isEmpty
 
     fun isPassable(x: Int, y: Int, z: Int) = shape(x, y, z).isEmpty
 
@@ -212,14 +289,37 @@ class NavigationTerrain(
         val key = pos.asLong()
         val old = states.get(key)
         if (old != null && isAlike(old, state, pos)) {
+            if (state.getOptionalValue(BlockStateProperties.OPEN).orElse(false)) {
+                // An opened door keeps the shape it counted with, but no longer needs opening.
+                closed.remove(key)
+            }
             return false
         }
 
         var cached = states.remove(key) != null
-        cached = shapes.remove(key) != null || cached
+        cached = drop(pos.x, pos.y, pos.z) || cached
+        if (opensDoors) {
+            // Whether a trapdoor counts as open depends on the blocks below and above it.
+            for (dy in TRAPDOOR_NEIGHBOURS) {
+                if (states.get(BlockPos.asLong(pos.x, pos.y + dy, pos.z))?.block is TrapDoorBlock) {
+                    cached = drop(pos.x, pos.y + dy, pos.z) || cached
+                }
+            }
+        }
+
+        return cached
+    }
+
+    /**
+     * Drops the shape of [x] [y] [z] and the standing heights that depend on it; true if any was cached.
+     */
+    private fun drop(x: Int, y: Int, z: Int): Boolean {
+        val key = BlockPos.asLong(x, y, z)
+        var cached = shapes.remove(key) != null
+        closed.remove(key)
         // The floor, the body and the layer below a tall floor block of a standing spot are within two blocks.
         for (dy in -STAND_REACH..STAND_REACH) {
-            val standKey = BlockPos.asLong(pos.x, pos.y + dy, pos.z)
+            val standKey = BlockPos.asLong(x, y + dy, z)
             if (stands.containsKey(standKey)) {
                 stands.remove(standKey)
                 cached = true
@@ -247,6 +347,7 @@ class NavigationTerrain(
         states.clear()
         shapes.clear()
         stands.clear()
+        closed.clear()
     }
 
     private fun computeStandHeight(x: Int, y: Int, z: Int): Double {
@@ -328,6 +429,11 @@ class NavigationTerrain(
         private const val STAND_REACH = 2
         private const val EPSILON = 1.0E-7
         private const val SUPPORT_PROBE = 1.0E-3
+
+        /**
+         * Offsets from a block to the trapdoors whose counting as open depends on it, see [isFloor].
+         */
+        private val TRAPDOOR_NEIGHBOURS = intArrayOf(-2, -1, 1)
 
         private val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
         private val FULL: VoxelShape = Shapes.block()

@@ -34,9 +34,13 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.test.Test
@@ -79,7 +83,8 @@ class WalkRoutingTest {
         goal: BlockPos,
         abilities: WalkAbilities = abilities(),
     ): RouteResult<WalkPath> {
-        val search = WalkRouteSearch(world.terrain(), start, BlockGoal(listOf(goal)), abilities, LIMITS)
+        val terrain = world.terrain(opensDoors = true)
+        val search = WalkRouteSearch(terrain, start, BlockGoal(listOf(goal)), abilities, LIMITS)
         var result = search.advance()
         repeat(1000) {
             if (result != RouteResult.Searching) {
@@ -305,6 +310,51 @@ class WalkRoutingTest {
 
         assertTrue(path.steps.any { world.getBlockState(it.to.below()) == ice })
         assertEquals(plain.cost, path.cost, 1.0E-9)
+    }
+
+    private fun TestNavigationWorld.door(x: Int, z: Int, block: Block) = apply {
+        val lower = block.defaultBlockState().setValue(DoorBlock.FACING, Direction.EAST)
+        set(x, 1, z, lower)
+        set(x, 2, z, lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER))
+    }
+
+    @Test
+    fun `closed wooden doors and fence gates are opened instead of a long detour`() {
+        val gate = Blocks.OAK_FENCE_GATE.defaultBlockState().setValue(FenceGateBlock.FACING, Direction.EAST)
+        val world = TestNavigationWorld.flat()
+            .fill(5, 1, -20, 5, 3, 20)
+            .door(5, 0, Blocks.OAK_DOOR)
+            .fill(8, 1, -20, 8, 3, 20)
+            .set(8, 1, 0, gate)
+            .set(8, 2, 0, AIR)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(12, 1, 0)))
+
+        assertEquals(listOf(BlockPos(5, 1, 0), BlockPos(8, 1, 0)), path.steps.flatMap { it.opens })
+    }
+
+    @Test
+    fun `iron doors are walked around`() {
+        val world = TestNavigationWorld.flat().fill(5, 1, -20, 5, 3, 20).door(5, 0, Blocks.IRON_DOOR)
+        val path = completePath(search(world, feet(0, 1, 0), BlockPos(10, 1, 0)))
+
+        assertTrue(path.steps.none { it.to.x == 5 && abs(it.to.z) <= 20 })
+        assertTrue(path.steps.all { it.opens.isEmpty() })
+    }
+
+    @Test
+    fun `trapdoors are opened in walls and walked over on floors`() {
+        val trapdoor = Blocks.OAK_TRAPDOOR.defaultBlockState()
+        val floor = TestNavigationWorld.flat().set(5, 1, 0, trapdoor)
+        val over = completePath(search(floor, feet(0, 1, 0), BlockPos(10, 1, 0)))
+        assertTrue(over.steps.any { it.to == BlockPos(5, 1, 0) })
+        assertTrue(over.steps.all { it.opens.isEmpty() })
+
+        val wall = TestNavigationWorld.flat()
+            .fill(5, 1, -20, 5, 3, 20)
+            .set(5, 1, 0, AIR)
+            .set(5, 2, 0, trapdoor)
+        val through = completePath(search(wall, feet(0, 1, 0), BlockPos(10, 1, 0)))
+        assertEquals(listOf(BlockPos(5, 2, 0)), through.steps.flatMap { it.opens })
     }
 
 }

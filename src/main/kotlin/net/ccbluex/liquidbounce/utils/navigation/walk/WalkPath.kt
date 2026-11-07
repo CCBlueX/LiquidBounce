@@ -58,6 +58,7 @@ enum class WalkMove {
 /**
  * One move of a walking path, from the feet block [from] to the feet block [to].
  */
+@Suppress("LongParameterList")
 class WalkStep(
     val from: BlockPos,
     val to: BlockPos,
@@ -77,6 +78,11 @@ class WalkStep(
      * Blocks to place before or during the move, in order; each is the position the new block takes.
      */
     val places: List<BlockPos>,
+
+    /**
+     * Closed doors, trapdoors and fence gates to open before the move; a door by its lower half.
+     */
+    val opens: List<BlockPos>,
 
     /**
      * Estimated duration in ticks.
@@ -153,6 +159,11 @@ object WalkCosts {
     const val PLACE = 20.0
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0
+
+    /**
+     * Ticks to stop, open a door, trapdoor or fence gate and walk on.
+     */
+    const val OPEN = 10.0
 
     /**
      * Up and down bounces after landing on a slime block.

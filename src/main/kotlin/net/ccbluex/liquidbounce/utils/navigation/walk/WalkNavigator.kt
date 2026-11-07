@@ -56,8 +56,9 @@ import kotlin.math.sqrt
 
 /**
  * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
- * everything else is pathfound, breaking and placing blocks when allowed; goals farther than half the path range or
- * in chunks not loaded are walked to in stages, and unreachable goals are walked as close as possible.
+ * everything else is pathfound, opening doors and gates on the way and breaking and placing blocks when allowed;
+ * goals farther than half the path range or in chunks not loaded are walked to in stages, and unreachable goals are
+ * walked as close as possible.
  *
  * Its settings go into [values]; it acts while [owner] runs. Blocks are aimed at with the [rotations] of the feature
  * it walks for, or with its own when the feature has none.
@@ -81,7 +82,7 @@ class WalkNavigator(
         values.tree(RouteRenderer(owner, view, showRoute))
     }
 
-    private val planner = RoutePlanner<WalkPath>(this)
+    private val planner = RoutePlanner<WalkPath>(this) { NavigationTerrain(it, opensDoors = true) }
     private val actions = WalkActions(this, this.rotations)
     private val follower = WalkFollower(actions)
 
@@ -122,14 +123,14 @@ class WalkNavigator(
     private var sprintWanted = false
 
     /**
-     * Whether a block is being mined or placed for the path.
+     * Whether a block is being mined, placed or opened for the path.
      */
     val isActing: Boolean
         get() = actions.isActive
 
     /**
-     * Where the walk heads: the aim at a block being mined or placed, else the way to the next point, else the
-     * direction of the movement input.
+     * Where the walk heads: the aim at a block being mined, placed or opened, else the way to the next point, else
+     * the direction of the movement input.
      */
     fun movementRotation(): Rotation {
         actions.rotation?.let { return it }

@@ -113,7 +113,7 @@ class WalkRouteSearch(
 
     private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val edges = ArrayList<WeightedEdge<BlockPos>>()
-        moves.forEach(node) { to, _, cost, _, _ ->
+        moves.forEach(node) { to, _, cost, _, _, _ ->
             val penalty = if (abilities.avoid.contains(to.asLong())) WalkCosts.AVOID else 0.0
             edges += WeightedEdge(to, cost + penalty)
         }
