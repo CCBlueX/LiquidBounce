@@ -21,6 +21,7 @@
     "hud",
     "inventory",
     "container",
+    "connecting",
     "disconnected",
     "browser"
   ],

@@ -8,6 +8,7 @@ import type {
     ClientUpdate,
     ClientUser,
     ConfigurableSetting,
+    ConnectionDetails,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
@@ -298,6 +299,18 @@ export async function connectToServer(address: string) {
         },
         body: JSON.stringify({address})
     });
+}
+
+export async function getConnectionDetails(): Promise<ConnectionDetails | null> {
+    const response = await fetch(`${API_BASE}/client/connection`);
+
+    if (response.status !== 200) {
+        return null;
+    }
+
+    const data: ConnectionDetails = await response.json();
+
+    return data;
 }
 
 export async function removeServer(id: number) {

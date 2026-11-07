@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ConnectionDetails
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.CameraType
@@ -162,6 +163,9 @@ class ServerConnectEvent(
     val serverInfo: ServerData,
     val cookieStorage: TransferState?,
 ) : CancellableEvent()
+
+@Tag("connectionDetails")
+class ConnectionDetailsEvent(val details: ConnectionDetails) : Event(), WebSocketEvent
 
 @AddonApi
 @Tag("disconnect")
