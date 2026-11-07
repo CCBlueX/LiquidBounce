@@ -32,15 +32,16 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import kotlin.math.abs
 
 /**
- * The balance follows the ticks the server saw: held back ticks and a slow timer earn it, warped ticks and a fast
- * timer spend it, and a setback clears it.
+ * The balance follows the ticks the server saw: held back ticks and a slow timer earn it, burst ticks and a fast
+ * timer spend it, and a setback clears it. Acceleration may run ahead down to the minimum balance.
  */
 class TimerBalanceGameTest : FabricClientGameTest {
 
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
         val savedFreeze = context.fromClient { ConfigSystem.serializeValueGroup(ModuleFreeze) }
-        val savedTimer = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTimer) }
+        val savedTimerModule = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTimer) }
+        val savedTimer = context.fromClient { ConfigSystem.serializeValueGroup(Timer) }
 
         try {
             context.worldBuilder().create().use { world ->
@@ -48,7 +49,8 @@ class TimerBalanceGameTest : FabricClientGameTest {
                 context.waitTicks(SETTLE_TICKS)
                 check(balance(context) == 0f) { "Plain ticks moved the balance to ${balance(context)}" }
 
-                assertHoldEarnsAndWarpSpends(context)
+                assertHoldEarnsAndBurstSpends(context)
+                assertRunsAheadToMinimum(context)
                 assertTimerIsAccounted(context)
                 assertSetbackClears(context, world)
             }
@@ -57,12 +59,13 @@ class TimerBalanceGameTest : FabricClientGameTest {
                 ModuleFreeze.enabled = false
                 ModuleTimer.enabled = false
                 ConfigSystem.deserializeValueGroup(ModuleFreeze, savedFreeze)
-                ConfigSystem.deserializeValueGroup(ModuleTimer, savedTimer)
+                ConfigSystem.deserializeValueGroup(ModuleTimer, savedTimerModule)
+                ConfigSystem.deserializeValueGroup(Timer, savedTimer)
             }
         }
     }
 
-    private fun assertHoldEarnsAndWarpSpends(context: ClientGameTestContext) {
+    private fun assertHoldEarnsAndBurstSpends(context: ClientGameTestContext) {
         context.onClient { ModuleFreeze.enabled = true }
         val start = playerTicks(context)
 
@@ -76,13 +79,32 @@ class TimerBalanceGameTest : FabricClientGameTest {
         context.waitTicks(max)
         check(balance(context) == max.toFloat()) { "The balance grew past its maximum to ${balance(context)}" }
 
-        val warped = context.fromClient {
+        val burst = context.fromClient {
             ModuleFreeze.enabled = false
-            Timer.warp(Int.MAX_VALUE)
+            Timer.burst(Int.MAX_VALUE)
         }
-        check(warped == max) { "Warped $warped ticks instead of the $max ticks of balance" }
-        check(playerTicks(context) - start == max) { "${playerTicks(context) - start} ticks ran during the warp" }
-        check(balance(context) == 0f) { "Warping left ${balance(context)} balance" }
+        check(burst == max) { "Burst $burst ticks instead of the $max ticks of balance" }
+        check(playerTicks(context) - start == max) { "${playerTicks(context) - start} ticks ran during the burst" }
+        check(balance(context) == 0f) { "The burst left ${balance(context)} balance" }
+    }
+
+    private fun assertRunsAheadToMinimum(context: ClientGameTestContext) {
+        val range = Timer.containedValues.single { it.name == "Balance" }
+        val start = playerTicks(context)
+
+        val burst = context.fromClient {
+            range.setByString("-$AHEAD_TICKS..20")
+            Timer.burst(Int.MAX_VALUE)
+        }
+        check(burst == AHEAD_TICKS) { "Burst $burst ticks ahead instead of $AHEAD_TICKS" }
+        check(playerTicks(context) - start == AHEAD_TICKS) { "${playerTicks(context) - start} ticks ran ahead" }
+        check(balance(context) == -AHEAD_TICKS.toFloat()) { "Running ahead left ${balance(context)} balance" }
+        check(!context.fromClient { Timer.requestBalancedTimerSpeed(2f, Priority.NORMAL, ModuleTimer) }) {
+            "Accelerating past the minimum balance was allowed"
+        }
+
+        context.onClient { range.setByString("0..20") }
+        context.waitTick()
     }
 
     private fun assertTimerIsAccounted(context: ClientGameTestContext) {
@@ -142,6 +164,7 @@ class TimerBalanceGameTest : FabricClientGameTest {
         const val SETTLE_TIMEOUT_TICKS = 200
         const val SETTLE_TICKS = 20
         const val FROZEN_TICKS = 10
+        const val AHEAD_TICKS = 10
         const val TIMER_TICKS = 10
         const val EPSILON = 0.01f
     }

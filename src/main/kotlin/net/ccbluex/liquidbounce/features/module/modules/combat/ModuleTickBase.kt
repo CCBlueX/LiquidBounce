@@ -47,7 +47,7 @@ import kotlin.math.min
 /**
  * TickBase
  *
- * Spends the timer balance to reach an enemy earlier, either by warping ticks or by speeding up the timer.
+ * Spends the timer balance to reach an enemy earlier, either by bursting ticks or by speeding up the timer.
  */
 internal object ModuleTickBase : ClientModule(
     "TickBase",
@@ -55,22 +55,22 @@ internal object ModuleTickBase : ClientModule(
     aliases = listOf("TimerRange")
 ) {
 
-    private val modes = choices("Mode", HoldFirst, arrayOf(HoldFirst, WarpFirst, TimerBoost))
+    private val modes = choices("Mode", HoldFirst, arrayOf(HoldFirst, BurstFirst, TimerBoost))
         .apply { tagBy(this) }
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
     /**
-     * Holds the ticks back first and runs them at once afterwards. Holding earns what the warp costs.
+     * Holds the ticks back first and runs them in one burst afterwards. Holding earns what the burst costs.
      */
-    private object HoldFirst : WarpMode("HoldFirst", "Past", holdFirst = true)
+    private object HoldFirst : TickMode("HoldFirst", "Past", holdFirst = true)
 
     /**
-     * Runs the ticks at once first and holds them back afterwards, which needs saved up balance.
+     * Runs the ticks in one burst first and holds them back afterwards, which needs spendable balance.
      */
-    private object WarpFirst : WarpMode("WarpFirst", "Future", holdFirst = false)
+    private object BurstFirst : TickMode("BurstFirst", "Future", holdFirst = false)
 
-    private open class WarpMode(name: String, alias: String, private val holdFirst: Boolean) :
+    private open class TickMode(name: String, alias: String, private val holdFirst: Boolean) :
         Mode(name, listOf(alias)) {
 
         override val parent: ModeValueGroup<*>
@@ -145,24 +145,24 @@ internal object ModuleTickBase : ClientModule(
 
             if (holdFirst) {
                 val hold = bestTick + pause
-                Timer.hold(this@WarpMode, hold)
+                Timer.hold(this@TickMode, hold)
                 waitTicks(hold)
-                Timer.warp(bestTick) { call.tick() }
+                Timer.burst(bestTick) { call.tick() }
             } else {
-                var warped = 0
+                var burst = 0
 
-                while (warped < bestTick && Timer.warp(1) { call.tick() } == 1) {
-                    warped++
+                while (burst < bestTick && Timer.burst(1) { call.tick() } == 1) {
+                    burst++
 
                     if (breakRequirement()) {
                         break
                     }
                 }
 
-                debugParameter("Total Skipped") { warped }
+                debugParameter("Total Skipped") { burst }
 
-                val hold = warped + pause
-                Timer.hold(this@WarpMode, hold)
+                val hold = burst + pause
+                Timer.hold(this@TickMode, hold)
                 waitTicks(hold)
             }
 
@@ -179,10 +179,10 @@ internal object ModuleTickBase : ClientModule(
             tickBuffer.clear()
 
             // Holding the ticks back first earns what running them costs
-            val available = when {
-                !holdFirst -> Timer.balance.toInt()
-                Timer.balance >= 0f -> Timer.maxBalance
-                else -> 0
+            val available = if (holdFirst) {
+                Timer.maxBalance - Timer.minBalance
+            } else {
+                Timer.spendableTicks
             }
             val ticks = min(maxTicksAtATime, available)
             if (ticks <= 0) {
@@ -274,7 +274,7 @@ internal object ModuleTickBase : ClientModule(
                 return chargeSpeed
             }
 
-            if (Timer.balance <= 0f) {
+            if (Timer.balance <= Timer.minBalance) {
                 exhausted = true
             } else if (Timer.balance >= Timer.maxBalance) {
                 exhausted = false

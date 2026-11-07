@@ -44,7 +44,11 @@ import kotlin.math.min
 @AddonApi
 object Timer : EventListener, ValueGroup("Timer") {
 
-    val maxBalance by int("MaxBalance", 20, 0..200, "ticks")
+    /**
+     * Acceleration may spend the balance down to the start, which is below 0 for anticheats that let the client
+     * run ahead. Holding back stops paying off at the end.
+     */
+    private val balanceRange by intRange("Balance", 0..20, -100..200, "ticks")
     private val resetBalanceOnFlag by boolean("ResetBalanceOnFlag", true)
 
     private val requestHandler = RequestHandler<Float>()
@@ -56,17 +60,25 @@ object Timer : EventListener, ValueGroup("Timer") {
     val timerSpeed: Float
         get() = requestHandler.getActiveRequestValue() ?: 1.0f
 
+    val minBalance: Int get() = balanceRange.first
+    val maxBalance: Int get() = balanceRange.last
+
     /**
-     * Ticks the client is behind. Positive balance can be spent on acceleration, negative balance is owed.
+     * Ticks the client is behind the server, negative once it runs ahead.
      */
     var balance = 0f
         private set
 
     /**
+     * Extra ticks the balance can pay for right now.
+     */
+    val spendableTicks: Int get() = (balance - minBalance).toInt()
+
+    /**
      * The speed the ticks of the current frame run at.
      */
     private var frameSpeed = 1f
-    private var warping = false
+    private var bursting = false
 
     /**
      * Scales the ticks a frame advances by the requested speed.
@@ -95,14 +107,14 @@ object Timer : EventListener, ValueGroup("Timer") {
     }
 
     /**
-     * Requests [timerSpeed] if the balance allows it. Faster than 1 needs balance to spend,
-     * slower than 1 stops once the balance is full.
+     * Requests [timerSpeed] if the balance allows it. Faster than 1 needs balance above [minBalance],
+     * slower than 1 stops once the balance reaches [maxBalance].
      *
      * @return whether the speed was requested
      */
     fun requestBalancedTimerSpeed(timerSpeed: Float, priority: Priority, provider: ClientModule): Boolean {
         val allowed = when {
-            timerSpeed > 1f -> balance > 0f
+            timerSpeed > 1f -> balance > minBalance
             timerSpeed < 1f -> balance < maxBalance
             else -> true
         }
@@ -121,27 +133,27 @@ object Timer : EventListener, ValueGroup("Timer") {
     }
 
     /**
-     * Runs up to [ticks] extra ticks right away, as many as the balance covers.
+     * Runs up to [ticks] extra ticks in one burst, as many as the balance covers.
      *
      * @return the ticks that ran
      */
-    fun warp(ticks: Int, tick: () -> Unit = { player.tick() }): Int {
+    fun burst(ticks: Int, tick: () -> Unit = { player.tick() }): Int {
         if (mc.player == null) {
             return 0
         }
 
-        val count = min(ticks, balance.toInt())
+        val count = min(ticks, spendableTicks)
         if (count <= 0) {
             return 0
         }
 
-        warping = true
+        bursting = true
         try {
             repeat(count) { tick() }
         } finally {
-            warping = false
+            bursting = false
         }
-        debugParameter("Warped") { count }
+        debugParameter("Burst") { count }
         return count
     }
 
@@ -152,7 +164,7 @@ object Timer : EventListener, ValueGroup("Timer") {
 
     @Suppress("unused")
     private val holdHandler = handler<PlayerTickEvent>(priority = FIRST_PRIORITY) { event ->
-        if (warping) {
+        if (bursting) {
             return@handler
         }
 
@@ -166,8 +178,8 @@ object Timer : EventListener, ValueGroup("Timer") {
 
     @Suppress("unused")
     private val balanceHandler = handler<PlayerTickEvent>(priority = READ_FINAL_STATE) { event ->
-        // A tick of the frame took 1 / speed ticks of real time, while a warped one took none
-        if (!warping) {
+        // A tick of the frame took 1 / speed ticks of real time, while a burst one took none
+        if (!bursting) {
             balance += 1f / frameSpeed
         }
 
@@ -175,7 +187,7 @@ object Timer : EventListener, ValueGroup("Timer") {
             balance -= 1f
         }
 
-        balance = balance.coerceIn(-maxBalance.toFloat(), maxBalance.toFloat())
+        balance = balance.coerceIn(minBalance.toFloat(), maxBalance.toFloat())
         debugParameter("Balance") { balance }
         debugParameter("Speed") { frameSpeed }
     }
