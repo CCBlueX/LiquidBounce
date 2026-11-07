@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
@@ -57,7 +58,12 @@ import java.util.Locale
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
 @Suppress("TooManyFunctions")
-class Theme private constructor(val origin: Origin, url: String) :
+class Theme private constructor(
+    val origin: Origin,
+    url: String,
+    /** Where the theme lies on disk; null for themes from the client or the internet. */
+    val folder: File? = null,
+) :
     AutoCloseable, SimpleReloadListener.Sequenced {
 
     private val baseUrl = url.trimEnd('/')
@@ -82,6 +88,9 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         @GET("sounds/{name}.ogg")
         suspend fun sound(@Path("name") name: String): Buffer
+
+        @GET("{path}")
+        suspend fun file(@Path("path", encoded = true) path: String): Buffer
     }
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
@@ -283,6 +292,11 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
+    /**
+     * Reads a file of the theme by its path relative to the theme root.
+     */
+    suspend fun readFile(path: String): ByteArray = service.file(path).readByteArray()
+
     private suspend fun loadAll() = apply {
         loadMetadata()
         loadComponents()
@@ -394,7 +408,12 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
-            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"
+            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/",
+            folder = when (origin) {
+                Origin.LOCAL -> ThemeManager.themesFolder.resolve(file)
+                Origin.MARKETPLACE -> MarketplaceManager.marketplaceRoot.resolve(file)
+                else -> null
+            },
         ).loadAll()
     }
 

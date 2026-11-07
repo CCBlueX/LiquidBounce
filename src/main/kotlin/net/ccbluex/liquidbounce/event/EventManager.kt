@@ -149,6 +149,7 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
 
@@ -407,7 +408,7 @@ object EventManager {
      * @param event to call
      */
     fun <T : Event> callEvent(event: T): T {
-        if (isDestructed) {
+        if (isDestructed || ErrorScreen.isShown) {
             return event
         }
 
@@ -432,6 +433,10 @@ object EventManager {
                     additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
                 )
             } catch (e: Throwable) {
+                // A handler that ran into a fatal error has left for the error screen
+                if (ErrorScreen.isShown) {
+                    throw e
+                }
                 logger.error(
                     "Exception while executing event handler of {}, event={}",
                     eventHook.handlerClass.javaClass.simpleName,
