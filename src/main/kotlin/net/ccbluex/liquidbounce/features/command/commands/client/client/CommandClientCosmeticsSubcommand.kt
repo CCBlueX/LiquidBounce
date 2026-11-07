@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import kotlin.coroutines.resume
 
@@ -54,7 +55,13 @@ object CommandClientCosmeticsSubcommand {
         ClientAccountManager.clientAccount.cosmetics = null
 
         suspendCancellableCoroutine { continuation ->
-            CosmeticService.refreshCarriers(true) {
+            CosmeticService.refreshCarriers(
+                force = true,
+                onFailure = {
+                    chat(markAsError("Cosmetic System could not be refreshed, see the log for details."))
+                    continuation.resume(Unit)
+                }
+            ) {
                 chat(
                     regular(
                         "Cosmetic System has been refreshed."
