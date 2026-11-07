@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.HumanoidArm
 import org.joml.Quaternionf
+import kotlin.math.roundToInt
 
 /**
  * Changes how our view model looks. The view model is our POV-view only.
@@ -46,6 +47,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         tree(OffHand)
         tree(EquipOffset)
         tree(SwingAnimations)
+        tree(SwingDuration)
     }
 
     object MainHand : ToggleableValueGroup(this, "MainHand", false) {
@@ -66,7 +68,27 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
-    val swingDuration by int("SwingDuration", 6, 1..20)
+    /**
+     * Scales the vanilla swing duration, which depends on the held item, Haste and Mining Fatigue.
+     */
+    object SwingDuration : ToggleableValueGroup(this, "SwingDuration", false) {
+        private val multiplier by float("Multiplier", 1f, 0.1f..3f, "x")
+        private val ignore by multiEnumChoice<Ignores>("Ignore")
+
+        val ignoreItem get() = Ignores.ITEM in ignore
+        val ignoreHaste get() = Ignores.HASTE in ignore
+        val ignoreMiningFatigue get() = Ignores.MINING_FATIGUE in ignore
+
+        fun scale(duration: Int) = (duration * multiplier).roundToInt().coerceAtLeast(1)
+
+        private enum class Ignores(
+            override val tag: String
+        ) : Tagged {
+            ITEM("Item"),
+            HASTE("Haste"),
+            MINING_FATIGUE("MiningFatigue")
+        }
+    }
 
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
