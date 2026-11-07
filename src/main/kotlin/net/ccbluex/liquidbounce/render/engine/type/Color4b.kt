@@ -57,7 +57,7 @@ data class Color4b(val argb: Int) {
     companion object {
 
         @JvmField
-        val LIQUID_BOUNCE = Color4b(0x00, 0x80, 0xFF, 0xFF)
+        val LIQUID_BOUNCE = Color4b(0x46, 0x77, 0xFF, 0xFF)
         @JvmField
         val WHITE = Color4b(255, 255, 255, 255)
         @JvmField
