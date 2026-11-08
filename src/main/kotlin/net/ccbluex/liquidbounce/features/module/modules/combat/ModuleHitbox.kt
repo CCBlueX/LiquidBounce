@@ -23,6 +23,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * Hitbox module
@@ -40,9 +44,24 @@ object ModuleHitbox : ClientModule("Hitbox", ModuleCategories.COMBAT) {
      */
     val applyToComponent by boolean("ApplyToComponent", true)
 
+    private val range by float("Range", 64f, 1f..64f, "blocks")
+    private val throughWalls by boolean("ThroughWalls", true)
+
+    /**
+     * Also enlarges targets whose shield would block the hit.
+     */
+    private val ignoreShield by boolean("IgnoreShield", true)
+
+    fun shouldEnlarge(entity: Entity): Boolean =
+        entity.shouldBeAttacked()
+            // Not [squaredBoxedDistanceTo], which asks for the margin again
+            && entity.boundingBox.distanceToSqr(player.eyePosition) <= range.sq()
+            && (ignoreShield || entity !is LivingEntity || !entity.wouldBlockHit)
+            && (throughWalls || player.hasLineOfSight(entity))
+
     @Suppress("unused")
     private val marginHandler = handler<EntityMarginEvent> { event ->
-        if (event.entity.shouldBeAttacked()) {
+        if (shouldEnlarge(event.entity)) {
             event.margin = size
         }
     }
