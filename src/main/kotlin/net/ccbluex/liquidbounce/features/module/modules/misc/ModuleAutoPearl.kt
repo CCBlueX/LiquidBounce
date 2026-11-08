@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -87,6 +88,7 @@ object ModuleAutoPearl : ClientModule(
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
+    private val throwDelay by intRange("ThrowDelay", 0..0, 0..20, "ticks")
 
     private val queue = ArrayDeque<Rotation>()
 
@@ -127,6 +129,8 @@ object ModuleAutoPearl : ClientModule(
     @Suppress("unused")
     private val gameTickHandler = tickHandler {
         val rotation = queue.removeFirstOrNull() ?: return@tickHandler
+        waitTicks(throwDelay.random())
+
         val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
 
         if (Rotate.enabled) {
