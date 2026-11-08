@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
@@ -27,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.isCharged
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
@@ -36,10 +39,12 @@ import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
@@ -260,8 +265,28 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
     }
 
+    /**
+     * Holds a hotbar totem in the main hand for as long as the offhand has to wait for its totem. Selecting a
+     * hotbar slot is not bound to [switchDelay] or the inventory constraints.
+     */
+    private object DoubleHand : ToggleableValueGroup(this, "DoubleHand", false) {
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            if (player.offhandItem.has(DataComponents.DEATH_PROTECTION)) {
+                return@handler
+            }
+
+            val totem = Slots.Hotbar.findSlot { it.has(DataComponents.DEATH_PROTECTION) } ?: return@handler
+            if (shouldEquip()) {
+                SilentHotbar.selectSlotSilently(this, totem, 1)
+            }
+        }
+
+    }
+
     init {
-        tree(Health)
+        treeAll(Health, DoubleHand)
     }
 
     /**
