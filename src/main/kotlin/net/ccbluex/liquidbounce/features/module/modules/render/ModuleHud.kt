@@ -123,6 +123,12 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         val alphaBlendRange by floatRange("AlphaBlendRange", 0.0F..0.75F, 0.0F..1.0F)
     }
 
+    /**
+     * Scales the theme's HUD components, read by the theme itself.
+     */
+    @Suppress("unused")
+    private val scale by float("Scale", 1f, 0.5f..2f)
+
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
         EventManager.callEvent(SpaceSeperatedNamesChangeEvent(state))

@@ -33,6 +33,7 @@
         type HudEditorDragState
     } from "../clickgui/tabs/hud_editor/constants";
     import Image from "./elements/Image.svelte";
+    import {hudScale} from "../../theme/theme_config";
 
     export let inEditor = false;
     export let onDragStateChange: ((state: HudEditorDragState) => void) | undefined = undefined;
@@ -44,6 +45,8 @@
     let themeComponents: HudComponent[] = [];
 
     $: renderedComponents = inEditor ? [...nativeComponents, ...themeComponents] : themeComponents;
+    // The game draws native components itself, unscaled
+    $: nativeIds = new Set(nativeComponents.map(c => c.id));
 
     setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
 
@@ -88,6 +91,7 @@
                     magneticallyReferenced={magneticTargetIds.includes(c.id)}
                     width={c.width}
                     height={c.height}
+                    contentScale={nativeIds.has(c.id) ? 1 : $hudScale}
             >
                 {#if c.name === "Watermark"}
                     <Watermark/>
