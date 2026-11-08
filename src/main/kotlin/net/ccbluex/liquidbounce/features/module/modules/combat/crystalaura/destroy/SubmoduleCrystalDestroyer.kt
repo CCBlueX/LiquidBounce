@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleAbort
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
@@ -89,6 +91,12 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     }
 
     private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
+        val plan = SubmoduleAbort.capture(
+            target.position(),
+            CrystalAuraDestroyTargetFactory.currentDamage,
+            CrystalAuraDamageOptions.RequestingSubmodule.DESTROY
+        )
+
         // create the action chain to execute
         val action = {
             ModuleCrystalAura.rotationMode.activeMode.rotate(rotation, isFinished = {
@@ -99,7 +107,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
                     throughWallsRange = wallsRange.toDouble()
                 ) != null
             }, onFinished = {
-                if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+                if (!chronometer.hasAtLeastElapsed(delay.toLong()) || plan?.isOutdated() == true) {
                     return@rotate
                 }
 

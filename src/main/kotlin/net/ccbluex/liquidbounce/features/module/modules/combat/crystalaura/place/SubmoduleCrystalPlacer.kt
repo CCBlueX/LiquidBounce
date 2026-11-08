@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 
 import it.unimi.dsi.fastutil.ints.IntCollection
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleAbort
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -36,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.network.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.math.topCenter
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
@@ -152,6 +155,12 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {
+        val plan = SubmoduleAbort.capture(
+            targetPos.topCenter,
+            CrystalAuraPlaceTargetFactory.placementDamage,
+            CrystalAuraDamageOptions.RequestingSubmodule.PLACE
+        )
+
         ModuleCrystalAura.rotationMode.activeMode.rotate(rotation.rotation, isFinished = {
             blockHitResult = raytraceBlock(
                 getMaxRange().toDouble(),
@@ -162,7 +171,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
             return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
         }, onFinished = {
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            if (!chronometer.hasAtLeastElapsed(delay.toLong()) || plan?.isOutdated() == true) {
                 return@rotate
             }
 

@@ -36,19 +36,27 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
     var currentTarget: EndCrystal? = null
 
     /**
+     * The damage [currentTarget] deals to the target when it explodes.
+     */
+    var currentDamage = 0f
+        private set
+
+    /**
      * For the main loop. Finds the best target in range.
      *
      * Updates the current target.
      */
     fun updateTarget() {
-        currentTarget =
-            world.getEntitiesBoxInRange(player.eyePosition, getMaxRange().toDouble()) {
-                it is EndCrystal && it.isWithinWorldBorder && !cannotSeeEntity(it)
-            }.mapNotNull {
-                val damage = dealsEnoughDamage(it) ?: return@mapNotNull null
+        val best = world.getEntitiesBoxInRange(player.eyePosition, getMaxRange().toDouble()) {
+            it is EndCrystal && it.isWithinWorldBorder && !cannotSeeEntity(it)
+        }.mapNotNull {
+            val damage = dealsEnoughDamage(it) ?: return@mapNotNull null
 
-                ComparisonListEntry(it as EndCrystal, damage.firstFloat(), damage.secondFloat())
-            }.maxOrNull()?.crystalEntity
+            ComparisonListEntry(it as EndCrystal, damage.firstFloat(), damage.secondFloat())
+        }.maxOrNull()
+
+        currentTarget = best?.crystalEntity
+        currentDamage = best?.enemyDamage ?: 0f
     }
 
     /**
@@ -71,7 +79,7 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
             return
         }
 
-        dealsEnoughDamage(crystal) ?: return
+        currentDamage = dealsEnoughDamage(crystal)?.secondFloat() ?: return
 
         currentTarget = crystal
     }

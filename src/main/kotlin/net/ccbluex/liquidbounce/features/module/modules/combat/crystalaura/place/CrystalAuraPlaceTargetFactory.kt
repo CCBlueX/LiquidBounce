@@ -41,6 +41,12 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
     var previousTarget: BlockPos? = null
 
     /**
+     * The damage a crystal on [placementTarget] deals to the target.
+     */
+    var placementDamage = 0f
+        private set
+
+    /**
      * Conditions to include a position into the positions to consider.
      */
     private val conditionChain: Array<PlacementCondition> = arrayOf(
@@ -92,6 +98,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         // finally, update the current target
         if (bestTarget.notBlockedByCrystal && !bestTarget.requiresBasePlace) {
             placementTarget = bestTarget.pos
+            placementDamage = bestTarget.enemyDamage!!
         }
     }
 

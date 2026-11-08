@@ -69,7 +69,8 @@ object ModuleCrystalAura : ClientModule(
             PredictFeature,
             SubmoduleIdPredict,
             SubmoduleSetDead,
-            SubmoduleBasePlace
+            SubmoduleBasePlace,
+            SubmoduleAbort
         )
     }
 
