@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.combat.TargetReaction
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
@@ -53,6 +54,8 @@ class CrosshairAttacker<T>(
     private val criticalsSelectionMode by parent.enumChoice("Criticals", CriticalsSelectionMode.SMART)
     private val delayPostStopUse by parent.int("DelayPostStopUse", 0, 0..20, "ticks")
 
+    private val reaction = parent.tree(TargetReaction())
+
     val isAttacking: Boolean
         get() = wantsToAttack() && weapon.matchesAny(player.mainHandItem)
 
@@ -71,13 +74,18 @@ class CrosshairAttacker<T>(
     }
 
     /**
-     * Clicks as often as [clicker] plans for this tick, unless a critical hit is still pending.
+     * Clicks as often as [clicker] plans for this tick, unless the reaction to the crosshair target or a critical
+     * hit is still pending.
      *
      * @return false when the tick went to waiting for or stopping an item use instead
      */
     suspend fun attack(): Boolean {
         val crosshairTarget = mc.hitResult
         if (crosshairTarget is EntityHitResult) {
+            if (!reaction.hasReactedTo(crosshairTarget.entity)) {
+                return true
+            }
+
             ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
             if (!criticalsSelectionMode.isCriticalHit()) {
