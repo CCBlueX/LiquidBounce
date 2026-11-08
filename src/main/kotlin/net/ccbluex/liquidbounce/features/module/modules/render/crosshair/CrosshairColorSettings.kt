@@ -39,7 +39,7 @@ class CrosshairColorSettings : ValueGroup("Color") {
         val first = firstColor
         val second = if (!syncColors) secondColor else firstColor
 
-        return getColorByAngle(angle, first, second, spinSpeed)
+        return ModuleCrosshair.HitFlash.tint(getColorByAngle(angle, first, second, spinSpeed))
     }
 
     private fun getColorByAngle(
