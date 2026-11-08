@@ -71,6 +71,7 @@ import kotlin.math.abs
 object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
+    private val sprintMultiplier by float("SprintMultiplier", 1f, 1f..5f)
 
     /**
      * Allows to interact from the camera perspective. This is very useful to interact with blocks that
@@ -255,7 +256,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         if (mc.options.keyJump.isDown) yAxisMovement += 1.0f
         if (mc.options.keyShift.isDown) yAxisMovement -= 1.0f
 
-        val speed = this.speed.toDouble()
+        var speed = this.speed.toDouble()
+        if (mc.options.keySprint.isDown) speed *= sprintMultiplier
 
         debugParameter("DirectionalInput") { directionalInput }
         val velocity = Vec3.ZERO
