@@ -59,7 +59,7 @@ import java.util.function.Predicate
  */
 object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases = listOf("AutoTotem")) {
 
-    private val inventoryConstraints = tree(PlayerInventoryConstraints())
+    internal val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val switchMode by enumChoice(
         "SwitchMode",
         default = if (!usesViaFabricPlus) SwitchMode.SWITCH else SwitchMode.AUTOMATIC
@@ -241,6 +241,11 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     private data class LastSwitch(val item: Item, val slot: ItemSlot)
 
     fun isOperating() = running && activeMode != Mode.NONE
+
+    /**
+     * Whether the totem is the item the offhand should hold right now.
+     */
+    internal val equipsTotem get() = running && activeMode == Mode.TOTEM
 
     private enum class Mode(
         val modeName: String,

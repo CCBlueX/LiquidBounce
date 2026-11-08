@@ -273,6 +273,10 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
      */
     val legit by boolean("Legit", false)
 
+    init {
+        tree(TotemLegitRoutine)
+    }
+
     /**
      * Ignores all active inventory requests, switch settings and sends the switch packets directly.
      */
@@ -294,9 +298,13 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
     }
 
     /**
-     * The slot of the totem under the cursor in the open inventory.
+     * The slot of the totem under the cursor in the open inventory, once the [TotemLegitRoutine] lets it be taken.
      */
     fun hoveredTotemSlot(): ItemSlot? {
+        if (TotemLegitRoutine.holdsSwap) {
+            return null
+        }
+
         val hovered = (mc.gui.screen() as? InventoryScreen)?.hoveredSlot ?: return null
         if (!hovered.item.has(DataComponents.DEATH_PROTECTION)) {
             return null
