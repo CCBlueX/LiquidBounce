@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -44,6 +46,18 @@ internal object VelocityModify : VelocityMode("Modify") {
     private val transactionBufferAmount by int("TransactionBuffer", 0, 0..3)
     private val considerExplosion by boolean("ConsiderExplosion", true)
 
+    /**
+     * Rolls the factors per hit, replacing [horizontal] and [vertical].
+     */
+    private object RandomFactors : ToggleableValueGroup(this, "Random", false) {
+        val horizontal by floatRange("Horizontal", 0f..0f, -1f..1f)
+        val vertical by floatRange("Vertical", 0f..0f, -1f..1f)
+    }
+
+    init {
+        tree(RandomFactors)
+    }
+
     private var transactionBuffer = 0
 
     override fun disable() {
@@ -60,8 +74,11 @@ internal object VelocityModify : VelocityMode("Modify") {
                 if (!filter.condition.asBoolean) return@handler
                 if (onlyMove && !player.input.keyPresses.anyHorizontal) return@handler
 
+                val horizontalFactor = horizontalFactor()
+                val verticalFactor = verticalFactor()
+
                 // It should just block the packet
-                if (horizontal == 0f && vertical == 0f) {
+                if (horizontalFactor == 0f && verticalFactor == 0f) {
                     event.cancelEvent()
                     NoFallBlink.waitUntilGround = true
                     return@handler
@@ -70,17 +87,17 @@ internal object VelocityModify : VelocityMode("Modify") {
                 val currentVelocity = player.deltaMovement
 
                 // Modify packet according to the specified values
-                if (horizontal != 0f) {
-                    packet.movement.x = packet.movement.x * horizontal
-                    packet.movement.z = packet.movement.z * horizontal
+                if (horizontalFactor != 0f) {
+                    packet.movement.x = packet.movement.x * horizontalFactor
+                    packet.movement.z = packet.movement.z * horizontalFactor
                 } else {
                     // set the horizontal velocity to the player velocity to prevent horizontal slowdown
                     packet.movement.x = currentVelocity.x * motionHorizontal
                     packet.movement.z = currentVelocity.z * motionHorizontal
                 }
 
-                if (vertical != 0f) {
-                    packet.movement.y = packet.movement.y * vertical
+                if (verticalFactor != 0f) {
+                    packet.movement.y = packet.movement.y * verticalFactor
                 } else {
                     // set the vertical velocity to the player velocity to prevent vertical slowdown
                     packet.movement.y = currentVelocity.y * motionVertical
@@ -100,9 +117,10 @@ internal object VelocityModify : VelocityMode("Modify") {
 
                 //  Modify packet according to the specified values
                 val knockback = packet.playerKnockback.get()
-                knockback.x *= horizontal
-                knockback.y *= vertical
-                knockback.z *= horizontal
+                val horizontalFactor = horizontalFactor()
+                knockback.x *= horizontalFactor
+                knockback.y *= verticalFactor()
+                knockback.z *= horizontalFactor
 
                 NoFallBlink.waitUntilGround = true
                 transactionBuffer += transactionBufferAmount
@@ -114,6 +132,9 @@ internal object VelocityModify : VelocityMode("Modify") {
             }
         }
     }
+
+    private fun horizontalFactor() = if (RandomFactors.enabled) RandomFactors.horizontal.random() else horizontal
+    private fun verticalFactor() = if (RandomFactors.enabled) RandomFactors.vertical.random() else vertical
 
     @Suppress("unused")
     private enum class VelocityTriggerFilter(
