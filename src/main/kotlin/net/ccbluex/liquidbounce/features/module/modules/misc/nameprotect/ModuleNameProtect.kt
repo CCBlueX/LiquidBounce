@@ -28,7 +28,9 @@ import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
+import net.ccbluex.liquidbounce.utils.client.randomUsername
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.text.codePointsToString
 import net.minecraft.network.chat.Component
@@ -46,6 +48,25 @@ import net.minecraft.util.StringDecomposer
 object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
     private val replacement by text("Replacement", "You")
+
+    /**
+     * Replaces the own name with a random one instead of [replacement], rolled again every interval.
+     */
+    private object RandomName : ToggleableValueGroup(this, "RandomName", false) {
+        private val interval by int("Interval", 60, 1..3600, "s")
+
+        private val chronometer = Chronometer()
+        private var rolledName = ""
+
+        fun current(): String {
+            if (rolledName.isEmpty() || chronometer.hasAtLeastElapsed(interval * 1000L)) {
+                rolledName = randomUsername()
+                chronometer.reset()
+            }
+
+            return rolledName
+        }
+    }
 
     private val colorMode = choices<GenericColorMode<Unit>>(
         "ColorMode",
@@ -72,9 +93,26 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         ) {
             arrayOf(GenericStaticColorMode(it, Color4b(71, 71, 71)), GenericRainbowColorMode(it))
         }
+
+        /**
+         * Also covers players in the world that the tab list does not show.
+         */
+        val includeWorldPlayers by boolean("IncludeWorldPlayers", false)
+
+        init {
+            tree(NumberedAliases)
+        }
+    }
+
+    /**
+     * Names the others after [prefix] and a number counting up in the order they are first seen.
+     */
+    private object NumberedAliases : ToggleableValueGroup(ReplaceOthers, "NumberedAliases", false) {
+        val prefix by text("Prefix", "Player")
     }
 
     init {
+        tree(RandomName)
         tree(ReplaceFriendNames)
         tree(ReplaceOthers)
 
@@ -83,6 +121,12 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
     }
 
     private val replacementMappings = NameProtectMappings()
+
+    /**
+     * Alias of every other player seen so far, kept so the numbering stays stable.
+     */
+    private val otherAliases = HashMap<String, String>()
+    private var otherAliasPrefix: String? = null
 
     private val coloringInfo = NameProtectMappings.ColoringInfo(
         username = { this.colorMode.activeMode.getColor(Unit) },
@@ -103,19 +147,39 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
         val playerName = player.gameProfile.name ?: mc.user.name
 
         val otherPlayers = if (ReplaceOthers.enabled) {
-            network.onlinePlayers.mapNotNull { playerListEntry ->
-                val otherName = playerListEntry.profile.name
+            val names = LinkedHashSet<String>()
+            network.onlinePlayers.mapTo(names) { it.profile.name }
 
-                if (otherName != playerName) otherName else null
+            if (ReplaceOthers.includeWorldPlayers) {
+                world.players().mapTo(names) { it.gameProfile.name }
             }
-        } else { null } ?: emptyList()
+
+            names.remove(playerName)
+            friendMappings.forEach { (name, _) -> names.remove(name) }
+            names.map { it to aliasOf(it) }
+        } else {
+            emptyList()
+        }
 
         this.replacementMappings.update(
-            playerName to this.replacement,
+            playerName to if (RandomName.enabled) RandomName.current() else this.replacement,
             friendMappings,
             otherPlayers,
             coloringInfo
         )
+    }
+
+    private fun aliasOf(name: String): String {
+        val prefix = NumberedAliases.prefix.takeIf { NumberedAliases.enabled }
+
+        if (prefix != otherAliasPrefix) {
+            otherAliases.clear()
+            otherAliasPrefix = prefix
+        }
+
+        return otherAliases.getOrPut(name) {
+            if (prefix != null) "$prefix${otherAliases.size + 1}" else hashedAlias(name)
+        }
     }
 
     fun replace(original: String): String =
