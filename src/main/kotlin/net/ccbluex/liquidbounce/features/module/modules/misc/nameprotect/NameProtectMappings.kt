@@ -58,7 +58,7 @@ class NameProtectMappings {
     private var usernameReplacement: Pair<String, String>? = null
 
     private var friendMappings = emptyMap<String, String>()
-    private var otherPlayerMappings = emptySet<String>()
+    private var otherPlayerMappings = emptyMap<String, String>()
 
     /**
      * Replaced as a whole on every rebuild, so readers either see the previous or the next
@@ -70,11 +70,11 @@ class NameProtectMappings {
     private fun shouldUpdate(
         usernameReplacement: Pair<String, String>,
         friendMappings: List<Pair<String, String>>,
-        otherPlayers: List<String>
+        otherPlayers: List<Pair<String, String>>
     ): Boolean {
         val userChanged = usernameReplacement != this.usernameReplacement
         val friendChanged = friendMappings.any { (name, replacement) -> this.friendMappings[name] != replacement }
-        val otherPlayersChanged = otherPlayers.any { name -> !this.otherPlayerMappings.contains(name) }
+        val otherPlayersChanged = otherPlayers.any { (name, alias) -> this.otherPlayerMappings[name] != alias }
 
         if (userChanged || friendChanged || otherPlayersChanged) {
             return true
@@ -93,7 +93,7 @@ class NameProtectMappings {
     fun update(
         username: Pair<String, String>,
         friendMappings: List<Pair<String, String>>,
-        otherPlayers: List<String>,
+        otherPlayers: List<Pair<String, String>>,
         coloringInfo: ColoringInfo
     ) {
         if (!shouldUpdate(username, friendMappings, otherPlayers)) {
@@ -102,15 +102,13 @@ class NameProtectMappings {
 
         val currentMapping = Object2ObjectOpenHashMap<String, MappingData>(otherPlayers.size + friendMappings.size)
 
-        otherPlayers.subList(0, 200.coerceAtMost(otherPlayers.size)).forEach { playerName ->
+        otherPlayers.subList(0, 200.coerceAtMost(otherPlayers.size)).forEach { (playerName, alias) ->
             // Prevent DoS attacks
             if (playerName.length !in 2..20) {
                 return@forEach
             }
 
-            val rng = getEntropySourceFrom(playerName)
-
-            currentMapping[playerName] = MappingData(randomUsername(16, rng), coloringInfo.otherPlayers)
+            currentMapping[playerName] = MappingData(alias, coloringInfo.otherPlayers)
         }
 
         friendMappings.forEach { (name, replacement) ->
@@ -119,7 +117,7 @@ class NameProtectMappings {
 
         this.friendMappings = friendMappings.toMap()
 
-        this.otherPlayerMappings = otherPlayers.toSet()
+        this.otherPlayerMappings = otherPlayers.toMap()
 
         this.usernameReplacement = username
 
@@ -168,10 +166,13 @@ class NameProtectMappings {
     class ColoringInfo(val username: ColorGetter, val friends: ColorGetter, val otherPlayers: ColorGetter)
 }
 
-private fun getEntropySourceFrom(playerName: String): Random {
+/**
+ * A random name that stays the same for [playerName].
+ */
+internal fun hashedAlias(playerName: String): String {
     val hash = DigestUtils.md5(playerName)
     // Parse the first 8 bytes to long value
     val l = FastByteArrayInputStream(hash).readLong()
-    return Random(l)
+    return randomUsername(16, Random(l))
 }
 
