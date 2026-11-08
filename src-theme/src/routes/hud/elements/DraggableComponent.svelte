@@ -25,6 +25,8 @@
     export let width: number | undefined = undefined;
     export let height: number | undefined = undefined;
     export let zIndex = 0;
+    /** Zoom of the component's content, on top of the game's GUI scale. */
+    export let contentScale = 1;
 
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
@@ -517,6 +519,7 @@
     <div
             class="contained-element"
             style={sizeStyleString}
+            style:zoom={contentScale}
             class:editor-mode={inEditor}
             class:magnetically-referenced={inEditor && magneticallyReferenced}
             on:mousedown={onMouseDown}
