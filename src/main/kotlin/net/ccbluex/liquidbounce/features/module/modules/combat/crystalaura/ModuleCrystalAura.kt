@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
+import net.ccbluex.liquidbounce.utils.aiming.CrosshairRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
@@ -80,9 +81,16 @@ object ModuleCrystalAura : ClientModule(
     val rotationMode = modes(this, "RotationMode") {
         arrayOf(
             NormalRotationMode(it, this, Priority.IMPORTANT_FOR_USAGE_2, true),
-            NoRotationMode(it, this)
+            NoRotationMode(it, this),
+            CrosshairRotationMode(it, this)
         )
     }
+
+    /**
+     * Only places on the block and breaks the crystal the player looks at, without rotating.
+     */
+    val crosshairOnly
+        get() = rotationMode.activeMode is CrosshairRotationMode
 
     override fun onDisabled() {
         CrystalAuraTriggerer.terminateRunningTasks()

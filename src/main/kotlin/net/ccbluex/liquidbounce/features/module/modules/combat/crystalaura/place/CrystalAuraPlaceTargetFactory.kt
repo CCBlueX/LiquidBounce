@@ -58,18 +58,21 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())
     }
 
-    fun updateTarget(excludeIds: IntCollection?) {
+    /**
+     * Finds the best placement, considering only [only] when it is given.
+     */
+    fun updateTarget(excludeIds: IntCollection?, only: BlockPos? = null) {
         // Reset current target
         previousTarget = placementTarget
         placementTarget = null
 
-        val basePlace = SubmoduleBasePlace.shouldBasePlaceRun()
-        val currentBasePlaceTarget = if (basePlace) null else SubmoduleBasePlace.currentTarget
+        val basePlace = only == null && SubmoduleBasePlace.shouldBasePlaceRun()
+        val currentBasePlaceTarget = if (basePlace || only != null) null else SubmoduleBasePlace.currentTarget
 
         val positions = mutableListOf<PlacementPositionCandidate>()
 
         // find all valid positions
-        if (evaluateCandidatePositions(basePlace, excludeIds, positions)) {
+        if (evaluateCandidatePositions(basePlace, excludeIds, positions, only)) {
             // return if the crystal aura doesn't target anything
             return
         }
@@ -98,7 +101,8 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
     private fun evaluateCandidatePositions(
         basePlace: Boolean,
         excludeIds: IntCollection?,
-        positions: MutableList<PlacementPositionCandidate>
+        positions: MutableList<PlacementPositionCandidate>,
+        only: BlockPos?
     ): Boolean {
         val target = ModuleCrystalAura.targetTracker.target ?: return true
         val expectedCrystal = if (oldVersion) FULL_BOX.setMaxY(2.0) else FULL_BOX
@@ -109,7 +113,8 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
         val playerPos = player.blockPosition()
         val pos = BlockPos.MutableBlockPos()
-        sphere.forEach {
+        val offsets = if (only != null) arrayOf(only.subtract(playerPos)) else sphere
+        offsets.forEach {
             // conditionChain
             pos.set(playerPos).move(it)
 
