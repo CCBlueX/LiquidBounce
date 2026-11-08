@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import net.ccbluex.fastutil.referenceSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
@@ -35,7 +38,11 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.Item
@@ -56,12 +63,30 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
     override val trapItems: Set<Item> = referenceSetOf(Items.COBWEB)
     override val trapWorthyBlocks: Set<Block> = referenceSetOf(Blocks.COBWEB)
 
+    /**
+     * Only webs falling players, where they are predicted to land.
+     */
+    private val onlyFalling by boolean("OnlyFalling", false)
+    private val leadTicks by int("LeadTicks", TrapPlayerSimulation.DEFAULT_LEAD_TICKS, 1..20, "ticks")
+
+    /**
+     * Also webs the block at head height once the one at the feet holds a web.
+     */
+    private val headHeight by boolean("HeadHeight", false)
+
+    init {
+        tree(Refill())
+    }
+
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<WebIntentData>? {
         val slot = findSlotForTrap() ?: return null
 
         for (target in enemies) {
             val targetPos = TrapPlayerSimulation.findPosForTrap(
-                target, isTargetLocked = targetTracker.target == target
+                target,
+                isTargetLocked = targetTracker.target == target,
+                onlyFalling,
+                leadTicks
             ) ?: continue
 
             val placementTarget = generatePlacementInfo(targetPos, target, slot) ?: continue
@@ -87,7 +112,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         val blockPos = targetPos.toBlockPos()
 
         if (blockPos.state?.block in trapWorthyBlocks) {
-            return null
+            return if (headHeight) generateHeadPlacementInfo(blockPos.above(), slot) else null
         }
 
         val offsetsForTargets = findOffsetsForTarget(
@@ -111,6 +136,24 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         return findBestBlockPlacementTarget(blockPos, options)
     }
 
+    /**
+     * The web at the feet is what the one at [headPos] is placed against.
+     */
+    private fun generateHeadPlacementInfo(headPos: BlockPos, slot: HotbarItemSlot): BlockPlacementTarget? {
+        if (headPos.state?.canBeReplaced() != true) {
+            return null
+        }
+
+        val options = BlockPlacementTargetFindingOptions(
+            BlockOffsetOptions.Default,
+            FaceHandlingOptions(NearestRotationTargetPositionFactory),
+            stackToPlaceWith = slot.itemStack,
+            PlayerLocationOnPlacement(),
+        )
+
+        return findBestBlockPlacementTarget(headPos, options)
+    }
+
     override fun validate(plan: BlockChangeIntent<WebIntentData>, raycast: BlockHitResult): Boolean {
         if (raycast.type != HitResult.Type.BLOCK) {
             return false
@@ -127,6 +170,31 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
 
     override fun onIntentFulfilled(intent: BlockChangeIntent<WebIntentData>) {
         targetTracker.target = intent.planningInfo.target
+    }
+
+    /**
+     * Moves webs from the inventory into the hotbar while there is a target and the hotbar has none.
+     */
+    private inner class Refill : ToggleableValueGroup(this@WebTrapPlanner, "Refill", false) {
+        private val constraints = tree(PlayerInventoryConstraints())
+
+        @Suppress("unused")
+        private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
+            if (findSlotForTrap() != null) {
+                return@handler
+            }
+
+            val webSlot = Slots.Inventory.findSlot(Items.COBWEB) ?: return@handler
+            if (targetTracker.targets().isEmpty()) {
+                return@handler
+            }
+
+            val hotbarSlot = Slots.Hotbar.findSlot { it.isEmpty }
+                ?: Slots.Hotbar.lastOrNull { !it.isSelected }
+                ?: return@handler
+
+            event.schedule(constraints, InventoryAction.Click.performSwap(from = webSlot, to = hotbarSlot))
+        }
     }
 
     class WebIntentData(

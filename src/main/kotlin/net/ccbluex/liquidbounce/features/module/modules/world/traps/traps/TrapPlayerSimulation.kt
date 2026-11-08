@@ -37,6 +37,8 @@ object TrapPlayerSimulation {
 
     private const val SIMULATION_DISTANCE: Double = 10.0
 
+    const val DEFAULT_LEAD_TICKS = 8
+
     fun runSimulations(enemies: List<LivingEntity>) {
         val seenPlayers = ReferenceOpenHashSet<Player>()
 
@@ -84,16 +86,27 @@ object TrapPlayerSimulation {
      * Searches for a position where a trap could be laid. Currently, that is the landing position of
      * a jumping/falling player, or the current position of a player standing on the ground.
      *
+     * @param onlyFalling only the landing position of a falling player counts
+     * @param leadTicks how many ticks before the predicted landing the trap has to be planned at the latest
      * @return position for the trap. `null` if the trap should not be placed.
      */
-    fun findPosForTrap(target: LivingEntity, isTargetLocked: Boolean): Vec3? {
+    fun findPosForTrap(
+        target: LivingEntity,
+        isTargetLocked: Boolean,
+        onlyFalling: Boolean = false,
+        leadTicks: Int = DEFAULT_LEAD_TICKS,
+    ): Vec3? {
         if (target !is Player) {
-            return target.position()
+            return if (onlyFalling) null else target.position()
         }
 
         val simulationCache = this.predictedPlayerStatesCache[target] ?: return null
 
         val lastEntry = simulationCache.last()
+
+        if (onlyFalling && lastEntry.onGround) {
+            return null
+        }
 
         // A grounded target is trapped where it stands; where it walks from here is covered by the planner's
         // offset search, which extrapolates the target's velocity.
@@ -103,11 +116,11 @@ object TrapPlayerSimulation {
 
         val positions = simulationCache.mapNotNull { it.nextOnGround }
 
-        val canLayTrapInTime = (lastEntry.ticksToGround ?: 0) >= 8
+        val canLayTrapInTime = (lastEntry.ticksToGround ?: 0) >= leadTicks
         val sufficientEvidence = positions.size >= 5
 
         if (!sufficientEvidence || !canLayTrapInTime && !isTargetLocked) {
-            return if (isTargetLocked) lastEntry.currPos else null
+            return if (isTargetLocked && !onlyFalling) lastEntry.currPos else null
         }
 
         val avg = positions.average()
