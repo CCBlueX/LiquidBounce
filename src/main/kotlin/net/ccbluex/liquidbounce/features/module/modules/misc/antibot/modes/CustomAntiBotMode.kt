@@ -220,12 +220,22 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }
     }
 
+    /**
+     * Premium accounts have version 4 UUIDs, offline-mode players version 3.
+     */
+    private object UuidVersion : ToggleableValueGroup(ModuleAntiBot, "UUIDVersion", false), AntiBotPredicate {
+        private val version by int("Version", 4, 1..8)
+
+        override fun isBot(entity: Player): Boolean = entity.uuid.version() != version
+    }
+
     init {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
         tree(Armor)
         tree(Name)
+        tree(UuidVersion)
     }
 
     private val flyingSet = Int2IntOpenHashMap()
@@ -328,6 +338,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             Age.enabled && Age.isBot(entity) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
             Name.enabled && Name.isBot(entity) -> true
+            UuidVersion.enabled && UuidVersion.isBot(entity) -> true
             else -> customConditions.any { it.isBot(entity) }
         }
     }
