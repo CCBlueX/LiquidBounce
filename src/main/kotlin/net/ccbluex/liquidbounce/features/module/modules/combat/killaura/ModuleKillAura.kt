@@ -286,6 +286,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                     return@prepareForAttack false
                 }
 
+                if (KillAuraFailSwing.missHit(target, rotation)) {
+                    return@prepareForAttack true
+                }
+
                 // Attack enemy
                 attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
                 range.update()

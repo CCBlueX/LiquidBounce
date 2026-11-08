@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.prepareForAttack
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -47,6 +49,11 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
     private val additionalRange by floatRange("AdditionalRange", 2.5f..3f, 0f..10f).onChanged { range ->
         currentAdditionalRange = range.random()
     }
+
+    /**
+     * Share of the hits in reach that become a fail swing.
+     */
+    private val missChance = percentageChance("MissChance", 0f)
     val mode = modes(this, "NotifyWhenFail", activeIndex = 1) {
         arrayOf(NoneMode(it), Box, Sound)
     }.apply {
@@ -83,21 +90,38 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
         KillAuraAutoBlock.makeSeemBlock()
 
         prepareForAttack {
-            // A click on a block starts digging it; only one into the air has the miss cooldown, which limits the
-            // attack speed. See [net.minecraft.client.Minecraft.startAttack].
-            if (block != null) {
-                interaction.startDestroyBlock(block.blockPos, block.direction)
-            } else if (interaction.hasMissTime()) {
-                mc.missTime = 10
-            }
-
-            SwingMode.DO_NOT_HIDE.attackSwing()
-
-            // Notify the user about the failed hit
-            KillAuraNotifyWhenFail.notifyForFailedHit(entity, RotationManager.currentRotation
-                ?: player.rotation)
+            swing(entity, block, RotationManager.currentRotation ?: player.rotation)
             true
         }
+    }
+
+    /**
+     * Turns the due hit on [target] into a fail swing, by the miss chance.
+     *
+     * @return whether the hit was missed
+     */
+    fun missHit(target: Entity, rotation: Rotation): Boolean {
+        if (!enabled || !missChance.asBoolean) {
+            return false
+        }
+
+        swing(target, null, rotation)
+        return true
+    }
+
+    private fun swing(entity: Entity, block: BlockHitResult?, rotation: Rotation) {
+        // A click on a block starts digging it; only one into the air has the miss cooldown, which limits the
+        // attack speed. See [net.minecraft.client.Minecraft.startAttack].
+        if (block != null) {
+            interaction.startDestroyBlock(block.blockPos, block.direction)
+        } else if (interaction.hasMissTime()) {
+            mc.missTime = 10
+        }
+
+        SwingMode.DO_NOT_HIDE.attackSwing()
+
+        // Notify the user about the failed hit
+        KillAuraNotifyWhenFail.notifyForFailedHit(entity, rotation)
     }
 
 }
