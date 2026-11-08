@@ -18,19 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.render;
 
-public final class FirstPersonShieldTint {
+import net.minecraft.world.entity.LivingEntity;
+import org.jspecify.annotations.Nullable;
 
-    private static final ScopedValue<Void> RENDERING = ScopedValue.newInstance();
+/**
+ * The entity whose shield is being submitted, for {@link net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams.Shield}.
+ */
+public final class ShieldTintContext {
 
-    private FirstPersonShieldTint() {
+    private static final ScopedValue<LivingEntity> HOLDER = ScopedValue.newInstance();
+
+    private ShieldTintContext() {
     }
 
-    public static void render(Runnable render) {
-        ScopedValue.where(RENDERING, null).run(render);
+    public static void render(LivingEntity holder, Runnable render) {
+        ScopedValue.where(HOLDER, holder).run(render);
     }
 
-    public static boolean isRendering() {
-        return RENDERING.isBound();
+    public static @Nullable LivingEntity holder() {
+        return HOLDER.isBound() ? HOLDER.get() : null;
     }
 
 }

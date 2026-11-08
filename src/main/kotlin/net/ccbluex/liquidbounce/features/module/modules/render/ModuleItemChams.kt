@@ -23,10 +23,14 @@ import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.textures.FilterMode
 import com.mojang.renderpearl.api.textures.GpuTexture
 import com.mojang.renderpearl.api.textures.GpuTextureView
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
 import net.ccbluex.liquidbounce.common.LightmapOverride
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
@@ -36,10 +40,17 @@ import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.ItemChamsEffectRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setPipeline
+import net.ccbluex.liquidbounce.utils.entity.handItems
+import net.ccbluex.liquidbounce.utils.render.ShieldTintContext
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.util.ARGB
+import net.minecraft.world.entity.LivingEntity
 import org.joml.Vector2f
 import java.util.function.Supplier
 
@@ -135,22 +146,109 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
     }
 
+    /**
+     * Tints shields, your own and with [others] those of other players, also by their [ShieldState].
+     */
     object Shield : ToggleableValueGroup(this, "Shield", true) {
         private val tintMode by enumChoice("TintMode", ShieldTintMode.MULTIPLY)
         private val tint by color("Tint", Color4b.WHITE)
+        private val self by boolean("Self", true)
+        private val others by boolean("Others", false)
 
-        fun applyTint(tintedColor: Int): Int {
-            if (!running) {
-                return tintedColor
+        private object States : ToggleableValueGroup(Shield, "States", false) {
+            val blocking by color("Blocking", Color4b(0, 160, 255))
+            val disabled by color("Disabled", Color4b(255, 60, 60))
+        }
+
+        init {
+            tree(States)
+        }
+
+        /**
+         * Game time until which a shield of another player stays disabled, by entity id. Only the own
+         * cooldowns are known and the game no longer sends an entity event for a broken shield, so an axe hit
+         * is told by the shield break sound at the player.
+         */
+        private val disabledUntil = Int2LongOpenHashMap()
+
+        private const val DISABLE_TICKS = 100
+        private const val SOUND_RANGE_SQ = 2.25
+
+        fun stateOf(entity: LivingEntity): ShieldState {
+            val disabled = if (entity is LocalPlayer) {
+                entity.handItems.any { it.has(DataComponents.BLOCKS_ATTACKS) && entity.cooldowns.isOnCooldown(it) }
+            } else {
+                disabledUntil.get(entity.id) > entity.level().gameTime
             }
 
-            return when (tintMode) {
-                ShieldTintMode.OVERRIDE -> tint.argb
-                ShieldTintMode.MULTIPLY -> ARGB.multiply(tintedColor, tint.argb)
+            return when {
+                disabled -> ShieldState.DISABLED
+                entity.isBlocking -> ShieldState.BLOCKING
+                else -> ShieldState.IDLE
             }
         }
 
-        fun usesTranslucentTint(tintedColor: Int) = running && ARGB.alpha(applyTint(tintedColor)) < 255
+        /**
+         * Tints the colour [tintedColor] of the shield [ShieldTintContext] renders, if any.
+         */
+        @JvmStatic
+        fun applyTint(tintedColor: Int): Int {
+            val holder = ShieldTintContext.holder()
+            if (!running || holder == null || !(if (holder is LocalPlayer) self else others)) {
+                return tintedColor
+            }
+
+            val color = if (States.running) {
+                when (stateOf(holder)) {
+                    ShieldState.BLOCKING -> States.blocking
+                    ShieldState.DISABLED -> States.disabled
+                    ShieldState.IDLE -> tint
+                }
+            } else {
+                tint
+            }
+
+            return when (tintMode) {
+                ShieldTintMode.OVERRIDE -> color.argb
+                ShieldTintMode.MULTIPLY -> ARGB.multiply(tintedColor, color.argb)
+            }
+        }
+
+        @JvmStatic
+        fun usesTranslucentTint(tintedColor: Int) = ARGB.alpha(applyTint(tintedColor)) < 255
+
+        @Suppress("unused")
+        private val soundHandler = handler<PacketEvent> { event ->
+            val packet = event.packet as? ClientboundSoundPacket ?: return@handler
+            if (!packet.sound.`is`(SoundEvents.SHIELD_BREAK)) {
+                return@handler
+            }
+
+            mc.execute {
+                val level = mc.level ?: return@execute
+                val holder = level.players()
+                    .filter { it !== mc.player }
+                    .minByOrNull { it.distanceToSqr(packet.x, packet.y, packet.z) }
+                    ?.takeIf { it.distanceToSqr(packet.x, packet.y, packet.z) < SOUND_RANGE_SQ }
+                    ?: return@execute
+                disabledUntil.put(holder.id, level.gameTime + DISABLE_TICKS)
+            }
+        }
+
+        @Suppress("unused")
+        private val worldChangeHandler = handler<WorldChangeEvent> {
+            disabledUntil.clear()
+        }
+    }
+
+    enum class ShieldState {
+        IDLE,
+        BLOCKING,
+
+        /**
+         * Knocked out of blocking by an axe, until the cooldown ends.
+         */
+        DISABLED,
     }
 
     /**
