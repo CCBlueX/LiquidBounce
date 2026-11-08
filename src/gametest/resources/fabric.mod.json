@@ -34,6 +34,7 @@
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
       "net.ccbluex.liquidbounce.gametest.combat.NoMissCooldownHideSwingGameTest",
       "net.ccbluex.liquidbounce.gametest.combat.NoMissCooldownChanceGameTest",
+      "net.ccbluex.liquidbounce.gametest.combat.NoMissCooldownNearEnemyGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest"
     ]
   },
