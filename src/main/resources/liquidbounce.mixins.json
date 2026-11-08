@@ -61,6 +61,7 @@
     "minecraft.entity.MixinHumanoidArmorLayer",
     "minecraft.entity.MixinInterpolationHandler",
     "minecraft.entity.MixinInventory",
+    "minecraft.entity.MixinItemActivation",
     "minecraft.entity.MixinLinearInterpolationHandler",
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinLocalPlayer",
