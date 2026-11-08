@@ -55,6 +55,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.handleUnrecoverable
 import net.minecraft.ChatFormatting
 import java.net.URI
 import java.time.Instant
@@ -65,12 +66,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-private const val MALFORMED_LOG_LENGTH = 200
-private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
-
-private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
-
 object LiquidChatClient {
+
+    private const val MALFORMED_LOG_LENGTH = 200
+    private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
+
+    private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
 
     private val client = AxochatClient(
         URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.ccbluex.net/ws")),
@@ -171,6 +172,7 @@ object LiquidChatClient {
         val account = ClientAccountManager.clientAccount
         val accessToken = if (session.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
             runCatching { account.takeSession().accessToken.value }
+                .handleUnrecoverable()
                 .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
                 .getOrNull()
         } else {

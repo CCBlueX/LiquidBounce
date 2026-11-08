@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
+import net.ccbluex.liquidbounce.utils.kotlin.handleUnrecoverable
 import net.ccbluex.liquidbounce.utils.text.capitalize
 import okio.Buffer
 import retrofit2.create
@@ -107,9 +108,11 @@ class Theme private constructor(
     private suspend fun loadMetadata() {
         try {
             _metadata = service.metadata().apply { checkNotNull() }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error("Failed to load theme metadata", e)
-            throw IllegalStateException("Failed to load theme metadata", e)
+            logger.error("Failed to load theme metadata from origin ${origin.tag}", e)
+            throw IllegalStateException("Failed to load theme metadata from origin ${origin.tag}", e)
         }
     }
 
@@ -131,7 +134,7 @@ class Theme private constructor(
         val componentFactoryList = metadata.components.mapNotNull { name ->
             runCatching {
                 service.component(name.lowercase(Locale.US))
-            }.onFailure {
+            }.handleUnrecoverable().onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull()
         }
@@ -140,7 +143,7 @@ class Theme private constructor(
             for (factory in componentFactoryList) {
                 // Check for duplicated component names
                 check(this.put(factory.name, factory) == null) {
-                    "Found duplicated component name '${factory.name}'"
+                    "Found duplicated component name '${factory.name}' in theme '${metadata.name}'"
                 }
             }
         }
@@ -325,7 +328,7 @@ class Theme private constructor(
 
         val fragmentShader = runCatching {
             service.shader(background.name.lowercase(Locale.US))
-        }.getOrNull() ?: return false
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundShader = ThemeBackground.Shader.build(
@@ -355,7 +358,7 @@ class Theme private constructor(
 
         val image = runCatching {
             service.background(background.name)
-        }.getOrNull() ?: return false
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
