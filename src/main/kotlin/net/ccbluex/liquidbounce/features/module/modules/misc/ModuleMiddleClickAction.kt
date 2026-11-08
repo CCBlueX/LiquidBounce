@@ -24,13 +24,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.VisibleSlotSwitch
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
@@ -63,7 +66,9 @@ object ModuleMiddleClickAction : ClientModule(
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
         private val stopOnSubmit by floatRange("StopOnSubmit", 85F..90F, 60F..90F, "Pitch")
+        private val visibleSwitch = tree(VisibleSlotSwitch(this))
         private var wasPressed = false
+        private var throwVisibly = false
 
         val repeatable = handler<GameTickEvent> {
             if (mc.gui.screen() != null) {
@@ -79,25 +84,44 @@ object ModuleMiddleClickAction : ClientModule(
             val pickup = mc.options.keyPickItem.isDown
 
             if (pickup) {
-                // visually select the slot
                 val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@handler
-                SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
+                if (!visibleSwitch.enabled) {
+                    // visually select the slot
+                    SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
+                }
                 wasPressed = true
             } else if (wasPressed) { // the key was released
-                Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
-                    useHotbarSlotOrOffhand(it, slotResetDelay)
+                if (visibleSwitch.enabled) {
+                    throwVisibly = true
+                } else {
+                    Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
+                        useHotbarSlotOrOffhand(it, slotResetDelay)
+                    }
                 }
                 wasPressed = false
             }
         }
 
         @Suppress("unused")
+        private val visibleThrowHandler = tickHandler {
+            if (!throwVisibly) {
+                return@tickHandler
+            }
+
+            throwVisibly = false
+            val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+            visibleSwitch.use(slot, slotResetDelay) { useItem(slot.useHand) }
+        }
+
+        @Suppress("unused")
         private val handler = handler<WorldChangeEvent> {
             wasPressed = false
+            throwVisibly = false
         }
 
         override fun disable() {
             wasPressed = false
+            throwVisibly = false
         }
 
         fun cancelPick(): Boolean {
