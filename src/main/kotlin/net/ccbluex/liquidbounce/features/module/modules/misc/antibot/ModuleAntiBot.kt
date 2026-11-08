@@ -43,6 +43,11 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
     private val literalNPC by boolean("LiteralNPC", false)
     private val notInTabList by boolean("NotInTabList", false)
 
+    /**
+     * How long after spawning a player may be missing from the tab list.
+     */
+    private val tabListGrace by int("TabListGrace", 0, 0..200, "ticks")
+
     @Suppress("unused")
     private val tagHandler = handler<TagEntityEvent> {
         if (it.entity === player) {
@@ -96,7 +101,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
             return true
         }
 
-        if (notInTabList && isMissingFromTabList(player)) {
+        if (notInTabList && player.tickCount >= tabListGrace && isMissingFromTabList(player)) {
             return true
         }
 
