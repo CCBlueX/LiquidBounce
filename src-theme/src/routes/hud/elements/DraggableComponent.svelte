@@ -3,7 +3,12 @@
 
     import type {KeyboardKeyEvent, ScaleFactorChangeEvent} from "../../../integration/events";
     import {bringComponentToFront, getGameWindow, setComponentAlignment} from "../../../integration/rest";
-    import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
+    import {
+        type Alignment,
+        HorizontalAlignment,
+        type MinecraftKeyboardKey,
+        VerticalAlignment
+    } from "../../../integration/types.js";
     import {listen} from "../../../integration/ws";
     import ComponentSettings from "../../clickgui/tabs/hud_editor/ComponentSettings.svelte";
     import {
@@ -15,6 +20,7 @@
         type VerticalAnchorZone
     } from "../../clickgui/tabs/hud_editor/constants";
     import {fade, type TransitionConfig} from "svelte/transition";
+    import {isClickGuiScreen, isTextEntry} from "../../../util/utils";
 
     export let alignment: Alignment;
     export let componentId: string;
@@ -29,6 +35,7 @@
     let scaleFactor = 2;
     let element: HTMLElement | undefined;
     let isDragging = false;
+    let isSelected = false;
     let isGridIgnored = false;
     let pointerCenterOffsetX = 0;
     let pointerCenterOffsetY = 0;
@@ -47,6 +54,13 @@
     let positionOnTop = false;
 
     const POSITION_OVERLAY_OFFSET = 19;
+
+    const NUDGE_DIRECTIONS: Partial<Record<MinecraftKeyboardKey, [number, number]>> = {
+        "key.keyboard.left": [-1, 0],
+        "key.keyboard.right": [1, 0],
+        "key.keyboard.up": [0, -1],
+        "key.keyboard.down": [0, 1],
+    };
 
     const editorElements = getContext<Map<string, HTMLElement>>(HUD_EDITOR_ELEMENTS_CONTEXT);
 
@@ -286,6 +300,7 @@
     function onMouseDown(event: MouseEvent): void {
         if (inEditor && event.button === 0) {
             updateZIndex();
+            isSelected = true;
         }
 
         if (event.button !== 0 && event.button !== 1) {
@@ -481,9 +496,33 @@
         });
     }
 
+    /**
+     * Moves the component by HUD pixels on screen, keeping its anchor.
+     */
+    function nudge(dx: number, dy: number): void {
+        const horizontal = alignment.horizontalAlignment === HorizontalAlignment.RIGHT ? -dx : dx;
+        const vertical = alignment.verticalAlignment === VerticalAlignment.BOTTOM ? -dy : dy;
+
+        alignment.horizontalOffset = clampHorizontalOffset(alignment.horizontalOffset + horizontal);
+        alignment.verticalOffset = clampVerticalOffset(alignment.verticalOffset + vertical);
+    }
+
     listen("keyboardKey", (e: KeyboardKeyEvent) => {
         if (e.key === "key.keyboard.left.shift") {
             isGridIgnored = e.action === 1;
+        }
+
+        const direction = NUDGE_DIRECTIONS[e.key];
+        if (!direction || !isSelected || isDragging || !isClickGuiScreen(e.screen) ||
+            isTextEntry(document.activeElement)) {
+            return;
+        }
+
+        // A held key repeats, so the position is only saved once it is released, as a drag is on mouse up
+        if (e.action === 0) {
+            setComponentAlignment(componentId, alignment);
+        } else {
+            nudge(...direction);
         }
     });
 
@@ -507,6 +546,7 @@
 </script>
 
 <svelte:window
+        on:mousedown|capture={() => isSelected = false}
         on:mouseup={onMouseUp}
         on:mousemove={onMouseMove}
 />
@@ -518,6 +558,7 @@
             class="contained-element"
             style={sizeStyleString}
             class:editor-mode={inEditor}
+            class:selected={isSelected}
             class:magnetically-referenced={inEditor && magneticallyReferenced}
             on:mousedown={onMouseDown}
     >
@@ -548,6 +589,10 @@
         outline: solid 1px var(--clickgui-hud-editor-draggable-element-outline-color);
         background-color: var(--clickgui-hud-editor-draggable-element-background-color);
         transition: background-color 100ms ease;
+    }
+
+    .selected {
+        outline: solid 1px var(--clickgui-hud-editor-draggable-element-selected-outline-color);
     }
 
     .magnetically-referenced {
