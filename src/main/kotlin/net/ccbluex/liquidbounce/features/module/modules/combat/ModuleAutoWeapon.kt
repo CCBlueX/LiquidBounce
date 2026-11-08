@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -30,8 +31,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -47,6 +50,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.item.enchantment.Enchantments
 
@@ -78,7 +82,13 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val autoShieldBreak by boolean("AutoShieldBreak", true)
     private val autoMace by boolean("AutoMace", true)
 
-    private val switchBack by int("SwitchBack", 20, 1..300, "ticks")
+    private val switchDelay by intRange("SwitchDelay", 0..0, 0..20, "ticks")
+    private val switchBack by intRange("SwitchBack", 20..20, 1..300, "ticks")
+
+    /**
+     * Only switch to a weapon while the slot the player has selected holds a totem.
+     */
+    private val totemOnly by boolean("TotemOnly", false)
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
@@ -138,25 +148,84 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private val canMaceSmash
         get() = (!isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)) || ModuleMaceKill.enabled
 
+    /**
+     * The weapon of a delayed switch, selected once [switchTicks] have passed.
+     */
+    private var pendingSlot: HotbarItemSlot? = null
+    private var switchTicks = 0
+
+    /**
+     * The target of an attack that was cancelled for a delayed switch and is made up for with the weapon in hand.
+     */
+    private var heldTarget: LivingEntity? = null
+
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
-        val weaponSlot = determineWeaponSlot(entity)?.inventorySlot ?: return@handler
+        val weaponSlot = determineWeaponSlot(entity) ?: return@handler
 
         if (isBusy || ChangeOnAction.ON_ATTACK !in changeOnActions) {
             return@handler
         }
 
-        SilentHotbar.selectSlotSilently(
-            this,
-            weaponSlot,
-            switchBack
-        )
+        // An attack made in the tick of a delayed switch waits as well, in place of the one before it
+        if (!selectWeapon(weaponSlot) || heldTarget != null) {
+            heldTarget = entity
+            event.cancelEvent()
+            return@handler
+        }
 
         // [ClientPlayerInteractionManager.attackEntity] will sync the selected slot,
         // so we can do that here already. This is legitimate, but unfortunately, the server seems
         // to not care about the sync when it occurs in the same tick as the attack.
         interaction.ensureHasSentCarriedItem()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        if (isBusy) {
+            pendingSlot = null
+            heldTarget = null
+            return@handler
+        }
+
+        val slot = pendingSlot
+        if (slot != null) {
+            if (--switchTicks == 0) {
+                selectWeapon(slot)
+            }
+            return@handler
+        }
+
+        // The server attacks with the attributes of the weapon from its next tick on,
+        // so the attack follows one tick after the switch.
+        val target = heldTarget ?: return@handler
+        heldTarget = null
+        if (target.isAlive && player.isWithinEntityInteractionRange(target, 0.0)) {
+            attackEntity(target, SwingMode.DO_NOT_HIDE)
+        }
+    }
+
+    /**
+     * Selects [slot]. A weapon that is not in hand yet is only selected after the [switchDelay].
+     *
+     * @return whether the weapon is in hand now
+     */
+    private fun selectWeapon(slot: HotbarItemSlot): Boolean {
+        if (slot.hotbarIndex != SilentHotbar.serversideSlot) {
+            if (pendingSlot == null) {
+                switchTicks = switchDelay.random()
+            }
+
+            if (switchTicks > 0) {
+                pendingSlot = slot
+                return false
+            }
+        }
+
+        pendingSlot = null
+        SilentHotbar.selectSlotSilently(this, slot, switchBack.random())
+        return true
     }
 
     /**
@@ -167,17 +236,13 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             return
         }
 
-        determineWeaponSlot(entity)?.let { slot ->
-            SilentHotbar.selectSlotSilently(
-                this,
-                slot.inventorySlot,
-                switchBack
-            )
-        }
+        determineWeaponSlot(entity)?.let(::selectWeapon)
     }
 
     override fun onDisabled() {
         SilentHotbar.resetSlot(this)
+        pendingSlot = null
+        heldTarget = null
     }
 
     private fun getBestDamageItem(): ItemStack? {
@@ -201,6 +266,10 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     }
 
     private fun determineWeaponSlot(target: LivingEntity?, enforceShield: Boolean = false): HotbarItemSlot? {
+        if (totemOnly && !player.inventory.getItem(player.inventory.selectedSlot).`is`(Items.TOTEM_OF_UNDYING)) {
+            return null
+        }
+
         val itemCategorization = ItemCategorization(Slots.Hotbar)
         val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
