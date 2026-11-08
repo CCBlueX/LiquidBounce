@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -45,12 +46,16 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 /**
  * Aimbot module
@@ -68,6 +73,35 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     }
     private val pointTracker = tree(PointTracker(this))
     private val lazyRotation by boolean("LazyRotation", false)
+
+    /**
+     * End crystals, which come before the targets of the [targetTracker].
+     */
+    private object Crystals : ToggleableValueGroup(this, "Crystals", false) {
+
+        /**
+         * Leaves the targets of the [targetTracker] out.
+         */
+        val only by boolean("Only", false)
+        private val onlyWhileUsing by boolean("OnlyWhileUsing", false)
+
+        fun targets(): MutableList<Entity> {
+            if (onlyWhileUsing && !mc.options.keyUse.isPressedOnAny) {
+                return ArrayList()
+            }
+
+            val crystals = world.getEntitiesBoxInRange(player.eyePosition, targetTracker.maxRange.toDouble()) {
+                it is EndCrystal && targetTracker.isInFov(it)
+            }
+            crystals.sortByDescending(RotationUtil::crosshairCosToEntity)
+            return crystals
+        }
+
+    }
+
+    init {
+        tree(Crystals)
+    }
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
@@ -121,12 +155,12 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     override fun onDisabled() {
         targetTracker.reset()
+        targetRotation = null
     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val partialTicks = event.partialTicks
-        val target = targetTracker.target ?: return@handler
 
         if (IgnoreOpened.SCREEN !in ignores && mc.gui.screen() != null) {
             return@handler
@@ -172,7 +206,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
-        for (entity in targetTracker.targets()) {
+        for (entity in targets()) {
             if (lazyRotation) {
                 val currentRotation = player.rotation
                 val currentHit = isLookingAtEntity(
@@ -184,7 +218,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                 )
 
                 if (currentHit != null) {
-                    targetTracker.target = entity
+                    targetTracker.target = entity as? LivingEntity
                     return entity to RotationWithVector(currentRotation, currentHit.location)
                 }
             }
@@ -204,12 +238,24 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                 rotationPreference = rotationPreference
             ) ?: continue
 
-            targetTracker.target = entity
+            targetTracker.target = entity as? LivingEntity
             return entity to rotation
         }
 
         targetTracker.reset()
         return null
+    }
+
+    private fun targets(): List<Entity> {
+        if (!Crystals.enabled) {
+            return targetTracker.targets()
+        }
+
+        val targets = Crystals.targets()
+        if (!Crystals.only) {
+            targets += targetTracker.targets()
+        }
+        return targets
     }
 
     private enum class IgnoreOpened(
