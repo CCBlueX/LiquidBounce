@@ -261,7 +261,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
     }
 
     init {
-        tree(Health)
+        treeAll(Health, TotemMaceDive)
     }
 
     /**
@@ -281,7 +281,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        return Health.healthBelowThreshold()
+        return Health.healthBelowThreshold() || TotemMaceDive.isDiving()
     }
 
     /**
