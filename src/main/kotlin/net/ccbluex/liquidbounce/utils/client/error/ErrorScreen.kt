@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.multiplayer.ClientLevel
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
@@ -268,10 +269,27 @@ class ErrorScreen private constructor(
                 if (mc.gui.screen() !== screen) {
                     mc.gui.setOverlay(null)
                     mc.gui.setScreen(screen)
+                    // Queued, so it never runs in the middle of the frame that failed
+                    mc.schedule { leaveWorld(screen) }
                 }
             } catch (e: Exception) {
                 logger.error("Failed to show the error screen", e)
                 fallback?.invoke()
+            }
+        }
+
+        /**
+         * Disconnects from the server, or saves and closes the singleplayer world, so the game does not go on
+         * behind the screen.
+         */
+        private fun leaveWorld(screen: ErrorScreen) {
+            val level = mc.level ?: return
+            try {
+                level.disconnect(ClientLevel.DEFAULT_QUIT_MESSAGE)
+                // Keeps the server's resource packs, so no reload starts behind the screen
+                mc.disconnect(screen, true)
+            } catch (e: Exception) {
+                logger.error("Failed to leave the world behind the error screen", e)
             }
         }
 
