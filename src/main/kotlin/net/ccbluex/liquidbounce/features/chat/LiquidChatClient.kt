@@ -264,6 +264,7 @@ object LiquidChatClient {
                 packet.author,
                 packet.id,
             ))
+            is Clientbound.MessageRemoved -> GlobalSettingsClientChat.remove(packet.id)
             is Clientbound.Error -> if (!authenticating) {
                 EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code.code))
             }
