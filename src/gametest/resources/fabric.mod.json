@@ -28,6 +28,7 @@
       "net.ccbluex.liquidbounce.gametest.navigation.NavigationGameTests",
       "net.ccbluex.liquidbounce.gametest.combat.AimbotCrystalsGameTest",
       "net.ccbluex.liquidbounce.gametest.CrystalAuraCrosshairGameTest",
+      "net.ccbluex.liquidbounce.gametest.inventory.AutoBuffGameTest",
       "net.ccbluex.gametest.harness.ResultsGameTest"
     ]
   },
