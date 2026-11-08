@@ -60,6 +60,7 @@ import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
@@ -123,6 +124,7 @@ enum class ItemType(
     BUCKET(false),
     PEARL(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
+    TOTEM(false),
     POTION(false),
     BLOCK(false),
     NONE(false);
@@ -171,6 +173,7 @@ enum class ItemSortChoice(
         ItemType.GAPPLE.defaultCategory,
         Predicate { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
     ),
+    TOTEM("Totem", ItemType.TOTEM.defaultCategory, { it.has(DataComponents.DEATH_PROTECTION) }),
     FOOD("Food", ItemType.FOOD.defaultCategory, { it.foodComponent != null }),
     POTION("Potion", ItemType.POTION.defaultCategory),
     BLOCK("Block", ItemType.BLOCK.defaultCategory, { it.item is BlockItem }),
@@ -339,6 +342,9 @@ class ItemCategorization(
                     itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
 
                     itemStack.isFood -> add(FoodItemFacet(slot))
+
+                    itemStack.has(DataComponents.DEATH_PROTECTION) ->
+                        add(PrimitiveItemFacet(slot, ItemType.TOTEM.defaultCategory))
 
                     else -> add(ItemFacet(slot))
                 }
