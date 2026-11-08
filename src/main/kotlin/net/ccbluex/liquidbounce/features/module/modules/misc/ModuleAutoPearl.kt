@@ -75,6 +75,8 @@ object ModuleAutoPearl : ClientModule(
         val angle by int("Angle", 180, 0..180, suffix = "°")
         val activationDistance by float("MinDistance", 8.0f, 0.0f..10.0f, suffix = "m")
         val destDistance by float("DestinationDistance", 8.0f, 0.0f..30.0f, suffix = "m")
+        val maxThrowerDistance by float("MaxThrowerDistance", 256f, 1f..256f, suffix = "m")
+        val maxLandingDistance by float("MaxLandingDistance", 256f, 1f..256f, suffix = "m")
     }
 
     private object Rotate : ToggleableValueGroup(this, "Rotate", true) {
@@ -162,13 +164,18 @@ object ModuleAutoPearl : ClientModule(
             return
         }
 
+        if (Limits.enabled && !pearlPos.closerThan(player.position(), Limits.maxThrowerDistance.toDouble())) {
+            return
+        }
+
         val destination = runSimulation(
             owner = pearl.owner ?: player,
             velocity = velocity,
             pos = pearlPos
         )?.location ?: return
 
-        if (Limits.enabled && destination.closerThan(player.position(), Limits.activationDistance.toDouble())) {
+        if (Limits.enabled && destination.distanceTo(player.position()) !in
+            Limits.activationDistance..Limits.maxLandingDistance) {
             return
         }
 
