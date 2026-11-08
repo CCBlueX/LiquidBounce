@@ -29,7 +29,7 @@ import java.util.function.IntSupplier
  * Reusable anchored hotbar swap state machine:
  * - keep the first swap as restore anchor
  * - swap selected inventory items into one fixed hotbar slot
- * - restore anchor after no active switching for [swapDelayProvider] ticks
+ * - restore anchor after no active switching for [swapDelayProvider] ticks, asked once per countdown
  */
 class AnchoredHotbarSwapController(
     private val owner: EventListener,
@@ -46,6 +46,7 @@ class AnchoredHotbarSwapController(
     private var pendingRestore = false
     private var restoreDue = false
     private var waitingTicks = 0
+    private var restoreDelay = 0
     private var lastSwitchScheduledEvent: ScheduleInventoryActionEvent? = null
 
     override fun parent() = owner
@@ -136,8 +137,12 @@ class AnchoredHotbarSwapController(
     private val tickHandler = handler<GameTickEvent> {
         if (!pendingRestore || restoreDue) return@handler
 
+        if (waitingTicks == 0) {
+            restoreDelay = swapDelayProvider.asInt
+        }
+
         waitingTicks++
-        if (waitingTicks <= swapDelayProvider.asInt) return@handler
+        if (waitingTicks <= restoreDelay) return@handler
 
         restoreDue = true
     }
