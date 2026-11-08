@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 
 object ModuleNoMissCooldown : ClientModule("NoMissCooldown", ModuleCategories.COMBAT) {
 
@@ -33,5 +34,10 @@ object ModuleNoMissCooldown : ClientModule("NoMissCooldown", ModuleCategories.CO
      * Cancels the attack when missing an attack.
      */
     val cancelAttackOnMiss by boolean("CancelAttackOnMiss", false)
+
+    /**
+     * Hides the swing of a missed attack from the client, the server or both.
+     */
+    val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
 }
