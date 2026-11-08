@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -26,7 +30,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
@@ -37,7 +40,9 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.inventory.AnchoredHotbarSwapController
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.item.attackDamage
@@ -66,7 +71,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      * due to the attack speed.
      *
      * If this [Set] is empty, do not prefer any weapon type.
-     * This is useful if you only want to make use of either [autoShieldBreak] or [autoMace].
+     * This is useful if you only want to make use of either [AutoShieldBreak] or [autoMace].
      */
     private val preferredWeapon by multiEnumChoice("Preferred", WeaponType.SWORD)
 
@@ -79,7 +84,61 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         ATTACK_SPEED("AttackSpeed")
     }
 
-    private val autoShieldBreak by boolean("AutoShieldBreak", true)
+    /**
+     * Switches to an axe for a target that blocks with a shield, which the hit disables.
+     */
+    private object AutoShieldBreak : ToggleableValueGroup(this, "AutoShieldBreak", true) {
+
+        /**
+         * Takes the axe from the inventory while the hotbar has none and puts it back after [switchBack].
+         */
+        object ConsiderInventory : ToggleableValueGroup(this, "ConsiderInventory", false) {
+            private val inventoryConstraints = tree(PlayerInventoryConstraints())
+            private val swapController = AnchoredHotbarSwapController(
+                owner = this,
+                inventoryConstraints = inventoryConstraints,
+                swapDelayProvider = { switchBack.last },
+            )
+
+            override fun onDisabled() {
+                swapController.reset()
+                super.onDisabled()
+            }
+
+            /**
+             * Asks for an axe from the inventory, or keeps the one in the hotbar from going back yet.
+             */
+            fun takeAxe() {
+                if (Slots.Hotbar.findSlot { it.isAxe } != null) {
+                    swapController.clearRequestedSwap()
+                    swapController.touchActiveSwitching()
+                } else {
+                    Slots.Inventory.findSlot { it.isAxe }?.let(swapController::requestSwapFromInventory)
+                }
+            }
+        }
+
+        init {
+            tree(ConsiderInventory)
+        }
+
+        /**
+         * Older configs store this group as the plain boolean it used to be.
+         */
+        override fun prepareDeserialize(jsonObject: JsonObject) {
+            val enabled = jsonObject["value"] as? JsonPrimitive ?: return
+            val enabledJson = JsonObject().apply {
+                addProperty("name", enabledValue.name)
+                add("value", enabled)
+            }
+            jsonObject.add("value", JsonArray().apply { add(enabledJson) })
+        }
+    }
+
+    init {
+        tree(AutoShieldBreak)
+    }
+
     private val autoMace by boolean("AutoMace", true)
 
     private val switchDelay by intRange("SwitchDelay", 0..0, 0..20, "ticks")
@@ -162,11 +221,11 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity as? LivingEntity ?: return@handler
-        val weaponSlot = determineWeaponSlot(entity) ?: return@handler
-
         if (isBusy || ChangeOnAction.ON_ATTACK !in changeOnActions) {
             return@handler
         }
+
+        val weaponSlot = determineWeaponSlot(entity) ?: return@handler
 
         // An attack made in the tick of a delayed switch waits as well, in place of the one before it
         if (!selectWeapon(weaponSlot) || heldTarget != null) {
@@ -271,8 +330,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         }
 
         val itemCategorization = ItemCategorization(Slots.Hotbar)
-        val requiresShield = autoShieldBreak && (enforceShield || target?.wouldBlockHit == true)
+        val requiresShield = AutoShieldBreak.enabled && (enforceShield || target?.wouldBlockHit == true)
         val requiresMace = autoMace && canMaceSmash
+
+        if (target != null && requiresShield && !requiresMace && AutoShieldBreak.ConsiderInventory.running) {
+            AutoShieldBreak.ConsiderInventory.takeAxe()
+        }
 
         val bestSlot = Slots.Hotbar
             .flatMap { slot -> itemCategorization.getItemFacets(slot).filterIsInstance<WeaponItemFacet>() }
