@@ -355,6 +355,16 @@ public abstract class MixinMinecraft {
         return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
 
+    @Inject(method = "startAttack", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/player/LocalPlayer;swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z"),
+        cancellable = true)
+    private void hookMissSwing(CallbackInfoReturnable<Boolean> cir) {
+        if (hitResult.getType() == HitResult.Type.MISS && ModuleNoMissCooldown.INSTANCE.getRunning()) {
+            ModuleNoMissCooldown.INSTANCE.getSwingMode().attackSwing();
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
     private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
         if (player == null || hitResult == null || hitResult.getType() == HitResult.Type.MISS) {
