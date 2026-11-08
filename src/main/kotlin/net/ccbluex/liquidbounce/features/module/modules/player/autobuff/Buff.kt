@@ -74,8 +74,7 @@ abstract class Buff(
             return false
         }
 
-        // Check if the item is in the hotbar
-        val slot = Slots.OffhandWithHotbar.findClosestSlot { isValidItem(it, true) } ?: return false
+        val slot = findBuffSlot() ?: return false
 
         CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
 
@@ -96,6 +95,12 @@ abstract class Buff(
             return false
         }
     }
+
+    /**
+     * The hotbar or offhand slot holding the item to use next, closest first.
+     */
+    protected open fun findBuffSlot(): HotbarItemSlot? =
+        Slots.OffhandWithHotbar.findClosestSlot { isValidItem(it, true) }
 
     abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
 
