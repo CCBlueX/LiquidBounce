@@ -151,7 +151,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
             SubmoduleCrystalDestroyer.postAttackHandlers.forEach { it.attacked(id) }
         }
 
-        SubmoduleCrystalDestroyer.chronometer.reset()
+        SubmoduleCrystalDestroyer.resetDelay()
         Rotate.rotateBack()
     }
 

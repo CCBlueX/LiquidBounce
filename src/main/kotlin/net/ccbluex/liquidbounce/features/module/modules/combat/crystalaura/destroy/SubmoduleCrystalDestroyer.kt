@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalAuraSpeedDebugger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
@@ -42,7 +43,7 @@ import kotlin.math.max
 object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Destroy", true) {
 
     val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE)
-    private val delay by int("Delay", 0, 0..1000, "ms")
+    private val delay = intRange("Delay", 0..0, 0..1000, "ms").asRefreshable()
     val range by float("Range", 4.5f, 1f..6f)
     val wallsRange by float("WallsRange", 4.5f, 0f..6f)
 
@@ -50,10 +51,10 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     private val prioritizeVisibleFaces by boolean("PrioritizeVisibleFaces", false)
 
     var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
-    val chronometer = Chronometer()
+    private val chronometer = Chronometer()
 
     fun tick(providedCrystal: EndCrystal? = null) {
-        if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
+        if (!enabled || !chronometer.hasAtLeastElapsed(delay.current.toLong())) {
             return
         }
 
@@ -99,7 +100,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
                     throughWallsRange = wallsRange.toDouble()
                 ) != null
             }, onFinished = {
-                if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+                if (!chronometer.hasAtLeastElapsed(delay.current.toLong())) {
                     return@rotate
                 }
 
@@ -107,7 +108,7 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
 
                 attackEntity(target1, swingMode)
                 postAttackHandlers.forEach { it.attacked(target1.id) }
-                chronometer.reset()
+                resetDelay()
             })
         }
 
@@ -117,6 +118,14 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         } else {
             action()
         }
+    }
+
+    /**
+     * Starts the delay until the next attack.
+     */
+    fun resetDelay() {
+        chronometer.reset()
+        delay.refresh()
     }
 
     fun getMaxRange() = max(range, wallsRange)
