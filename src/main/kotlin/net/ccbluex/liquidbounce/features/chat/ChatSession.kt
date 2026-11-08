@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
-import net.ccbluex.liquidbounce.utils.collection.LruCache
 import java.util.concurrent.ConcurrentHashMap
 
 object ChatSession {
@@ -35,9 +34,13 @@ object ChatSession {
 
     private val users = ConcurrentHashMap<String, Author>()
 
-    private val recentMessages = LruCache<Long, String>(REMEMBERED_MESSAGES)
+    private val recentMessages = object : LinkedHashMap<Long, String>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
+    }
 
-    private val removedMessages = LruCache<Long, Unit>(REMEMBERED_MESSAGES)
+    private val removedMessages = object : LinkedHashMap<Long, Unit>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, Unit>) = size > REMEMBERED_MESSAGES
+    }
 
     fun isSelf(id: String) = self?.id == id
 
