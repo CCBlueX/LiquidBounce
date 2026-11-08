@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.utils.aiming.point
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebugCollection
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBestHitVector
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptContext
@@ -31,8 +34,10 @@ import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorDelay
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorGaussian
 import net.ccbluex.liquidbounce.utils.aiming.point.features.PointProcessorLazy
 import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
@@ -42,6 +47,8 @@ import kotlin.math.abs
 class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventListener {
 
     override fun parent() = parent
+
+    private val mode by enumChoice("Mode", AimPointMode.CLOSEST)
 
     private val predicateBoxParts by multiEnumChoice<ExemptBoxPart>("ExemptBoxParts")
     private val predicateBestHitVector = tree(ExemptBestHitVector(this))
@@ -88,9 +95,8 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
         // Filter exempts
         val predicateContext = ExemptContext(box, bestHitVector, worstHitVector)
         val predicates = predicateBoxParts + predicateBestHitVector
-        val pointsWithExempts = points.filter { point ->
-            predicates.none { predicate -> predicate.predicate(predicateContext, point) }
-        }
+        val isExempt = { point: Vec3 -> predicates.any { predicate -> predicate.predicate(predicateContext, point) } }
+        val pointsWithExempts = points.filterNot(isExempt)
 
         parent.debugGeometry("Points") {
             DebugCollection(points.map { point ->
@@ -104,7 +110,14 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
             })
         }
 
-        val pos = pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) } ?: bestHitVector
+        val pos = when (mode) {
+            AimPointMode.CLOSEST -> pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) }
+            AimPointMode.CENTER -> {
+                val rotation = RotationManager.currentRotation ?: player.rotation
+                ExemptBoxPart.entries.map { part -> part.center(box) }.filterNot(isExempt)
+                    .minByOrNull { center -> rotation.rotationDeltaLengthSqrTo(Rotation.lookingAt(center, eyes)) }
+            }
+        } ?: bestHitVector
         var point = PointInsideBox(pos, box)
         for (processor in processors) {
             if (processor.enabled) {
@@ -142,6 +155,19 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
         val bestDistance = bestHitVector.distanceTo(eyes)
         val worstDistance = worstHitVector.distanceTo(eyes)
         return ((pointDistance - bestDistance) / (worstDistance - bestDistance)).toFloat().coerceIn(0.0F, 1.0F)
+    }
+
+    private enum class AimPointMode(override val tag: String) : Tagged {
+
+        /**
+         * The point on the box that is the closest to the eyes.
+         */
+        CLOSEST("Closest"),
+
+        /**
+         * The center of the box part that takes the least rotation to aim at.
+         */
+        CENTER("Center")
     }
 
 }

@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 enum class ExemptBoxPart(override val tag: String) : Tagged, ExemptPoint {
@@ -60,5 +62,13 @@ enum class ExemptBoxPart(override val tag: String) : Tagged, ExemptPoint {
      * So please DO NOT change the order of the enum.
      */
     fun isHigherThan(other: ExemptBoxPart) = entries.indexOf(this) < entries.indexOf(other)
+
+    /**
+     * The center of this part of the [box], counted from the top by the index of the enum as well.
+     */
+    fun center(box: AABB): Vec3 {
+        val length = box.ysize / entries.size
+        return box.center.copy(y = box.maxY - length * (ordinal + 0.5))
+    }
 
 }
