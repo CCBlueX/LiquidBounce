@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -29,11 +30,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
@@ -54,6 +58,8 @@ import kotlin.math.abs
  * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings.
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
+
+    private val edgeDistance = floatRange("EdgeDistance", 0f..0f, 0f..1f, "blocks").asRefreshable()
 
     private object Assist : ToggleableValueGroup(this, "Assist", true) {
         val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")
@@ -215,16 +221,42 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         return true
     }
 
-    /** Jumps on the last tick before running off a block. */
+    /** Jumps [edgeDistance] before running off a block, or on the last tick on it. */
     private fun jumpAtEdge(event: MovementInputEvent) {
-        if (!player.onGround() || mc.options.keyJump.isDown) {
+        if (!player.onGround() || mc.options.keyJump.isDown ||
+            !reachesEdgeWithin(event.directionalInput, edgeDistance.current)
+        ) {
             return
         }
 
-        val simulation = PlayerSimulationCache.getSimulationForLocalPlayer()
-        if (!simulation.getSnapshotAt(1).onGround) {
-            event.jump = true
+        event.jump = true
+        edgeDistance.refresh()
+    }
+
+    /**
+     * Whether the next tick leaves the ground or the edge is at most [distance] ahead. The edge lies halfway between
+     * the last simulated position on the ground and the first one in the air.
+     */
+    private fun reachesEdgeWithin(input: DirectionalInput, distance: Float): Boolean {
+        // Not PlayerSimulationCache: at this priority it can still hold the last tick's input and position.
+        val simulation = SimulatedPlayer.fromClientPlayer(SimulatedPlayerInput.fromClientPlayer(input))
+        val start = player.position()
+        var groundTravelled = 0.0
+
+        for (tick in 1..EDGE_LOOKAHEAD) {
+            simulation.tick()
+            val travelled = simulation.pos.horizontalDistanceTo(start)
+            if (!simulation.onGround) {
+                return tick == 1 || (groundTravelled + travelled) / 2.0 <= distance
+            }
+            if (travelled > distance) {
+                return false
+            }
+
+            groundTravelled = travelled
         }
+
+        return false
     }
 
     private fun release() {
@@ -261,4 +293,5 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private const val BRAKE_LOOKAHEAD = 3
     private const val BRAKE_SPEED = 0.1
     private const val MIN_AIM_DISTANCE = 0.75
+    private const val EDGE_LOOKAHEAD = 10
 }
