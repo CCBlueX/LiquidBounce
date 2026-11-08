@@ -255,6 +255,14 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             override fun getPrioritizedInventoryPart() = 1
 
             override fun getSlot(): ItemSlot? {
+                if (Totem.legit) {
+                    return if (player.offhandItem.has(DataComponents.DEATH_PROTECTION)) {
+                        HotbarItemSlot.OFFHAND
+                    } else {
+                        Totem.hoveredTotemSlot()
+                    }
+                }
+
                 val slot = super.getSlot()
                 if (slot == null && Crystal.enabled && Crystal.whenNoTotems) {
                     return CRYSTAL.getSlot()

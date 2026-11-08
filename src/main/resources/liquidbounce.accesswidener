@@ -161,6 +161,8 @@ accessible class net/minecraft/client/gui/Hud$ContextualInfo
 accessible method net/minecraft/client/gui/screens/ConnectScreen connect (Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/multiplayer/resolver/ServerAddress;Lnet/minecraft/client/multiplayer/ServerData;Lnet/minecraft/client/multiplayer/TransferState;)V
 accessible method net/minecraft/client/gui/screens/ConnectScreen updateStatus (Lnet/minecraft/network/chat/Component;)V
 
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen hoveredSlot Lnet/minecraft/world/inventory/Slot;
+
 accessible method net/minecraft/client/multiplayer/PlayerInfo createSkinLookup (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;
 accessible method net/minecraft/client/player/AbstractClientPlayer getPlayerInfo ()Lnet/minecraft/client/multiplayer/PlayerInfo;
 

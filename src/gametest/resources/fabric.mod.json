@@ -33,7 +33,8 @@
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest",
-      "net.ccbluex.liquidbounce.gametest.InventoryCleanerTotemSlotGameTest"
+      "net.ccbluex.liquidbounce.gametest.InventoryCleanerTotemSlotGameTest",
+      "net.ccbluex.liquidbounce.gametest.OffhandLegitGameTest"
     ]
   },
   "depends": {

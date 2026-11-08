@@ -36,10 +36,14 @@ import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.center
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
@@ -265,6 +269,11 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
     }
 
     /**
+     * Leaves the choice of the totem to the player: only the one under the cursor in the open inventory is taken.
+     */
+    val legit by boolean("Legit", false)
+
+    /**
      * Ignores all active inventory requests, switch settings and sends the switch packets directly.
      */
     private val sendDirectly by boolean("SendDirectly", false)
@@ -282,6 +291,18 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
         }
 
         return Health.healthBelowThreshold()
+    }
+
+    /**
+     * The slot of the totem under the cursor in the open inventory.
+     */
+    fun hoveredTotemSlot(): ItemSlot? {
+        val hovered = (mc.gui.screen() as? InventoryScreen)?.hoveredSlot ?: return null
+        if (!hovered.item.has(DataComponents.DEATH_PROTECTION)) {
+            return null
+        }
+
+        return Slots.HotbarAndInventory.find { it.getIdForServer(null) == hovered.index }
     }
 
     /**
