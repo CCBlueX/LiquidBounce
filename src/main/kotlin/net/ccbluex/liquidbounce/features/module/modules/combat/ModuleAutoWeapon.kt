@@ -90,6 +90,12 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      */
     private val totemOnly by boolean("TotemOnly", false)
 
+    /**
+     * Attacks again a tick after an attack that switched to the weapon. The server attacks with the attributes
+     * of the weapon from its next tick on, so the first hit only has those of the item held before.
+     */
+    private val rehit by boolean("Rehit", false)
+
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
         enumSetOf(ChangeOnAction.ON_ATTACK)
@@ -155,7 +161,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
     private var switchTicks = 0
 
     /**
-     * The target of an attack that was cancelled for a delayed switch and is made up for with the weapon in hand.
+     * The target of the attack that follows a tick after the switch, with the weapon in hand. It makes up for one
+     * that was cancelled for a delayed switch, or repeats one that went out in the tick of the switch ([rehit]).
      */
     private var heldTarget: LivingEntity? = null
 
@@ -169,10 +176,15 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
         }
 
         // An attack made in the tick of a delayed switch waits as well, in place of the one before it
+        val slotBefore = SilentHotbar.serversideSlot
         if (!selectWeapon(weaponSlot) || heldTarget != null) {
             heldTarget = entity
             event.cancelEvent()
             return@handler
+        }
+
+        if (rehit && SilentHotbar.serversideSlot != slotBefore) {
+            heldTarget = entity
         }
 
         // [ClientPlayerInteractionManager.attackEntity] will sync the selected slot,
