@@ -223,7 +223,9 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
 
     private fun delayOf(mode: Mode): Long {
         val range = mode.getDelay()
-        return (range.first + (range.last - range.first) * delayRoll).toLong()
+        val delay = range.first + (range.last - range.first) * delayRoll
+        val factor = if (mode == Mode.TOTEM) Totem.Urgency.delayFactor() else 1f
+        return (delay * factor).toLong()
     }
 
     private fun resetDelay() {

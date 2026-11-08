@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.block.isCharged
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
@@ -43,6 +44,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
+import kotlin.math.sqrt
 
 internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
@@ -171,20 +173,25 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
                 allowedDamage = health
             }
 
-            var calculatedDamage = getDamageFromEntities(allowedDamage)
+            return predictedDamage(allowedDamage) >= allowedDamage
+        }
 
-            // the damage would exceed the threshold
+        /**
+         * The damage the player might take from explosions and falling, stops adding up once it reaches
+         * [allowedDamage].
+         */
+        fun predictedDamage(allowedDamage: Float): Float {
+            var calculatedDamage = getDamageFromEntities(allowedDamage)
             if (calculatedDamage >= allowedDamage) {
-                return true
+                return calculatedDamage
             }
 
             calculatedDamage = calculatedDamage.coerceAtLeast(getDamageFromBlocks(allowedDamage))
             if (calculatedDamage >= allowedDamage) {
-                return true
+                return calculatedDamage
             }
 
-            calculatedDamage += FallDamage.getFallDamage()
-            return calculatedDamage >= allowedDamage
+            return calculatedDamage + FallDamage.getFallDamage()
         }
 
         private fun getDamageFromEntities(allowedDamage: Float): Float {
@@ -260,8 +267,36 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
     }
 
+    /**
+     * Shortens [switchDelay] the more danger the player is in: low health, damage [Health] predicts, or a close
+     * enemy.
+     */
+    object Urgency : ToggleableValueGroup(this, "Urgency", false) {
+
+        /**
+         * The share of the delay that is left in the greatest danger.
+         */
+        private val minFactor by float("MinFactor", 0f, 0f..1f)
+        private val range by float("Range", 6f, 1f..16f)
+
+        fun delayFactor() = if (enabled) 1f - danger() * (1f - minFactor) else 1f
+
+        /**
+         * From 0, safe, to 1, in the greatest danger.
+         */
+        private fun danger(): Float {
+            val health = player.health + player.absorptionAmount
+            val damage = Health.predictedDamage(health) / health
+            val enemy = world.findEnemies(0f, range).minOfOrNull { it.rightDouble() }
+                ?.let { 1f - sqrt(it).toFloat() / range } ?: 0f
+
+            return maxOf(1f - health / player.maxHealth, damage, enemy).coerceIn(0f, 1f)
+        }
+
+    }
+
     init {
-        tree(Health)
+        treeAll(Health, Urgency)
     }
 
     /**
