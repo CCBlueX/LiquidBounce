@@ -84,7 +84,13 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
+    private val breakLastOnDisable by boolean("BreakLastOnDisable", false)
+
     override fun onDisabled() {
+        if (breakLastOnDisable && inGame) {
+            SubmoduleCrystalDestroyer.breakLastPlaced()
+        }
+
         CrystalAuraTriggerer.terminateRunningTasks()
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)

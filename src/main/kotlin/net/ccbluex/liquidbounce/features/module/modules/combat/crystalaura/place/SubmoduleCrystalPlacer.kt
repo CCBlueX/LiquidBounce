@@ -87,6 +87,13 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     private val chronometer = Chronometer()
     private var blockHitResult: BlockHitResult? = null
 
+    /**
+     * The block the last crystal was placed on.
+     */
+    @Volatile
+    var lastBase: BlockPos? = null
+        private set
+
     // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
@@ -174,6 +181,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
                 sequenced
             )
 
+            lastBase = targetPos
             SubmoduleIdPredict.run(targetPos)
 
             chronometer.reset()
