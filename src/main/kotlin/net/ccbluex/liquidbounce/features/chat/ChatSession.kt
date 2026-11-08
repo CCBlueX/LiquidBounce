@@ -20,6 +20,8 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
 import java.util.concurrent.ConcurrentHashMap
@@ -34,13 +36,9 @@ object ChatSession {
 
     private val users = ConcurrentHashMap<String, Author>()
 
-    private val recentMessages = object : LinkedHashMap<Long, String>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
-    }
+    private val recentMessages = Long2ObjectLinkedOpenHashMap<String>(REMEMBERED_MESSAGES)
 
-    private val removedMessages = object : LinkedHashMap<Long, Unit>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, Unit>) = size > REMEMBERED_MESSAGES
-    }
+    private val removedMessages = LongLinkedOpenHashSet(REMEMBERED_MESSAGES)
 
     fun isSelf(id: String) = self?.id == id
 
@@ -58,7 +56,7 @@ object ChatSession {
         .mapTo(sortedSetOf(String.CASE_INSENSITIVE_ORDER)) { it.name }
 
     fun lastMessageOf(userId: String): Long? = synchronized(recentMessages) {
-        recentMessages.entries.lastOrNull { it.value == userId }?.key
+        recentMessages.long2ObjectEntrySet().lastOrNull { it.value == userId }?.longKey
     }
 
     internal fun update(packet: Clientbound) {
@@ -71,12 +69,14 @@ object ChatSession {
             is Clientbound.ChatMessage -> {
                 users[packet.author.id] = packet.author
                 synchronized(recentMessages) {
-                    recentMessages[packet.id] = packet.author.id
+                    if (recentMessages.size >= REMEMBERED_MESSAGES) recentMessages.removeFirst()
+                    recentMessages.putAndMoveToLast(packet.id, packet.author.id)
                 }
             }
 
             is Clientbound.MessageRemoved -> synchronized(removedMessages) {
-                removedMessages[packet.id] = Unit
+                if (removedMessages.size >= REMEMBERED_MESSAGES) removedMessages.removeFirstLong()
+                removedMessages.addAndMoveToLast(packet.id)
             }
 
             else -> {}
