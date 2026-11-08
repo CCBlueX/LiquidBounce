@@ -313,7 +313,7 @@ public abstract class MixinMinecraft {
     @ModifyExpressionValue(method = "startAttack",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 0, opcode = Opcodes.GETFIELD))
     private int injectNoMissCooldown(int original) {
-        if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
+        if (ModuleNoMissCooldown.INSTANCE.getChangesAttack() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown()) {
             return 0;
         }
 
@@ -352,14 +352,14 @@ public abstract class MixinMinecraft {
     @WrapWithCondition(method = "startAttack", at = @At(value = "FIELD",
         target = "Lnet/minecraft/client/Minecraft;missTime:I", ordinal = 1, opcode = Opcodes.PUTFIELD))
     private boolean disableAttackCooldown(Minecraft instance, int value) {
-        return !(ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
+        return !(ModuleNoMissCooldown.INSTANCE.getChangesAttack() && ModuleNoMissCooldown.INSTANCE.getRemoveAttackCooldown());
     }
 
     @Inject(method = "startAttack", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/client/player/LocalPlayer;swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z"),
         cancellable = true)
     private void hookMissSwing(CallbackInfoReturnable<Boolean> cir) {
-        if (hitResult.getType() == HitResult.Type.MISS && ModuleNoMissCooldown.INSTANCE.getRunning()) {
+        if (hitResult.getType() == HitResult.Type.MISS && ModuleNoMissCooldown.INSTANCE.getChangesAttack()) {
             ModuleNoMissCooldown.INSTANCE.getSwingMode().attackSwing();
             cir.setReturnValue(false);
         }
@@ -367,8 +367,10 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
     private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
+        ModuleNoMissCooldown.INSTANCE.startAttack();
+
         if (player == null || hitResult == null || hitResult.getType() == HitResult.Type.MISS) {
-            if (ModuleNoMissCooldown.INSTANCE.getRunning() && ModuleNoMissCooldown.INSTANCE.getCancelAttackOnMiss()) {
+            if (ModuleNoMissCooldown.INSTANCE.getChangesAttack() && ModuleNoMissCooldown.INSTANCE.getCancelAttackOnMiss()) {
                 // Prevent swinging
                 cir.setReturnValue(true);
             }

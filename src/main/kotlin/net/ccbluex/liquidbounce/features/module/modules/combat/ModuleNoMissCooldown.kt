@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -39,5 +40,24 @@ object ModuleNoMissCooldown : ClientModule("NoMissCooldown", ModuleCategories.CO
      * Hides the swing of a missed attack from the client, the server or both.
      */
     val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
+
+    /**
+     * Chance of an attack being changed. The other attacks stay vanilla.
+     */
+    private val chance = percentageChance("Chance", 100f)
+    private var chancePassed = true
+
+    val changesAttack
+        get() = running && chancePassed
+
+    /**
+     * Rolls the [chance] for the attack that is about to start.
+     */
+    fun startAttack() {
+        // A miss that stayed vanilla keeps its cooldown, a new roll would let the next click skip it
+        if (chancePassed || mc.missTime <= 0) {
+            chancePassed = chance.asBoolean
+        }
+    }
 
 }
