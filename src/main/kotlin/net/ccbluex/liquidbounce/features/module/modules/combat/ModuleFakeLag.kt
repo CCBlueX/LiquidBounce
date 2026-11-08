@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -29,14 +30,16 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -50,6 +53,7 @@ import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 import kotlin.jvm.optionals.getOrNull
@@ -62,9 +66,21 @@ import kotlin.jvm.optionals.getOrNull
 @Suppress("MagicNumber")
 object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private val range by floatRange("Range", 2f..5f, 0f..10f)
+    private val fov by float("FOV", 180f, 0f..180f)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
     private val recoilTime by int("RecoilTime", 250, 0..1000, "ms")
     private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
+
+    /**
+     * Sends the held packets once we are further than [maxDistance] away from the position the server knows.
+     */
+    private object DistanceLimit : ToggleableValueGroup(this, "DistanceLimit", false) {
+        val maxDistance by float("MaxDistance", 3f, 0.5f..10f, "blocks")
+    }
+
+    init {
+        tree(DistanceLimit)
+    }
 
     private val flushOn by multiEnumChoice("FlushOn", FlushOn.entries)
 
@@ -97,7 +113,9 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent> {
-        isEnemyNearby = world.findEnemy(range) != null
+        isEnemyNearby = world.findEnemies(range.start, range.endInclusive).any { enemy ->
+            fov >= 180f || Mth.cos(fov.toDouble().toRadians()) <= RotationUtil.crosshairCosToEntity(enemy.key())
+        }
 
         if (ModuleAutoDodge.enabled) {
             val position = positions.firstOrNull() ?: return@handler
@@ -140,6 +158,12 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
         if (BlinkManager.isAboveTime(nextDelay.toLong())) {
             nextDelay = delay.random()
+            return@handler
+        }
+
+        if (DistanceLimit.enabled
+            && positions.firstOrNull()?.closerThan(player.position(), DistanceLimit.maxDistance.toDouble()) == false
+        ) {
             return@handler
         }
 
