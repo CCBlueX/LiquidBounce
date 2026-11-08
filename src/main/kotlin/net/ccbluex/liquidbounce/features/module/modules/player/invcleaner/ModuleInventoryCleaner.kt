@@ -58,6 +58,7 @@ object ModuleInventoryCleaner : ClientModule(
     private val maxWaterBuckets by int("MaximumWaterBuckets", 2, 0..16)
     private val maxLavaBuckets by int("MaximumLavaBuckets", 2, 0..16)
     private val maxMilkBuckets by int("MaximumMilkBuckets", 2, 0..16)
+    private val maxTotems by int("MaximumTotems", 37, 0..37)
 
     private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
 
@@ -121,6 +122,7 @@ object ModuleInventoryCleaner : ClientModule(
                     ItemSortChoice.WATER.category, maxWaterBuckets,
                     ItemSortChoice.LAVA.category, maxLavaBuckets,
                     ItemSortChoice.MILK.category, maxMilkBuckets,
+                    ItemType.TOTEM.defaultCategory, maxTotems,
                 ),
                 desiredValuePerFunction = referenceIntArrayMapOf(
                     ItemFunction.FOOD, maxFoods,
