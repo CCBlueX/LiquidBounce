@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
+import net.ccbluex.liquidbounce.utils.combat.TotemPopTracker
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
@@ -61,7 +62,7 @@ internal object NametagTextFormatter : ValueGroup("Text") {
 
     private val parts by multiEnumChoice(
         "Parts",
-        ObjectLinkedOpenHashSet(Part.entries),
+        ObjectLinkedOpenHashSet(Part.entries - Part.TOTEM_POPS),
         canBeNone = false
     )
 
@@ -156,6 +157,18 @@ internal object NametagTextFormatter : ValueGroup("Text") {
         BOT_MARK("BotMark") {
             override fun apply(entity: Entity): FormattedCharSequence? {
                 return if (entity.isBot) BOT_TEXT else null
+            }
+        },
+
+        TOTEM_POPS("TotemPops") {
+            override fun apply(entity: Entity): FormattedCharSequence? {
+                if (entity !is Player) return null
+
+                return when (val pops = TotemPopTracker.pops(entity)) {
+                    0 -> null
+                    1 -> "1 Pop".withFormat(ChatFormatting.GOLD)
+                    else -> "$pops Pops".withFormat(ChatFormatting.GOLD)
+                }
             }
         };
 
