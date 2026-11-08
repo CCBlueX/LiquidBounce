@@ -32,10 +32,6 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Util
 import java.io.File
 import java.util.concurrent.CompletableFuture
-import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.Clip
-import javax.sound.sampled.FloatControl
-import kotlin.math.log10
 
 /**
  * Plays the active theme's splash screen through the loading overlay, the browser choice and the startup
@@ -60,17 +56,19 @@ object Splash {
 
     private val INCLUDED_THEME = ResourceSplashFiles("/resources/liquidbounce/themes/liquidbounce/")
 
-    private class Loaded(val bundle: SplashBundle, val clips: Map<String, Clip>) : AutoCloseable {
+    private class Loaded(val bundle: SplashBundle, val sounds: SplashSoundPlayer) : AutoCloseable {
         override fun close() {
             bundle.close()
-            clips.values.forEach(Clip::close)
+            sounds.close()
         }
     }
 
     private class Active(val loaded: Loaded) : AutoCloseable {
         val textures: Map<String, SplashTexture>
         val renderer: LottieRenderer
-        val playSound: (String) -> Unit = { name -> loaded.clips[name]?.play(name) }
+        val playSound: (String) -> Unit = { name ->
+            loaded.sounds.play(name, Minecraft.getInstance().options.getFinalSoundSourceVolume(SoundSource.MASTER))
+        }
 
         init {
             val created = LinkedHashMap<String, SplashTexture>()
@@ -312,14 +310,7 @@ object Splash {
             ?: INCLUDED_THEME
         val bundle = loadBundle(files) ?: return null
 
-        val clips = bundle.sounds.mapNotNull { (name, sound) ->
-            runCatching {
-                name to AudioSystem.getClip().apply { open(sound.format, sound.pcm, 0, sound.pcm.size) }
-            }.onFailure {
-                logger.debug("Splash sound $name unavailable", it)
-            }.getOrNull()
-        }.toMap()
-        return Loaded(bundle, clips)
+        return Loaded(bundle, SplashSoundPlayer(bundle.sounds))
     }
 
 }
@@ -333,23 +324,3 @@ private fun loadBundle(files: SplashFiles): SplashBundle? = runCatching {
 }.onFailure {
     logger.error("Failed to read the splash screen", it)
 }.getOrNull()
-
-private fun Clip.setVolume(volume: Float) {
-    if (isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-        val gain = getControl(FloatControl.Type.MASTER_GAIN) as FloatControl
-        gain.value = (20f * log10(volume)).coerceIn(gain.minimum, gain.maximum)
-    }
-}
-
-private fun Clip.play(name: String) {
-    val volume = Minecraft.getInstance().options.getFinalSoundSourceVolume(SoundSource.MASTER)
-    if (volume <= 0f) {
-        return
-    }
-
-    runCatching {
-        setVolume(volume)
-        framePosition = 0
-        start()
-    }.onFailure { logger.debug("Failed to play splash sound $name", it) }
-}
