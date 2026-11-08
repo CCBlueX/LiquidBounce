@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 
 import it.unimi.dsi.fastutil.ints.IntCollection
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
@@ -50,7 +51,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
     private val switchMode by enumChoice("Switch", SwitchMode.SILENT)
     val oldVersion by boolean("1_12_2", false)
-    private val delay by int("Delay", 0, 0..1000, "ms")
+    private val delay = intRange("Delay", 0..0, 0..1000, "ms").asRefreshable()
     val range by float("Range", 4.5f, 1f..6f).onChanged {
         CrystalAuraPlaceTargetFactory.updateSphere()
     }
@@ -94,7 +95,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
     @Suppress("LongMethod", "CognitiveComplexMethod")
     fun tick(excludeIds: IntCollection? = null) {
-        if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
+        if (!enabled || !chronometer.hasAtLeastElapsed(delay.current.toLong())) {
             return
         }
 
@@ -162,7 +163,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
 
             return@rotate blockHitResult!!.type == HitResult.Type.BLOCK && blockHitResult!!.blockPos == targetPos
         }, onFinished = {
-            if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
+            if (!chronometer.hasAtLeastElapsed(delay.current.toLong())) {
                 return@rotate
             }
 
@@ -177,6 +178,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
             SubmoduleIdPredict.run(targetPos)
 
             chronometer.reset()
+            delay.refresh()
         })
     }
 
