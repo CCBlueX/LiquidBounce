@@ -203,6 +203,7 @@ object ModuleAutoPearl : ClientModule(
         return when(mode) {
             Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked()
             Modes.TARGET -> ModuleKillAura.targetTracker.target === pearl.owner
+            Modes.LAST_ATTACKED -> CombatManager.lastAttackedEnemy === pearl.owner
         }
     }
 
@@ -245,7 +246,8 @@ object ModuleAutoPearl : ClientModule(
 
     private enum class Modes(override val tag: String) : Tagged {
         TRIGGER("Trigger"),
-        TARGET("Target")
+        TARGET("Target"),
+        LAST_ATTACKED("LastAttacked")
     }
 
 }

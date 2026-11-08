@@ -32,10 +32,12 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket
@@ -47,6 +49,7 @@ import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.util.Util
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import kotlin.math.roundToInt
@@ -108,6 +111,18 @@ object CombatManager : EventListener {
         return ((serverTicks + 0.5) / other.currentItemAttackStrengthDelay).toFloat()
     }
 
+    private const val MEMORY_MILLIS = 5000L
+    private const val MEMORY_RANGE = 15.0
+    private const val CRYSTAL_ENEMY_RANGE = 6.0
+
+    /**
+     * The enemy we attacked last, directly or by attacking an end crystal next to it.
+     * Forgotten after [MEMORY_MILLIS], when either of us dies or when it is further than [MEMORY_RANGE] away.
+     */
+    var lastAttackedEnemy: LivingEntity? = null
+        private set
+    private val lastAttackChronometer = Chronometer()
+
     private fun updatePauseRotation() {
         if (pauseRotation <= 0) return
 
@@ -147,6 +162,13 @@ object CombatManager : EventListener {
         update()
 
         val player = mc.player ?: return@handler
+        lastAttackedEnemy?.let { enemy ->
+            if (player.isDeadOrDying || !enemy.isAlive || lastAttackChronometer.hasElapsed(MEMORY_MILLIS)
+                || enemy.distanceToSqr(player) > MEMORY_RANGE * MEMORY_RANGE) {
+                lastAttackedEnemy = null
+            }
+        }
+
         debugParameter("Client Cooldown Ticks") { player.attackStrengthTicker }
         debugParameter("Server Cooldown Ticks") { attackCooldownTicks() }
     }
@@ -155,8 +177,19 @@ object CombatManager : EventListener {
     val attackHandler = handler<AttackEntityEvent> { event ->
         val entity = event.entity
 
+        if (entity is EndCrystal) {
+            world.getEntitiesBoxInRange(entity.position(), CRYSTAL_ENEMY_RANGE) {
+                it is LivingEntity && it.shouldBeAttacked()
+            }.minByOrNull { it.distanceToSqr(entity) }?.let { enemy ->
+                lastAttackedEnemy = enemy as LivingEntity
+                lastAttackChronometer.reset()
+            }
+        }
+
         if (entity is LivingEntity && entity.shouldBeAttacked()) {
             duringCombat = PAUSE_COMBAT
+            lastAttackedEnemy = entity
+            lastAttackChronometer.reset()
 
             if (entity is Player) {
                 EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
@@ -197,9 +230,10 @@ object CombatManager : EventListener {
     }
 
     @Suppress("unused")
-    private val cooldownWorldHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         cooldownResetTicks = Timer.realTicks
         cooldownResets.clear()
+        lastAttackedEnemy = null
     }
 
     val shouldPauseCombat: Boolean
