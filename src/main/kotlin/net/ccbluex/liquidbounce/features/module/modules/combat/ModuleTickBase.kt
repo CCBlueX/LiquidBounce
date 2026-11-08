@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -40,16 +41,20 @@ import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerSnapshot
+import net.ccbluex.liquidbounce.utils.entity.serverBox
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.world.entity.EntitySelector
-import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
@@ -226,12 +231,13 @@ internal object ModuleTickBase : ClientModule(
     }
 
     /**
-     * Runs the ticks in one burst. What the charged balance does not cover is held back right before.
+     * Holds the game back until the balance pays for a burst that lands the hit, then bursts. Positions still
+     * update while held, so the burst follows where the target is by then.
      */
     private object HoldFirst : BurstMode("HoldFirst", "Past", holdFirst = true)
 
     /**
-     * Runs the ticks in one burst. What the charged balance does not cover is held back right after.
+     * Bursts right away. What the charged balance does not cover is held back afterwards.
      */
     private object BurstFirst : BurstMode("BurstFirst", "Future", holdFirst = false)
 
@@ -250,6 +256,12 @@ internal object ModuleTickBase : ClientModule(
          */
         private var busy = false
 
+        /**
+         * While holding first, the normal ticks that will run between the hold and the burst.
+         */
+        private var walkAfterHold: Int? = null
+        private var plannedAtBalance = Float.NaN
+
         override fun timerSpeed() = 1f.takeIf { busy }
 
         @Suppress("unused")
@@ -261,18 +273,12 @@ internal object ModuleTickBase : ClientModule(
                 return@tickHandler
             }
 
-            val charged = Timer.balance.toInt().coerceIn(0, maxBalance)
-
             // The current tick still runs. Holding first then runs the delay and the tick the burst follows,
             // so the player covers them at the normal speed
-            val walk = if (holdFirst) delay.random() + 2 else 1
-            val path = snapshotsFromNow().take(walk + maxTicks + 1).toList()
-            val hitAt = hitPointFrom()
-            val ticks = ticksToHit(path, hitAt, walk)
-            val hit = ticks?.let { hitAt(path[it].eyes()) }?.takeIf(::requirementsMet)
-            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit)
-
-            if (ticks == null || hit == null) {
+            val delayTicks = delay.random()
+            val walk = if (holdFirst) delayTicks + 2 else 1
+            val ticks = plan(snapshotsFromNow(), walk)
+            if (ticks == null) {
                 rolled = null
                 return@tickHandler
             }
@@ -285,35 +291,92 @@ internal object ModuleTickBase : ClientModule(
 
             busy = true
             try {
-                boost(ticks - walk, charged, walk)
+                if (holdFirst) {
+                    holdFirst(delayTicks)
+                } else {
+                    burstFirst(ticks - walk)
+                }
             } finally {
                 busy = false
+                walkAfterHold = null
             }
         }
 
         /**
-         * Bursts [ticks] ticks and holds back the ticks the [charged] balance does not cover, with the delay
-         * between. Held ticks do not count towards the waited ticks, the burst ticks do.
+         * Holds back ticks until [holdHandler] finds the balance pays for the burst, then bursts after the delay.
+         * Held ticks do not count towards the waited ticks, the burst ticks do.
          */
-        private suspend fun boost(ticks: Int, charged: Int, walk: Int) {
-            if (holdFirst) {
-                Timer.hold(this, max(0, ticks - charged))
-                waitTicks(walk - 1)
-                val burst = Timer.burst(ticks, 0..maxBalance + maxTicks)
-                TickBaseVisuals.clear()
-                waitTicks(burst + cooldown.random())
-            } else {
-                val burst = Timer.burst(ticks, -maxTicks..maxBalance)
-                TickBaseVisuals.clear()
-                waitTicks(burst + delay.random())
-                Timer.hold(this, max(0, burst - charged))
-                waitTicks(1 + cooldown.random())
+        private suspend fun holdFirst(delayTicks: Int) {
+            val walk = delayTicks + 1
+            walkAfterHold = walk
+            plannedAtBalance = Float.NaN
+            Timer.hold(this, maxTicks)
+
+            // Resumes with the first tick after the hold
+            waitTicks(1)
+            walkAfterHold = null
+
+            val ticks = plan(currentSnapshotsFromNow(), walk)?.minus(walk)
+            if (ticks == null || ticks > Timer.balance) {
+                rolled = null
+                waitTicks(cooldown.random())
+                return
+            }
+
+            waitTicks(delayTicks)
+            val burst = Timer.burst(ticks, 0..maxBalance + maxTicks)
+            TickBaseVisuals.clear()
+            waitTicks(burst + cooldown.random())
+        }
+
+        /**
+         * Bursts [ticks] ticks and holds back the ticks the charged balance does not cover after the delay.
+         */
+        private suspend fun burstFirst(ticks: Int) {
+            val charged = Timer.balance.toInt().coerceIn(0, maxBalance)
+            val burst = Timer.burst(ticks, -maxTicks..maxBalance)
+            TickBaseVisuals.clear()
+            waitTicks(burst + delay.random())
+            Timer.hold(this, max(0, burst - charged))
+            waitTicks(1 + cooldown.random())
+        }
+
+        /**
+         * Plans the burst again with every tick held, against where the target is now. Releases the hold once the
+         * balance pays for it, or the hit is gone.
+         */
+        @Suppress("unused")
+        private val holdHandler = handler<TickPacketProcessEvent> {
+            val walk = walkAfterHold ?: return@handler
+            if (Timer.balance == plannedAtBalance) {
+                return@handler
+            }
+            plannedAtBalance = Timer.balance
+
+            val ticks = plan(currentSnapshotsFromNow(), walk)
+            if (ticks == null || ticks - walk <= Timer.balance) {
+                walkAfterHold = null
+                Timer.hold(this, 0)
             }
         }
 
         override fun disable() {
             busy = false
+            walkAfterHold = null
             super.disable()
+        }
+
+        /**
+         * The tick of [snapshots] to land the hit on after [walk] normal ticks, shown in the visuals. Null when no
+         * hit lands, or the requirements are not met.
+         */
+        private fun plan(snapshots: Sequence<SimulatedPlayerSnapshot>, walk: Int): Int? {
+            val path = snapshots.take(walk + maxTicks + 1).toList()
+            val hitAt = hitPointFrom()
+            val ticks = ticksToHit(path, hitAt, walk)
+            val hit = ticks?.let { hitAt(path[it].eyes()) }?.takeIf(::requirementsMet)
+            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit)
+            return ticks.takeIf { hit != null }
         }
 
         /**
@@ -364,6 +427,11 @@ internal object ModuleTickBase : ClientModule(
     private const val LOOK_MARGIN = 1.0
     private const val CLICK_MILLIS = 250L
 
+    /**
+     * How far the server box of an enemy may be off its box on the client, which stays behind while ticks are held.
+     */
+    private const val SEARCH_MARGIN = 8.0
+
     private fun requirementsMet(hit: Vec3) = requires.all { it.meets(hit) }
 
     private val prefersCritical
@@ -372,14 +440,16 @@ internal object ModuleTickBase : ClientModule(
 
     /**
      * Where a hit from the given eyes lands: on the target of KillAura or Aimbot, otherwise on an enemy under the
-     * crosshair. Null when it misses.
+     * crosshair. Null when it misses. Uses where the server has the enemies, which the client only catches up with
+     * while ticking.
      */
     private fun hitPointFrom(): (Vec3) -> Vec3? {
         val killAuraTarget = ModuleKillAura.targetTracker.target?.takeIf { ModuleKillAura.running }
         if (killAuraTarget != null) {
+            val box = killAuraTarget.serverBox()
             val range = ModuleKillAura.range.interactionRange.toDouble()
             val wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
-            return { eyes -> killAuraTarget.boundingBox.hitPoint(eyes, range, wallsRange) }
+            return { eyes -> box.hitPoint(eyes, range, wallsRange) }
         }
 
         val range = if (ModuleReach.running) {
@@ -390,7 +460,8 @@ internal object ModuleTickBase : ClientModule(
 
         val aimbotTarget = ModuleAimbot.targetTracker.target?.takeIf { ModuleAimbot.running }
         if (aimbotTarget != null) {
-            return { eyes -> aimbotTarget.boundingBox.hitPoint(eyes, range, 0.0) }
+            val box = aimbotTarget.serverBox()
+            return { eyes -> box.hitPoint(eyes, range, 0.0) }
         }
 
         val direction = player.lookAngle
@@ -401,18 +472,19 @@ internal object ModuleTickBase : ClientModule(
         it.distanceToSqr(eyes) <= range.sq() && canSeeBox(eyes, this, range, wallsRange)
     }
 
+    /**
+     * Like [net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult], against the server boxes.
+     */
     private fun enemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Vec3? {
         val end = eyes.fma(range, direction)
-        val hit = ProjectileUtil.getEntityHitResult(
-            player,
-            eyes,
-            end,
-            AABB(eyes, end).inflate(1.0),
-            EntitySelector.CAN_BE_PICKED.and { it.shouldBeAttacked() },
-            range.sq()
-        ) ?: return null
+        val candidates = world.getEntities(player, AABB(eyes, end).inflate(SEARCH_MARGIN)) {
+            EntitySelector.CAN_BE_PICKED.test(it) && it.shouldBeAttacked()
+        }
 
-        return hit.location.takeIf { hasLineOfSight(eyes, it) }
+        return candidates.mapNotNull { entity ->
+            val box = entity.serverBox().inflate(entity.pickRadius.toDouble())
+            if (box.contains(eyes)) eyes else box.clip(eyes, end).orElse(null)
+        }.minByOrNull { it.distanceToSqr(eyes) }?.takeIf { hasLineOfSight(eyes, it) }
     }
 
     /**
@@ -426,6 +498,14 @@ internal object ModuleTickBase : ClientModule(
      * the last tick, so its first step is now.
      */
     private fun snapshotsFromNow() = PlayerSimulationCache.getSimulationForLocalPlayer().simulate().drop(1)
+
+    /**
+     * Like [snapshotsFromNow], simulated from the current state of the player. While ticks are held, the cached
+     * simulation misses what changed in the meantime, such as knockback.
+     */
+    private fun currentSnapshotsFromNow() = SimulatedPlayerCache(
+        SimulatedPlayer.fromClientPlayer(SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input)))
+    ).simulate()
 
     private fun SimulatedPlayerSnapshot.eyes() = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
 
