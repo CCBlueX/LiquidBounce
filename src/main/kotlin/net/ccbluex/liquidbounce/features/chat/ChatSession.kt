@@ -38,6 +38,10 @@ object ChatSession {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
     }
 
+    private val removedMessages = object : LinkedHashMap<Long, Unit>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, Unit>) = size > REMEMBERED_MESSAGES
+    }
+
     fun isSelf(id: String) = self?.id == id
 
     val isAccount get() = self?.isAccount == true
@@ -71,14 +75,23 @@ object ChatSession {
                 }
             }
 
+            is Clientbound.MessageRemoved -> synchronized(removedMessages) {
+                removedMessages[packet.id] = Unit
+            }
+
             else -> {}
         }
     }
+
+    fun isRemoved(id: Long): Boolean = synchronized(removedMessages) { id in removedMessages }
 
     internal fun reset() {
         self = null
         synchronized(recentMessages) {
             recentMessages.clear()
+        }
+        synchronized(removedMessages) {
+            removedMessages.clear()
         }
     }
 
