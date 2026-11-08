@@ -53,6 +53,11 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val delay by int("Delay", 20, 0..400, "ticks")
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
+    /**
+     * Without rotations, a trap is only placed once the crosshair is on a block that traps the target.
+     */
+    private val rotate by boolean("Rotate", true)
+
     private val ignitionTrapPlanner = tree(IgnitionTrapPlanner(this))
     private val webTrapPlanner = tree(WebTrapPlanner(this))
     val targetTracker = tree(TargetTracker(range = range))
@@ -109,6 +114,10 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
                 return@handler
             }
 
+            if (!rotate) {
+                return@handler
+            }
+
             RotationManager.setRotationTarget(
                 blockChangeInfo.blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
@@ -135,7 +144,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@tickHandler
         }
 
-        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rotation = RotationManager.currentRotation?.takeIf { rotate } ?: player.rotation
         val raycast = traceFromPlayer(rotation)
         if (!plan.validate(raycast)) {
             return@tickHandler
