@@ -43,7 +43,7 @@ open class RangeValueGroup(
      */
     val interactionRange: Float
         get() = (mc.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
-            ?: 3.0F) + maxRangeIncrease
+            ?: 3.0F) + rangeIncrease
 
     val interactionThroughWallsRange
         get() = throughWallsRange
@@ -86,12 +86,18 @@ open class RangeValueGroup(
         min(interactionRange, it)
     }
 
+    /**
+     * The increase applied to the max range, [maxRangeIncrease] unless overridden.
+     */
+    protected open val rangeIncrease: Float
+        get() = maxRangeIncrease
+
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
             max(0f, attackRange.minReach/* - minRangeDecrease*/),
-            attackRange.maxReach + this@RangeValueGroup.maxRangeIncrease,
+            attackRange.maxReach + rangeIncrease,
             max(0f, attackRange.minCreativeReach/* - minRangeDecrease*/),
-            attackRange.maxCreativeReach + this@RangeValueGroup.maxRangeIncrease,
+            attackRange.maxCreativeReach + rangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )

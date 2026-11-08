@@ -18,8 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.utils.percentageChance
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.range.RangeValueGroup
 
 /**
@@ -31,6 +36,41 @@ import net.ccbluex.liquidbounce.utils.range.RangeValueGroup
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
-    val entity = tree(RangeValueGroup("Entity", 1f, 0f))
+
+    private object EntityRange : RangeValueGroup("Entity", 1f, 0f) {
+        override val rangeIncrease: Float
+            get() = super.rangeIncrease + if (RandomIncrease.enabled) RandomIncrease.rolled else 0f
+    }
+
+    val entity: RangeValueGroup = tree(EntityRange)
     val blockRangeIncrease by float("BlockRangeIncrease", 0.5f, 0f..64f)
+
+    /**
+     * Adds a random increase to the entity range, rolled again after every hit.
+     */
+    private object RandomIncrease : ToggleableValueGroup(this, "Random", false) {
+        private val increase by floatRange("Increase", 0.5f..1f, 0f..5f, "blocks")
+        private val chance = percentageChance("Chance", 100f)
+
+        var rolled = 0f
+            private set
+
+        private fun roll() {
+            rolled = if (chance.asBoolean) increase.random() else 0f
+        }
+
+        override fun onEnabled() {
+            roll()
+        }
+
+        @Suppress("unused")
+        private val attackHandler = handler<AttackEntityEvent> {
+            roll()
+        }
+    }
+
+    init {
+        tree(RandomIncrease)
+    }
+
 }
