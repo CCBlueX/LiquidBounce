@@ -69,7 +69,8 @@ object ModuleCrystalAura : ClientModule(
             PredictFeature,
             SubmoduleIdPredict,
             SubmoduleSetDead,
-            SubmoduleBasePlace
+            SubmoduleBasePlace,
+            SubmoduleLootPause
         )
     }
 
@@ -89,6 +90,7 @@ object ModuleCrystalAura : ClientModule(
         SubmoduleCrystalPlacer.placementRenderer.clearSilently()
         SubmoduleCrystalDestroyer.postAttackHandlers.forEach(CrystalPostAttackTracker::onToggle)
         SubmoduleBasePlace.onDisabled()
+        SubmoduleLootPause.onDisabled()
         CrystalAuraDamageOptions.cacheMap.clear()
     }
 
@@ -104,6 +106,7 @@ object ModuleCrystalAura : ClientModule(
         }
 
         targetTracker.selectFirst()
+        SubmoduleLootPause.update(targetTracker.target)
     }
 
 }

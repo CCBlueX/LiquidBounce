@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleLootPause
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.notWhileUsingItem
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.BlockChangeTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ClientBlockBreakTrigger
@@ -147,11 +148,12 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
 
     /**
      * Also pauses when the combat manager tells combat modules to pause or option
-     * (e.g. [notWhileUsingItem]) require it.
+     * (e.g. [notWhileUsingItem], [SubmoduleLootPause]) require it.
      */
     override val running: Boolean
         get() = ModuleCrystalAura.running
             && !CombatManager.shouldPauseCombat
+            && !SubmoduleLootPause.pausing
             && (!player.isUsingItem || !notWhileUsingItem)
 
 }
