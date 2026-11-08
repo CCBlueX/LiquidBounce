@@ -41,6 +41,7 @@ public record RoundedRectGuiElementRenderState(
     int fillColor,
     int fillBottomColor,
     int outlineColor,
+    int outlineBottomColor,
     float outlineWidth,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
@@ -65,8 +66,8 @@ public record RoundedRectGuiElementRenderState(
             emitQuad(vertices, fillColor, fillBottomColor, encodedWidth, encodedHeight, encodedRadius, 0.0F);
         }
 
-        if (isVisible(outlineColor) && outlineWidth > 0.0F) {
-            emitQuad(vertices, outlineColor, outlineColor, encodedWidth, encodedHeight, encodedRadius, outlineWidth);
+        if ((isVisible(outlineColor) || isVisible(outlineBottomColor)) && outlineWidth > 0.0F) {
+            emitQuad(vertices, outlineColor, outlineBottomColor, encodedWidth, encodedHeight, encodedRadius, outlineWidth);
         }
     }
 
