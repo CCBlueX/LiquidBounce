@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -72,9 +72,24 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         val pickupSpan by floatRange("PickupSpan", 0.8F..3.0F, 0.5F..20.0F, "s")
     }
 
+    /**
+     * Leaves the aim to the player and only uses the bucket once the crosshair is on a spot that works.
+     */
+    private val crosshair by boolean("Crosshair", false)
+
+    /**
+     * Also reacts to webs that only reach into the player's box, not just the ones at the feet or the head.
+     */
+    private val partialWebs by boolean("PartialWebs", true)
+    private val delay by intRange("Delay", 0..0, 0..20, "ticks")
+
     private val rotations = tree(RotationsValueGroup(this))
     private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
-    private val trackedWebs = ObjectLinkedOpenHashSet<BlockPos>()
+
+    /**
+     * Webs the player is in, with the game time from which on they are acted on.
+     */
+    private val trackedWebs = Object2LongLinkedOpenHashMap<BlockPos>()
 
     private var currentAction: UseAction? = null
     private var lastSuccessfulWeb: BlockPos? = null
@@ -97,14 +112,25 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     }
 
     override fun handleEntityCollision(pos: BlockPos): Boolean {
-        trackedWebs.add(pos.immutable)
+        if ((partialWebs || isInCenterColumn(pos)) && !trackedWebs.containsKey(pos)) {
+            trackedWebs.put(pos.immutable, world.gameTime + delay.random())
+        }
+
         while (trackedWebs.size > MAX_TRACKED_WEBS) {
-            trackedWebs.removeFirst()
+            trackedWebs.removeFirstLong()
         }
 
         // Do not cancel web slowdown in this mode.
         return false
     }
+
+    private fun isInCenterColumn(pos: BlockPos): Boolean {
+        val feet = player.blockPosition()
+        return pos.x == feet.x && pos.z == feet.z && pos.y in feet.y..BlockPos.containing(player.eyePosition).y
+    }
+
+    private val useRotation: Rotation
+        get() = if (crosshair) player.rotation else RotationManager.currentRotation ?: player.rotation
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
@@ -119,22 +145,35 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
             return@handler
         }
 
-        trackedWebs.removeIf { trackedPos -> trackedPos.state?.block !is WebBlock }
+        trackedWebs.keys.removeIf { trackedPos -> trackedPos.state?.block !is WebBlock }
 
+        // A silent rotation of another module would decide where the bucket goes instead of the crosshair.
+        if (crosshair && RotationManager.currentRotation != null) {
+            return@handler
+        }
+
+        val crosshairTarget = if (crosshair) traceFromPlayer(player.rotation) else null
         val now = System.currentTimeMillis()
+        val gameTime = world.gameTime
         val placeAction = Slots.OffhandWithHotbar.findClosestSlot(Items.WATER_BUCKET)?.let { waterSlot ->
-            trackedWebs.firstNotNullOfOrNull { webPos ->
-                if (lastSuccessfulWeb == webPos && now - lastSuccessfulAt <= SAME_WEB_RETRY_DELAY_MS) {
+            trackedWebs.object2LongEntrySet().firstNotNullOfOrNull { entry ->
+                val webPos = entry.key
+                if (gameTime < entry.longValue ||
+                    lastSuccessfulWeb == webPos && now - lastSuccessfulAt <= SAME_WEB_RETRY_DELAY_MS) {
                     return@firstNotNullOfOrNull null
                 }
 
-                buildPlaceAction(webPos, waterSlot)
+                buildPlaceAction(webPos, waterSlot)?.takeIf { it.fits(crosshairTarget) }
             }
         }
 
-        currentAction = placeAction ?: buildPickupAction()
+        currentAction = placeAction ?: buildPickupAction()?.takeIf { it.fits(crosshairTarget) }
 
         val action = currentAction ?: return@handler
+        if (crosshair) {
+            return@handler
+        }
+
         RotationManager.setRotationTarget(
             action.rotation,
             valueGroup = rotations,
@@ -143,10 +182,13 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         )
     }
 
+    private fun UseAction.fits(crosshairTarget: BlockHitResult?) =
+        crosshairTarget == null || resolveHitResult(crosshairTarget) != null
+
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         val action = currentAction ?: return@handler
-        val rotation = RotationManager.currentRotation ?: player.rotation
+        val rotation = useRotation
         val resolvedHitResult = action.resolveHitResult(traceFromPlayer(rotation)) ?: return@handler
 
         SilentHotbar.selectSlotSilently(this, action.slot, 1)
@@ -257,7 +299,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private fun markWebPlacementSuccess(webPos: BlockPos) {
         lastSuccessfulWeb = webPos
         lastSuccessfulAt = System.currentTimeMillis()
-        trackedWebs.remove(webPos)
+        trackedWebs.removeLong(webPos)
     }
 
     private fun recordDirectionalWaterCandidates(
@@ -283,29 +325,34 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
         webPos: BlockPos,
         side: Direction,
         fallbackHitResult: BlockHitResult,
-    ): BlockHitResult {
+    ): BlockHitResult? {
+        val fallback = fallbackHitResult.takeUnless { crosshair }
+
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
-            return fallbackHitResult
+            return fallback
         }
 
         val directWebFace = rayTraceResult.blockPos == webPos && rayTraceResult.direction == side
         val oppositeAdjacentFace =
             rayTraceResult.blockPos == webPos.relative(side) && rayTraceResult.direction == side.opposite
 
-        return if (directWebFace || oppositeAdjacentFace) rayTraceResult else fallbackHitResult
+        return if (directWebFace || oppositeAdjacentFace) rayTraceResult else fallback
     }
 
     private fun resolvePickupHitResult(
         rayTraceResult: BlockHitResult,
         pickupPos: BlockPos,
         pickupCenter: Vec3,
-    ): BlockHitResult {
-        val fluidTraceResult = traceFromPlayer(fluid = ClipContext.Fluid.SOURCE_ONLY)
+    ): BlockHitResult? {
+        val fluidTraceResult = traceFromPlayer(useRotation, fluid = ClipContext.Fluid.SOURCE_ONLY)
         return when {
             // Prefer fluid-inclusive trace so we can hit source blocks hidden behind web geometry.
             fluidTraceResult.type == HitResult.Type.BLOCK && fluidTraceResult.blockPos == pickupPos -> {
                 fluidTraceResult
             }
+
+            // The bucket only picks up what the crosshair is on.
+            crosshair -> null
 
             rayTraceResult.type == HitResult.Type.BLOCK && rayTraceResult.blockPos == pickupPos -> {
                 rayTraceResult
