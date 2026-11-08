@@ -25,11 +25,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.EntityHitResult
@@ -63,10 +67,42 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
     private val holdingItemFilter by enumChoice("HoldingItemFilter", Filter.WHITELIST)
     private val holdingItems by items("HoldingItems", defaultHoldingItems())
 
+    /**
+     * Leaves the crosshair and attacks alone and only skips the use interaction.
+     */
+    private val onlyUse by boolean("OnlyUse", false)
+    private val offhand by boolean("Offhand", false)
+    private val onlyEnemies by boolean("OnlyEnemies", false)
+
+    /**
+     * Whether the crosshair may target the entity.
+     */
     fun test(entity: EntityHitResult): Boolean {
-        return !running ||
-            entityTypeFilter(entity.entity, entityTypes) &&
-            holdingItemFilter(player.mainHandItem.item, holdingItems)
+        if (!running || onlyUse) {
+            return true
+        }
+
+        val target = entity.entity
+        return allows(target, player.mainHandItem) && (!offhand || allows(target, player.offhandItem))
+    }
+
+    /**
+     * Whether using [hand] on [entity] reaches the entity, see [onlyUse].
+     */
+    fun allowsUse(entity: Entity, hand: InteractionHand): Boolean {
+        if (!running || !onlyUse || hand == InteractionHand.OFF_HAND && !offhand) {
+            return true
+        }
+
+        return allows(entity, player.getItemInHand(hand))
+    }
+
+    private fun allows(entity: Entity, heldItem: ItemStack): Boolean {
+        if (onlyEnemies && !entity.shouldBeAttacked()) {
+            return true
+        }
+
+        return entityTypeFilter(entity, entityTypes) && holdingItemFilter(heldItem.item, holdingItems)
     }
 
 }
