@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
@@ -44,15 +45,16 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundSpectatorActionPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
-import kotlin.jvm.optionals.getOrNull
 
 /**
  * FakeLag module
@@ -66,7 +68,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private val recoilTime by int("RecoilTime", 250, 0..1000, "ms")
     private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
 
-    private val flushOn by multiEnumChoice("FlushOn", FlushOn.entries)
+    private val flushOn by multiEnumChoice("FlushOn", FlushOn.ENTITY_INTERACT, FlushOn.BLOCK_INTERACT, FlushOn.ACTION)
 
     private enum class FlushOn(
         override val tag: String,
@@ -80,8 +82,17 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             it is ServerboundUseItemOnPacket
             || it is ServerboundSignUpdatePacket
         }),
+        ITEM_INTERACT("ItemInteract", {
+            it is ServerboundUseItemPacket
+        }),
         ACTION("Action", {
             it is ServerboundPlayerActionPacket
+        }),
+        INVENTORY_CLICK("InventoryClick", {
+            it is ServerboundContainerClickPacket
+        }),
+        EXPLOSION("Explosion", {
+            it is ClientboundExplodePacket && it.playerKnockback.isPresent
         })
     }
 
@@ -174,16 +185,6 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                 }
             }
 
-            // Flush on explosion
-            is ClientboundExplodePacket -> {
-                packet.playerKnockback.getOrNull()?.let { knockback ->
-                    if (knockback != Vec3.ZERO) {
-                        chronometer.reset()
-                        return@handler
-                    }
-                }
-            }
-
             // Flush on damage
             is ClientboundSetHealthPacket -> {
                 chronometer.reset()
@@ -244,6 +245,20 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
                 }
 
                 BlinkManager.Action.QUEUE
+            }
+        }
+    }
+
+    /**
+     * [fakeLagHandler] skips incoming packets.
+     */
+    @Suppress("unused")
+    private val incomingPacketHandler = handler<PacketEvent> { event ->
+        if (event.origin == TransferOrigin.INCOMING && flushOn.matchesAny(event.packet)) {
+            // Flushing on the network thread would race with the flushes of the client thread
+            mc.execute {
+                chronometer.reset()
+                BlinkManager.flush(TransferOrigin.OUTGOING)
             }
         }
     }
