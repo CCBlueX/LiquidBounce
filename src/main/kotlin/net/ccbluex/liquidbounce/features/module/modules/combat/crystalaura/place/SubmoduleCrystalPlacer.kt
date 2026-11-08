@@ -84,6 +84,10 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         )
     )
 
+    init {
+        tree(PlacementScoring)
+    }
+
     private val chronometer = Chronometer()
     private var blockHitResult: BlockHitResult? = null
 

@@ -26,7 +26,8 @@ import net.minecraft.core.BlockPos
 class PlacementPositionCandidate(
     val pos: BlockPos, // the block the crystal should be placed on
     val notBlockedByCrystal: Boolean,
-    val requiresBasePlace: Boolean
+    val requiresBasePlace: Boolean,
+    private val bonus: Float // added to the enemy damage when comparing, see PlacementScoring
 ) : Comparable<PlacementPositionCandidate> {
 
     /**
@@ -75,7 +76,7 @@ class PlacementPositionCandidate(
 
     override fun compareTo(other: PlacementPositionCandidate): Int {
         // coarse sorting
-        val enemyDamageComparison = this.enemyDamage!!.compareTo(other.enemyDamage!!)
+        val enemyDamageComparison = (this.enemyDamage!! + bonus).compareTo(other.enemyDamage!! + other.bonus)
 
         // not equal
         if (enemyDamageComparison != 0) {
