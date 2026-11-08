@@ -23,6 +23,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.KeyMapping
 
@@ -46,6 +47,11 @@ object InputTracker : EventListener {
      * Array indices correspond to InputConstants mouse button codes.
      */
     private val mouseLastPressed = LongArray(32)
+
+    /**
+     * Tracks the last time the mouse turned the player.
+     */
+    private var mouseLastMoved = 0L
 
     /**
      * Tracks the last time each keyboard key was pressed.
@@ -120,6 +126,14 @@ object InputTracker : EventListener {
         }
     }
 
+    @Suppress("unused")
+    private val handleMouseRotation = handler<MouseRotationEvent> { event ->
+        // The mouse handler reports a turn every frame, also when the mouse rests
+        if (event.cursorDeltaX != 0.0 || event.cursorDeltaY != 0.0) {
+            mouseLastMoved = System.currentTimeMillis()
+        }
+    }
+
     /**
      * Checks if the specified mouse button is currently pressed.
      *
@@ -139,6 +153,15 @@ object InputTracker : EventListener {
         val lastPressed = mouseLastPressed[button]
         return lastPressed > 0 && (System.currentTimeMillis() - lastPressed) <= withinMs
     }
+
+    /**
+     * Checks if the mouse turned the player recently.
+     *
+     * @param withinMs The time window in milliseconds to check within.
+     * @return True if the mouse was moved within the specified time, false otherwise.
+     */
+    fun wasMouseMovedRecently(withinMs: Long): Boolean =
+        mouseLastMoved > 0 && (System.currentTimeMillis() - mouseLastMoved) <= withinMs
 
     /**
      * Gets the time elapsed since the specified mouse button was last pressed.

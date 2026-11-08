@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.input.InputTracker.wasMouseMovedRecently
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
@@ -37,6 +38,7 @@ enum class KillAuraRequirements(
     override val tag: String,
 ) : Tagged, BooleanSupplier {
     CLICK("Click"),
+    MOUSE_MOVEMENT("MouseMovement"),
     WEAPON("Weapon"),
     EMPTY_HAND("EmptyHand"),
     VANILLA_NAME("VanillaName"),
@@ -45,6 +47,7 @@ enum class KillAuraRequirements(
     override fun getAsBoolean(): Boolean =
         when (this) {
             CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(250)
+            MOUSE_MOVEMENT -> wasMouseMovedRecently(100)
             WEAPON -> player.mainHandItem.isWeapon()
             EMPTY_HAND -> player.mainHandItem.isEmpty
             VANILLA_NAME -> player.mainHandItem.customName == null
