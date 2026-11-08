@@ -63,6 +63,8 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
 
+    private val noParticles by boolean("NoParticles", false)
+
     @JvmStatic
     fun canRender(choice: DoRender) = !running || choice in render
 
@@ -72,6 +74,9 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
         } else {
             1.0f
         }
+
+    @get:JvmName("shouldHideParticles")
+    val shouldHideParticles get() = running && noParticles
 }
 
 enum class DoRender(override val tag: String) : Tagged {

@@ -137,6 +137,7 @@
     "minecraft.render.MixinLightmapRenderStateExtractor",
     "minecraft.render.MixinMapRenderer",
     "minecraft.render.MixinModelBlockRenderer",
+    "minecraft.render.MixinParticleEngine",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinRenderTypeAccessor",
     "minecraft.render.MixinScreenEffectRenderer",
