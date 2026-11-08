@@ -134,4 +134,28 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
 
 }
 
+/**
+ * Never rotates. The action only runs when [isFinished] holds for the rotation the player already has, so the
+ * player's own crosshair decides what gets hit.
+ */
+class CrosshairRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener: EventListener)
+    : RotationMode("Crosshair", modeValueGroup, eventListener) {
+
+    override fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable) {
+        fun task() {
+            if (isFinished.asBoolean) {
+                onFinished.run()
+            }
+        }
+
+        if (instant) {
+            task()
+            return
+        }
+
+        PostRotationExecutor.addTask(eventListener, postMove) { task() }
+    }
+
+}
+
 
