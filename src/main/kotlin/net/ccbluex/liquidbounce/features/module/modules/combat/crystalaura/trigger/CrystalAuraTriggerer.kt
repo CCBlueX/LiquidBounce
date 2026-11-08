@@ -51,6 +51,8 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     // avoids grim multi action flags
     private val notWhileUsingItem by boolean("NotWhileUsingItem", false)
 
+    private val onlyOnGround by boolean("OnlyOnGround", false)
+
     /**
      * Runs the calculations on a separate thread avoiding overhead on the render thread.
      */
@@ -153,5 +155,6 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         get() = ModuleCrystalAura.running
             && !CombatManager.shouldPauseCombat
             && (!player.isUsingItem || !notWhileUsingItem)
+            && (!onlyOnGround || player.onGround())
 
 }
