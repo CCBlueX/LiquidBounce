@@ -220,15 +220,24 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }
     }
 
+    /**
+     * A tab list latency of 0 for longer than the grace period.
+     */
+    private object ZeroPing : ToggleableValueGroup(ModuleAntiBot, "ZeroPing", false) {
+        val grace by int("Grace", 100, 0..1200, "ticks")
+    }
+
     init {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
         tree(Armor)
         tree(Name)
+        tree(ZeroPing)
     }
 
     private val flyingSet = Int2IntOpenHashMap()
+    private val zeroPingTicks = Int2IntOpenHashMap()
     private val hitSet = IntOpenHashSet()
     private val notAlwaysInRadiusSet = IntOpenHashSet()
 
@@ -252,6 +261,12 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
             if (Armor.enabled && !Armor.isValid(entity)) {
                 armorSet.add(entity.id)
+            }
+
+            if (ZeroPing.enabled && network.getPlayerInfo(entity.uuid)?.latency == 0) {
+                zeroPingTicks.addTo(entity.id, 1)
+            } else {
+                zeroPingTicks.remove(entity.id)
             }
         }
 
@@ -306,6 +321,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                 packet.entityIds.forEachInt { entityId ->
                     attributesSet.remove(entityId)
                     flyingSet.remove(entityId)
+                    zeroPingTicks.remove(entityId)
                     hitSet.remove(entityId)
                     swungSet.remove(entityId)
                     crittedSet.remove(entityId)
@@ -324,6 +340,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         val entityId = entity.id
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
+            ZeroPing.enabled && zeroPingTicks.get(entityId) > ZeroPing.grace -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
             Age.enabled && Age.isBot(entity) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
@@ -334,6 +351,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
     override fun reset() {
         flyingSet.clear()
+        zeroPingTicks.clear()
         notAlwaysInRadiusSet.clear()
         hitSet.clear()
         swungSet.clear()
