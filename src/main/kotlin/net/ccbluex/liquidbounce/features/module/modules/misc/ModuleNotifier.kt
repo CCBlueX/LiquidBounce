@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -34,12 +33,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.combat.TotemPopTracker
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.network.isDeathProtection
 import net.minecraft.client.player.RemotePlayer
-import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
-import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.InteractionHand
@@ -87,7 +85,6 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
     private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
     private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
     private val observedPlayers = ObjectOpenHashSet<UUID>()
-    private val totemPopCounter = Object2IntOpenHashMap<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -102,7 +99,6 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
         itemConsumptionCache.clear()
         heldItemCache.clear()
         observedPlayers.clear()
-        totemPopCounter.clear()
     }
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -139,25 +135,16 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
                 }
             }
 
-            is ClientboundEntityEventPacket -> if (packet.isDeathProtection) {
+            is ClientboundEntityEventPacket -> if (packet.isDeathProtection && totemPopMessages) {
                 mc.execute {
                     val entity = packet.getEntity(world) as? Player ?: return@execute
                     if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
 
-                    totemPopCounter.addTo(entity.uuid, 1)
-
-                    if (totemPopMessages) {
-                        sendNotifierMessage(
-                            totemPopMessageFormat.format(
-                                entity.name.string,
-                                totemPopCounter.getInt(entity.uuid)
-                            )
-                        )
-                    }
+                    sendNotifierMessage(
+                        totemPopMessageFormat.format(entity.name.string, TotemPopTracker.pops(entity))
+                    )
                 }
             }
-
-            is ClientboundDisconnectPacket, is ClientboundLoginPacket -> mc.execute(totemPopCounter::clear)
         }
     }
 
