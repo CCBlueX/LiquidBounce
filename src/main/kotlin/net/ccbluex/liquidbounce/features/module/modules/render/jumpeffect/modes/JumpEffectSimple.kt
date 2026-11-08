@@ -32,6 +32,8 @@ internal object JumpEffectSimple : JumpEffectMode("Simple") {
         tree(colors)
     }
 
+    override val glowColor get() = colors.outerColor
+
     override fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float) {
         drawGradientCircle(
             endRadius.endInclusive * progress,

@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.circles
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
@@ -46,6 +48,15 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
     val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
     protected val canBeCovered by boolean("CanBeCovered", false)
 
+    private val glow = tree(Glow())
+
+    private class Glow : ToggleableValueGroup(null, "Glow", false) {
+        val size by float("Size", 0.25f, 0.05f..1.5f)
+        val opacity by float("Opacity", 0.6f, 0.05f..1f)
+    }
+
+    protected abstract val glowColor: Color4b
+
     protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float)
 
     @Suppress("unused")
@@ -62,9 +73,35 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
                 withPositionRelativeToCamera(it.value.add(0.0, 0.01, 0.0)) {
                     poseStack.withPush {
                         drawJumpEffect(progress, age)
+
+                        if (glow.enabled) {
+                            drawGlow(progress, age)
+                        }
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Soft halos fading away from both edges of the ring.
+     */
+    private fun WorldRenderEnvironment.drawGlow(progress: Float, age: Float) {
+        val color = animateColor(glowColor, age).fade(glow.opacity)
+        val transparent = color.alpha(0)
+        val outerRadius = endRadius.endInclusive * progress
+        val innerRadius = endRadius.start * progress
+        val size = glow.size * progress
+
+        drawGradientCircle(outerRadius + size, outerRadius, transparent, color, noDepthTest = !canBeCovered)
+        if (innerRadius > 0f) {
+            drawGradientCircle(
+                innerRadius,
+                (innerRadius - size).coerceAtLeast(0f),
+                color,
+                transparent,
+                noDepthTest = !canBeCovered
+            )
         }
     }
 
