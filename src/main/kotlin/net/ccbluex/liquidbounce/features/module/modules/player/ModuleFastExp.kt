@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
@@ -35,7 +37,9 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.durability
@@ -100,9 +104,17 @@ object ModuleFastExp : ClientModule(
         val maxDurabilityToContinueRepair by int("MaxDurabilityToContinueRepair", 85, 1..100, "%")
     }
 
+    /**
+     * Moves bottles from the main inventory into the hotbar once none are left there.
+     */
+    private object FromInventory : ToggleableValueGroup(this, "FromInventory", false) {
+        val constraints = tree(PlayerInventoryConstraints())
+    }
+
     init {
         tree(Rotate)
         tree(NoWaste)
+        tree(FromInventory)
     }
 
     private val throwMode = modes(this,
@@ -119,7 +131,7 @@ object ModuleFastExp : ClientModule(
     }
 
     private object Normal : ThrowMode("Normal") {
-        private val ticksPerItem by floatRange("TicksPerItem", 2f..3f, 0.5f..10f, "ticks")
+        private val ticksPerItem by floatRange("TicksPerItem", 2f..3f, 0.5f..20f, "ticks")
         override fun nextTickItems(): Float = 1f / ticksPerItem.random()
     }
 
@@ -130,6 +142,22 @@ object ModuleFastExp : ClientModule(
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
+
+    @Suppress("unused")
+    private val bottleSupplyHandler = handler<ScheduleInventoryActionEvent> { event ->
+        if (!FromInventory.enabled || Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE) != null) {
+            return@handler
+        }
+
+        val source = Slots.Inventory.findSlot(Items.EXPERIENCE_BOTTLE) ?: return@handler
+        val target = Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[player.inventory.selectedSlot]
+
+        event.schedule(
+            FromInventory.constraints,
+            InventoryAction.Click.performSwap(from = source, to = target),
+            Priority.IMPORTANT_FOR_USAGE_1,
+        )
+    }
 
     private var bottlesRequired = 0
     private var bottlesUsed = 0
