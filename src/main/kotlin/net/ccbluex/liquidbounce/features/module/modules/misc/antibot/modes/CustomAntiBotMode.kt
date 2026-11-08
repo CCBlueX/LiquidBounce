@@ -42,6 +42,7 @@ import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
@@ -220,15 +221,24 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         }
     }
 
+    /**
+     * A player counts as a bot until this many position updates arrived for it.
+     */
+    private object Movement : ToggleableValueGroup(ModuleAntiBot, "Movement", false) {
+        val requiredUpdates by int("RequiredUpdates", 5, 1..100, "updates")
+    }
+
     init {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
         tree(Armor)
         tree(Name)
+        tree(Movement)
     }
 
     private val flyingSet = Int2IntOpenHashMap()
+    private val movementUpdates = Int2IntOpenHashMap()
     private val hitSet = IntOpenHashSet()
     private val notAlwaysInRadiusSet = IntOpenHashSet()
 
@@ -269,22 +279,16 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is ClientboundMoveEntityPacket if packet.hasPosition() && InvalidGround.enabled -> mc.execute {
-                val entity = packet.getEntity(world) ?: return@execute
-                val id = entity.id
-                val currentValue = flyingSet.getOrDefault(id, 0)
-                if (entity.onGround() && entity.yo != entity.y) {
-                    flyingSet.put(id, currentValue + 1)
-                } else if (!entity.onGround() && currentValue > 0) {
-                    val newVL = currentValue / 2
-
-                    if (newVL <= 0) {
-                        flyingSet.remove(id)
-                    } else {
-                        flyingSet.put(id, newVL)
+            is ClientboundMoveEntityPacket if packet.hasPosition() && (InvalidGround.enabled || Movement.enabled) ->
+                mc.execute {
+                    val entity = packet.getEntity(world) ?: return@execute
+                    if (Movement.enabled) {
+                        movementUpdates.addTo(entity.id, 1)
+                    }
+                    if (InvalidGround.enabled) {
+                        trackGround(entity)
                     }
                 }
-            }
 
             is ClientboundUpdateAttributesPacket -> mc.execute {
                 attributesSet.add(packet.entityId)
@@ -306,12 +310,29 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
                 packet.entityIds.forEachInt { entityId ->
                     attributesSet.remove(entityId)
                     flyingSet.remove(entityId)
+                    movementUpdates.remove(entityId)
                     hitSet.remove(entityId)
                     swungSet.remove(entityId)
                     crittedSet.remove(entityId)
                     notAlwaysInRadiusSet.remove(entityId)
                     armorSet.remove(entityId)
                 }
+            }
+        }
+    }
+
+    private fun trackGround(entity: Entity) {
+        val id = entity.id
+        val currentValue = flyingSet.getOrDefault(id, 0)
+        if (entity.onGround() && entity.yo != entity.y) {
+            flyingSet.put(id, currentValue + 1)
+        } else if (!entity.onGround() && currentValue > 0) {
+            val newVL = currentValue / 2
+
+            if (newVL <= 0) {
+                flyingSet.remove(id)
+            } else {
+                flyingSet.put(id, newVL)
             }
         }
     }
@@ -324,6 +345,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         val entityId = entity.id
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
+            Movement.enabled && movementUpdates.get(entityId) < Movement.requiredUpdates -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
             Age.enabled && Age.isBot(entity) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
@@ -334,6 +356,7 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
     override fun reset() {
         flyingSet.clear()
+        movementUpdates.clear()
         notAlwaysInRadiusSet.clear()
         hitSet.clear()
         swungSet.clear()
