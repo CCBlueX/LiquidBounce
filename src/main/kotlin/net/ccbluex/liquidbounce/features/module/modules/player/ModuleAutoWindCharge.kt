@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -40,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.item.Items
 
 /**
- * Uses wind charges to boost yourself up when holding jump.
+ * Uses wind charges to boost yourself up when holding jump, or throws one on a key press.
  */
 object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PLAYER) {
 
@@ -57,28 +58,42 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
         treeAll(HorizontalBoost, Rotate)
     }
 
+    /**
+     * Throws one charge per press, without jumping and in the air as well.
+     */
+    private val throwKey by key("ThrowKey")
+
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     /**
-     * How long we stay on the ground while turning down, before jumping without a charge.
+     * How long we keep turning down, before jumping without a charge or giving up on a key throw.
      */
     private const val MAX_AIM_TICKS = 10
 
     private var holdJump = false
     private var aimTicks = 0
     private var horizontalPitch: Float? = null
+    private var keyThrow = false
 
     override fun onDisabled() {
         holdJump = false
         aimTicks = 0
         horizontalPitch = null
+        keyThrow = false
     }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         if (holdJump) {
             event.jump = false
+        }
+    }
+
+    @Suppress("unused")
+    private val keyHandler = handler<KeyEvent> { event ->
+        if (event.action == InputConstants.PRESS && event.key == throwKey) {
+            keyThrow = true
         }
     }
 
@@ -91,7 +106,11 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     private val autoWindChargeHandler = tickHandler {
         holdJump = false
 
-        if (player.isFallFlying || player.isSwimming || player.isInLiquid || !mc.options.keyJump.isDown) {
+        val onKey = keyThrow
+        keyThrow = false
+
+        val triggered = onKey || mc.options.keyJump.isDown
+        if (!triggered || player.isFallFlying || player.isSwimming || player.isInLiquid) {
             aimTicks = 0
             return@tickHandler
         }
@@ -103,7 +122,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
 
         val rotation = throwRotation()
 
-        if (!player.onGround()) {
+        if (!onKey && !player.onGround()) {
             // Face down before landing, so the throw does not wait for the turn
             if (Rotate.enabled && isLandingWithin(rotations.calculateTicks(rotation) + 1)) {
                 aim(rotation)
@@ -115,7 +134,9 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
             aim(rotation)
 
             if (RotationManager.serverRotation.directionAngleTo(rotation) > 1f) {
-                holdJump = aimTicks++ < MAX_AIM_TICKS
+                val aiming = aimTicks++ < MAX_AIM_TICKS
+                holdJump = aiming
+                keyThrow = onKey && aiming
                 return@tickHandler
             }
         }

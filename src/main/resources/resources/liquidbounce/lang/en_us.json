@@ -534,7 +534,7 @@
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk: straight ahead, the way you are facing around obstacles, to a destination (also set with .goto), or after a player (also set with .follow).",
   "liquidbounce.module.autoWalk.messages.arrived": "Arrived at %s, %s, %s.",
   "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
-  "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump.",
+  "liquidbounce.module.autoWindCharge.description": "Automatically boosts you using wind charges when holding jump, or throws one at your feet on a key press.",
   "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might affect you negatively.",
   "liquidbounce.module.backtrack.description": "Causes targets to lag allowing you to attack them more efficiently.",
   "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars.",
