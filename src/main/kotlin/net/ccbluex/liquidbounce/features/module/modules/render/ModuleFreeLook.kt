@@ -45,6 +45,17 @@ object ModuleFreeLook : ClientModule(
     @get:JvmName("isInvertedView")
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT
 
+    /**
+     * The camera stays in the head and only looks around.
+     */
+    @get:JvmName("isFirstPerson")
+    val firstPerson get() = perspective.perspective.isFirstPerson
+
+    /**
+     * Whether the camera has left the head, so the own player is visible.
+     */
+    val detachesCamera get() = running && !firstPerson
+
     override fun onEnabled() {
         cameraYaw = player.yRot
         cameraPitch = player.xRot
@@ -62,7 +73,8 @@ object ModuleFreeLook : ClientModule(
         cameraYaw += delta.deltaYaw * senseBoost
         cameraPitch += delta.deltaPitch * senseBoost
 
-        if (!noPitchLimit) {
+        // Past straight up or down the first person view would turn upside down
+        if (!noPitchLimit || firstPerson) {
             cameraPitch = cameraPitch.coerceIn(-90f, 90f)
         }
 
@@ -75,6 +87,7 @@ object ModuleFreeLook : ClientModule(
         val perspective: CameraType
     ) : Tagged {
         FRONT("Front", THIRD_PERSON_FRONT),
-        BACK("Back", THIRD_PERSON_BACK)
+        BACK("Back", THIRD_PERSON_BACK),
+        FIRST_PERSON("FirstPerson", CameraType.FIRST_PERSON)
     }
 }

@@ -123,8 +123,8 @@ private fun Set<Targets>.shouldAttack(entity: Entity): Boolean {
 
 private fun Set<Targets>.shouldShow(entity: Entity): Boolean {
     if (entity === player || entity.hasPassenger(player)) {
-        return Targets.SELF in this &&
-            (mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
+        return Targets.SELF in this && (mc.options.cameraType !== CameraType.FIRST_PERSON ||
+            ModuleFreeCam.enabled || ModuleFreeLook.detachesCamera)
     }
 
     val info = EntityTaggingManager.getTag(entity).targetingInfo

@@ -91,10 +91,17 @@ public abstract class MixinCamera {
     @Inject(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER), cancellable = true)
     private void modifyCameraOrientation(float partialTicks, CallbackInfo ci) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
-            this.detached = true;
-
             var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
             var cameraPitch = ModuleFreeLook.INSTANCE.getCameraPitch();
+
+            if (ModuleFreeLook.INSTANCE.isFirstPerson()) {
+                this.detached = false;
+                setRotation(cameraYaw, cameraPitch);
+                ci.cancel();
+                return;
+            }
+
+            this.detached = true;
 
             if (ModuleFreeLook.INSTANCE.isInvertedView()) {
                 setRotation(cameraYaw + 180, -cameraPitch);

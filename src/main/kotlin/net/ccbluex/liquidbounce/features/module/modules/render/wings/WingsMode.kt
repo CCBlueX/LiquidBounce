@@ -115,7 +115,7 @@ abstract class WingsMode(name: String) : Mode(name) {
     }
 
     private fun hasWings(entity: Player, player: Player) = if (entity == player) {
-        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.detachesCamera
     } else {
         friends.friendView && FriendManager.isFriend(entity) && player.closerThan(entity, friends.distance.toDouble())
     }

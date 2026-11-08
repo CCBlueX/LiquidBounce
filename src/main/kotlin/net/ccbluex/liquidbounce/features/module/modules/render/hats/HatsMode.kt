@@ -109,7 +109,7 @@ abstract class HatsMode(name: String) : Mode(name) {
     }
 
     private fun wearsHat(entity: Player, player: Player) = if (entity == player) {
-        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+        !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.detachesCamera
     } else {
         friendsOptions.friendView && FriendManager.isFriend(entity) &&
             player.closerThan(entity, friendsOptions.distance.toDouble())
