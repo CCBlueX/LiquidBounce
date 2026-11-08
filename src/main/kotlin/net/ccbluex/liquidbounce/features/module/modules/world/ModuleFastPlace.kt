@@ -37,7 +37,7 @@ import java.util.function.Predicate
 object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
 
     private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")
-    private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
+    private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.PROJECTILES, ApplyTo.BLOCKS)
     private val startDelay by int("StartDelay", 0, 0..1000, "ms")
 
     @Suppress("unused")
@@ -63,6 +63,7 @@ object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
         val condition: Predicate<Item>
     ): Tagged {
         PROJECTILES("Projectiles", { item -> item is ProjectileItem }),
-        BLOCKS("Blocks", { item -> item is BlockItem })
+        BLOCKS("Blocks", { item -> item is BlockItem }),
+        USABLE_ITEMS("UsableItems", { item -> item !is ProjectileItem && item !is BlockItem })
     }
 }
