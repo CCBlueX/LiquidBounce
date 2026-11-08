@@ -119,7 +119,12 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
                     box = expectedCrystal, excludeIds = excludeIds, buildingOnly = false)
                 val crystal = blocked.value() != null
                 if (!blocked.keyBoolean() || crystal) {
-                    positions.add(PlacementPositionCandidate(pos.immutable(), !crystal, !cache.canPlace))
+                    positions.add(PlacementPositionCandidate(
+                        pos.immutable(),
+                        !crystal,
+                        !cache.canPlace,
+                        PlacementScoring.bonus(pos, context.eyePos)
+                    ))
                 }
             }
         }
