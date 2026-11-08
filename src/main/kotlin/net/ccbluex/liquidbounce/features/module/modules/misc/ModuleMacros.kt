@@ -36,7 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.network.sendChatOrCommand
 import net.ccbluex.liquidbounce.utils.inventory.SingleItemStackPickMode
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.VisibleSlotSwitch
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.world.phys.BlockHitResult
@@ -126,6 +128,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
 
             private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
             private val holdTime by intRange("HoldTime", 1..1, 1..20, "ticks")
+            private val visibleSwitch = tree(VisibleSlotSwitch(ModuleMacros))
 
             private enum class Action(override val tag: String) : Tagged {
                 USE_ONLY("UseOnly"),
@@ -135,7 +138,15 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
             override suspend fun execute() {
                 val slot = Slots.OffhandWithHotbar.findSlot(pickMode.activeMode) ?: return
 
-                SilentHotbar.selectSlotSilently(ModuleMacros, slot, ticksUntilReset = holdTime.random())
+                if (visibleSwitch.enabled) {
+                    visibleSwitch.use(slot, holdTime.random()) { perform(slot) }
+                } else {
+                    SilentHotbar.selectSlotSilently(ModuleMacros, slot, ticksUntilReset = holdTime.random())
+                    perform(slot)
+                }
+            }
+
+            private fun perform(slot: HotbarItemSlot) {
                 when (action) {
                     Action.USE_ONLY -> useItem(slot.useHand, swingMode = swingMode)
 
