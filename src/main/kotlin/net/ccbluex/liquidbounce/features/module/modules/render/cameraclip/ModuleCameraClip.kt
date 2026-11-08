@@ -97,7 +97,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         override fun canPerformScroll(): Boolean =
             (modifierKey == InputConstants.UNKNOWN || modifierKey.isPressed)
                 && (!requireFreeLook || ModuleFreeLook.running)
-                && (mc.options.cameraType != CameraType.FIRST_PERSON || ModuleFreeLook.running)
+                && (mc.options.cameraType != CameraType.FIRST_PERSON || ModuleFreeLook.detachesCamera)
 
         @Suppress("unused")
         private val resetHandler = handler<PerspectiveEvent>(

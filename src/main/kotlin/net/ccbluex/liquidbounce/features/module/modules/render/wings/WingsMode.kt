@@ -68,7 +68,7 @@ abstract class WingsMode(name: String) : Mode(name) {
                         && player.closerThan(entity, friends.distance.toDouble())
 
                 val shouldRender = when {
-                    isMe -> !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
+                    isMe -> !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.detachesCamera
                     isFriend -> true
                     else -> false
                 }
