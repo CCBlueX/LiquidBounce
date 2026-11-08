@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.DoorBlock
@@ -57,6 +58,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) 
 
         internal val delayOnBroken by boolean("DelayOnBroken", true)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
+        private val crystalsOnlyOnGround by boolean("CrystalsOnlyOnGround", false)
         internal val attacker = CrosshairAttacker(this, clicker) { attack && isOnObjective() }
 
         val isAttacking: Boolean
@@ -66,16 +68,23 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) 
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
+            CRYSTAL("Crystal"),
             ANY("Any")
         }
 
         fun isOnObjective(): Boolean {
             val crosshair = mc.hitResult
+            val isCrystal = crosshair is EntityHitResult && crosshair.entity is EndCrystal
+
+            if (isCrystal && crystalsOnlyOnGround && !player.onGround()) {
+                return false
+            }
 
             return when (objectiveType) {
                 ObjectiveType.ENEMY -> crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()
                 ObjectiveType.ENTITY -> crosshair is EntityHitResult
                 ObjectiveType.BLOCK -> crosshair is BlockHitResult
+                ObjectiveType.CRYSTAL -> isCrystal
                 ObjectiveType.ANY -> true
             }
         }
