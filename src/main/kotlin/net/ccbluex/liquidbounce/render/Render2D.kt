@@ -209,6 +209,7 @@ fun GuiGraphicsExtractor.drawQuad(
                 x21,
                 y21,
                 fillColor.argb,
+                fillColor.argb,
                 copyPosePooled(),
                 this.scissorStack.peek(),
                 bounds,
@@ -236,8 +237,44 @@ fun GuiGraphicsExtractor.drawQuad(
 }
 
 /**
+ * A quad that fades from [topColor] at its upper edge to [bottomColor] at its lower edge.
+ */
+fun GuiGraphicsExtractor.drawGradientQuad(
+    x1: Float,
+    y1: Float,
+    x2: Float,
+    y2: Float,
+    topColor: Color4b,
+    bottomColor: Color4b,
+) {
+    if (topColor.isTransparent && bottomColor.isTransparent) {
+        return
+    }
+
+    val x11 = minOf(x1, x2)
+    val y11 = minOf(y1, y2)
+    val x21 = maxOf(x1, x2)
+    val y21 = maxOf(y1, y2)
+
+    this.guiRenderState.addGuiElement(
+        QuadGuiElementRenderState(
+            x11,
+            y11,
+            x21,
+            y21,
+            topColor.argb,
+            bottomColor.argb,
+            copyPosePooled(),
+            this.scissorStack.peek(),
+            getBounds(x11, y11, x21, y21),
+        )
+    )
+}
+
+/**
  * @param fillBottomColor Color at the bottom edge of the [fillColor], interpolated over the height. `null` keeps
  * the fill solid.
+ * @param outlineBottomColor Color at the bottom edge of the [outlineColor], like [fillBottomColor].
  */
 @Suppress("LongParameterList")
 fun GuiGraphicsExtractor.drawRoundedRect(
@@ -249,6 +286,7 @@ fun GuiGraphicsExtractor.drawRoundedRect(
     fillColor: Color4b? = Color4b.TRANSPARENT,
     fillBottomColor: Color4b? = null,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
+    outlineBottomColor: Color4b? = null,
     outlineWidth: Float = 1.0f,
 ) {
     val x11 = minOf(x1, x2)
@@ -258,7 +296,8 @@ fun GuiGraphicsExtractor.drawRoundedRect(
 
     val fill = fillColor ?: Color4b.TRANSPARENT
     val outline = outlineColor ?: Color4b.TRANSPARENT
-    if (fill.isTransparent && (outline.isTransparent || outlineWidth <= 0.0f)) {
+    val outlineBottom = outlineBottomColor ?: outline
+    if (fill.isTransparent && (outline.isTransparent && outlineBottom.isTransparent || outlineWidth <= 0.0f)) {
         return
     }
 
@@ -272,6 +311,7 @@ fun GuiGraphicsExtractor.drawRoundedRect(
             fill.argb,
             (fillBottomColor ?: fill).argb,
             outline.argb,
+            outlineBottom.argb,
             outlineWidth.coerceAtLeast(0.0f),
             copyPosePooled(),
             this.scissorStack.peek(),

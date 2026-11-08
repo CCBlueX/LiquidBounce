@@ -28,7 +28,8 @@ import org.joml.Matrix3x2f;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Float version of {@link net.minecraft.client.gui.render.state.ColoredRectangleRenderState}
+ * Float version of {@link net.minecraft.client.gui.render.state.ColoredRectangleRenderState}, fading from
+ * {@code argb} at the top to {@code bottomArgb}.
  */
 public record QuadGuiElementRenderState(
     float x0,
@@ -36,6 +37,7 @@ public record QuadGuiElementRenderState(
     float x1,
     float y1,
     int argb,
+    int bottomArgb,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
@@ -44,8 +46,8 @@ public record QuadGuiElementRenderState(
     @Override
     public void buildVertices(VertexConsumer vertices) {
         vertices.addVertexWith2DPose(pose, x0, y0).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x0, y1).setColor(argb);
-        vertices.addVertexWith2DPose(pose, x1, y1).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x0, y1).setColor(bottomArgb);
+        vertices.addVertexWith2DPose(pose, x1, y1).setColor(bottomArgb);
         vertices.addVertexWith2DPose(pose, x1, y0).setColor(argb);
     }
 
