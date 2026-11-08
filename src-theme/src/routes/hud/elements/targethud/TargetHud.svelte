@@ -1,14 +1,18 @@
 <script lang="ts">
     import ArmorStatus from "./ArmorStatus.svelte";
     import {listen} from "../../../../integration/ws.js";
-    import type {PlayerData} from "../../../../integration/types";
+    import type {PlayerData, Vec3} from "../../../../integration/types";
     import {REST_BASE} from "../../../../integration/host";
     import {fly} from "svelte/transition";
     import HealthProgress from "./HealthProgress.svelte";
-    import type {TargetChangeEvent} from "../../../../integration/events";
+    import type {ClientPlayerDataEvent, TargetChangeEvent} from "../../../../integration/events";
+    import {itemTextureUrl} from "../../../../integration/rest";
 
     let target: PlayerData | null = null;
     let visible = true;
+    let ownPosition: Vec3 | null = null;
+    let distance: number | null = null;
+    let hurtFlash: HTMLElement | null = null;
 
     let hideTimeout: number;
 
@@ -18,8 +22,27 @@
         }, 1000);
     }
 
+    function flashIfHurt(previous: PlayerData | null, next: PlayerData | null) {
+        if (!previous || !next || previous.uuid !== next.uuid ||
+            next.actualHealth + next.absorption >= previous.actualHealth + previous.absorption) {
+            return;
+        }
+
+        hurtFlash?.animate([{opacity: 1}, {opacity: 0}], {duration: 350, easing: "ease-out"});
+    }
+
+    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
+        ownPosition = event.playerData.position;
+    });
+
     listen("targetChange", (data: TargetChangeEvent) => {
+        flashIfHurt(target, data.target);
         target = data.target;
+        distance = target && ownPosition ? Math.hypot(
+            target.position.x - ownPosition.x,
+            target.position.y - ownPosition.y,
+            target.position.z - ownPosition.z
+        ) : null;
         visible = true;
         clearTimeout(hideTimeout);
         startHideTimeout();
@@ -33,6 +56,7 @@
         <div class="main-wrapper">
             <div class="avatar">
                 <img src="{REST_BASE}/api/v1/client/resource/skin?uuid={target.uuid}" alt="avatar" />
+                <div class="hurt-flash" bind:this={hurtFlash}></div>
             </div>
     
             <div class="name">{target.username}</div>
@@ -63,8 +87,21 @@
                             alt="armor"
                     />
                 </div>
+                {#if distance !== null}
+                    <div class="stat distance">
+                        <div class="value">{distance.toFixed(1)}</div>
+                        <span class="unit">m</span>
+                    </div>
+                {/if}
             </div>
             <div class="armor-stats">
+                {#if target.mainHandStack.count > 0}
+                    <img
+                            class="held-item"
+                            src={itemTextureUrl(target.mainHandStack.identifier)}
+                            alt={target.mainHandStack.identifier}
+                    />
+                {/if}
                 {#if target.armorItems[3].count > 0}
                     <ArmorStatus itemStack={target.armorItems[3]} />
                 {/if}
@@ -114,13 +151,33 @@
         column-gap: 10px;
 
         .stat {
+            display: flex;
+            align-items: center;
+            column-gap: 2px;
+            white-space: nowrap;
+
             .value {
                 color: var(--targethud-text-dimmed-color);
                 font-size: 14px;
                 min-width: 18px;
                 display: inline-block;
             }
+
+            &.distance .value {
+                min-width: 0;
+            }
+
+            .unit {
+                color: var(--targethud-text-dimmed-color);
+                font-size: 12px;
+            }
         }
+    }
+
+    .held-item {
+        height: 30px;
+        width: 30px;
+        image-rendering: pixelated;
     }
 
     .armor-stats {
@@ -149,6 +206,13 @@
             width: 800%;
             left: -100%;
             top: -100%;
+        }
+
+        .hurt-flash {
+            position: absolute;
+            inset: 0;
+            background-color: var(--targethud-hurt-flash-color);
+            opacity: 0;
         }
     }
 </style>

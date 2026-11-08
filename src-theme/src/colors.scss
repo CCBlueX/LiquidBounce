@@ -227,6 +227,8 @@
   --targethud-armor-point-background-color: var(--targethud-base-30-color);
   --targethud-armor-point-active-color: var(--accent-color);
   --targethud-health-progress-color: var(--hotbar-health-color);
+  --targethud-health-trail-color: color-mix(in srgb, var(--text-color) 70%, transparent);
+  --targethud-hurt-flash-color: color-mix(in srgb, var(--error-color) 60%, transparent);
 
   --blockcounter-base-color: var(--surface-color);
   --blockcounter-background-color: color-mix(in srgb, var(--blockcounter-base-color) 68%, transparent);
