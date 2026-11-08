@@ -92,7 +92,6 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
     // that when the ca switches between two players very fast and one place is invalid it would fail
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
 
-    @Suppress("LongMethod", "CognitiveComplexMethod")
     fun tick(excludeIds: IntCollection? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
             return
@@ -101,41 +100,23 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         // if we don't have crystals, we don't need to run the method
         getSlot() ?: return
 
-        CrystalAuraPlaceTargetFactory.updateTarget(excludeIds)
+        val crosshair = if (ModuleCrystalAura.crosshairOnly) {
+            (mc.hitResult as? BlockHitResult)?.takeIf { it.type == HitResult.Type.BLOCK } ?: return
+        } else {
+            null
+        }
+
+        CrystalAuraPlaceTargetFactory.updateTarget(excludeIds, crosshair?.blockPos)
 
         removeFromRenderer()
 
         val targetPos = CrystalAuraPlaceTargetFactory.placementTarget ?: return
 
-        val notSameRotation = RotationManager.serverRotation != previousRotations.lastOrNull()?.first
-        val rotationsNotToMatch = if (notSameRotation && jitter) {
-            previousRotations.map { it.second }
+        val (rotation, side) = if (crosshair != null) {
+            RotationWithVector(RotationManager.serverRotation, crosshair.location) to crosshair.direction
         } else {
-            null
+            findRotation(targetPos) ?: return
         }
-
-        var side = Direction.UP
-        val rotation = if (onlyAbove) {
-            raytraceUpperBlockSide(
-                player.eyePosition,
-                range.toDouble(),
-                wallsRange.toDouble(),
-                targetPos,
-                rotationsNotToMatch = rotationsNotToMatch
-            )
-        } else {
-            val data = findClosestPointOnBlockInLineWithCrystal(
-                player.eyePosition,
-                range.toDouble(),
-                wallsRange.toDouble(),
-                targetPos,
-                notFacingAway,
-                rotationsNotToMatch
-            ) ?: return
-            side = data.second
-
-            data.first
-        } ?: return
 
         if (ModuleCrystalAura.rotationMode.activeMode is NoRotationMode) {
             blockHitResult = raytraceBlock(
@@ -149,6 +130,36 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         addToRenderer()
         updatePrevious(rotation)
         queuePlacing(rotation, targetPos, side)
+    }
+
+    private fun findRotation(targetPos: BlockPos): Pair<RotationWithVector, Direction>? {
+        val notSameRotation = RotationManager.serverRotation != previousRotations.lastOrNull()?.first
+        val rotationsNotToMatch = if (notSameRotation && jitter) {
+            previousRotations.map { it.second }
+        } else {
+            null
+        }
+
+        if (onlyAbove) {
+            val rotation = raytraceUpperBlockSide(
+                player.eyePosition,
+                range.toDouble(),
+                wallsRange.toDouble(),
+                targetPos,
+                rotationsNotToMatch = rotationsNotToMatch
+            ) ?: return null
+
+            return rotation to Direction.UP
+        }
+
+        return findClosestPointOnBlockInLineWithCrystal(
+            player.eyePosition,
+            range.toDouble(),
+            wallsRange.toDouble(),
+            targetPos,
+            notFacingAway,
+            rotationsNotToMatch
+        )
     }
 
     private fun queuePlacing(rotation: RotationWithVector, targetPos: BlockPos, side: Direction) {

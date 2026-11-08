@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
@@ -57,10 +58,16 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
             return
         }
 
+        val crystal = if (ModuleCrystalAura.crosshairOnly) {
+            (mc.hitResult as? EntityHitResult)?.entity as? EndCrystal ?: return
+        } else {
+            providedCrystal
+        }
+
         // update the target / validate the provided crystal
-        providedCrystal?.let { crystal ->
+        crystal?.let {
             // just check if it works, not if it's the best
-            CrystalAuraDestroyTargetFactory.validateAndUpdateTarget(crystal)
+            CrystalAuraDestroyTargetFactory.validateAndUpdateTarget(it)
         } ?: run {
             CrystalAuraDestroyTargetFactory.updateTarget()
         }
