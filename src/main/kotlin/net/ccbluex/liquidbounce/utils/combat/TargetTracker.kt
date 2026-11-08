@@ -243,4 +243,12 @@ enum class TargetPriority(override val tag: String) : Tagged, Comparator<LivingE
         override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
             o2.tickCount compareTo o1.tickCount
     },
+
+    /**
+     * Lowest armor first
+     */
+    ARMOR("Armor") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.armorValue compareTo o2.armorValue
+    },
 }
