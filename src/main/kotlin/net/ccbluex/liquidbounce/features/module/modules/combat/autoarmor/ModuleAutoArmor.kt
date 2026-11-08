@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -31,13 +32,18 @@ import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorComparatorMode
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorEvaluation
 import net.ccbluex.liquidbounce.utils.item.armor.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.core.component.DataComponentType
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents
+import net.minecraft.world.item.enchantment.EnchantmentHelper
 
 /**
  * AutoArmor module
@@ -98,6 +104,24 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         tree(AutoArmorSaveArmor)
     }
 
+    /**
+     * Armor with one of these curses is never put on.
+     */
+    private val skipCursed by multiEnumChoice<Curse>("SkipCursed")
+
+    /**
+     * The slots armor is picked from. Worn pieces always count, as a bound one cannot be swapped out anyway.
+     */
+    internal val candidateSlots: List<ItemSlot>
+        get() = if (skipCursed.isEmpty()) {
+            Slots.All
+        } else {
+            Slots.All.filter { slot ->
+                slot.slotType == ItemSlot.Type.ARMOR ||
+                    skipCursed.none { EnchantmentHelper.has(slot.itemStack, it.effect) }
+            }
+        }
+
     @Suppress("unused")
     private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
         if (player.isSpectator) {
@@ -112,6 +136,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
 
         val armorToEquip = ArmorEvaluation
             .findBestArmorPieces(
+                slots = candidateSlots,
                 durabilityThreshold = durabilityThreshold,
                 mode = comparatorMode,
                 considerProjectileProtection = considerProjectileProtection
@@ -176,6 +201,11 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         } else {
             InventoryAction.Click.performQuickMove(screen = null, armorPieceSlot)
         }
+    }
+
+    private enum class Curse(override val tag: String, val effect: DataComponentType<*>) : Tagged {
+        BINDING("Binding", EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE),
+        VANISHING("Vanishing", EnchantmentEffectComponents.PREVENT_EQUIPMENT_DROP),
     }
 
 }
