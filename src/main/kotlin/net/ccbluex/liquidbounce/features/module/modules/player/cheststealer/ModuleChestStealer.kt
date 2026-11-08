@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Cleanu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.ContainerItemSlot
@@ -75,6 +77,9 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
         THROW("Throw"),
 //        PUT_BACK("PutBack"), TODO: Fix this
     }
+
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val itemsList by items("Items", itemSortedSetOf())
 
     private val checkScreenHandlerType = tree(CheckScreenHandlerTypeValueGroup(this))
     private val checkScreenTitle = tree(CheckScreenTitleValueGroup(this))
@@ -303,12 +308,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
     private fun createCleanupPlan(screen: AbstractContainerScreen<*>): InventoryCleanupPlan {
-        val cleanupPlan = if (!ModuleInventoryCleaner.running) {
-            val usefulItems = screen.findItemsInContainer()
+        val itemsInContainer = screen.findItemsInContainer().filter { filter(it.itemStack.item, itemsList) }
 
-            InventoryCleanupPlan(ObjectOpenHashSet(usefulItems), mutableListOf(), hashMapOf())
+        val cleanupPlan = if (!ModuleInventoryCleaner.running) {
+            InventoryCleanupPlan(ObjectOpenHashSet(itemsInContainer), mutableListOf(), hashMapOf())
         } else {
-            val availableItems = findNonEmptySlotsInInventory() + screen.findItemsInContainer()
+            val availableItems = findNonEmptySlotsInInventory() + itemsInContainer
 
             CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
         }
