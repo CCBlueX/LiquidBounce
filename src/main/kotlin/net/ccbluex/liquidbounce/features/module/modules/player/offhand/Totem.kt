@@ -49,7 +49,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
     /**
      * The totem mode might have a lower switch delay than other items.
      */
-    val switchDelay by int("SwitchDelay", 0, 0..500, "ms")
+    val switchDelay by intRange("SwitchDelay", 0..0, 0..500, "ms")
 
     /**
      * The totem mode might have a higher and separate switch back delay than other items.
