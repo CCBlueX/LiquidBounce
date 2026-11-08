@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -87,11 +89,17 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
     private enum class Mode(override val tag: String) : Tagged {
         CONSTANT("Constant"),
-        DYNAMIC("Dynamic")
+        DYNAMIC("Dynamic"),
+
+        /**
+         * Lags for [delay] after taking knockback.
+         */
+        KNOCKBACK("Knockback")
     }
 
     private var nextDelay = delay.random()
     private val chronometer = Chronometer()
+    private val knockbackChronometer = Chronometer()
 
     private var isEnemyNearby = false
 
@@ -245,11 +253,27 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
 
                 BlinkManager.Action.QUEUE
             }
+            Mode.KNOCKBACK -> {
+                if (knockbackChronometer.hasElapsed()) {
+                    return@handler
+                }
+
+                BlinkManager.Action.QUEUE
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        if (mode == Mode.KNOCKBACK && event.packet.isLocalPlayerVelocity()) {
+            nextDelay = delay.random()
+            knockbackChronometer.waitForAtLeast(nextDelay.toLong())
         }
     }
 
     override fun onDisabled() {
         isEnemyNearby = false
+        knockbackChronometer.reset(0)
         super.onDisabled()
     }
 
