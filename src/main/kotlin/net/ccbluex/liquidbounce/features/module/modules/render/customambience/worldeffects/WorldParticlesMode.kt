@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.Easing
+import kotlin.math.cos
+import kotlin.math.sin
 
 abstract class WorldParticlesMode(name: String) : Mode(name) {
 
@@ -46,14 +48,21 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
     protected val canBeCovered by boolean("CanBeCovered", true)
 
     private val yMotion = YMotion()
+    private val wander = Wander()
 
     private class YMotion : ToggleableValueGroup(null, "YMotion", false) {
         val motion by float("Motion", 2f, -10f..10f)
         val animBy by enumChoice("AnimBy", AnimBy.PROGRESS)
     }
 
+    private class Wander : ToggleableValueGroup(null, "Wander", false) {
+        val distance by float("Distance", 0.5f, 0.05f..4f)
+        val speed by float("Speed", 1f, 0.1f..5f)
+    }
+
     init {
         tree(yMotion)
+        tree(wander)
     }
 
     protected var lastSpawnTime = 0L
@@ -86,6 +95,18 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
                                 AnimBy.AGE -> age
                             }
                             translate(0F, yMotion.motion * anim, 0F)
+                        }
+
+                        if (wander.enabled) {
+                            // Masked so the per-particle phase stays small enough for float precision
+                            val phase = (it.value.hashCode() and 0xFF).toFloat()
+                            val angle = age * 0.05f * wander.speed + phase
+                            val distance = wander.distance
+                            translate(
+                                sin(angle) * distance,
+                                sin(angle * 0.7f) * distance * 0.5f,
+                                cos(angle * 1.3f) * distance,
+                            )
                         }
 
                         rotate(rot)
