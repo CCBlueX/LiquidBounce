@@ -41,6 +41,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)
+    private val customTime by int("CustomTime", 6000, 0..24000, "ticks")
 
     object Precipitation : ToggleableValueGroup(this, "ModifyPrecipitation", true) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
@@ -167,6 +168,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
                 TimeType.DUSK -> 12610L
                 TimeType.NIGHT -> 13000L
                 TimeType.MID_NIGHT -> 18000L
+                TimeType.CUSTOM -> customTime.toLong()
             }
         } else {
             original
@@ -189,7 +191,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
         NOON("Noon"),
         DUSK("Dusk"),
         NIGHT("Night"),
-        MID_NIGHT("MidNight")
+        MID_NIGHT("MidNight"),
+        CUSTOM("Custom")
     }
 
 }
