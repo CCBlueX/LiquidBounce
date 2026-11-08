@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
@@ -27,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.isCharged
 import net.ccbluex.liquidbounce.utils.block.fallDamageMultiplier
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.isOlderThan1_19_4
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
@@ -37,9 +40,12 @@ import net.ccbluex.liquidbounce.utils.inventory.ArmorItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.math.center
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerDamage
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
@@ -260,8 +266,36 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
     }
 
+    /**
+     * Anticheats test for an auto totem by hurting the player with plain generic damage, which nothing deals in
+     * normal play, and timing how fast the popped totem comes back. Delays the totem after such a probe.
+     */
+    object IgnoreProbes : ToggleableValueGroup(this, "IgnoreProbes", false) {
+
+        private val delay by intRange("Delay", 400..700, 0..2000, "ms")
+
+        private val chronometer = Chronometer()
+
+        val isDelaying: Boolean
+            get() = enabled && !chronometer.hasElapsed()
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+            // servers before 1.19.4 do not send the damage type, every hit arrives as generic damage
+            if (packet.isLocalPlayerDamage() && packet.isProbe && !isOlderThan1_19_4) {
+                chronometer.waitForAtLeast(delay.random().toLong())
+            }
+        }
+
+        private val ClientboundDamageEventPacket.isProbe
+            get() = sourceType.`is`(DamageTypes.GENERIC) && sourceCauseId == -1 && sourceDirectId == -1 &&
+                sourcePosition.isEmpty
+
+    }
+
     init {
-        tree(Health)
+        treeAll(Health, IgnoreProbes)
     }
 
     /**

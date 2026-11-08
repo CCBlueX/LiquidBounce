@@ -132,6 +132,17 @@ val isOlderThanOrEqual1_12_2: Boolean
     }.getOrDefault(false)
 
 /**
+ * 1.19.4 added [net.minecraft.network.protocol.game.ClientboundDamageEventPacket]. Older protocols only send that an
+ * entity got hurt, which arrives here as generic damage without a source.
+ */
+val isOlderThan1_19_4: Boolean
+    get() = runCatching {
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThan1_19_4
+    }.onFailure {
+        logger.error("Failed to check if the server is using a pre-1.19.4 protocol", it)
+    }.getOrDefault(false)
+
+/**
  * 1.21 added rotation fields to [net.minecraft.network.protocol.game.ServerboundUseItemPacket].
  * Older protocols need the movement rotation packet to be sent before a use-item interaction.
  */

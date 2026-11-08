@@ -173,6 +173,10 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
             lastTagMode = activeMode
         }
 
+        if (activeMode == Mode.TOTEM && Totem.IgnoreProbes.isDelaying) {
+            return@handler
+        }
+
         if (activeMode != lastMode && lastMode == Mode.TOTEM) {
             if (!Totem.switchBackStarted) {
                 Totem.switchBack.reset()
