@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant.player
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.HumanoidArm
 import org.joml.Quaternionf
 import kotlin.math.roundToInt
@@ -57,6 +58,7 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         val mainHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
         val mainHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
         val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
+        val mainHandSize by float("Size", 1f, 0.1f..3f)
     }
 
     object OffHand : ToggleableValueGroup(this, "OffHand", false) {
@@ -66,6 +68,21 @@ object GlobalSettingsViewModel : ValueGroup("ViewModel"), EventListener {
         val OffHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
         val OffHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
         val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
+        val offHandSize by float("Size", 1f, 0.1f..3f)
+    }
+
+    /**
+     * Scales the item held in [hand] around its own position, leaving the arm as it is.
+     */
+    fun scaleHeldItem(poseStack: PoseStack, hand: InteractionHand) {
+        val size = when {
+            !running -> return
+            hand == InteractionHand.MAIN_HAND && MainHand.running -> MainHand.mainHandSize
+            hand == InteractionHand.OFF_HAND && OffHand.running -> OffHand.offHandSize
+            else -> return
+        }
+
+        poseStack.scale(size, size, size)
     }
 
     /**

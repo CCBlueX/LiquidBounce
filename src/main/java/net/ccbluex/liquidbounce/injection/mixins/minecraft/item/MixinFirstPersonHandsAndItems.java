@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.global.viewmodel.SwingAnimationMode;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.item.ItemCategorizationsKt;
-import net.ccbluex.liquidbounce.utils.render.FirstPersonShieldTint;
+import net.ccbluex.liquidbounce.utils.render.ShieldTintContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer;
@@ -66,12 +66,16 @@ public abstract class MixinFirstPersonHandsAndItems {
     private static float ITEM_POS_Y;
 
     @WrapOperation(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"))
-    private void hookFirstPersonShieldTint(
+    private void hookHeldItemSubmit(
         ItemStackRenderState instance, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, int overlayCoords, int outlineColor, Operation<Void> original,
-        @Local(argsOnly = true, name = "itemStack") ItemStack itemStack
+        @Local(argsOnly = true, name = "itemStack") ItemStack itemStack,
+        @Local(argsOnly = true, name = "hand") InteractionHand hand
     ) {
-        if (itemStack.getItem() instanceof ShieldItem) {
-            FirstPersonShieldTint.render(
+        GlobalSettingsViewModel.INSTANCE.scaleHeldItem(poseStack, hand);
+
+        var player = Minecraft.getInstance().player;
+        if (player != null && itemStack.getItem() instanceof ShieldItem) {
+            ShieldTintContext.render(player,
                 () -> original.call(instance, poseStack, submitNodeCollector, lightCoords, overlayCoords, outlineColor));
             return;
         }

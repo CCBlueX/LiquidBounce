@@ -22,7 +22,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
-import net.ccbluex.liquidbounce.utils.render.FirstPersonShieldTint;
+import net.ccbluex.liquidbounce.utils.render.ShieldTintContext;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
@@ -37,20 +37,20 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 public abstract class MixinShieldSpecialRenderer {
 
     @WrapOperation(method = "submit(Lnet/minecraft/core/component/DataComponentMap;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IIZI)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;IIILnet/minecraft/client/resources/model/sprite/SpriteId;Lnet/minecraft/client/resources/model/sprite/SpriteGetter;I)V"))
-    private <S> void hookFirstPersonShieldBaseTint(
+    private <S> void hookShieldBaseTint(
         SubmitNodeCollector instance, Model<S> model, S state, PoseStack poseStack, int lightCoords, int overlayCoords,
         int tintedColor, SpriteId sprite, SpriteGetter sprites, int outlineColor,
         Operation<Void> original
     ) {
-        if (!FirstPersonShieldTint.isRendering()) {
+        if (ShieldTintContext.holder() == null) {
             original.call(
                 instance, model, state, poseStack, lightCoords, overlayCoords, tintedColor, sprite, sprites, outlineColor
             );
             return;
         }
 
-        int shieldTint = ModuleItemChams.Shield.INSTANCE.applyTint(tintedColor);
-        if (ModuleItemChams.Shield.INSTANCE.usesTranslucentTint(tintedColor)) {
+        int shieldTint = ModuleItemChams.Shield.applyTint(tintedColor);
+        if (ModuleItemChams.Shield.usesTranslucentTint(tintedColor)) {
             instance.submitModel(
                 model, state, poseStack, RenderTypes.entityTranslucentCull(sprite.atlasLocation()),
                 lightCoords, overlayCoords, shieldTint, sprites.get(sprite), outlineColor
@@ -64,10 +64,8 @@ public abstract class MixinShieldSpecialRenderer {
     }
 
     @ModifyArg(method = "submit(Lnet/minecraft/core/component/DataComponentMap;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;IIZI)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/UvMapping;I)V"), index = 6)
-    private int hookFirstPersonShieldBaseGlintTint(int tintedColor) {
-        return FirstPersonShieldTint.isRendering()
-            ? ModuleItemChams.Shield.INSTANCE.applyTint(tintedColor)
-            : tintedColor;
+    private int hookShieldBaseGlintTint(int tintedColor) {
+        return ModuleItemChams.Shield.applyTint(tintedColor);
     }
 
 }
