@@ -73,10 +73,12 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity
 import net.minecraft.world.level.block.entity.CrafterBlockEntity
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity
 import net.minecraft.world.level.block.entity.DispenserBlockEntity
+import net.minecraft.world.level.block.entity.DropperBlockEntity
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity
 import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShelfBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
+import net.minecraft.world.level.block.entity.TrappedChestBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import net.minecraft.world.phys.AABB
@@ -109,11 +111,13 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 && (ignoreDistance || entity.position().cameraDistanceSq() < distanceFade.farEnd.sq())
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
+        object TrappedChest : ChestType("TrappedChest", Color4b(220, 60, 40))
         object Barrel : ChestType("Barrel", Color4b(0xf6, 0x82, 0x1f))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
         object Furnace : ChestType("Furnace", Color4b(79, 79, 79))
         object BrewingStand : ChestType("BrewingStand", Color4b(139, 69, 19))
         object Dispenser : ChestType("Dispenser", Color4b(Color.LIGHT_GRAY))
+        object Dropper : ChestType("Dropper", Color4b(130, 110, 90))
         object Hopper : ChestType("Hopper", Color4b(Color.GRAY))
         object ShulkerBox : ChestType("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
         object Pot : ChestType("Pot", Color4b(209, 134, 0))
@@ -123,11 +127,13 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private val allTypes = arrayOf(
         ChestType.Chest,
+        ChestType.TrappedChest,
         ChestType.Barrel,
         ChestType.EnderChest,
         ChestType.Furnace,
         ChestType.BrewingStand,
         ChestType.Dispenser,
+        ChestType.Dropper,
         ChestType.Hopper,
         ChestType.ShulkerBox,
         ChestType.Pot,
@@ -403,11 +409,13 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     @JvmStatic
     fun BlockEntity?.categorize(): ChestType? {
         return when (this) {
+            is TrappedChestBlockEntity -> ChestType.TrappedChest
             is ChestBlockEntity -> ChestType.Chest
             is BarrelBlockEntity -> ChestType.Barrel
             is EnderChestBlockEntity -> ChestType.EnderChest
             is AbstractFurnaceBlockEntity -> ChestType.Furnace
             is BrewingStandBlockEntity -> ChestType.BrewingStand
+            is DropperBlockEntity -> ChestType.Dropper
             is DispenserBlockEntity -> ChestType.Dispenser
             is CrafterBlockEntity -> ChestType.Dispenser
             is HopperBlockEntity -> ChestType.Hopper
