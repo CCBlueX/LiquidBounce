@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -46,6 +47,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import java.util.function.BiPredicate
 
 /**
@@ -83,7 +86,7 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             private val swapController = AnchoredHotbarSwapController(
                 owner = this,
                 inventoryConstraints = inventoryConstraints,
-                swapDelayProvider = { swapBackDelay },
+                swapDelayProvider = { swapBackDelay.random() },
             )
 
             override fun onDisabled() {
@@ -164,13 +167,26 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
         tree(SilkTouchHandler)
     }
 
-    private val swapBackDelay by int("SwapBackDelay", 20, 1..100, "ticks", aliases = listOf("SwapPreviousDelay"))
+    private val swapBackDelay by intRange(
+        "SwapBackDelay", 20..20, 1..100, "ticks", aliases = listOf("SwapPreviousDelay")
+    )
 
-    private val switchDelay by int("SwitchDelay", 0, 0..100, "ticks")
+    private val switchDelay by intRange("SwitchDelay", 0..0, 0..100, "ticks")
+
+    /**
+     * Switches as soon as a block is aimed at, before it is hit.
+     */
+    private val onAim by boolean("OnAim", false)
+
+    /**
+     * Only switches for the block the player stands on.
+     */
+    private val onlyBlockBelow by boolean("OnlyBlockBelow", false)
 
     // Tracks the current block breaking session so the switch is delayed only once per block
     private var breakingPos: BlockPos? = null
     private var breakingStartedTick = 0
+    private var currentSwitchDelay = 0
 
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)
@@ -208,6 +224,18 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     @Suppress("unused")
+    private val handleAim = handler<GameTickEvent> {
+        if (!onAim) {
+            return@handler
+        }
+
+        val hitResult = mc.hitResult
+        if (hitResult is BlockHitResult && hitResult.type == HitResult.Type.BLOCK) {
+            switchToBreakBlock(hitResult.blockPos)
+        }
+    }
+
+    @Suppress("unused")
     private val handleCancelBlockBreaking = handler<CancelBlockBreakingEvent> {
         if (isInventoryConsidered) {
             DynamicSelectMode.ConsiderInventory.onNoTool()
@@ -215,15 +243,18 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (switchDelay > 0) {
-            // A new block starts a new breaking session and re-arms the delay
-            if (breakingPos != pos) {
-                breakingPos = pos
-                breakingStartedTick = player.tickCount
-            }
-            if (player.tickCount - breakingStartedTick < switchDelay) {
-                return
-            }
+        if (onlyBlockBelow && pos != player.onPos) {
+            return
+        }
+
+        // A new block starts a new breaking session and re-arms the delay
+        if (breakingPos != pos) {
+            breakingPos = pos.immutable()
+            breakingStartedTick = player.tickCount
+            currentSwitchDelay = switchDelay.random()
+        }
+        if (player.tickCount - breakingStartedTick < currentSwitchDelay) {
+            return
         }
 
         val cancelDueToCombat = notDuringCombat && CombatManager.isInCombat
@@ -240,13 +271,12 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
 
         val blockState = pos.stateOrEmpty
         val slot = toolSelector.activeMode.getTool(blockState) ?: return
-        SilentHotbar.selectSlotSilently(this, slot, swapBackDelay)
+        SilentHotbar.selectSlotSilently(this, slot, swapBackDelay.random())
     }
 
     override fun onDisabled() {
         SilentHotbar.resetSlot(this)
         breakingPos = null
     }
-
 
 }
