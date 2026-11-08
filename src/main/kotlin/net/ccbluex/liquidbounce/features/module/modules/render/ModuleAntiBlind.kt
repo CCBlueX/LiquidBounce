@@ -70,6 +70,11 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
      */
     private val skipTerrainLoading by boolean("SkipTerrainLoading", false)
 
+    /**
+     * Plays floating items such as the totem pop this many times faster.
+     */
+    private val floatingItemSpeed by int("FloatingItemSpeed", 1, 1..8, suffix = "x")
+
     @JvmStatic
     fun canRender(choice: DoRender) = !running || choice in render
 
@@ -85,6 +90,8 @@ object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, alia
 
     @get:JvmName("shouldSkipTerrainLoading")
     val shouldSkipTerrainLoading get() = running && skipTerrainLoading
+
+    val floatingItemSpeedMultiplier get() = if (running) floatingItemSpeed else 1
 }
 
 enum class DoRender(override val tag: String) : Tagged {

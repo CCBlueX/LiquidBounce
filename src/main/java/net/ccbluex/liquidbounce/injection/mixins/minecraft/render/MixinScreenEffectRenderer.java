@@ -21,12 +21,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.state.level.PlayerRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -35,6 +37,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ScreenEffectRenderer.class)
@@ -64,6 +67,22 @@ public abstract class MixinScreenEffectRenderer {
         if (!ModuleAntiBlind.canRender(DoRender.WALL_OVERLAY)) {
             ci.cancel();
         }
+    }
+
+    /**
+     * Each tick advances a faster floating item by several ticks, so the frames in between have to as well.
+     *
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinItemActivation
+     */
+    @ModifyVariable(method = "renderItemActivationAnimation", at = @At("HEAD"), argsOnly = true)
+    private float hookFloatingItemSpeed(float partialTicks, @Local(argsOnly = true) PlayerRenderState playerRenderState) {
+        var itemActivation = playerRenderState.itemActivation;
+        var speed = ModuleAntiBlind.INSTANCE.getFloatingItemSpeedMultiplier();
+        if (speed == 1 || itemActivation == null) {
+            return partialTicks;
+        }
+
+        return Math.min(partialTicks * speed, itemActivation.ticks);
     }
 
 }
