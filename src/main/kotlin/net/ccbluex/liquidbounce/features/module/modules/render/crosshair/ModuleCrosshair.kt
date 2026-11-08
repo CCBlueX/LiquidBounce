@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes.CrosshairCircle
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes.CrosshairCS2
+import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes.CrosshairPulse
 
 object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
     val modes =
@@ -30,6 +31,7 @@ object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
             arrayOf(
                 CrosshairCircle,
                 CrosshairCS2,
+                CrosshairPulse,
             )
         }.apply { tagBy(this) }
 }
