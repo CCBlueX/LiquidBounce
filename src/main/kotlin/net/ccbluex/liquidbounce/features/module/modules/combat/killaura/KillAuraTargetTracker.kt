@@ -18,40 +18,56 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 
 object KillAuraTargetTracker : TargetTracker() {
 
     /**
-     * Allows to ignore when the target is holding a shield,
-     * which would normally block attacks.
+     * What to do with a target whose shield would block the attack: attack it anyway, do not target it,
+     * or keep it as the target and hold the attacks back until the shield is down.
      */
-    private val ignoreShield by boolean("IgnoreShield", true)
+    private val shield by enumChoice("Shield", ShieldHandling.IGNORE, aliases = listOf("IgnoreShield"))
 
     override fun validate(entity: LivingEntity): Boolean {
-        return super.validate(entity) && validateShield(entity)
+        return super.validate(entity) && (shield != ShieldHandling.AVOID || !wouldBlockAttack(entity))
     }
+
+    /**
+     * Whether attacks on [entity] are held back until its shield is down.
+     */
+    fun skipsAttack(entity: Entity) = shield == ShieldHandling.SKIP && wouldBlockAttack(entity)
 
     /**
      * Check if the entity is holding a shield and if the shield would block the attack.
      */
-    private fun validateShield(entity: LivingEntity): Boolean {
-        if (ignoreShield || entity !is Player || isOlderThanOrEqual1_8) {
-            return true
+    private fun wouldBlockAttack(entity: Entity): Boolean {
+        if (entity !is Player || isOlderThanOrEqual1_8) {
+            return false
         }
 
         if (player.mainHandItem.isAxe || ModuleAutoWeapon.willShieldBreak) {
-            return true
+            return false
         }
 
-        return !entity.wouldBlockHit
+        return entity.wouldBlockHit
+    }
+
+    /**
+     * The aliases read the boolean `IgnoreShield` of older configs.
+     */
+    private enum class ShieldHandling(override val tag: String, override val tagAliases: List<String>) : Tagged {
+        IGNORE("Ignore", listOf("true")),
+        AVOID("Avoid", listOf("false")),
+        SKIP("Skip", emptyList())
     }
 
 }

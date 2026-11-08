@@ -279,7 +279,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         // Attack enemy, according to the attack scheduler
         if (clicker.isClickTick && canAttackNow(target, mainHandStack) &&
-            !KillAuraAutoBlock.isPrioritizingBlocking) {
+            !KillAuraAutoBlock.isPrioritizingBlocking && !targetTracker.skipsAttack(target)) {
             clicker.prepareForAttack(rotation) {
                 // On each click, we check if we are still ready to attack
                 if (!canAttackNow(target, mainHandStack)) {
