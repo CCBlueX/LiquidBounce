@@ -19,10 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 
 object ModuleNoMissCooldown : ClientModule("NoMissCooldown", ModuleCategories.COMBAT) {
 
@@ -47,17 +49,31 @@ object ModuleNoMissCooldown : ClientModule("NoMissCooldown", ModuleCategories.CO
     private val chance = percentageChance("Chance", 100f)
     private var chancePassed = true
 
+    /**
+     * Only changes attacks while an enemy is within the range.
+     */
+    private object OnlyNearEnemy : ToggleableValueGroup(this, "OnlyNearEnemy", false) {
+        val range by float("Range", 6f, 0f..10f, "blocks")
+    }
+
+    init {
+        tree(OnlyNearEnemy)
+    }
+
+    private var enemyNear = true
+
     val changesAttack
-        get() = running && chancePassed
+        get() = running && chancePassed && enemyNear
 
     /**
-     * Rolls the [chance] for the attack that is about to start.
+     * Rolls the [chance] and looks for an enemy for the attack that is about to start.
      */
     fun startAttack() {
         // A miss that stayed vanilla keeps its cooldown, a new roll would let the next click skip it
         if (chancePassed || mc.missTime <= 0) {
             chancePassed = chance.asBoolean
         }
+        enemyNear = !OnlyNearEnemy.running || world.findEnemy(0f, OnlyNearEnemy.range) != null
     }
 
 }
