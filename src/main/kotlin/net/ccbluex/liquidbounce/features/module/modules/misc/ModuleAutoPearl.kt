@@ -87,6 +87,7 @@ object ModuleAutoPearl : ClientModule(
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
+    private val onlyOnGround by boolean("OnlyOnGround", false)
 
     private val queue = ArrayDeque<Rotation>()
 
@@ -149,6 +150,10 @@ object ModuleAutoPearl : ClientModule(
             }
         }
 
+        if (onlyOnGround && !player.onGround()) {
+            return@tickHandler
+        }
+
         val (yaw, pitch) = rotation.normalize()
         useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
     }
@@ -158,7 +163,7 @@ object ModuleAutoPearl : ClientModule(
         velocity: Vec3,
         pearlPos: Vec3
     ) {
-        if (!canTrigger(pearl)) {
+        if (!canTrigger(pearl) || onlyOnGround && !player.onGround()) {
             return
         }
 
