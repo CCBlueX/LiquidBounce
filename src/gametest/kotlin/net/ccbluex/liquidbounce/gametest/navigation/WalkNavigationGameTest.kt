@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.waitForClient
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -34,7 +35,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * A survival player walks through a course with the walking navigation: around a wall, through a closed room,
@@ -210,7 +210,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
     private fun awaitArrival(context: ClientGameTestContext, goal: Vec3, ticks: Int, what: String) {
         repeat(ticks) {
             val position = context.fromClient { checkNotNull(it.player).position() }
-            if (position.horizontalDistance(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
+            if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
                 return
             }
             context.waitTick()
@@ -241,12 +241,6 @@ class WalkNavigationGameTest : FabricClientGameTest {
         }
 
     private fun MinecraftServer.player() = playerList.players.first()
-
-    private fun Vec3.horizontalDistance(other: Vec3): Double {
-        val dx = x - other.x
-        val dz = z - other.z
-        return sqrt(dx * dx + dz * dz)
-    }
 
     private companion object {
         const val GOAL_RADIUS = 0.8

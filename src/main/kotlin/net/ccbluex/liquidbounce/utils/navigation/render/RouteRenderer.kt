@@ -32,17 +32,16 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.PI
-import kotlin.math.sin
 
 /**
  * Draws the route of [view] with its direction and progress, the blocks it breaks and places, the destination,
@@ -145,7 +144,7 @@ class RouteRenderer(
         }
 
         val phase = (System.currentTimeMillis() % PULSE_MILLIS).toDouble() / PULSE_MILLIS
-        val pulse = (sin(phase * 2.0 * PI) + 1.0) / 2.0
+        val pulse = (Mth.sin(phase * Mth.TWO_PI) + 1.0F) / 2.0F
         withPositionRelativeToCamera(reached) {
             drawBox(TIP, searchColor.alpha((TIP_ALPHA * pulse).toInt()), searchColor, noDepthTest = noDepthTest)
         }
@@ -237,11 +236,11 @@ class RouteRenderer(
             }
 
             while (offset < length) {
-                val tip = from.add(direction.scale(offset + CHEVRON_SIZE))
-                val back = from.add(direction.scale(offset - CHEVRON_SIZE))
-                lines.addRelative(back.add(side.scale(CHEVRON_SIZE)), origin)
+                val tip = from.fma(offset + CHEVRON_SIZE, direction)
+                val back = from.fma(offset - CHEVRON_SIZE, direction)
+                lines.addRelative(back.fma(CHEVRON_SIZE, side), origin)
                 lines.addRelative(tip, origin)
-                lines.addRelative(back.subtract(side.scale(CHEVRON_SIZE)), origin)
+                lines.addRelative(back.fma(-CHEVRON_SIZE, side), origin)
                 lines.addRelative(tip, origin)
                 offset += CHEVRON_SPACING
             }

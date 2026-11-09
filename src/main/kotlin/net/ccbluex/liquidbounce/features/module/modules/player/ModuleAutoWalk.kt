@@ -26,8 +26,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.toBlockPos
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
@@ -126,20 +129,14 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
             val position = player.position()
             val yaw = player.yRot
             val goal = goal
-            if (goal != null && horizontalDistanceSqr(goal, position) > REFRESH * REFRESH &&
+            if (goal != null && goal.horizontalDistanceToSqr(position) > REFRESH * REFRESH &&
                 abs(Mth.wrapDegrees(yaw - goalYaw)) <= MAX_TURN
             ) {
                 return goal
             }
 
             goalYaw = yaw
-            return position.add(Rotation(yaw, 0f).directionVector.scale(DISTANCE)).also { this.goal = it }
-        }
-
-        private fun horizontalDistanceSqr(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return dx * dx + dz * dz
+            return position.fma(DISTANCE, Rotation(yaw, 0f).directionVector).also { this.goal = it }
         }
 
         private const val DISTANCE = 1024.0
@@ -160,7 +157,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         override fun goal(): Vec3? {
             val destination = destination
             if (destination != goalOf) {
-                val pos = BlockPos(destination.x, destination.y, destination.z)
+                val pos = destination.toBlockPos()
                 goal = Vec3.atBottomCenterOf(feetAt(pos))
                 // Whether the destination is the ground to stand on is only known once its chunk is loaded.
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }

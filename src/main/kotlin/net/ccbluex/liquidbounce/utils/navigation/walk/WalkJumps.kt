@@ -30,7 +30,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.min
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * How a jump from one feet block to another is made: run from [runUp] towards [aim], sprinting, first with [hops]
@@ -305,7 +304,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         edge = Double.MAX_VALUE
         dirX = targetX - fromX
         dirZ = targetZ - fromZ
-        distance = sqrt(dirX * dirX + dirZ * dirZ)
+        distance = Mth.length(dirX, dirZ)
         if (distance > 1.0E-6) {
             dirX /= distance
             dirZ /= distance
@@ -418,7 +417,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         for (tick in 0 until MAX_AIR_TICKS) {
             val toX = targetX - x
             val toZ = targetZ - z
-            val length = sqrt(toX * toX + toZ * toZ)
+            val length = Mth.length(toX, toZ)
             if (length > 1.0E-4) {
                 val push = when {
                     catches || !overshoots(x, y, z, motionX, motionY, motionZ) -> acceleration
@@ -529,7 +528,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
     ): Boolean {
         val toX = targetX - x
         val toZ = targetZ - z
-        val remaining = sqrt(toX * toX + toZ * toZ)
+        val remaining = Mth.length(toX, toZ)
         if (remaining < 1.0E-4) {
             return false
         }

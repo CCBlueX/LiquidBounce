@@ -25,7 +25,6 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
  * Where to look while gliding, whether to fire a rocket now and whether a rocket pushes this tick.
@@ -63,7 +62,7 @@ internal object GlidePhysics {
     fun step(velocity: Vec3, yaw: Float, pitch: Float, boosted: Boolean): Vec3 {
         val look = Vec3.directionFromRotation(pitch, yaw)
         val lean = Math.toRadians(pitch.toDouble())
-        val lookHorizontal = sqrt(look.x * look.x + look.z * look.z)
+        val lookHorizontal = look.horizontalDistance()
         val moveHorizontal = velocity.horizontalDistance()
         val lift = cos(lean) * cos(lean)
 
@@ -135,7 +134,7 @@ class GlideControl(
     override fun steer(position: Vec3, velocity: Vec3): GlideInput {
         val dx = goal.x - position.x
         val dz = goal.z - position.z
-        val distance = sqrt(dx * dx + dz * dz)
+        val distance = Mth.length(dx, dz)
         val bearing = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
         sweepPitches(position, velocity, bearing, distance, dx, dz)
 

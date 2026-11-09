@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.waitForClient
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -30,7 +31,6 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * A survival player walks sneaking: crouched through a tunnel one and a half blocks high into a closed room, along a
@@ -156,7 +156,7 @@ class WalkSneakGameTest : FabricClientGameTest {
                 player.position() to player.isShiftKeyDown
             }
             sneaked = sneaked || sneaking
-            if (position.horizontalDistance(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
+            if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
                 return sneaked
             }
             context.waitTick()
@@ -172,12 +172,6 @@ class WalkSneakGameTest : FabricClientGameTest {
             client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
         }, WAIT)
         context.waitTicks(5)
-    }
-
-    private fun Vec3.horizontalDistance(other: Vec3): Double {
-        val dx = x - other.x
-        val dz = z - other.z
-        return sqrt(dx * dx + dz * dz)
     }
 
     private companion object {

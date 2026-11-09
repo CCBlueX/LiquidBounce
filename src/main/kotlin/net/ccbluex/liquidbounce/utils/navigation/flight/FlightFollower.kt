@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
@@ -187,7 +188,7 @@ class FlightFollower : RouteProgress {
             val point = points[corner]
             val length = from.distanceTo(point)
             if (length >= remaining) {
-                return from.add(point.subtract(from).scale(remaining / length))
+                return from.lerp(point, remaining / length)
             }
             if (isSharp(points, corner)) {
                 return point
@@ -272,7 +273,7 @@ class FlightFollower : RouteProgress {
             }
 
             val t = (point.subtract(from).dot(segment) / lengthSqr).coerceIn(0.0, 1.0)
-            return point.distanceTo(from.add(segment.scale(t)))
+            return point.distanceTo(from.fma(t, segment))
         }
     }
 

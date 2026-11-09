@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
@@ -45,7 +46,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
-import kotlin.math.sqrt
 
 /**
  * Glides to goals for a walking navigator while an elytra is worn: plans a glide whenever the goal lies far enough
@@ -146,9 +146,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         }
 
         val start = player.position()
-        val dx = goal.x - start.x
-        val dz = goal.z - start.z
-        val distance = sqrt(dx * dx + dz * dz)
+        val distance = start.horizontalDistanceTo(goal)
         val loaded = world.hasChunkAt(BlockPos.containing(goal))
         if (distance < MIN_DISTANCE || distance <= MAX_DISTANCE && loaded) {
             return false
@@ -202,7 +200,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         val start = player.position()
         val dx = goal.x - start.x
         val dz = goal.z - start.z
-        val distance = sqrt(dx * dx + dz * dz)
+        val distance = Mth.length(dx, dz)
         val drop = start.y - goal.y
         if (distance < MIN_DISTANCE || distance > MAX_DISTANCE || drop < MIN_DROP && abilities.rockets == 0) {
             return

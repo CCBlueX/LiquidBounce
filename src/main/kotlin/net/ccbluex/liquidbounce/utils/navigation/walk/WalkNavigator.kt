@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -411,7 +412,7 @@ class WalkNavigator(
             return false
         }
 
-        val ahead = position.add(delta.scale(min(HEADWAY, length) / length))
+        val ahead = position.fma(min(HEADWAY, length) / length, delta)
         val terrain = NavigationTerrain(LiveWorld(world))
         return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, walkSettings.safeFall)
     }
@@ -518,7 +519,7 @@ class WalkNavigator(
         val leftPath = offPath && !wasOffPath
         wasOffPath = offPath
 
-        val goalMoved = pathGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }
+        val goalMoved = pathGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }
         val finishedShort = path != null && follower.isFinished
         val nearStage = path != null && followsStage && position.horizontalDistanceTo(path.end) < STAGE_LEAD
         val urgent = stuck || leftPath
@@ -543,7 +544,7 @@ class WalkNavigator(
      */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
         val nearGoal = NearGoal(goal, radius)
-        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }) {
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
             failures = 0
         }
         // After searches that found nothing, the next ones look further around for a detour.
@@ -570,7 +571,7 @@ class WalkNavigator(
             WalkRouteSearch(terrain, start, searchGoal, abilities, limits)
         }
 
-        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }) {
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
             failed = false
         }
         requestedGoal = goal
@@ -589,7 +590,7 @@ class WalkNavigator(
         }
 
         val avoidGoal = avoidGoal
-        val goalChanged = avoidGoal == null || avoidGoal.distanceToSqr(goal) > Mth.square(AVOID_GOAL_CHANGE)
+        val goalChanged = avoidGoal == null || avoidGoal.distanceToSqr(goal) > AVOID_GOAL_CHANGE * AVOID_GOAL_CHANGE
         if (goalChanged || ticks - avoidSince > AVOID_TICKS) {
             avoid.clear()
             avoidVersion++

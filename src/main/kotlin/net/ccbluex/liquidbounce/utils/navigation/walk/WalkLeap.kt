@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 /**
  * Makes a [WalkMove.PARKOUR] step by simulating the player in the live world every tick: running on and jumping at
@@ -177,7 +176,7 @@ internal class WalkLeap {
     private fun behind(runUp: Vec3, target: Vec3, distance: Double): Vec3 {
         val dx = target.x - runUp.x
         val dz = target.z - runUp.z
-        val length = sqrt(dx * dx + dz * dz)
+        val length = Mth.length(dx, dz)
         if (length < MIN_LENGTH) {
             return runUp
         }

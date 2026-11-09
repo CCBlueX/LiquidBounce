@@ -28,7 +28,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.sqrt
 
 internal fun interface MoveSink {
     @Suppress("LongParameterList")
@@ -681,7 +680,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
          * How far below the feet the floor that moves the player is looked up, as vanilla does.
          */
         const val FLOOR_PROBE = 0.500001
-        val DIAGONAL = sqrt(2.0)
+        val DIAGONAL = Mth.SQRT_OF_TWO
 
         val DX = intArrayOf(1, -1, 0, 0)
         val DZ = intArrayOf(0, 0, 1, -1)

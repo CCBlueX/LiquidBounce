@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.ride
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkCosts
 import net.minecraft.core.BlockPos
@@ -29,7 +30,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.sqrt
 
 /**
  * Where a ridden [body] rests and how it moves on, over [terrain]. Nodes are the blocks the bottom of the vehicle
@@ -125,7 +125,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
 
         val dx = to.x - from.x
         val dz = to.z - from.z
-        val samples = max(1, ceil(sqrt(dx * dx + dz * dz) / SAMPLE_SPACING).toInt())
+        val samples = max(1, ceil(Mth.length(dx, dz) / SAMPLE_SPACING).toInt())
         val nodeY = Mth.floor(level + EPSILON)
         for (sample in 1..samples) {
             val t = sample.toDouble() / samples
@@ -204,7 +204,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
     private fun isClearLine(fromX: Double, fromZ: Double, toX: Double, toZ: Double, level: Double): Boolean {
         val dx = toX - fromX
         val dz = toZ - fromZ
-        val samples = max(1, ceil(sqrt(dx * dx + dz * dz) / SAMPLE_SPACING).toInt())
+        val samples = max(1, ceil(Mth.length(dx, dz) / SAMPLE_SPACING).toInt())
         for (sample in 0..samples) {
             val t = sample.toDouble() / samples
             if (!terrain.isClear(box(fromX + dx * t, level, fromZ + dz * t))) {
@@ -215,9 +215,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
     }
 
     private fun cost(from: Spot, to: Spot, jump: Boolean): Double {
-        val dx = to.position.x - from.position.x
-        val dz = to.position.z - from.position.z
-        val half = sqrt(dx * dx + dz * dz) / 2.0
+        val half = from.position.horizontalDistanceTo(to.position) / 2.0
         var ticks = half / from.speed + half / to.speed
         if (jump) {
             ticks += RideBody.JUMP_CHARGE_TICKS + WalkCosts.fall(Mth.ceil(body.jump))

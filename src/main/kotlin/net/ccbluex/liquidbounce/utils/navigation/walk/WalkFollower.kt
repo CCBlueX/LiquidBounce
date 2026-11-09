@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
@@ -422,11 +423,12 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
      */
     private fun isAirAbove(): Boolean {
         val head = BlockPos.containing(player.eyePosition)
+        val chunk = world.getChunk(head)
         for (dy in 0..AIR_SEARCH) {
             val pos = head.above(dy)
-            val state = world.getBlockState(pos)
+            val state = chunk.getBlockState(pos)
             if (state.fluidState.isEmpty) {
-                return state.getCollisionShape(world, pos).isEmpty
+                return state.getCollisionShape(chunk, pos).isEmpty
             }
         }
         return false
@@ -566,7 +568,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     /**
      * Whether the door, trapdoor or fence gate at [pos] is open; anything else that took its place counts as open.
      */
-    private fun isOpen(pos: BlockPos) =
+    private fun isOpen(pos: BlockPos): Boolean =
         world.getBlockState(pos).getOptionalValue(BlockStateProperties.OPEN).orElse(true)
 
     override val isMoving: Boolean
@@ -634,7 +636,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
             }
 
             val t = (point.subtract(from).dot(segment) / lengthSqr).coerceIn(0.0, 1.0)
-            return point.distanceTo(from.add(segment.scale(t)))
+            return point.distanceTo(from.fma(t, segment))
         }
     }
 
