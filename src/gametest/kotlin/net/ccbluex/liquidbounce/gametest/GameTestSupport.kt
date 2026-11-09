@@ -19,7 +19,10 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.TitleScreen
@@ -30,11 +33,32 @@ import org.apache.commons.lang3.function.FailableFunction
 private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
 
 /**
+ * `-PgameTestAngleSmooth=<mode>`, such as Sigmoid or Acceleration, runs the tests with every AngleSmooth setting on
+ * that mode, so they also cover rotations that lag behind their target.
+ */
+private val angleSmooth: String? = System.getProperty("net.ccbluex.liquidbounce.gametest.angleSmooth")
+
+/**
  * Waits for the title screen behind LiquidBounce's startup tasks.
  */
 fun ClientGameTestContext.waitForClient() {
     waitFor({ client -> client.gui.screen() is TitleScreen }, STARTUP_TIMEOUT_TICKS)
     check(fromClient { LiquidBounce.isInitialized }) { "LiquidBounce did not finish initializing" }
+    if (angleSmooth != null) {
+        onClient { ModuleManager.forEach(::useAngleSmooth) }
+    }
+}
+
+/**
+ * Puts the AngleSmooth settings within [group] that offer the mode the run asks for on it; call it for settings a
+ * test makes itself, the modules get it in [waitForClient].
+ */
+fun useAngleSmooth(group: ValueGroup) {
+    val mode = angleSmooth ?: return
+    group.collectValuesRecursively()
+        .filterIsInstance<ModeValueGroup<*>>()
+        .filter { setting -> setting.name == "AngleSmooth" && setting.modes.any { it.tag == mode } }
+        .forEach { it.setByString(mode) }
 }
 
 /**

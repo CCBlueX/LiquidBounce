@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
@@ -76,6 +77,8 @@ class WalkNavigationGameTest : FabricClientGameTest {
         context.onClient {
             walker = Walker("TestWalker", build = false)
             builder = Walker("TestBuilder", build = true)
+            useAngleSmooth(walker)
+            useAngleSmooth(builder)
         }
 
         try {
@@ -195,7 +198,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
         val health = server.computeOnServer<Float, RuntimeException> { it.player().health }
         context.onClient { walker.goal = goal }
         try {
-            awaitArrival(context, goal, ticks, what)
+            TurnWatch.watch(context, "Walking $what", { walker.isActing }) { awaitArrival(context, goal, ticks, what) }
         } finally {
             context.onClient { walker.goal = null }
         }

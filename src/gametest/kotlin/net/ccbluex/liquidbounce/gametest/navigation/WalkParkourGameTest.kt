@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
@@ -80,6 +81,7 @@ class WalkParkourGameTest : FabricClientGameTest {
         context.onClient {
             walker = Walker()
             walker.containedValues.first { it.name == "RiskyJumps" }.setByString("true")
+            useAngleSmooth(walker)
         }
 
         try {
@@ -132,23 +134,25 @@ class WalkParkourGameTest : FabricClientGameTest {
 
         context.onClient { walker.goal = goal }
         try {
-            for (tick in 0 until TIMEOUT) {
+            return TurnWatch.watch(context, course.name) {
+                for (tick in 0 until TIMEOUT) {
+                    val position = context.fromClient { checkNotNull(it.player).position() }
+                    if (position.y < lowest) {
+                        return@watch "${course.name}: fell at $position after $tick ticks"
+                    }
+                    if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
+                        logger.info("PARKOUR ${course.name}: done in $tick ticks")
+                        return@watch null
+                    }
+                    context.waitTick()
+                }
+
                 val position = context.fromClient { checkNotNull(it.player).position() }
-                if (position.y < lowest) {
-                    return "${course.name}: fell at $position after $tick ticks"
-                }
-                if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
-                    logger.info("PARKOUR ${course.name}: done in $tick ticks")
-                    return null
-                }
-                context.waitTick()
+                "${course.name}: not done within $TIMEOUT ticks, stopped at $position"
             }
         } finally {
             context.onClient { walker.goal = null }
         }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        return "${course.name}: not done within $TIMEOUT ticks, stopped at $position"
     }
 
     /**

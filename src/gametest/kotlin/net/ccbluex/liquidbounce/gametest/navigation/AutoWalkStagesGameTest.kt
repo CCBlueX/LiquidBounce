@@ -88,17 +88,19 @@ class AutoWalkStagesGameTest : FabricClientGameTest {
         var stops = 0
         var last = context.fromClient { checkNotNull(it.player).position() }
         var ticks = 0
-        while (context.fromClient { ModuleAutoWalk.enabled }) {
-            check(ticks++ < MAX_TICKS) { "Did not arrive within $MAX_TICKS ticks, stopped at $last" }
-            context.waitTick()
-            val (position, onGround) = context.fromClient { mc ->
-                val player = checkNotNull(mc.player)
-                player.position() to player.onGround()
+        TurnWatch.watch(context, "Walking to the far destination") {
+            while (context.fromClient { ModuleAutoWalk.enabled }) {
+                check(ticks++ < MAX_TICKS) { "Did not arrive within $MAX_TICKS ticks, stopped at $last" }
+                context.waitTick()
+                val (position, onGround) = context.fromClient { mc ->
+                    val player = checkNotNull(mc.player)
+                    player.position() to player.onGround()
+                }
+                if (onGround && position.subtract(last).horizontalDistance() < STILL) {
+                    stops++
+                }
+                last = position
             }
-            if (onGround && position.subtract(last).horizontalDistance() < STILL) {
-                stops++
-            }
-            last = position
         }
 
         val position = context.fromClient { checkNotNull(it.player).position() }
