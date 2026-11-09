@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
@@ -139,6 +140,11 @@ class WalkNavigator(
     private var sprintWanted = false
 
     /**
+     * The yaw the walk or an action looked at last, held while there is nothing far enough to look at.
+     */
+    private var lastLookYaw = Float.NaN
+
+    /**
      * Whether a block is being mined, placed or opened for the path.
      */
     val isActing: Boolean
@@ -152,38 +158,55 @@ class WalkNavigator(
         actions.rotation?.let { return it }
 
         val target = steeringTarget ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
-        val delta = target.subtract(player.position())
-        if (delta.horizontalDistanceSqr() < MIN_STEER_DISTANCE_SQR) {
-            return Rotation(player.getMovementDirectionOfInput(), 0f)
-        }
-
-        return if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, 0f)
+        val yaw = lookYaw(target).takeUnless { it.isNaN() }
+            ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
+        return Rotation(yaw, if (follower.dive) divePitch(target) else 0f)
     }
 
     /**
      * Turns the head the way the walk goes, so the keys press forward under movement correction and the player can
      * sprint; under water also up or down, so the swimming pose swims there. Mining and placing aim themselves, and
-     * any other feature that rotates takes over.
+     * any other feature that rotates takes over. While the next path is worked out, the head stays where it looked.
      */
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        val target = steeringTarget ?: return@handler
-        if (actions.rotation != null) {
+        actions.rotation?.let { aim ->
+            lastLookYaw = aim.yaw
             return@handler
         }
 
-        val delta = target.subtract(player.position())
-        if (delta.horizontalDistanceSqr() < MIN_STEER_DISTANCE_SQR) {
+        val target = steeringTarget
+        val yaw = if (target == null) lastLookYaw else lookYaw(target)
+        if (yaw.isNaN()) {
             return@handler
         }
-
+        lastLookYaw = yaw
         RotationManager.setRotationTarget(
-            if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, player.xRot),
+            Rotation(yaw, if (target != null && follower.dive) divePitch(target) else player.xRot),
             valueGroup = this.rotations,
             priority = Priority.NOT_IMPORTANT,
             provider = owner,
         )
     }
+
+    /**
+     * The yaw to look at while heading for [target]. Close to it, the way there turns around with every bit the
+     * player passes it by, so the path further on is looked at, or else the last look held. Along a stretch that is
+     * mined or built, the player keeps facing the way the last block was aimed at, forwards or backwards, as when
+     * bridging backwards. NaN with nothing to look at yet.
+     */
+    private fun lookYaw(target: Vec3): Float {
+        val position = player.position()
+        val look = target.takeIf { it.horizontalDistanceToSqr(position) >= LOOK_DISTANCE * LOOK_DISTANCE }
+            ?: follower.lookAhead(target, position, LOOK_DISTANCE)
+            ?: return lastLookYaw
+        val yaw = look.subtract(position).yaw
+        val backwards = follower.building && lastLookYaw.isFinite() &&
+            abs(Mth.wrapDegrees(yaw - lastLookYaw)) > QUARTER_TURN
+        return if (backwards) Mth.wrapDegrees(yaw + 2 * QUARTER_TURN) else yaw
+    }
+
+    private fun divePitch(target: Vec3) = Rotation.fromRotationVec(target.subtract(player.position())).pitch
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
@@ -222,6 +245,7 @@ class WalkNavigator(
 
         if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
             stop(event)
+            lastLookYaw = Float.NaN
             view.done()
             return false
         }
@@ -633,6 +657,7 @@ class WalkNavigator(
         followsStage = false
         directGoal = null
         steeringTarget = null
+        lastLookYaw = Float.NaN
         sprintWanted = false
         straight = false
         direct = false
@@ -660,6 +685,7 @@ class WalkNavigator(
         followsStage = false
         directGoal = null
         steeringTarget = null
+        lastLookYaw = Float.NaN
         sprintWanted = false
         straight = false
         direct = false
@@ -683,7 +709,11 @@ class WalkNavigator(
     private data class SearchKey(val start: BlockPos, val goal: NearGoal, val avoidVersion: Int, val staged: Boolean)
 
     private companion object {
-        const val MIN_STEER_DISTANCE_SQR = 1.0E-4
+        /**
+         * How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind.
+         */
+        const val LOOK_DISTANCE = 0.75
+        const val QUARTER_TURN = 90f
         const val VERTICAL_MARGIN = 16
         const val GOAL_MOVED = 1.5
         const val REPLAN_INTERVAL = 5

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
@@ -108,6 +109,15 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
      */
     var isPlainWalk = false
         private set
+
+    /**
+     * Whether the step walked or the next one mines or places blocks, which aims at them in between the walking.
+     */
+    val building: Boolean
+        get() {
+            val steps = path?.steps ?: return false
+            return steps.getOrNull(index)?.builds == true || steps.getOrNull(index + 1)?.builds == true
+        }
 
     var remainingBreaks: List<BlockPos> = emptyList()
         private set
@@ -484,6 +494,25 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     }
 
     /**
+     * The first point of the path that lies at least [distance] away from [position], horizontally, within a few
+     * steps from [target] if that is a point of the path, else from the step walked; null when the path stays closer.
+     */
+    fun lookAhead(target: Vec3, position: Vec3, distance: Double): Vec3? {
+        val points = path?.points ?: return null
+        val end = min(points.size, index + 1 + SHORTCUT_STEPS)
+        val from = (index + 1 until end).firstOrNull { points[it] == target } ?: (index + 1)
+        for (i in from until min(points.size, from + LOOK_STEPS)) {
+            if (points[i].horizontalDistanceToSqr(position) >= distance * distance) {
+                return points[i]
+            }
+        }
+        return null
+    }
+
+    private val WalkStep.builds: Boolean
+        get() = breaks.isNotEmpty() || places.isNotEmpty()
+
+    /**
      * The farthest of the next points a straight walk from the player gets to, while every step up to it is a plain
      * walk on one level; null when [step] is not one or the player is in the air.
      */
@@ -617,6 +646,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
          */
         const val SHORTCUT_STEPS = 8
         const val SHORTCUT_STOP = 0.25
+        const val LOOK_STEPS = 4
 
         /**
          * Sprint hops: the least distance to the aim, the food kept, and how far and high the head is checked for room.
