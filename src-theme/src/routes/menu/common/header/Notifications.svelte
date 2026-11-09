@@ -39,7 +39,7 @@
             return;
         }
 
-        //dismissTimeout = setTimeout(hideCurrent, (current.delay ?? 3) * 1000);
+        dismissTimeout = setTimeout(hideCurrent, (current.delay ?? 3) * 1000);
     }
 
     onMount(() => {
