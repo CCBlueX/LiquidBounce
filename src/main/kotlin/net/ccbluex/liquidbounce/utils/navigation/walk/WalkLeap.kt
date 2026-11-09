@@ -24,12 +24,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -138,8 +139,8 @@ internal class WalkLeap {
      */
     private fun isReady(state: PlayerMotion, stop: Vec3): Boolean {
         stillTicks = if (state.horizontalSpeed < READY_SPEED) stillTicks + 1 else 0
-        return stillTicks > 0 &&
-            (Vec3(state.x, stop.y, state.z).distanceTo(stop) < WalkJump.RUN_UP_TOLERANCE || stillTicks >= STILL_TICKS)
+        val atStop = stop.horizontalDistanceToSqr(state.x, state.z) < Mth.square(WalkJump.RUN_UP_TOLERANCE)
+        return stillTicks > 0 && (atStop || stillTicks >= STILL_TICKS)
     }
 
     /**
@@ -149,7 +150,7 @@ internal class WalkLeap {
         if (refined == null) {
             // The planned run-up only just works and was not hit closely enough: one that works with more room.
             refined = jumps.refine(step.from, jump.runUp.y, step.to, step.feet.y)
-                ?.takeIf { it.runUp.distanceTo(jump.runUp) > WalkJump.RUN_UP_TOLERANCE }
+                ?.takeIf { it.runUp.distanceToSqr(jump.runUp) > Mth.square(WalkJump.RUN_UP_TOLERANCE) }
         }
         if (refined == null || jump === refined) {
             // Further back, the run has more room.
@@ -225,20 +226,16 @@ internal class WalkLeap {
             }
         }
 
-        val dx = probe.x - runUp.x
-        val dz = probe.z - runUp.z
-        return dx * dx + dz * dz
+        return runUp.horizontalDistanceToSqr(probe.x, probe.z)
     }
 
-    private fun yawTo(motion: PlayerMotion, look: Vec3): Float =
-        (atan2(look.z - motion.z, look.x - motion.x) * Mth.RAD_TO_DEG - QUARTER_TURN).toFloat()
+    private fun yawTo(motion: PlayerMotion, look: Vec3): Float = look.subtract(motion.x, motion.y, motion.z).yaw
 
     private companion object {
         const val HOLD_TICKS = 2
         const val SETTLE_TICKS = 6
         const val FALL_PENALTY = 100.0
         const val SCORE_EPSILON = 1.0E-4
-        const val QUARTER_TURN = 90.0
 
         /**
          * Fastest a player may move and still count as standing at a run-up, in blocks a tick.

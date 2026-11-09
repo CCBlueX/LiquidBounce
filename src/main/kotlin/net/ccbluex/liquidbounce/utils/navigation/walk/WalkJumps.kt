@@ -19,9 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.min
@@ -49,11 +53,6 @@ class WalkJump(
     val margin: Double,
 
     /**
-     * Whether a missed jump falls somewhere the walker survives.
-     */
-    val safe: Boolean,
-
-    /**
      * Jumps on the same floor the run starts with, one right after the other, which land faster than running gets.
      */
     val hops: Int,
@@ -69,15 +68,9 @@ class WalkJump(
      * Estimated duration in ticks, the walk back to [runUp] included.
      */
     fun ticks(from: Vec3): Double {
-        val back = from.horizontalDistance(runUp)
+        val back = from.horizontalDistanceTo(runUp)
         val backTicks = if (back > RUN_UP_TOLERANCE) back * WalkCosts.WALK + STOP_TICKS else 0.0
         return backTicks + takeoff + airTicks + LANDING_TICKS
-    }
-
-    private fun Vec3.horizontalDistance(other: Vec3): Double {
-        val dx = x - other.x
-        val dz = z - other.z
-        return sqrt(dx * dx + dz * dz)
     }
 
     companion object {
@@ -126,11 +119,6 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
     private var airTicks = 0
 
     /**
-     * Whether a miss of the jump being worked out is survived.
-     */
-    private var safe = true
-
-    /**
      * Whether the target is a ladder or vine the jump catches rather than lands on.
      */
     private var catches = false
@@ -145,8 +133,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
      */
     fun plan(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): WalkJump? {
         aim(from.x + 0.5, from.z + 0.5, to, toHeight)
-        safe = isSafe(fromHeight)
-        if (!safe && !abilities.riskyJumps) {
+        if (!abilities.riskyJumps && !isSafe(fromHeight)) {
             return null
         }
 
@@ -183,7 +170,6 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
      */
     fun refine(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): WalkJump? {
         aim(from.x + 0.5, from.z + 0.5, to, toHeight)
-        safe = isSafe(fromHeight)
         val longest = runUpLength(fromHeight, MAX_RUN_UP)
         var best: WalkJump? = null
         var back = 0.0
@@ -316,7 +302,6 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         target = to
         targetHeight = toHeight
         catches = terrain.isClimbable(to.x, to.y, to.z)
-        safe = true
         edge = Double.MAX_VALUE
         dirX = targetX - fromX
         dirZ = targetZ - fromZ
@@ -461,9 +446,9 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
                 return Double.NaN
             }
 
-            motionX *= AIR_DRAG
-            motionZ *= AIR_DRAG
-            motionY = (motionY - PlayerMotion.GRAVITY) * VERTICAL_DRAG
+            motionX *= BASE_HORIZONTAL_AIR_DRAG
+            motionZ *= BASE_HORIZONTAL_AIR_DRAG
+            motionY = (motionY - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         }
         return Double.NaN
     }
@@ -480,7 +465,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         return if (margin.isNaN()) {
             null
         } else {
-            WalkJump(runUp, takeoff, jumps, airTicks, margin, safe, hops, Vec3(aimX, targetHeight, aimZ))
+            WalkJump(runUp, takeoff, jumps, airTicks, margin, hops, Vec3(aimX, targetHeight, aimZ))
         }
     }
 
@@ -564,8 +549,8 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
             if (vertical < 0.0 && height <= targetHeight) {
                 return false
             }
-            speed *= AIR_DRAG
-            vertical = (vertical - PlayerMotion.GRAVITY) * VERTICAL_DRAG
+            speed *= BASE_HORIZONTAL_AIR_DRAG
+            vertical = (vertical - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         }
         return false
     }
@@ -674,8 +659,6 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
          */
         const val KEY_PREFERENCE = 0.02
         val STRAFES = intArrayOf(0, 1, -1)
-        const val AIR_DRAG = 0.91f
-        const val VERTICAL_DRAG = 0.98f
         const val AIR_ACCELERATION = 0.02f * 0.98f
         const val SPRINT_AIR_ACCELERATION = 0.025999999f * 0.98f
 

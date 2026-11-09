@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
@@ -35,11 +36,9 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkStep
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -112,7 +111,7 @@ class WalkJumpTest {
         val leap = WalkLeap()
         var look = feet
         repeat(MAX_LEAP_TICKS) {
-            val yaw = (atan2(look.z - state.z, look.x - state.x) * Mth.RAD_TO_DEG - 90.0).toFloat()
+            val yaw = look.subtract(state.x, state.y, state.z).yaw
             val input = leap.decide(state, yaw, step, jump, jumps)
             look = leap.target ?: feet
             state.tick(yaw, input.forward, input.strafe, input.jump, input.sprint, input.sneak)
@@ -213,10 +212,8 @@ class WalkJumpTest {
 
         // The same gap with ground two blocks down: a miss is survived.
         val world = TestNavigationWorld().fill(-2, -2, -2, 5, -2, 2).fill(0, 0, 0, 0, 0, 0).fill(3, 0, 0, 3, 0, 0)
-        val jump = WalkJumps(world.terrain(), abilities(riskyJumps = false))
-            .plan(BlockPos(0, 1, 0), 1.0, BlockPos(3, 1, 0), 1.0)
-        assertNotNull(jump)
-        assertTrue(jump.safe)
+        val jumps = WalkJumps(world.terrain(), abilities(riskyJumps = false))
+        assertNotNull(jumps.plan(BlockPos(0, 1, 0), 1.0, BlockPos(3, 1, 0), 1.0))
     }
 
     @Test

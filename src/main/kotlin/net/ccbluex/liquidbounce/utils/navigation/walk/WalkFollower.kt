@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
@@ -35,7 +36,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.sqrt
 
 enum class FollowState {
     WALKING,
@@ -308,7 +308,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
         val position = player.position()
         val feet = step.feet
-        val horizontal = horizontalDistance(position, feet)
+        val horizontal = position.horizontalDistanceTo(feet)
         val onGround = player.onGround()
         val inWater = player.isInWater
         val climbing = player.onClimbable()
@@ -357,7 +357,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
      * spare, room for the head all along the jump and no farmland the landing would trample.
      */
     private fun canHop(position: Vec3, aim: Vec3): Boolean {
-        val distance = horizontalDistance(position, aim)
+        val distance = position.horizontalDistanceTo(aim)
         if (!player.onGround() || !player.isSprinting || distance < HOP_DISTANCE ||
             player.foodData.foodLevel <= HOP_FOOD) {
             return false
@@ -433,7 +433,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     }
 
     private fun centerInput(position: Vec3, feet: Vec3, frameYaw: Float): DirectionalInput =
-        if (horizontalDistance(position, feet) > CENTER_TOLERANCE) {
+        if (position.horizontalDistanceTo(feet) > CENTER_TOLERANCE) {
             steer(feet.subtract(position), frameYaw)
         } else {
             DirectionalInput.NONE
@@ -528,7 +528,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
                     support == step.to.below())
         }
 
-        val close = horizontalDistance(position, step.feet) < REACH_HORIZONTAL
+        val close = position.horizontalDistanceTo(step.feet) < REACH_HORIZONTAL
         if (close && abs(position.y - step.feet.y) < REACH_VERTICAL) {
             return true
         }
@@ -625,12 +625,6 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         const val HOP_HEIGHT = 1.25
         const val HOP_SAMPLE = 0.5
         const val FLOOR_PROBE = 0.5
-
-        fun horizontalDistance(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return sqrt(dx * dx + dz * dz)
-        }
 
         fun distanceToSegment(point: Vec3, from: Vec3, to: Vec3): Double {
             val segment = to.subtract(from)

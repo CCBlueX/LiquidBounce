@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
@@ -53,11 +54,11 @@ import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
@@ -218,7 +219,7 @@ class WalkNavigator(
         val position = player.position()
         updateAvoid(goal)
 
-        if (player.rootVehicle.position().distanceTo(goal) <= radius) {
+        if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
             stop(event)
             view.done()
             return false
@@ -226,7 +227,7 @@ class WalkNavigator(
 
         if (player.onGround()) {
             // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
-            straight = position.distanceTo(goal) <= walkSettings.maxLength &&
+            straight = position.distanceToSqr(goal) <= Mth.square(walkSettings.maxLength) &&
                 isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, walkSettings.safeFall)
             direct = straight
         }
@@ -501,7 +502,7 @@ class WalkNavigator(
         var bestDistance = Double.MAX_VALUE
         for (index in 0 until min(points.size, JOIN_POINTS)) {
             val point = points[index]
-            val horizontal = horizontalDistance(position, point)
+            val horizontal = position.horizontalDistanceTo(point)
             val near = horizontal <= JOIN_DISTANCE && abs(position.y - point.y) <= JOIN_DISTANCE
             if (near && horizontal < bestDistance) {
                 best = index
@@ -517,9 +518,9 @@ class WalkNavigator(
         val leftPath = offPath && !wasOffPath
         wasOffPath = offPath
 
-        val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
+        val goalMoved = pathGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }
         val finishedShort = path != null && follower.isFinished
-        val nearStage = path != null && followsStage && horizontalDistance(position, path.end) < STAGE_LEAD
+        val nearStage = path != null && followsStage && position.horizontalDistanceTo(path.end) < STAGE_LEAD
         val urgent = stuck || leftPath
 
         val settled = settledAt.let { it != null && ticks - it < SETTLE_TICKS }
@@ -542,7 +543,7 @@ class WalkNavigator(
      */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
         val nearGoal = NearGoal(goal, radius)
-        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }) {
             failures = 0
         }
         // After searches that found nothing, the next ones look further around for a detour.
@@ -569,7 +570,7 @@ class WalkNavigator(
             WalkRouteSearch(terrain, start, searchGoal, abilities, limits)
         }
 
-        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_MOVED) }) {
             failed = false
         }
         requestedGoal = goal
@@ -588,7 +589,8 @@ class WalkNavigator(
         }
 
         val avoidGoal = avoidGoal
-        if (avoidGoal == null || avoidGoal.distanceTo(goal) > AVOID_GOAL_CHANGE || ticks - avoidSince > AVOID_TICKS) {
+        val goalChanged = avoidGoal == null || avoidGoal.distanceToSqr(goal) > Mth.square(AVOID_GOAL_CHANGE)
+        if (goalChanged || ticks - avoidSince > AVOID_TICKS) {
             avoid.clear()
             avoidVersion++
             this.avoidGoal = goal
@@ -701,12 +703,6 @@ class WalkNavigator(
         const val PARKOUR_EXPANSIONS = 40_000
         const val MAX_WIDENING = 2
         val PARKOUR_COMPUTE_NANOS = TimeUnit.SECONDS.toNanos(2)
-
-        fun horizontalDistance(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return sqrt(dx * dx + dz * dz)
-        }
     }
 
 }

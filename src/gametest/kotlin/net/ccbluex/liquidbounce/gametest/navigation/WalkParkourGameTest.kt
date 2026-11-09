@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -33,7 +34,6 @@ import net.minecraft.core.Direction
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * A survival player runs Jump 'n' Run courses high over a lake with the walking navigation: gaps of one to three
@@ -137,7 +137,7 @@ class WalkParkourGameTest : FabricClientGameTest {
                 if (position.y < lowest) {
                     return "${course.name}: fell at $position after $tick ticks"
                 }
-                if (horizontalDistance(position, goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
+                if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
                     logger.info("PARKOUR ${course.name}: done in $tick ticks")
                     return null
                 }
@@ -158,12 +158,6 @@ class WalkParkourGameTest : FabricClientGameTest {
         val level = it.overworld()
         val top = level.getBlockState(pos).getCollisionShape(level, pos).max(Direction.Axis.Y)
         Vec3(pos.x + 0.5, pos.y + top, pos.z + 0.5)
-    }
-
-    private fun horizontalDistance(a: Vec3, b: Vec3): Double {
-        val dx = a.x - b.x
-        val dz = a.z - b.z
-        return sqrt(dx * dx + dz * dz)
     }
 
     private companion object {

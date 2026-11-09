@@ -25,6 +25,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.block.Block
@@ -179,7 +184,7 @@ internal class PlayerMotion(
             motionX = 0.0
             motionZ = 0.0
         }
-        if (abs(motionY) < MIN_MOTION) {
+        if (abs(motionY) < LivingEntity.MIN_MOVEMENT_DISTANCE) {
             motionY = 0.0
         }
 
@@ -217,9 +222,9 @@ internal class PlayerMotion(
         accelerate(yaw, forward, strafe, speed, inputScale)
         move(motionX, motionY, motionZ)
 
-        val friction = (blockFriction * AIR_DRAG).toDouble()
+        val friction = (blockFriction * BASE_HORIZONTAL_AIR_DRAG).toDouble()
         motionX *= friction
-        motionY = (motionY - GRAVITY) * VERTICAL_DRAG
+        motionY = (motionY - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         motionZ *= friction
     }
 
@@ -324,13 +329,13 @@ internal class PlayerMotion(
 
         val state = terrain.state(supportX, legacyOnY(), supportZ)
         val restitution = state.block.bounceRestitution.toDouble()
-        if (-motionY <= GRAVITY || restitution <= 0.0) {
+        if (-motionY <= DEFAULT_BASE_GRAVITY || restitution <= 0.0) {
             return 0.0
         }
 
         val portion = moved / motionY
-        val compensation = portion * GRAVITY
-        val drag = Mth.lerp(portion, 1.0, VERTICAL_DRAG.toDouble())
+        val compensation = portion * DEFAULT_BASE_GRAVITY
+        val drag = Mth.lerp(portion, 1.0, BASE_VERTICAL_AIR_DRAG.toDouble())
         return (compensation - motionY) * drag * restitution
     }
 
@@ -342,21 +347,22 @@ internal class PlayerMotion(
         }
     }
 
-    private fun legacyOnY() = Mth.floor(y - LEGACY_ON_OFFSET)
+    private fun legacyOnY() = Mth.floor(y - Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2)
 
     /**
      * Entity.getBlockPosBelowThatAffectsMyMovement: the supporting block's column, below the feet.
      */
     private fun movementBlock(): Block {
         if (!hasSupport) {
-            return terrain.state(Mth.floor(x), Mth.floor(y - MOVEMENT_OFFSET), Mth.floor(z)).block
+            return terrain.state(Mth.floor(x), Mth.floor(y - Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5), Mth.floor(z))
+                .block
         }
 
         val support = terrain.state(supportX, supportY, supportZ)
         if (support.block is WallBlock || support.block is FenceGateBlock) {
             return support.block
         }
-        return terrain.state(supportX, Mth.floor(y - MOVEMENT_OFFSET), supportZ).block
+        return terrain.state(supportX, Mth.floor(y - Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5), supportZ).block
     }
 
     private fun jumpFactor(): Float {
@@ -405,7 +411,7 @@ internal class PlayerMotion(
         }
     }
 
-    fun box(): AABB = AABB(x - HALF_WIDTH, y, z - HALF_WIDTH, x + HALF_WIDTH, y + HEIGHT, z + HALF_WIDTH)
+    private fun box(): AABB = AABB(x - HALF_WIDTH, y, z - HALF_WIDTH, x + HALF_WIDTH, y + HEIGHT, z + HALF_WIDTH)
 
     /**
      * Whether the player stands on the block at [x] [y] [z], the one Entity.checkSupportingBlock picks.
@@ -618,15 +624,14 @@ internal class PlayerMotion(
 
     companion object {
         const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
-        const val HEIGHT = NavigationTerrain.PLAYER_HEIGHT
-        const val STEP = 0.6f
-        const val GRAVITY = 0.08
-        const val JUMP_DELAY = 10
+        private const val HEIGHT = NavigationTerrain.PLAYER_HEIGHT
+        private const val STEP = 0.6f
+        private const val JUMP_DELAY = 10
 
         /**
          * Motion of a player standing still on the ground, which gravity keeps pulling down every tick.
          */
-        val RESTING: Vec3 = Vec3(0.0, -GRAVITY * 0.98f, 0.0)
+        val RESTING: Vec3 = Vec3(0.0, -DEFAULT_BASE_GRAVITY * BASE_VERTICAL_AIR_DRAG, 0.0)
 
         private const val SPRINT_JUMP_BOOST = 0.2f
         private const val SPRINT_FACTOR = 1.3f
@@ -634,17 +639,12 @@ internal class PlayerMotion(
         private const val SPRINT_AIR_SPEED = 0.025999999f
         private const val PLAIN_FRICTION = 0.6f
         private const val GROUND_FACTOR = 0.21600002f
-        private const val AIR_DRAG = 0.91f
-        const val VERTICAL_DRAG = 0.98f
         private const val INPUT_SCALE = 0.98f
         private const val SNEAK_SPEED = 0.3f
         private const val MIN_HORIZONTAL_SQR = 9.0E-6
-        private const val MIN_MOTION = 0.003
         private const val SLIME_STEP_MOTION = 0.1
         private const val SLIME_STEP_BASE = 0.4
         private const val SLIME_STEP_FACTOR = 0.2
-        private const val MOVEMENT_OFFSET = 0.500001
-        private const val LEGACY_ON_OFFSET = 0.2
         private const val SUPPORT_PROBE = 1.0E-6
         private const val STEP_PROBE = 1.0E-5
         private const val EPSILON = 1.0E-7
@@ -672,13 +672,13 @@ class MotionTraits(val walkSpeed: Float, val jumpStrength: Float, val jumpBoost:
         var height = 0.0
         while (motion > 0.0) {
             height += motion
-            motion = (motion - PlayerMotion.GRAVITY) * PlayerMotion.VERTICAL_DRAG
+            motion = (motion - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         }
         height
     }
 
     companion object {
-        val DEFAULT = MotionTraits(walkSpeed = 0.1f, jumpStrength = 0.42f, jumpBoost = 0f)
+        val DEFAULT = MotionTraits(walkSpeed = 0.1f, jumpStrength = LivingEntity.BASE_JUMP_POWER, jumpBoost = 0f)
 
         /**
          * The traits of [player] now, effects included. Call on the render thread.
