@@ -38,6 +38,39 @@ object Timer : EventListener {
     val timerSpeed: Float
         get() = requestHandler.getActiveRequestValue() ?: 1.0f
 
+    /**
+     * The speed the ticks of the current frame run at.
+     */
+    private var frameSpeed = 1f
+
+    /**
+     * Ticks of real time: a tick at a faster timer counts as less than one, and ticks run outside the tick loop of a
+     * frame do not count. Only differences between two readings mean anything.
+     */
+    var realTicks = 0.0
+        private set
+
+    /**
+     * Scales the ticks a frame advances by the requested speed.
+     */
+    fun scaleFrame(deltaTicks: Float): Float {
+        val speed = timerSpeed
+        frameSpeed = if (speed > 0f) speed else 1f
+        return deltaTicks * frameSpeed
+    }
+
+    /**
+     * Bound of the tick loop of a frame, checked before each tick. Counts the [ticks] of the frame in [realTicks].
+     *
+     * @param index the tick the loop is about to run
+     */
+    fun frameTicks(ticks: Int, index: Int): Int {
+        if (index == 0) {
+            realTicks += ticks / frameSpeed.toDouble()
+        }
+        return ticks
+    }
+
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         requestHandler.tick()

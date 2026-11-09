@@ -1768,8 +1768,10 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun frameTicks (II)I
 	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
+	public final fun getRealTicks ()D
 	public fun getRunning ()Z
 	public final fun getTimerSpeed ()F
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -1779,6 +1781,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;I)V
 	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;IILjava/lang/Object;)V
+	public final fun scaleFrame (F)F
 	public fun unregister ()V
 }
 

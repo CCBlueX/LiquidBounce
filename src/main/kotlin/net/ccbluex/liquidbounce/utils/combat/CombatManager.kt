@@ -22,13 +22,24 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
+import net.minecraft.network.protocol.game.ServerboundPunchPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import kotlin.math.roundToInt
 
 /**
  * A rotation manager
@@ -46,6 +57,37 @@ object CombatManager : EventListener {
 
     const val PAUSE_COMBAT = 40 // 40 ticks = 2 seconds
     var duringCombat: Int = 0
+
+    /**
+     * [Timer.realTicks] when the server last restarted our attack cooldown.
+     */
+    private var cooldownResetTicks = 0.0
+
+    /**
+     * Server ticks per tick of real time: the TPS [ServerObserver] measured against the tick rate the client runs at.
+     * 1 until there is a measurement.
+     */
+    val serverTickRate: Double
+        get() {
+            val tps = ServerObserver.tps
+            val level = mc.level
+            return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
+        }
+
+    /**
+     * Ticks the server has counted towards our attack cooldown by [ticks] ticks of real time from now. It counts real
+     * time at [serverTickRate], so held, burst and timer ticks of the client do not shift it. Rounded to whole ticks
+     * like the server counts them, so a TPS measured a little under 20 does not hold the hit back a tick.
+     */
+    fun attackCooldownTicks(ticks: Int = 0) =
+        ((Timer.realTicks - cooldownResetTicks + ticks) * serverTickRate).roundToInt()
+
+    /**
+     * Like [Player.getAttackStrengthScale] on the server for an attack [ticks] ticks of real time from now, not
+     * clamped.
+     */
+    fun attackCooldownProgress(ticks: Int = 0) =
+        (attackCooldownTicks(ticks) + 0.5f) / player.currentItemAttackStrengthDelay
 
     private fun updatePauseRotation() {
         if (pauseRotation <= 0) return
@@ -97,6 +139,22 @@ object CombatManager : EventListener {
                 EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
             }
         }
+    }
+
+    @Suppress("unused")
+    private val cooldownPacketHandler = handler<PacketEvent> { event ->
+        when (event.packet) {
+            // The server restarts it on every swing, attack and change of the held item
+            is ServerboundAttackPacket, is ServerboundPunchPacket, is ServerboundSetCarriedItemPacket ->
+                cooldownResetTicks = Timer.realTicks
+            // and on a new player after respawning
+            is ClientboundRespawnPacket -> mc.execute { cooldownResetTicks = Timer.realTicks }
+        }
+    }
+
+    @Suppress("unused")
+    private val cooldownWorldHandler = handler<WorldChangeEvent> {
+        cooldownResetTicks = Timer.realTicks
     }
 
     val shouldPauseCombat: Boolean
