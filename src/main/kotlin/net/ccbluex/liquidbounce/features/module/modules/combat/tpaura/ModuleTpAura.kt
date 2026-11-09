@@ -72,7 +72,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val hold by int("Hold", 10, 1..40, "ticks")
 
     private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
-    private val clicker = tree(Clicker(this, mc.options.keyAttack))
+    private val clicker = tree(Clicker(this, mc.options.keyAttack, priority = Priority.IMPORTANT_FOR_USAGE_2))
     private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
     private val steps = tree(TeleportStepSettings())
 

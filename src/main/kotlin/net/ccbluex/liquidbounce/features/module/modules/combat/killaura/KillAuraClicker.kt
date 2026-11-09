@@ -43,13 +43,15 @@ import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 import kotlin.math.round
 
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
     mc.options.keyAttack,
-    KillAuraClickerItemCooldown()
+    KillAuraClickerItemCooldown(),
+    priority = Priority.IMPORTANT_FOR_USAGE_2,
 ) {
 
     override val isClickTick: Boolean

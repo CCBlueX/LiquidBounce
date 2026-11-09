@@ -74,7 +74,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
     )
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
-    private val clicker = tree(Clicker(this, mc.options.keyUse, itemCooldown = null))
+    private val clicker = tree(
+        Clicker(this, mc.options.keyUse, itemCooldown = null, priority = Priority.IMPORTANT_FOR_USAGE_2)
+    )
 
     /**
      * The target tracker to find the best enemy to attack.

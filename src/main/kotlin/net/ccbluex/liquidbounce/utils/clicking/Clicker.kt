@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.util.Util
@@ -45,10 +45,8 @@ import net.minecraft.util.Util
  * @see [Minecraft.handleKeybinds]
  *
  * Presses are planned in milliseconds by a [ClickTiming] and batched into ticks by a [ClickPlan],
- * so we can predict future clicks and behave accordingly.
- *
- * Clickers on the same key would add up their CPS, so the one that clicked keeps the key until its combo ends
- * and the others drop their presses meanwhile.
+ * so we can predict future clicks and behave accordingly. Clickers on the same key take turns by [priority],
+ * see [KeyRequests].
  */
 open class Clicker<T>(
     val parent: T,
@@ -57,12 +55,13 @@ open class Clicker<T>(
     maxCps: Int = 30,
     name: String = "Clicker",
     simulateAttackKeyDown: Boolean = false,
+    private val priority: Priority = Priority.NORMAL,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
         private const val TICKS_AHEAD = 20
-
-        private val drivers = Reference2ReferenceOpenHashMap<KeyMapping, Clicker<*>>()
+        private const val TICKS_PER_SECOND = 20
+        private const val MIN_HOLD_TICKS = 5
     }
 
     private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
@@ -112,12 +111,6 @@ open class Clicker<T>(
     open val isClickTick: Boolean
         get() = willClickAt(0)
 
-    private val isKeyTaken: Boolean
-        get() {
-            val driver = drivers[keyBinding] ?: return false
-            return driver !== this && driver.running
-        }
-
     val ticksUntilClick: Int
         get() = (0 until TICKS_AHEAD).firstOrNull(::willClickAt) ?: TICKS_AHEAD
 
@@ -148,6 +141,12 @@ open class Clicker<T>(
     }
 
     /**
+     * Holds [keyBinding] for two of our slowest click intervals, so it stays ours between clicks.
+     */
+    private fun requestKey() =
+        KeyRequests.request(this, priority, (2 * TICKS_PER_SECOND / cps.first).coerceAtLeast(MIN_HOLD_TICKS))
+
+    /**
      * Uses the presses of this tick. If the cooldown is not passed, the press is dropped.
      * [block] should return true if the click was successful. Otherwise, it will not count as a click.
      */
@@ -158,7 +157,7 @@ open class Clicker<T>(
         debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
-        if (isKeyTaken) {
+        if (!requestKey()) {
             return
         }
 
@@ -167,7 +166,6 @@ open class Clicker<T>(
                 if (success) {
                     itemCooldown?.newCooldown()
                     ticksSinceLastClick = 0
-                    drivers[keyBinding] = this
                 }
             }
         }
@@ -180,7 +178,7 @@ open class Clicker<T>(
      * This uses the same gating logic as [click] before invoking [block].
      */
     fun canExecuteClickNow(): Boolean {
-        if (getClickAmount() <= 0 || isKeyTaken) {
+        if (!requestKey() || getClickAmount() <= 0) {
             return false
         }
 
@@ -200,9 +198,7 @@ open class Clicker<T>(
 
         plan.cps = cps
         plan.maxPerTick = maxPerTick
-        if (plan.tick(Util.getMillis())) {
-            drivers.remove(keyBinding, this)
-        }
+        plan.tick(Util.getMillis())
     }
 
     override fun parent() = parent

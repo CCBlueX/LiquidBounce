@@ -54,7 +54,9 @@ object ModuleProjectilePuncher : ClientModule(
     aliases = listOf("AntiFireball")
 ) {
 
-    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
+    private val clicker = tree(
+        Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null, priority = Priority.IMPORTANT_FOR_USER_SAFETY)
+    )
 
     private val range by float("Range", 3f, 3f..6f)
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
