@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.clicking
 
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
@@ -45,6 +46,9 @@ import net.minecraft.util.Util
  *
  * Presses are planned in milliseconds by a [ClickTiming] and batched into ticks by a [ClickPlan],
  * so we can predict future clicks and behave accordingly.
+ *
+ * Clickers on the same key would add up their CPS, so the one that clicked keeps the key until its combo ends
+ * and the others drop their presses meanwhile.
  */
 open class Clicker<T>(
     val parent: T,
@@ -57,6 +61,8 @@ open class Clicker<T>(
 
     companion object {
         private const val TICKS_AHEAD = 20
+
+        private val drivers = Reference2ReferenceOpenHashMap<KeyMapping, Clicker<*>>()
     }
 
     private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
@@ -106,6 +112,12 @@ open class Clicker<T>(
     open val isClickTick: Boolean
         get() = willClickAt(0)
 
+    private val isKeyTaken: Boolean
+        get() {
+            val driver = drivers[keyBinding] ?: return false
+            return driver !== this && driver.running
+        }
+
     val ticksUntilClick: Int
         get() = (0 until TICKS_AHEAD).firstOrNull(::willClickAt) ?: TICKS_AHEAD
 
@@ -146,11 +158,16 @@ open class Clicker<T>(
         debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
+        if (isKeyTaken) {
+            return
+        }
+
         val clicks = plan.consume({ passesMissCooldown && itemCooldown?.isCooldownPassed() != false }) {
             block().also { success ->
                 if (success) {
                     itemCooldown?.newCooldown()
                     ticksSinceLastClick = 0
+                    drivers[keyBinding] = this
                 }
             }
         }
@@ -163,7 +180,7 @@ open class Clicker<T>(
      * This uses the same gating logic as [click] before invoking [block].
      */
     fun canExecuteClickNow(): Boolean {
-        if (getClickAmount() <= 0) {
+        if (getClickAmount() <= 0 || isKeyTaken) {
             return false
         }
 
@@ -183,7 +200,9 @@ open class Clicker<T>(
 
         plan.cps = cps
         plan.maxPerTick = maxPerTick
-        plan.tick(Util.getMillis())
+        if (plan.tick(Util.getMillis())) {
+            drivers.remove(keyBinding, this)
+        }
     }
 
     override fun parent() = parent

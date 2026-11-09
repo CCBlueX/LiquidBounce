@@ -95,15 +95,18 @@ class ClickPlan(
     /**
      * Advances to the next tick and consumes the presses due at [now].
      * Presses nobody used for a while, or a gap in ticks, end the combo.
+     *
+     * @return true when a new combo started
      */
-    fun tick(now: Long) {
+    fun tick(now: Long): Boolean {
         if (consumed > 0) {
             idleSince = NONE
         } else if (due > 0 && idleSince == NONE) {
             idleSince = tickTime
         }
 
-        if (times.isEmpty || now - tickTime > IDLE_MS || idleSince != NONE && now - idleSince > IDLE_MS) {
+        val newCombo = times.isEmpty || now - tickTime > IDLE_MS || idleSince != NONE && now - idleSince > IDLE_MS
+        if (newCombo) {
             reset(now)
         }
 
@@ -120,6 +123,7 @@ class ClickPlan(
         due = count.coerceAtMost(maxPerTick)
         consumed = 0
         trim()
+        return newCombo
     }
 
     fun clicksAt(tick: Int): Int {
