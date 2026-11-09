@@ -15,6 +15,7 @@
       "net.ccbluex.liquidbounce.gametest.LocalConfigTrackingGameTest",
       "net.ccbluex.liquidbounce.gametest.HoleFillerBudgetGameTest",
       "net.ccbluex.liquidbounce.gametest.FallDamageTrackerGameTest",
+      "net.ccbluex.liquidbounce.gametest.ChatReceiveTypeGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.TeleportCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.TeleportRouteGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.TeleportReachGameTest",
