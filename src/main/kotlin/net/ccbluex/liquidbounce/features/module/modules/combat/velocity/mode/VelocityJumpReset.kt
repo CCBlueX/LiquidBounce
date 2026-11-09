@@ -19,11 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
+import net.minecraft.world.entity.player.Player
+import java.util.function.BooleanSupplier
 
 /**
  * Jump Reset mode. A technique most players use to minimize the amount of knockback they get.
@@ -31,6 +34,24 @@ import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 internal object VelocityJumpReset : VelocityMode("JumpReset") {
 
     private val chance = percentageChance("Chance", 100f)
+
+    private val conditions by multiEnumChoice<Condition>("Conditions")
+
+    @Suppress("unused")
+    private enum class Condition(override val tag: String) : Tagged, BooleanSupplier {
+        ONLY_PLAYER_ATTACKER("OnlyPlayerAttacker") {
+            override fun getAsBoolean() = player.lastDamageSource?.entity is Player
+        },
+        NOT_BURNING("NotBurning") {
+            override fun getAsBoolean() = !player.isOnFire
+        },
+        NOT_USING_ITEM("NotUsingItem") {
+            override fun getAsBoolean() = !player.isUsingItem
+        },
+        NOT_IN_SCREEN("NotInScreen") {
+            override fun getAsBoolean() = mc.gui.screen() == null
+        },
+    }
 
     private object JumpByReceivedHits : ToggleableValueGroup(this, "JumpByReceivedHits", false) {
         val hitsUntilJump by intRange("HitsUntilJump", 2..2, 0..10)
@@ -53,7 +74,8 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
         if (player.hurtTime != 9 || !player.onGround() || !player.isSprinting ||
-            LocalPlayerFallDamageTracker.isCurrentFallDamage || !isCooldownOver() || !chance.asBoolean)
+            LocalPlayerFallDamageTracker.isCurrentFallDamage || !conditions.all { it.asBoolean } ||
+            !isCooldownOver() || !chance.asBoolean)
         {
             updateLimit()
             return@handler
