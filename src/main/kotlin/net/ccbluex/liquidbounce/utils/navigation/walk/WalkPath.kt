@@ -39,7 +39,7 @@ enum class WalkMove {
     /** Walk off an edge one block sideways and land lower. */
     FALL,
 
-    /** Sprint-jump over a gap. */
+    /** Sprint-jump over a gap or onto a block out of step reach, see [WalkStep.jump]. */
     PARKOUR,
 
     /** Jump and place a block below the feet. */
@@ -99,15 +99,22 @@ class WalkStep(
      * Whether the move ends with the head under water, so it is swum towards [feet] in three dimensions.
      */
     val underwater: Boolean = false,
+
+    /**
+     * How a [WalkMove.PARKOUR] move is jumped.
+     */
+    val jump: WalkJump? = null,
 )
 
 /**
- * A walking path from [start]. An incomplete path ends at the reachable spot closest to the goal.
+ * A walking path from [start], searched with [abilities]. An incomplete path ends at the reachable spot closest to
+ * the goal.
  */
 class WalkPath(
     val start: Vec3,
     val steps: List<WalkStep>,
     val complete: Boolean,
+    val abilities: WalkAbilities,
 ) {
 
     val end: Vec3
@@ -135,6 +142,11 @@ class WalkAbilities(
      */
     val placeableBlocks: Int,
     val canParkour: Boolean,
+
+    /**
+     * Whether jumps may cross drops a miss would not be survived and land with some fall damage.
+     */
+    val riskyJumps: Boolean = false,
     val canSprint: Boolean,
 
     /**
@@ -161,6 +173,11 @@ class WalkAbilities(
      * Ticks of air the walker has left.
      */
     val air: Int = WalkWater.MAX_AIR,
+
+    /**
+     * Speed and jump height jumps are worked out with.
+     */
+    val motion: MotionTraits = MotionTraits.DEFAULT,
 )
 
 /**
@@ -177,6 +194,11 @@ object WalkCosts {
     const val PLACE = 20.0
     const val BREAK_OVERHEAD = 2.0
     const val AVOID = 50.0
+
+    /**
+     * What a jump costs on top of its ticks when jumps are not risky: a second.
+     */
+    const val JUMP_PENALTY = 20.0
 
     /**
      * Ticks to stop, open a door, trapdoor or fence gate and walk on.

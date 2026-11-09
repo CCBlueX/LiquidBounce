@@ -22,13 +22,15 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
+import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.FluidTags
+import net.minecraft.util.Mth
+import net.minecraft.world.level.block.FarmlandBlock
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -96,6 +98,11 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         private set
 
     /**
+     * Whether the player is coming up for air.
+     */
+    private var breathing = false
+
+    /**
      * Whether the movement of this tick is a plain walk other features may add to, such as an extra jump.
      */
     var isPlainWalk = false
@@ -111,6 +118,13 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     private var idleTicks = 0
     private var actionTarget: BlockPos? = null
     private var actionTicks = 0
+    private var stepTicks = 0
+    private val leap = WalkLeap()
+
+    /**
+     * Where the sprint hop in the air was aimed.
+     */
+    private var hopAim: Vec3? = null
 
     fun follow(path: WalkPath, startIndex: Int) {
         this.path = path
@@ -125,6 +139,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         sprint = false
         dive = false
         isPlainWalk = false
+        hopAim = null
         remainingBreaks = emptyList()
         remainingPlaces = emptyList()
         resetProgress()
@@ -147,7 +162,23 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
             return true
         }
 
-        return distanceToSegment(position, from, step.feet) > OFF_PATH
+        // A jump may first walk back to its run-up.
+        val runUp = step.jump?.runUp
+        if (runUp != null && distanceToSegment(position, runUp, from) <= OFF_PATH) {
+            return false
+        }
+
+        // Shortcuts cut the corners of plain walks ahead.
+        val points = path.points
+        for (i in index until min(points.size - 1, index + SHORTCUT_STEPS)) {
+            if (distanceToSegment(position, points[i], points[i + 1]) <= OFF_PATH) {
+                return false
+            }
+            if (!path.steps[i].isPlain) {
+                break
+            }
+        }
+        return true
     }
 
     fun tick(event: MovementInputEvent, frameYaw: Float): FollowState {
@@ -194,6 +225,11 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         actions.idle()
         actionTarget = null
         move(event, frameYaw, step)
+
+        // A jump moves away from its target while walking back to the run-up.
+        if (step.jump != null) {
+            return if (++stepTicks >= JUMP_TICKS || leap.hopeless) giveUp(step) else FollowState.WALKING
+        }
 
         val distance = player.position().distanceTo(step.feet)
         if (distance < bestDistance - PROGRESS) {
@@ -250,8 +286,23 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     }
 
     private fun move(event: MovementInputEvent, frameYaw: Float, step: WalkStep) {
+        if (breathes()) {
+            standStill(event)
+            sprint = false
+            idleTicks = 0
+            return
+        }
         if (step.underwater) {
             swim(event, frameYaw, step)
+            return
+        }
+
+        val jump = step.jump
+        val path = path
+        if (jump != null && path != null) {
+            leap.tick(event, frameYaw, step, jump, path.abilities)
+            target = leap.target
+            sprint = leap.sprint
             return
         }
 
@@ -262,15 +313,14 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         val inWater = player.isInWater
         val climbing = player.onClimbable()
         val keepsLevel = step.to.y >= step.from.y
+        val aim = aim(step, onGround)
 
-        target = feet
-        event.directionalInput = centerInput(position, feet, frameYaw)
+        target = aim
+        event.directionalInput = centerInput(position, aim, frameYaw)
         event.sneak = step.sneak
         sprint = !step.sneak
 
         event.jump = when (step.move) {
-            WalkMove.PARKOUR -> onGround && wouldLeaveGround(event.directionalInput, frameYaw)
-
             WalkMove.SWIM -> keepsLevel
             WalkMove.CLIMB_UP -> true
             WalkMove.CLIMB_DOWN, WalkMove.FALL, WalkMove.DOWNWARD -> false
@@ -278,9 +328,55 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
                 val rises = feet.y - position.y > NavigationTerrain.STEP + RISE_MARGIN
                 (rises && horizontal < JUMP_REACH && (onGround || inWater || climbing)) || (inWater && keepsLevel)
             }
-        }
+        } || startsHop(position, aim, feet)
 
         isPlainWalk = (step.move == WalkMove.TRAVERSE || step.move == WalkMove.DIAGONAL) && !step.sneak
+    }
+
+    /**
+     * Where to walk for [step]: a shortcut ahead or the step itself; in the air, the steps a sprint hop passes over
+     * lie behind the player, so it keeps to where the hop was aimed.
+     */
+    private fun aim(step: WalkStep, onGround: Boolean): Vec3 {
+        if (onGround) {
+            hopAim = null
+        }
+        return shortcut(step) ?: hopAim ?: step.feet
+    }
+
+    private fun startsHop(position: Vec3, aim: Vec3, feet: Vec3): Boolean {
+        if (aim === feet || !canHop(position, aim)) {
+            return false
+        }
+        hopAim = aim
+        return true
+    }
+
+    /**
+     * Whether to jump while sprinting straight on to [aim], which is faster than running: far enough, with food to
+     * spare, room for the head all along the jump and no farmland the landing would trample.
+     */
+    private fun canHop(position: Vec3, aim: Vec3): Boolean {
+        val distance = horizontalDistance(position, aim)
+        if (!player.onGround() || !player.isSprinting || distance < HOP_DISTANCE ||
+            player.foodData.foodLevel <= HOP_FOOD) {
+            return false
+        }
+
+        val terrain = NavigationTerrain(LiveWorld(world))
+        val dx = (aim.x - position.x) / distance
+        val dz = (aim.z - position.z) / distance
+        var travelled = 0.0
+        while (travelled <= HOP_LENGTH) {
+            val x = position.x + dx * travelled
+            val z = position.z + dz * travelled
+            val floor = terrain.state(Mth.floor(x), Mth.floor(position.y - FLOOR_PROBE), Mth.floor(z))
+            if (!terrain.isClear(terrain.box(x, position.y + HOP_HEIGHT, z)) || floor.block is FarmlandBlock) {
+                return false
+            }
+            travelled += HOP_SAMPLE
+        }
+        return true
     }
 
     /**
@@ -306,24 +402,42 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         event.sneak = rise < -SWIM_TOLERANCE
     }
 
+    /**
+     * Whether to come up for air and stay until the air is full, which a long swim close under the surface needs
+     * whatever the route counted on.
+     */
+    private fun breathes(): Boolean {
+        if (!player.isInWater || player.airSupply >= player.maxAirSupply) {
+            breathing = false
+            return false
+        }
+        if (player.airSupply < player.maxAirSupply * LOW_AIR) {
+            breathing = isAirAbove()
+        }
+        return breathing
+    }
+
+    /**
+     * Whether open air is a short swim straight up from the head.
+     */
+    private fun isAirAbove(): Boolean {
+        val head = BlockPos.containing(player.eyePosition)
+        for (dy in 0..AIR_SEARCH) {
+            val pos = head.above(dy)
+            val state = world.getBlockState(pos)
+            if (state.fluidState.isEmpty) {
+                return state.getCollisionShape(world, pos).isEmpty
+            }
+        }
+        return false
+    }
+
     private fun centerInput(position: Vec3, feet: Vec3, frameYaw: Float): DirectionalInput =
         if (horizontalDistance(position, feet) > CENTER_TOLERANCE) {
             steer(feet.subtract(position), frameYaw)
         } else {
             DirectionalInput.NONE
         }
-
-    /**
-     * Whether walking on with [input] for one more tick leaves the ground, the moment a parkour jump has to start.
-     */
-    private fun wouldLeaveGround(input: DirectionalInput, frameYaw: Float): Boolean {
-        val simulated = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput(input, jumping = false, sprinting = true, sneaking = false)
-        )
-        simulated.yRot = frameYaw
-        simulated.tick()
-        return !simulated.onGround
-    }
 
     private fun standStill(event: MovementInputEvent) {
         event.directionalInput = DirectionalInput.NONE
@@ -337,11 +451,65 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         while (index < path.steps.size && isReached(path.steps[index], path.steps.getOrNull(index + 1))) {
             index++
         }
+        skipAhead(path)
 
         if (index != start) {
             stepChanged()
         }
     }
+
+    /**
+     * Moves on past plain steps whose blocks a shortcut walked by: when the player stands in the block of a later
+     * plain step, the ones before it are done.
+     */
+    private fun skipAhead(path: WalkPath) {
+        if (!player.onGround()) {
+            return
+        }
+
+        val feet = BlockPos.containing(player.position())
+        val end = min(path.steps.size, index + SHORTCUT_STEPS)
+        for (i in index until end) {
+            val step = path.steps[i]
+            if (!step.isPlain) {
+                return
+            }
+            if (step.to == feet) {
+                index = i + 1
+                return
+            }
+        }
+    }
+
+    /**
+     * The farthest of the next points a straight walk from the player gets to, while every step up to it is a plain
+     * walk on one level; null when [step] is not one or the player is in the air.
+     */
+    private fun shortcut(step: WalkStep): Vec3? {
+        val path = path ?: return null
+        if (!step.isPlain || !player.onGround()) {
+            return null
+        }
+
+        var end = index
+        while (end + 1 < min(path.steps.size, index + SHORTCUT_STEPS) && path.steps[end + 1].isPlain) {
+            end++
+        }
+
+        val terrain = NavigationTerrain(LiveWorld(world))
+        val position = player.position()
+        for (i in end downTo index + 1) {
+            val point = path.steps[i].feet
+            if (isStraightWalkable(terrain, position, point, SHORTCUT_STOP, path.abilities.safeFall)) {
+                return point
+            }
+        }
+        return null
+    }
+
+    private val WalkStep.isPlain: Boolean
+        get() = (move == WalkMove.TRAVERSE || move == WalkMove.DIAGONAL) && !sneak && jump == null &&
+            breaks.isEmpty() && places.isEmpty() && opens.isEmpty() && !underwater
 
     private fun isReached(step: WalkStep, next: WalkStep?): Boolean {
         val pending = step.breaks.any { !isCleared(it) } || step.places.any { !isPlaced(it) } ||
@@ -351,6 +519,15 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         }
 
         val position = player.position()
+        // A jump is done once it stands on its target, wherever on it, or holds on to the ladder it jumped to; in the
+        // air above it, the landing still needs steering.
+        if (step.jump != null) {
+            val support = player.mainSupportingBlockPos.orElse(null)
+            return player.onClimbable() && BlockPos.containing(position) == step.to ||
+                player.onGround() && (BlockPos.containing(position) == step.to || support == step.to ||
+                    support == step.to.below())
+        }
+
         val close = horizontalDistance(position, step.feet) < REACH_HORIZONTAL
         if (close && abs(position.y - step.feet.y) < REACH_VERTICAL) {
             return true
@@ -378,6 +555,8 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         idleTicks = 0
         actionTarget = null
         actionTicks = 0
+        stepTicks = 0
+        leap.clear()
     }
 
     private fun isCleared(pos: BlockPos) = world.getBlockState(pos).getCollisionShape(world, pos).isEmpty
@@ -412,13 +591,40 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
          * block high.
          */
         const val SWIM_LEVEL = 0.2
+        const val LOW_AIR = 0.3
+        const val AIR_SEARCH = 4
         const val SWIM_TOLERANCE = 0.15
         const val JUMP_REACH = 1.5
         const val OFF_PATH = 1.5
-        const val FALL_BELOW = 1.0
+
+        /**
+         * How far below the path the player may stand before the route is worked out again; a block down counts.
+         */
+        const val FALL_BELOW = 0.9
         const val PROGRESS = 0.1
         const val STUCK_TICKS = 40
         const val ACTION_TICKS = 60
+
+        /**
+         * Longest a jump may take, walking back to its run-up included.
+         */
+        const val JUMP_TICKS = 120
+
+        /**
+         * Plain steps ahead a shortcut may skip, and how close to its end a straight walk has to get.
+         */
+        const val SHORTCUT_STEPS = 8
+        const val SHORTCUT_STOP = 0.25
+
+        /**
+         * Sprint hops: the least distance to the aim, the food kept, and how far and high the head is checked for room.
+         */
+        const val HOP_DISTANCE = 4.0
+        const val HOP_FOOD = 10
+        const val HOP_LENGTH = 3.5
+        const val HOP_HEIGHT = 1.25
+        const val HOP_SAMPLE = 0.5
+        const val FLOOR_PROBE = 0.5
 
         fun horizontalDistance(a: Vec3, b: Vec3): Double {
             val dx = a.x - b.x

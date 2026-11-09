@@ -51,6 +51,7 @@ class WalkSettings(
     val allowBreak by values.boolean("AllowBreak", allowBreak)
     val allowPlace by values.boolean("AllowPlace", allowPlace)
     private val allowParkour by values.boolean("AllowParkour", allowParkour)
+    private val riskyJumps by values.boolean("RiskyJumps", false)
     private val maxFall by values.int("MaxFall", 3, 0..20, "blocks")
     private val pathRange by values.int("PathRange", 64, 16..128, "blocks")
     private val allowFly by values.boolean("AllowFly", true)
@@ -90,12 +91,14 @@ class WalkSettings(
             canPlace = allowPlace && placeableBlocks > 0,
             placeableBlocks = placeableBlocks,
             canParkour = allowParkour,
+            riskyJumps = allowParkour && riskyJumps,
             canSprint = player.foodData.foodLevel > MIN_SPRINT_FOOD,
             safeFall = safeFall,
             waterFall = WATER_FALL,
             breakTicks = if (allowBreak) BreakTimes.capture() else { _ -> Double.POSITIVE_INFINITY },
             avoid = LongOpenHashSet(avoid),
             air = player.airSupply,
+            motion = MotionTraits.capture(player),
         )
     }
 

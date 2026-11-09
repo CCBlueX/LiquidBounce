@@ -106,9 +106,9 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
     }
 
     /**
-     * Keeps a goal on ground up to [LOOKAHEAD] blocks the way the camera faces, so the walk follows where you look
-     * and goes around whatever is in the way. The goal moves on once [REFRESH] blocks are left to it or the view
-     * turned, early enough that the next path is found before the current one runs out.
+     * Keeps a goal [DISTANCE] blocks the way the camera faces, so the walk follows where you look and, in stages,
+     * goes around whatever is in the way: hills, lakes and cliffs alike. The goal is set again once the view turned
+     * or half the way to it is walked.
      */
     private object Direction : NavigationMode("Direction") {
         private var goal: Vec3? = null
@@ -133,33 +133,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
             }
 
             goalYaw = yaw
-            return ahead(position, yaw).also { this.goal = it }
-        }
-
-        /**
-         * The farthest spot [NEAREST] to [LOOKAHEAD] blocks the way [yaw] faces to stand on near the height of
-         * [position], else the point [LOOKAHEAD] blocks ahead.
-         */
-        private fun ahead(position: Vec3, yaw: Float): Vec3 {
-            val terrain = NavigationTerrain(LiveWorld(world))
-            val direction = Rotation(yaw, 0f).directionVector
-            val y = Mth.floor(position.y)
-
-            var distance = LOOKAHEAD
-            while (distance >= NEAREST) {
-                val point = position.add(direction.scale(distance))
-                val x = Mth.floor(point.x)
-                val z = Mth.floor(point.z)
-                for (dy in HEIGHTS) {
-                    val height = terrain.standHeight(x, y + dy, z)
-                    if (!height.isNaN()) {
-                        return Vec3(point.x, height, point.z)
-                    }
-                }
-                distance -= STRIDE
-            }
-
-            return position.add(direction.scale(LOOKAHEAD))
+            return position.add(Rotation(yaw, 0f).directionVector.scale(DISTANCE)).also { this.goal = it }
         }
 
         private fun horizontalDistanceSqr(a: Vec3, b: Vec3): Double {
@@ -168,13 +142,10 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
             return dx * dx + dz * dz
         }
 
-        private const val LOOKAHEAD = 16.0
-        private const val NEAREST = 10.0
-        private const val STRIDE = 2.0
-        private const val REFRESH = 6.0
+        private const val DISTANCE = 1024.0
+        private const val REFRESH = 512.0
         private const val RADIUS = 2.0
         private const val MAX_TURN = 20f
-        private val HEIGHTS = intArrayOf(0, 1, -1, 2, -2, 3, -3, 4, -4)
     }
 
     /**

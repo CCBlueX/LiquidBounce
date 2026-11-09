@@ -55,6 +55,8 @@ class RoutePlanner<T>(
     private var result: RouteResult<T> = RouteResult.Searching
 
     private val changes = ArrayList<BlockPos>()
+    private var polls = 0
+    private var startedAt = 0
     private var changesOverflowed = false
 
     val isIdle: Boolean
@@ -88,6 +90,7 @@ class RoutePlanner<T>(
         if (search == null) {
             return RouteResult.Searching
         }
+        polls++
 
         slice?.let { running ->
             if (!running.isDone) {
@@ -100,7 +103,9 @@ class RoutePlanner<T>(
             }
         }
 
-        if (applyChanges()) {
+        // Blocks that change all the time, like a command block running every tick, would otherwise restart the
+        // search before it ever gets anywhere.
+        if (polls - startedAt >= MIN_SEARCH_POLLS && applyChanges()) {
             start()
         }
 
@@ -141,6 +146,7 @@ class RoutePlanner<T>(
         val terrain = newTerrain(SectionCache.capture(level, region))
         this.terrain = terrain
         search = factory.create(terrain)
+        startedAt = polls
         result = RouteResult.Searching
         slice = null
         changes.clear()
@@ -200,6 +206,7 @@ class RoutePlanner<T>(
 
     private companion object {
         const val MAX_PENDING_CHANGES = 1024
+        const val MIN_SEARCH_POLLS = 20
     }
 
 }

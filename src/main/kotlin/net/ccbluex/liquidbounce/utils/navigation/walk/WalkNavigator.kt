@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -103,6 +104,11 @@ class WalkNavigator(
     private var lastRequest = Int.MIN_VALUE / 2
     private var retryAt = 0
     private var failed = false
+
+    /**
+     * Searches in a row that found nothing for the same goal.
+     */
+    private var failures = 0
     private var stuck = false
     private var wasOffPath = false
 
@@ -219,9 +225,10 @@ class WalkNavigator(
         }
 
         if (player.onGround()) {
-            val terrain = NavigationTerrain(LiveWorld(world))
-            straight = isStraightWalkable(terrain, position, goal, radius, walkSettings.safeFall)
-            direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
+            // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
+            straight = position.distanceTo(goal) <= walkSettings.maxLength &&
+                isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, walkSettings.safeFall)
+            direct = straight
         }
 
         if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
@@ -447,6 +454,7 @@ class WalkNavigator(
             is RouteResult.Failed -> {
                 planner.cancel()
                 failed = true
+                failures++
                 retryAt = ticks + RETRY_TICKS
                 if (follower.isFinished) {
                     follower.clear()
@@ -457,6 +465,7 @@ class WalkNavigator(
 
     private fun accept(path: WalkPath, position: Vec3) {
         failed = false
+        failures = 0
         stuck = false
         if (path.steps.isEmpty()) {
             // Nothing closer to the goal can be reached from here.
@@ -533,7 +542,11 @@ class WalkNavigator(
      */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
         val nearGoal = NearGoal(goal, radius)
-        val maxLength = walkSettings.maxLength
+        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
+            failures = 0
+        }
+        // After searches that found nothing, the next ones look further around for a detour.
+        val maxLength = walkSettings.maxLength * (1 shl min(failures, MAX_WIDENING))
         // A stage with its detours stays within the path range.
         val stageRange = maxLength / 2.0
         val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
@@ -543,7 +556,12 @@ class WalkNavigator(
             nearGoal.region(start, maxLength, VERTICAL_MARGIN)
         }
         val abilities = walkSettings.capture(avoid)
-        val limits = RouteLimits(maxLength)
+        // Every jump considered is simulated, which makes routes with them slower to work out.
+        val limits = if (abilities.canParkour) {
+            RouteLimits(maxLength, maxExpansions = PARKOUR_EXPANSIONS, maxComputeNanos = PARKOUR_COMPUTE_NANOS)
+        } else {
+            RouteLimits(maxLength)
+        }
 
         val key = SearchKey(BlockPos.containing(start), nearGoal, avoidVersion, staged)
         planner.request(key, region) { terrain ->
@@ -643,6 +661,7 @@ class WalkNavigator(
         straight = false
         direct = false
         failed = false
+        failures = 0
         stuck = false
         wasOffPath = false
         settledAt = null
@@ -679,6 +698,9 @@ class WalkNavigator(
          * Blocks before the end of a stage at which the next stage is searched, so the walk goes on without a stop.
          */
         const val STAGE_LEAD = 12.0
+        const val PARKOUR_EXPANSIONS = 40_000
+        const val MAX_WIDENING = 2
+        val PARKOUR_COMPUTE_NANOS = TimeUnit.SECONDS.toNanos(2)
 
         fun horizontalDistance(a: Vec3, b: Vec3): Double {
             val dx = a.x - b.x

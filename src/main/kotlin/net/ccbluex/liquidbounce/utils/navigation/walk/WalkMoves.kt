@@ -31,6 +31,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 internal fun interface MoveSink {
+    @Suppress("LongParameterList")
     fun accept(
         to: BlockPos,
         move: WalkMove,
@@ -38,7 +39,12 @@ internal fun interface MoveSink {
         breaks: List<BlockPos>,
         places: List<BlockPos>,
         opens: List<BlockPos>,
+        jump: WalkJump?,
     )
+}
+
+internal fun interface JumpFilter {
+    fun accept(x: Int, y: Int, z: Int): Boolean
 }
 
 /**
@@ -54,15 +60,23 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
     private val walk = if (abilities.canSprint) WalkCosts.SPRINT else WalkCosts.WALK
     private val canPlace = abilities.canPlace && abilities.placeableBlocks > 0
-    private val maxGap = if (abilities.canSprint) 3 else 2
     private val maxDrop = max(abilities.safeFall, abilities.waterFall) + 1
     private val halfWidth = terrain.width / 2.0
     private val swim = WalkWater(terrain, abilities.canSprint)
+    private val jumps = WalkJumps(terrain, abilities)
+    private val jumpTargets = WalkJumpTargets(terrain, abilities.motion)
+    private val maxJumpDrop = abilities.safeFall + if (abilities.riskyJumps) RISKY_JUMP_DROP else 1
+
+    /**
+     * Extra cost of a jump for a walker that takes no risks, so it only jumps where that saves a good while.
+     */
+    private val jumpPenalty = if (abilities.riskyJumps) 0.0 else WalkCosts.JUMP_PENALTY
 
     private val breaks = ArrayList<BlockPos>(3)
     private val places = ArrayList<BlockPos>(1)
     private val opens = ArrayList<BlockPos>(1)
     private var breakCost = 0.0
+    private var jumpFilter = JumpFilter { _, _, _ -> true }
 
     /**
      * The node the moves start from, its feet height and whether it is standable in [terrain].
@@ -91,22 +105,25 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
      */
     fun step(from: BlockPos, to: BlockPos): WalkStep? {
         var best: WalkStep? = null
-        forEach(from) { target, move, cost, breaks, places, opens ->
+        val sink = MoveSink { target, move, cost, breaks, places, opens, jump ->
             val current = best
             if (target == to && (current == null || cost < current.cost)) {
                 best = WalkStep(
                     from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost,
-                    isSneaking(from, to, move), isUnderwater(to),
+                    isSneaking(from, to, move), isUnderwater(to), jump,
                 )
             }
         }
+        forEach(from, sink) { x, y, z -> x == to.x && y == to.y && z == to.z }
         return best
     }
 
     /**
-     * Passes every move out of [node] to [sink]. The lists passed are reused; copy them to keep them.
+     * Passes every move out of [node] to [sink]. The lists passed are reused; copy them to keep them. Jumps are only
+     * worked out to spots [isJumpWorth] accepts, as each is simulated.
      */
-    fun forEach(node: BlockPos, sink: MoveSink) {
+    fun forEach(node: BlockPos, sink: MoveSink, isJumpWorth: JumpFilter = JumpFilter { _, _, _ -> true }) {
+        jumpFilter = isJumpWorth
         val x = node.x
         val y = node.y
         val z = node.z
@@ -137,7 +154,6 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
             }
             if (standing) {
                 fall(node, height, x + dx, z + dz, sink)
-                parkour(node, height, dx, dz, sink)
                 diagonal(node, height, DIAGONAL_X[i], DIAGONAL_Z[i], sink)
             }
 
@@ -146,6 +162,8 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
                 swimOut(node, x + dx, z + dz, sink)
             }
         }
+
+        jump(node, height, sink)
 
         swimInto(x, y + 1, z, sink)
         swimInto(x, y - 1, z, sink)
@@ -344,39 +362,30 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         return null
     }
 
-    private fun parkour(from: BlockPos, height: Double, dx: Int, dz: Int, sink: MoveSink) {
-        val x = from.x
-        val y = from.y
-        val z = from.z
-        // A slow floor shortens the run-up.
-        val canLeap = canJump && fromFloor <= 1.0
-        if (!abilities.canParkour || !canLeap || terrain.isWater(x, y, z) || !terrain.isPassable(x, y + 2, z)) {
+    /**
+     * Jumps from the edge of a gap to spots out of reach of the other moves, each simulated by [WalkJumps].
+     */
+    private fun jump(from: BlockPos, height: Double, sink: MoveSink) {
+        if (!abilities.canParkour || !originStands || terrain.isWater(from.x, from.y, from.z)) {
             return
         }
 
         begin()
-        for (gap in 1..maxGap) {
-            val cx = x + dx * gap
-            val cz = z + dz * gap
-            val isGap = terrain.isPassable(cx, y, cz) && terrain.isPassable(cx, y + 1, cz) &&
-                terrain.isPassable(cx, y + 2, cz) && terrain.standHeight(cx, y, cz).isNaN() &&
-                terrain.standHeight(cx, y - 1, cz).isNaN()
-            // A missed jump has to land safely.
-            if (!isGap || landing(cx, y - 1, cz, height) == null) {
-                return
+        val feet = Vec3(from.x + 0.5, height, from.z + 0.5)
+        // Drops to the ground below a course would use up the jumps worked out before the next block of it.
+        var planned = 0
+        var drops = 0
+        jumpTargets.forEach(from.x, from.y, from.z, height, maxJumpDrop) { x, y, z, top ->
+            val drop = top < height - DROP_HEIGHT
+            if (drop && drops >= MAX_JUMPS) {
+                return@forEach planned < MAX_JUMPS
             }
-
-            val lx = cx + dx
-            val lz = cz + dz
-            for (ly in y downTo y - 1) {
-                val top = terrain.standHeight(lx, ly, lz)
-                if (top.isNaN() || top > height || !isColumnPassable(lx, ly, y + 1, lz)) {
-                    continue
-                }
-
-                emit(lx, ly, lz, WalkMove.PARKOUR, (gap + 1) * WalkCosts.SPRINT + WalkCosts.JUMP, sink)
-                return
+            val plan = if (jumpFilter.accept(x, y, z)) jumps.plan(from, height, BlockPos(x, y, z), top) else null
+            if (plan != null) {
+                emit(x, y, z, WalkMove.PARKOUR, plan.ticks(feet) + jumpPenalty, sink, plan)
+                if (drop) drops++ else planned++
             }
+            planned < MAX_JUMPS
         }
     }
 
@@ -521,14 +530,15 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         breakCost = 0.0
     }
 
-    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, sink: MoveSink) {
+    @Suppress("LongParameterList")
+    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, sink: MoveSink, jump: WalkJump? = null) {
         opens.clear()
         if (terrain.opensDoors) {
             val from = terrain.box(origin.x + 0.5, originHeight, origin.z + 0.5)
             terrain.closedIn(from.minmax(terrain.box(x + 0.5, height(x, y, z), z + 0.5)), from, opens)
         }
 
-        sink.accept(BlockPos(x, y, z), move, cost + opens.size * WalkCosts.OPEN, breaks, places, opens)
+        sink.accept(BlockPos(x, y, z), move, cost + opens.size * WalkCosts.OPEN, breaks, places, opens, jump)
     }
 
     /**
@@ -619,15 +629,6 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
 
     private fun isBodyClear(x: Int, y: Int, z: Int) = terrain.isClear(terrain.box(x + 0.5, y.toDouble(), z + 0.5))
 
-    private fun isColumnPassable(x: Int, fromY: Int, toY: Int, z: Int): Boolean {
-        for (y in fromY..toY) {
-            if (!terrain.isPassable(x, y, z)) {
-                return false
-            }
-        }
-        return true
-    }
-
     /**
      * Feet height in [x] [y] [z]; a node that is not standable in the terrain stands on its floor or a placed block.
      */
@@ -686,6 +687,17 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         val DZ = intArrayOf(0, 0, 1, -1)
         val DIAGONAL_X = intArrayOf(1, 1, -1, -1)
         val DIAGONAL_Z = intArrayOf(1, -1, 1, -1)
+
+        /**
+         * Jumps tried from one spot, nearest first.
+         */
+        const val MAX_JUMPS = 24
+
+        /**
+         * How much lower a jump has to land to count as a drop, the floor beside a slab included.
+         */
+        const val DROP_HEIGHT = 0.25
+        const val RISKY_JUMP_DROP = 3
     }
 
 }
