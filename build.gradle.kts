@@ -102,9 +102,6 @@ loom {
 // Run with `./gradlew runClientGameTest`. Headless, SDL needs EGL, since Xvfb has no sRGB GLX visual:
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
 // `-PgameTestNavigation=false` skips the slow navigation tests.
-// `-PgameTestParkourMaps=<manifest.json>` runs the Jump n' Run benchmark (ParkourMapGameTest) on the maps it lists,
-// `-PgameTestParkourFilter=slug;slug:0,2` picks maps and stages, `-PgameTestParkourSurvey=true` only surveys them.
-// `-PgameTestTimeout=<minutes>` raises the run's time limit for long benchmarks.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -123,31 +120,15 @@ loom.runs.named("clientGameTest") {
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
-    val parkourMaps = providers.gradleProperty("gameTestParkourMaps").orNull
-    // The benchmark runs alone unless the navigation tests are asked for
     systemProperties.put(
         "net.ccbluex.liquidbounce.gametest.navigation",
-        providers.gradleProperty("gameTestNavigation").getOrElse((parkourMaps == null).toString()),
+        providers.gradleProperty("gameTestNavigation").getOrElse("true"),
     )
-    if (parkourMaps != null) {
-        systemProperties.put("net.ccbluex.liquidbounce.gametest.parkourMaps", file(parkourMaps).absolutePath)
-    }
-    for (name in listOf("parkourFilter", "parkourSurvey")) {
-        providers.gradleProperty("gameTest${name.replaceFirstChar(Char::uppercase)}").orNull?.let {
-            systemProperties.put("net.ccbluex.liquidbounce.gametest.$name", it)
-        }
-    }
-    // `-PgameTestLongWalk=<blocks>` runs AutoWalkLongDistanceGameTest; optional `-PgameTestLongWalkSeed`, `Yaw`,
-    // `Minutes` (wall clock limit) and `Output` (directory for the incidents and screenshots)
-    for (suffix in listOf("", "Seed", "Yaw", "Minutes", "Output")) {
-        val name = "net.ccbluex.liquidbounce.gametest.longWalk" + if (suffix.isEmpty()) "" else ".${suffix.lowercase()}"
-        providers.gradleProperty("gameTestLongWalk$suffix").orNull?.let { systemProperties.put(name, it) }
-    }
 }
 
 tasks.named("runClientGameTest") {
     // A game that cannot start may wait on an error dialog forever
-    timeout = Duration.ofMinutes(providers.gradleProperty("gameTestTimeout").map(String::toLong).getOrElse(10))
+    timeout = Duration.ofMinutes(10)
 }
 
 dependencies {

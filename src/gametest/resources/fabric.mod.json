@@ -22,7 +22,6 @@
       "net.ccbluex.liquidbounce.gametest.navigation.AutoWalkGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.AutoWalkStagesGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkParkourGameTest",
-      "net.ccbluex.liquidbounce.gametest.navigation.AutoWalkLongDistanceGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSneakGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSwimGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.FlightNavigationGameTest",
@@ -30,8 +29,7 @@
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
-      "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest",
-      "net.ccbluex.liquidbounce.gametest.navigation.ParkourMapGameTest"
+      "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest"
     ]
   },
   "depends": {
