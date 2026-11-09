@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
 
-// What the marketplace tab of the ClickGUI shows, and how it comes from the marketplace's models.
+// What themes get from the marketplace routes, and how it comes from the marketplace's models.
 
 private const val SUMMARY_LENGTH = 200
 private const val REVIEW_PAGE_SIZE = 100
@@ -54,7 +54,7 @@ internal data class PageView<T>(
 )
 
 /**
- * A config as the tab lists it. [overlayOn] is the config it loads on top of.
+ * A config as themes list it. [overlayOn] is the config it loads on top of.
  */
 internal data class ConfigView(
     val id: Int,
@@ -115,7 +115,7 @@ internal data class RevisionView(
 )
 
 /**
- * An add-on, script or theme as the tab lists it. [notFor] is the running LiquidBounce when nothing fits it.
+ * An add-on, script or theme as themes list it. [notFor] is the running LiquidBounce when nothing fits it.
  */
 internal data class ItemView(
     val id: Int,

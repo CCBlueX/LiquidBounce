@@ -57,7 +57,7 @@ private const val PAGE_SIZE = 20
 private const val HISTORY_SIZE = 10
 
 /**
- * The messages of `.config`, which the tab tells the same way.
+ * The messages of `.config`, which a theme's actions tell the same way.
  */
 private val configCommand = object : CmdI18n {
     override val path = "config"

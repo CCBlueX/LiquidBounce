@@ -54,7 +54,7 @@ private const val PAGE_SIZE = 20
 private const val REVISION_PAGE_SIZE = 50
 
 /**
- * The messages of `.marketplace`, which the tab tells the same way.
+ * The messages of `.marketplace`, which a theme's actions tell the same way.
  */
 private val marketplaceCommand = object : CmdI18n {
     override val path = "marketplace"

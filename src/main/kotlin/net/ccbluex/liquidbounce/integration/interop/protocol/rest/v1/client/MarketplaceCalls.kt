@@ -46,11 +46,11 @@ import java.io.IOException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-// What the marketplace routes of the ClickGUI share: reaching the marketplace, the account and list queries.
+// What the marketplace routes for themes share: reaching the marketplace, the account and list queries.
 
 /**
  * Runs [block] against the marketplace: an unreachable marketplace answers 503, a refused request
- * the marketplace's own status and reason. The tab shows no errors of its actions, so the player is told those.
+ * the marketplace's own status and reason. Themes show no errors of these actions, so the player is told those.
  */
 internal suspend inline fun <T> ApplicationCall.marketplace(block: () -> T): T = try {
     block()
