@@ -107,6 +107,9 @@ fun Vec3i.lengthSqr(): Long {
     return x1 * x1 + y1 * y1 + z1 * z1
 }
 
+fun Vec3i.distSqr(x: Int, y: Int, z: Int): Long =
+    Mth.square(this.x.toLong() - x) + Mth.square(this.y.toLong() - y) + Mth.square(this.z.toLong() - z)
+
 inline operator fun Vec3.unaryMinus(): Vec3 = this.reverse()
 
 inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())

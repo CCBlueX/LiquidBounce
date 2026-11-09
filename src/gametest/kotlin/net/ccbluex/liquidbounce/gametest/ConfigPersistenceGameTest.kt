@@ -23,6 +23,13 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.createFile
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.name
 
 class ConfigPersistenceGameTest : FabricClientGameTest {
 
@@ -32,6 +39,7 @@ class ConfigPersistenceGameTest : FabricClientGameTest {
             val config = Config("GameTestPersistence")
             val value = config.int("Number", 1, 0..10)
             ConfigSystem.root(config)
+            val target = config.jsonFile.toPath()
             try {
                 ConfigSystem.store(config)
                 check(config.jsonFile.isFile) { "First save did not create a config" }
@@ -42,27 +50,31 @@ class ConfigPersistenceGameTest : FabricClientGameTest {
                 check(saved["value"].asJsonArray[0].asJsonObject["value"].asInt == 2) {
                     "Saving did not replace the existing config"
                 }
-                check(!config.jsonTmpFile.exists()) { "A successful save left its temporary file behind" }
+                check(leftoverTemps(target).isEmpty()) { "A successful save left its temporary file behind" }
 
-                val previous = config.jsonFile.readBytes()
-                check(config.jsonTmpFile.mkdir()) { "Could not block the temporary write" }
+                // A non-empty directory cannot be replaced, so the save has to fail and keep it.
+                check(config.jsonFile.delete()) { "Could not block the config file" }
+                target.createDirectory().resolve("blocker").createFile()
                 value.set(3)
                 ConfigSystem.store(config)
-                check(previous.contentEquals(config.jsonFile.readBytes())) {
-                    "A failed temporary write changed the saved config"
-                }
+                check(target.isDirectory()) { "A failed save replaced the config file" }
+                check(leftoverTemps(target).isEmpty()) { "A failed save left its temporary file behind" }
 
-                check(config.jsonTmpFile.delete()) { "Could not unblock the temporary write" }
+                config.jsonFile.deleteRecursively()
                 ConfigSystem.store(config)
                 value.set(0)
                 ConfigSystem.load(config)
-                check(value.get() == 3) { "Saving did not recover after a failed temporary write" }
+                check(value.get() == 3) { "Saving did not recover after a failed save" }
             } finally {
-                config.jsonTmpFile.deleteRecursively()
-                config.jsonFile.delete()
+                leftoverTemps(target).forEach { it.deleteIfExists() }
+                config.jsonFile.deleteRecursively()
                 ConfigSystem.remove(config)
             }
         }
     }
+
+    /** Temporary siblings that only a failed save leaves behind. */
+    private fun leftoverTemps(target: Path): List<Path> =
+        Files.newDirectoryStream(target.parent, "${target.name}.*.tmp").use { it.toList() }
 
 }

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.config
 
-import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -26,7 +25,6 @@ import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentT
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
-import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -66,8 +64,7 @@ object ConfigInfoCommand {
                         resolveConfig(input).id
                     }
 
-                    val loggedIn = ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT
-                    val item = request { MarketplaceApi.getMarketplaceItem(id, if (loggedIn) session() else null) }
+                    val item = request { MarketplaceApi.getMarketplaceItem(id, sessionOrNull()) }
                     printInfo(item)
                 }
             }
@@ -96,6 +93,11 @@ object ConfigInfoCommand {
         item.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
             field(regular(t("info.tags", tags.joinToText(DEFAULT_SEPARATOR) { variable(it.name) })))
         }
+        item.contributors?.takeIf { it.isNotEmpty() }?.let { contributors ->
+            val names = contributors.joinToText(DEFAULT_SEPARATOR) { variable(it.nickname ?: it.uid) }
+            field(regular(t("info.contributors", names)))
+        }
+        item.sourceUrl?.let { field(regular(t("info.source", variable(it).copyable()))) }
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
             val names = dependencies.joinToText(DEFAULT_SEPARATOR) {

@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.pingThemAll
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList.serverList
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.SharedConstants
@@ -86,6 +87,22 @@ private fun Route.getServers() = get {
 
         call.respond(servers)
     }.getOrElse { call.internalServerError("Failed to get servers due to ${it.message}") }
+}
+
+// GET /api/v1/client/servers/current
+private fun Route.getCurrentServer() = get("/current") {
+    val server = mc.currentServer
+    if (server == null) {
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        return@get
+    }
+
+    val json = interopGson.toJsonTree(server).asJsonObject.apply {
+        // The list's id, when the server is saved
+        serverList.servers.indexOfFirst { it.ip == server.ip }.takeIf { it >= 0 }?.let { addProperty("id", it) }
+        ServerObserver.tps.takeUnless { it.isNaN() }?.let { addProperty("tps", it) }
+    }
+    call.respond(json)
 }
 
 // POST /api/v1/client/servers/connect
@@ -191,16 +208,6 @@ private fun Route.getLanServers() = get("/lan") {
     runCatching {
         call.respond(ActiveServerList.getLanServers())
     }.getOrElse { call.internalServerError("Failed to get LAN servers due to ${it.message}") }
-}
-
-// GET /api/v1/client/servers/current
-private fun Route.getCurrentServer() = get("/current") {
-    val server = mc.currentServer
-    if (server != null) {
-        call.respond(interopGson.toJsonTree(server))
-    } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
-    }
 }
 
 object ActiveServerList : EventListener {
@@ -377,8 +384,8 @@ fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == ad
 
 internal fun Route.serverListRoutes() = route("/servers") {
     getServers()
-    getLanServers()
     getCurrentServer()
+    getLanServers()
     putAddServer()
     deleteServer()
     putEditServer()

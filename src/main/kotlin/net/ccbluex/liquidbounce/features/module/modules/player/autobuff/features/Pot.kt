@@ -167,7 +167,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
             val sim = TrajectoryInfoRenderer.getHypotheticalTrajectory(
                 simulationOwner = player,
                 trajectoryInfo = TrajectoryInfo.POTION,
-                trajectoryType = TrajectoryType.Potion,
+                trajectoryType = TrajectoryType.POTION,
                 rotation = rotation,
             ).runSimulation(300)
 

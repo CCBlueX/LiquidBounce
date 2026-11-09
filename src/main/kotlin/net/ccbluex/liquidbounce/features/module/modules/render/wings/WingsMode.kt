@@ -26,12 +26,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations
 import net.ccbluex.liquidbounce.features.module.modules.render.wings.ModuleWings.WingsPosition
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
@@ -73,11 +73,10 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val partAllowed = ModuleRotations.isPartAllowed(ModuleRotations.BodyPart.BODY)
-
-                val bodyRot = if (isMe && ModuleRotations.running && partAllowed) {
-                    val modelRot = ModuleRotations.modelRotation?.yaw
-                    val prevModelRot = ModuleRotations.prevModelRotation?.yaw
+                val partAllowed = RotationManager.isPartAllowed(RotationManager.BodyPart.BODY)
+                val bodyRot = if (isMe && RotationManager.running && partAllowed) {
+                    val modelRot = RotationManager.currentRotation?.yaw
+                    val prevModelRot = RotationManager.lastRotation?.yaw
                     rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
                 } else { rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot) }
 

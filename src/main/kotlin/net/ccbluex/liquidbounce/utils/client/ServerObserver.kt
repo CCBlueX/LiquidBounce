@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
@@ -94,6 +95,17 @@ object ServerObserver : EventListener {
 
     var tps = Double.NaN
         private set
+
+    /**
+     * How fast the server ticks against the client: [tps] over the tick rate the client runs at. 1 until there is a
+     * measurement.
+     */
+    val tickSpeed: Double
+        get() {
+            val level = mc.level
+            return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
+        }
+
     var serverVersion: String? = null
         private set
     var hostingInformation: IpInfoApi.IpData? = null
@@ -221,6 +233,9 @@ object ServerObserver : EventListener {
                     } else {
                         Double.NaN
                     }
+
+                    debugParameter("TPS") { tps }
+                    debugParameter("Tick Speed") { tickSpeed }
                 }
             }
 

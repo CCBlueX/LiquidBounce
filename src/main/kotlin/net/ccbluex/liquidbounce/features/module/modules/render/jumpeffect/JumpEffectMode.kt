@@ -41,7 +41,7 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
 
     protected val animCurve by easing("AnimCurve", Easing.QUAD_OUT)
 
-    protected val hueOffsetAnim by int("HueOffsetAnim", 63, -360..360)
+    protected val hueOffsetAnim by int("HueOffsetAnim", -63, -360..360)
 
     val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
     protected val canBeCovered by boolean("CanBeCovered", false)

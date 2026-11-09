@@ -22,12 +22,8 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.HttpMethod
-import net.ccbluex.liquidbounce.api.core.asForm
+import net.ccbluex.liquidbounce.api.thirdparty.LogsApi
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
@@ -58,7 +54,7 @@ import java.util.EnumSet
  * with their issues.
  *
  * This command will create a JSON file with all the information
- * and send it to the CCBlueX Paste API.
+ * and upload it together with the latest log to logs.liquidbounce.net.
  */
 object CommandDebug : CommandRegistrar {
 
@@ -77,27 +73,37 @@ object CommandDebug : CommandRegistrar {
                     serializeAutoConfig(it)
                 }
                 val autoConfig = buffer.readUtf8()
-                val autoConfigPaste = uploadToPaste(autoConfig)
+                val autoConfigPaste = LogsApi.upload(autoConfig)
                 buffer.clear()
 
-                val debugJson = createDebugJson(autoConfigPaste)
+                val logPaste = LogsApi.readLatestLog()?.let { LogsApi.upload(it) }
+
+                val debugJson = createDebugJson(autoConfigPaste, logPaste)
                 buffer.outputStream().writer().use {
                     gson.toJson(debugJson, it)
                 }
-                val paste = uploadToPaste(buffer.readUtf8())
+                val paste = LogsApi.upload(buffer.readUtf8())
                 buffer.clear()
 
                 chat(
                     "Debug information has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
                     paste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(paste))),
                 )
+
+                if (logPaste != null) {
+                    chat(
+                        "Latest log has been uploaded to: ".asPlainText(ChatFormatting.GREEN),
+                        logPaste.asPlainText(Style.EMPTY + ChatFormatting.YELLOW + ClickEvent.OpenUrl(URI(logPaste))),
+                    )
+                }
             }
         }
     }
 
     @Suppress("LongMethod")
     private fun createDebugJson(
-        autoConfigPaste: String
+        autoConfigPaste: String,
+        logPaste: String?
     ) = JsonObject().apply {
         add("client", JsonObject().apply {
             addProperty("name", LiquidBounce.CLIENT_NAME)
@@ -150,6 +156,7 @@ object CommandDebug : CommandRegistrar {
         })
 
         addProperty("config", autoConfigPaste)
+        addProperty("log", logPaste)
 
         add("activeModules", ModuleManager.filter { it.running }.mapToJsonArray { module ->
             JsonPrimitive(module.name)
@@ -167,16 +174,6 @@ object CommandDebug : CommandRegistrar {
         })
 
         add("enemies", publicGson.toJsonTree(GlobalSettingsTarget.combat, EnumSet::class.javaObjectType))
-    }
-
-    /**
-     * Uploads the given content to the CCBlueX Paste API
-     * and returns the URL of the paste.
-     */
-    private suspend fun uploadToPaste(content: String): String = withContext(Dispatchers.IO) {
-        val form = "content=$content"
-        HttpClient.request("https://paste.ccbluex.net/api.php", HttpMethod.POST, body = form.asForm())
-                .body.string()
     }
 
 }

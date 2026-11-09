@@ -18,4 +18,40 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-object EspGlowMode : EspMode("Glow", requiresTrueSight = true)
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.AuraGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.ChromaticGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowStyle
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.HalftoneGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.HologramGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.NeonGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.OutlineGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.RainbowGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.RippleGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.SmoothGlow
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.VanillaGlow
+
+object EspGlowMode : EspMode("Glow", requiresTrueSight = true) {
+
+    val styles = modes("Style", SmoothGlow, arrayOf<GlowStyle>(
+        VanillaGlow,
+        SmoothGlow,
+        OutlineGlow,
+        NeonGlow,
+        RainbowGlow,
+        RippleGlow,
+        HologramGlow,
+        HalftoneGlow,
+        ChromaticGlow,
+        AuraGlow,
+    ))
+
+    init {
+        for (style in styles.modes) {
+            for (value in style.containedValues) {
+                value.onChanged { GlowPostEffect.invalidate() }
+            }
+        }
+    }
+
+}

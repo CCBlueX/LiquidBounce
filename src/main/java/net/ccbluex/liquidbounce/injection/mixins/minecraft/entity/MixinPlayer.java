@@ -43,6 +43,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -92,6 +93,25 @@ public abstract class MixinPlayer extends MixinLivingEntity {
         }
 
         return rotation.yRot();
+    }
+
+    /**
+     * Swimming up or down using modified-rotation
+     */
+    @ModifyExpressionValue(method = "travel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 hookSwimmingRotationVector(Vec3 original) {
+        if (!liquid_bounce$isClientPlayer()) {
+            return original;
+        }
+
+        var rotation = RotationManager.INSTANCE.getCurrentRotation();
+        var rotationTarget = RotationManager.INSTANCE.getActiveRotationTarget();
+
+        if (rotation == null || rotationTarget == null || rotationTarget.getMovementCorrection() == MovementCorrection.OFF) {
+            return original;
+        }
+
+        return rotation.directionVector();
     }
 
     @Inject(method = "isReducedDebugInfo", at = @At("HEAD"), cancellable = true)

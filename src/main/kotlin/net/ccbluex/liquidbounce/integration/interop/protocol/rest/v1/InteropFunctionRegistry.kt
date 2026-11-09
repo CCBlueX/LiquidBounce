@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.user
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.browserRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.protocolRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.reconnectRoutes
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.connectionRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.inputRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.playerRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.registryRoutes
@@ -66,6 +67,7 @@ internal fun Route.registerInteropFunctions() = route("/api/v1/client") {
     playerRoutes()
     registryRoutes()
     serverListRoutes()
+    connectionRoutes()
     textureRoutes()
     worldListRoutes()
     marketplaceRoutes()

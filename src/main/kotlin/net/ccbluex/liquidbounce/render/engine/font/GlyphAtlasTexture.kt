@@ -81,6 +81,20 @@ class GlyphAtlasTexture(
         gpuDevice.createCommandEncoder().writeToTexture(getTexture(), source)
     }
 
+    /**
+     * Zeroes a rectangle of the retained pixels. [uploadRows] sends it to the GPU.
+     */
+    fun clearPixels(x: Int, y: Int, width: Int, height: Int) {
+        val pixels = requireNotNull(pixels) { "Glyph atlas has no retained pixel data" }
+        require(x >= 0 && y >= 0 && width <= pixels.width - x && height <= pixels.height - y) {
+            "Rectangle is outside the glyph atlas"
+        }
+
+        for (row in y until y + height) {
+            MemoryUtil.memSet(pixels.pointer + row.toLong() * pixels.width + x, 0, width.toLong())
+        }
+    }
+
     override fun close() {
         pixels?.close()
         pixels = null

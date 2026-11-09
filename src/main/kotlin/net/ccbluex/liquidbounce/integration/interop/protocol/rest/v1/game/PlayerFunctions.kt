@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
+import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -68,6 +69,16 @@ private fun Route.getPlayerInventory() = get("/inventory") {
     val playerInventoryData = mc.player?.let(PlayerInventoryData::fromPlayer)
     if (playerInventoryData != null) {
         call.respond(playerInventoryData)
+    } else {
+        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    }
+}
+
+// GET /api/v1/client/player/statistics
+private fun Route.getPlayerStatistics() = get("/statistics") {
+    val statistics = PlayerStatisticsTracker.statistics
+    if (statistics != null) {
+        call.respond(statistics)
     } else {
         call.respond(io.ktor.http.HttpStatusCode.NoContent)
     }
@@ -234,6 +245,7 @@ internal fun Route.playerRoutes() {
     route("/player") {
         getPlayerData()
         getPlayerInventory()
+        getPlayerStatistics()
     }
     getCrosshairData()
 }
