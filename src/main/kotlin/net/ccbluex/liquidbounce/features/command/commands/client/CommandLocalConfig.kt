@@ -240,7 +240,7 @@ object CommandLocalConfig : CommandRegistrar {
             }
 
             val config = AutoConfig.readAutoConfig(bufferedReader())
-            AutoConfig.withLoading {
+            AutoConfig.applyConfigs(name) {
                 AutoConfig.loadAutoConfig(config, modules)
             }
             config.int("marketplaceItemId")

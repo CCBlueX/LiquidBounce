@@ -24,6 +24,7 @@ import com.google.gson.annotations.SerializedName
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import net.ccbluex.liquidbounce.config.ConfigLoadReport
 import net.ccbluex.liquidbounce.config.OptionalInclusion
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -247,6 +248,7 @@ open class Value<T : Any>(
             changedListeners.forEach { it.accept(currT) }
             stateFlow.value = currT
         }.onFailure { ex ->
+            ConfigLoadReport.current?.countError()
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
     }

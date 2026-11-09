@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
+import net.ccbluex.liquidbounce.config.ConfigLoadReport
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeValueGroup
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -36,9 +37,11 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -80,6 +83,21 @@ object AutoConfig {
         } finally {
             loadingNow = false
         }
+    }
+
+    /**
+     * Applies the configs in [block] while [loadingNow], then shows one notification on what they did under [name]:
+     * values applied and failed, coloured by the outcome.
+     */
+    fun applyConfigs(name: String, block: () -> Unit) {
+        val report = ConfigLoadReport.collect { withLoading(block) }
+
+        logger.info("Applied config $name: ${report.applied} values applied, ${report.errors} failed")
+        notification(
+            translation("liquidbounce.config.applied", name),
+            translation("liquidbounce.config.applied.summary", report.applied, report.errors),
+            if (report.errors > 0) NotificationEvent.Severity.ERROR else NotificationEvent.Severity.SUCCESS
+        )
     }
 
     /**

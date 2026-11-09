@@ -158,10 +158,6 @@ object ModuleAutoConfig : ClientModule(
             )
         }.onSuccess { result ->
             connectScreen?.updateStatus(regular(message("loaded", address)))
-            notification(
-                "Auto Config", "Successfully loaded config ${autoConfig.name}.",
-                NotificationEvent.Severity.SUCCESS
-            )
             if (result.restartRequired) {
                 notification(
                     "Auto Config",

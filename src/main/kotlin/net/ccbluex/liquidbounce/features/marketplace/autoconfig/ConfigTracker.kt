@@ -177,7 +177,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         val configs = readConfigs(chain + Step(item.id, revisionId))
 
         withContext(Dispatchers.Main) {
-            val base = apply(configs, modules)
+            val base = apply(item.name, configs, modules)
 
             if (modules.isEmpty()) {
                 track(item, revisionId, chain, base)
@@ -208,11 +208,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Applies a config that does not come from the marketplace. It stops tracking but keeps the backup.
+     * Applies a config that does not come from the marketplace, read from [name]. It stops tracking but keeps the
+     * backup.
      */
-    suspend fun loadExternal(config: JsonObject, modules: Collection<ValueGroup> = emptyList()) {
+    suspend fun loadExternal(name: String, config: JsonObject, modules: Collection<ValueGroup> = emptyList()) {
         withContext(Dispatchers.Main) {
-            apply(listOf(config), modules)
+            apply(name, listOf(config), modules)
 
             if (modules.isEmpty()) {
                 updateTracking { clearItem() }
@@ -253,7 +254,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         val configs = readConfigs(chain + Step(itemId, revisionId))
         withContext(Dispatchers.Main) {
-            apply(configs, emptyList())
+            apply(itemName, configs, emptyList())
             updateTracking {
                 baselineText = encodeHashes(snapshot())
                 state = State.TRACKED
@@ -508,23 +509,27 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Backs up the current settings unless a backup exists, then applies [configs] in order. A
-     * failed apply puts back the backup it just took.
+     * Backs up the current settings unless a backup exists, then applies [configs] in order and sums up what they
+     * did under [name]. A failed apply puts back the backup it just took.
      *
      * @return the settings before the last config, when there was more than one
      */
-    private fun apply(configs: List<JsonObject>, modules: Collection<ValueGroup>): Map<String, String>? {
+    private fun apply(
+        name: String,
+        configs: List<JsonObject>,
+        modules: Collection<ValueGroup>
+    ): Map<String, String>? {
         val createdBackup = !hasBackup || !backupFile(backupName).exists()
         if (createdBackup) {
-            val name = "marketplace_preload_${System.currentTimeMillis()}"
-            ConfigSystem.backup(name, backedUpConfigs)
-            updateTracking { backupName = name }
+            val backup = "marketplace_preload_${System.currentTimeMillis()}"
+            ConfigSystem.backup(backup, backedUpConfigs)
+            updateTracking { backupName = backup }
         }
 
         var base: Map<String, String>? = null
         withoutDetection {
             try {
-                AutoConfig.withLoading {
+                AutoConfig.applyConfigs(name) {
                     configs.forEachIndexed { index, config ->
                         if (index == configs.lastIndex && index > 0) {
                             base = snapshot()

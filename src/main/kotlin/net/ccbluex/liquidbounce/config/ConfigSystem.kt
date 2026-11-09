@@ -310,33 +310,13 @@ object ConfigSystem {
         if (value is ValueGroup) {
             runCatching {
                 if (value is ModeValueGroup<*>) {
-                    // Set current active choice
-                    runCatching {
-                        value.setByString(jsonObject["active"].asString)
-                    }.onFailure {
-                        logger.error("Unable to deserialize active choice for ${value.name}", it)
-                    }
-
-                    // Deserialize each choice
-                    val choices = jsonObject["choices"].asJsonObject
-
-                    for (choice in value.modes) {
-                        runCatching {
-                            val choiceElement = choices[choice.name]
-                                // Alias support
-                                ?: choice.aliases.firstNotNullOfOrNull { alias -> choices[alias] }
-                                ?: error("Choice ${choice.name} not found")
-
-                            deserializeValueGroup(choice, choiceElement)
-                        }.onFailure {
-                            logger.error("Unable to deserialize choice ${choice.name}", it)
-                        }
-                    }
+                    deserializeModes(value, jsonObject)
                 }
 
                 // Deserialize the rest of the config
                 deserializeValueGroup(value, jsonObject)
             }.onFailure {
+                ConfigLoadReport.current?.countError()
                 logger.error("Unable to deserialize config ${value.name}", it)
             }
 
@@ -344,11 +324,54 @@ object ConfigSystem {
         }
 
         // Otherwise, we simply deserialize the value
-        runCatching {
+        counted {
             value.deserializeFrom(fileGson, jsonObject["value"])
         }.onFailure {
             logger.error("Unable to deserialize value ${value.name}", it)
         }
+    }
+
+    /**
+     * Sets the active choice of [value] and deserializes each of its choices.
+     */
+    private fun deserializeModes(value: ModeValueGroup<*>, jsonObject: JsonObject) {
+        counted {
+            value.setByString(jsonObject["active"].asString)
+        }.onFailure {
+            logger.error("Unable to deserialize active choice for ${value.name}", it)
+        }
+
+        val choices = jsonObject["choices"].asJsonObject
+
+        for (choice in value.modes) {
+            val choiceElement = choices[choice.name]
+                // Alias support
+                ?: choice.aliases.firstNotNullOfOrNull { alias -> choices[alias] }
+
+            if (choiceElement == null) {
+                logger.error("Unable to deserialize choice ${choice.name}: not in the config")
+                continue
+            }
+
+            runCatching {
+                deserializeValueGroup(choice, choiceElement)
+            }.onFailure {
+                ConfigLoadReport.current?.countError()
+                logger.error("Unable to deserialize choice ${choice.name}", it)
+            }
+        }
+    }
+
+    /**
+     * Runs [block], which sets one value, and counts it into the active [ConfigLoadReport]: as applied unless it
+     * threw or [Value.set] counted a failure meanwhile.
+     */
+    private inline fun counted(block: () -> Unit): Result<Unit> {
+        val report = ConfigLoadReport.current ?: return runCatching(block)
+        val errors = report.errors
+        return runCatching(block)
+            .onSuccess { if (report.errors == errors) report.countApplied() }
+            .onFailure { report.countError() }
     }
 
     private fun ensureRootKeys() {

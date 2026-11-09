@@ -420,6 +420,8 @@
   "liquidbounce.commandManager.notAFriend": "\"%s\" is not on your friend list.",
   "liquidbounce.commandManager.notIngame": "This command can only be used in-game.",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
+  "liquidbounce.config.applied": "Loaded %s",
+  "liquidbounce.config.applied.summary": "%s applied, %s failed",
   "liquidbounce.fileDialog.mode.openDirectory": "Select Folder",
   "liquidbounce.fileDialog.mode.openFile": "Open File",
   "liquidbounce.fileDialog.mode.saveFile": "Save File As",

@@ -110,7 +110,7 @@ object ConfigLoadCommand {
             val config = withContext(Dispatchers.IO) {
                 HttpClient.request(url, HttpMethod.GET).body.charStream().let(AutoConfig::readAutoConfig)
             }
-            ConfigTracker.loadExternal(config, modules)
+            ConfigTracker.loadExternal(url, config, modules)
         }
         chat(regular(t("load.loaded", variable(url))))
     }
