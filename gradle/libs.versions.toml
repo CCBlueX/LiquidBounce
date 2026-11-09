@@ -18,7 +18,7 @@ liquidbounce-cef = "1.0.1+26.3"
 # MinecraftAuth (CCBlueX fork of RaphiMC/MinecraftAuth)
 minecraftauth = "5.0.3-SNAPSHOT"
 # https://github.com/CCBlueX/axochat/tree/master/client
-axochat-client = "1.0.0-SNAPSHOT"
+axochat-client = "1.1.0"
 # TheAltening
 thealtening = "4.1.0"
 # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit

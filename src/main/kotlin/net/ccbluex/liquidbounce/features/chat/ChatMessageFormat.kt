@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.axochat.protocol.Channel
-import net.ccbluex.axochat.user.UserRef
+import net.ccbluex.axochat.user.Author
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsClientChat
@@ -43,7 +43,7 @@ import net.minecraft.network.chat.Style
 
 object ChatMessageFormat {
 
-    fun displayName(user: UserRef, color: ChatFormatting = ChatFormatting.GOLD): MutableComponent {
+    fun displayName(user: Author, color: ChatFormatting = ChatFormatting.GOLD): MutableComponent {
         if (!user.isAccount) {
             return Component.literal(user.name).withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(" [MC]").withStyle(ChatFormatting.DARK_GRAY))
@@ -59,9 +59,9 @@ object ChatMessageFormat {
 
     fun messagePrefix(event: ClientChatMessageEvent, playerSprite: Component): Component {
         val author = event.author
-        val channel = event.channel?.let(Channel::parse)
+        val channel = event.channel
 
-        if (author != null && channel is Channel.User && ChatSession.isSelf(author.id)) {
+        if (author != null && channel is Channel.Direct && ChatSession.isSelf(author.id)) {
             val receiver = channel.user
             val name = ChatSession.userOf(receiver)?.let { displayName(it, ChatFormatting.BLUE) }
                 ?: ChatSession.nameOf(receiver).asPlainText(ChatFormatting.BLUE)
@@ -81,17 +81,13 @@ object ChatMessageFormat {
                     ClickEvent.CopyToClipboard(event.user.name) +
                     HoverEvent.ShowText(event.user.name.asPlainText())
             )
-            ChatSession.isSelf(author.id) -> displayName(author.toUserRef(), nameColor)
-            else -> {
-                val user = author.toUserRef()
-                displayName(user, nameColor)
-                    .onHover(HoverEvent.ShowText(translation("liquidbounce.liquidchat.action.hover")))
-                    .onClickRun { userActions(user) }
-            }
+            ChatSession.isSelf(author.id) -> displayName(author, nameColor)
+            else -> displayName(author, nameColor)
+                .onHover(HoverEvent.ShowText(translation("liquidbounce.liquidchat.action.hover")))
+                .onClickRun { userActions(author) }
         }
 
         val parts = mutableListOf<Component>()
-        channelTag(event)?.let(parts::add)
         if (event.chatGroup == ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT) {
             parts += "[".asPlainText(ChatFormatting.DARK_GRAY)
         }
@@ -109,19 +105,6 @@ object ChatMessageFormat {
             " ▸ ".asPlainText(ChatFormatting.DARK_GRAY)
         }
         return parts.asText()
-    }
-
-    private fun channelTag(event: ClientChatMessageEvent): Component? {
-        val (name, color) = when (event.chatGroup) {
-            ClientChatMessageEvent.ChatGroup.SERVER_CHAT -> {
-                // staff watching every server see where a message comes from
-                val watched = (event.channel?.let(Channel::parse) as? Channel.Watched)?.address
-                (watched ?: translation("liquidbounce.liquidchat.channel.server").string) to ChatFormatting.DARK_AQUA
-            }
-            else -> return null
-        }
-
-        return bracketed("[", name.asPlainText(color), "] ")
     }
 
     private fun bracketed(open: String, name: Component, close: String) = textOf(
@@ -142,7 +125,7 @@ object ChatMessageFormat {
     /**
      * Direct messages are between LiquidBounce Accounts only.
      */
-    private fun userActions(user: UserRef) {
+    private fun userActions(user: Author) {
         GlobalSettingsClientChat.notice(
             buildText {
                 this += displayName(user)

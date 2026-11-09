@@ -24,7 +24,6 @@ import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.StringArgumentType
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withTimeoutOrNull
-import net.ccbluex.axochat.AxochatSession
 import net.ccbluex.axochat.protocol.Channel
 import net.ccbluex.axochat.protocol.Serverbound
 import net.ccbluex.liquidbounce.config.types.Value
@@ -38,6 +37,7 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.chat.ChatMessageFormat
+import net.ccbluex.liquidbounce.features.chat.ChatSession
 import net.ccbluex.liquidbounce.features.chat.LiquidChatClient
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.client.clientTag
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -83,8 +84,12 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
-    internal val allowMessages by boolean("AllowMessages", true).onChanged { sendSettings() }
-    private val serverChat by boolean("ServerChat", false).onChanged { sendSettings() }
+    // the server only takes it at login
+    internal val allowMessages by boolean("AllowMessages", true).onChanged {
+        if (LiquidChatClient.isLoggedIn) {
+            restartIfRunning()
+        }
+    }
 
     private val prefix = clientTag("LiquidChat")
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
@@ -118,7 +123,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         val packet = when {
             session.isModern -> Serverbound.ChatMessage(channel, message)
             channel == Channel.Global -> Serverbound.Message(message)
-            channel is Channel.User -> Serverbound.PrivateMessage(channel.user, message)
+            channel is Channel.Direct -> Serverbound.PrivateMessage(channel.user, message)
             else -> null
         }
         if (packet == null) {
@@ -127,7 +132,7 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
 
         session.send(packet)
-        if (!session.isModern && channel is Channel.User) {
+        if (!session.isModern && channel is Channel.Direct) {
             // v1 servers do not echo direct messages
             val prefix = ChatMessageFormat.directMessagePrefix(channel.user.asPlainText(ChatFormatting.BLUE))
             writeChat(prefix, regular(message))
@@ -147,12 +152,6 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
 
     init {
         CommandManager.register(::registerChatWriteCommand)
-    }
-
-    internal fun sendSettings(session: AxochatSession? = LiquidChatClient.session) {
-        if (session != null && LiquidChatClient.isLoggedIn && session.isModern) {
-            session.send(Serverbound.Settings(allowMessages = allowMessages, serverChat = serverChat))
-        }
     }
 
     override fun onEnabledValueRegistration(value: Value<Boolean>): Value<Boolean> =
@@ -216,17 +215,31 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
             regular(event.message)
         }
 
-        writeChat(prefix, content.copyable(copyContent = event.message))
+        // the profile lookup above can take longer than the server needs to take a message back
+        val metadata = event.id?.let { id ->
+            if (ChatSession.isRemoved(id)) {
+                return@suspendHandler
+            }
+            MessageMetadata(prefix = false, id = messageId(id), remove = false)
+        } ?: messageData
+        writeChat(prefix, content.copyable(copyContent = event.message), metadata)
 
         if (event.chatGroup !in autoTranslate) {
             return@suspendHandler
         }
 
         val result = GlobalSettingsAutoTranslate.translate(text = event.message)
-        if (result.isValid) {
-            writeChat(prefix, result.toResultText())
+        if (result.isValid && event.id?.let(ChatSession::isRemoved) != true) {
+            writeChat(prefix, result.toResultText(), metadata)
         }
     }
+
+    /**
+     * Takes a message the server removed out of the chat, with its translation.
+     */
+    fun remove(id: Long) = mc.gui.hud.chat.removeMessage(messageId(id))
+
+    private fun messageId(id: Long) = "LiquidChat#message$id"
 
     /**
      * Connection errors carry no code and are left to the notifications.
@@ -238,11 +251,11 @@ object GlobalSettingsClientChat : ToggleableValueGroup(
         }
     }
 
-    private fun writeChat(playerPrefix: Component, message: Component) {
+    private fun writeChat(playerPrefix: Component, message: Component, metadata: MessageMetadata = messageData) {
         if (!inGame) {
             logger.info("[Chat] ${playerPrefix.string} ${message.string}")
         } else {
-            chat(prefix, playerPrefix, message, metadata = messageData)
+            chat(prefix, playerPrefix, message, metadata = metadata)
         }
     }
 

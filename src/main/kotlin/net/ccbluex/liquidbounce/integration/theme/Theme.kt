@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.config.types.group.json
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ThemeColorChangeEvent
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthConfig
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
@@ -43,6 +44,7 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.kotlin.SimpleReloadListener
+import net.ccbluex.liquidbounce.utils.kotlin.handleUnrecoverable
 import net.ccbluex.liquidbounce.utils.text.capitalize
 import okio.Buffer
 import retrofit2.create
@@ -57,7 +59,12 @@ import java.util.Locale
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
 @Suppress("TooManyFunctions")
-class Theme private constructor(val origin: Origin, url: String) :
+class Theme private constructor(
+    val origin: Origin,
+    url: String,
+    /** Where the theme lies on disk; null for themes from the client or the internet. */
+    val folder: File? = null,
+) :
     AutoCloseable, SimpleReloadListener.Sequenced {
 
     private val baseUrl = url.trimEnd('/')
@@ -82,6 +89,9 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         @GET("sounds/{name}.ogg")
         suspend fun sound(@Path("name") name: String): Buffer
+
+        @GET("{path}")
+        suspend fun file(@Path("path", encoded = true) path: String): Buffer
     }
 
     enum class Origin(override val tag: String, val external: Boolean) : Tagged {
@@ -98,9 +108,11 @@ class Theme private constructor(val origin: Origin, url: String) :
     private suspend fun loadMetadata() {
         try {
             _metadata = service.metadata().apply { checkNotNull() }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error("Failed to load theme metadata", e)
-            throw IllegalStateException("Failed to load theme metadata", e)
+            logger.error("Failed to load theme metadata from origin ${origin.tag}", e)
+            throw IllegalStateException("Failed to load theme metadata from origin ${origin.tag}", e)
         }
     }
 
@@ -122,7 +134,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         val componentFactoryList = metadata.components.mapNotNull { name ->
             runCatching {
                 service.component(name.lowercase(Locale.US))
-            }.onFailure {
+            }.handleUnrecoverable().onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull()
         }
@@ -131,7 +143,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             for (factory in componentFactoryList) {
                 // Check for duplicated component names
                 check(this.put(factory.name, factory) == null) {
-                    "Found duplicated component name '${factory.name}'"
+                    "Found duplicated component name '${factory.name}' in theme '${metadata.name}'"
                 }
             }
         }
@@ -283,6 +295,11 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
+    /**
+     * Reads a file of the theme by its path relative to the theme root.
+     */
+    suspend fun readFile(path: String): ByteArray = service.file(path).readByteArray()
+
     private suspend fun loadAll() = apply {
         loadMetadata()
         loadComponents()
@@ -311,7 +328,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         val fragmentShader = runCatching {
             service.shader(background.name.lowercase(Locale.US))
-        }.getOrNull() ?: return false
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundShader = ThemeBackground.Shader.build(
@@ -341,7 +358,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         val image = runCatching {
             service.background(background.name)
-        }.getOrNull() ?: return false
+        }.handleUnrecoverable().getOrNull() ?: return false
 
         withContext(Dispatchers.Main) {
             backgroundImage = ThemeBackground.Image(metadata, image).also {
@@ -394,7 +411,12 @@ class Theme private constructor(val origin: Origin, url: String) :
 
         suspend fun load(origin: Origin, file: File) = Theme(
             origin,
-            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/"
+            url = "${ClientInteropServer.url}/${origin.tag}/${file.invariantSeparatorsPath}/",
+            folder = when (origin) {
+                Origin.LOCAL -> ThemeManager.themesFolder.resolve(file)
+                Origin.MARKETPLACE -> MarketplaceManager.marketplaceRoot.resolve(file)
+                else -> null
+            },
         ).loadAll()
     }
 

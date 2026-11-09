@@ -81,6 +81,13 @@ class FontGlyphPageManager(
 
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
+        updateDynamicGlyphs()
+    }
+
+    /**
+     * Takes in the glyphs rendered in the background since the last frame.
+     */
+    fun updateDynamicGlyphs() {
         this.dynamicFontManager.update().forEach { update ->
             if (!update.removed) {
                 dynamicallyLoadedGlyphs[update.key] = update.descriptor

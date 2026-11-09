@@ -55,6 +55,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.kotlin.handleUnrecoverable
 import net.minecraft.ChatFormatting
 import java.net.URI
 import java.time.Instant
@@ -65,12 +66,12 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-private const val MALFORMED_LOG_LENGTH = 200
-private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
-
-private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
-
 object LiquidChatClient {
+
+    private const val MALFORMED_LOG_LENGTH = 200
+    private val ACCOUNT_RESTORE_TIMEOUT = 15.seconds
+
+    private val timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withZone(ZoneId.systemDefault())
 
     private val client = AxochatClient(
         URI(System.getProperty("net.ccbluex.liquidbounce.chat.url", "wss://chat.ccbluex.net/ws")),
@@ -171,6 +172,7 @@ object LiquidChatClient {
         val account = ClientAccountManager.clientAccount
         val accessToken = if (session.isModern && account != ClientAccount.EMPTY_ACCOUNT) {
             runCatching { account.takeSession().accessToken.value }
+                .handleUnrecoverable()
                 .onFailure { logger.warn("Could not refresh the LiquidBounce Account session", it) }
                 .getOrNull()
         } else {
@@ -196,7 +198,7 @@ object LiquidChatClient {
         logger.info("Logging in with LiquidBounce Account...")
         stateChange(ClientChatStateChange.State.LOGGING_IN)
         when (val result = session.loginAccount(accessToken, GlobalSettingsClientChat.allowMessages)) {
-            LoginResult.Success -> loggedIn(session)
+            LoginResult.Success -> loggedIn()
             is LoginResult.Refused -> if (result.error.code == ErrorCode.LoginFailed) {
                 logger.info("LiquidBounce Account login failed, falling back to Mojang...")
                 return false
@@ -230,7 +232,7 @@ object LiquidChatClient {
         }
 
         when (result) {
-            LoginResult.Success -> loggedIn(session)
+            LoginResult.Success -> loggedIn()
             is LoginResult.Refused -> EventManager.callEvent(
                 ClientChatErrorEvent(translateError(result.error), result.error.code.code)
             )
@@ -238,12 +240,11 @@ object LiquidChatClient {
         }
     }
 
-    private fun loggedIn(session: AxochatSession) {
+    private fun loggedIn() {
         isLoggedIn = true
         loggedInAt = TimeSource.Monotonic.markNow()
         announcedAuthFailure = false
         stateChange(ClientChatStateChange.State.LOGGED_IN)
-        GlobalSettingsClientChat.sendSettings(session)
         if (!announcedLogin) {
             announcedLogin = true
             announce("states.loggedIn", NotificationEvent.Severity.INFO)
@@ -260,11 +261,12 @@ object LiquidChatClient {
             is Clientbound.ChatMessage -> EventManager.callEvent(ClientChatMessageEvent(
                 LegacyUser(packet.author.name, packet.author.uuid),
                 packet.content,
-                chatGroupOf(packet.target),
+                chatGroupOf(packet.channel),
                 packet.channel,
                 packet.author,
                 packet.id,
             ))
+            is Clientbound.MessageRemoved -> GlobalSettingsClientChat.remove(packet.id)
             is Clientbound.Error -> if (!authenticating) {
                 EventManager.callEvent(ClientChatErrorEvent(translateError(packet), packet.code.code))
             }
@@ -293,9 +295,8 @@ private suspend fun joinServer(serverId: String) = withContext(Dispatchers.IO) {
     mc.services.sessionService.joinServer(mc.user.profileId, mc.user.accessToken, serverId)
 }
 
-private fun chatGroupOf(channel: Channel?) = when (channel) {
-    Channel.Server, is Channel.Watched -> ClientChatMessageEvent.ChatGroup.SERVER_CHAT
-    is Channel.User -> ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT
+private fun chatGroupOf(channel: Channel) = when (channel) {
+    is Channel.Direct -> ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT
     else -> ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT
 }
 

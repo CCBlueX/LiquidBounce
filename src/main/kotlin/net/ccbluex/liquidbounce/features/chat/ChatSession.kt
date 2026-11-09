@@ -20,9 +20,10 @@
 
 package net.ccbluex.liquidbounce.features.chat
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet
 import net.ccbluex.axochat.protocol.Clientbound
 import net.ccbluex.axochat.user.Author
-import net.ccbluex.axochat.user.UserRef
 import java.util.concurrent.ConcurrentHashMap
 
 object ChatSession {
@@ -33,11 +34,11 @@ object ChatSession {
     var self: Author? = null
         private set
 
-    private val users = ConcurrentHashMap<String, UserRef>()
+    private val users = ConcurrentHashMap<String, Author>()
 
-    private val recentMessages = object : LinkedHashMap<Long, String>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, String>) = size > REMEMBERED_MESSAGES
-    }
+    private val recentMessages = Long2ObjectLinkedOpenHashMap<String>(REMEMBERED_MESSAGES)
+
+    private val removedMessages = LongLinkedOpenHashSet(REMEMBERED_MESSAGES)
 
     fun isSelf(id: String) = self?.id == id
 
@@ -45,9 +46,9 @@ object ChatSession {
 
     fun nameOf(id: String): String = users[id]?.name ?: id.take(8)
 
-    fun userOf(id: String): UserRef? = users[id]
+    fun userOf(id: String): Author? = users[id]
 
-    fun findUser(reference: String): UserRef? =
+    fun findUser(reference: String): Author? =
         users[reference] ?: users.values.firstOrNull { it.name.equals(reference, true) }
 
     fun knownNames(accounts: Boolean = false): Collection<String> = users.values
@@ -55,31 +56,42 @@ object ChatSession {
         .mapTo(sortedSetOf(String.CASE_INSENSITIVE_ORDER)) { it.name }
 
     fun lastMessageOf(userId: String): Long? = synchronized(recentMessages) {
-        recentMessages.entries.lastOrNull { it.value == userId }?.key
+        recentMessages.long2ObjectEntrySet().lastOrNull { it.value == userId }?.longKey
     }
 
     internal fun update(packet: Clientbound) {
         when (packet) {
             is Clientbound.Welcome -> {
                 self = packet.user
-                users[packet.user.id] = packet.user.toUserRef()
+                users[packet.user.id] = packet.user
             }
 
             is Clientbound.ChatMessage -> {
-                users[packet.author.id] = packet.author.toUserRef()
+                users[packet.author.id] = packet.author
                 synchronized(recentMessages) {
-                    recentMessages[packet.id] = packet.author.id
+                    if (recentMessages.size >= REMEMBERED_MESSAGES) recentMessages.removeFirst()
+                    recentMessages.putAndMoveToLast(packet.id, packet.author.id)
                 }
+            }
+
+            is Clientbound.MessageRemoved -> synchronized(removedMessages) {
+                if (removedMessages.size >= REMEMBERED_MESSAGES) removedMessages.removeFirstLong()
+                removedMessages.addAndMoveToLast(packet.id)
             }
 
             else -> {}
         }
     }
 
+    fun isRemoved(id: Long): Boolean = synchronized(removedMessages) { id in removedMessages }
+
     internal fun reset() {
         self = null
         synchronized(recentMessages) {
             recentMessages.clear()
+        }
+        synchronized(removedMessages) {
+            removedMessages.clear()
         }
     }
 

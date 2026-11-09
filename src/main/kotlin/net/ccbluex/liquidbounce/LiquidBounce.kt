@@ -52,7 +52,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.chat.ServerLocation
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -75,6 +74,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
@@ -293,7 +293,6 @@ object LiquidBounce : EventListener {
         FriendManager
         InventoryManager
         EnderChestInventoryTracker
-        ServerLocation
         ActiveServerList
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
@@ -540,7 +539,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen(translation("liquidbounce.splash.loadingLibraries"), taskManager))
         }
     }
 

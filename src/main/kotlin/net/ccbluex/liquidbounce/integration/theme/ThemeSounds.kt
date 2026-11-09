@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import it.unimi.dsi.fastutil.io.FastByteArrayInputStream
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.utils.client.FileSounds
@@ -25,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.sounds.WeighedSoundEvents
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.Resource
-import java.io.ByteArrayInputStream
 import java.util.Locale
 
 /**
@@ -68,7 +68,7 @@ object ThemeSounds {
                 val id = soundId(theme.metadata.id, name) ?: continue
                 // The engine caches decoded files by path; a changed file gets a new one, so it is not served stale
                 val file = id.withSuffix("/${Integer.toHexString(data.contentHashCode())}")
-                files.add(registry, cache, id, file) { ByteArrayInputStream(data) }
+                files.add(registry, cache, id, file) { FastByteArrayInputStream(data) }
             }
         }
     }

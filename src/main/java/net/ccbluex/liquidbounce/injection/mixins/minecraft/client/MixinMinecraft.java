@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
 import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
+import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
@@ -247,6 +248,19 @@ public abstract class MixinMinecraft {
         }
 
         CoroutineTicker.INSTANCE.endMinecraftTick();
+    }
+
+    /**
+     * Keeps the game loop going behind {@link ErrorScreen} when an error leaves a frame early.
+     */
+    @WrapOperation(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runTick(Z)V"))
+    private void keepRunningForErrorScreen(Minecraft instance, boolean advanceGameTime, Operation<Void> original) {
+        ErrorScreen.markLoopRunning();
+        try {
+            original.call(instance, advanceGameTime);
+        } catch (Throwable throwable) {
+            ErrorScreen.recover(throwable);
+        }
     }
 
     /**
