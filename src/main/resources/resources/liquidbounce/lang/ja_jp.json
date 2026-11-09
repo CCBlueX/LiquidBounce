@@ -396,7 +396,7 @@
   "liquidbounce.module.oldRegen.description": "Minecraft 1.8の仕組みを悪用して高速回復を可能にし、炎や毒などの状態異常を除去します。",
   "liquidbounce.module.packetLogger.description": "すべてのパケットとそのフィールドを表示します。",
   "liquidbounce.module.packetMine.description": "ブロックを一度クリックするだけで採掘できるようにします。",
-  "liquidbounce.module.parkour.description": "走り込むジャンプを補助します：踏み切りのタイミングを合わせ、隙間の先のブロックへ向きを合わせ、空中で軌道を修正します。該当するブロックがない場合はブロックの端でジャンプします。",
+  "liquidbounce.module.parkour.description": "ブロックの端でジャンプし、着地を補助します。",
   "liquidbounce.module.particles.description": "エンティティを攻撃したときにパーティクルを表示します。",
   "liquidbounce.module.perfectHit.description": "攻撃のクールダウンが完全に回復したときに攻撃を許可します。",
   "liquidbounce.module.phase.description": "アンチチートを悪用してブロックをすり抜けられるようにします。",

@@ -499,7 +499,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Отправляющиеся",
   "liquidbounce.module.packetMine.description": "Позволяет добывать блоки, щелкая по ним один раз.",
   "liquidbounce.module.packetMine.messages.noVfp": "Смени метод или поставь ViaFabricPlus!",
-  "liquidbounce.module.parkour.description": "Помогает с прыжками, к которым вы разбегаетесь: выбирает момент толчка, направляет прыжок на блок за пропастью и корректирует полёт. Без такого блока прыгает на самом краю.",
+  "liquidbounce.module.parkour.description": "Прыгает с края блока и помогает точно приземляться.",
   "liquidbounce.module.particles.description": "Показывает партиклы при ударе по существу.",
   "liquidbounce.module.phase.description": "Позволяет проходить сквозь блоки, обходя античит.",
   "liquidbounce.module.pingSpoof.description": "Подменяет ваш пинг на указанное значение.",

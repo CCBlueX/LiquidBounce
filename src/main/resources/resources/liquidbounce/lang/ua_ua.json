@@ -417,7 +417,7 @@
   "liquidbounce.module.oldRegen.messages.warningNot1_8": "Попередження: не версія 1.8",
   "liquidbounce.module.packetLogger.description": "Виводить усі пакети та їхні поля.",
   "liquidbounce.module.packetMine.description": "Дозволяє ламати блоки одним кліком.",
-  "liquidbounce.module.parkour.description": "Допомагає зі стрибками, до яких ви розбігаєтеся: обирає момент відштовхування, спрямовує стрибок на блок за прірвою та коригує політ. Без такого блоку стрибає на самому краю.",
+  "liquidbounce.module.parkour.description": "Стрибає з краю блоку та допомагає точно приземлятися.",
   "liquidbounce.module.particles.description": "Показує частинки під час атаки на сутність.",
   "liquidbounce.module.perfectHit.description": "Дозволяє атаки тільки тоді, коли час відновлення атаки повністю відновлено (ідеальний удар).",
   "liquidbounce.module.perfectHorseJump.description": "Автоматично стрибає, коли шкала стрибка коня заповнена.",

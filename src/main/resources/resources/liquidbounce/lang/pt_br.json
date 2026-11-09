@@ -439,7 +439,7 @@
   "liquidbounce.module.oldRegen.description": "Explora mecânicas do Minecraft 1.8 para regeneração mais rápida e remove efeitos negativos como fogo e veneno.",
   "liquidbounce.module.packetLogger.description": "Imprime todos os pacotes e seus campos.",
   "liquidbounce.module.packetMine.description": "Permite minerar blocos clicando neles uma vez.",
-  "liquidbounce.module.parkour.description": "Ajuda nos pulos em que você corre: escolhe o momento do pulo, mira no bloco do outro lado do vão e corrige no ar. Sem um bloco assim, pula na beirada do bloco.",
+  "liquidbounce.module.parkour.description": "Pula na beirada dos blocos e ajuda você a acertar os pulos.",
   "liquidbounce.module.particles.description": "Exibe partículas ao atacar uma entidade.",
   "liquidbounce.module.perfectHit.description": "Permite ataques apenas quando o tempo de recarga do ataque está totalmente restaurado.",
   "liquidbounce.module.perfectHorseJump.description": "Automaticamente pula quando a barra do cavalo estiver cheia.",

@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
@@ -49,15 +50,19 @@ import kotlin.math.abs
 /**
  * Parkour module
  *
- * Helps with the jumps you run at: picks the block across the gap you are heading for, jumps at the tick that lands
- * best, turns the jump towards it, steers in the air and stops you on small landings. Without such a block it jumps
- * at the very edge.
+ * Jumps at the very edge of a block. With [Assist], it picks the block across the gap you are heading for, jumps at
+ * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings.
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
-    private val assist by boolean("Assist", true)
-    private val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")
-    private val rotations = tree(RotationsValueGroup(this))
+    private object Assist : ToggleableValueGroup(this, "Assist", true) {
+        val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")
+        val rotations = tree(RotationsValueGroup(this))
+    }
+
+    init {
+        tree(Assist)
+    }
 
     /**
      * The block being jumped to, while a jump is assisted.
@@ -83,7 +88,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
         RotationManager.setRotationTarget(
             Rotation(delta.yaw, player.xRot),
-            valueGroup = rotations,
+            valueGroup = Assist.rotations,
             priority = Priority.NOT_IMPORTANT,
             provider = this,
         )
@@ -101,7 +106,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         sprint = false
         val running = event.directionalInput.isMoving && !event.sneak
         val free = !player.isInWater && !player.onClimbable() && !player.abilities.flying
-        if (!assist || !running || !free) {
+        if (!Assist.enabled || !running || !free) {
             release()
             if (running) {
                 jumpAtEdge(event)
@@ -159,7 +164,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     }
 
     /**
-     * Picks the block across a gap within [maxAngle] of [heading] that a jump from here lands on best, and aims at
+     * Picks the block across a gap within MaxAngle of [heading] that a jump from here lands on best, and aims at
      * it; whether to jump this tick, or null without one.
      */
     private fun pickTarget(
@@ -179,6 +184,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP) { x, y, z, top ->
             val center = Vec3(x + 0.5, top, z + 0.5)
             val angle = abs(Mth.wrapDegrees(center.subtract(position).yaw - heading))
+            val maxAngle = Assist.maxAngle
             if (angle > maxAngle) {
                 return@forEach true
             }
