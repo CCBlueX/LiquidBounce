@@ -18,13 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
+import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -39,6 +43,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -49,6 +54,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerSnapshot
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
+import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.entity.serverBox
 import net.ccbluex.liquidbounce.utils.entity.serverPosition
@@ -61,10 +67,16 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
+import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySelector
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
@@ -93,6 +105,12 @@ internal object ModuleTickBase : ClientModule(
     private val requires by multiEnumChoice("Requires", Requirement.KILLAURA)
     private val chance = percentageChance("Chance", 100f)
     private val cooldown by intRange("Cooldown", 0..0, 0..100, "ticks")
+
+    /**
+     * How full the attack cooldown has to be on the server when the hit lands, where the server has one. KillAura's
+     * own minimum applies on top.
+     */
+    private val attackCooldown by float("AttackCooldown", 1f, 0f..1f)
 
     /**
      * Charging slows the game down while an enemy is near, until the balance reaches [maxBalance].
@@ -155,6 +173,23 @@ internal object ModuleTickBase : ClientModule(
          */
         abstract fun timerSpeed(): Float?
 
+        /**
+         * Whether the server has the attack cooldown full enough for a hit landing [landingDelay] ticks of real time
+         * from now.
+         */
+        protected fun cooldownReady(landingDelay: Int): Boolean {
+            if (!player.hasCooldown) {
+                return true
+            }
+
+            val killAura = ModuleKillAura.clicker.itemCooldown
+                ?.takeIf { ModuleKillAura.running && ModuleKillAura.targetTracker.target != null }
+            val required = max(attackCooldown, killAura?.nextCooldown ?: 0f)
+            val progress = CombatManager.attackCooldownProgress(landingDelay)
+            ModuleTickBase.debugParameter("Attack Cooldown At Landing") { progress }
+            return progress >= required
+        }
+
         override fun disable() {
             TickBaseVisuals.clear()
         }
@@ -191,10 +226,11 @@ internal object ModuleTickBase : ClientModule(
             // Each boosted tick takes 1 / speed ticks of real time
             val landingDelay = ceil((ticks ?: 0) / boostSpeed).toInt()
             val target = hit?.takeIf {
-                val after = snapshotsFromNow().drop(path.size).take(Advantage.knockbackTicks).map { s -> s.pos }
-                requirementsMet(it.point) && Advantage.paysOff(it, path + after, path.lastIndex, landingDelay)
+                val after = snapshotsFromNow().drop(path.size).take(Advantage.knockbackTicks).toList()
+                requirementsMet(it.point) && cooldownReady(landingDelay) &&
+                    Advantage.paysOff(it, path + after, path.lastIndex, landingDelay)
             }
-            TickBaseVisuals.show(path, ticks.takeIf { target != null }, target?.point)
+            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { target != null }, target?.point)
             debugParameter("Ticks To Hit") { ticks }
 
             val boost = ticks != null && ticks > 0 && target != null && cooldownTicks <= 0 && rollChance()
@@ -216,14 +252,14 @@ internal object ModuleTickBase : ClientModule(
         }
 
         /**
-         * The positions of the boost the balance pays for, up to the hit landing on the last, and that hit.
+         * The snapshots of the boost the balance pays for, up to the hit landing on the last, and that hit.
          */
-        private fun planBoost(): Pair<List<Vec3>, Hit?> {
+        private fun planBoost(): Pair<List<SimulatedPlayerSnapshot>, Hit?> {
             val hitAt = hitPointFrom()
-            val path = ArrayList<Vec3>()
+            val path = ArrayList<SimulatedPlayerSnapshot>()
 
             for (snapshot in snapshotsFromNow().take(boostTicks() + 1)) {
-                path += snapshot.pos
+                path += snapshot
                 val hit = hitAt(snapshot.eyes())
                 if (hit != null) {
                     return path to hit
@@ -393,7 +429,7 @@ internal object ModuleTickBase : ClientModule(
             val path = simulated.take(walk + maxTicks + 1)
             val hitAt = hitPointFrom()
             val hits = path.map { hitAt(it.eyes()) }
-            val ticks = ticksToHit(path, hits, walk, simulated.map { it.pos })
+            val ticks = ticksToHit(path, hits, walk, simulated)
             val hit = ticks?.let { hits[it] }?.takeIf { requirementsMet(it.point) }
             TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit?.point)
             return ticks.takeIf { hit != null }
@@ -401,25 +437,26 @@ internal object ModuleTickBase : ClientModule(
 
         /**
          * The tick of [path] to land the hit on, preferring a critical one, with [walk] normal ticks before the
-         * burst. [hits] are the hits from each tick of [path], [positions] the player simulated on past it. Null
+         * burst. [hits] are the hits from each tick of [path], [simulated] the player simulated on past it. Null
          * when no hit lands on [path] and pays off, or one lands by just walking without a critical hit to wait for.
          */
         private fun ticksToHit(
             path: List<SimulatedPlayerSnapshot>,
             hits: List<Hit?>,
             walk: Int,
-            positions: List<Vec3>
+            simulated: List<SimulatedPlayerSnapshot>
         ): Int? {
             val inRange = path.indices.filter { hits[it] != null }
             val first = inRange.firstOrNull() ?: return null
 
             // The n-th game tick from now moves the player to path[n + 1], held ticks are no game ticks
             val landing = inRange.filter { tick ->
-                tick > walk && killAuraClicksAt(tick - 1) &&
-                    hits[tick]?.let { Advantage.paysOff(it, positions, tick, landingDelay(tick, walk)) } == true
+                val delay = landingDelay(tick, walk)
+                tick > walk && killAuraClicksAt(tick - 1) && cooldownReady(delay) &&
+                    hits[tick]?.let { Advantage.paysOff(it, simulated, tick, delay) } == true
             }
             val critical = if (prefersCritical) {
-                landing.firstOrNull { !path[it].onGround && path[it].fallDistance > 0.0 }
+                landing.firstOrNull { path[it].falling }
             } else {
                 null
             }
@@ -446,12 +483,18 @@ internal object ModuleTickBase : ClientModule(
     private class Hit(val entity: Entity, val point: Vec3)
 
     /**
-     * Boosts only when the hit wins the exchange: the enemy is not invulnerable when it lands, and the knockback
-     * pushes it out of [enemyRange] of us within [knockbackTicks] ticks.
+     * Boosts only when the hit wins the exchange: the enemy is not invulnerable when it lands, and cannot hit back
+     * within [knockbackTicks] ticks. That is the case when the knockback pushes it out of [enemyRange] of us, when its
+     * own attack cooldown is not full yet, or when our hit is critical. The last two apply only where the server has
+     * an attack cooldown.
      */
     private object Advantage : ToggleableValueGroup(ModuleTickBase, "Advantage", true) {
 
         private val enemyRange by float("EnemyRange", 3f, 0f..8f, "blocks")
+
+        /**
+         * Ticks after our hit lands in which the enemy must not be able to hit back.
+         */
         val knockbackTicks by int("KnockbackTicks", 2, 0..10, "ticks")
 
         /**
@@ -461,10 +504,45 @@ internal object ModuleTickBase : ClientModule(
         private val skipInvulnerable by boolean("SkipInvulnerable", true)
 
         /**
+         * Where the server has an attack cooldown, a hit also wins when the enemy's cooldown is not full by the end of
+         * [knockbackTicks], or when it is a critical hit.
+         */
+        private val enemyCooldown by boolean("EnemyCooldown", true)
+        private val criticals by boolean("Criticals", true)
+
+        /**
+         * [Util.getMillis] when the server last restarted the attack cooldown of each player, by entity id.
+         */
+        private val cooldownResets = Int2LongOpenHashMap()
+
+        @Suppress("unused")
+        private val packetHandler = handler<PacketEvent> { event ->
+            val millis = Util.getMillis()
+            when (val packet = event.packet) {
+                is ClientboundSwingAnimationPacket -> mc.execute { cooldownResets.put(packet.entityId, millis) }
+                // Runs before the packet is applied, so the entity still holds the old item
+                is ClientboundSetEquipmentPacket -> mc.execute {
+                    val enemy = mc.level?.getEntity(packet.entity) as? LivingEntity ?: return@execute
+                    val item = packet.slots.firstOrNull { it.first == EquipmentSlot.MAINHAND }?.second
+                        ?: return@execute
+                    if (!ItemStack.isSameItem(enemy.mainHandItem, item)) {
+                        cooldownResets.put(packet.entity, millis)
+                    }
+                }
+                is ClientboundRemoveEntitiesPacket -> mc.execute {
+                    packet.entityIds.forEachInt { cooldownResets.remove(it) }
+                }
+            }
+        }
+
+        @Suppress("unused")
+        private val worldChangeHandler = handler<WorldChangeEvent> { cooldownResets.clear() }
+
+        /**
          * Whether [hit] pays off when it lands with the player at [landing] of [path], [landingDelay] ticks of real
          * time from now. [path] starts now and goes on past [landing] as far as it was simulated.
          */
-        fun paysOff(hit: Hit, path: List<Vec3>, landing: Int, landingDelay: Int): Boolean {
+        fun paysOff(hit: Hit, path: List<SimulatedPlayerSnapshot>, landing: Int, landingDelay: Int): Boolean {
             val enemy = hit.entity as? LivingEntity
             if (!enabled || enemy == null) {
                 return true
@@ -478,6 +556,31 @@ internal object ModuleTickBase : ClientModule(
                 return false
             }
 
+            val modern = player.hasCooldown
+            val strength = if (modern) CombatManager.attackCooldownProgress(landingDelay) else 1f
+            val critical = modern && criticals && isCritical(path[landing], strength)
+            val enemyStrength = (enemy as? Player)
+                ?.takeIf { modern && enemyCooldown }
+                ?.let { enemyStrengthAfter(it, landingDelay) }
+            val sprintHit = player.isSprinting && strength > SPRINT_HIT_STRENGTH
+            val range = rangeAfterKnockback(enemy, path, landing, landingDelay, sprintHit)
+            ModuleTickBase.debugParameter("Critical") { critical }
+            ModuleTickBase.debugParameter("Enemy Cooldown After Knockback") { enemyStrength }
+            ModuleTickBase.debugParameter("Enemy Range After Knockback") { range }
+            return range > enemyRange || critical || enemyStrength != null && enemyStrength <= SPRINT_HIT_STRENGTH
+        }
+
+        /**
+         * How far [enemy] is from us [knockbackTicks] ticks after the knockback of our hit, which lands with the
+         * player at [landing] of [path], [landingDelay] ticks of real time from now.
+         */
+        private fun rangeAfterKnockback(
+            enemy: LivingEntity,
+            path: List<SimulatedPlayerSnapshot>,
+            landing: Int,
+            landingDelay: Int,
+            sprintHit: Boolean
+        ): Double {
             val prediction = PositionExtrapolation.getBestForEntity(enemy)
             // The prediction starts where the client draws the enemy, which falls behind the server while ticks
             // are held
@@ -490,19 +593,40 @@ internal object ModuleTickBase : ClientModule(
             } else {
                 prediction.getPositionInTicks(landingDelay + 1.0).add(offset).subtract(feet)
             }
-            val sprintHit =
-                player.isSprinting && player.getAttackStrengthScale(landing.toFloat()) > SPRINT_HIT_STRENGTH
-            var motion = knockback(enemy, path[landing], feet, before, sprintHit)
+            var motion = knockback(enemy, path[landing].pos, feet, before, sprintHit)
 
             repeat(knockbackTicks) {
                 feet = feet.add(motion)
                 motion = motion.scale(AIR_FRICTION)
             }
 
-            val box = player.getBoundingBoxAt(path[min(landing + knockbackTicks, path.lastIndex)])
-            val range = sqrt(box.distanceToSqr(feet.add(0.0, enemy.eyeHeight.toDouble(), 0.0)))
-            ModuleTickBase.debugParameter("Enemy Range After Knockback") { range }
-            return range > enemyRange
+            val box = player.getBoundingBoxAt(path[min(landing + knockbackTicks, path.lastIndex)].pos)
+            return sqrt(box.distanceToSqr(feet.add(0.0, enemy.eyeHeight.toDouble(), 0.0)))
+        }
+
+        /**
+         * Whether the hit is critical: falling, a full enough cooldown, and not sprinting, which KillAura and Criticals
+         * stop for a critical hit.
+         */
+        private fun isCritical(landing: SimulatedPlayerSnapshot, strength: Float): Boolean {
+            val canCrit = ModuleCriticals.allowsCriticalHit(ignoreOnGround = true) &&
+                (!player.isSprinting || prefersCritical)
+            return landing.falling && strength > SPRINT_HIT_STRENGTH && canCrit
+        }
+
+        /**
+         * How full the attack cooldown of [enemy] is on the server at the end of [knockbackTicks] after our hit, which
+         * lands [landingDelay] ticks of real time from now. Null when we have not seen it restart.
+         */
+        private fun enemyStrengthAfter(enemy: Player, landingDelay: Int): Double? {
+            if (!cooldownResets.containsKey(enemy.id)) {
+                return null
+            }
+
+            // We saw the restart half a ping late, and our hit reaches the server half a ping after we send it
+            val ticks = (Util.getMillis() - cooldownResets.get(enemy.id)).toDouble() / TICK_MILLIS +
+                player.ping.toDouble() / TICK_MILLIS + landingDelay + knockbackTicks
+            return (ticks * CombatManager.serverTickRate + 0.5) / enemy.currentItemAttackStrengthDelay
         }
 
         /**
@@ -549,6 +673,11 @@ internal object ModuleTickBase : ClientModule(
      */
     private const val DEFAULT_KNOCKBACK = 0.4
     private const val SPRINT_KNOCKBACK = 0.5
+
+    /**
+     * The attack strength a hit needs for the sprint knockback and a critical hit, and that counts as a full hit back
+     * from the enemy.
+     */
     private const val SPRINT_HIT_STRENGTH = 0.9f
 
     /**
@@ -638,5 +767,8 @@ internal object ModuleTickBase : ClientModule(
     ).simulate()
 
     private fun SimulatedPlayerSnapshot.eyes() = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
+
+    private val SimulatedPlayerSnapshot.falling
+        get() = !onGround && fallDistance > 0.0
 
 }
