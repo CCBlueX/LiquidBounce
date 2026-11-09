@@ -41,6 +41,8 @@ import kotlin.math.min
 @AddonApi
 object Timer : EventListener {
 
+    private const val HELD_HISTORY_TICKS = 20
+
     private val requestHandler = RequestHandler<Float>()
     private val holds = RequestHandler<Unit>()
 
@@ -73,11 +75,22 @@ object Timer : EventListener {
         private set
 
     /**
+     * Ticks held back since the last tick that ran.
+     */
+    private var heldTicks = 0
+
+    /**
+     * Ticks held back before each of the last ticks that ran, a ring ending before [heldHistoryEnd].
+     */
+    private val heldHistory = IntArray(HELD_HISTORY_TICKS)
+    private var heldHistoryEnd = 0
+
+    /**
      * Whether the last tick was held back. Its interpolated values are then still those of the tick before,
      * so the game is drawn as it is instead of replaying that tick every frame.
      */
-    var isHeld = false
-        private set
+    val isHeld
+        get() = heldTicks > 0
 
     /**
      * Ticks the tick loop of the current frame runs, see [frameTicks].
@@ -158,6 +171,18 @@ object Timer : EventListener {
     }
 
     /**
+     * Ticks held back since [ticks] ticks ago, at most [HELD_HISTORY_TICKS]. Other entities do not tick while held,
+     * so what counts down every tick, such as their hurt time, falls behind the server by that many ticks.
+     */
+    fun heldTicksWithin(ticks: Int): Int {
+        var held = heldTicks
+        for (back in 1..min(ticks, heldHistory.size)) {
+            held += heldHistory[(heldHistoryEnd - back).mod(heldHistory.size)]
+        }
+        return held
+    }
+
+    /**
      * Runs up to [ticks] extra game ticks right after the current one, as many as the balance covers within
      * [range]. They run through the tick loop of the frame like the ticks of a faster timer, only all at once.
      *
@@ -198,7 +223,9 @@ object Timer : EventListener {
         }
 
         if (index < frameEnd) {
-            isHeld = false
+            heldHistory[heldHistoryEnd] = heldTicks
+            heldHistoryEnd = (heldHistoryEnd + 1) % heldHistory.size
+            heldTicks = 0
         }
         return frameEnd
     }
@@ -216,7 +243,7 @@ object Timer : EventListener {
 
         if (held > 0) {
             balance += held / frameSpeed
-            isHeld = true
+            heldTicks += held
         }
     }
 
@@ -251,7 +278,8 @@ object Timer : EventListener {
     private val worldChangeHandler = handler<WorldChangeEvent> {
         balance = 0f
         burstTicks = 0
-        isHeld = false
+        heldTicks = 0
+        heldHistory.fill(0)
         holds.clear()
     }
 

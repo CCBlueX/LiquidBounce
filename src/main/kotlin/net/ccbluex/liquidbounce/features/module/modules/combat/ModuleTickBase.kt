@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -41,24 +42,35 @@ import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerSnapshot
+import net.ccbluex.liquidbounce.utils.entity.armorItems
+import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.entity.serverBox
+import net.ccbluex.liquidbounce.utils.entity.serverPosition
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.armorKnockbackResistance
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySelector
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
 
 /**
  * TickBase
@@ -94,6 +106,7 @@ internal object ModuleTickBase : ClientModule(
     private val balanceReset = balanceReset()
 
     init {
+        tree(Advantage)
         tree(TickBaseVisuals)
     }
 
@@ -175,8 +188,13 @@ internal object ModuleTickBase : ClientModule(
 
             val (path, hit) = planBoost()
             val ticks = if (hit != null) path.lastIndex else null
-            val target = hit?.takeIf(::requirementsMet)
-            TickBaseVisuals.show(path, ticks.takeIf { target != null }, target)
+            // Each boosted tick takes 1 / speed ticks of real time
+            val landingDelay = ceil((ticks ?: 0) / boostSpeed).toInt()
+            val target = hit?.takeIf {
+                val after = snapshotsFromNow().drop(path.size).take(Advantage.knockbackTicks).map { s -> s.pos }
+                requirementsMet(it.point) && Advantage.paysOff(it, path + after, path.lastIndex, landingDelay)
+            }
+            TickBaseVisuals.show(path, ticks.takeIf { target != null }, target?.point)
             debugParameter("Ticks To Hit") { ticks }
 
             val boost = ticks != null && ticks > 0 && target != null && cooldownTicks <= 0 && rollChance()
@@ -200,7 +218,7 @@ internal object ModuleTickBase : ClientModule(
         /**
          * The positions of the boost the balance pays for, up to the hit landing on the last, and that hit.
          */
-        private fun planBoost(): Pair<List<Vec3>, Vec3?> {
+        private fun planBoost(): Pair<List<Vec3>, Hit?> {
             val hitAt = hitPointFrom()
             val path = ArrayList<Vec3>()
 
@@ -368,27 +386,38 @@ internal object ModuleTickBase : ClientModule(
 
         /**
          * The tick of [snapshots] to land the hit on after [walk] normal ticks, shown in the visuals. Null when no
-         * hit lands, or the requirements are not met.
+         * hit lands and pays off, or the requirements are not met.
          */
         private fun plan(snapshots: Sequence<SimulatedPlayerSnapshot>, walk: Int): Int? {
-            val path = snapshots.take(walk + maxTicks + 1).toList()
+            val simulated = snapshots.take(walk + maxTicks + 1 + Advantage.knockbackTicks).toList()
+            val path = simulated.take(walk + maxTicks + 1)
             val hitAt = hitPointFrom()
-            val ticks = ticksToHit(path, hitAt, walk)
-            val hit = ticks?.let { hitAt(path[it].eyes()) }?.takeIf(::requirementsMet)
-            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit)
+            val hits = path.map { hitAt(it.eyes()) }
+            val ticks = ticksToHit(path, hits, walk, simulated.map { it.pos })
+            val hit = ticks?.let { hits[it] }?.takeIf { requirementsMet(it.point) }
+            TickBaseVisuals.show(path.map { it.pos }, ticks.takeIf { hit != null }, hit?.point)
             return ticks.takeIf { hit != null }
         }
 
         /**
          * The tick of [path] to land the hit on, preferring a critical one, with [walk] normal ticks before the
-         * burst. Null when no hit lands on [path], or one lands by just walking without a critical hit to wait for.
+         * burst. [hits] are the hits from each tick of [path], [positions] the player simulated on past it. Null
+         * when no hit lands on [path] and pays off, or one lands by just walking without a critical hit to wait for.
          */
-        private fun ticksToHit(path: List<SimulatedPlayerSnapshot>, hitAt: (Vec3) -> Vec3?, walk: Int): Int? {
-            val inRange = path.indices.filter { hitAt(path[it].eyes()) != null }
+        private fun ticksToHit(
+            path: List<SimulatedPlayerSnapshot>,
+            hits: List<Hit?>,
+            walk: Int,
+            positions: List<Vec3>
+        ): Int? {
+            val inRange = path.indices.filter { hits[it] != null }
             val first = inRange.firstOrNull() ?: return null
 
             // The n-th game tick from now moves the player to path[n + 1], held ticks are no game ticks
-            val landing = inRange.filter { tick -> tick > walk && killAuraClicksAt(tick - 1) }
+            val landing = inRange.filter { tick ->
+                tick > walk && killAuraClicksAt(tick - 1) &&
+                    hits[tick]?.let { Advantage.paysOff(it, positions, tick, landingDelay(tick, walk)) } == true
+            }
             val critical = if (prefersCritical) {
                 landing.firstOrNull { !path[it].onGround && path[it].fallDistance > 0.0 }
             } else {
@@ -400,6 +429,93 @@ internal object ModuleTickBase : ClientModule(
                 first <= walk -> null
                 else -> landing.firstOrNull()
             }
+        }
+
+        /**
+         * Ticks of real time until the hit on [tick] of the path lands: the normal ticks before the burst, and when
+         * holding first, the held ticks the balance does not pay for yet.
+         */
+        private fun landingDelay(tick: Int, walk: Int) =
+            if (holdFirst) walk + max(0, tick - walk - Timer.balance.toInt()) else walk
+
+    }
+
+    /**
+     * A hit on [entity], landing on [point].
+     */
+    private class Hit(val entity: Entity, val point: Vec3)
+
+    /**
+     * Boosts only when the hit wins the exchange: the enemy is not invulnerable when it lands, and the knockback
+     * pushes it out of [enemyRange] of us within [knockbackTicks] ticks.
+     */
+    private object Advantage : ToggleableValueGroup(ModuleTickBase, "Advantage", true) {
+
+        private val enemyRange by float("EnemyRange", 3f, 0f..8f, "blocks")
+        val knockbackTicks by int("KnockbackTicks", 2, 0..10, "ticks")
+
+        /**
+         * For servers whose knockback differs from vanilla.
+         */
+        private val knockbackMultiplier by float("KnockbackMultiplier", 1f, 0f..3f)
+        private val skipInvulnerable by boolean("SkipInvulnerable", true)
+
+        /**
+         * Whether [hit] pays off when it lands with the player at [landing] of [path], [landingDelay] ticks of real
+         * time from now. [path] starts now and goes on past [landing] as far as it was simulated.
+         */
+        fun paysOff(hit: Hit, path: List<Vec3>, landing: Int, landingDelay: Int): Boolean {
+            val enemy = hit.entity as? LivingEntity
+            if (!enabled || enemy == null) {
+                return true
+            }
+
+            // Invulnerable when the hit reaches the server, so it takes no knockback and hits back. The hurt time is a
+            // round trip late, and did not count down while ticks were held since it arrived
+            val hurtTime = enemy.hurtTime - Timer.heldTicksWithin(enemy.hurtDuration - enemy.hurtTime)
+            ModuleTickBase.debugParameter("Enemy Hurt Time") { hurtTime }
+            if (skipInvulnerable && hurtTime > landingDelay + player.ping / TICK_MILLIS) {
+                return false
+            }
+
+            val prediction = PositionExtrapolation.getBestForEntity(enemy)
+            // The prediction starts where the client draws the enemy, which falls behind the server while ticks
+            // are held
+            val offset = enemy.serverPosition.subtract(enemy.position())
+            var feet = prediction.getPositionInTicks(landingDelay.toDouble()).add(offset)
+            // The server halves the motion it has of the enemy. Of players it only has what is left of earlier
+            // knockback, and their client takes the result as its new motion
+            val before = if (enemy is Player) {
+                Vec3.ZERO
+            } else {
+                prediction.getPositionInTicks(landingDelay + 1.0).add(offset).subtract(feet)
+            }
+            val sprintHit =
+                player.isSprinting && player.getAttackStrengthScale(landing.toFloat()) > SPRINT_HIT_STRENGTH
+            var motion = knockback(enemy, path[landing], feet, before, sprintHit)
+
+            repeat(knockbackTicks) {
+                feet = feet.add(motion)
+                motion = motion.scale(AIR_FRICTION)
+            }
+
+            val box = player.getBoundingBoxAt(path[min(landing + knockbackTicks, path.lastIndex)])
+            val range = sqrt(box.distanceToSqr(feet.add(0.0, enemy.eyeHeight.toDouble(), 0.0)))
+            ModuleTickBase.debugParameter("Enemy Range After Knockback") { range }
+            return range > enemyRange
+        }
+
+        /**
+         * The horizontal motion of [enemy] at [at] after our hit from [from], with the server having [motion] of it
+         * before.
+         */
+        private fun knockback(enemy: LivingEntity, from: Vec3, at: Vec3, motion: Vec3, sprintHit: Boolean): Vec3 {
+            val away = Vec3(at.x - from.x, 0.0, at.z - from.z).normalize()
+            // Armor is the only knockback resistance known of other entities, the attribute is not synced
+            val resistance = enemy.armorItems.sumOf { it.armorKnockbackResistance }.coerceIn(0.0, 1.0)
+            val strength = knockbackMultiplier * (1.0 - resistance)
+            val knocked = Vec3(motion.x, 0.0, motion.z).scale(0.5).add(away.scale(DEFAULT_KNOCKBACK * strength))
+            return if (sprintHit) knocked.scale(0.5).add(away.scale(SPRINT_KNOCKBACK * strength)) else knocked
         }
 
     }
@@ -426,6 +542,19 @@ internal object ModuleTickBase : ClientModule(
      */
     private const val LOOK_MARGIN = 1.0
     private const val CLICK_MILLIS = 250L
+    private const val TICK_MILLIS = 50
+
+    /**
+     * The knockback of a hit, and the extra one of a sprint hit at more than [SPRINT_HIT_STRENGTH] attack strength.
+     */
+    private const val DEFAULT_KNOCKBACK = 0.4
+    private const val SPRINT_KNOCKBACK = 0.5
+    private const val SPRINT_HIT_STRENGTH = 0.9f
+
+    /**
+     * Knockback lifts the enemy off the ground, where only the air slows its motion down.
+     */
+    private const val AIR_FRICTION = 0.91
 
     /**
      * How far the server box of an enemy may be off its box on the client, which stays behind while ticks are held.
@@ -443,13 +572,13 @@ internal object ModuleTickBase : ClientModule(
      * crosshair. Null when it misses. Uses where the server has the enemies, which the client only catches up with
      * while ticking.
      */
-    private fun hitPointFrom(): (Vec3) -> Vec3? {
+    private fun hitPointFrom(): (Vec3) -> Hit? {
         val killAuraTarget = ModuleKillAura.targetTracker.target?.takeIf { ModuleKillAura.running }
         if (killAuraTarget != null) {
             val box = killAuraTarget.serverBox()
             val range = ModuleKillAura.range.interactionRange.toDouble()
             val wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
-            return { eyes -> box.hitPoint(eyes, range, wallsRange) }
+            return { eyes -> box.hitPoint(eyes, range, wallsRange)?.let { Hit(killAuraTarget, it) } }
         }
 
         val range = if (ModuleReach.running) {
@@ -461,7 +590,7 @@ internal object ModuleTickBase : ClientModule(
         val aimbotTarget = ModuleAimbot.targetTracker.target?.takeIf { ModuleAimbot.running }
         if (aimbotTarget != null) {
             val box = aimbotTarget.serverBox()
-            return { eyes -> box.hitPoint(eyes, range, 0.0) }
+            return { eyes -> box.hitPoint(eyes, range, 0.0)?.let { Hit(aimbotTarget, it) } }
         }
 
         val direction = player.lookAngle
@@ -475,7 +604,7 @@ internal object ModuleTickBase : ClientModule(
     /**
      * Like [net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult], against the server boxes.
      */
-    private fun enemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Vec3? {
+    private fun enemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Hit? {
         val end = eyes.fma(range, direction)
         val candidates = world.getEntities(player, AABB(eyes, end).inflate(SEARCH_MARGIN)) {
             EntitySelector.CAN_BE_PICKED.test(it) && it.shouldBeAttacked()
@@ -483,8 +612,9 @@ internal object ModuleTickBase : ClientModule(
 
         return candidates.mapNotNull { entity ->
             val box = entity.serverBox().inflate(entity.pickRadius.toDouble())
-            if (box.contains(eyes)) eyes else box.clip(eyes, end).orElse(null)
-        }.minByOrNull { it.distanceToSqr(eyes) }?.takeIf { hasLineOfSight(eyes, it) }
+            val point = if (box.contains(eyes)) eyes else box.clip(eyes, end).orElse(null)
+            point?.let { Hit(entity, it) }
+        }.minByOrNull { it.point.distanceToSqr(eyes) }?.takeIf { hasLineOfSight(eyes, it.point) }
     }
 
     /**

@@ -1793,6 +1793,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public final fun getTimerSpeed ()F
+	public final fun heldTicksWithin (I)I
 	public final fun hold (Lnet/ccbluex/liquidbounce/event/EventListener;I)V
 	public static synthetic fun hold$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;Lnet/ccbluex/liquidbounce/event/EventListener;IILjava/lang/Object;)V
 	public final fun isHeld ()Z
