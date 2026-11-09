@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.config.autoconfig.AutoConfigMetadata
 import net.ccbluex.liquidbounce.config.autoconfig.IncludeConfiguration
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.gson.util.int
-import net.ccbluex.liquidbounce.config.gson.util.parseTree
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
@@ -240,7 +239,7 @@ object CommandLocalConfig : CommandRegistrar {
                 return 1
             }
 
-            val config = publicGson.newJsonReader(bufferedReader()).use { it.parseTree().asJsonObject }
+            val config = AutoConfig.readAutoConfig(bufferedReader())
             AutoConfig.withLoading {
                 AutoConfig.loadAutoConfig(config, modules)
             }
