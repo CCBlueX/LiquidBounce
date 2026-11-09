@@ -390,7 +390,7 @@
   "liquidbounce.module.oldRegen.description": "Abuses Minecraft 1.8 mechanics two awwow fastew wegenewation and wemoves negative status effects wike fiwe and poison",
   "liquidbounce.module.packetLogger.description": "Pwints aww packets and theiw fiewds.",
   "liquidbounce.module.packetMine.description": "Awwows u two mine bwocks by cwicking them once",
-  "liquidbounce.module.parkour.description": "Autwomaticawwy jumps at teh wewwy edge of a bwock",
+  "liquidbounce.module.parkour.description": "Hewps wif teh jumps u wun at: times each jump, tuwns it towawds teh bwock acwoss teh gap an steews in teh aiw. Wifout such a bwock it jumps at teh wewwy edge",
   "liquidbounce.module.particles.description": "Displays pawticles when attacking an entity",
   "liquidbounce.module.perfectHit.description": "Allows attacks only when attack cooldown is fully restored.",
   "liquidbounce.module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is fully filled up.",

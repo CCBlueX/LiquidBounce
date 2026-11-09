@@ -23,6 +23,7 @@
       "net.ccbluex.liquidbounce.gametest.navigation.AutoWalkGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.AutoWalkStagesGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkParkourGameTest",
+      "net.ccbluex.liquidbounce.gametest.navigation.ParkourAssistGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSneakGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSwimGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.FlightNavigationGameTest",

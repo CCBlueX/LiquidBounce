@@ -435,7 +435,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Gönderiliyor",
   "liquidbounce.module.packetMine.description": "Bloklara bir kez tıklayarak kazmanızı sağlar.",
   "liquidbounce.module.packetMine.messages.noVfp": "Başka bir geçiş yöntemi seçin veya ViaFabricPlus’ı kurun!",
-  "liquidbounce.module.parkour.description": "Bir bloğun tam kenarında otomatik olarak zıplar.",
+  "liquidbounce.module.parkour.description": "Koşarak yaptığın atlayışlara yardım eder: sıçrama anını ayarlar, atlayışı boşluğun ötesindeki bloğa yöneltir ve havada yön düzeltir. Böyle bir blok yoksa bloğun tam kenarında zıplar.",
   "liquidbounce.module.particles.description": "Bir varlığa saldırdığınızda parçacıklar gösterir.",
   "liquidbounce.module.phase.description": "Hile karşıtını istismar ederek blokların içinden geçmenizi sağlar.",
   "liquidbounce.module.pingSpoof.description": "Pinginizi belirtilen bir değere sahteleştirir.",
