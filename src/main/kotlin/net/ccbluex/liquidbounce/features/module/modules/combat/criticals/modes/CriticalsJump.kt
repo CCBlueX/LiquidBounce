@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.world.entity.LivingEntity
@@ -134,7 +136,7 @@ object CriticalsJump : Mode("Jump") {
         // If player is already falling in the air
         if (!onGround && player.deltaMovement.y <= 0.0) {
             // If already capable of landing a critical hit right now, don't wait!
-            if (player.fallDistance > 0.0 && player.getAttackStrengthScale(0.5f) > 0.9f) {
+            if (player.fallDistance > 0.0 && CombatManager.attackCooldownProgress() > 0.9f) {
                 return false
             }
 
@@ -178,9 +180,10 @@ object CriticalsJump : Mode("Jump") {
 
     private fun calculateTicksUntilNextCrit(): Float {
         val durationToWait = player.currentItemAttackStrengthDelay * 0.9F - 0.5F
-        val waitedDuration = player.attackStrengthTicker.toFloat()
+        val waitedDuration = CombatManager.attackCooldownTicks().toFloat()
 
-        return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
+        // Server ticks left, which pass slower than ours while the server lags
+        return ((durationToWait - waitedDuration) / ServerObserver.tickSpeed.toFloat()).coerceAtLeast(0.0f)
     }
 
     fun shouldWaitForJump(initialMotion: Float = LivingEntity.BASE_JUMP_POWER): Boolean {

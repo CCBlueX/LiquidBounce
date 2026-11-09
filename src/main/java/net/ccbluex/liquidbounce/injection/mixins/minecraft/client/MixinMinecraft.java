@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.render.ClientTesselator;
 import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -273,6 +274,14 @@ public abstract class MixinMinecraft {
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V", shift = At.Shift.BEFORE))
     private void hookPacketProcess(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(TickPacketProcessEvent.INSTANCE);
+    }
+
+    /**
+     * Counts the ticks of each frame in real time.
+     */
+    @ModifyExpressionValue(method = "runTick", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"))
+    private int hookFrameTicks(int ticks, @Local(name = "i") int index) {
+        return Timer.INSTANCE.frameTicks(ticks, index);
     }
 
     /**

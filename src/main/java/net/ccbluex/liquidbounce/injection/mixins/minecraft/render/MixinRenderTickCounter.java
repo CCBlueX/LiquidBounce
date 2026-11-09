@@ -38,10 +38,7 @@ public abstract class MixinRenderTickCounter {
      */
     @Inject(method = "advanceGameTime(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/DeltaTracker$Timer;deltaTicks:F", shift = At.Shift.AFTER, opcode = Opcodes.PUTFIELD))
     private void hookTimer(CallbackInfoReturnable<Integer> callback) {
-        float customTimer = Timer.INSTANCE.getTimerSpeed();
-        if (customTimer > 0) {
-            deltaTicks *= customTimer;
-        }
+        deltaTicks = Timer.INSTANCE.scaleFrame(deltaTicks);
     }
 
 }
