@@ -60,7 +60,7 @@
 <svelte:window onclick={handleWindowClick}/>
 
 <div class="component-drawer" bind:this={drawerElement}>
-    <button class="button-toggle-drawer" onclick={toggleDrawer}>Add Component</button>
+    <button class="button-toggle-drawer" onclick={toggleDrawer} transition:fly={{duration: 200, y: -10}}>Add Component</button>
 
     {#if drawerShown}
         <div class="drawer" transition:fly={{ y: -10, duration: 200 }}>
