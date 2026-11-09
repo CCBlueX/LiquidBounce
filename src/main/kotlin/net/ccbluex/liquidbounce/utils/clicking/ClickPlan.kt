@@ -30,6 +30,7 @@ import kotlin.math.abs
  * Tick `n` consumes the presses in `(tickTime + (n - 1) * 50, tickTime + n * 50]`,
  * so [clicksAt] is what that tick will consume.
  */
+@Suppress("TooManyFunctions")
 class ClickPlan(
     private val timing: ClickTiming,
     private val random: Random = Random(),
@@ -168,6 +169,38 @@ class ClickPlan(
     }
 
     /**
+     * A press on the same key from the player or another clicker at [time]. It counts as one of this tick's
+     * presses, and the presses after it are planned again from there, so presses from several sources don't add up.
+     *
+     * A clicker passes its own plan as [leader]: drawing our own intervals instead would race it,
+     * and the earlier of two random presses comes faster than either plan's CPS.
+     */
+    fun pressed(time: Long, leader: ClickPlan? = null) {
+        if (times.isEmpty) {
+            return
+        }
+
+        if (consumed < due) {
+            consumed++
+        }
+
+        replan()
+        if (time >= times.getLong(times.size - 1)) {
+            append(time)
+        }
+        next = times.size
+
+        if (leader != null) {
+            for (i in leader.next until leader.times.size) {
+                val planned = leader.times.getLong(i)
+                if (planned > time) {
+                    append(planned)
+                }
+            }
+        }
+    }
+
+    /**
      * Drops the presses planned after this tick, so they are planned again with changed settings.
      */
     private fun replan() {
@@ -193,7 +226,11 @@ class ClickPlan(
             time = maxOf(time, times.getLong(times.size - maxPerTick) + TICK_MS)
         }
 
-        intervals.add(time - last)
+        append(time)
+    }
+
+    private fun append(time: Long) {
+        intervals.add(time - times.getLong(times.size - 1))
         if (intervals.size > HISTORY) {
             intervals.removeLong(0)
         }
