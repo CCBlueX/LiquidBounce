@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
@@ -138,7 +138,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private val stepSuccessEvent = handler<PlayerStepSuccessEvent> { event ->
             val stepHeight = event.adjustedVec.y
 
-            ModuleDebug.debugParameter(ModuleStep, "StepHeight", stepHeight)
+            ModuleStep.debugParameter("StepHeight") { stepHeight }
 
             if (stepHeight <= 0.5) {
                 return@handler

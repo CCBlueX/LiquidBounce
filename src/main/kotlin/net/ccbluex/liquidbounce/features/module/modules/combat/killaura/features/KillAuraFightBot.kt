@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
@@ -200,11 +201,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
                 val position = leaderPosition.fma(LeaderFollower.radius.toDouble(), rotation.directionVector)
-                ModuleDebug.debugGeometry(
-                    this,
-                    "Possible Position $yaw",
-                    ModuleDebug.DebuggedPoint(position, Color4b.MAGENTA)
-                )
+                debugGeometry("Possible Position $yaw") { DebuggedPoint(position, Color4b.MAGENTA) }
                 position
             }
             .minByOrNull { it.distanceToSqr(playerPosition) } ?: leaderPosition
@@ -233,11 +230,9 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(
                 }
 
                 val isInAngle = abs(rotation.rotationDeltaTo(combatTarget.targetRotation).deltaYaw) <= dangerousYawDiff
-                ModuleDebug.debugGeometry(
-                    this,
-                    "Possible Position $yaw",
-                    ModuleDebug.DebuggedPoint(position, if (!isInAngle) Color4b.GREEN else Color4b.RED)
-                )
+                debugGeometry("Possible Position $yaw") {
+                    DebuggedPoint(position, if (!isInAngle) Color4b.GREEN else Color4b.RED)
+                }
 
                 if (isInAngle) null else position
             }

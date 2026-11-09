@@ -25,8 +25,9 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebugCollection
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
@@ -136,9 +137,9 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
         placementPositions.sortWith(placementTargetComparator)
 
         debugGeometry("PlacementPositions") {
-            ModuleDebug.DebugCollection(
+            DebugCollection(
                 placementPositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(BlockPos.of(pos).center, Color4b.RED.with(a = 100))
+                    DebuggedPoint(BlockPos.of(pos).center, Color4b.RED.with(a = 100))
                 }
             )
         }

@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -94,11 +95,7 @@ abstract class NavigationBaseValueGroup<T>(
             return@handler
         }
 
-        ModuleDebug.debugGeometry(
-            this,
-            "Goal",
-            ModuleDebug.DebuggedPoint(goal, Color4b.BLUE, size = 0.4)
-        )
+        debugGeometry("Goal") { DebuggedPoint(goal, Color4b.BLUE, size = 0.4) }
 
         if (navigator.navigate(event, goal, goalRadius(context))) {
             handleMovementAssist(event, context)
