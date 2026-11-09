@@ -115,7 +115,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
             }
 
             // If we are not going to switch to an axe, we will not break the shield
-            return determineWeaponSlot(null, enforceShield = true)?.itemStack?.isAxe == true
+            return running && determineWeaponSlot(null, enforceShield = true)?.itemStack?.isAxe == true
         }
 
     /**
