@@ -61,6 +61,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     private val range = float("Range", 4.2f, 1f..8f)
 
+    private val wallRange by float("WallRange", 0f, 0f..8f).onChange {
+        minOf(range.get(), it)
+    }
+
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
 
     init {
@@ -180,7 +184,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                     toEntity = entity,
                     rotation = currentRotation,
                     range = targetTracker.maxRange.toDouble(),
-                    throughWallsRange = 0.0,
+                    throughWallsRange = wallRange.toDouble(),
                 )
 
                 if (currentHit != null) {
@@ -200,7 +204,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                 eyes = eyes,
                 box = point.box,
                 range = targetTracker.maxRange.toDouble(),
-                wallsRange = 0.0,
+                wallsRange = wallRange.toDouble(),
                 rotationPreference = rotationPreference
             ) ?: continue
 
