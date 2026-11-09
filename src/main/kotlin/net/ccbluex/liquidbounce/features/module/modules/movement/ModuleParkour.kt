@@ -70,6 +70,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private var target: BlockPos? = null
     private var targetHeight = 0.0
     private var aim: Vec3? = null
+    private var aimYaw = Float.NaN
     private var sprint = false
 
     /**
@@ -78,16 +79,23 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private var airborne = false
     private var sinceLanding = BRAKE_TICKS
 
+    /**
+     * Turns towards the block jumped to. Close to its middle, the way there turns around with every bit the player
+     * passes it by, so the yaw from before is held.
+     */
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         val aim = aim ?: return@handler
         val delta = aim.subtract(player.position())
-        if (delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE_SQR) {
+        if (delta.horizontalDistanceSqr() >= MIN_AIM_DISTANCE * MIN_AIM_DISTANCE) {
+            aimYaw = delta.yaw
+        }
+        if (aimYaw.isNaN()) {
             return@handler
         }
 
         RotationManager.setRotationTarget(
-            Rotation(delta.yaw, player.xRot),
+            Rotation(aimYaw, player.xRot),
             valueGroup = Assist.rotations,
             priority = Priority.NOT_IMPORTANT,
             provider = this,
@@ -246,6 +254,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private fun release() {
         target = null
         aim = null
+        aimYaw = Float.NaN
     }
 
     private fun abilities() = WalkAbilities(
@@ -276,5 +285,5 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private const val BRAKE_TICKS = 10
     private const val BRAKE_LOOKAHEAD = 3
     private const val BRAKE_SPEED = 0.1
-    private const val MIN_AIM_DISTANCE_SQR = 1.0E-4
+    private const val MIN_AIM_DISTANCE = 0.75
 }
