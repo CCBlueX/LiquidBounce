@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -126,6 +127,11 @@ object CombatManager : EventListener {
 
     val tickHandler = handler<GameTickEvent> {
         update()
+
+        val player = mc.player ?: return@handler
+        debugParameter("Client Cooldown Ticks") { player.attackStrengthTicker }
+        debugParameter("Server Cooldown Ticks") { attackCooldownTicks() }
+        debugParameter("Server Tick Rate") { serverTickRate }
     }
 
     @Suppress("unused")
