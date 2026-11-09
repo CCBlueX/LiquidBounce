@@ -31,8 +31,9 @@ import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * `.localconfig load` sums up what the config did in one notification, coloured by the outcome. A value that
- * refuses its new setting counts as failed and the rest of the config still applies.
+ * `.localconfig load` sums up what the config did in one notification, coloured by the outcome. Settings no value
+ * knows count as skipped; a value that refuses its new setting counts as failed. The rest of the config still
+ * applies either way.
  */
 class ConfigSummaryGameTest : FabricClientGameTest {
 
@@ -55,16 +56,25 @@ class ConfigSummaryGameTest : FabricClientGameTest {
 
         try {
             load(context, folder, """{"name": "Number", "value": 5}, {"name": "Picky", "value": 6}""")
-            checkSummary("2 applied, 0 failed", NotificationEvent.Severity.SUCCESS)
+            checkSummary("2 applied, 0 skipped, 0 failed", NotificationEvent.Severity.SUCCESS)
             check(module.number == 5 && module.picky == 6) {
                 "A clean config was not applied, got ${module.number} and ${module.picky}"
             }
 
             load(context, folder, """{"name": "Number", "value": 7}, {"name": "Picky", "value": $REFUSED}""")
-            checkSummary("1 applied, 1 failed", NotificationEvent.Severity.ERROR)
+            checkSummary("1 applied, 0 skipped, 1 failed", NotificationEvent.Severity.ERROR)
             check(module.number == 7 && module.picky == 6) {
                 "A refused value stopped the config or was applied, got ${module.number} and ${module.picky}"
             }
+
+            load(
+                context,
+                folder,
+                """{"name": "Number", "value": 8}, {"name": "Gone", "value": 1}""",
+                """, {"name": "GameTestMissing", "value": []}"""
+            )
+            checkSummary("1 applied, 2 skipped, 0 failed", NotificationEvent.Severity.INFO)
+            check(module.number == 8) { "Unknown settings stopped the config, got ${module.number}" }
         } finally {
             hook.close()
             context.onClient {
@@ -79,9 +89,12 @@ class ConfigSummaryGameTest : FabricClientGameTest {
         }
     }
 
-    private fun load(context: ClientGameTestContext, folder: File, values: String) {
+    /**
+     * Loads a config setting [values] of the test module, with [extraModules] after it in the module list.
+     */
+    private fun load(context: ClientGameTestContext, folder: File, values: String, extraModules: String = "") {
         folder.resolve("$NAME.json").writeText(
-            """{"name": "modules", "value": [{"name": "GameTestSummary", "value": [$values]}]}"""
+            """{"name": "modules", "value": [{"name": "GameTestSummary", "value": [$values]}$extraModules]}"""
         )
         notifications.clear()
         context.command("localconfig load $NAME")

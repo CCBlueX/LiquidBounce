@@ -54,17 +54,20 @@ object KillAuraRange : RangeValueGroup("Range", 1f, 3f), MinecraftShortcuts {
      * Migrates the old values from the config.
      *
      * todo: remove this when no one uses the format anymore
+     *
+     * @return the names of the old values it read
      */
-    fun migrateFromValues(map: Map<String, List<JsonObject>>) {
+    fun migrateFromValues(map: Map<String, List<JsonObject>>): Set<String> {
         if (!map.containsKey("WallRange") || !map.containsKey("ScanExtraRange")) {
             // This cannot be an old format.
-            return
+            return emptySet()
         }
 
         this.maxRangeIncrease = max(0f, withDummy("Range", map["Range"]!!.single(), 4.2f) - 3f)
         this.throughWallsRange = withDummy("WallRange", map["WallRange"]!!.single(), 3f)
         this.scanRangeIncrease = withDummy("ScanExtraRange", map["ScanExtraRange"]!!.single(), 2f..3f)
         logger.info("KillAura Range Config migrated from old format.")
+        return setOf("Range", "WallRange", "ScanExtraRange")
     }
 
     private fun <T : Any> withDummy(name: String, jsonObject: JsonObject, value: T): T {

@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.config
 
 /**
- * Counts what applying a config did: the values it set and the ones that failed.
+ * Counts what applying a config did: the values it set, the settings no value knows, and the values that failed.
  *
  * [collect] gathers one while configs are applied on the current thread; [ConfigSystem] and
  * [net.ccbluex.liquidbounce.config.types.Value.set] count into it.
@@ -28,11 +28,17 @@ class ConfigLoadReport private constructor() {
 
     var applied = 0
         private set
+    var skipped = 0
+        private set
     var errors = 0
         private set
 
     internal fun countApplied() {
         applied++
+    }
+
+    internal fun countSkipped() {
+        skipped++
     }
 
     internal fun countError() {

@@ -87,17 +87,23 @@ object AutoConfig {
 
     /**
      * Applies the configs in [block] while [loadingNow], then shows one notification on what they did under [name]:
-     * values applied and failed, coloured by the outcome.
+     * values applied, unknown settings skipped and values failed, coloured by the outcome.
      */
     fun applyConfigs(name: String, block: () -> Unit) {
         val report = ConfigLoadReport.collect { withLoading(block) }
 
-        logger.info("Applied config $name: ${report.applied} values applied, ${report.errors} failed")
-        notification(
-            translation("liquidbounce.config.applied", name),
-            translation("liquidbounce.config.applied.summary", report.applied, report.errors),
-            if (report.errors > 0) NotificationEvent.Severity.ERROR else NotificationEvent.Severity.SUCCESS
-        )
+        with(report) {
+            logger.info("Applied config $name: $applied values applied, $skipped unknown skipped, $errors failed")
+            notification(
+                translation("liquidbounce.config.applied", name),
+                translation("liquidbounce.config.applied.summary", applied, skipped, errors),
+                when {
+                    errors > 0 -> NotificationEvent.Severity.ERROR
+                    skipped > 0 -> NotificationEvent.Severity.INFO
+                    else -> NotificationEvent.Severity.SUCCESS
+                }
+            )
+        }
     }
 
     /**

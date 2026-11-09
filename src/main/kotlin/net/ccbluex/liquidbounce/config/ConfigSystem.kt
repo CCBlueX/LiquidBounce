@@ -285,12 +285,17 @@ object ConfigSystem {
             }
         }
 
+        // Names no value knows, such as settings a later client version added or an older one removed
+        val unknown = valuesByName.keys.toHashSet()
+
         // Migration Code for KillAura's Range Values
         if (valueGroup is ModuleKillAura) {
-            valueGroup.range.migrateFromValues(valuesByName)
+            unknown -= valueGroup.range.migrateFromValues(valuesByName)
         }
 
         for (value in valueGroup.inner) {
+            unknown -= value.name
+            unknown -= value.aliases
             if (!value.isPersistent) continue
 
             val queue = valuesByName[value.name]
@@ -299,6 +304,18 @@ object ConfigSystem {
             if (queue.isEmpty()) continue
 
             deserializeValue(value, queue.removeFirst())
+        }
+
+        skipUnknown(valueGroup, unknown)
+    }
+
+    /**
+     * Logs and counts the [names] a config holds for [valueGroup] that none of its values knows.
+     */
+    private fun skipUnknown(valueGroup: ValueGroup, names: Collection<String>) {
+        for (name in names) {
+            logger.warn("Skipped unknown setting '$name' of ${valueGroup.key ?: valueGroup.name}")
+            ConfigLoadReport.current?.countSkipped()
         }
     }
 
@@ -342,8 +359,12 @@ object ConfigSystem {
         }
 
         val choices = jsonObject["choices"].asJsonObject
+        val unknownChoices = choices.keySet().toHashSet()
 
         for (choice in value.modes) {
+            unknownChoices -= choice.name
+            unknownChoices -= choice.aliases
+
             val choiceElement = choices[choice.name]
                 // Alias support
                 ?: choice.aliases.firstNotNullOfOrNull { alias -> choices[alias] }
@@ -360,6 +381,8 @@ object ConfigSystem {
                 logger.error("Unable to deserialize choice ${choice.name}", it)
             }
         }
+
+        skipUnknown(value, unknownChoices)
     }
 
     /**
