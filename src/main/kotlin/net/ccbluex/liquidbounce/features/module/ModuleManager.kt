@@ -69,13 +69,13 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMoreCarry
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNameCollector
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleOldRegen
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleResetVL
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleSleepWalker
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTimeShift
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleVehicleOneHit
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleYggdrasilSignatureFix
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
@@ -504,7 +504,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleServerCrasher,
             ModuleDupe,
             ModuleTeleportReach,
-            ModuleTimeShift,
+            ModuleOldRegen,
             ModulePhase,
             ModuleYggdrasilSignatureFix,
 
