@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.config.types.group
 
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.Value
@@ -48,7 +49,7 @@ abstract class ToggleableValueGroup @JvmOverloads constructor(
     @get:JvmName("getEnabledValue")
     val enabledValue: Value<Boolean> = boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
-        .onChange(::onToggled)
+        .onChange(::toggle)
 
     @AddonApi
     override var enabled by enabledValue
@@ -66,6 +67,31 @@ abstract class ToggleableValueGroup @JvmOverloads constructor(
         }
 
         return onToggled(state, false)
+    }
+
+    /**
+     * Toggles through [onToggled]. While a config loads, a toggle that throws first undoes what it got done through
+     * the opposite hook, so the group stays as it was. The error still reaches [Value.set], which keeps the previous
+     * state and counts the failure.
+     */
+    private fun toggle(state: Boolean): Boolean {
+        if (!AutoConfig.loadingNow) {
+            return onToggled(state)
+        }
+
+        return try {
+            onToggled(state)
+        } catch (e: Exception) {
+            runCatching {
+                if (state) {
+                    removeEventListenerScope()
+                    onDisabled()
+                } else {
+                    onEnabled()
+                }
+            }.onFailure(e::addSuppressed)
+            throw e
+        }
     }
 
     fun onToggled(state: Boolean, isParentUpdate: Boolean): Boolean {
