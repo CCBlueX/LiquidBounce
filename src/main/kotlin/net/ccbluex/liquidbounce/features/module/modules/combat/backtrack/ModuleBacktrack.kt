@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
@@ -71,6 +72,8 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     }
 
     private val pauseOnHurtTime = tree(PauseOnHurtTime)
+
+    private val flushOnKnockback by boolean("FlushOnKnockback", false)
 
     private val targetMode by enumChoice("TargetMode", Mode.ATTACK)
     private val lastAttackTimeToWork by int("LastAttackTimeToWork", 1000, 0..5000)
@@ -124,6 +127,11 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         }
 
         if (!hasQueuedIncoming && !shouldCancel) {
+            return@handler
+        }
+
+        if (flushOnKnockback && packet.isLocalPlayerVelocity()) {
+            clear(true)
             return@handler
         }
 
