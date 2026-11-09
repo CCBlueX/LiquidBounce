@@ -47,10 +47,15 @@ object FriendManager : Config("Friends"), EventListener {
 
     @Suppress("unused")
     private val onAttack = handler<AttackEntityEvent> {
-        if (cancelAttack && isFriend(it.entity)) {
+        if (cancelsAttack(it.entity)) {
             it.cancelEvent()
         }
     }
+
+    /**
+     * Whether a click on [entity] must neither attack it nor swing at it.
+     */
+    fun cancelsAttack(entity: Entity): Boolean = cancelAttack && isFriend(entity)
 
     init {
         ConfigSystem.root(this)
