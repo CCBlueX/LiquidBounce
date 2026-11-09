@@ -80,6 +80,13 @@ object Timer : EventListener {
     private var heldTicks = 0
 
     /**
+     * Ticks of real time, counted like [balance] but never clamped or reset: held ticks count, burst ticks do not,
+     * and a tick at a faster timer counts as less than one. Only differences between two readings mean anything.
+     */
+    var realTicks = 0.0
+        private set
+
+    /**
      * Ticks held back before each of the last ticks that ran, a ring ending before [heldHistoryEnd].
      */
     private val heldHistory = IntArray(HELD_HISTORY_TICKS)
@@ -205,13 +212,15 @@ object Timer : EventListener {
 
     /**
      * Bound of the tick loop of a frame, checked before each tick. Of the [ticks] the frame advanced by, the ones
-     * a [hold] covers do not run, and the [burst] ticks run in front of the others once no hold is left.
+     * a [hold] covers do not run, and the [burst] ticks run in front of the others once no hold is left. All of the
+     * [ticks] count in [realTicks].
      *
      * @param index the tick the loop is about to run
      */
     fun frameTicks(ticks: Int, index: Int): Int {
         if (index == 0) {
             frameEnd = ticks
+            realTicks += ticks / frameSpeed.toDouble()
         }
 
         holdTicks(index)

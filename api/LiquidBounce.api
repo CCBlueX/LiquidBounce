@@ -1783,6 +1783,7 @@ public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liq
 	public final fun getBursting ()Z
 	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
 	public fun getDebugOwnerId ()Ljava/lang/String;
+	public final fun getRealTicks ()D
 	public fun getRunning ()Z
 	public final fun getTimerSpeed ()F
 	public final fun heldTicksWithin (I)I

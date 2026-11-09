@@ -277,10 +277,10 @@ public abstract class MixinMinecraft {
     }
 
     /**
-     * Runs the burst ticks of the timer after the ticks the frame advanced by.
+     * Counts the ticks of each frame in real time, and runs the burst ticks of the timer after them.
      */
     @ModifyExpressionValue(method = "runTick", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"))
-    private int hookBurstTicks(int ticks, @Local(name = "i") int index) {
+    private int hookFrameTicks(int ticks, @Local(name = "i") int index) {
         return Timer.INSTANCE.frameTicks(ticks, index);
     }
 
