@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
+import net.ccbluex.liquidbounce.utils.block.isBreakable
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -41,8 +42,10 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBestToolToMineBlock
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
+import net.minecraft.tags.BlockTags
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
@@ -183,6 +186,11 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
      */
     private val onlyBlockBelow by boolean("OnlyBlockBelow", false)
 
+    /**
+     * Only ever switches to a pickaxe.
+     */
+    private val pickaxeOnly by boolean("PickaxeOnly", false)
+
     // Tracks the current block breaking session so the switch is delayed only once per block
     private var breakingPos: BlockPos? = null
     private var breakingStartedTick = 0
@@ -243,7 +251,12 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (onlyBlockBelow && pos != player.onPos) {
+        val state = pos.stateOrEmpty
+        if (onlyBlockBelow && pos != player.onPos
+            || !state.isBreakable(pos)
+            // Other blocks would pick another tool, even from the inventory
+            || pickaxeOnly && !state.`is`(BlockTags.MINEABLE_WITH_PICKAXE)
+        ) {
             return
         }
 
@@ -269,8 +282,9 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
             return
         }
 
-        val blockState = pos.stateOrEmpty
-        val slot = toolSelector.activeMode.getTool(blockState) ?: return
+        val slot = toolSelector.activeMode.getTool(state)
+            ?.takeIf { !pickaxeOnly || it.itemStack.isPickaxe }
+            ?: return
         SilentHotbar.selectSlotSilently(this, slot, swapBackDelay.random())
     }
 
