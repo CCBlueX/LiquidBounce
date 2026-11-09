@@ -92,6 +92,9 @@ accessible method net/minecraft/client/Camera setPosition (Lnet/minecraft/world/
 accessible method net/minecraft/client/multiplayer/MultiPlayerGameMode startPrediction (Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/multiplayer/prediction/PredictiveAction;)V
 
 accessible field net/minecraft/client/renderer/PostChain passes Ljava/util/List;
+accessible method net/minecraft/client/renderer/PostChain <init> (Lnet/minecraft/resources/Identifier;Ljava/util/List;Ljava/util/Map;Ljava/util/Set;Lnet/minecraft/client/renderer/Projection;Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;)V
+accessible field net/minecraft/client/renderer/ShaderManager postChainProjection Lnet/minecraft/client/renderer/Projection;
+accessible field net/minecraft/client/renderer/ShaderManager postChainProjectionMatrixBuffer Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;
 
 accessible field net/minecraft/network/Connection channel Lio/netty/channel/Channel;
 
