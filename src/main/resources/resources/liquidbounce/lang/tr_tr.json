@@ -517,6 +517,7 @@
   "liquidbounce.module.translation.description": "İstemci için otomatik bir çevirmen kurar.",
   "liquidbounce.module.translationFix.description": "Sunucuların vanilya çeviri açığı yoluyla yüklü modlarınızı öğrenmesini engeller.",
   "liquidbounce.module.tridentBoost.description": "Mızrağın riptide atılışını güçlendirir ve karada kullanılmasına izin verir.",
+  "liquidbounce.module.triggerBot.description": "Saldırı tuşunu basılı tutmadan nişangahınızdaki düşmana saldırır.",
   "liquidbounce.module.trueSight.description": "Görünmez nesneleri ve varlıkları görmenizi sağlar.",
   "liquidbounce.module.twerk.description": "Otomatik olarak eğilip kalkar.",
   "liquidbounce.module.vehicleBoost.description": "Araçtan ayrıldığınızda sizi hızlandırır.",

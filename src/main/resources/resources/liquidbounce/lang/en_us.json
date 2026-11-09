@@ -846,6 +846,7 @@
   "liquidbounce.module.translation.description": "Setting up an auto translator for a client.",
   "liquidbounce.module.translationFix.description": "Prevents servers from knowing about your installed mods through the vanilla translation vulnerability.",
   "liquidbounce.module.tridentBoost.description": "Strengthens the riptide dash of a trident and allows it to be used on dry land.",
+  "liquidbounce.module.triggerBot.description": "Attacks the enemy under your crosshair without holding the attack button.",
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
   "liquidbounce.module.twerk.description": "Automatically sneaks and unsneaks.",
   "liquidbounce.module.vehicleBoost.description": "Boost you when leaving a vehicle.",

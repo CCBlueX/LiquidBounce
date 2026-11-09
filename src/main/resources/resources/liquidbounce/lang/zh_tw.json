@@ -743,6 +743,7 @@
   "liquidbounce.module.translation.description": "為客戶端設定自動翻譯器。",
   "liquidbounce.module.translationFix.description": "防止伺服器通過原版translation漏洞得知你安裝的模組。",
   "liquidbounce.module.tridentBoost.description": "增強三叉戟的激流衝刺，並允許在陸地上使用。",
+  "liquidbounce.module.triggerBot.description": "無需按住攻擊鍵即可攻擊準星下的敵人。",
   "liquidbounce.module.trueSight.description": "允許你看到隱形的物體和實體。",
   "liquidbounce.module.twerk.description": "自動潛行並取消潛行。",
   "liquidbounce.module.vehicleBoost.description": "在你離開載具時將你加速。",
