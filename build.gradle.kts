@@ -137,6 +137,12 @@ loom.runs.named("clientGameTest") {
             systemProperties.put("net.ccbluex.liquidbounce.gametest.$name", it)
         }
     }
+    // `-PgameTestLongWalk=<blocks>` runs AutoWalkLongDistanceGameTest; optional `-PgameTestLongWalkSeed`, `Yaw`,
+    // `Minutes` (wall clock limit) and `Output` (directory for the incidents and screenshots)
+    for (suffix in listOf("", "Seed", "Yaw", "Minutes", "Output")) {
+        val name = "net.ccbluex.liquidbounce.gametest.longWalk" + if (suffix.isEmpty()) "" else ".${suffix.lowercase()}"
+        providers.gradleProperty("gameTestLongWalk$suffix").orNull?.let { systemProperties.put(name, it) }
+    }
 }
 
 tasks.named("runClientGameTest") {
