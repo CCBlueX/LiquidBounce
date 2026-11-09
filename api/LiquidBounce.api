@@ -1226,6 +1226,7 @@ public final class net/ccbluex/liquidbounce/integration/theme/component/HudCompo
 	public static final fun isTweakEnabled (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentTweak;)Z
 	public final fun register (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
 	public final fun registerFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
+	public final fun resetLayout ()V
 	public final fun unregister (Lnet/ccbluex/liquidbounce/integration/theme/component/components/NativeHudComponent;)V
 	public final fun unregisterFactory (Lnet/ccbluex/liquidbounce/integration/theme/component/HudComponentFactory$NativeHudComponentFactory;)V
 	public final fun updateComponents ()V

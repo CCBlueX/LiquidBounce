@@ -115,6 +115,15 @@ private fun Route.postComponentAlignment() = post("/{id}/alignment") {
     call.respond(HttpStatusCode.NoContent)
 }
 
+// POST /api/v1/client/components/layout/reset
+private fun Route.postResetLayout() = post("/layout/reset") {
+    withContext(Dispatchers.Main) {
+        HudComponentManager.resetLayout()
+        ConfigSystem.store(modulesConfig)
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
 // GET /api/v1/client/components/{id}/settings
 private fun Route.getComponentSettings() = get("/{id}/settings") {
     val id = call.parameters["id"] ?: call.badRequest("Missing component id")
@@ -175,6 +184,7 @@ internal fun Route.componentRoutes() = route("/components") {
     postComponent()
     postComponentZIndex()
     postComponentAlignment()
+    postResetLayout()
     getComponentSettings()
     getComponentFile()
     putComponentSettings()
