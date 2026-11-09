@@ -20,12 +20,14 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
+import net.minecraft.world.entity.LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.ELYTRA_VERTICAL_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
  * Where to look while gliding, whether to fire a rocket now and whether a rocket pushes this tick.
@@ -44,14 +46,11 @@ fun interface GlideSteering {
  */
 internal object GlidePhysics {
 
-    private const val GRAVITY = 0.08
     private const val LIFT = 0.75
     private const val DIVE = 0.1
     private const val CLIMB = 0.04
     private const val CLIMB_LIFT = 3.2
     private const val TURN = 0.1
-    private const val HORIZONTAL_DRAG = 0.99
-    private const val VERTICAL_DRAG = 0.98
     private const val ROCKET_PUSH = 0.1
     private const val ROCKET_SPEED = 1.5
     private const val ROCKET_PULL = 0.5
@@ -63,12 +62,12 @@ internal object GlidePhysics {
     fun step(velocity: Vec3, yaw: Float, pitch: Float, boosted: Boolean): Vec3 {
         val look = Vec3.directionFromRotation(pitch, yaw)
         val lean = Math.toRadians(pitch.toDouble())
-        val lookHorizontal = sqrt(look.x * look.x + look.z * look.z)
+        val lookHorizontal = look.horizontalDistance()
         val moveHorizontal = velocity.horizontalDistance()
         val lift = cos(lean) * cos(lean)
 
         var x = velocity.x
-        var y = velocity.y + GRAVITY * (-1.0 + lift * LIFT)
+        var y = velocity.y + DEFAULT_BASE_GRAVITY * (-1.0 + lift * LIFT)
         var z = velocity.z
         if (lookHorizontal > 0.0) {
             if (y < 0.0) {
@@ -87,9 +86,9 @@ internal object GlidePhysics {
             z += (look.z / lookHorizontal * moveHorizontal - z) * TURN
         }
 
-        x *= HORIZONTAL_DRAG
-        y *= VERTICAL_DRAG
-        z *= HORIZONTAL_DRAG
+        x *= ELYTRA_HORIZONTAL_AIR_DRAG
+        y *= ELYTRA_VERTICAL_AIR_DRAG
+        z *= ELYTRA_HORIZONTAL_AIR_DRAG
         if (boosted) {
             x += look.x * ROCKET_PUSH + (look.x * ROCKET_SPEED - x) * ROCKET_PULL
             y += look.y * ROCKET_PUSH + (look.y * ROCKET_SPEED - y) * ROCKET_PULL
@@ -135,7 +134,7 @@ class GlideControl(
     override fun steer(position: Vec3, velocity: Vec3): GlideInput {
         val dx = goal.x - position.x
         val dz = goal.z - position.z
-        val distance = sqrt(dx * dx + dz * dz)
+        val distance = Mth.length(dx, dz)
         val bearing = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
         sweepPitches(position, velocity, bearing, distance, dx, dz)
 

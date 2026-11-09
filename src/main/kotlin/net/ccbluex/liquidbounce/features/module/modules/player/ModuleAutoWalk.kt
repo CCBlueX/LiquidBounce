@@ -26,8 +26,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.toBlockPos
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
@@ -106,9 +109,9 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
     }
 
     /**
-     * Keeps a goal on ground up to [LOOKAHEAD] blocks the way the camera faces, so the walk follows where you look
-     * and goes around whatever is in the way. The goal moves on once [REFRESH] blocks are left to it or the view
-     * turned, early enough that the next path is found before the current one runs out.
+     * Keeps a goal [DISTANCE] blocks the way the camera faces, so the walk follows where you look and, in stages,
+     * goes around whatever is in the way: hills, lakes and cliffs alike. The goal is set again once the view turned
+     * or half the way to it is walked.
      */
     private object Direction : NavigationMode("Direction") {
         private var goal: Vec3? = null
@@ -126,55 +129,20 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
             val position = player.position()
             val yaw = player.yRot
             val goal = goal
-            if (goal != null && horizontalDistanceSqr(goal, position) > REFRESH * REFRESH &&
+            if (goal != null && goal.horizontalDistanceToSqr(position) > REFRESH * REFRESH &&
                 abs(Mth.wrapDegrees(yaw - goalYaw)) <= MAX_TURN
             ) {
                 return goal
             }
 
             goalYaw = yaw
-            return ahead(position, yaw).also { this.goal = it }
+            return position.fma(DISTANCE, Rotation(yaw, 0f).directionVector).also { this.goal = it }
         }
 
-        /**
-         * The farthest spot [NEAREST] to [LOOKAHEAD] blocks the way [yaw] faces to stand on near the height of
-         * [position], else the point [LOOKAHEAD] blocks ahead.
-         */
-        private fun ahead(position: Vec3, yaw: Float): Vec3 {
-            val terrain = NavigationTerrain(LiveWorld(world))
-            val direction = Rotation(yaw, 0f).directionVector
-            val y = Mth.floor(position.y)
-
-            var distance = LOOKAHEAD
-            while (distance >= NEAREST) {
-                val point = position.add(direction.scale(distance))
-                val x = Mth.floor(point.x)
-                val z = Mth.floor(point.z)
-                for (dy in HEIGHTS) {
-                    val height = terrain.standHeight(x, y + dy, z)
-                    if (!height.isNaN()) {
-                        return Vec3(point.x, height, point.z)
-                    }
-                }
-                distance -= STRIDE
-            }
-
-            return position.add(direction.scale(LOOKAHEAD))
-        }
-
-        private fun horizontalDistanceSqr(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return dx * dx + dz * dz
-        }
-
-        private const val LOOKAHEAD = 16.0
-        private const val NEAREST = 10.0
-        private const val STRIDE = 2.0
-        private const val REFRESH = 6.0
+        private const val DISTANCE = 1024.0
+        private const val REFRESH = 512.0
         private const val RADIUS = 2.0
         private const val MAX_TURN = 20f
-        private val HEIGHTS = intArrayOf(0, 1, -1, 2, -2, 3, -3, 4, -4)
     }
 
     /**
@@ -189,7 +157,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         override fun goal(): Vec3? {
             val destination = destination
             if (destination != goalOf) {
-                val pos = BlockPos(destination.x, destination.y, destination.z)
+                val pos = destination.toBlockPos()
                 goal = Vec3.atBottomCenterOf(feetAt(pos))
                 // Whether the destination is the ground to stand on is only known once its chunk is loaded.
                 goalOf = destination.takeIf { world.hasChunkAt(pos.x, pos.z) }

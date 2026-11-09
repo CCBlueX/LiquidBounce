@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.ClickableCenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
@@ -172,9 +173,14 @@ class WalkActions(
 
         val pos = placing ?: return@handler
         val slot = placeableSlot() ?: return@handler
+        // A pillar block goes where the feet are or were; any part of the top below is in reach, and its middle lies
+        // in no particular direction, so the aim keeps to the way the player looks.
+        val underFeet = pos.x == player.blockX && pos.z == player.blockZ && pos.y <= player.blockY
         val options = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions.Default,
-            FaceHandlingOptions(ClickableCenterTargetPositionFactory),
+            FaceHandlingOptions(
+                if (underFeet) NearestRotationTargetPositionFactory else ClickableCenterTargetPositionFactory,
+            ),
             slot.itemStack,
             PlayerLocationOnPlacement(position = player.position()),
         )

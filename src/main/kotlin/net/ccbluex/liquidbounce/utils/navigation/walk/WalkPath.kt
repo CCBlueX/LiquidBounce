@@ -21,10 +21,12 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.SlimeBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
+import java.util.function.ToDoubleFunction
 
 enum class WalkMove {
     /** One block sideways on the same level. */
@@ -39,7 +41,7 @@ enum class WalkMove {
     /** Walk off an edge one block sideways and land lower. */
     FALL,
 
-    /** Sprint-jump over a gap. */
+    /** Sprint-jump over a gap or onto a block out of step reach, see [WalkStep.jump]. */
     PARKOUR,
 
     /** Jump and place a block below the feet. */
@@ -99,15 +101,22 @@ class WalkStep(
      * Whether the move ends with the head under water, so it is swum towards [feet] in three dimensions.
      */
     val underwater: Boolean = false,
+
+    /**
+     * How a [WalkMove.PARKOUR] move is jumped.
+     */
+    val jump: WalkJump? = null,
 )
 
 /**
- * A walking path from [start]. An incomplete path ends at the reachable spot closest to the goal.
+ * A walking path from [start], searched with [abilities]. An incomplete path ends at the reachable spot closest to
+ * the goal.
  */
 class WalkPath(
     val start: Vec3,
     val steps: List<WalkStep>,
     val complete: Boolean,
+    val abilities: WalkAbilities,
 ) {
 
     val end: Vec3
@@ -135,6 +144,11 @@ class WalkAbilities(
      */
     val placeableBlocks: Int,
     val canParkour: Boolean,
+
+    /**
+     * Whether jumps may cross drops a miss would not be survived and land with some fall damage.
+     */
+    val riskyJumps: Boolean = false,
     val canSprint: Boolean,
 
     /**
@@ -150,7 +164,7 @@ class WalkAbilities(
     /**
      * Ticks to mine a block with the best tool at hand; infinite when it must not or cannot be mined.
      */
-    val breakTicks: (BlockState) -> Double,
+    val breakTicks: ToDoubleFunction<BlockState>,
 
     /**
      * Feet blocks the walker got stuck at; moves into them cost extra.
@@ -161,6 +175,11 @@ class WalkAbilities(
      * Ticks of air the walker has left.
      */
     val air: Int = WalkWater.MAX_AIR,
+
+    /**
+     * Speed and jump height jumps are worked out with.
+     */
+    val motion: MotionTraits = MotionTraits.DEFAULT,
 )
 
 /**
@@ -179,6 +198,11 @@ object WalkCosts {
     const val AVOID = 50.0
 
     /**
+     * What a jump costs on top of its ticks when jumps are not risky: a second.
+     */
+    const val JUMP_PENALTY = 20.0
+
+    /**
      * Ticks to stop, open a door, trapdoor or fence gate and walk on.
      */
     const val OPEN = 10.0
@@ -189,7 +213,6 @@ object WalkCosts {
     private const val BOUNCES = 2
     private const val PLAIN_FRICTION = 0.6f
     private const val SLIME_SLOWDOWN = 0.4
-    private const val GROUND_DRAG = 0.91
     private const val GROUND_ACCELERATION = 0.216
 
     private val fallTicks: DoubleArray = DoubleArray(257).also { ticks ->
@@ -243,7 +266,7 @@ object WalkCosts {
      * every tick, after LivingEntity.travel: the speed gained per tick over the share lost.
      */
     private fun groundSpeed(friction: Float, slowdown: Double): Double {
-        val drag = friction * GROUND_DRAG
+        val drag = (friction * BASE_HORIZONTAL_AIR_DRAG).toDouble()
         return GROUND_ACCELERATION / (drag * drag * drag) / (1.0 - slowdown * drag)
     }
 }

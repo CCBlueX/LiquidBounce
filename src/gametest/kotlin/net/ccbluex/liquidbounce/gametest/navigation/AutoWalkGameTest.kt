@@ -128,7 +128,7 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
 
         var stops = 0
-        unhurt(server, "walking the way it faces") {
+        unhurt(context, server, "walking the way it faces") {
             var last = context.fromClient { checkNotNull(it.player).position() }
             repeat(DIRECTION_TICKS) {
                 context.waitTick()
@@ -157,7 +157,7 @@ class AutoWalkGameTest : FabricClientGameTest {
         context.command("goto ${destination.x} ${destination.y} ${destination.z}")
         check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
 
-        unhurt(server, "going around the room") {
+        unhurt(context, server, "going around the room") {
             awaitClient(context, 600, "Did not arrive behind the closed room") { !ModuleAutoWalk.enabled }
         }
         val position = context.fromClient { checkNotNull(it.player).position() }
@@ -193,7 +193,7 @@ class AutoWalkGameTest : FabricClientGameTest {
 
         var ticks = 0
         var sprinting = 0
-        unhurt(server, "sprinting along") {
+        unhurt(context, server, "sprinting along") {
             repeat(SPRINT_TICKS) {
                 context.waitTick()
                 ticks++
@@ -222,7 +222,7 @@ class AutoWalkGameTest : FabricClientGameTest {
         try {
             context.command("follow Twin")
             check(context.fromClient { ModuleAutoWalk.enabled }) { ".follow did not turn AutoWalk on" }
-            unhurt(server, "following") {
+            unhurt(context, server, "following") {
                 awaitClient(context, FOLLOW_TICKS, "Did not walk up to the followed player") {
                     it.distanceTo(twin) <= FOLLOW_DISTANCE
                 }
@@ -244,7 +244,7 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
 
         try {
-            unhurt(server, "walking to an item") {
+            unhurt(context, server, "walking to an item") {
                 repeat(200) {
                     if (context.fromClient { checkNotNull(it.player).inventory.hasAnyOf(setOf(Items.WHEAT_SEEDS)) }) {
                         return@unhurt
@@ -272,7 +272,7 @@ class AutoWalkGameTest : FabricClientGameTest {
                 Triple("bed", BlockPos(41, y + 9, 0), BlockPos(42, y + 9, 0)),
                 Triple("dragon egg", BlockPos(49, y + 9, 0), BlockPos(49, y + 9, 0)),
             )) {
-                unhurt(server, "walking to the $target") {
+                unhurt(context, server, "walking to the $target", acting = { FuckerAutoWalk.isActing }) {
                     repeat(800) {
                         if (server.countBlocks(from, to) == 0) {
                             return@unhurt
@@ -319,9 +319,19 @@ class AutoWalkGameTest : FabricClientGameTest {
         }
     }
 
-    private fun unhurt(server: TestServerContext, what: String, block: () -> Unit) {
+    /**
+     * Runs [block], a walk, and fails if it hurt the player or the player glanced back on the way, other than to mine
+     * or place while [acting].
+     */
+    private fun unhurt(
+        context: ClientGameTestContext,
+        server: TestServerContext,
+        what: String,
+        acting: () -> Boolean = { false },
+        block: () -> Unit,
+    ) {
         val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        block()
+        TurnWatch.watch(context, "AutoWalk $what", acting, block)
         val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
         check(after >= health) { "AutoWalk hurt the player $what, from $health to $after" }
     }

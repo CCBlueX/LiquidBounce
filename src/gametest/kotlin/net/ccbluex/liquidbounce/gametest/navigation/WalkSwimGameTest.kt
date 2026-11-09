@@ -22,7 +22,9 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -31,7 +33,6 @@ import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * A survival player walks from a closed room to another one joined only under water: it dives into a pool, swims
@@ -70,7 +71,10 @@ class WalkSwimGameTest : FabricClientGameTest {
             return
         }
         context.waitForClient()
-        context.onClient { walker = Walker() }
+        context.onClient {
+            walker = Walker()
+            useAngleSmooth(walker)
+        }
 
         try {
             context.worldBuilder().create().use { world ->
@@ -116,7 +120,7 @@ class WalkSwimGameTest : FabricClientGameTest {
 
         context.onClient { walker.goal = goal }
         val swim = try {
-            awaitArrival(context, goal, ARRIVAL_TICKS)
+            TurnWatch.watch(context, "Swimming through the tunnel") { awaitArrival(context, goal, ARRIVAL_TICKS) }
         } finally {
             context.onClient { walker.goal = null }
         }
@@ -137,7 +141,7 @@ class WalkSwimGameTest : FabricClientGameTest {
             }
             swam = swam || swimming
             minAir = min(minAir, air)
-            if (position.horizontalDistance(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
+            if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
                 return Swim(swam, minAir)
             }
             context.waitTick()
@@ -153,12 +157,6 @@ class WalkSwimGameTest : FabricClientGameTest {
             client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
         }, WAIT)
         context.waitTicks(5)
-    }
-
-    private fun Vec3.horizontalDistance(other: Vec3): Double {
-        val dx = x - other.x
-        val dz = z - other.z
-        return sqrt(dx * dx + dz * dz)
     }
 
     private companion object {

@@ -19,18 +19,23 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.BASE_JUMP_POWER
+import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * A glide from [start], the take-off included: where the feet pass, every few ticks, and where they land, flown with
@@ -124,11 +129,15 @@ class GlideRouteSearch(
      */
     private fun jump(): Vec3 {
         if (tick == 0) {
-            val toGoal = Vec3(goal.x - start.x, 0.0, goal.z - start.z).normalize().scale(TAKE_OFF_SPEED)
-            motion = Vec3(toGoal.x, JUMP_SPEED, toGoal.z)
+            val toGoal = Vec3(goal.x - start.x, 0.0, goal.z - start.z).withLength(TAKE_OFF_SPEED)
+            motion = Vec3(toGoal.x, BASE_JUMP_POWER.toDouble(), toGoal.z)
         }
         val next = position.add(motion)
-        motion = Vec3(motion.x * AIR_DRAG, (motion.y - GRAVITY) * VERTICAL_DRAG, motion.z * AIR_DRAG)
+        motion = Vec3(
+            motion.x * BASE_HORIZONTAL_AIR_DRAG,
+            (motion.y - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG,
+            motion.z * BASE_HORIZONTAL_AIR_DRAG,
+        )
         return next
     }
 
@@ -202,10 +211,6 @@ class GlideRouteSearch(
         private const val GLIDE_HEIGHT = 0.6
         private const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
         private const val TAKE_OFF_SPEED = 0.3
-        private const val JUMP_SPEED = 0.42
-        private const val GRAVITY = 0.08
-        private const val AIR_DRAG = 0.91
-        private const val VERTICAL_DRAG = 0.98
         private const val GROUND_TOLERANCE = 0.01
         private const val LANDING_REACH = 3.0
         private const val LANDING_HEIGHT = 1.0
@@ -217,7 +222,7 @@ class GlideRouteSearch(
          * away to circle down, and above them for rocket climbs.
          */
         fun region(start: Vec3, goal: Vec3): NavigationRegion {
-            val margin = min(sqrt(start.horizontalDistanceSqr(goal)), HORIZONTAL_MARGIN.toDouble()).toInt() + 2
+            val margin = min(start.horizontalDistanceTo(goal), HORIZONTAL_MARGIN.toDouble()).toInt() + 2
             return NavigationRegion(
                 Mth.floor(min(start.x, goal.x)) - margin,
                 Mth.floor(min(start.y, goal.y)) - 2,
@@ -226,12 +231,6 @@ class GlideRouteSearch(
                 Mth.floor(max(start.y, goal.y)) + VERTICAL_MARGIN,
                 Mth.floor(max(start.z, goal.z)) + margin,
             )
-        }
-
-        private fun Vec3.horizontalDistanceSqr(other: Vec3): Double {
-            val dx = x - other.x
-            val dz = z - other.z
-            return dx * dx + dz * dz
         }
     }
 

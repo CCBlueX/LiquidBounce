@@ -27,11 +27,11 @@ import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * Finds a teleport route from [start] to the closest of [goals], the blocks the feet end in.
@@ -81,7 +81,7 @@ class TeleportRouteSearch(
             return RouteResult.AlreadyThere
         }
 
-        val inReach = standable.filter { (_, feet) -> feet.distanceTo(start) <= limits.maxLength }
+        val inReach = standable.filter { (_, feet) -> feet.distanceToSqr(start) <= Mth.square(limits.maxLength) }
         return when {
             standable.isEmpty() -> RouteResult.Failed(RouteFailure.INVALID_DESTINATION)
             inReach.isEmpty() -> RouteResult.Failed(RouteFailure.TOO_FAR)
@@ -266,7 +266,7 @@ class TeleportRouteSearch(
     companion object {
         private const val ARRIVED_SQ = 0.25 * 0.25
         private const val MAX_LOOKAHEAD = 32
-        private val DIAGONAL = sqrt(2.0)
+        private val DIAGONAL = Mth.SQRT_OF_TWO.toDouble()
 
         /**
          * Highest rise and deepest drop to a neighbouring column. Drops end on the first floor below, so only
@@ -276,8 +276,8 @@ class TeleportRouteSearch(
         private const val MAX_DROP = 48
 
         private val HORIZONTAL = arrayOf(
-            1 to 0, -1 to 0, 0 to 1, 0 to -1,
-            1 to 1, 1 to -1, -1 to 1, -1 to -1,
+            intArrayOf(1, 0), intArrayOf(-1, 0), intArrayOf(0, 1), intArrayOf(0, -1),
+            intArrayOf(1, 1), intArrayOf(1, -1), intArrayOf(-1, 1), intArrayOf(-1, -1),
         )
     }
 

@@ -144,10 +144,8 @@ class RideRouteSearch(
         }
     }
 
-    private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
-        val edges = ArrayList<WeightedEdge<BlockPos>>()
-        moves.forEach(node) { to, cost, _ -> edges += WeightedEdge(to, cost) }
-        return edges
+    private fun neighbors(node: BlockPos) = buildList {
+        moves.forEach(node) { to, cost, _ -> this += WeightedEdge(to, cost) }
     }
 
     /**

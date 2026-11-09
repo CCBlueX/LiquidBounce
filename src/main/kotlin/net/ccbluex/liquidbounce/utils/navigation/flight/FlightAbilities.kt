@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 
 /**
  * How the player's speed follows the movement keys while flying.
@@ -67,9 +68,8 @@ class FlightAbilities(
     companion object {
 
         /**
-         * Momentum flight keeps this much of its speed every tick, horizontally and vertically.
+         * Momentum flight keeps this much of its vertical speed every tick.
          */
-        const val HORIZONTAL_DRAG = 0.91
         const val VERTICAL_DRAG = 0.6
 
         private const val INPUT_SCALE = 0.98
@@ -98,7 +98,7 @@ class FlightAbilities(
             val speed = abilities.flyingSpeed.toDouble()
             return FlightAbilities(
                 FlightControl.MOMENTUM,
-                horizontalSpeed = 2.0 * speed * INPUT_SCALE / (1.0 - HORIZONTAL_DRAG),
+                horizontalSpeed = 2.0 * speed * INPUT_SCALE / (1.0 - FLYING_AIR_DRAG),
                 verticalSpeed = speed * VERTICAL_THRUST / (1.0 - VERTICAL_DRAG),
                 isFlying = abilities.flying,
             )

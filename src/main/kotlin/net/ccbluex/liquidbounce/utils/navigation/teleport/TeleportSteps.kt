@@ -25,7 +25,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * One position packet of a route.
@@ -173,7 +172,8 @@ object TeleportSteps {
         for ((index, step) in steps.withIndex()) {
             val packet = inTick + 1
             if (inTick > 0 &&
-                (packet > perTick || step.position.distanceTo(tickStart) > SAFE_DISTANCE * sqrt(packet.toDouble()))
+                (packet > perTick || step.position.distanceToSqr(tickStart) >
+                    SAFE_DISTANCE * SAFE_DISTANCE * packet.toDouble())
             ) {
                 sizes.add(inTick)
                 tickStart = steps[index - 1].position

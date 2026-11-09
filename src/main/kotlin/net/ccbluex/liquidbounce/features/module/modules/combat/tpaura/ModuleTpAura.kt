@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -55,6 +56,7 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.reachPositions
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 
@@ -421,7 +423,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private fun isInReach(feet: Vec3, target: LivingEntity) =
-        target.boundingBox.distanceToSqr(feet.add(0.0, player.eyeHeight.toDouble(), 0.0)) <= reach * reach
+        target.boundingBox.distanceToSqr(feet.add(0.0, player.eyeHeight.toDouble(), 0.0)) <= Mth.square(reach)
 
     /**
      * Whether the rotation the server has hits [target] from [eyes].
@@ -432,7 +434,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             return true
         }
 
-        val end = eyes.add(RotationManager.serverRotation.directionVector.scale(reach + REACH_MARGIN))
+        val end = eyes.fma(reach + REACH_MARGIN, RotationManager.serverRotation.directionVector)
         val hit = box.clip(eyes, end).orElse(null) ?: return false
         return hasLineOfSight(eyes, hit)
     }

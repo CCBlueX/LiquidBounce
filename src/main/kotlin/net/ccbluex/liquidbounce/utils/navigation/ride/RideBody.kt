@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.navigation.ride
 
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.camel.Camel
 import net.minecraft.world.entity.animal.equine.AbstractHorse
@@ -89,8 +91,6 @@ class RideBody(
         private const val EYE_MARGIN = 0.05
         private const val JUMP_MARGIN = 0.2
         private const val BOAT_SAFE_FALL = 1
-        private const val GRAVITY = 0.08
-        private const val DRAG = 0.98
 
         /**
          * Top ground speed per point of the movement speed attribute, after LivingEntity.travel on plain ground.
@@ -144,7 +144,7 @@ class RideBody(
             var height = 0.0
             while (velocity > 0.0) {
                 height += velocity
-                velocity = (velocity - GRAVITY) * DRAG
+                velocity = (velocity - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
             }
             return (height - JUMP_MARGIN).coerceAtLeast(0.0)
         }

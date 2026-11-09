@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -42,7 +43,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * Bounces along a flat floor, such as the Nether roof, with an elytra and [ModuleElytraRecast]: holding jump reopens
@@ -71,7 +71,7 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         }
 
         val position = player.position()
-        val distance = horizontalDistance(position, goal)
+        val distance = position.horizontalDistanceTo(goal)
         val terrain = NavigationTerrain(LiveWorld(world))
         if (!isActive) {
             if (!player.onGround() || distance < MIN_DISTANCE) {
@@ -162,7 +162,7 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         fun bounceLine(terrain: NavigationTerrain, feet: Vec3, goal: Vec3, lookahead: Double): Vec3? {
             val dx = goal.x - feet.x
             val dz = goal.z - feet.z
-            val length = sqrt(dx * dx + dz * dz)
+            val length = Mth.length(dx, dz)
             if (length < STEP) {
                 return null
             }
@@ -191,12 +191,6 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
 
         private fun at(feet: Vec3, ux: Double, uz: Double, along: Double) =
             Vec3(feet.x + ux * along, feet.y, feet.z + uz * along)
-
-        private fun horizontalDistance(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return sqrt(dx * dx + dz * dz)
-        }
     }
 
 }

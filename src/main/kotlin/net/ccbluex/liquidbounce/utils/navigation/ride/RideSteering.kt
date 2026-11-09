@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.ride
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
@@ -29,7 +30,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * Movement input that drives a ridden vehicle towards a point: a boat turns with left and right and paddles
@@ -86,7 +86,7 @@ internal class RideSteering {
         val aligned = abs(Mth.wrapDegrees(desired - player.yRot)) < MOUNT_FORWARD_ANGLE
 
         var jump = false
-        if (jumpTo != null && horizontalDistance(mount.position(), jumpTo) < reach) {
+        if (jumpTo != null && mount.position().horizontalDistanceTo(jumpTo) < reach) {
             chargeTicks++
             jump = chargeTicks <= RideBody.JUMP_CHARGE_TICKS
             if (chargeTicks > RideBody.JUMP_CHARGE_TICKS + JUMP_RETRY_TICKS) {
@@ -135,12 +135,6 @@ internal class RideSteering {
         private const val MAX_TURN = 35f
         private const val JUMP_RETRY_TICKS = 20
         private const val FLOOR_PROBE = 0.1
-
-        fun horizontalDistance(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return sqrt(dx * dx + dz * dz)
-        }
     }
 
 }

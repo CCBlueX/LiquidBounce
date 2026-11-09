@@ -142,14 +142,19 @@ class WalkRouteSearch(
     private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val dive = diveLength(node)
         val edges = ArrayList<WeightedEdge<BlockPos>>()
-        moves.forEach(node) { to, _, cost, _, _, _ ->
+        // A jump costs at least its time in the air; spots already reached cheaper are not worth simulating.
+        val reachable = (search?.cost(node) ?: 0.0) + MIN_JUMP_TICKS
+        val sink = MoveSink { to, _, cost, _, _, _, _ ->
             // Out of air, the only way on under water is straight up.
             val upwards = to.x == node.x && to.z == node.z && to.y > node.y
             if (dive >= maxDive && !upwards && moves.isUnderwater(to)) {
-                return@forEach
+                return@MoveSink
             }
             val penalty = if (abilities.avoid.contains(to.asLong())) WalkCosts.AVOID else 0.0
             edges += WeightedEdge(to, cost + penalty)
+        }
+        moves.forEach(node, sink) { x, y, z ->
+            (search?.cost(BlockPos(x, y, z)) ?: Double.POSITIVE_INFINITY) > reachable
         }
         return edges
     }
@@ -184,12 +189,17 @@ class WalkRouteSearch(
         for (i in 1 until nodes.size) {
             steps += moves.step(nodes[i - 1], nodes[i]) ?: return RouteResult.Failed(RouteFailure.NO_PATH)
         }
-        return RouteResult.Found(WalkPath(start, steps, complete))
+        return RouteResult.Found(WalkPath(start, steps, complete, abilities))
     }
 
     private companion object {
         const val MIN_PROGRESS = 1.0
         const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
+
+        /**
+         * Fewest ticks any jump takes, the shortest time in the air.
+         */
+        const val MIN_JUMP_TICKS = 6.0
     }
 
 }

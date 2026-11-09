@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 import it.unimi.dsi.fastutil.longs.Long2BooleanOpenHashMap
 import net.ccbluex.liquidbounce.utils.block.AStarSearch
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.route.NavigationGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
@@ -35,7 +36,6 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * A flight route from [start]: straight lines through the air between [points], the start included. An incomplete
@@ -217,7 +217,7 @@ class FlightRouteSearch(
     }
 
     private fun cost(to: BlockPos, dx: Int, dy: Int, dz: Int): Double {
-        val horizontal = sqrt((dx * dx + dz * dz).toDouble()) * abilities.horizontalCost
+        val horizontal = Mth.length(dx.toDouble(), dz.toDouble()) * abilities.horizontalCost
         var cost = max(horizontal, abs(dy) * abilities.verticalCost)
         if (terrain.isWater(to.x, to.y, to.z) || terrain.isWater(to.x, to.y + 1, to.z)) {
             cost *= WATER_FACTOR
@@ -321,7 +321,7 @@ internal fun isClearLine(terrain: NavigationTerrain, from: Vec3, to: Vec3): Bool
     for (sample in 0..samples) {
         val along = length * sample / samples
         val margin = if (along < END_LENGTH || length - along < END_LENGTH) 0.0 else LINE_MARGIN
-        val point = from.add(delta.scale(sample.toDouble() / samples))
+        val point = from.fma(sample.toDouble() / samples, delta)
         if (!terrain.isClear(terrain.box(point).inflate(margin, 0.0, margin))) {
             return false
         }

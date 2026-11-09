@@ -36,6 +36,9 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.fma
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
@@ -53,10 +56,11 @@ import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.math.sqrt
 
 /**
  * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
@@ -103,6 +107,11 @@ class WalkNavigator(
     private var lastRequest = Int.MIN_VALUE / 2
     private var retryAt = 0
     private var failed = false
+
+    /**
+     * Searches in a row that found nothing for the same goal.
+     */
+    private var failures = 0
     private var stuck = false
     private var wasOffPath = false
 
@@ -131,6 +140,11 @@ class WalkNavigator(
     private var sprintWanted = false
 
     /**
+     * The yaw the walk or an action looked at last, held while there is nothing far enough to look at.
+     */
+    private var lastLookYaw = Float.NaN
+
+    /**
      * Whether a block is being mined, placed or opened for the path.
      */
     val isActing: Boolean
@@ -144,38 +158,55 @@ class WalkNavigator(
         actions.rotation?.let { return it }
 
         val target = steeringTarget ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
-        val delta = target.subtract(player.position())
-        if (delta.horizontalDistanceSqr() < MIN_STEER_DISTANCE_SQR) {
-            return Rotation(player.getMovementDirectionOfInput(), 0f)
-        }
-
-        return if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, 0f)
+        val yaw = lookYaw(target).takeUnless { it.isNaN() }
+            ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
+        return Rotation(yaw, if (follower.dive) divePitch(target) else 0f)
     }
 
     /**
      * Turns the head the way the walk goes, so the keys press forward under movement correction and the player can
      * sprint; under water also up or down, so the swimming pose swims there. Mining and placing aim themselves, and
-     * any other feature that rotates takes over.
+     * any other feature that rotates takes over. While the next path is worked out, the head stays where it looked.
      */
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        val target = steeringTarget ?: return@handler
-        if (actions.rotation != null) {
+        actions.rotation?.let { aim ->
+            lastLookYaw = aim.yaw
             return@handler
         }
 
-        val delta = target.subtract(player.position())
-        if (delta.horizontalDistanceSqr() < MIN_STEER_DISTANCE_SQR) {
+        val target = steeringTarget
+        val yaw = if (target == null) lastLookYaw else lookYaw(target)
+        if (yaw.isNaN()) {
             return@handler
         }
-
+        lastLookYaw = yaw
         RotationManager.setRotationTarget(
-            if (follower.dive) Rotation.fromRotationVec(delta) else Rotation(delta.yaw, player.xRot),
+            Rotation(yaw, if (target != null && follower.dive) divePitch(target) else player.xRot),
             valueGroup = this.rotations,
             priority = Priority.NOT_IMPORTANT,
             provider = owner,
         )
     }
+
+    /**
+     * The yaw to look at while heading for [target]. Close to it, the way there turns around with every bit the
+     * player passes it by, so the path further on is looked at, or else the last look held. Along a stretch that is
+     * mined or built, the player keeps facing the way the last block was aimed at, forwards or backwards, as when
+     * bridging backwards. NaN with nothing to look at yet.
+     */
+    private fun lookYaw(target: Vec3): Float {
+        val position = player.position()
+        val look = target.takeIf { it.horizontalDistanceToSqr(position) >= LOOK_DISTANCE * LOOK_DISTANCE }
+            ?: follower.lookAhead(target, position, LOOK_DISTANCE)
+            ?: return lastLookYaw
+        val yaw = look.subtract(position).yaw
+        val backwards = follower.building && lastLookYaw.isFinite() &&
+            abs(Mth.wrapDegrees(yaw - lastLookYaw)) > QUARTER_TURN
+        return if (backwards) Mth.wrapDegrees(yaw + 2 * QUARTER_TURN) else yaw
+    }
+
+    private fun divePitch(target: Vec3) = Rotation.fromRotationVec(target.subtract(player.position())).pitch
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
@@ -212,16 +243,18 @@ class WalkNavigator(
         val position = player.position()
         updateAvoid(goal)
 
-        if (player.rootVehicle.position().distanceTo(goal) <= radius) {
+        if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
             stop(event)
+            lastLookYaw = Float.NaN
             view.done()
             return false
         }
 
         if (player.onGround()) {
-            val terrain = NavigationTerrain(LiveWorld(world))
-            straight = isStraightWalkable(terrain, position, goal, radius, walkSettings.safeFall)
-            direct = straight && position.distanceTo(goal) <= walkSettings.maxLength
+            // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
+            straight = position.distanceToSqr(goal) <= Mth.square(walkSettings.maxLength) &&
+                isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, walkSettings.safeFall)
+            direct = straight
         }
 
         if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
@@ -403,7 +436,7 @@ class WalkNavigator(
             return false
         }
 
-        val ahead = position.add(delta.scale(min(HEADWAY, length) / length))
+        val ahead = position.fma(min(HEADWAY, length) / length, delta)
         val terrain = NavigationTerrain(LiveWorld(world))
         return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, walkSettings.safeFall)
     }
@@ -447,6 +480,7 @@ class WalkNavigator(
             is RouteResult.Failed -> {
                 planner.cancel()
                 failed = true
+                failures++
                 retryAt = ticks + RETRY_TICKS
                 if (follower.isFinished) {
                     follower.clear()
@@ -457,6 +491,7 @@ class WalkNavigator(
 
     private fun accept(path: WalkPath, position: Vec3) {
         failed = false
+        failures = 0
         stuck = false
         if (path.steps.isEmpty()) {
             // Nothing closer to the goal can be reached from here.
@@ -492,7 +527,7 @@ class WalkNavigator(
         var bestDistance = Double.MAX_VALUE
         for (index in 0 until min(points.size, JOIN_POINTS)) {
             val point = points[index]
-            val horizontal = horizontalDistance(position, point)
+            val horizontal = position.horizontalDistanceTo(point)
             val near = horizontal <= JOIN_DISTANCE && abs(position.y - point.y) <= JOIN_DISTANCE
             if (near && horizontal < bestDistance) {
                 best = index
@@ -508,9 +543,9 @@ class WalkNavigator(
         val leftPath = offPath && !wasOffPath
         wasOffPath = offPath
 
-        val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
+        val goalMoved = pathGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }
         val finishedShort = path != null && follower.isFinished
-        val nearStage = path != null && followsStage && horizontalDistance(position, path.end) < STAGE_LEAD
+        val nearStage = path != null && followsStage && position.horizontalDistanceTo(path.end) < STAGE_LEAD
         val urgent = stuck || leftPath
 
         val settled = settledAt.let { it != null && ticks - it < SETTLE_TICKS }
@@ -533,7 +568,11 @@ class WalkNavigator(
      */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
         val nearGoal = NearGoal(goal, radius)
-        val maxLength = walkSettings.maxLength
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
+            failures = 0
+        }
+        // After searches that found nothing, the next ones look further around for a detour.
+        val maxLength = walkSettings.maxLength * (1 shl min(failures, MAX_WIDENING))
         // A stage with its detours stays within the path range.
         val stageRange = maxLength / 2.0
         val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
@@ -543,7 +582,12 @@ class WalkNavigator(
             nearGoal.region(start, maxLength, VERTICAL_MARGIN)
         }
         val abilities = walkSettings.capture(avoid)
-        val limits = RouteLimits(maxLength)
+        // Every jump considered is simulated, which makes routes with them slower to work out.
+        val limits = if (abilities.canParkour) {
+            RouteLimits(maxLength, maxExpansions = PARKOUR_EXPANSIONS, maxComputeNanos = PARKOUR_COMPUTE_NANOS)
+        } else {
+            RouteLimits(maxLength)
+        }
 
         val key = SearchKey(BlockPos.containing(start), nearGoal, avoidVersion, staged)
         planner.request(key, region) { terrain ->
@@ -551,7 +595,7 @@ class WalkNavigator(
             WalkRouteSearch(terrain, start, searchGoal, abilities, limits)
         }
 
-        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
+        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
             failed = false
         }
         requestedGoal = goal
@@ -570,7 +614,8 @@ class WalkNavigator(
         }
 
         val avoidGoal = avoidGoal
-        if (avoidGoal == null || avoidGoal.distanceTo(goal) > AVOID_GOAL_CHANGE || ticks - avoidSince > AVOID_TICKS) {
+        val goalChanged = avoidGoal == null || avoidGoal.distanceToSqr(goal) > AVOID_GOAL_CHANGE * AVOID_GOAL_CHANGE
+        if (goalChanged || ticks - avoidSince > AVOID_TICKS) {
             avoid.clear()
             avoidVersion++
             this.avoidGoal = goal
@@ -612,6 +657,7 @@ class WalkNavigator(
         followsStage = false
         directGoal = null
         steeringTarget = null
+        lastLookYaw = Float.NaN
         sprintWanted = false
         straight = false
         direct = false
@@ -639,10 +685,12 @@ class WalkNavigator(
         followsStage = false
         directGoal = null
         steeringTarget = null
+        lastLookYaw = Float.NaN
         sprintWanted = false
         straight = false
         direct = false
         failed = false
+        failures = 0
         stuck = false
         wasOffPath = false
         settledAt = null
@@ -661,7 +709,11 @@ class WalkNavigator(
     private data class SearchKey(val start: BlockPos, val goal: NearGoal, val avoidVersion: Int, val staged: Boolean)
 
     private companion object {
-        const val MIN_STEER_DISTANCE_SQR = 1.0E-4
+        /**
+         * How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind.
+         */
+        const val LOOK_DISTANCE = 0.75
+        const val QUARTER_TURN = 90f
         const val VERTICAL_MARGIN = 16
         const val GOAL_MOVED = 1.5
         const val REPLAN_INTERVAL = 5
@@ -679,12 +731,9 @@ class WalkNavigator(
          * Blocks before the end of a stage at which the next stage is searched, so the walk goes on without a stop.
          */
         const val STAGE_LEAD = 12.0
-
-        fun horizontalDistance(a: Vec3, b: Vec3): Double {
-            val dx = a.x - b.x
-            val dz = a.z - b.z
-            return sqrt(dx * dx + dz * dz)
-        }
+        const val PARKOUR_EXPANSIONS = 40_000
+        const val MAX_WIDENING = 2
+        val PARKOUR_COMPUTE_NANOS = TimeUnit.SECONDS.toNanos(2)
     }
 
 }

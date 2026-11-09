@@ -24,7 +24,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.max
-import kotlin.math.sqrt
 
 /**
  * Height of the highest block that stops a glide in column [x] [z], or null while the column is not loaded.
@@ -72,7 +71,7 @@ class ElytraCruise(
 
         val dx = goal.x - position.x
         val dz = goal.z - position.z
-        val distance = sqrt(dx * dx + dz * dz)
+        val distance = Mth.length(dx, dz)
         if (distance <= HANDOVER || rockets == 0 && boostTicks == 0) {
             return land(position, velocity, distance)
         }
@@ -146,7 +145,7 @@ class ElytraCruise(
             var unknown = false
             val dx = goal.x - from.x
             val dz = goal.z - from.z
-            val length = sqrt(dx * dx + dz * dz)
+            val length = Mth.length(dx, dz)
             val samples = ceil(length / SAMPLE).toInt()
             for (i in 0..samples) {
                 val t = if (samples == 0) 0.0 else i.toDouble() / samples

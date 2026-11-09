@@ -122,6 +122,11 @@ class AStarSearch<T>(
     fun previous(node: T): T? = previous[node]
 
     /**
+     * Cost of the best known path to [node]; infinite for nodes not reached yet.
+     */
+    fun cost(node: T): Double = gScores.getDouble(node)
+
+    /**
      * The path to the explored node with the smallest heuristic, or null if no node beats the start.
      */
     fun closestPath(): ShortestPath<T>? {

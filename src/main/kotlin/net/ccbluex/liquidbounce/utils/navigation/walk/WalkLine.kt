@@ -28,7 +28,6 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.min
-import kotlin.math.sqrt
 
 private const val SAMPLE_SPACING = 0.5
 private const val DEAD_ANGLE = 20f
@@ -49,7 +48,7 @@ internal fun isStraightWalkable(
 ): Boolean {
     val dx = to.x - from.x
     val dz = to.z - from.z
-    val length = sqrt(dx * dx + dz * dz)
+    val length = Mth.length(dx, dz)
     val samples = ceil(length / SAMPLE_SPACING).toInt()
 
     var level = from.y

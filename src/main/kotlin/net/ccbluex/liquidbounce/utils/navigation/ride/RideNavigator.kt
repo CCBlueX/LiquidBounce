@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.ride.RideSteering.Companion.horizontalDistance
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
+import java.util.function.DoubleSupplier
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -52,7 +53,7 @@ import kotlin.math.min
 class RideNavigator(
     private val owner: EventListener,
     private val view: RouteView,
-    private val maxLength: () -> Double,
+    private val maxLength: DoubleSupplier,
 ) : EventListener {
 
     private val planner = RoutePlanner<RidePath>(this)
@@ -171,8 +172,8 @@ class RideNavigator(
 
         when (body.kind) {
             RideKind.BOAT -> {
-                val brake = target === path.end && horizontalDistance(position, target) <
-                    vehicle.deltaMovement.horizontalDistance() * BOAT_COAST_TICKS + 1.0
+                val brake = target === path.end && position.horizontalDistanceTo(target) <
+                        vehicle.deltaMovement.horizontalDistance() * BOAT_COAST_TICKS + 1.0
                 steering.boat(event, vehicle, target, brake)
             }
 
@@ -199,9 +200,9 @@ class RideNavigator(
 
             // A point the vehicle went past on the way to the next one counts as reached too.
             val next = path.points.getOrNull(i + 1)
-            val distance = horizontalDistance(position, point.position)
+            val distance = position.horizontalDistanceTo(point.position)
             val passed = next != null && !point.jump && !next.jump && distance <= arrive * 2.0 &&
-                horizontalDistance(position, next.position) < horizontalDistance(point.position, next.position)
+                    position.horizontalDistanceTo(next.position) < point.position.horizontalDistanceTo(next.position)
             if (passed || distance <= arrive) {
                 reached = i
             }
@@ -219,7 +220,7 @@ class RideNavigator(
      * route is there.
      */
     private fun trackProgress(position: Vec3, point: Vec3, path: RidePath) {
-        val distance = horizontalDistance(position, point)
+        val distance = position.horizontalDistanceTo(point)
         if (distance < bestDistance - MIN_PROGRESS) {
             bestDistance = distance
             progressAt = ticks
@@ -319,7 +320,7 @@ class RideNavigator(
         val offPath = path != null && index < path.points.size && distanceToLeg(position, path) > OFF_PATH
         val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
         val finishedShort = path != null && index >= path.points.size && !path.complete && !path.exhausted
-        val nearStage = path != null && followsStage && horizontalDistance(position, path.end) < STAGE_LEAD
+        val nearStage = path != null && followsStage && position.horizontalDistanceTo(path.end) < STAGE_LEAD
         val urgent = stuck || offPath
 
         val needed = goalMoved || offPath || finishedShort || stuck || nearStage
@@ -336,7 +337,7 @@ class RideNavigator(
 
     private fun request(goal: Vec3, radius: Double, start: Vec3, body: RideBody) {
         val nearGoal = NearGoal(goal, radius)
-        val maxLength = maxLength()
+        val maxLength = maxLength.asDouble
         val stageRange = maxLength / 2.0
         val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
         val region = if (staged) {
@@ -371,7 +372,7 @@ class RideNavigator(
         } else {
             (((position.x - from.x) * dx + (position.z - from.z) * dz) / lengthSqr).coerceIn(0.0, 1.0)
         }
-        return horizontalDistance(position, Vec3(from.x + dx * t, position.y, from.z + dz * t))
+        return position.horizontalDistanceTo(Vec3(from.x + dx * t, position.y, from.z + dz * t))
     }
 
     private val progress = object : RouteProgress {

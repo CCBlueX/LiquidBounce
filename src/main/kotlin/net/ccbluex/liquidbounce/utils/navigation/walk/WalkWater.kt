@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.minecraft.world.entity.Avatar.SWIMMING_BB_HEIGHT
+import net.minecraft.world.entity.Entity.TOTAL_AIR_SUPPLY
 
 /**
  * Where a swimmer fits in water and where it has air to breathe.
@@ -53,12 +55,12 @@ internal class WalkWater(private val terrain: NavigationTerrain, private val can
         /**
          * Height of a player in the swimming pose.
          */
-        const val SWIMMING_HEIGHT = 0.6
+        const val SWIMMING_HEIGHT = SWIMMING_BB_HEIGHT.toDouble()
 
         /**
          * Ticks of air a player has when breathing freely.
          */
-        const val MAX_AIR = 300
+        const val MAX_AIR = TOTAL_AIR_SUPPLY
 
         /**
          * Moves in a row with the head under water that [air] ticks of air last for: half of them at the speed of

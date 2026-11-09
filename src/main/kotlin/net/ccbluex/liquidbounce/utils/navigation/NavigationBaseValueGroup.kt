@@ -50,7 +50,7 @@ abstract class NavigationBaseValueGroup<T>(
     /**
      * Whether a block is being mined or placed for the path.
      */
-    protected val isActing: Boolean
+    val isActing: Boolean
         get() = navigator.isActing
 
     /**

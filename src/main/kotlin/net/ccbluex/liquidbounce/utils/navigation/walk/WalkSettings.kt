@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity.BASE_SAFE_FALL_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.EmptyBlockGetter
 import net.minecraft.world.level.block.state.BlockState
+import java.util.function.ToDoubleFunction
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -51,6 +53,7 @@ class WalkSettings(
     val allowBreak by values.boolean("AllowBreak", allowBreak)
     val allowPlace by values.boolean("AllowPlace", allowPlace)
     private val allowParkour by values.boolean("AllowParkour", allowParkour)
+    private val riskyJumps by values.boolean("RiskyJumps", false)
     private val maxFall by values.int("MaxFall", 3, 0..20, "blocks")
     private val pathRange by values.int("PathRange", 64, 16..128, "blocks")
     private val allowFly by values.boolean("AllowFly", true)
@@ -69,7 +72,7 @@ class WalkSettings(
     val safeFall: Int
         get() {
             val safeFallDistance = floor(player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)).toInt()
-            return maxFall + max(0, safeFallDistance - VANILLA_SAFE_FALL)
+            return maxFall + max(0, safeFallDistance - BASE_SAFE_FALL_DISTANCE)
         }
 
     /**
@@ -90,12 +93,14 @@ class WalkSettings(
             canPlace = allowPlace && placeableBlocks > 0,
             placeableBlocks = placeableBlocks,
             canParkour = allowParkour,
+            riskyJumps = allowParkour && riskyJumps,
             canSprint = player.foodData.foodLevel > MIN_SPRINT_FOOD,
             safeFall = safeFall,
             waterFall = WATER_FALL,
-            breakTicks = if (allowBreak) BreakTimes.capture() else { _ -> Double.POSITIVE_INFINITY },
+            breakTicks = if (allowBreak) BreakTimes.capture() else ToDoubleFunction { _ -> Double.POSITIVE_INFINITY },
             avoid = LongOpenHashSet(avoid),
             air = player.airSupply,
+            motion = MotionTraits.capture(player),
         )
     }
 
@@ -110,7 +115,6 @@ class WalkSettings(
     fun captureGlide(): GlideAbilities? = if (allowElytra) GlideAbilities.capture(elytraRockets) else null
 
     private companion object {
-        const val VANILLA_SAFE_FALL = 3
         const val WATER_FALL = 23
         const val MIN_SPRINT_FOOD = 6
     }
@@ -120,11 +124,11 @@ class WalkSettings(
 /**
  * Ticks to mine a block with the best of copied hotbar tools, without haste, fatigue or water penalties.
  */
-private class BreakTimes(private val tools: List<Tool>) : (BlockState) -> Double {
+private class BreakTimes(private val tools: List<Tool>) : ToDoubleFunction<BlockState> {
 
     class Tool(val stack: ItemStack, val efficiency: Int)
 
-    override fun invoke(state: BlockState): Double {
+    override fun applyAsDouble(state: BlockState): Double {
         val hardness = state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)
         if (hardness < 0f) {
             return Double.POSITIVE_INFINITY

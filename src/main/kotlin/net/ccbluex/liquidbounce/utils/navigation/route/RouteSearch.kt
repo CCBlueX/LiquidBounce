@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.route
 
+import net.ccbluex.liquidbounce.utils.math.distSqr
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
@@ -106,20 +107,17 @@ interface NavigationGoal {
 /**
  * Standing in one of [positions].
  */
-class BlockGoal(val positions: Collection<BlockPos>) : NavigationGoal {
+class BlockGoal(positions: Collection<BlockPos>) : NavigationGoal {
 
-    private val set = positions.toHashSet()
+    private val set = positions.toSet()
 
-    override val ends: Collection<Vec3> = positions.map(Vec3::atBottomCenterOf)
+    override val ends: Collection<Vec3> = set.map(Vec3::atBottomCenterOf)
 
     override fun isGoal(x: Int, y: Int, z: Int) = BlockPos(x, y, z) in set
 
-    override fun distance(x: Int, y: Int, z: Int) = positions.minOf { goal ->
-        val dx = (goal.x - x).toDouble()
-        val dy = (goal.y - y).toDouble()
-        val dz = (goal.z - z).toDouble()
-        sqrt(dx * dx + dy * dy + dz * dz)
-    }
+    override fun distance(x: Int, y: Int, z: Int) = set.minOf { goal ->
+        goal.distSqr(x, y, z)
+    }.let { sqrt(it.toDouble()) }
 
     override fun equals(other: Any?) = other is BlockGoal && other.set == set
 
@@ -145,7 +143,7 @@ data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
         val dx = x + 0.5 - center.x
         val dy = (y - centerY).toDouble()
         val dz = z + 0.5 - center.z
-        return sqrt(dx * dx + dy * dy + dz * dz)
+        return Mth.length(dx, dy, dz)
     }
 
 }
