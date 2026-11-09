@@ -49,8 +49,19 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     // prioritizes faces that are visible, might make the crystal aura slower
     private val prioritizeVisibleFaces by boolean("PrioritizeVisibleFaces", false)
 
+    /**
+     * Holds the attack while the target is still in its hurt time from the last explosion. The server only applies
+     * the part of a hit that exceeds the last one then, so an explosion dealing no more than our last one is wasted.
+     */
+    private val damageTick by boolean("DamageTick", false)
+
     var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
     val chronometer = Chronometer()
+
+    /**
+     * The enemy damage of the last crystal we attacked.
+     */
+    private var lastDamage = 0f
 
     fun tick(providedCrystal: EndCrystal? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
@@ -66,6 +77,9 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         }
 
         val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return
+        if (!hitsOutsideHurtTime(CrystalAuraDestroyTargetFactory.currentDamage)) {
+            return
+        }
 
         val base = FULL_BOX.move(target.blockPosition().below())
         mc.execute {
@@ -104,10 +118,15 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
                 }
 
                 val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
+                val damage = CrystalAuraDestroyTargetFactory.currentDamage
+                if (!hitsOutsideHurtTime(damage)) {
+                    return@rotate
+                }
 
                 attackEntity(target1, swingMode)
                 postAttackHandlers.forEach { it.attacked(target1.id) }
                 chronometer.reset()
+                lastDamage = damage
             })
         }
 
@@ -117,6 +136,18 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
         } else {
             action()
         }
+    }
+
+    /**
+     * Whether an explosion dealing [damage] would hurt the enemy, see [damageTick].
+     */
+    private fun hitsOutsideHurtTime(damage: Float): Boolean {
+        if (!damageTick) {
+            return true
+        }
+
+        val enemy = ModuleCrystalAura.targetTracker.target ?: return true
+        return enemy.hurtTime == 0 || damage > lastDamage
     }
 
     fun getMaxRange() = max(range, wallsRange)
