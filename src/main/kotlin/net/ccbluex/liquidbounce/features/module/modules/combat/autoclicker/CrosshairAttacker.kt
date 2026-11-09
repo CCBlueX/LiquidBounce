@@ -32,9 +32,12 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.WeaponType
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.EntityHitResult
 
 /**
@@ -52,6 +55,12 @@ class CrosshairAttacker<T>(
     private val weapon by parent.multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
     private val criticalsSelectionMode by parent.enumChoice("Criticals", CriticalsSelectionMode.SMART)
     private val delayPostStopUse by parent.int("DelayPostStopUse", 0, 0..20, "ticks")
+
+    /**
+     * Attacks a target whose shield would block the hit. When disabled, the clicks are held back until the shield
+     * is down or the attack will break it.
+     */
+    private val ignoreShield by parent.boolean("IgnoreShield", true)
 
     val isAttacking: Boolean
         get() = wantsToAttack() && weapon.matchesAny(player.mainHandItem)
@@ -71,16 +80,18 @@ class CrosshairAttacker<T>(
     }
 
     /**
-     * Clicks as often as [clicker] plans for this tick, unless a critical hit is still pending.
+     * Clicks as often as [clicker] plans for this tick, unless a critical hit is still pending or the shield of the
+     * target would block the hit.
      *
      * @return false when the tick went to waiting for or stopping an item use instead
      */
     suspend fun attack(): Boolean {
         val crosshairTarget = mc.hitResult
         if (crosshairTarget is EntityHitResult) {
-            ModuleAutoWeapon.onTarget(crosshairTarget.entity)
+            val entity = crosshairTarget.entity
+            ModuleAutoWeapon.onTarget(entity)
 
-            if (!criticalsSelectionMode.isCriticalHit()) {
+            if (!criticalsSelectionMode.isCriticalHit() || !ignoreShield && isShielded(entity)) {
                 return true
             }
         }
@@ -95,6 +106,9 @@ class CrosshairAttacker<T>(
         }
         return true
     }
+
+    private fun isShielded(entity: Entity) =
+        entity is LivingEntity && entity.wouldBlockHit && !ModuleAutoWeapon.willShieldBreak
 
     private suspend fun encounterItemUse(): Boolean {
         return when (onItemUse) {
