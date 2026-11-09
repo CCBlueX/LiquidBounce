@@ -109,7 +109,7 @@
 
     .title {
       color: var(--menu-text-color);
-      font-weight: 600;
+      font-weight: 500;
       font-size: 18px;
       grid-area: b;
       align-self: flex-end;
