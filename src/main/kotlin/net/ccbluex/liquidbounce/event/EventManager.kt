@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerDataEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerStatisticsEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ClosedCaptionsEvent
@@ -212,6 +213,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     PlayerInteractItemEvent::class.java,
     PlayerInteractedItemEvent::class.java,
     ClientPlayerInventoryEvent::class.java,
+    ClientPlayerStatisticsEvent::class.java,
     PlayerVelocityStrafe::class.java,
     PlayerStrideEvent::class.java,
     PlayerSafeWalkEvent::class.java,
