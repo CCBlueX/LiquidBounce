@@ -169,13 +169,27 @@ class ClickPlan(
     }
 
     /**
-     * A press on the same key from the player or another clicker at [time]. It counts as one of this tick's
-     * presses, and the presses after it are planned again from there, so presses from several sources don't add up.
-     *
-     * A clicker passes its own plan as [leader]: drawing our own intervals instead would race it,
-     * and the earlier of two random presses comes faster than either plan's CPS.
+     * The player pressed the key. The press takes the place of our next planned one,
+     * so the presses keep our rhythm and CPS instead of adding up.
      */
-    fun pressed(time: Long, leader: ClickPlan? = null) {
+    fun pressedByPlayer() {
+        if (next >= times.size) {
+            return
+        }
+
+        val interval = intervals.size - (times.size - next)
+        if (interval >= 0) {
+            intervals.removeLong(interval)
+        }
+        times.removeLong(next)
+    }
+
+    /**
+     * Another clicker on the same key pressed at [time]. It counts as one of this tick's presses, and the presses
+     * after it follow the plan of [leader]: drawing our own would race it, and the earlier of two random presses
+     * comes faster than either plan's CPS.
+     */
+    fun pressedBy(leader: ClickPlan, time: Long) {
         if (times.isEmpty) {
             return
         }
@@ -190,12 +204,10 @@ class ClickPlan(
         }
         next = times.size
 
-        if (leader != null) {
-            for (i in leader.next until leader.times.size) {
-                val planned = leader.times.getLong(i)
-                if (planned > time) {
-                    append(planned)
-                }
+        for (i in leader.next until leader.times.size) {
+            val planned = leader.times.getLong(i)
+            if (planned > time) {
+                append(planned)
             }
         }
     }

@@ -191,26 +191,26 @@ open class Clicker<T>(
         val now = Util.getMillis()
         for (other in clickers.getValue(keyBinding)) {
             if (other !== this && other.running) {
-                other.plan.pressed(now, plan)
+                other.plan.pressedBy(plan, now)
             }
         }
     }
 
-    private fun pressedByPlayer(key: InputConstants.Key, pressed: Boolean, screen: Screen?) {
+    private fun onPlayerPress(key: InputConstants.Key, pressed: Boolean, screen: Screen?) {
         // Minecraft only clicks keys while no screen is open
         if (pressed && screen == null && key == keyBinding.key) {
-            plan.pressed(Util.getMillis())
+            plan.pressedByPlayer()
         }
     }
 
     @Suppress("unused")
     private val mouseHandler = handler<MouseButtonEvent> { event ->
-        pressedByPlayer(event.key, event.isPressed, event.screen)
+        onPlayerPress(event.key, event.isPressed, event.screen)
     }
 
     @Suppress("unused")
     private val keyboardHandler = handler<KeyboardKeyEvent> { event ->
-        pressedByPlayer(event.key, event.isPressed, event.screen)
+        onPlayerPress(event.key, event.isPressed, event.screen)
     }
 
     @Suppress("unused")
