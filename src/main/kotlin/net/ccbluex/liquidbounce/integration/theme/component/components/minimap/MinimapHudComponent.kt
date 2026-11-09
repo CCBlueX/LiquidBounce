@@ -186,10 +186,6 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
         val minimapSize = size
 
-        val boundingBox = getGuiScaledBounds(minimapSize.toFloat(), minimapSize.toFloat())
-
-        val centerBB = boundingBox.centerVec
-
         val baseX = (playerPos.x / 16.0).toInt()
         val baseZ = (playerPos.z / 16.0).toInt()
 
@@ -202,60 +198,64 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         val mapRotation = if (!fixedDirection) -(playerRotation.yaw + 180.0F).toRadians() else 0F
 
         with(event.context) {
-            val bounds = getBounds(boundingBox).ifEmpty { return@with }
-            scissorStack.withPush(bounds) {
-                pose().withPush {
-                    translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
-                    scale(scale)
+            withHudScale(getGuiScaledBounds(minimapSize.toFloat(), minimapSize.toFloat())) { boundingBox ->
+                val centerBB = boundingBox.centerVec
 
-                    if (mapRotation != 0F) rotate(mapRotation)
-                    translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
+                val bounds = getBounds(boundingBox).ifEmpty { return@withHudScale }
+                scissorStack.withPush(bounds) {
+                    pose().withPush {
+                        translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
+                        scale(scale)
 
-                    drawMinimapTexture(bounds, baseX, baseZ, chunksToRenderAround, viewDistance)
+                        if (mapRotation != 0F) rotate(mapRotation)
+                        translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
-                    drawEntities(event.tickDelta, baseX.toFloat(), baseZ.toFloat())
+                        drawMinimapTexture(bounds, baseX, baseZ, chunksToRenderAround, viewDistance)
+
+                        drawEntities(event.tickDelta, baseX.toFloat(), baseZ.toFloat())
+                    }
                 }
+
+                drawOutOfBoundsEntityMarkers(
+                    tickDelta = event.tickDelta,
+                    center = centerBB,
+                    boundingBox = boundingBox,
+                    playerPosX = playerPos.x.toFloat() / 16.0F,
+                    playerPosZ = playerPos.z.toFloat() / 16.0F,
+                    mapScale = scale,
+                    viewDistance = viewDistance,
+                    rotation = mapRotation,
+                )
+
+                for (element in extraElements) {
+                    element.render(this, boundingBox)
+                }
+
+                val from = Color4b.DEFAULT_BG_COLOR
+                val to = Color4b.TRANSPARENT
+
+                drawShadowForBB(boundingBox, bounds, from, to)
+
+                val lines = floatArrayOf(
+                    // Cursor
+                    boundingBox.xMin, centerBB.y,
+                    boundingBox.xMax, centerBB.y,
+                    centerBB.x, boundingBox.yMin,
+                    centerBB.x, boundingBox.yMax,
+                    // Border
+                    boundingBox.xMin, boundingBox.yMin,
+                    boundingBox.xMax, boundingBox.yMin,
+                    boundingBox.xMin, boundingBox.yMax,
+                    boundingBox.xMax, boundingBox.yMax,
+
+                    boundingBox.xMin, boundingBox.yMin,
+                    boundingBox.xMin, boundingBox.yMax,
+                    boundingBox.xMax, boundingBox.yMin,
+                    boundingBox.xMax, boundingBox.yMax,
+                )
+
+                drawLines(lines, Color4b.WHITE.argb, bounds)
             }
-
-            drawOutOfBoundsEntityMarkers(
-                tickDelta = event.tickDelta,
-                center = centerBB,
-                boundingBox = boundingBox,
-                playerPosX = playerPos.x.toFloat() / 16.0F,
-                playerPosZ = playerPos.z.toFloat() / 16.0F,
-                mapScale = scale,
-                viewDistance = viewDistance,
-                rotation = mapRotation,
-            )
-
-            for (element in extraElements) {
-                element.render(this, boundingBox)
-            }
-
-            val from = Color4b.DEFAULT_BG_COLOR
-            val to = Color4b.TRANSPARENT
-
-            drawShadowForBB(boundingBox, bounds, from, to)
-
-            val lines = floatArrayOf(
-                // Cursor
-                boundingBox.xMin, centerBB.y,
-                boundingBox.xMax, centerBB.y,
-                centerBB.x, boundingBox.yMin,
-                centerBB.x, boundingBox.yMax,
-                // Border
-                boundingBox.xMin, boundingBox.yMin,
-                boundingBox.xMax, boundingBox.yMin,
-                boundingBox.xMin, boundingBox.yMax,
-                boundingBox.xMax, boundingBox.yMax,
-
-                boundingBox.xMin, boundingBox.yMin,
-                boundingBox.xMin, boundingBox.yMax,
-                boundingBox.xMax, boundingBox.yMin,
-                boundingBox.xMax, boundingBox.yMax,
-            )
-
-            drawLines(lines, Color4b.WHITE.argb, bounds)
         }
     }
 
