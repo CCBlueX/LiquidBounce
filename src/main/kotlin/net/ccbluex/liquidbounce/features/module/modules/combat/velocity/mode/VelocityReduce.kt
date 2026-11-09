@@ -243,7 +243,7 @@ object VelocityReduce : VelocityMode("Reduce") {
             return@handler
         }
 
-        if (ModuleVelocity.pause > 0) return@handler
+        if (ModuleVelocity.isPaused) return@handler
 
         if (packet.isLocalPlayerDamage()) {
             receiveDamage = true

@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
@@ -53,6 +54,11 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  */
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
+
+    /**
+     * We are still on the ground when the explosion knockback arrives.
+     */
+    private const val EXPLOSION_LIFT_OFF_TICKS = 2
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
@@ -80,13 +86,20 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 0, 0..20, "ticks")
+    private val pauseOnExplosion by boolean("PauseOnExplosion", false)
 
-    internal var pause = 0
+    private var pause = 0
+    private var pauseUntilLanding = false
+
+    internal val isPaused
+        get() = pause > 0 || pauseUntilLanding
 
     @Suppress("unused")
     private val pauseHandler = handler<GameTickEvent> {
         if (pause > 0) {
             pause--
+        } else if (pauseUntilLanding && player.onGround()) {
+            pauseUntilLanding = false
         }
     }
 
@@ -94,7 +107,16 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
     private val packetHandler = sequenceHandler<PacketEvent>(priority = 1) { event ->
         val packet = event.packet
 
-        if (!event.original || pause > 0) {
+        if (!event.original) {
+            return@sequenceHandler
+        }
+
+        if (pauseOnExplosion && packet is ClientboundExplodePacket && packet.playerKnockback.isPresent) {
+            pause = maxOf(pause, EXPLOSION_LIFT_OFF_TICKS)
+            pauseUntilLanding = true
+        }
+
+        if (isPaused) {
             return@sequenceHandler
         }
 

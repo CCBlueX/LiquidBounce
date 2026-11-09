@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.isPaused
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 
 abstract class VelocityMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
 
@@ -30,6 +30,6 @@ abstract class VelocityMode(name: String, aliases: List<String> = emptyList()) :
         get() = modes
 
     override val running: Boolean
-        get() = super.running && pause == 0
+        get() = super.running && !isPaused
 
 }
