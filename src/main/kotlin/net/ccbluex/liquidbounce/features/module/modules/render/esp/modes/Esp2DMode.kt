@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -38,6 +39,7 @@ import net.minecraft.util.Mth
 import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.AABB
 
 object Esp2DMode : EspMode.BoxBased("2D") {
 
@@ -73,6 +75,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
     }
 
     private val fill by boolean("Fill", true)
+    private val fillOpacity by float("FillOpacity", 0.2f, 0f..1f)
 
     /**
      * Rounds the outline, its border, the fill and the glow. A rounded outline has no [Corner] gaps.
@@ -82,6 +85,8 @@ object Esp2DMode : EspMode.BoxBased("2D") {
     object HealthBar : ToggleableValueGroup(this, "HealthBar", true) {
         val spacing by float("Spacing", 2f, 0f..32f, "px")
         val position by enumChoice("Position", Position.LEFT)
+        val highColor by color("HighColor", Color4b.GREEN)
+        val lowColor by color("LowColor", Color4b.RED)
 
         enum class Position(override val tag: String) : Tagged {
             LEFT("Left"),
@@ -91,6 +96,14 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         }
     }
 
+    /**
+     * Fades a box in when its target appears and out at the last place of the target once it is gone.
+     */
+    private object Fade : ToggleableValueGroup(this, "Fade", false) {
+        val inTime by int("InTime", 250, 0..2000, "ms")
+        val outTime by int("OutTime", 250, 0..2000, "ms")
+    }
+
     init {
         tree(Outline)
         tree(Corner)
@@ -98,7 +111,16 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         tree(Glow)
         tree(Gradient)
         tree(HealthBar)
+        tree(Fade)
     }
+
+    private class FadingBox(val entity: Entity, var box: AABB) {
+        var opacity = 0f
+        var present = true
+    }
+
+    private val fadingBoxes = Reference2ObjectOpenHashMap<Entity, FadingBox>()
+    private var lastFadeMillis = 0L
 
     private val thickness get() = Outline.thickness / mc.window.guiScale
     private val borderThickness get() = if (Border.enabled) Border.thickness / mc.window.guiScale else 0f
@@ -106,24 +128,80 @@ object Esp2DMode : EspMode.BoxBased("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val secondColor = Gradient.secondColor.with(a = 255)
-        val swap = 0.5f - 0.5f * Mth.cos(Util.getMillis() / 1000.0 * Gradient.speed * Mth.TWO_PI)
+        val boxes = collectPreparedBoxes(event.tickDelta)
 
-        for ((entity, _, _, box) in collectPreparedBoxes(event.tickDelta)) {
-            val rect = WorldToScreen.calculateScreenRect(box) ?: continue
-            val color = getColor(entity).with(a = 255)
+        if (!Fade.enabled) {
+            resetFade()
+            for ((entity, _, _, box) in boxes) {
+                val rect = WorldToScreen.calculateScreenRect(box) ?: continue
+                event.context.drawBox(entity, rect, 1f)
+            }
+            return@handler
+        }
 
-            if (Gradient.enabled) {
-                val topColor = color.interpolateTo(secondColor, swap)
-                val bottomColor = secondColor.interpolateTo(color, swap)
-                event.context.drawBox(entity, rect, topColor, bottomColor)
+        updateFade(boxes)
+        for (fadingBox in fadingBoxes.values) {
+            val rect = WorldToScreen.calculateScreenRect(fadingBox.box) ?: continue
+            event.context.drawBox(fadingBox.entity, rect, fadingBox.opacity)
+        }
+    }
+
+    override fun disable() {
+        super.disable()
+        resetFade()
+    }
+
+    private fun resetFade() {
+        fadingBoxes.clear()
+        lastFadeMillis = 0L
+    }
+
+    private fun updateFade(boxes: List<BoxBasedEspRenderState>) {
+        val now = Util.getMillis()
+        val elapsed = if (lastFadeMillis == 0L) 0f else (now - lastFadeMillis).toFloat()
+        lastFadeMillis = now
+
+        for (fadingBox in fadingBoxes.values) {
+            fadingBox.present = false
+        }
+        for ((entity, _, _, box) in boxes) {
+            val fadingBox = fadingBoxes.getOrPut(entity) { FadingBox(entity, box) }
+            fadingBox.box = box
+            fadingBox.present = true
+        }
+
+        val iterator = fadingBoxes.values.iterator()
+        while (iterator.hasNext()) {
+            val fadingBox = iterator.next()
+            if (fadingBox.present) {
+                fadingBox.opacity = (fadingBox.opacity + fadeStep(elapsed, Fade.inTime)).coerceAtMost(1f)
             } else {
-                event.context.drawBox(entity, rect, color, color)
+                fadingBox.opacity -= fadeStep(elapsed, Fade.outTime)
+                if (fadingBox.opacity <= 0f) {
+                    iterator.remove()
+                }
             }
         }
     }
 
-    private fun GuiGraphicsExtractor.drawBox(entity: Entity, rect: Rect, topColor: Color4b, bottomColor: Color4b) {
+    private fun fadeStep(elapsed: Float, time: Int) = if (time == 0) 1f else elapsed / time
+
+    private fun GuiGraphicsExtractor.drawBox(entity: Entity, rect: Rect, opacity: Float) {
+        val color = getColor(entity).with(a = 255)
+        var topColor = color
+        var bottomColor = color
+
+        if (Gradient.enabled) {
+            val secondColor = Gradient.secondColor.with(a = 255)
+            val swap = 0.5f - 0.5f * Mth.cos(Util.getMillis() / 1000.0 * Gradient.speed * Mth.TWO_PI)
+            topColor = color.interpolateTo(secondColor, swap)
+            bottomColor = secondColor.interpolateTo(color, swap)
+        }
+
+        topColor = topColor.fade(opacity)
+        bottomColor = bottomColor.fade(opacity)
+        val borderColor = Color4b.BLACK.fade(opacity)
+
         pose().withPush {
             translate(rect.x1, rect.y1)
 
@@ -131,13 +209,13 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                 drawGlow(rect.w, rect.h, topColor, bottomColor)
             }
             if (fill) {
-                drawFill(rect.w, rect.h, topColor.with(a = 50), bottomColor.with(a = 50))
+                drawFill(rect.w, rect.h, topColor.fade(fillOpacity), bottomColor.fade(fillOpacity))
             }
             if (Outline.enabled) {
-                drawOutline(rect.w, rect.h, topColor, bottomColor)
+                drawOutline(rect.w, rect.h, topColor, bottomColor, borderColor)
             }
             if (HealthBar.enabled && entity is LivingEntity) {
-                drawHealthBar(entity, rect.w, rect.h)
+                drawHealthBar(entity, rect.w, rect.h, borderColor, opacity)
             }
         }
     }
@@ -147,15 +225,15 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         val edge = thickness / 2 + borderThickness
 
         for (layer in 1..Glow.radius) {
-            val alpha = (255 * Glow.opacity * (1f - layer / (Glow.radius + 1f))).toInt()
+            val layerOpacity = Glow.opacity * (1f - layer / (Glow.radius + 1f))
             val expand = edge + layer * pixel
 
             drawRoundedRect(
                 -expand, -expand, width + expand, height + expand,
                 radius = radius + expand,
                 fillColor = null,
-                outlineColor = topColor.with(a = alpha),
-                outlineBottomColor = bottomColor.with(a = alpha),
+                outlineColor = topColor.fade(layerOpacity),
+                outlineBottomColor = bottomColor.fade(layerOpacity),
                 // Half a pixel of overlap, the antialiased edges of the rings leave seams otherwise.
                 outlineWidth = pixel * 1.5f,
             )
@@ -170,7 +248,13 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         }
     }
 
-    private fun GuiGraphicsExtractor.drawOutline(width: Float, height: Float, topColor: Color4b, bottomColor: Color4b) {
+    private fun GuiGraphicsExtractor.drawOutline(
+        width: Float,
+        height: Float,
+        topColor: Color4b,
+        bottomColor: Color4b,
+        borderColor: Color4b,
+    ) {
         val t = thickness
         val b = borderThickness
 
@@ -180,7 +264,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                     -t / 2 - b, -t / 2 - b, width + t / 2 + b, height + t / 2 + b,
                     radius = radius + t / 2 + b,
                     fillColor = null,
-                    outlineColor = Color4b.BLACK,
+                    outlineColor = borderColor,
                     outlineWidth = t + 2 * b,
                 )
             }
@@ -204,7 +288,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
 
         if (b > 0f) {
             forEachLine(width, height) { x1, y1, x2, y2 ->
-                drawQuad(x1 - b, y1 - b, x2 + b, y2 + b, Color4b.BLACK)
+                drawQuad(x1 - b, y1 - b, x2 + b, y2 + b, borderColor)
             }
         }
 
@@ -250,10 +334,16 @@ object Esp2DMode : EspMode.BoxBased("2D") {
         line(right - t, height - cornerHeight, right, bottom)
     }
 
-    private fun GuiGraphicsExtractor.drawHealthBar(entity: LivingEntity, width: Float, height: Float) {
+    private fun GuiGraphicsExtractor.drawHealthBar(
+        entity: LivingEntity,
+        width: Float,
+        height: Float,
+        borderColor: Color4b,
+        opacity: Float,
+    ) {
         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
         val healthPercentage = (entity.getActualHealth() / maxHealth).coerceIn(0f, 1f)
-        val healthColor = Color4b.RED.interpolateTo(Color4b.GREEN, healthPercentage)
+        val healthColor = HealthBar.lowColor.interpolateTo(HealthBar.highColor, healthPercentage).fade(opacity)
 
         val t = thickness
         val b = borderThickness
@@ -264,7 +354,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                 val x = if (position == HealthBar.Position.LEFT) -t / 2 - offset else width - t / 2 + offset
 
                 if (b > 0f) {
-                    drawVerticalLine(x - b, -t / 2 - b, height + t / 2 + b, t + 2 * b, Color4b.BLACK)
+                    drawVerticalLine(x - b, -t / 2 - b, height + t / 2 + b, t + 2 * b, borderColor)
                 }
                 drawVerticalLine(x, height - height * healthPercentage - t / 2, height + t / 2, t, healthColor)
             }
@@ -273,7 +363,7 @@ object Esp2DMode : EspMode.BoxBased("2D") {
                 val y = if (position == HealthBar.Position.TOP) -t / 2 - offset else height - t / 2 + offset
 
                 if (b > 0f) {
-                    drawHorizontalLine(-t / 2 - b, width + t / 2 + b, y - b, t + 2 * b, Color4b.BLACK)
+                    drawHorizontalLine(-t / 2 - b, width + t / 2 + b, y - b, t + 2 * b, borderColor)
                 }
                 drawHorizontalLine(-t / 2, width * healthPercentage + t / 2, y, t, healthColor)
             }

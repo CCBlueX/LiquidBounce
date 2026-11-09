@@ -34,6 +34,7 @@
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
       "net.ccbluex.liquidbounce.gametest.EspObjectTargetsGameTest",
       "net.ccbluex.liquidbounce.gametest.Esp2DBoxOptionsGameTest",
+      "net.ccbluex.liquidbounce.gametest.Esp2DPolishGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest"
     ]
   },
