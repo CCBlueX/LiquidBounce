@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTriggerBot
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
