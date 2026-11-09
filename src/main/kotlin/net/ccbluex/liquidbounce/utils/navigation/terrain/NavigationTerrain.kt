@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.utils.navigation.terrain
 
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.level.block.BaseFireBlock
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.DoorBlock
 import net.minecraft.world.level.block.FenceGateBlock
@@ -463,7 +463,7 @@ class NavigationTerrain(
         private val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
         private val FULL: VoxelShape = Shapes.block()
 
-        private val HAZARDS = setOf(
+        private val HAZARDS = referenceHashSetOf(
             Blocks.COBWEB,
             Blocks.SWEET_BERRY_BUSH,
             Blocks.POWDER_SNOW,
@@ -474,7 +474,7 @@ class NavigationTerrain(
             Blocks.CACTUS,
         )
 
-        private val CLIMBABLE: Set<Block> = setOf(
+        private val CLIMBABLE = referenceHashSetOf(
             Blocks.LADDER,
             Blocks.VINE,
             Blocks.WEEPING_VINES,

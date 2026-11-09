@@ -81,7 +81,7 @@ class TeleportRouteSearch(
             return RouteResult.AlreadyThere
         }
 
-        val inReach = standable.filter { (_, feet) -> feet.distanceTo(start) <= limits.maxLength }
+        val inReach = standable.filter { (_, feet) -> feet.distanceToSqr(start) <= Mth.square(limits.maxLength) }
         return when {
             standable.isEmpty() -> RouteResult.Failed(RouteFailure.INVALID_DESTINATION)
             inReach.isEmpty() -> RouteResult.Failed(RouteFailure.TOO_FAR)

@@ -34,6 +34,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.EmptyBlockGetter
 import net.minecraft.world.level.block.state.BlockState
+import java.util.function.ToDoubleFunction
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -95,7 +96,7 @@ class WalkSettings(
             canSprint = player.foodData.foodLevel > MIN_SPRINT_FOOD,
             safeFall = safeFall,
             waterFall = WATER_FALL,
-            breakTicks = if (allowBreak) BreakTimes.capture() else { _ -> Double.POSITIVE_INFINITY },
+            breakTicks = if (allowBreak) BreakTimes.capture() else ToDoubleFunction { _ -> Double.POSITIVE_INFINITY },
             avoid = LongOpenHashSet(avoid),
             air = player.airSupply,
             motion = MotionTraits.capture(player),
@@ -123,11 +124,11 @@ class WalkSettings(
 /**
  * Ticks to mine a block with the best of copied hotbar tools, without haste, fatigue or water penalties.
  */
-private class BreakTimes(private val tools: List<Tool>) : (BlockState) -> Double {
+private class BreakTimes(private val tools: List<Tool>) : ToDoubleFunction<BlockState> {
 
     class Tool(val stack: ItemStack, val efficiency: Int)
 
-    override fun invoke(state: BlockState): Double {
+    override fun applyAsDouble(state: BlockState): Double {
         val hardness = state.getDestroySpeed(EmptyBlockGetter.INSTANCE, BlockPos.ZERO)
         if (hardness < 0f) {
             return Double.POSITIVE_INFINITY

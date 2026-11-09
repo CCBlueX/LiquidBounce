@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.SlimeBlock
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
+import java.util.function.ToDoubleFunction
 
 enum class WalkMove {
     /** One block sideways on the same level. */
@@ -162,7 +163,7 @@ class WalkAbilities(
     /**
      * Ticks to mine a block with the best tool at hand; infinite when it must not or cannot be mined.
      */
-    val breakTicks: (BlockState) -> Double,
+    val breakTicks: ToDoubleFunction<BlockState>,
 
     /**
      * Feet blocks the walker got stuck at; moves into them cost extra.

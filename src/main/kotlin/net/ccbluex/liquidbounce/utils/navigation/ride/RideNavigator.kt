@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
+import java.util.function.DoubleSupplier
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -52,7 +53,7 @@ import kotlin.math.min
 class RideNavigator(
     private val owner: EventListener,
     private val view: RouteView,
-    private val maxLength: () -> Double,
+    private val maxLength: DoubleSupplier,
 ) : EventListener {
 
     private val planner = RoutePlanner<RidePath>(this)
@@ -336,7 +337,7 @@ class RideNavigator(
 
     private fun request(goal: Vec3, radius: Double, start: Vec3, body: RideBody) {
         val nearGoal = NearGoal(goal, radius)
-        val maxLength = maxLength()
+        val maxLength = maxLength.asDouble
         val stageRange = maxLength / 2.0
         val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
         val region = if (staged) {

@@ -48,6 +48,10 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
      */
     class Spot(val position: Vec3, val speed: Double)
 
+    fun interface NodeConsumer {
+        operator fun invoke(to: BlockPos, cost: Double, jump: Boolean)
+    }
+
     private val halfWidth = body.width / 2.0
     private val spots = Long2ObjectOpenHashMap<Spot>()
 
@@ -69,7 +73,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
      * Calls [action] for every node reachable in one move from [node] with the ticks the move takes and whether it
      * needs a jump.
      */
-    fun forEach(node: BlockPos, action: (to: BlockPos, cost: Double, jump: Boolean) -> Unit) {
+    fun forEach(node: BlockPos, action: NodeConsumer) {
         val from = spot(node) ?: return
         for (direction in DIRECTIONS) {
             val x = node.x + direction[0]
@@ -82,7 +86,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
     /**
      * Moves up onto the column [x] [z] from [from] in node height [y], stepping or jumping.
      */
-    private fun rises(from: Spot, x: Int, y: Int, z: Int, action: (BlockPos, Double, Boolean) -> Unit) {
+    private fun rises(from: Spot, x: Int, y: Int, z: Int, action: NodeConsumer) {
         val maxRise = max(body.step, body.jump)
         for (dy in ceil(maxRise).toInt() downTo 1) {
             val to = spot(x, y + dy, z) ?: continue
@@ -97,7 +101,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
     /**
      * The move onto the column [x] [z] on the level of [from] in node height [y], or down onto the first floor below.
      */
-    private fun levelOrDrop(from: Spot, x: Int, y: Int, z: Int, action: (BlockPos, Double, Boolean) -> Unit) {
+    private fun levelOrDrop(from: Spot, x: Int, y: Int, z: Int, action: NodeConsumer) {
         for (dy in 0 downTo -(body.safeFall + 1)) {
             val to = spot(x, y + dy, z)
             if (to == null) {

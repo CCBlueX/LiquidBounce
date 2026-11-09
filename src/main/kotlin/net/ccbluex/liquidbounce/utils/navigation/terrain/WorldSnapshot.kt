@@ -203,7 +203,7 @@ object SectionCache : EventListener {
     }
 
     private fun forgetColumn(chunkX: Int, chunkZ: Int) {
-        copies.keys.removeIf(LongPredicate { SectionPos.x(it) == chunkX && SectionPos.z(it) == chunkZ })
+        copies.keys.removeIf { SectionPos.x(it) == chunkX && SectionPos.z(it) == chunkZ }
     }
 
     @Suppress("unused")

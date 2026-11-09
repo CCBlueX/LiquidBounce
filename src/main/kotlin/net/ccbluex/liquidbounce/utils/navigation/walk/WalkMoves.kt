@@ -589,7 +589,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
             }
         }
 
-        val ticks = abilities.breakTicks(state)
+        val ticks = abilities.breakTicks.applyAsDouble(state)
         return if (ticks.isFinite()) ticks else Double.NaN
     }
 
