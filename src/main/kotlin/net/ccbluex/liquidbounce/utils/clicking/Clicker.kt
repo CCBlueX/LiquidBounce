@@ -61,7 +61,6 @@ open class Clicker<T>(
     companion object {
         private const val TICKS_AHEAD = 20
         private const val TICKS_PER_SECOND = 20
-        private const val MIN_HOLD_TICKS = 5
     }
 
     private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
@@ -142,9 +141,9 @@ open class Clicker<T>(
 
     /**
      * Holds [keyBinding] for two of our slowest click intervals, so it stays ours between clicks.
+     * Rounded up to whole ticks, so even at 20+ CPS the hold outlasts the tick it was asked in.
      */
-    private fun requestKey() =
-        KeyRequests.request(this, priority, (2 * TICKS_PER_SECOND / cps.first).coerceAtLeast(MIN_HOLD_TICKS))
+    private fun requestKey() = KeyRequests.request(this, priority, 2 * Math.ceilDiv(TICKS_PER_SECOND, cps.first))
 
     /**
      * Uses the presses of this tick. If the cooldown is not passed, the press is dropped.
