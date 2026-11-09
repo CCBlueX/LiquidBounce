@@ -65,23 +65,12 @@ object CombatManager : EventListener {
     private var cooldownResetTicks = 0.0
 
     /**
-     * Server ticks per tick of real time: the TPS [ServerObserver] measured against the tick rate the client runs at.
-     * 1 until there is a measurement.
-     */
-    val serverTickRate: Double
-        get() {
-            val tps = ServerObserver.tps
-            val level = mc.level
-            return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
-        }
-
-    /**
      * Ticks the server has counted towards our attack cooldown by [ticks] ticks of real time from now. It counts real
-     * time at [serverTickRate], so held, burst and timer ticks of the client do not shift it. Rounded to whole ticks
-     * like the server counts them, so a TPS measured a little under 20 does not hold the hit back a tick.
+     * time at [ServerObserver.tickSpeed], so held, burst and timer ticks of the client do not shift it. Rounded to
+     * whole ticks like the server counts them, so a TPS measured a little under 20 does not hold the hit back a tick.
      */
     fun attackCooldownTicks(ticks: Int = 0) =
-        ((Timer.realTicks - cooldownResetTicks + ticks) * serverTickRate).roundToInt()
+        ((Timer.realTicks - cooldownResetTicks + ticks) * ServerObserver.tickSpeed).roundToInt()
 
     /**
      * Like [Player.getAttackStrengthScale] on the server for an attack [ticks] ticks of real time from now, not
@@ -131,7 +120,6 @@ object CombatManager : EventListener {
         val player = mc.player ?: return@handler
         debugParameter("Client Cooldown Ticks") { player.attackStrengthTicker }
         debugParameter("Server Cooldown Ticks") { attackCooldownTicks() }
-        debugParameter("Server Tick Rate") { serverTickRate }
     }
 
     @Suppress("unused")

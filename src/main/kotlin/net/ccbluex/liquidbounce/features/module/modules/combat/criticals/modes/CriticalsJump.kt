@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -182,7 +183,7 @@ object CriticalsJump : Mode("Jump") {
         val waitedDuration = CombatManager.attackCooldownTicks().toFloat()
 
         // Server ticks left, which pass slower than ours while the server lags
-        return ((durationToWait - waitedDuration) / CombatManager.serverTickRate.toFloat()).coerceAtLeast(0.0f)
+        return ((durationToWait - waitedDuration) / ServerObserver.tickSpeed.toFloat()).coerceAtLeast(0.0f)
     }
 
     fun shouldWaitForJump(initialMotion: Float = LivingEntity.BASE_JUMP_POWER): Boolean {

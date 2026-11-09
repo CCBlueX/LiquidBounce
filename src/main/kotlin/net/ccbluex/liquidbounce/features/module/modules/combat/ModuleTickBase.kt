@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -626,7 +627,7 @@ internal object ModuleTickBase : ClientModule(
             // We saw the restart half a ping late, and our hit reaches the server half a ping after we send it
             val ticks = (Util.getMillis() - cooldownResets.get(enemy.id)).toDouble() / TICK_MILLIS +
                 player.ping.toDouble() / TICK_MILLIS + landingDelay + knockbackTicks
-            return (ticks * CombatManager.serverTickRate + 0.5) / enemy.currentItemAttackStrengthDelay
+            return (ticks * ServerObserver.tickSpeed + 0.5) / enemy.currentItemAttackStrengthDelay
         }
 
         /**
