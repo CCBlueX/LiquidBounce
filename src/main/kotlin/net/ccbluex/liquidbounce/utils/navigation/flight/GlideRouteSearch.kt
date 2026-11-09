@@ -27,6 +27,10 @@ import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.BASE_JUMP_POWER
+import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -126,10 +130,14 @@ class GlideRouteSearch(
     private fun jump(): Vec3 {
         if (tick == 0) {
             val toGoal = Vec3(goal.x - start.x, 0.0, goal.z - start.z).withLength(TAKE_OFF_SPEED)
-            motion = Vec3(toGoal.x, JUMP_SPEED, toGoal.z)
+            motion = Vec3(toGoal.x, BASE_JUMP_POWER.toDouble(), toGoal.z)
         }
         val next = position.add(motion)
-        motion = Vec3(motion.x * AIR_DRAG, (motion.y - GRAVITY) * VERTICAL_DRAG, motion.z * AIR_DRAG)
+        motion = Vec3(
+            motion.x * BASE_HORIZONTAL_AIR_DRAG,
+            (motion.y - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG,
+            motion.z * BASE_HORIZONTAL_AIR_DRAG,
+        )
         return next
     }
 
@@ -203,10 +211,6 @@ class GlideRouteSearch(
         private const val GLIDE_HEIGHT = 0.6
         private const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
         private const val TAKE_OFF_SPEED = 0.3
-        private const val JUMP_SPEED = 0.42
-        private const val GRAVITY = 0.08
-        private const val AIR_DRAG = 0.91
-        private const val VERTICAL_DRAG = 0.98
         private const val GROUND_TOLERANCE = 0.01
         private const val LANDING_REACH = 3.0
         private const val LANDING_HEIGHT = 1.0

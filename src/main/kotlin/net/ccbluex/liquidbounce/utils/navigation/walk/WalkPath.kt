@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.SlimeBlock
 import net.minecraft.world.level.block.state.BlockState
@@ -212,7 +213,6 @@ object WalkCosts {
     private const val BOUNCES = 2
     private const val PLAIN_FRICTION = 0.6f
     private const val SLIME_SLOWDOWN = 0.4
-    private const val GROUND_DRAG = 0.91
     private const val GROUND_ACCELERATION = 0.216
 
     private val fallTicks: DoubleArray = DoubleArray(257).also { ticks ->
@@ -266,7 +266,7 @@ object WalkCosts {
      * every tick, after LivingEntity.travel: the speed gained per tick over the share lost.
      */
     private fun groundSpeed(friction: Float, slowdown: Double): Double {
-        val drag = friction * GROUND_DRAG
+        val drag = (friction * BASE_HORIZONTAL_AIR_DRAG).toDouble()
         return GROUND_ACCELERATION / (drag * drag * drag) / (1.0 - slowdown * drag)
     }
 }

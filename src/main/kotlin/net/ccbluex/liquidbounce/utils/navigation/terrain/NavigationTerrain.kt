@@ -25,6 +25,8 @@ import net.ccbluex.fastutil.referenceHashSetOf
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity.DEFAULT_BB_HEIGHT
+import net.minecraft.world.entity.Entity.DEFAULT_BB_WIDTH
 import net.minecraft.world.level.block.BaseFireBlock
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.DoorBlock
@@ -438,8 +440,8 @@ class NavigationTerrain(
     }
 
     companion object {
-        const val PLAYER_WIDTH = 0.6
-        const val PLAYER_HEIGHT = 1.8
+        const val PLAYER_WIDTH = DEFAULT_BB_WIDTH.toDouble()
+        const val PLAYER_HEIGHT = DEFAULT_BB_HEIGHT.toDouble()
 
         /**
          * Height of a crouching player.

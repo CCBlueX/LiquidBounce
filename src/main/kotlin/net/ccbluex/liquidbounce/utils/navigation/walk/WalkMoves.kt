@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.FallingBlock
 import net.minecraft.world.phys.Vec3
@@ -210,7 +211,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
      * The block below feet at [height] in column [x] [z] that sets the speed, friction and jump of the player.
      */
     private fun floorBlock(x: Int, z: Int, height: Double): Block =
-        terrain.state(x, Mth.floor(height - FLOOR_PROBE), z).block
+        terrain.state(x, Mth.floor(height - DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5), z).block
 
     /**
      * A traverse that breaks the way free or places the floor.
@@ -676,10 +677,6 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         const val MAX_JUMP = 1.25
         const val EPSILON = 1.0E-6
 
-        /**
-         * How far below the feet the floor that moves the player is looked up, as vanilla does.
-         */
-        const val FLOOR_PROBE = 0.500001
         val DIAGONAL = Mth.SQRT_OF_TWO
 
         val DX = intArrayOf(1, -1, 0, 0)

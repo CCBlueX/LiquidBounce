@@ -20,6 +20,9 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
+import net.minecraft.world.entity.LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.ELYTRA_VERTICAL_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -43,14 +46,11 @@ fun interface GlideSteering {
  */
 internal object GlidePhysics {
 
-    private const val GRAVITY = 0.08
     private const val LIFT = 0.75
     private const val DIVE = 0.1
     private const val CLIMB = 0.04
     private const val CLIMB_LIFT = 3.2
     private const val TURN = 0.1
-    private const val HORIZONTAL_DRAG = 0.99
-    private const val VERTICAL_DRAG = 0.98
     private const val ROCKET_PUSH = 0.1
     private const val ROCKET_SPEED = 1.5
     private const val ROCKET_PULL = 0.5
@@ -67,7 +67,7 @@ internal object GlidePhysics {
         val lift = cos(lean) * cos(lean)
 
         var x = velocity.x
-        var y = velocity.y + GRAVITY * (-1.0 + lift * LIFT)
+        var y = velocity.y + DEFAULT_BASE_GRAVITY * (-1.0 + lift * LIFT)
         var z = velocity.z
         if (lookHorizontal > 0.0) {
             if (y < 0.0) {
@@ -86,9 +86,9 @@ internal object GlidePhysics {
             z += (look.z / lookHorizontal * moveHorizontal - z) * TURN
         }
 
-        x *= HORIZONTAL_DRAG
-        y *= VERTICAL_DRAG
-        z *= HORIZONTAL_DRAG
+        x *= ELYTRA_HORIZONTAL_AIR_DRAG
+        y *= ELYTRA_VERTICAL_AIR_DRAG
+        z *= ELYTRA_HORIZONTAL_AIR_DRAG
         if (boosted) {
             x += look.x * ROCKET_PUSH + (look.x * ROCKET_SPEED - x) * ROCKET_PULL
             y += look.y * ROCKET_PUSH + (look.y * ROCKET_SPEED - y) * ROCKET_PULL

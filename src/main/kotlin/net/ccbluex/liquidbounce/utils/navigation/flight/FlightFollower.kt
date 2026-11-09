@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.ccbluex.liquidbounce.utils.navigation.walk.steer
+import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 
@@ -144,7 +145,7 @@ class FlightFollower : RouteProgress {
     ) {
         val momentum = abilities.control == FlightControl.MOMENTUM
         val velocity = player.deltaMovement
-        val horizontalCoast = if (momentum) 1.0 / (1.0 - FlightAbilities.HORIZONTAL_DRAG) else 1.0
+        val horizontalCoast = if (momentum) 1.0 / (1.0 - FLYING_AIR_DRAG) else 1.0
         val verticalCoast = if (momentum) 1.0 / (1.0 - FlightAbilities.VERTICAL_DRAG) else 1.0
         val rest = player.position().add(velocity.x * horizontalCoast, velocity.y * verticalCoast,
             velocity.z * horizontalCoast)

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity.BASE_SAFE_FALL_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.enchantment.Enchantments
@@ -71,7 +72,7 @@ class WalkSettings(
     val safeFall: Int
         get() {
             val safeFallDistance = floor(player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)).toInt()
-            return maxFall + max(0, safeFallDistance - VANILLA_SAFE_FALL)
+            return maxFall + max(0, safeFallDistance - BASE_SAFE_FALL_DISTANCE)
         }
 
     /**
@@ -114,7 +115,6 @@ class WalkSettings(
     fun captureGlide(): GlideAbilities? = if (allowElytra) GlideAbilities.capture(elytraRockets) else null
 
     private companion object {
-        const val VANILLA_SAFE_FALL = 3
         const val WATER_FALL = 23
         const val MIN_SPRINT_FOOD = 6
     }

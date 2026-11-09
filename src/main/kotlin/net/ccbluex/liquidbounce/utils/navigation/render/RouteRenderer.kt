@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Avatar.DEFAULT_EYE_HEIGHT
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -202,7 +203,7 @@ class RouteRenderer(
 
         if (view.engaged && server != null) {
             val lines = MutableVertexList(2)
-            lines.addRelative(server.add(0.0, EYE_HEIGHT, 0.0), camera.position())
+            lines.addRelative(server.add(0.0, DEFAULT_EYE_HEIGHT.toDouble(), 0.0), camera.position())
             lines.addRelative(box.center, camera.position())
             drawLines(targetColor.argb, lines, noDepthTest)
         }
@@ -250,7 +251,6 @@ class RouteRenderer(
 
     private companion object {
         const val LIFT = 0.05
-        const val EYE_HEIGHT = 1.62
         const val CHEVRON_SPACING = 1.5
         const val CHEVRON_SIZE = 0.2
         const val GHOST_ALPHA = 50
