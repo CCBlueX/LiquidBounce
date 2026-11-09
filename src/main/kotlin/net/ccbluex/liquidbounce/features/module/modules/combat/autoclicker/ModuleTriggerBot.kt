@@ -36,10 +36,7 @@ object ModuleTriggerBot : ClientModule("TriggerBot", ModuleCategories.COMBAT) {
 
     private val attacker = CrosshairAttacker(this, clicker) {
         val crosshair = mc.hitResult
-
-        // A second clicker on the same attack key would double the CPS
         crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()
-            && !ModuleAutoClicker.AttackButton.isAttacking
     }
 
     @Suppress("unused")
