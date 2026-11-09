@@ -39,7 +39,7 @@
             return;
         }
 
-        dismissTimeout = setTimeout(hideCurrent, (current.delay ?? 3) * 1000);
+        //dismissTimeout = setTimeout(hideCurrent, (current.delay ?? 3) * 1000);
     }
 
     onMount(() => {
@@ -83,16 +83,13 @@
 </div>
 
 <style lang="scss">
-
   .notifications {
     position: relative;
     min-width: 350px;
-    height: 65px;
   }
 
   .notification {
-    position: absolute;
-    top: 0;
+    position: relative;
     width: 100%;
     z-index: 1001;
     box-sizing: border-box;
@@ -126,7 +123,7 @@
 
     .icon {
       grid-area: a;
-      height: 65px;
+      min-height: 65px;
       width: 65px;
       background-color: var(--menu-header-notification-icon-background-color);
       display: flex;
