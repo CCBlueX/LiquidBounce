@@ -27,9 +27,11 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.render.drawLinesWithWidth
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
+import net.ccbluex.liquidbounce.render.utils.MutableVertexList
+import net.ccbluex.liquidbounce.render.utils.lineStripAsLines
 import net.ccbluex.liquidbounce.render.setColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -37,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.util.Mth
@@ -49,18 +50,25 @@ import kotlin.math.sin
 
 /**
  * Shows what TickBase does in every mode: the coming ticks up to the hit, the player where the hit lands,
- * the ticks run ahead of time trailing behind, and the balance as a ring around the feet.
+ * where the player was when it ran ahead of time, and the balance as a ring around the feet.
  */
 internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals", true) {
 
     private val color by color("Color", Color4b.LIQUID_BOUNCE).doNotIncludeAlways()
     private val balanceRing by boolean("BalanceRing", true)
 
+    /**
+     * The coming positions of the player from now up to where the hit on [hit] lands. Empty without a hit.
+     */
     private var path = emptyList<Vec3>()
-    private var landing = -1
     private var hit: Vec3? = null
 
-    private val afterimages = ArrayDeque<Afterimage>()
+    /**
+     * Where the player was when the ticks started to run ahead of real time.
+     */
+    private var afterimage: Afterimage? = null
+    private var ahead = false
+
     private val ghost = WireframePlayer()
 
     private class Afterimage(val pos: Vec3, val yRot: Float, val pose: Pose, val time: Long)
@@ -69,8 +77,7 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
      * Shows [path], the coming positions of the player from now, with the hit landing on [hit] after [landing] ticks.
      */
     fun show(path: List<Vec3>, landing: Int?, hit: Vec3?) {
-        this.path = path
-        this.landing = landing ?: -1
+        this.path = if (landing != null && landing > 0 && hit != null) path.subList(0, landing + 1) else emptyList()
         this.hit = hit
     }
 
@@ -78,14 +85,10 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
 
     @Suppress("unused")
     private val tickHandler = handler<PlayerPostTickEvent> {
-        // A tick ahead of real time leaves an image behind
-        if (!Timer.bursting && Timer.timerSpeed <= 1f) {
-            return@handler
-        }
-
-        afterimages.addLast(Afterimage(player.position(), player.yRot, player.pose, clientStartDurationMs))
-        if (afterimages.size > 24) {
-            afterimages.removeFirst()
+        val wasAhead = ahead
+        ahead = Timer.bursting || Timer.timerSpeed > 1f
+        if (ahead && !wasAhead) {
+            afterimage = Afterimage(player.oldPosition(), player.yRot, player.pose, clientStartDurationMs)
         }
     }
 
@@ -98,9 +101,11 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
             if (balanceRing) {
                 renderBalance(origin, player.getViewYRot(event.partialTicks))
             }
-            renderPath(origin)
-            renderLanding()
-            renderAfterimages(time)
+            hit?.takeIf { path.isNotEmpty() }?.let { hit ->
+                renderPath(origin)
+                renderLanding(hit)
+            }
+            renderAfterimage(time)
         }
     }
 
@@ -140,65 +145,21 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
     }
 
     /**
-     * The coming ticks as a ribbon on the ground with a bead for each, widening and brightening towards the landing
-     * and fading past it. Without a hit to land, only a faint trace.
+     * The coming ticks up to the landing as a line on the ground.
      */
     private fun WorldRenderEnvironment.renderPath(origin: Vec3) {
-        if (path.size < 2) {
-            return
-        }
-
-        val end = if (landing > 0) landing else 0
-
-        // The ribbon starts where the player is drawn between ticks
-        val points = path.mapIndexed { tick, pos -> if (tick == 0) Vec3.ZERO else pos - origin }
-
+        // The line starts where the player is drawn between ticks
+        val line = MutableVertexList(path.size).add(Vec3.ZERO).addAllRelative(path.subList(1, path.size), origin)
         withPositionRelativeToCamera(origin.add(0.0, 0.02, 0.0)) {
-            drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
-                for (tick in 1..points.lastIndex) {
-                    val from = points[tick - 1]
-                    val to = points[tick]
-
-                    // Zero for ticks standing still, which leaves their quad empty
-                    val side = Vec3(to.z - from.z, 0.0, from.x - to.x).normalize()
-                    val fromFade = pathFade(tick - 1, end)
-                    val toFade = pathFade(tick, end)
-                    val fromSide = side.scale(0.14 * (0.3 + 0.7 * fromFade))
-                    val toSide = side.scale(0.14 * (0.3 + 0.7 * toFade))
-
-                    addVertex(pose, from + fromSide).setColor(color.fade(0.6f * fromFade))
-                    addVertex(pose, to + toSide).setColor(color.fade(0.6f * toFade))
-                    addVertex(pose, to - toSide).setColor(color.fade(0.6f * toFade))
-                    addVertex(pose, from - fromSide).setColor(color.fade(0.6f * fromFade))
-
-                    if (tick <= end) {
-                        val bead = color.fade(0.4f + 0.6f * toFade)
-                        addVertex(pose, to.add(0.09, 0.0, 0.0)).setColor(bead)
-                        addVertex(pose, to.add(0.0, 0.0, 0.09)).setColor(bead)
-                        addVertex(pose, to.add(-0.09, 0.0, 0.0)).setColor(bead)
-                        addVertex(pose, to.add(0.0, 0.0, -0.09)).setColor(bead)
-                    }
-                }
-            }
+            drawLinesWithWidth(color.argb, 3f, line.lineStripAsLines())
         }
-    }
-
-    private fun pathFade(tick: Int, end: Int) = if (tick <= end) {
-        0.25f + 0.75f * tick / end
-    } else {
-        0.25f * (1f - (tick - end).toFloat() / (path.size - end))
     }
 
     /**
-     * The player where the hit lands on a ring, and the strike from its eyes to the hit.
+     * The player where the hit lands, and the strike from its eyes to the hit.
      */
-    private fun WorldRenderEnvironment.renderLanding() {
-        val hit = hit ?: return
-        if (landing <= 0) {
-            return
-        }
-
-        val pos = path[landing]
+    private fun WorldRenderEnvironment.renderLanding(hit: Vec3) {
+        val pos = path.last()
         val eyes = pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
         val fade = ghostFade(eyes)
 
@@ -207,11 +168,6 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
             ghost.pose = player.pose
             ghost.setRotation(Rotation.lookingAt(hit, eyes))
             ghost.render(color.fade(0.12f * fade), color.fade(0.9f * fade))
-        }
-
-        withPositionRelativeToCamera(pos.add(0.0, 0.02, 0.0)) {
-            drawGradientCircle(0.55f, 0f, color.fade(0.45f), Color4b.TRANSPARENT)
-            drawCircleOutline(0.55f, color)
         }
 
         withPositionRelativeToCamera(eyes) {
@@ -223,27 +179,20 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
     }
 
     /**
-     * The ticks run ahead of real time, fading out from the oldest.
+     * The player where the ticks started to run ahead of real time, fading out.
      */
-    private fun WorldRenderEnvironment.renderAfterimages(time: Long) {
-        while (afterimages.isNotEmpty() && time - afterimages.first().time > 450) {
-            afterimages.removeFirst()
+    private fun WorldRenderEnvironment.renderAfterimage(time: Long) {
+        val image = afterimage ?: return
+        val fade = (1f - (time - image.time) / 450f) * ghostFade(image.pos.add(0.0, player.eyeHeight.toDouble(), 0.0))
+        if (fade <= 0f) {
+            return
         }
 
-        afterimages.forEachIndexed { index, image ->
-            val age = (time - image.time) / 450f
-            val fade = (1f - age) * (index + 1f) / afterimages.size *
-                ghostFade(image.pos.add(0.0, player.eyeHeight.toDouble(), 0.0))
-            if (fade <= 0f) {
-                return@forEachIndexed
-            }
-
-            ghost.pos = image.pos
-            ghost.pose = image.pose
-            ghost.yRot = image.yRot
-            ghost.xRot = 0f
-            ghost.render(color.fade(0.08f * fade), color.fade(0.6f * fade))
-        }
+        ghost.pos = image.pos
+        ghost.pose = image.pose
+        ghost.yRot = image.yRot
+        ghost.xRot = 0f
+        ghost.render(color.fade(0.08f * fade), color.fade(0.6f * fade))
     }
 
     // Ghosts close to the camera would fill the screen in first person
