@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -40,13 +39,13 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EntitySpawnReason
 import net.minecraft.world.entity.EntityTypes
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
@@ -55,6 +54,13 @@ import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
 private const val MAX_SIMULATED_TICKS = 240
+private const val REFINE_STEPS = 10
+private const val REFINE_STEP = 0.1f
+
+/**
+ * How close an arc has to land to the enemy's pearl to be preferred for its shorter flight.
+ */
+private const val LANDING_TOLERANCE = 1.0
 
 /**
  * Auto pearl module
@@ -102,12 +108,14 @@ object ModuleAutoPearl : ClientModule(
         val entity = data.type.create(world, EntitySpawnReason.SPAWN_ITEM_USE) as ThrownEnderpearl
         entity.recreateFromPacket(data)
 
-        proceedPearl(
-            pearl = entity,
-            // entity.velocity & entity.pos doesn't work, don't use it
-            velocity = with(data) { Vec3(movement.x, movement.y, movement.z) },
-            pearlPos = with(data) { Vec3(x, y, z) }
-        )
+        // entity.velocity & entity.pos doesn't work, don't use it
+        val velocity = with(data) { Vec3(movement.x, movement.y, movement.z) }
+        val pearlPos = with(data) { Vec3(x, y, z) }
+
+        // Simulating against the world is only safe on the client thread
+        mc.execute {
+            proceedPearl(pearl = entity, velocity = velocity, pearlPos = pearlPos)
+        }
     }
 
     @Suppress("unused")
@@ -172,18 +180,14 @@ object ModuleAutoPearl : ClientModule(
             return
         }
 
-        val rotation = SituationalProjectileAngleCalculator.calculateAngleForStaticTarget(
-            TrajectoryInfo.GENERIC,
-            destination,
-            EntityDimensions.fixed(1.0F, 0.0F)
-        ) ?: return
+        val aim = aimAt(destination) ?: return
 
-        if (!canThrow(rotation, destination)) {
+        if (Limits.enabled && aim.error > Limits.destDistance) {
             return
         }
 
         if (queue.isEmpty()) {
-            queue.add(rotation)
+            queue.add(aim.rotation)
         }
     }
 
@@ -206,18 +210,46 @@ object ModuleAutoPearl : ClientModule(
         }
     }
 
-    private fun canThrow(
-        angles: Rotation,
-        destination: Vec3
-    ): Boolean {
-        val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            simulationOwner = player,
-            trajectoryInfo = TrajectoryInfo.GENERIC,
-            trajectoryType = TrajectoryType.ENDER_PEARL,
-            rotation = angles
-        ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
+    private class Throw(val rotation: Rotation, val error: Double, val ticks: Int)
 
-        return !Limits.enabled || destination.closerThan(simulatedDestination, Limits.destDistance.toDouble())
+    /**
+     * Simulates every pitch towards [destination] and refines each arc that lands closest locally. Of the arcs
+     * landing within [LANDING_TOLERANCE], the one with the shortest flight wins, so a blocked low arc falls back
+     * to a high one. Without such an arc, the closest one is returned.
+     */
+    private fun aimAt(destination: Vec3): Throw? {
+        val yaw = destination.subtract(player.eyePosition).yaw
+
+        fun simulate(pitch: Float): Throw? {
+            val rotation = Rotation(yaw, pitch.coerceIn(-90f, 90f))
+            val result = TrajectoryInfoRenderer.getHypotheticalTrajectory(
+                simulationOwner = player,
+                trajectoryInfo = TrajectoryInfo.GENERIC,
+                trajectoryType = TrajectoryType.ENDER_PEARL,
+                rotation = rotation
+            ).runSimulation(MAX_SIMULATED_TICKS)
+            val landing = result.hitResult?.location ?: return null
+            return Throw(rotation, landing.distanceTo(destination), result.positions.size)
+        }
+
+        val coarse = (-90..90).map { simulate(it.toFloat()) }
+        val arcs = coarse.withIndex().mapNotNull { (index, current) ->
+            if (current == null) {
+                return@mapNotNull null
+            }
+
+            val neighbours = listOfNotNull(coarse.getOrNull(index - 1), coarse.getOrNull(index + 1))
+            if (neighbours.any { it.error < current.error }) {
+                return@mapNotNull null
+            }
+
+            (-REFINE_STEPS..REFINE_STEPS)
+                .mapNotNull { step -> simulate(current.rotation.pitch + step * REFINE_STEP) }
+                .minByOrNull { it.error }
+        }
+
+        return arcs.filter { it.error <= LANDING_TOLERANCE }.minByOrNull { it.ticks }
+            ?: arcs.minByOrNull { it.error }
     }
 
     private fun runSimulation(
