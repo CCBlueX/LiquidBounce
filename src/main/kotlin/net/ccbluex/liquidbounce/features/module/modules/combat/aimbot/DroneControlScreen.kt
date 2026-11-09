@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.text.asPlainText
@@ -183,11 +184,9 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         ModuleDroneControl.currentTarget = null
 
         this.focusedEntity?.let {
-            ModuleDebug.debugGeometry(
-                ModuleProjectileAimbot,
-                "focusEntity",
-                ModuleDebug.DebuggedBox(it.entity.box, Color4b.RED.with(a = 127))
-            )
+            ModuleProjectileAimbot.debugGeometry("focusEntity") {
+                DebuggedBox(it.entity.box, Color4b.RED.with(a = 127))
+            }
 
             val plane = NormalizedPlane(Vec3(0.0, it.baseY, 0.0), Vec3.Y_AXIS)
             val intersect = plane.intersection(
@@ -201,14 +200,9 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
 
             ModuleDroneControl.currentTarget = it.entity to entityPos
 
-            ModuleDebug.debugGeometry(
-                ModuleProjectileAimbot,
-                "focusEntity",
-                ModuleDebug.DebuggedBox(
-                    it.entity.dimensions.makeBoundingBox(entityPos),
-                    Color4b.RED.with(a = 127)
-                )
-            )
+            ModuleProjectileAimbot.debugGeometry("focusEntity") {
+                DebuggedBox(it.entity.dimensions.makeBoundingBox(entityPos), Color4b.RED.with(a = 127))
+            }
         }
     }
 

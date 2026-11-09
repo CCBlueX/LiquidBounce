@@ -29,9 +29,10 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -399,15 +400,15 @@ object ModuleFucker : ClientModule(
         val path = findBestSurroundingPath(initialPosition, eyePos) ?: return false
 
         debugGeometry("targetPoint") {
-            ModuleDebug.DebuggedPoint(path.info.targetPoint, Color4b.RED.alpha(100))
+            DebuggedPoint(path.info.targetPoint, Color4b.RED.alpha(100))
         }
 
         debugGeometry("initialPosition") {
-            ModuleDebug.DebuggedBox(initialPosition.outlineBox.move(initialPosition), Color4b.GREEN.alpha(50))
+            DebuggedBox(initialPosition.outlineBox.move(initialPosition), Color4b.GREEN.alpha(50))
         }
 
         debugGeometry("raytraceResult") {
-            ModuleDebug.DebuggedBox(path.firstBlock.outlineBox.move(path.firstBlock), Color4b.BLUE.alpha(50))
+            DebuggedBox(path.firstBlock.outlineBox.move(path.firstBlock), Color4b.BLUE.alpha(50))
         }
 
         debugParameter("wayToTarget") { path.blocks }
