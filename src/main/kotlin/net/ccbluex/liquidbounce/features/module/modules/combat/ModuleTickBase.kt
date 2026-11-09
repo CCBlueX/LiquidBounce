@@ -202,11 +202,6 @@ internal object ModuleTickBase : ClientModule(
      */
     private object TimerBoost : BoostMode("Timer") {
 
-        /**
-         * Longer boosts are not worth simulating every tick.
-         */
-        private const val MAX_BOOST_TICKS = 100
-
         private val boostSpeed by float("BoostSpeed", 5f, 1f..10f)
 
         private var boosting = false
@@ -280,7 +275,8 @@ internal object ModuleTickBase : ClientModule(
             }
 
             val ticks = Timer.spendableTicks(balance) / (1f - 1f / boostSpeed)
-            return min(ticks.toInt(), MAX_BOOST_TICKS)
+            // Longer boosts are not worth simulating every tick
+            return min(ticks.toInt(), 100)
         }
 
     }
@@ -553,7 +549,7 @@ internal object ModuleTickBase : ClientModule(
             // round trip late, and did not count down while ticks were held since it arrived
             val hurtTime = enemy.hurtTime - Timer.heldTicksWithin(enemy.hurtDuration - enemy.hurtTime)
             ModuleTickBase.debugParameter("Enemy Hurt Time") { hurtTime }
-            if (skipInvulnerable && hurtTime > landingDelay + player.ping / TICK_MILLIS) {
+            if (skipInvulnerable && hurtTime > landingDelay + player.ping / 50) {
                 return false
             }
 
@@ -563,12 +559,13 @@ internal object ModuleTickBase : ClientModule(
             val enemyStrength = (enemy as? Player)
                 ?.takeIf { modern && enemyCooldown }
                 ?.let { enemyStrengthAfter(it, landingDelay) }
-            val sprintHit = player.isSprinting && strength > SPRINT_HIT_STRENGTH
+            // Vanilla's threshold for sprint knockback and crits
+            val sprintHit = player.isSprinting && strength > 0.9f
             val range = rangeAfterKnockback(enemy, path, landing, landingDelay, sprintHit)
             ModuleTickBase.debugParameter("Critical") { critical }
             ModuleTickBase.debugParameter("Enemy Cooldown After Knockback") { enemyStrength }
             ModuleTickBase.debugParameter("Enemy Range After Knockback") { range }
-            return range > enemyRange || critical || enemyStrength != null && enemyStrength <= SPRINT_HIT_STRENGTH
+            return range > enemyRange || critical || enemyStrength != null && enemyStrength <= 0.9
         }
 
         /**
@@ -598,7 +595,8 @@ internal object ModuleTickBase : ClientModule(
 
             repeat(knockbackTicks) {
                 feet = feet.add(motion)
-                motion = motion.scale(AIR_FRICTION)
+                // Knockback lifts the enemy off the ground, where only the air slows it down
+                motion = motion.scale(0.91)
             }
 
             val box = player.getBoundingBoxAt(path[min(landing + knockbackTicks, path.lastIndex)].pos)
@@ -612,7 +610,7 @@ internal object ModuleTickBase : ClientModule(
         private fun isCritical(landing: SimulatedPlayerSnapshot, strength: Float): Boolean {
             val canCrit = ModuleCriticals.allowsCriticalHit(ignoreOnGround = true) &&
                 (!player.isSprinting || prefersCritical)
-            return landing.falling && strength > SPRINT_HIT_STRENGTH && canCrit
+            return landing.falling && strength > 0.9f && canCrit
         }
 
         /**
@@ -625,8 +623,8 @@ internal object ModuleTickBase : ClientModule(
             }
 
             // We saw the restart half a ping late, and our hit reaches the server half a ping after we send it
-            val ticks = (Util.getMillis() - cooldownResets.get(enemy.id)).toDouble() / TICK_MILLIS +
-                player.ping.toDouble() / TICK_MILLIS + landingDelay + knockbackTicks
+            val ticks = (Util.getMillis() - cooldownResets.get(enemy.id)).toDouble() / 50 +
+                player.ping.toDouble() / 50 + landingDelay + knockbackTicks
             return (ticks * ServerObserver.tickSpeed + 0.5) / enemy.currentItemAttackStrengthDelay
         }
 
@@ -639,8 +637,8 @@ internal object ModuleTickBase : ClientModule(
             // Armor is the only knockback resistance known of other entities, the attribute is not synced
             val resistance = enemy.armorItems.sumOf { it.armorKnockbackResistance }.coerceIn(0.0, 1.0)
             val strength = knockbackMultiplier * (1.0 - resistance)
-            val knocked = Vec3(motion.x, 0.0, motion.z).scale(0.5).add(away.scale(DEFAULT_KNOCKBACK * strength))
-            return if (sprintHit) knocked.scale(0.5).add(away.scale(SPRINT_KNOCKBACK * strength)) else knocked
+            val knocked = Vec3(motion.x, 0.0, motion.z).scale(0.5).add(away.scale(0.4 * strength))
+            return if (sprintHit) knocked.scale(0.5).add(away.scale(0.5 * strength)) else knocked
         }
 
     }
@@ -655,41 +653,13 @@ internal object ModuleTickBase : ClientModule(
         fun meets(hit: Vec3) = when (this) {
             KILLAURA -> ModuleKillAura.running && ModuleKillAura.targetTracker.target != null
             LOOKING_AT -> player.eyePosition.let { eyes ->
-                enemyUnderCrosshair(eyes, player.lookAngle, eyes.distanceTo(hit) + LOOK_MARGIN) != null
+                // Past the hit, as it lands on the surface of the hitbox
+                enemyUnderCrosshair(eyes, player.lookAngle, eyes.distanceTo(hit) + 1.0) != null
             }
-            CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(CLICK_MILLIS)
+            CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(250)
             ON_GROUND -> player.onGround()
         }
     }
-
-    /**
-     * Past the hit, as it lands on the surface of the hitbox.
-     */
-    private const val LOOK_MARGIN = 1.0
-    private const val CLICK_MILLIS = 250L
-    private const val TICK_MILLIS = 50
-
-    /**
-     * The knockback of a hit, and the extra one of a sprint hit at more than [SPRINT_HIT_STRENGTH] attack strength.
-     */
-    private const val DEFAULT_KNOCKBACK = 0.4
-    private const val SPRINT_KNOCKBACK = 0.5
-
-    /**
-     * The attack strength a hit needs for the sprint knockback and a critical hit, and that counts as a full hit back
-     * from the enemy.
-     */
-    private const val SPRINT_HIT_STRENGTH = 0.9f
-
-    /**
-     * Knockback lifts the enemy off the ground, where only the air slows its motion down.
-     */
-    private const val AIR_FRICTION = 0.91
-
-    /**
-     * How far the server box of an enemy may be off its box on the client, which stays behind while ticks are held.
-     */
-    private const val SEARCH_MARGIN = 8.0
 
     private fun requirementsMet(hit: Vec3) = requires.all { it.meets(hit) }
 
@@ -736,7 +706,8 @@ internal object ModuleTickBase : ClientModule(
      */
     private fun enemyUnderCrosshair(eyes: Vec3, direction: Vec3, range: Double): Hit? {
         val end = eyes.fma(range, direction)
-        val candidates = world.getEntities(player, AABB(eyes, end).inflate(SEARCH_MARGIN)) {
+        // The server box may be off the box on the client, which stays behind while ticks are held
+        val candidates = world.getEntities(player, AABB(eyes, end).inflate(8.0)) {
             EntitySelector.CAN_BE_PICKED.test(it) && it.shouldBeAttacked()
         }
 

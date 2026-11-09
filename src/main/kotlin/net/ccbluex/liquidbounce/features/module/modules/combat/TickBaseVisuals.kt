@@ -53,22 +53,6 @@ import kotlin.math.sin
  */
 internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals", true) {
 
-    private const val AFTERIMAGE_MILLIS = 450f
-    private const val MAX_AFTERIMAGES = 24
-
-    private const val CIRCLE_SEGMENTS = 48
-    private const val RING_RADIUS = 0.6f
-    private const val RING_WIDTH = 0.04f
-    private const val LANDING_RADIUS = 0.55f
-
-    private const val PATH_HALF_WIDTH = 0.14
-    private const val BEAD_RADIUS = 0.09
-    private const val GROUND_LIFT = 0.02
-
-    // Ghosts close to the camera would fill the screen in first person
-    private const val GHOST_HIDDEN_DISTANCE = 0.8
-    private const val GHOST_FADE_DISTANCE = 1.2
-
     private val color by color("Color", Color4b.LIQUID_BOUNCE).doNotIncludeAlways()
     private val balanceRing by boolean("BalanceRing", true)
 
@@ -100,7 +84,7 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         }
 
         afterimages.addLast(Afterimage(player.position(), player.yRot, player.pose, clientStartDurationMs))
-        if (afterimages.size > MAX_AFTERIMAGES) {
+        if (afterimages.size > 24) {
             afterimages.removeFirst()
         }
     }
@@ -132,16 +116,16 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         }
 
         withPositionRelativeToCamera(origin.add(0.0, 0.01, 0.0)) {
-            drawCircleOutline(RING_RADIUS, color.fade(0.2f))
+            drawCircleOutline(0.6f, color.fade(0.2f))
             if (fraction <= 0f) {
                 return@withPositionRelativeToCamera
             }
 
             val sweep = fraction * Mth.TWO_PI
             val start = (yRot + 90f).toRadians() - sweep / 2f
-            val segments = max(2, (CIRCLE_SEGMENTS * fraction).toInt())
-            val inner = RING_RADIUS - RING_WIDTH
-            val outer = RING_RADIUS + RING_WIDTH
+            val segments = max(2, (48 * fraction).toInt())
+            val inner = 0.56f
+            val outer = 0.64f
 
             drawCustomMesh(ClientRenderPipelines.triangleStrip(noDepthTest = true)) { pose ->
                 for (i in 0..segments) {
@@ -169,7 +153,7 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         // The ribbon starts where the player is drawn between ticks
         val points = path.mapIndexed { tick, pos -> if (tick == 0) Vec3.ZERO else pos - origin }
 
-        withPositionRelativeToCamera(origin.add(0.0, GROUND_LIFT, 0.0)) {
+        withPositionRelativeToCamera(origin.add(0.0, 0.02, 0.0)) {
             drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { pose ->
                 for (tick in 1..points.lastIndex) {
                     val from = points[tick - 1]
@@ -179,8 +163,8 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
                     val side = Vec3(to.z - from.z, 0.0, from.x - to.x).normalize()
                     val fromFade = pathFade(tick - 1, end)
                     val toFade = pathFade(tick, end)
-                    val fromSide = side.scale(PATH_HALF_WIDTH * (0.3 + 0.7 * fromFade))
-                    val toSide = side.scale(PATH_HALF_WIDTH * (0.3 + 0.7 * toFade))
+                    val fromSide = side.scale(0.14 * (0.3 + 0.7 * fromFade))
+                    val toSide = side.scale(0.14 * (0.3 + 0.7 * toFade))
 
                     addVertex(pose, from + fromSide).setColor(color.fade(0.6f * fromFade))
                     addVertex(pose, to + toSide).setColor(color.fade(0.6f * toFade))
@@ -189,10 +173,10 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
 
                     if (tick <= end) {
                         val bead = color.fade(0.4f + 0.6f * toFade)
-                        addVertex(pose, to.add(BEAD_RADIUS, 0.0, 0.0)).setColor(bead)
-                        addVertex(pose, to.add(0.0, 0.0, BEAD_RADIUS)).setColor(bead)
-                        addVertex(pose, to.add(-BEAD_RADIUS, 0.0, 0.0)).setColor(bead)
-                        addVertex(pose, to.add(0.0, 0.0, -BEAD_RADIUS)).setColor(bead)
+                        addVertex(pose, to.add(0.09, 0.0, 0.0)).setColor(bead)
+                        addVertex(pose, to.add(0.0, 0.0, 0.09)).setColor(bead)
+                        addVertex(pose, to.add(-0.09, 0.0, 0.0)).setColor(bead)
+                        addVertex(pose, to.add(0.0, 0.0, -0.09)).setColor(bead)
                     }
                 }
             }
@@ -225,9 +209,9 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
             ghost.render(color.fade(0.12f * fade), color.fade(0.9f * fade))
         }
 
-        withPositionRelativeToCamera(pos.add(0.0, GROUND_LIFT, 0.0)) {
-            drawGradientCircle(LANDING_RADIUS, 0f, color.fade(0.45f), Color4b.TRANSPARENT)
-            drawCircleOutline(LANDING_RADIUS, color)
+        withPositionRelativeToCamera(pos.add(0.0, 0.02, 0.0)) {
+            drawGradientCircle(0.55f, 0f, color.fade(0.45f), Color4b.TRANSPARENT)
+            drawCircleOutline(0.55f, color)
         }
 
         withPositionRelativeToCamera(eyes) {
@@ -242,12 +226,12 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
      * The ticks run ahead of real time, fading out from the oldest.
      */
     private fun WorldRenderEnvironment.renderAfterimages(time: Long) {
-        while (afterimages.isNotEmpty() && time - afterimages.first().time > AFTERIMAGE_MILLIS) {
+        while (afterimages.isNotEmpty() && time - afterimages.first().time > 450) {
             afterimages.removeFirst()
         }
 
         afterimages.forEachIndexed { index, image ->
-            val age = (time - image.time) / AFTERIMAGE_MILLIS
+            val age = (time - image.time) / 450f
             val fade = (1f - age) * (index + 1f) / afterimages.size *
                 ghostFade(image.pos.add(0.0, player.eyeHeight.toDouble(), 0.0))
             if (fade <= 0f) {
@@ -262,7 +246,8 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         }
     }
 
+    // Ghosts close to the camera would fill the screen in first person
     private fun WorldRenderEnvironment.ghostFade(eyes: Vec3) =
-        ((camera.position().distanceTo(eyes) - GHOST_HIDDEN_DISTANCE) / GHOST_FADE_DISTANCE).toFloat().coerceIn(0f, 1f)
+        ((camera.position().distanceTo(eyes) - 0.8) / 1.2).toFloat().coerceIn(0f, 1f)
 
 }

@@ -41,8 +41,6 @@ import kotlin.math.min
 @AddonApi
 object Timer : EventListener {
 
-    private const val HELD_HISTORY_TICKS = 20
-
     private val requestHandler = RequestHandler<Float>()
     private val holds = RequestHandler<Unit>()
 
@@ -89,7 +87,7 @@ object Timer : EventListener {
     /**
      * Ticks held back before each of the last ticks that ran, a ring ending before [heldHistoryEnd].
      */
-    private val heldHistory = IntArray(HELD_HISTORY_TICKS)
+    private val heldHistory = IntArray(20)
     private var heldHistoryEnd = 0
 
     /**
@@ -178,7 +176,7 @@ object Timer : EventListener {
     }
 
     /**
-     * Ticks held back since [ticks] ticks ago, at most [HELD_HISTORY_TICKS]. Other entities do not tick while held,
+     * Ticks held back since [ticks] ticks ago, at most 20. Other entities do not tick while held,
      * so what counts down every tick, such as their hurt time, falls behind the server by that many ticks.
      */
     fun heldTicksWithin(ticks: Int): Int {
