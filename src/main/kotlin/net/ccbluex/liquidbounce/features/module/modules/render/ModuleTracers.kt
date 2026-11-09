@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
@@ -46,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.math.toVec3f
  */
 
 object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
+    private val hideTeammates by boolean("HideTeammates", false)
 
     private val modes = choices("ColorMode", 0) {
         arrayOf(
@@ -82,6 +84,8 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                 if (distanceSq > maxDistanceSq) {
                     continue
                 }
+                
+                if (hideTeammates && ModuleTeams.isInClientPlayersTeam(entity)) continue
 
                 val color = if (FriendManager.isFriend(entity)) {
                     Color4b.BLUE
