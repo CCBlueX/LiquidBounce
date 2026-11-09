@@ -254,8 +254,6 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
      * the cooldown progress is not updated.
      */
     fun getAttackSpeed(original: Double): Double {
-        debugParameter("Original Attack Speed") { original }
-
         if (!running || ChangeOnAction.ON_ATTACK !in changeOnActions || !player.hasCooldown) {
             return original
         }

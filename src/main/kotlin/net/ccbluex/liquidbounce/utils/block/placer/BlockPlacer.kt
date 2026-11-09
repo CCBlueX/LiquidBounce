@@ -166,7 +166,7 @@ class BlockPlacer(
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent>(priority = -20) {
-        debugParameter("Blocks") { blocks }
+        debugParameter("Blocks") { blocks.size }
 
         if (ticksToWait > 0) {
             ticksToWait--

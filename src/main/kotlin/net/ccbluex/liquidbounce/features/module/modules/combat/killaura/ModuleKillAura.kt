@@ -237,7 +237,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         KillAuraAutoBlock.makeSeemBlock()
 
         debugParameter("Rotation") { rotation }
-        debugParameter("Target") { target.scoreboardName }
+        debugParameter("Target") { target }
 
         val attackHitResult = isLookingAtEntity(
             toEntity = target,
@@ -313,7 +313,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         }
 
         debugParameter("Maximum Range") { maximumRange }
-        debugParameter("Range") { range }
         val squaredMaxRange = maximumRange.sq()
         val squaredNormalRange = range.interactionRange.sq()
 

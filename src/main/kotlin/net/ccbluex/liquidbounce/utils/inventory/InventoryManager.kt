@@ -284,7 +284,7 @@ object InventoryManager : EventListener {
     ) { event ->
         val screen = event.screen
 
-        debugParameter("Screen") { screen }
+        debugParameter("Screen") { screen?.title }
 
         if (event.isCancelled) {
             return@handler

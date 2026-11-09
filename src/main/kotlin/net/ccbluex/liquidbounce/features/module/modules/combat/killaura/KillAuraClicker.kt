@@ -44,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockingServerside
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
-import kotlin.math.round
 
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
@@ -95,7 +94,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                 range = ModuleKillAura.range.interactionRange.toDouble(),
                 wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
             )
-            debugParameter("Is Exiting Range On ${round(ticks)}") { isExitingRange }
+            debugParameter("Is Exiting Range") { isExitingRange }
             if (isExitingRange) {
                 debugGeometry("Exiting") { DebuggedPoint(futurePos, Color4b.RED, 0.4) }
             }
