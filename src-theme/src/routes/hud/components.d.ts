@@ -45,6 +45,10 @@ interface HudScoreboardSettings {
     replaceWith: string;
 }
 
+interface HudEffectsSettings {
+    romanNumerals: boolean;
+}
+
 interface HudNotificationsSettings {
     severities: NotificationSeverity[];
 }
