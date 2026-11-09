@@ -34,6 +34,7 @@ class AutoToolGameTest : FabricClientGameTest {
             val bench = InventoryBench(context, world.server)
             bench.setUp()
             bench.checkAutoTool()
+            bench.checkAutoToolFilters()
         }
     }
 
