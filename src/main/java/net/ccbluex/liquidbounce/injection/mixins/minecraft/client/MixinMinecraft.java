@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.CoroutineTicker;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor;
 import net.ccbluex.liquidbounce.event.events.*;
+import net.ccbluex.liquidbounce.features.misc.FriendManager;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker;
@@ -69,6 +70,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.AttackRange;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -366,6 +368,14 @@ public abstract class MixinMinecraft {
         }
 
         if (CombatManager.INSTANCE.getShouldPauseCombat()) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        // A click on a friend sends nothing, unless it spectates them. The swing alone would still reset the
+        // attack cooldown on the server.
+        if (hitResult instanceof EntityHitResult entityHit && !gameMode.isSpectator()
+            && FriendManager.INSTANCE.cancelsAttack(entityHit.getEntity())) {
             cir.setReturnValue(false);
         }
     }
