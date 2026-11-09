@@ -18,17 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
-import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -41,7 +37,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
-import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -68,16 +63,10 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
-import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
-import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
-import net.minecraft.util.Util
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntitySelector
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
@@ -508,34 +497,6 @@ internal object ModuleTickBase : ClientModule(
         private val criticals by boolean("Criticals", true)
 
         /**
-         * [Util.getMillis] when the server last restarted the attack cooldown of each player, by entity id.
-         */
-        private val cooldownResets = Int2LongOpenHashMap()
-
-        @Suppress("unused")
-        private val packetHandler = handler<PacketEvent> { event ->
-            val millis = Util.getMillis()
-            when (val packet = event.packet) {
-                is ClientboundSwingAnimationPacket -> mc.execute { cooldownResets.put(packet.entityId, millis) }
-                // Runs before the packet is applied, so the entity still holds the old item
-                is ClientboundSetEquipmentPacket -> mc.execute {
-                    val enemy = mc.level?.getEntity(packet.entity) as? LivingEntity ?: return@execute
-                    val item = packet.slots.firstOrNull { it.first == EquipmentSlot.MAINHAND }?.second
-                        ?: return@execute
-                    if (!ItemStack.isSameItem(enemy.mainHandItem, item)) {
-                        cooldownResets.put(packet.entity, millis)
-                    }
-                }
-                is ClientboundRemoveEntitiesPacket -> mc.execute {
-                    packet.entityIds.forEachInt { cooldownResets.remove(it) }
-                }
-            }
-        }
-
-        @Suppress("unused")
-        private val worldChangeHandler = handler<WorldChangeEvent> { cooldownResets.clear() }
-
-        /**
          * Whether [hit] pays off when it lands with the player at [landing] of [path], [landingDelay] ticks of real
          * time from now. [path] starts now and goes on past [landing] as far as it was simulated.
          */
@@ -556,16 +517,18 @@ internal object ModuleTickBase : ClientModule(
             val modern = player.hasCooldown
             val strength = if (modern) CombatManager.attackCooldownProgress(landingDelay) else 1f
             val critical = modern && criticals && isCritical(path[landing], strength)
+            // Our hit reaches the server half a ping after we send it
+            val knockbackEnd = landingDelay + player.ping / 2.0 / 50 + knockbackTicks
             val enemyStrength = (enemy as? Player)
                 ?.takeIf { modern && enemyCooldown }
-                ?.let { enemyStrengthAfter(it, landingDelay) }
+                ?.let { CombatManager.attackCooldownProgress(it, knockbackEnd) }
             // Vanilla's threshold for sprint knockback and crits
             val sprintHit = player.isSprinting && strength > 0.9f
             val range = rangeAfterKnockback(enemy, path, landing, landingDelay, sprintHit)
             ModuleTickBase.debugParameter("Critical") { critical }
             ModuleTickBase.debugParameter("Enemy Cooldown After Knockback") { enemyStrength }
             ModuleTickBase.debugParameter("Enemy Range After Knockback") { range }
-            return range > enemyRange || critical || enemyStrength != null && enemyStrength <= 0.9
+            return range > enemyRange || critical || enemyStrength != null && enemyStrength <= 0.9f
         }
 
         /**
@@ -611,21 +574,6 @@ internal object ModuleTickBase : ClientModule(
             val canCrit = ModuleCriticals.allowsCriticalHit(ignoreOnGround = true) &&
                 (!player.isSprinting || prefersCritical)
             return landing.falling && strength > 0.9f && canCrit
-        }
-
-        /**
-         * How full the attack cooldown of [enemy] is on the server at the end of [knockbackTicks] after our hit, which
-         * lands [landingDelay] ticks of real time from now. Null when we have not seen it restart.
-         */
-        private fun enemyStrengthAfter(enemy: Player, landingDelay: Int): Double? {
-            if (!cooldownResets.containsKey(enemy.id)) {
-                return null
-            }
-
-            // We saw the restart half a ping late, and our hit reaches the server half a ping after we send it
-            val ticks = (Util.getMillis() - cooldownResets.get(enemy.id)).toDouble() / 50 +
-                player.ping.toDouble() / 50 + landingDelay + knockbackTicks
-            return (ticks * ServerObserver.tickSpeed + 0.5) / enemy.currentItemAttackStrengthDelay
         }
 
         /**

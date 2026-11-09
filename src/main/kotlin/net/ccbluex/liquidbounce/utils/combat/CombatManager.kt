@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap
+import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -34,12 +36,19 @@ import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.ping
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.util.Util
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
 import kotlin.math.roundToInt
 
 /**
@@ -78,6 +87,26 @@ object CombatManager : EventListener {
      */
     fun attackCooldownProgress(ticks: Int = 0) =
         (attackCooldownTicks(ticks) + 0.5f) / player.currentItemAttackStrengthDelay
+
+    /**
+     * [Util.getMillis] when the server last restarted the attack cooldown of other players, by entity id.
+     */
+    private val cooldownResets = Int2LongOpenHashMap()
+
+    /**
+     * Like [attackCooldownProgress] for [other], [ticks] ticks of real time from now. Null when we have not seen its
+     * cooldown restart.
+     */
+    fun attackCooldownProgress(other: Player, ticks: Double = 0.0): Float? {
+        if (!cooldownResets.containsKey(other.id)) {
+            return null
+        }
+
+        // We saw the restart half a ping late
+        val millis = Util.getMillis() - cooldownResets.get(other.id) + player.ping / 2.0
+        val serverTicks = (millis / 50 + ticks) * ServerObserver.tickSpeed
+        return ((serverTicks + 0.5) / other.currentItemAttackStrengthDelay).toFloat()
+    }
 
     private fun updatePauseRotation() {
         if (pauseRotation <= 0) return
@@ -137,18 +166,40 @@ object CombatManager : EventListener {
 
     @Suppress("unused")
     private val cooldownPacketHandler = handler<PacketEvent> { event ->
-        when (event.packet) {
+        when (val packet = event.packet) {
             // The server restarts it on every swing, attack and change of the held item
             is ServerboundAttackPacket, is ServerboundPunchPacket, is ServerboundSetCarriedItemPacket ->
                 cooldownResetTicks = Timer.realTicks
             // and on a new player after respawning
             is ClientboundRespawnPacket -> mc.execute { cooldownResetTicks = Timer.realTicks }
+
+            // The same goes for other players, whose swings and items we see
+            is ClientboundSwingAnimationPacket -> {
+                val millis = Util.getMillis()
+                mc.execute { cooldownResets.put(packet.entityId, millis) }
+            }
+            // Runs before the packet is applied, so the entity still holds the old item
+            is ClientboundSetEquipmentPacket -> {
+                val millis = Util.getMillis()
+                mc.execute {
+                    val entity = mc.level?.getEntity(packet.entity) as? LivingEntity ?: return@execute
+                    val item = packet.slots.firstOrNull { it.first == EquipmentSlot.MAINHAND }?.second
+                        ?: return@execute
+                    if (!ItemStack.isSameItem(entity.mainHandItem, item)) {
+                        cooldownResets.put(packet.entity, millis)
+                    }
+                }
+            }
+            is ClientboundRemoveEntitiesPacket -> mc.execute {
+                packet.entityIds.forEachInt { cooldownResets.remove(it) }
+            }
         }
     }
 
     @Suppress("unused")
     private val cooldownWorldHandler = handler<WorldChangeEvent> {
         cooldownResetTicks = Timer.realTicks
+        cooldownResets.clear()
     }
 
     val shouldPauseCombat: Boolean
