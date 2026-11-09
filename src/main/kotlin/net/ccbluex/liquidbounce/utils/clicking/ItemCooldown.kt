@@ -30,7 +30,8 @@ open class ItemCooldown : ValueGroup("ItemCooldown", aliases = listOf("Cooldown"
         1.0f..1.0f, 0.0f..2.0f
     )
 
-    private var nextCooldown = minimumCooldown.random()
+    var nextCooldown = minimumCooldown.random()
+        private set
 
     open fun isCooldownPassed(ticks: Int = 0) = cooldownProgress(ticks) >= nextCooldown
 

@@ -250,9 +250,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
     private object SimulatePlacementAttempts : ToggleableValueGroup(this, "SimulatePlacementAttempts", false) {
-        val clicker = tree(
-            Clicker(ModuleScaffold, mc.options.keyUse, null, maxCps = 100, priority = Priority.NOT_IMPORTANT)
-        )
+        val clicker = tree(Clicker(ModuleScaffold, mc.options.keyUse, null, maxCps = 100))
         val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 

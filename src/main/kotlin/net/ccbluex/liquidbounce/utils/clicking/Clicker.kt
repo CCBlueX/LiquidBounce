@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.KeyMapping
 import net.minecraft.client.Minecraft
 import net.minecraft.util.Util
@@ -45,8 +44,7 @@ import net.minecraft.util.Util
  * @see [Minecraft.handleKeybinds]
  *
  * Presses are planned in milliseconds by a [ClickTiming] and batched into ticks by a [ClickPlan],
- * so we can predict future clicks and behave accordingly. Clickers on the same key take turns by [priority],
- * see [KeyRequests].
+ * so we can predict future clicks and behave accordingly.
  */
 open class Clicker<T>(
     val parent: T,
@@ -55,12 +53,10 @@ open class Clicker<T>(
     maxCps: Int = 30,
     name: String = "Clicker",
     simulateAttackKeyDown: Boolean = false,
-    private val priority: Priority = Priority.NORMAL,
 ) : ValueGroup(name, aliases = listOf("ClickScheduler")), EventListener where T : EventListener {
 
     companion object {
         private const val TICKS_AHEAD = 20
-        private const val TICKS_PER_SECOND = 20
     }
 
     private val technique by enumChoice("Technique", ClickTechnique.HUMAN)
@@ -140,12 +136,6 @@ open class Clicker<T>(
     }
 
     /**
-     * Holds [keyBinding] for two of our slowest click intervals, so it stays ours between clicks.
-     * Rounded up to whole ticks, so even at 20+ CPS the hold outlasts the tick it was asked in.
-     */
-    private fun requestKey() = KeyRequests.request(this, priority, 2 * Math.ceilDiv(TICKS_PER_SECOND, cps.first))
-
-    /**
      * Uses the presses of this tick. If the cooldown is not passed, the press is dropped.
      * [block] should return true if the click was successful. Otherwise, it will not count as a click.
      */
@@ -155,10 +145,6 @@ open class Clicker<T>(
         debugParameter("Combo") { plan.comboMs }
         debugParameter("Miss Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
-
-        if (!requestKey()) {
-            return
-        }
 
         val clicks = plan.consume({ passesMissCooldown && itemCooldown?.isCooldownPassed() != false }) {
             block().also { success ->
@@ -177,7 +163,7 @@ open class Clicker<T>(
      * This uses the same gating logic as [click] before invoking [block].
      */
     fun canExecuteClickNow(): Boolean {
-        if (!requestKey() || getClickAmount() <= 0) {
+        if (getClickAmount() <= 0) {
             return false
         }
 
