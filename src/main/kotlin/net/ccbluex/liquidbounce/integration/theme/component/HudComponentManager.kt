@@ -153,6 +153,14 @@ object HudComponentManager {
             ?.addComponent(id)
     }
 
+    /**
+     * Moves every component back to where it starts out.
+     */
+    fun resetLayout() {
+        components.forEach(HudComponent::resetAlignment)
+        updateComponents()
+    }
+
     fun updateComponents() {
         EventManager.callEvent(ComponentsUpdateEvent(
             source = ComponentsUpdateEvent.Source.NATIVE,

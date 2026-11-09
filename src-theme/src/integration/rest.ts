@@ -734,6 +734,12 @@ export async function setComponentAlignment(id: string, alignment: Alignment): P
     });
 }
 
+export async function resetHudLayout(): Promise<void> {
+    await fetch(`${API_BASE}/client/components/layout/reset`, {
+        method: "POST"
+    });
+}
+
 export async function bringComponentToFront(id: string): Promise<number> {
     const response = await fetch(`${API_BASE}/client/components/${id}/z-index`, {
         method: "POST"

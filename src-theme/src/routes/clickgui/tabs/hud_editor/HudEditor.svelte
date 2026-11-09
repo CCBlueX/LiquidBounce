@@ -2,7 +2,7 @@
     import {onMount} from "svelte";
 
     import Hud from "../../../hud/Hud.svelte";
-    import {getGameWindow, setHudEditorSelected} from "../../../../integration/rest";
+    import {getGameWindow, resetHudLayout, setHudEditorSelected} from "../../../../integration/rest";
     import {
         HORIZONTAL_ANCHOR_ZONES,
         HUD_EDITOR_GRID_SIZE,
@@ -12,10 +12,24 @@
     import ComponentDrawer from "./drawer/ComponentDrawer.svelte";
     import {darken} from "../../clickgui_store";
     import {listen} from "../../../../integration/ws";
-    import type {ScaleFactorChangeEvent} from "../../../../integration/events";
+    import type {KeyboardKeyEvent, ScaleFactorChangeEvent} from "../../../../integration/events";
+    import {isClickGuiScreen, isTextEntry} from "../../../../util/utils";
+
+    const RESET_KEY = "key.keyboard.r";
+    const CANCEL_KEY = "key.keyboard.escape";
+    const GLFW_PRESS = 1;
+    /** How long the second press confirming the reset may take. */
+    const RESET_CONFIRM_MS = 3000;
 
     let dragState: HudEditorDragState | undefined;
     let scaleFactor = 2;
+    let confirmingReset = false;
+    let resetConfirmTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function stopConfirmingReset(): void {
+        confirmingReset = false;
+        clearTimeout(resetConfirmTimeout);
+    }
 
     function handleDragStateChange(state: HudEditorDragState): void {
         dragState = state.dragging ? state : undefined;
@@ -35,12 +49,32 @@
 
         return () => {
             $darken = true;
+            stopConfirmingReset();
             setHudEditorSelected(false);
         };
     });
 
     listen("scaleFactorChange", (event: ScaleFactorChangeEvent) => {
         scaleFactor = event.scaleFactor;
+    });
+
+    // The first press asks, a second one within a few seconds resets
+    listen("keyboardKey", (e: KeyboardKeyEvent) => {
+        if (e.action !== GLFW_PRESS || !isClickGuiScreen(e.screen) || isTextEntry(document.activeElement)) {
+            return;
+        }
+
+        if (e.key === RESET_KEY) {
+            if (confirmingReset) {
+                stopConfirmingReset();
+                resetHudLayout();
+            } else {
+                confirmingReset = true;
+                resetConfirmTimeout = setTimeout(stopConfirmingReset, RESET_CONFIRM_MS);
+            }
+        } else if (e.key === CANCEL_KEY) {
+            stopConfirmingReset();
+        }
     });
 </script>
 
@@ -72,6 +106,14 @@
         {/if}
     {/if}
 
+    <div class="hint" class:confirming={confirmingReset}>
+        {#if confirmingReset}
+            Press <span class="key">R</span> again to reset the layout
+        {:else}
+            <span class="key">R</span> Reset layout
+        {/if}
+    </div>
+
     <ComponentDrawer/>
     <Hud
             inEditor
@@ -88,6 +130,28 @@
     &.grid {
       background-image: linear-gradient(to right, var(--clickgui-hud-editor-grid-color) 1px, transparent 1px),
       linear-gradient(to bottom, var(--clickgui-hud-editor-grid-color) 1px, transparent 1px);
+    }
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    pointer-events: none;
+    background-color: var(--clickgui-hud-editor-hint-background-color);
+    color: var(--clickgui-hud-editor-hint-color);
+
+    .key {
+      font-weight: 600;
+      color: var(--clickgui-hud-editor-hint-key-color);
+    }
+
+    &.confirming {
+      color: var(--clickgui-hud-editor-hint-warning-color);
     }
   }
 
