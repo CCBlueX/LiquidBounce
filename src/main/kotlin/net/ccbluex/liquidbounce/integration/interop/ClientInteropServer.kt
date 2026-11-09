@@ -18,6 +18,11 @@
  */
 package net.ccbluex.liquidbounce.integration.interop
 
+import io.ktor.http.HttpHeaders
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
@@ -26,6 +31,7 @@ import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -50,6 +56,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.lang3.RandomStringUtils
 import java.net.BindException
 import java.net.ServerSocket
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -70,6 +77,18 @@ object ClientInteropServer {
         ?: RandomStringUtils.secure().nextAlphanumeric(16)
 
     val url get() = "http://127.0.0.1:$port"
+
+    private val openRequests = ConcurrentHashMap<ApplicationCall, Long>()
+
+    /**
+     * Requests that have no response yet, oldest first, with how long they have waited.
+     */
+    fun openRequests(): List<String> {
+        val now = System.nanoTime()
+        return openRequests.entries.sortedBy { it.value }.map { (call, start) ->
+            "${call.request.local.method.value} ${call.request.path()} (${(now - start) / 1_000_000} ms)"
+        }
+    }
 
     suspend fun start() {
         if (isSkipping) {
@@ -95,6 +114,8 @@ object ClientInteropServer {
     private suspend fun startServer(port: Int, authCode: String): Int {
         return try {
             val engine = embeddedServer(CIO, host = "127.0.0.1", port = port) {
+                trackOpenRequests()
+
                 install(StatusPages) {
                     exception<HttpStatusException> { call, cause ->
                         call.respond(cause.status, cause.body)
@@ -166,6 +187,20 @@ object ClientInteropServer {
             startServer((15001..17000).random(), authCode)
         } catch (exception: Exception) {
             ErrorHandler.fatal(exception, additionalMessage = "Start interop server")
+        }
+    }
+
+    private fun Application.trackOpenRequests() = intercept(ApplicationCallPipeline.Setup) {
+        // A web socket stays open for its whole session
+        if (call.request.headers[HttpHeaders.Upgrade] != null) {
+            return@intercept
+        }
+
+        openRequests[call] = System.nanoTime()
+        try {
+            proceed()
+        } finally {
+            openRequests.remove(call)
         }
     }
 
