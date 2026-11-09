@@ -93,25 +93,27 @@ class ParkourAssistGameTest : FabricClientGameTest {
         input.holdKey { it.keyUp }
         input.holdKey { it.keySprint }
         try {
-            for (tick in 0 until TIMEOUT) {
+            return TurnWatch.watch(context, if (assist) "With Parkour" else "Without Parkour") {
+                for (tick in 0 until TIMEOUT) {
+                    val position = context.fromClient { checkNotNull(it.player).position() }
+                    if (position.y < origin.y + COURSE.minOf { it.y }) {
+                        return@watch "fell at $position after $tick ticks"
+                    }
+                    if (BlockPos.containing(position) == BlockPos.containing(goal)) {
+                        logger.info("PARKOUR ASSIST: done in $tick ticks")
+                        return@watch null
+                    }
+                    context.waitTick()
+                }
+
                 val position = context.fromClient { checkNotNull(it.player).position() }
-                if (position.y < origin.y + COURSE.minOf { it.y }) {
-                    return "fell at $position after $tick ticks"
-                }
-                if (BlockPos.containing(position) == BlockPos.containing(goal)) {
-                    logger.info("PARKOUR ASSIST: done in $tick ticks")
-                    return null
-                }
-                context.waitTick()
+                "not done within $TIMEOUT ticks, stopped at $position"
             }
         } finally {
             input.releaseKey { it.keyUp }
             input.releaseKey { it.keySprint }
             context.onClient { ModuleParkour.enabled = false }
         }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        return "not done within $TIMEOUT ticks, stopped at $position"
     }
 
     private companion object {
