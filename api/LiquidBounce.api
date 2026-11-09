@@ -1257,7 +1257,9 @@ public abstract class net/ccbluex/liquidbounce/integration/theme/component/compo
 	public abstract fun getGuiScaledHeight ()F
 	public abstract fun getGuiScaledWidth ()F
 	public final fun getHeight ()F
+	public final fun getHudScale ()F
 	public final fun getWidth ()F
+	protected final fun withHudScale (Lnet/minecraft/client/gui/GuiGraphicsExtractor;Lnet/ccbluex/liquidbounce/render/engine/type/BoundingBox2f;Lkotlin/jvm/functions/Function2;)V
 }
 
 public final class net/ccbluex/liquidbounce/lang/LanguageKt {

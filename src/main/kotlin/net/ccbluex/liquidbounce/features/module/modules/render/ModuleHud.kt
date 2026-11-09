@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScr
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.screens.DisconnectedScreen
@@ -124,10 +125,12 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     }
 
     /**
-     * Scales the theme's HUD components, read by the theme itself.
+     * Scales every HUD component: the theme reads it for its own, native components apply it when drawing.
      */
-    @Suppress("unused")
-    private val scale by float("Scale", 1f, 0.5f..2f)
+    val scale by float("Scale", 1f, 0.5f..2f).onChanged {
+        // Native components report their scaled size to the HUD editor
+        HudComponentManager.updateComponents()
+    }
 
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->

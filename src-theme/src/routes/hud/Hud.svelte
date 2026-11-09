@@ -45,7 +45,7 @@
     let themeComponents: HudComponent[] = [];
 
     $: renderedComponents = inEditor ? [...nativeComponents, ...themeComponents] : themeComponents;
-    // The game draws native components itself, unscaled
+    // Native components report their size with the scale already applied
     $: nativeIds = new Set(nativeComponents.map(c => c.id));
 
     setContext(HUD_EDITOR_ELEMENTS_CONTEXT, new Map<string, HTMLElement>());
