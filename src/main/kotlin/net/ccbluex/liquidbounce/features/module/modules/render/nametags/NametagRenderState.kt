@@ -55,16 +55,33 @@ internal class NametagRenderState {
     @JvmField val equipments = Equipments()
 
     /**
+     * The health bar under the nametag, `null` without one.
+     */
+    @JvmField var health: NametagHealthBar.SmoothedHealth? = null
+
+    /**
      * Updated on frame.
      */
     @JvmField var screenPos: Vec3f? = null
 
-    fun update(entity: Entity, scale: Float, distance: Float) {
+    /**
+     * Places the nametag of [entity] without building its content, so that tags beyond the limit cost nothing.
+     */
+    fun place(entity: Entity, scale: Float, distance: Float) {
         this.entity = entity
         this.scale = scale
         this.distance = distance
+    }
+
+    fun build() {
+        val entity = this.entity ?: return
         this.text = NametagTextFormatter.format(entity)
         this.equipments.update(entity)
+        this.health = if (NametagHealthBar.running && entity is LivingEntity) {
+            NametagHealthBar.track(entity)
+        } else {
+            null
+        }
     }
 
     fun reset() {
@@ -73,6 +90,7 @@ internal class NametagRenderState {
         this.distance = 0F
         this.text = FormattedCharSequence.EMPTY
         this.equipments.reset()
+        this.health = null
     }
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {

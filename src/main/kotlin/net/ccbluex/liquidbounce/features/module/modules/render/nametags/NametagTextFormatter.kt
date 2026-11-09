@@ -122,13 +122,7 @@ internal object NametagTextFormatter : ValueGroup("Text") {
                 val actualHealth = (entity.getActualHealth() +
                     if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
 
-                val healthColor = when {
-                    actualHealth >= 14 -> ChatFormatting.GREEN
-                    actualHealth >= 8 -> ChatFormatting.YELLOW
-                    else -> ChatFormatting.RED
-                }
-
-                return "$actualHealth HP".withFormat(healthColor)
+                return "$actualHealth HP".withFormat(healthFormatting(actualHealth.toFloat()))
             }
         },
 
@@ -188,4 +182,13 @@ private val Entity.nameColor: TextColor?
 
 private fun ChatFormatting.toTextColor(): TextColor {
     return TextColor.fromLegacyFormat(this)!!
+}
+
+/**
+ * The colour of [health], shared by the health text and the health bar.
+ */
+internal fun healthFormatting(health: Float): ChatFormatting = when {
+    health >= 14 -> ChatFormatting.GREEN
+    health >= 8 -> ChatFormatting.YELLOW
+    else -> ChatFormatting.RED
 }
