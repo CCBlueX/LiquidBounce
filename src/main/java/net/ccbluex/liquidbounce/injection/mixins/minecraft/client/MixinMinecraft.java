@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTriggerBot;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
@@ -309,6 +310,13 @@ public abstract class MixinMinecraft {
 
         if (ModuleAutoClicker.AttackButton.INSTANCE.getRunning()) {
             var clickAmount = ModuleAutoClicker.AttackButton.INSTANCE.getClicker().getClickAmount();
+            if (clickAmount != null && clickAmount > 0) {
+                return 0;
+            }
+        }
+
+        if (ModuleTriggerBot.INSTANCE.getRunning()) {
+            var clickAmount = ModuleTriggerBot.INSTANCE.getClicker().getClickAmount();
             if (clickAmount != null && clickAmount > 0) {
                 return 0;
             }

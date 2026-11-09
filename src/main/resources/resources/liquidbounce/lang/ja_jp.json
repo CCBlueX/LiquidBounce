@@ -473,6 +473,7 @@
   "liquidbounce.module.translation.description": "クライアント用の自動翻訳を設定します。",
   "liquidbounce.module.translationFix.description": "バニラの翻訳の脆弱性を通じて、インストール済みMODをサーバーに知られないようにします。",
   "liquidbounce.module.tridentBoost.description": "トライデントの激流ダッシュを強化し、陸上でも使用できるようにします。",
+  "liquidbounce.module.triggerBot.description": "攻撃ボタンを押さなくても、照準の先にいる敵を攻撃します。",
   "liquidbounce.module.trueSight.description": "目に見えないオブジェクトやエンティティを見ることができます。",
   "liquidbounce.module.twerk.description": "自動的にスニークとアンスニークを繰り返します。",
   "liquidbounce.module.vehicleBoost.description": "乗り物から降りたときにブーストします。",

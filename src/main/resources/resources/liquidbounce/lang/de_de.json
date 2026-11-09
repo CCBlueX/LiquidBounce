@@ -587,6 +587,7 @@
   "liquidbounce.module.translation.description": "Einrichten eines automatischen Übersetzers für den Client.",
   "liquidbounce.module.translationFix.description": "Verhindert, dass Server über eine Vanilla-Übersetzungsschwachstelle etwas über deine installierten Mods erfahren.",
   "liquidbounce.module.tridentBoost.description": "Verstärkt den Sog-Antrieb des Dreizacks und ermöglicht dessen Verwendung an Land.",
+  "liquidbounce.module.triggerBot.description": "Greift den Gegner unter deinem Fadenkreuz an, ohne dass du die Angriffstaste gedrückt hältst.",
   "liquidbounce.module.trueSight.description": "Ermöglicht dir, unsichtbare Blöcke und Entities zu sehen.",
   "liquidbounce.module.twerk.description": "Sneakt und Unsneakt automatisch.",
   "liquidbounce.module.vehicleBoost.description": "Gibt dir einen Schub, wenn du ein Fahrzeug verlässt.",

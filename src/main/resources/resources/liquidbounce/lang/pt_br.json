@@ -523,7 +523,7 @@
   "liquidbounce.module.translation.description": "Configura um tradutor automático para o cliente.",
   "liquidbounce.module.translationFix.description": "Impede que servidores saibam dos seus mods instalados pela vulnerabilidade de tradução do vanilla.",
   "liquidbounce.module.tridentBoost.description": "Fortalece o dash de riptide do tridente e permite usá-lo em terra firme.",
-  "liquidbounce.module.trigger.description": "Automaticamente ataca quando olha para alguem.",
+  "liquidbounce.module.triggerBot.description": "Ataca o inimigo na sua mira sem segurar o botão de ataque.",
   "liquidbounce.module.trueSight.description": "Permite que você veja objetos e entidades invisíveis.",
   "liquidbounce.module.twerk.description": "Agacha e levanta automaticamente.",
   "liquidbounce.module.vehicleBoost.description": "Dá um impulso ao sair de um veículo.",

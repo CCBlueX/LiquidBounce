@@ -19,25 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
-import net.ccbluex.liquidbounce.utils.item.WeaponType
-import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
 import net.minecraft.client.KeyMapping
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -55,31 +49,24 @@ import net.minecraft.world.phys.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, aliases = listOf("TriggerBot")) {
+object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) {
 
     object AttackButton : ToggleableValueGroup(this, "Attack", true) {
 
         val clicker = tree(Clicker(this, mc.options.keyAttack, simulateAttackKeyDown = true))
 
-        internal val requiresNoInput by boolean("RequiresNoInput", false)
         internal val delayOnBroken by boolean("DelayOnBroken", true)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
-        private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
-        private val weapon by multiEnumChoice("Weapon", enumSetOf(WeaponType.ANY), canBeNone = false)
-        internal val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
-        private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
+        internal val attacker = CrosshairAttacker(this, clicker) { attack && isOnObjective() }
+
+        val isAttacking: Boolean
+            get() = running && attacker.isAttacking
 
         private enum class ObjectiveType(override val tag: String) : Tagged {
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
             ANY("Any")
-        }
-
-        private enum class Use(override val tag: String) : Tagged {
-            WAIT("Wait"),
-            STOP("Stop"),
-            IGNORE("Ignore")
         }
 
         fun isOnObjective(): Boolean {
@@ -90,40 +77,6 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
                 ObjectiveType.ENTITY -> crosshair is EntityHitResult
                 ObjectiveType.BLOCK -> crosshair is BlockHitResult
                 ObjectiveType.ANY -> true
-            }
-        }
-
-        fun isWeaponSelected(): Boolean = weapon.matchesAny(player.mainHandItem)
-
-        suspend fun encounterItemUse(): Boolean {
-            return when (onItemUse) {
-                Use.WAIT -> {
-                    tickUntil { !player.isUsingItem }
-                    waitTicks(delayPostStopUse)
-                    true
-                }
-
-                Use.STOP -> {
-                    interaction.releaseUsingItem(player)
-                    waitTicks(delayPostStopUse)
-                    true
-                }
-
-                Use.IGNORE -> false
-            }
-        }
-
-        @Suppress("unused")
-        private val sprintHandler = handler<SprintEvent> { event ->
-            if (event.source == SprintEvent.Source.MOVEMENT_TICK || event.source == SprintEvent.Source.INPUT) {
-                if (!attack || !isOnObjective() || !isWeaponSelected()) {
-                    return@handler
-                }
-
-                val target = mc.hitResult as? EntityHitResult ?: return@handler
-                if (criticalsSelectionMode.shouldStopSprinting(clicker, target.entity)) {
-                    event.sprint = false
-                }
             }
         }
 
@@ -172,7 +125,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
     }
 
     val attack: Boolean
-        get() = mc.options.keyAttack.isPressedOnAny || AttackButton.requiresNoInput
+        get() = mc.options.keyAttack.isPressedOnAny
 
     val use: Boolean
         get() = mc.options.keyUse.isPressedOnAny || UseButton.requiresNoInput
@@ -193,7 +146,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
     @Suppress("unused")
     private val tickHandler = tickHandler {
         AttackButton.run {
-            if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) {
+            if (!isAttacking) {
                 return@run
             }
 
@@ -206,26 +159,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT, 
                 return@run
             }
 
-            val crosshairTarget = mc.hitResult
-            if (crosshairTarget is EntityHitResult) {
-                ModuleAutoWeapon.onTarget(crosshairTarget.entity)
-
-                if (!criticalsSelectionMode.isCriticalHit()) {
-                    return@run
-                }
-            }
-
-            if (player.isUsingItem) {
-                val encounterItemUse = encounterItemUse()
-
-                if (encounterItemUse) {
-                    return@tickHandler
-                }
-            }
-
-            clicker.click {
-                KeyMapping.click(mc.options.keyAttack.key)
-                true
+            if (!attacker.attack()) {
+                return@tickHandler
             }
         }
 

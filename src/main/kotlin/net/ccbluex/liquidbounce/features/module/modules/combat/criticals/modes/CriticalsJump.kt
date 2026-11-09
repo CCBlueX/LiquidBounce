@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -53,6 +54,7 @@ object CriticalsJump : Mode("Jump") {
 
     private val checkKillaura by boolean("CheckKillaura", false)
     private val checkAutoClicker by boolean("CheckAutoClicker", false)
+    private val checkTriggerBot by boolean("CheckTriggerBot", false)
     private val canBeSeen by boolean("CanBeSeen", true)
 
     /**
@@ -218,13 +220,14 @@ object CriticalsJump : Mode("Jump") {
             return false
         }
 
-        // if both module checks are disabled, we can safely say that we are active
-        if (!checkKillaura && !checkAutoClicker) {
+        // if all module checks are disabled, we can safely say that we are active
+        if (!checkKillaura && !checkAutoClicker && !checkTriggerBot) {
             return true
         }
 
         return (ModuleKillAura.running && checkKillaura) ||
-            (ModuleAutoClicker.running && checkAutoClicker)
+            (ModuleAutoClicker.running && checkAutoClicker) ||
+            (ModuleTriggerBot.running && checkTriggerBot)
     }
 
 }

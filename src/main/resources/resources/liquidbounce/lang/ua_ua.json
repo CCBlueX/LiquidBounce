@@ -499,7 +499,7 @@
   "liquidbounce.module.translation.description": "Налаштовує автоматичний перекладач для клієнта.",
   "liquidbounce.module.translationFix.description": "Не дає серверам дізнатися про встановлені моди через вразливість ванільної локалізації.",
   "liquidbounce.module.tridentBoost.description": "Посилює ривок тризуба та дозволяє використовувати його на суші.",
-  "liquidbounce.module.trigger.description": "Автоматично б'є, коли ви дивитесь на ворога.",
+  "liquidbounce.module.triggerBot.description": "Атакує ворога під прицілом без утримання кнопки атаки.",
   "liquidbounce.module.trueSight.description": "Дозволяє вам бачити невидимі об'єкти та сутності.",
   "liquidbounce.module.twerk.description": "Автоматично присідає та встає.",
   "liquidbounce.module.vehicleBoost.description": "Розганяє вас під час виходу з транспорту.",
