@@ -454,7 +454,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Versturen",
   "liquidbounce.module.packetMine.description": "Laat je een blok 'in één klik' minen.",
   "liquidbounce.module.packetMine.messages.noVfp": "Kies een andere switch-methode of installeer ViaFabricPlus!",
-  "liquidbounce.module.parkour.description": "Spring automatisch aan de rand van een blok.",
+  "liquidbounce.module.parkour.description": "Springt aan de rand van blokken en helpt je sprongen te landen.",
   "liquidbounce.module.particles.description": "Toont deeltjes bij het aanvallen van een entiteit.",
   "liquidbounce.module.phase.description": "Laat je door blokken heen glitchen via een anti-cheat-exploit.",
   "liquidbounce.module.pingSpoof.description": "Faket je ping naar een bepaalde waarde.",

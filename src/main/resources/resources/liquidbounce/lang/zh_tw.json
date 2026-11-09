@@ -657,7 +657,7 @@
   "liquidbounce.module.packetLogger.messages.send": "發送",
   "liquidbounce.module.packetMine.description": "使你能通過單次點擊破壞方塊。",
   "liquidbounce.module.packetMine.messages.noVfp": "你需要安裝ViaFabricPlus，或者選擇另一種切換方式！",
-  "liquidbounce.module.parkour.description": "在方塊邊緣自動跳躍幫你完成跑酷。",
+  "liquidbounce.module.parkour.description": "在方塊邊緣自動跳躍，並輔助你完成跳躍。",
   "liquidbounce.module.particles.description": "攻擊實體時顯示粒子效果。",
   "liquidbounce.module.phase.description": "允許你利用反作弊漏洞穿過方塊。",
   "liquidbounce.module.pingSpoof.description": "自訂一個虛假的Ping值。",
