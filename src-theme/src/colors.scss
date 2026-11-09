@@ -278,6 +278,7 @@
   --effects-duration-color: var(--text-color);
   --effects-progress-background-color: color-mix(in srgb, var(--text-color) 15%, transparent);
   --effects-expiring-color: var(--warning-color);
+  --effects-critical-color: var(--error-color);
 
   --notification-background-color: color-mix(in srgb, var(--surface-color) 68%, transparent);
   --notification-success-color: var(--success-color);

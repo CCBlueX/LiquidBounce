@@ -4,9 +4,18 @@
     import type {StatusEffect} from "../../../integration/types";
     import {effectTextureUrl} from "../../../integration/rest";
     import {intToHex} from "../../../integration/util";
+    import type {HudEffectsSettings} from "../components";
+
+    export let settings: { [name: string]: any };
 
     /** Effects with fewer ticks left blink. */
     const EXPIRING_TICKS = 200;
+    /** Effects with fewer ticks left pulse red, bar included. */
+    const CRITICAL_TICKS = 100;
+    const ROMAN_NUMERALS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
+    let cSettings: HudEffectsSettings;
+    $: cSettings = settings as HudEffectsSettings;
 
     interface ShownEffect extends StatusEffect {
         /** The longest duration seen at this level, which is a full bar: the client only knows the time left. */
@@ -42,8 +51,8 @@
         return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
 
-    function formatAmplifier(n: number): string {
-        return (n + 1).toString();
+    function formatAmplifier(n: number, roman: boolean): string {
+        return roman && n < ROMAN_NUMERALS.length ? ROMAN_NUMERALS[n] : (n + 1).toString();
     }
 
     function progress(e: ShownEffect): number {
@@ -54,22 +63,26 @@
     function isExpiring(e: StatusEffect): boolean {
         return !e.infinite && !e.ambient && e.duration <= EXPIRING_TICKS;
     }
+
+    function isCritical(e: StatusEffect): boolean {
+        return isExpiring(e) && e.duration <= CRITICAL_TICKS;
+    }
 </script>
 
 {#if effects.length > 0}
     <div class="effects">
         {#each effects as e}
-            <div class="effect" class:expiring={isExpiring(e)}>
+            <div class="effect" class:expiring={isExpiring(e)} class:critical={isCritical(e)}>
                 <div class="row">
                     <img class="effect-icon" src={effectTextureUrl(e.effect)} alt={e.localizedName}/>
                     <span class="name">{e.localizedName}  <span
-                            class="amplifier">{formatAmplifier(e.amplifier)}</span></span>
+                            class="amplifier">{formatAmplifier(e.amplifier, cSettings.romanNumerals)}</span></span>
                     <span class="duration">{formatTime(e.duration)}</span>
                 </div>
                 {#if !e.infinite}
                     <div class="progress">
                         <div class="thumb"
-                             style="width: {progress(e)}%; background-color: {intToHex(0xff000000 | e.color)};"></div>
+                             style="width: {progress(e)}%; background-color: {isCritical(e) ? 'var(--effects-critical-color)' : intToHex(0xff000000 | e.color)};"></div>
                     </div>
                 {/if}
             </div>
@@ -98,6 +111,14 @@
 
       .duration {
         color: var(--effects-expiring-color);
+      }
+    }
+
+    &.critical {
+      animation: pulse 0.5s ease-in-out infinite alternate;
+
+      .duration {
+        color: var(--effects-critical-color);
       }
     }
   }
@@ -151,6 +172,16 @@
 
     to {
       opacity: 0.35;
+    }
+  }
+
+  @keyframes pulse {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0.55;
     }
   }
 </style>

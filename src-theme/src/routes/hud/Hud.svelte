@@ -125,7 +125,7 @@
                 {:else if c.name === "Keystrokes"}
                     <Keystrokes/>
                 {:else if c.name === "Effects"}
-                    <Effects/>
+                    <Effects settings={c.settings}/>
                 {:else if c.name === "Text"}
                     <Text settings={c.settings}/>
                 {:else if c.name === "Image"}

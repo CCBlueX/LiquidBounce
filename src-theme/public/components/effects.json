@@ -9,5 +9,12 @@
     "verticalAlignment": "Bottom",
     "verticalOffset": 15
   },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "RomanNumerals",
+      "value": false
+    }
+  ],
   "tweaks": ["DISABLE_STATUS_EFFECT_OVERLAY"]
 }
