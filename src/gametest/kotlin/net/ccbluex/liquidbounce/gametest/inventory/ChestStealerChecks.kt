@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.gametest.inventory
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -28,6 +29,7 @@ import net.minecraft.world.item.Items
 import java.util.SequencedSet
 
 private const val STEAL_TICKS = 100
+private const val IDLE_TICKS = 40
 
 /**
  * With a whitelist ChestStealer takes only the listed items and closes the chest once only other items are left.
@@ -50,6 +52,33 @@ fun InventoryBench.checkChestStealerItemFilter() {
         check(count(Items.DIRT) == 0) { "dirt was taken although it is not whitelisted" }
         val dirtLeft = onServer { player -> (player.level().getBlockEntity(chest) as Container).countItem(Items.DIRT) }
         check(dirtLeft == 10) { "the chest holds $dirtLeft dirt instead of 10" }
+    }
+    command("setblock ${chest.x} ${chest.y} ${chest.z} minecraft:air")
+}
+
+/**
+ * With a hold key ChestStealer leaves the chest alone until the key is held.
+ */
+fun InventoryBench.checkChestStealerHoldKey() {
+    val chest = origin.offset(2, 0, 0)
+    command("setblock ${chest.x} ${chest.y} ${chest.z} minecraft:chest")
+    command("item replace block ${chest.x} ${chest.y} ${chest.z} container.0 with minecraft:diamond 3")
+
+    withModule(ModuleChestStealer, {
+        ModuleChestStealer.setting<InputConstants.Key>("HoldKey").set(testKey)
+    }) {
+        onServer { player -> player.openMenu(player.level().getBlockEntity(chest) as MenuProvider) }
+        context.waitTicks(IDLE_TICKS)
+        check(count(Items.DIAMOND) == 0) { "diamonds were taken without the hold key" }
+
+        context.input.holdKey(testKey)
+        try {
+            waitUntil(STEAL_TICKS, { "the diamonds were not taken with the hold key held" }) {
+                count(Items.DIAMOND) == 3
+            }
+        } finally {
+            context.input.releaseKey(testKey)
+        }
     }
     command("setblock ${chest.x} ${chest.y} ${chest.z} minecraft:air")
 }

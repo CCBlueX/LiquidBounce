@@ -34,6 +34,7 @@ class ChestStealerGameTest : FabricClientGameTest {
             val bench = InventoryBench(context, world.server)
             bench.setUp()
             bench.checkChestStealerItemFilter()
+            bench.checkChestStealerHoldKey()
         }
     }
 

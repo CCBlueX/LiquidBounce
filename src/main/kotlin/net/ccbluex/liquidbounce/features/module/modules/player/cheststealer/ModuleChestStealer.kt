@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
+import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.swap
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleValueGroup
 import net.ccbluex.liquidbounce.utils.inventory.ContainerItemSlot
@@ -66,6 +68,11 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
 
+    /**
+     * When set, only steals while this key is held.
+     */
+    private val holdKey by key("HoldKey")
+
     private val selectionMode = choices("SelectionMode", Distance, arrayOf(Distance, Index, Random)).apply(::tagBy)
     private val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     private val quickSwaps by boolean("QuickSwaps", true)
@@ -91,6 +98,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER
 
     @Suppress("unused")
     private val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
+        if (holdKey != InputConstants.UNKNOWN && !holdKey.isPressed) {
+            return@handler
+        }
+
         // Check if we are in a chest screen
         val screen = getChestScreen() ?: return@handler
 
