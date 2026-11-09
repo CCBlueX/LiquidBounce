@@ -741,7 +741,6 @@
   "liquidbounce.module.timeShift.description": "滥用Minecraft 1.8的机制来加速恢复，并移除火焰和毒药等负面状态效果。",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "警告：Time Shift（Regen、Zoot等）仅支持1.8版本的Minecraft服务器！但是，你的客户端版本可以更高（1.17+）以便绕过。",
   "liquidbounce.module.timer.description": "改变游戏的速度。",
-  "liquidbounce.module.timerRange.description": "当处于敌人范围内时加速游戏时间。",
   "liquidbounce.module.tntTimer.description": "突出显示点燃的TNT，并显示爆炸剩余时间。",
   "liquidbounce.module.totemEffect.description": "当玩家使用图腾时渲染特效。",
   "liquidbounce.module.tpAura.description": "自动传送到敌人周围并攻击它们。",

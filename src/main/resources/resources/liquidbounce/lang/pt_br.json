@@ -514,7 +514,6 @@
   "liquidbounce.module.tickBase.description": "Acumula ticks para conseguir golpes antecipados em um inimigo.",
   "liquidbounce.module.timeShift.description": "Explora mecânicas do Minecraft 1.8 para regeneração mais rápida e remove efeitos negativos como fogo e veneno.",
   "liquidbounce.module.timer.description": "Muda a velocidade do jogo.",
-  "liquidbounce.module.timerRange.description": "Acelera o tempo do jogo quando você está no alcance de um inimigo.",
   "liquidbounce.module.tntTimer.description": "Destaca os TNTs ativos.",
   "liquidbounce.module.totemEffect.description": "Exibe um efeito quando os jogadores usam um totem.",
   "liquidbounce.module.tpAura.description": "Teletransporta e ataca automaticamente inimigos ao seu redor.",

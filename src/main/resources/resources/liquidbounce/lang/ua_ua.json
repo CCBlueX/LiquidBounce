@@ -490,7 +490,6 @@
   "liquidbounce.module.timeShift.description": "Опис зсуву часу",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "Попередження: не версія 1.8",
   "liquidbounce.module.timer.description": "Змінює швидкість роботи гри (на стороні клієнта).",
-  "liquidbounce.module.timerRange.description": "Опис діапазону таймера",
   "liquidbounce.module.tntTimer.description": "Підсвічує активні ТНТ.",
   "liquidbounce.module.totemEffect.description": "Ефект при використанні тотема гравцями",
   "liquidbounce.module.tpAura.description": "Автоматично телепортується та атакує ворогів навколо вас.",

@@ -464,7 +464,6 @@
   "liquidbounce.module.tickBase.description": "ティックを蓄積し、敵への攻撃をより早く命中させます。",
   "liquidbounce.module.timeShift.description": "Minecraft 1.8の仕組みを悪用して高速回復を可能にし、炎や毒などの状態異常を除去します。",
   "liquidbounce.module.timer.description": "ゲームの実行速度を変更します。",
-  "liquidbounce.module.timerRange.description": "敵の射程圏内にいるとき、ゲーム時間を早めます。",
   "liquidbounce.module.tntTimer.description": "アクティブなTNTを強調表示します。",
   "liquidbounce.module.totemEffect.description": "プレイヤーがトーテムを使用する際にエフェクトを描画します。",
   "liquidbounce.module.tpAura.description": "周囲の敵に自動的にテレポートして攻撃します。",

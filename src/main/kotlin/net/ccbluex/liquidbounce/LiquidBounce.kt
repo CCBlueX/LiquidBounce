@@ -87,6 +87,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -282,6 +283,7 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         BlinkManager
+        Timer
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
         TeleportDispatcher

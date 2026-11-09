@@ -527,7 +527,6 @@
   "liquidbounce.module.timeShift.description": "Misbruikt 1.8-mechanismes voor snellere regeneratie en verwijdert negatieve effecten zoals vuur en gif.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "LET OP: Time Shift (Regen, Zoot, enz.) werkt alleen op 1.8-servers! Je clientversie mag wel hoger zijn (1.17+) om te kunnen bypassen.",
   "liquidbounce.module.timer.description": "Wijzigt de snelheid waarop het spel lokaal draait.",
-  "liquidbounce.module.timerRange.description": "Versnelt de lokale tickrate wanneer je binnen bereik van een vijand bent.",
   "liquidbounce.module.tntTimer.description": "Markeert actieve TNT's.",
   "liquidbounce.module.totemEffect.description": "Rendert een effect wanneer spelers een totem gebruiken.",
   "liquidbounce.module.tpAura.description": "Teleport en val vijanden in je omgeving aan.",

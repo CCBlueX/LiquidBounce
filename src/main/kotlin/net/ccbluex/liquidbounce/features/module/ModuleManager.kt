@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCoold
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTickBase
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTimerRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
@@ -470,7 +469,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleKillAura,
             ModuleTpAura,
             ModuleSuperKnockback,
-            ModuleTimerRange,
             ModuleTickBase,
             ModuleVelocity,
             ModuleBacktrack,
