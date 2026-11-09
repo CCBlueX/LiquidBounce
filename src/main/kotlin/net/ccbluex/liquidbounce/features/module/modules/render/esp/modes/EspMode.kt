@@ -47,6 +47,11 @@ sealed class EspMode(
     sealed class BoxBased(name: String) : EspMode(name) {
         protected val expand by float("Expand", 0.05f, 0f..0.5f)
 
+        /**
+         * Shows only the nearest targets, `0` for all.
+         */
+        private val limit by int("Limit", 0, 0..50)
+
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
             pool.recycleAll(prepared)
@@ -65,6 +70,12 @@ sealed class EspMode(
                 state.entity = entity
                 state.localBox = localBox
                 prepared.add(state)
+            }
+
+            if (limit > 0 && prepared.size > limit) {
+                prepared.sortBy { it.entity!!.position().cameraDistanceSq() }
+                pool.recycleAll(prepared.subList(limit, prepared.size))
+                prepared.size(limit)
             }
         }
 
