@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.render.entity
 import net.ccbluex.liquidbounce.utils.render.isCustom
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.renderer.entity.state.EntityRenderState
+import net.minecraft.world.entity.Entity
 import org.joml.Vector2f
 
 /**
@@ -54,6 +55,15 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
+
+    /**
+     * Only the nearest tags are drawn, 0 draws all.
+     */
+    private val maxTags by int("MaxTags", 0, 0..64)
+
+    init {
+        tree(NametagHealthBar)
+    }
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -86,7 +96,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         for (nametagInfo in nametagsToRender) {
             val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
 
-            drawNametag(nametagInfo, x, y)
+            drawNametag(nametagInfo, x, y, tickDelta)
         }
     }
 
@@ -103,12 +113,31 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
             val scale = scale.transform(distance)
             if (scale > 0.01f) {
                 val nametag = nametagPool.borrow()
-                nametag.update(entity, scale, distance)
+                nametag.place(entity, scale, distance)
                 nametagsToRender += nametag
             }
         }
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
+
+        val maxTags = maxTags
+        if (maxTags > 0) {
+            while (nametagsToRender.size > maxTags) {
+                nametagPool.recycle(nametagsToRender.removeLast())
+            }
+        }
+
+        NametagHealthBar.beginCollection()
+        for (nametag in nametagsToRender) {
+            nametag.build()
+        }
+        NametagHealthBar.endCollection()
     }
+
+    /**
+     * The entities that have a nametag, nearest first.
+     */
+    val taggedEntities: List<Entity>
+        get() = nametagsToRender.mapNotNull { it.entity }
 
     private val NAMETAG_COMPARATOR: Comparator<NametagRenderState> =
         Comparator { a, b -> a.distance compareTo b.distance }

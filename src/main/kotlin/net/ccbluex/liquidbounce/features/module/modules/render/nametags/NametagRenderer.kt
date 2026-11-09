@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagHealthBar.drawHealthBar
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -31,7 +32,12 @@ private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
 private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
-internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX: Float, posY: Float) {
+internal fun GuiGraphicsExtractor.drawNametag(
+    nametag: NametagRenderState,
+    posX: Float,
+    posY: Float,
+    tickDelta: Float,
+) {
     if (nametag.entity == null) {
         return
     }
@@ -74,6 +80,11 @@ internal fun GuiGraphicsExtractor.drawNametag(nametag: NametagRenderState, posX:
         outlineColor = Color4b.BLACK,
         outlineWidth = ModuleNametags.borderWidth / fontScale,
     )
+
+    nametag.health?.let { health ->
+        val barTop = y2 + (ModuleNametags.borderWidth + 1f) / fontScale
+        drawHealthBar(health, x1, barTop, x2, barTop + NametagHealthBar.height / fontScale, tickDelta)
+    }
 
     // Text
     fontRenderer.draw(text) {
