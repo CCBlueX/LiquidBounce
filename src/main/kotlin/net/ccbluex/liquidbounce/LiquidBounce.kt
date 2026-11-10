@@ -86,6 +86,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.KillDeathTracker
 import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -303,6 +304,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
+        KillDeathTracker
         PlayerStatisticsTracker
         ItemImageAtlas
         ItemStackListRenderer

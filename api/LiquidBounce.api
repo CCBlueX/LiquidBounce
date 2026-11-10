@@ -469,12 +469,22 @@ public final class net/ccbluex/liquidbounce/event/events/PacketEvent : net/ccblu
 	public final fun getPacket ()Lnet/minecraft/network/protocol/Packet;
 }
 
+public final class net/ccbluex/liquidbounce/event/events/PlayerDeathEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getKiller ()Ljava/lang/String;
+}
+
 public final class net/ccbluex/liquidbounce/event/events/PlayerJumpEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
 	public fun <init> (FF)V
 	public final fun getMotion ()F
 	public final fun getYaw ()F
 	public final fun setMotion (F)V
 	public final fun setYaw (F)V
+}
+
+public final class net/ccbluex/liquidbounce/event/events/PlayerKillEvent : net/ccbluex/liquidbounce/event/Event {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getVictim ()Ljava/lang/String;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/PlayerMoveEvent : net/ccbluex/liquidbounce/event/Event {
