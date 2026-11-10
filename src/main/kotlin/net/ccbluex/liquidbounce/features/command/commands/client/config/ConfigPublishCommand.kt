@@ -35,9 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
 
-/**
- * Publishes the current settings to the marketplace as a new config
- */
 object ConfigPublishCommand {
 
     fun CmdLiteralScope.publish() {
@@ -109,8 +106,12 @@ object ConfigPublishCommand {
         handler: suspend CmdI18n.(name: String, visibility: String?, description: String) -> Unit
     ) {
         argument("name", ClientStringArgumentType.string()) { name ->
-            optional("visibility", ClientStringArgumentType.word(), default = null, suggests = visibilitySuggestions) {
-                    visibility ->
+            optional(
+                "visibility",
+                ClientStringArgumentType.word(),
+                default = null,
+                suggests = visibilitySuggestions
+            ) { visibility ->
                 optional("description", StringArgumentType.greedyString(), default = "") { description ->
                     execSuspend { ctx ->
                         handler(ctx.get(name), ctx.get(visibility), ctx.get(description))
@@ -122,9 +123,7 @@ object ConfigPublishCommand {
 
     private fun CmdI18n.published(item: MarketplaceItem) {
         chat(regular(t("publish.published", variable(item.name))))
-        item.shareCode?.let { code ->
-            chat(regular(t("info.shareCode", variable(code).copyable())))
-        }
+        item.shareCode?.let { chat(regular(t("info.shareCode", variable(it).copyable()))) }
     }
 
 }

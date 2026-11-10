@@ -31,9 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Edits the listing of the tracked config
- */
 object ConfigSetCommand {
 
     private val LIST_SEPARATOR = Regex("[,\\s]+")

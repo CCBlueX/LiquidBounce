@@ -1,0 +1,188 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
+
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
+import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.event.events.NotificationEvent.Severity
+import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
+import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
+import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
+import net.ccbluex.liquidbounce.features.marketplace.UpdateResult
+import net.ccbluex.liquidbounce.features.marketplace.installWithDependencies
+import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.notFound
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+
+private const val PAGE_SIZE = 20
+private const val REVISION_PAGE_SIZE = 50
+
+private val marketplaceI18n = object : CmdI18n {
+    override val path = "marketplace"
+}
+
+private fun Route.getItems() = get {
+    val name = call.queryParameters["type"]
+    val type = MarketplaceItemType.entries.find { it.tag.equals(name, true) && it.isSubscribable }
+        ?: call.badRequest("Unknown type $name")
+    val list = call.listRequest
+
+    call.respondMarketplace {
+        val response = MarketplaceApi.getMarketplaceItems(
+            page = list.page,
+            limit = PAGE_SIZE,
+            query = list.query,
+            type = type,
+            filter = MarketplaceApi.Filter(sort = list.sort)
+        )
+        val items = coroutineScope { response.items.map { async { it.toItemData() } }.awaitAll() }
+        PageData(items, response.pagination)
+    }
+}
+
+private fun Route.getItem() = get {
+    val id = call.requireId()
+    call.respondMarketplace {
+        val item = MarketplaceApi.getMarketplaceItem(id)
+        ItemDetailData(item.toItemData(), item.description, clientVersionTag, getVersions(item))
+    }
+}
+
+/**
+ * Every revision, newest first. Of an add-on, only those the marketplace offers for this game fit.
+ */
+private suspend fun getVersions(item: MarketplaceItem): List<VersionData> {
+    val revisions = getAllRevisions(item.id)
+    val compatibleIds = if (item.type == MarketplaceItemType.ADDON) {
+        getAllRevisions(item.id, AddonInstaller.minecraft, AddonInstaller.liquidbounce).mapTo(HashSet()) { it.id }
+    } else {
+        null
+    }
+    val installed = MarketplaceManager.getItem(item.id)?.installedRevisionId
+
+    return revisions.map { revision ->
+        val isCompatible = compatibleIds == null || revision.id in compatibleIds
+        VersionData(revision.toRevisionData(), revision.id == installed, isCompatible)
+    }
+}
+
+private suspend fun getAllRevisions(id: Int, minecraft: String? = null, liquidbounce: String? = null) =
+    collectAllPages { page ->
+        MarketplaceApi.getMarketplaceItemRevisions(id, page, REVISION_PAGE_SIZE, minecraft, liquidbounce)
+    }
+
+/**
+ * Installs what the item needs first, like `.marketplace subscribe`.
+ */
+private fun Route.postInstall() = post("/install") {
+    call.handleMarketplaceErrors {
+        val id = call.requireId()
+        val (installed, unavailable) = installWithDependencies(MarketplaceApi.getMarketplaceItem(id))
+        if (installed.none { it.id == id }) {
+            throw NoCompatibleRevisionException(unavailable.first())
+        }
+
+        sendFeedback(marketplaceI18n.t("subscribe.success", variable(id.toString())))
+        val needed = installed.filter { it.id != id }.joinToString(", ") { it.name }
+        if (needed.isNotEmpty()) {
+            mc.execute { chat(regular(marketplaceI18n.t("subscribe.dependencies", variable(needed)))) }
+        }
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
+private fun Route.postUpdate() = post("/update") {
+    call.respondMarketplace {
+        val id = call.requireId()
+        val subscribed = MarketplaceManager.getItem(id) ?: call.notFound(id.toString(), "Not installed")
+        val idText = variable(id.toString())
+        when (val result = MarketplaceManager.update(subscribed)) {
+            is UpdateResult.Updated ->
+                sendFeedback(marketplaceI18n.t("update.success", idText, variable(result.revision.version)))
+            is UpdateResult.NoUpdate -> sendFeedback(marketplaceI18n.t("update.noUpdate", idText), Severity.INFO)
+            is UpdateResult.Incompatible -> call.badRequest(result.unavailable.text().string)
+            is UpdateResult.Failed ->
+                throw (result.error as? Exception ?: Exception(result.error)).toHttpStatusException()
+        }
+        MarketplaceApi.getMarketplaceItem(id).toItemData()
+    }
+}
+
+private fun Route.postRemove() = post("/remove") {
+    call.handleMarketplaceErrors {
+        val id = call.requireId()
+        if (!MarketplaceManager.isSubscribed(id)) {
+            call.notFound(id.toString(), "Not installed")
+        }
+
+        MarketplaceManager.unsubscribe(id)
+        sendFeedback(marketplaceI18n.t("unsubscribe.success", variable(id.toString())))
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
+private fun Route.postApply() = post("/apply") {
+    call.handleMarketplaceErrors {
+        val id = call.requireId()
+        val theme = ThemeManager.marketplaceThemes[id] ?: call.notFound(id.toString(), "Theme not loaded")
+
+        withContext(Dispatchers.Main) {
+            ThemeManager.theme = theme
+            ConfigSystem.store(ThemeManager)
+        }
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
+/**
+ * Answered without asking the marketplace.
+ */
+private fun Route.getInstalled() = get("/installed") {
+    call.respond(MarketplaceManager.subscribedItems.map { item -> InstalledItemData(item.id, item.type, item.name) })
+}
+
+internal fun Route.marketplaceItemRoutes() = route("/marketplace/items") {
+    getItems()
+    getInstalled()
+    route("/{id}") {
+        getItem()
+        postInstall()
+        postUpdate()
+        postRemove()
+        postApply()
+    }
+}
