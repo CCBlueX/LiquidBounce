@@ -25,11 +25,13 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.response.respond
 import kotlinx.coroutines.CancellationException
+import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
+import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent.Severity
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionException
 import net.ccbluex.liquidbounce.integration.interop.HttpStatusException
@@ -39,71 +41,72 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.text.rootDomain
-import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-// What the marketplace routes for themes share: reaching the marketplace, the account and list queries.
-
 /**
- * Runs [block] against the marketplace: an unreachable marketplace answers 503, a refused request
- * the marketplace's own status and reason. Themes show no errors of these actions, so the player is told those.
+ * Turns what goes wrong in [block] into an [HttpStatusException]. Themes show no errors for actions, so a
+ * failed one is announced to the player.
  */
-internal suspend inline fun <T> ApplicationCall.marketplace(block: () -> T): T = try {
+internal suspend inline fun <T> ApplicationCall.handleMarketplaceErrors(block: () -> T): T = try {
     block()
 } catch (e: Exception) {
     val failure = when (e) {
         is HttpStatusException -> e
         is CancellationException -> throw e
-        else -> marketplaceFailure(e)
+        else -> e.toHttpStatusException()
     }
     if (request.httpMethod != HttpMethod.Get) {
-        val reason = Component.literal(failure.body["reason"] ?: failure.status.description)
-        mc.execute {
-            chat(markAsError(reason))
-            notification("Marketplace", reason, NotificationEvent.Severity.ERROR)
-        }
+        sendFeedback((failure.body["reason"] ?: failure.status.description).asText(), Severity.ERROR)
     }
     throw failure
 }
 
-/**
- * Responds with what [block] gets from the marketplace, as [marketplace] does.
- */
 internal suspend inline fun <reified T : Any> ApplicationCall.respondMarketplace(block: () -> T) =
-    respond(marketplace(block))
+    respond(handleMarketplaceErrors(block))
 
-internal fun marketplaceFailure(e: Exception): HttpStatusException {
-    val http = e.httpException
+internal fun Exception.toHttpStatusException(): HttpStatusException {
+    val http = httpException
+    val reason = message ?: javaClass.simpleName
     return when {
         http != null -> {
             logger.warn("Marketplace request failed: ${http.message}")
-            HttpStatusException(
-                HttpStatusCode.fromValue(http.code),
-                mapOf("reason" to runCatching { JsonParser.parseString(http.content).asJsonObject["error"].asString }
-                    .getOrDefault(http.content))
-            )
+            createStatusException(HttpStatusCode.fromValue(http.code), http.reason)
         }
 
-        e is IOException -> HttpStatusException(
-            HttpStatusCode.ServiceUnavailable,
-            mapOf("reason" to "Can't reach the marketplace")
-        )
+        this is IOException -> createStatusException(HttpStatusCode.ServiceUnavailable, "Can't reach the marketplace")
 
-        e is IllegalStateException || e is IllegalArgumentException || e is NoCompatibleRevisionException ->
-            HttpStatusException(HttpStatusCode.BadRequest, mapOf("reason" to (e.message ?: e.javaClass.simpleName)))
+        this is IllegalStateException || this is IllegalArgumentException || this is NoCompatibleRevisionException ->
+            createStatusException(HttpStatusCode.BadRequest, reason)
 
         else -> {
-            logger.error("Marketplace request failed", e)
-            HttpStatusException(
-                HttpStatusCode.InternalServerError,
-                mapOf("reason" to (e.message ?: e.javaClass.simpleName))
-            )
+            logger.error("Marketplace request failed", this)
+            createStatusException(HttpStatusCode.InternalServerError, reason)
         }
     }
+}
+
+private fun createStatusException(status: HttpStatusCode, reason: String) =
+    HttpStatusException(status, mapOf("reason" to reason))
+
+/**
+ * The marketplace answers errors as `{"error": "..."}`.
+ */
+private val HttpException.reason
+    get() = runCatching { JsonParser.parseString(content).asJsonObject["error"].asString }.getOrDefault(content)
+
+/**
+ * Tells the player how an action went, in the chat and as a notification, like the commands do.
+ */
+internal fun sendFeedback(message: MutableComponent, severity: Severity = Severity.SUCCESS) = mc.execute {
+    chat(if (severity == Severity.ERROR) markAsError(message) else regular(message))
+    notification("Marketplace", message, severity)
 }
 
 internal suspend fun ApplicationCall.requireSession(): OAuthSession {
@@ -111,37 +114,43 @@ internal suspend fun ApplicationCall.requireSession(): OAuthSession {
     if (account == EMPTY_ACCOUNT) {
         unauthorized("Not logged in")
     }
-    return marketplace { account.takeSession() }
+    return handleMarketplaceErrors { account.takeSession() }
 }
 
 /**
- * The session of the account, `null` while logged out or when it cannot be renewed, so browsing goes on
- * without it.
+ * `null` while logged out or when the session cannot be renewed, so browsing goes on without it.
  */
-internal suspend fun optionalSession(): OAuthSession? {
+internal suspend fun getSessionOrNull(): OAuthSession? {
     val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
     return runCatching { account.takeSession() }
         .onFailure { logger.debug("Failed to renew the session", it) }
         .getOrNull()
 }
 
-internal fun currentServer() = mc.currentServer?.ip?.dropPort()?.rootDomain()
+internal fun getCurrentServerDomain() = mc.currentServer?.ip?.dropPort()?.rootDomain()
 
 /**
- * The API sends UTC without a zone.
+ * The marketplace sends UTC without a zone.
  */
-internal fun epochMillis(dateTime: String?): Long? = dateTime?.let {
+internal fun parseEpochMillis(dateTime: String?): Long? = dateTime?.let {
     runCatching { LocalDateTime.parse(it).toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
 }
 
-/**
- * The page, search and order of a list request.
- */
-internal class ListQuery(val page: Int, val query: String?, val sort: MarketplaceApi.Sort)
+internal suspend inline fun <T> collectAllPages(fetch: (page: Int) -> PaginatedResponse<T>): List<T> {
+    val items = mutableListOf<T>()
+    var page = 1
+    do {
+        val response = fetch(page)
+        items += response.items
+    } while (page++ < response.pagination.pages)
+    return items
+}
 
-internal val ApplicationCall.listQuery
+internal class ListRequest(val page: Int, val query: String?, val sort: MarketplaceApi.Sort)
+
+internal val ApplicationCall.listRequest
     get() = with(request.queryParameters) {
-        ListQuery(
+        ListRequest(
             page = get("page")?.toIntOrNull() ?: 1,
             query = get("query")?.trim()?.takeIf(String::isNotEmpty),
             sort = if (get("sort") == "new") MarketplaceApi.Sort.CREATED else MarketplaceApi.Sort.SCORE,

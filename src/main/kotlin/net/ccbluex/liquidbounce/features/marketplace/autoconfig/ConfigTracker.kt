@@ -50,11 +50,12 @@ import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.marketplace.ItemDependencies
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.features.marketplace.Unavailable
-import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
+import net.ccbluex.liquidbounce.features.marketplace.UnavailableItem
+import net.ccbluex.liquidbounce.features.marketplace.getDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installDependencies
-import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
+import net.ccbluex.liquidbounce.features.marketplace.shouldRestartAfterInstall
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.io.atomicWrite
@@ -65,17 +66,12 @@ import java.io.Reader
 import kotlin.io.path.writeBytes
 
 /**
- * Tracks the marketplace config the client runs.
- *
- * A loaded config is [State.TRACKED] while the settings match what was loaded and
- * [State.EDITING] once they differ. The settings from before the first load are kept
+ * Tracks the marketplace config the client runs: [State.TRACKED] while the settings match what
+ * was loaded, [State.EDITING] once they differ. The settings from before the first load are kept
  * as a backup until the user restores or detaches.
  *
- * A config's config dependencies are applied before it, depth-first in their order, and
- * its add-on and script dependencies are installed. The settings after the dependencies are
- * its base: an overlay only publishes what differs from it.
- *
- * Loading a local config over it stops tracking, unless the local config was saved from it; see [loadedLocal].
+ * A config's config dependencies are applied before it. The settings after them are its base:
+ * an overlay only publishes what differs from it.
  */
 @Suppress("TooManyFunctions")
 object ConfigTracker : Config("MarketplaceConfig"), EventListener {
@@ -89,13 +85,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     data class Step(val itemId: Int, val revisionId: Int)
 
     /**
-     * Dependencies [load] installed; [restartRequired] when one only works after a restart. [unavailable]
-     * are the ones left out since they or what they need do not load with this game.
+     * [unavailable] are the dependencies skipped since they do not load with this game.
      */
     data class LoadResult(
         val installed: List<MarketplaceItem>,
         val restartRequired: Boolean,
-        val unavailable: List<Unavailable>
+        val unavailable: List<UnavailableItem>
     )
 
     var state by enumChoice("State", State.NONE)
@@ -150,8 +145,9 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     private val backedUpConfigs get() = listOf(ModuleManager.modulesConfig, SpooferManager)
 
-    private fun cacheFile(itemId: Int, revisionId: Int) =
-        MarketplaceManager.marketplaceRoot.resolve("configs/$itemId/$revisionId.json")
+    private fun cacheDir(itemId: Int) = MarketplaceManager.marketplaceRoot.resolve("configs/$itemId")
+
+    private fun cacheFile(itemId: Int, revisionId: Int) = cacheDir(itemId).resolve("$revisionId.json")
 
     private fun backupFile(name: String) = File(ConfigSystem.backupFolder, "$name.zip")
 
@@ -169,70 +165,52 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     }
 
     /**
-     * Applies [revisionId] of [item] after its config dependencies and installs its add-on and
-     * script dependencies. A full load starts tracking it, a load restricted to [modules] only
-     * applies that slice of every step.
+     * Applies [revisionId] of [item] after its config dependencies and installs its add-on and script
+     * dependencies. A load restricted to [modules] applies that slice of every step and does not track.
      */
     suspend fun load(
         item: MarketplaceItem,
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = dependenciesOf(item.id)
+        val dependencies = getDependencies(item.id)
         val (installed, unavailable) = installDependencies(dependencies.installables)
-        val chain = dependencies.configs.map { Step(it.item.id, it.revision.id) }
-        val configs = (chain + Step(item.id, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
+        val chain = dependencies.configSteps()
+        val configs = readConfigs(chain + Step(item.id, revisionId))
 
         withContext(Dispatchers.Main) {
             val base = apply(configs, modules)
 
-            if (modules.isNotEmpty()) {
+            if (modules.isEmpty()) {
+                track(item, revisionId, chain, base)
+            } else {
                 recheck()
-                return@withContext
-            }
-
-            updateTracking {
-                itemId = item.id
-                itemName = item.name
-                itemUid = item.uid
-                itemAuthor = item.author.orEmpty()
-                this.revisionId = revisionId
-                chainText = encodeChain(chain)
-                baseText = base?.let(::encodeHashes).orEmpty()
-                baselineText = encodeHashes(snapshot())
-                state = State.TRACKED
-                localName = ""
             }
         }
 
         return LoadResult(
             installed,
-            installed.any { it.installNeedsRestart },
+            installed.any { it.shouldRestartAfterInstall },
             unavailable
         )
     }
 
     /**
-     * The modules loading [revisionId] of [item] sets, to restrict a load to. Only the revisions it applies are
-     * downloaded, to the cache [load] reads them from.
+     * The modules loading [revisionId] of [item] sets, its config dependencies included.
      */
-    internal suspend fun modulesToLoad(item: MarketplaceItem, revisionId: Int): List<String> {
-        val steps = dependenciesOf(item.id).configs.map { Step(it.item.id, it.revision.id) } + Step(item.id, revisionId)
-        return steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
+    internal suspend fun getLoadableModuleNames(item: MarketplaceItem, revisionId: Int): List<String> {
+        val steps = getDependencies(item.id).configSteps() + Step(item.id, revisionId)
+        return steps.flatMap { getModuleNames(it.itemId, it.revisionId) }.distinct()
     }
 
-    /**
-     * The modules [revisionId] of [itemId] sets.
-     */
-    internal suspend fun modules(itemId: Int, revisionId: Int): List<String> {
-        val config = readConfig(revisionFile(itemId, revisionId))
+    internal suspend fun getModuleNames(itemId: Int, revisionId: Int): List<String> {
+        val config = readConfig(itemId, revisionId)
         val modules = if (config.string("name") == "modules") config else config.obj("modules")
         return modules?.get("value")?.asJsonArray?.map { it.asJsonObject["name"].asString }.orEmpty()
     }
 
     /**
-     * Applies a config that does not come from the marketplace. It stops tracking but keeps
-     * the backup.
+     * Applies a config that does not come from the marketplace. It stops tracking but keeps the backup.
      */
     suspend fun loadExternal(source: CharSequence, modules: Collection<ValueGroup> = emptyList()) {
         val config = publicGson.newJsonReader(Reader.of(source)).use { it.parseTree().asJsonObject }
@@ -240,17 +218,14 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         withContext(Dispatchers.Main) {
             apply(listOf(config), modules)
 
-            if (modules.isNotEmpty()) {
-                recheck()
-            } else {
+            if (modules.isEmpty()) {
                 updateTracking { clearItem() }
+            } else {
+                recheck()
             }
         }
     }
 
-    /**
-     * Id of the tracked config, which a local config saved now keeps as its origin.
-     */
     val trackedItemId get() = itemId.takeIf { state != State.NONE }
 
     /**
@@ -280,7 +255,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     suspend fun revert() {
         check(state != State.NONE) { "No tracked config" }
 
-        val configs = (chain + Step(itemId, revisionId)).map { readConfig(revisionFile(it.itemId, it.revisionId)) }
+        val configs = readConfigs(chain + Step(itemId, revisionId))
         withContext(Dispatchers.Main) {
             apply(configs, emptyList())
             updateTracking {
@@ -290,9 +265,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         }
     }
 
-    /**
-     * Returns to the settings from before the first marketplace load.
-     */
     suspend fun restoreBackup() = withContext(Dispatchers.Main) {
         check(hasBackup) { "No backup to restore" }
 
@@ -328,7 +300,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         val (item, revision) = publish(session, name, description, details, null) { }
 
         withContext(Dispatchers.Main) {
-            track(item, revision, emptyList(), null)
+            track(item, revision.id, emptyList(), null)
         }
         return item
     }
@@ -380,7 +352,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         ) { item -> MarketplaceApi.addItemDependency(session, item.id, baseId) }
 
         withContext(Dispatchers.Main) {
-            track(item, revision, chain, base)
+            track(item, revision.id, chain, base)
         }
         return item
     }
@@ -419,7 +391,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         val id = itemId
         MarketplaceApi.deleteMarketplaceItem(session, id)
-        MarketplaceManager.marketplaceRoot.resolve("configs/$id").deleteRecursively()
+        cacheDir(id).deleteRecursively()
         detach()
     }
 
@@ -455,7 +427,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     private fun track(
         item: MarketplaceItem,
-        revision: MarketplaceItemRevision,
+        revisionId: Int,
         chain: List<Step>,
         base: Map<String, String>?
     ) = updateTracking {
@@ -463,7 +435,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         itemName = item.name
         itemUid = item.uid
         itemAuthor = item.author.orEmpty()
-        revisionId = revision.id
+        this.revisionId = revisionId
         chainText = encodeChain(chain)
         baseText = base?.let(::encodeHashes).orEmpty()
         baselineText = encodeHashes(snapshot())
@@ -514,6 +486,20 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         return revision
     }
 
+    private fun ItemDependencies.configSteps() = configs.map { Step(it.item.id, it.revision.id) }
+
+    private suspend fun readConfigs(steps: List<Step>) = steps.map { readConfig(it.itemId, it.revisionId) }
+
+    private suspend fun readConfig(itemId: Int, revisionId: Int): JsonObject {
+        val file = revisionFile(itemId, revisionId)
+        return withContext(Dispatchers.IO) {
+            publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
+        }
+    }
+
+    /**
+     * The cached file of a revision, downloaded when missing.
+     */
     private suspend fun revisionFile(itemId: Int, revisionId: Int): File {
         val file = cacheFile(itemId, revisionId)
         if (!file.exists()) {
@@ -523,10 +509,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
             check(part.renameTo(file)) { "Failed to store revision $revisionId" }
         }
         return file
-    }
-
-    private suspend fun readConfig(file: File): JsonObject = withContext(Dispatchers.IO) {
-        publicGson.newJsonReader(file.bufferedReader()).use { it.parseTree().asJsonObject }
     }
 
     /**

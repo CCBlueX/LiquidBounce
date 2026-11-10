@@ -356,7 +356,7 @@ object LiquidBounce : EventListener {
                 MarketplaceItems.refresh()
             }
             launch {
-                MarketplaceManager.fillAuthors()
+                MarketplaceManager.updateMissingAuthors()
             }
             launch {
                 IpInfoApi.original
