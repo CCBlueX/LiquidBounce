@@ -111,8 +111,7 @@ public abstract class net/ccbluex/liquidbounce/config/types/group/ToggleableValu
 	protected final fun choices (Ljava/lang/String;[Lnet/ccbluex/liquidbounce/config/types/group/Mode;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public static synthetic fun choices$default (Lnet/ccbluex/liquidbounce/config/types/group/ToggleableValueGroup;Ljava/lang/String;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lnet/ccbluex/liquidbounce/config/types/group/ModeValueGroup;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getDebugName ()Ljava/lang/String;
 	public fun getEnabled ()Z
 	public final fun getEnabledValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public fun getGpuDevice ()Lcom/mojang/renderpearl/api/device/GpuDevice;
@@ -277,8 +276,6 @@ public abstract interface class net/ccbluex/liquidbounce/event/EventListener : n
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -291,8 +288,7 @@ public final class net/ccbluex/liquidbounce/event/EventListener$DefaultImpls {
 	public static fun after (Lnet/ccbluex/liquidbounce/event/EventListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public static fun children (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/util/List;
 	public static fun every (Lnet/ccbluex/liquidbounce/event/EventListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public static fun getDebugDisplayName (Lnet/ccbluex/liquidbounce/event/EventListener;)Lnet/minecraft/util/FormattedCharSequence;
-	public static fun getDebugOwnerId (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/lang/String;
+	public static fun getDebugName (Lnet/ccbluex/liquidbounce/event/EventListener;)Ljava/lang/String;
 	public static fun getRunning (Lnet/ccbluex/liquidbounce/event/EventListener;)Z
 	public static fun on (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public static fun on (Lnet/ccbluex/liquidbounce/event/EventListener;Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -515,9 +511,11 @@ public final class net/ccbluex/liquidbounce/event/events/RefreshArrayListEvent :
 	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
-public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent {
+public final class net/ccbluex/liquidbounce/event/events/ScreenEvent : net/ccbluex/liquidbounce/event/CancellableEvent, net/ccbluex/liquidbounce/integration/interop/protocol/event/WebSocketEvent {
 	public fun <init> (Lnet/minecraft/client/gui/screens/Screen;)V
 	public final fun getScreen ()Lnet/minecraft/client/gui/screens/Screen;
+	public fun getSerializeAsync ()Z
+	public fun getSerializer ()Lcom/google/gson/Gson;
 }
 
 public final class net/ccbluex/liquidbounce/event/events/TagEntityEvent : net/ccbluex/liquidbounce/event/Event {
@@ -614,8 +612,7 @@ public abstract class net/ccbluex/liquidbounce/features/addon/LiquidBounceAddon 
 	public final fun getAuthors ()Ljava/util/List;
 	public fun getCategories ()Ljava/util/List;
 	public final fun getColor ()Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getDebugName ()Ljava/lang/String;
 	public final fun getDescription ()Ljava/lang/String;
 	public fun getDisplayName ()Ljava/lang/String;
 	public fun getGpuDevice ()Lcom/mojang/renderpearl/api/device/GpuDevice;
@@ -844,8 +841,6 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun getBind ()Lnet/ccbluex/liquidbounce/utils/input/InputBind;
 	public final fun getBindValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun getCategory ()Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
 	public final fun getDisableActivation ()Z
 	public final fun getDisableOnQuit ()Z
 	public fun getExternalBind ()Z
@@ -1423,6 +1418,8 @@ public final class net/ccbluex/liquidbounce/render/engine/type/Color4b : java/la
 	public fun hashCode ()I
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;D)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;DDDD)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;F)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
+	public final fun interpolateTo (Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public final fun isTransparent ()Z
 	public static final fun ofHSB (FFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
 	public static final fun ofHSB (FFFF)Lnet/ccbluex/liquidbounce/render/engine/type/Color4b;
@@ -1652,6 +1649,14 @@ public class net/ccbluex/liquidbounce/utils/clicking/Clicker : net/ccbluex/liqui
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/utils/client/BalanceReset : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public final class net/ccbluex/liquidbounce/utils/client/Chronometer {
 	public fun <init> ()V
 	public fun <init> (J)V
@@ -1743,8 +1748,7 @@ public final class net/ccbluex/liquidbounce/utils/client/SilentHotbar : net/ccbl
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun getClientsideSlot ()I
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
+	public fun getDebugName ()Ljava/lang/String;
 	public fun getRunning ()Z
 	public final fun getServersideSlot ()I
 	public final fun isSlotModified ()Z
@@ -1762,19 +1766,32 @@ public final class net/ccbluex/liquidbounce/utils/client/SilentHotbar : net/ccbl
 public final class net/ccbluex/liquidbounce/utils/client/Timer : net/ccbluex/liquidbounce/event/EventListener {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/utils/client/Timer;
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public final fun balanceWithin (Lkotlin/ranges/IntRange;)F
+	public final fun burst (ILkotlin/ranges/IntRange;)I
 	public fun children ()Ljava/util/List;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
-	public fun getDebugDisplayName ()Lnet/minecraft/util/FormattedCharSequence;
-	public fun getDebugOwnerId ()Ljava/lang/String;
+	public final fun frameTicks (II)I
+	public final fun getBalance ()F
+	public final fun getBursting ()Z
+	public fun getDebugName ()Ljava/lang/String;
+	public final fun getRealTicks ()D
 	public fun getRunning ()Z
 	public final fun getTimerSpeed ()F
+	public final fun heldTicksWithin (I)I
+	public final fun hold (Lnet/ccbluex/liquidbounce/event/EventListener;I)V
+	public static synthetic fun hold$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;Lnet/ccbluex/liquidbounce/event/EventListener;IILjava/lang/Object;)V
+	public final fun isHeld ()Z
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun parent ()Lnet/ccbluex/liquidbounce/event/EventListener;
+	public final fun requestBalancedTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;Lkotlin/ranges/IntRange;)Z
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;)V
 	public final fun requestTimerSpeed (FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;I)V
 	public static synthetic fun requestTimerSpeed$default (Lnet/ccbluex/liquidbounce/utils/client/Timer;FLnet/ccbluex/liquidbounce/utils/kotlin/Priority;Lnet/ccbluex/liquidbounce/features/module/ClientModule;IILjava/lang/Object;)V
+	public final fun resetBalance ()V
+	public final fun scaleFrame (F)F
+	public final fun spendableTicks (Lkotlin/ranges/IntRange;)I
 	public fun unregister ()V
 }
 
@@ -2145,6 +2162,78 @@ public final class net/ccbluex/liquidbounce/utils/movement/DirectionalInput {
 
 public final class net/ccbluex/liquidbounce/utils/movement/MovementUtilsKt {
 	public static final fun stopXZVelocity (Lnet/minecraft/client/player/LocalPlayer;)V
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/flight/FlightNavigator : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/flight/GlideNavigator : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/flight/RoofBounce : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/ride/RideNavigator : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/route/RoutePlanner : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/teleport/TeleportDispatcher : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/terrain/SectionCache : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/walk/WalkActions : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/utils/navigation/walk/WalkNavigator : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
 public final class net/ccbluex/liquidbounce/utils/network/LocalPlayerFallDamageTracker : net/ccbluex/liquidbounce/event/EventListener {

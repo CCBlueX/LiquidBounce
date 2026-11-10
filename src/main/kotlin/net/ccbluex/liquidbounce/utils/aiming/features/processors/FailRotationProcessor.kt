@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -79,14 +79,14 @@ class FailRotationProcessor(owner: EventListener? = null)
             shiftRotation = Rotation(yawShift, pitchShift)
             ticksElapsed = 0
 
-            ModuleDebug.debugParameter(this, "Chance", chance)
-            ModuleDebug.debugParameter(this, "Duration", currentTransitionInDuration)
-            ModuleDebug.debugParameter(this, "Shift", shiftRotation)
+            debugParameter("Chance") { chance }
+            debugParameter("Duration") { currentTransitionInDuration }
+            debugParameter("Shift") { shiftRotation }
         } else {
             ticksElapsed++
         }
 
-        ModuleDebug.debugParameter(this, "Elapsed", ticksElapsed)
+        debugParameter("Elapsed") { ticksElapsed }
     }
 
     override fun process(
@@ -101,8 +101,8 @@ class FailRotationProcessor(owner: EventListener? = null)
             val deltaYaw = (prevRotation.yaw - serverRotation.yaw) * failFactor
             val deltaPitch = (prevRotation.pitch - serverRotation.pitch) * failFactor
 
-            ModuleDebug.debugParameter(this, "DeltaYaw", deltaYaw)
-            ModuleDebug.debugParameter(this, "DeltaPitch", deltaPitch)
+            debugParameter("DeltaYaw") { deltaYaw }
+            debugParameter("DeltaPitch") { deltaPitch }
 
             Rotation(
                 targetRotation.yaw + deltaYaw + shiftRotation.yaw,

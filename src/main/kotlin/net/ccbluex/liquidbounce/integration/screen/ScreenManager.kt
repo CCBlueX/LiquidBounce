@@ -119,8 +119,15 @@ object ScreenManager : EventListener {
         if (waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
                 browser.isInitialized && browser.state.isCompleted
             } == null) {
+            val stage = when {
+                !browser.isInitialized -> "the browser was never created"
+                browser.state == BrowserState.Idle -> "the page never started loading"
+                else -> "the page did not finish loading"
+            }
+            val openRequests = ClientInteropServer.openRequests()
+            logger.error("Unanswered interop requests: ${openRequests.ifEmpty { listOf("none") }.joinToString()}")
             ErrorHandler.fatal(
-                error = IllegalStateException("Timed out waiting for integration browser to initialize."),
+                error = IllegalStateException("Timed out waiting for integration browser to initialize: $stage."),
                 quickFix = QuickFixes.BROWSER_IS_NOT_RESPONDING
             )
         }

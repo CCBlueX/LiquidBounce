@@ -33,9 +33,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLineSegment
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK_SNAP
@@ -385,7 +386,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             }
 
         debugGeometry("predictedPos") {
-            ModuleDebug.DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
+            DebuggedPoint(predictedPos, Color4b.GREEN, size = 0.1)
         }
 
         val technique = activeTechnique
@@ -399,7 +400,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
             val a = optimalLine?.getNearestPointTo(b)  ?: return@debugGeometry null
 
             // Debug the line a-b
-            ModuleDebug.DebuggedLineSegment(
+            DebuggedLineSegment(
                 from = a,
                 to = b,
                 Color4b.RED,

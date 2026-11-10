@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoShoot
@@ -46,9 +45,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCoold
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTickBase
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTimerRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
@@ -60,7 +60,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVe
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAbortBreaking
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClip
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDamage
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleExtendedFirework
@@ -70,12 +69,13 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMoreCarry
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNameCollector
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleOldRegen
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleResetVL
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleSleepWalker
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTimeShift
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleVehicleOneHit
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleYggdrasilSignatureFix
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
@@ -137,7 +137,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSneak
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStrafe
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTridentBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleVehicleControl
@@ -198,7 +197,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCrystalView
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDamageParticles
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright
@@ -470,7 +469,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleKillAura,
             ModuleTpAura,
             ModuleSuperKnockback,
-            ModuleTimerRange,
             ModuleTickBase,
             ModuleVelocity,
             ModuleBacktrack,
@@ -480,6 +478,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleMaceKill,
             ModuleSpearKill,
             ModuleNoMissCooldown,
+            ModuleTriggerBot,
 
             // Exploit
             ModuleAbortBreaking,
@@ -504,9 +503,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleVehicleOneHit,
             ModuleServerCrasher,
             ModuleDupe,
-            ModuleClickTp,
-            ModuleTimeShift,
-            ModuleTeleport,
+            ModuleTeleportReach,
+            ModuleOldRegen,
             ModulePhase,
             ModuleYggdrasilSignatureFix,
 

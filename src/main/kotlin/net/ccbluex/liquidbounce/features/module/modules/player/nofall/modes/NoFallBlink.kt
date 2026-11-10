@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -115,8 +116,9 @@ internal object NoFallBlink : NoFallMode("Blink") {
                     NotificationEvent.Severity.INFO)
                 blinkFall = true
 
-                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.position(),
-                    Color4b(0, 0, 255, 255), size = 0.2))
+                ModuleNoFall.debugGeometry("Ground") {
+                    DebuggedPoint(player.position(), Color4b(0, 0, 255, 255), size = 0.2)
+                }
                 break
             }
         }

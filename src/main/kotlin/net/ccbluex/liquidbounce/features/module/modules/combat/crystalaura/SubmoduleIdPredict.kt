@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -107,7 +107,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
     private var highestId = 0
         set(value) {
             field = value
-            ModuleDebug.debugParameter(ModuleCrystalAura, "Highest ID", highestId)
+            ModuleCrystalAura.debugParameter("Highest ID") { highestId }
         }
 
     override fun onEnabled() {

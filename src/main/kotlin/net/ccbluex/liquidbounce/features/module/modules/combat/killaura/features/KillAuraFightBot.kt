@@ -22,9 +22,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
@@ -60,7 +62,15 @@ data class CombatTarget(
 /**
  * A fight bot that handles combat and movement automatically
  */
-object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura, "FightBot", false) {
+object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(
+    ModuleKillAura,
+    "FightBot",
+    false,
+    rotations = KillAuraRotationsValueGroup,
+    showRoute = false,
+) {
+
+    private const val GOAL_RADIUS = 0.7
 
     private val opponentRange by float("OpponentRange", 3f, 0.1f..10f)
     private val dangerousYawDiff by float("DangerousYaw", 55f, 0f..90f, suffix = "°")
@@ -143,21 +153,21 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
 
         // Otherwise handle combat movement
         val combatTarget = context.combatTarget ?: return null
-        return if (runawayOnCooldown && !clicker.willClickAt()) {
+        return if (runawayOnCooldown && !combatTarget.outOfDistance && !clicker.willClickAt()) {
             calculateRunawayPosition(context, combatTarget)
         } else {
             calculateAttackPosition(context, combatTarget)
         }
     }
 
+    override fun goalRadius(context: CombatContext) = GOAL_RADIUS
+
     /**
-     * Handles additional movement mechanics like swimming and jumping
+     * Jumps towards the opponent or the leader while walking straight on
      *
      * @param event Movement input event to modify
      */
     override fun handleMovementAssist(event: MovementInputEvent, context: CombatContext) {
-        super.handleMovementAssist(event, context)
-
         val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
             && !context.combatTarget.outOfDanger
         val goal = calculateGoalPosition(context) ?: return
@@ -175,6 +185,10 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
      */
     override fun getMovementRotation(): Rotation {
         val movementRotation = super.getMovementRotation()
+        if (isActing) {
+            return movementRotation
+        }
+
         val movementPitch = targetTracker.target?.let { entity ->
             Rotation.lookingAt(point = entity.boundingBox.center, from = player.eyePosition).pitch
         } ?: return movementRotation
@@ -187,11 +201,7 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
                 val position = leaderPosition.fma(LeaderFollower.radius.toDouble(), rotation.directionVector)
-                ModuleDebug.debugGeometry(
-                    this,
-                    "Possible Position $yaw",
-                    ModuleDebug.DebuggedPoint(position, Color4b.MAGENTA)
-                )
+                debugGeometry("Possible Position $yaw") { DebuggedPoint(position, Color4b.MAGENTA) }
                 position
             }
             .minByOrNull { it.distanceToSqr(playerPosition) } ?: leaderPosition
@@ -220,11 +230,9 @@ object KillAuraFightBot : NavigationBaseValueGroup<CombatContext>(ModuleKillAura
                 }
 
                 val isInAngle = abs(rotation.rotationDeltaTo(combatTarget.targetRotation).deltaYaw) <= dangerousYawDiff
-                ModuleDebug.debugGeometry(
-                    this,
-                    "Possible Position $yaw",
-                    ModuleDebug.DebuggedPoint(position, if (!isInAngle) Color4b.GREEN else Color4b.RED)
-                )
+                debugGeometry("Possible Position $yaw") {
+                    DebuggedPoint(position, if (!isInAngle) Color4b.GREEN else Color4b.RED)
+                }
 
                 if (isInAngle) null else position
             }

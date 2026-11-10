@@ -60,6 +60,9 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         @JvmField
         val GradientCircle = "gradient_circle"("shaders/circle/gradient_circle.vsh")
 
+        @JvmField
+        val ScreenQuad = "screenquad"("shaders/screenquad.vert")
+
     }
 
     object Fragment : ClientShaders(ShaderType.FRAGMENT) {
@@ -118,6 +121,39 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
         @JvmField
         val HeartSDF = "heart_sdf"("shaders/heart/heart.fsh")
 
+        @JvmField
+        val EspGlowRows = "esp_glow/rows"("shaders/esp_glow/field_rows.frag")
+
+        @JvmField
+        val EspGlowColumns = "esp_glow/columns"("shaders/esp_glow/field_columns.frag")
+
+        @JvmField
+        val EspGlowSmooth = "esp_glow/smooth"("shaders/esp_glow/styles/smooth.frag")
+
+        @JvmField
+        val EspGlowOutline = "esp_glow/outline"("shaders/esp_glow/styles/outline.frag")
+
+        @JvmField
+        val EspGlowNeon = "esp_glow/neon"("shaders/esp_glow/styles/neon.frag")
+
+        @JvmField
+        val EspGlowRainbow = "esp_glow/rainbow"("shaders/esp_glow/styles/rainbow.frag")
+
+        @JvmField
+        val EspGlowRipple = "esp_glow/ripple"("shaders/esp_glow/styles/ripple.frag")
+
+        @JvmField
+        val EspGlowHologram = "esp_glow/hologram"("shaders/esp_glow/styles/hologram.frag")
+
+        @JvmField
+        val EspGlowHalftone = "esp_glow/halftone"("shaders/esp_glow/styles/halftone.frag")
+
+        @JvmField
+        val EspGlowChromatic = "esp_glow/chromatic"("shaders/esp_glow/styles/chromatic.frag")
+
+        @JvmField
+        val EspGlowAura = "esp_glow/aura"("shaders/esp_glow/styles/aura.frag")
+
     }
 
     private fun newShader(id: String, path: String): Identifier {
@@ -139,14 +175,27 @@ sealed class ClientShaders(val type: ShaderType) : ShaderSource {
     override fun close() = Unit
 
     companion object Source : ShaderSource {
+        private val includes = mapOf(include("esp_glow/glow.glsl"))
+
         override fun getShader(identifier: Identifier, shaderType: ShaderType): String? = when (shaderType) {
             ShaderType.VERTEX -> Vertex.getShader(identifier, shaderType)
             ShaderType.FRAGMENT -> Fragment.getShader(identifier, shaderType)
         }
 
-        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
+        override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = includes[id]?.value
 
         override fun close() = Unit
+
+        /**
+         * Shaders reach it as `#include <liquidbounce:[path]>`. The compiler keeps using the source once handed out,
+         * so it is never freed.
+         */
+        private fun include(path: String): Pair<Identifier, Lazy<ShaderSource.CachedIncludeSource>> {
+            val id = LiquidBounce.identifier(path)
+            return id to lazy {
+                ShaderSource.CachedIncludeSource.create(id, LiquidBounce.resourceToString("shaders/$path"))
+            }
+        }
     }
 
 }

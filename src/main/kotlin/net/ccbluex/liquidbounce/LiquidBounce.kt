@@ -74,6 +74,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.atlas.ItemImageAtlas
@@ -85,7 +86,9 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -96,6 +99,8 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
+import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
 import net.minecraft.resources.Identifier
@@ -279,8 +284,11 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         BlinkManager
+        Timer
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
+        TeleportDispatcher
+        SectionCache
         InteractionTracker
         CombatManager
         FriendManager
@@ -294,6 +302,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
+        PlayerStatisticsTracker
         ItemImageAtlas
         ItemStackListRenderer
         IndicatorRenderer
@@ -371,6 +380,7 @@ object LiquidBounce : EventListener {
                         logger.info("Successfully renewed client account token.")
                     }
                 }
+                ClientAccountManager.restored.complete(Unit)
             }
         }
 
@@ -531,7 +541,7 @@ object LiquidBounce : EventListener {
 
         if (!taskManager.isCompleted && event.screen !is TaskProgressScreen) {
             event.cancelEvent()
-            mc.gui.setScreen(TaskProgressScreen("Loading Required Libraries", taskManager))
+            mc.gui.setScreen(TaskProgressScreen(translation("liquidbounce.splash.loadingLibraries"), taskManager))
         }
     }
 

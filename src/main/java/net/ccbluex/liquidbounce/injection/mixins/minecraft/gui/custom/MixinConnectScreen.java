@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.additions.ConnectScreenAddition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ConnectionDetailsEvent;
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
+import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ConnectionDetails;
 import net.minecraft.client.Minecraft;
@@ -36,7 +37,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ConnectScreen.class)
@@ -63,6 +66,15 @@ public abstract class MixinConnectScreen extends MixinScreen implements ConnectS
         if (event.isCancelled()) {
             ci.cancel();
         }
+    }
+
+    /**
+     * The cancel button sits at a quarter of the height, the status at half of it, so on tall GUIs the
+     * connection details under the status would run into the button. Theme pages place them from this offset.
+     */
+    @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 50))
+    private int moveStatusUp(int original) {
+        return SelfDestruct.INSTANCE.isDestructed() ? original : original + 30;
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
