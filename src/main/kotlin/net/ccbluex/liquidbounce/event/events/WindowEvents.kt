@@ -34,6 +34,10 @@ class WindowResizeEvent(val width: Int, val height: Int) : Event()
 class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @AddonApi
+@Tag("windowTitle")
+class WindowTitleEvent(val title: StringBuilder) : Event()
+
+@AddonApi
 @Tag("mouseButton")
 class MouseButtonEvent(
     val key: InputConstants.Key,
@@ -55,7 +59,7 @@ class MouseButtonEvent(
 }
 
 @Tag("mouseScroll")
-class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
+class MouseScrollEvent(val horizontal: Double, val vertical: Double) : CancellableEvent()
 
 @Tag("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()

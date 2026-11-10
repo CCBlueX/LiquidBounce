@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.event.tickConditional
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.item.Items
 
 /**
@@ -47,7 +49,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     }
 
     private object HorizontalBoost : ToggleableValueGroup(this, "HorizontalBoost", true) {
-        val pitch by float("Pitch", 70f, 0f..90f)
+        val pitch by floatRange("Pitch", 70f..70f, 0f..90f)
         val boostKey by key("Key", InputConstants.KEY_LCONTROL)
     }
 
@@ -59,55 +61,92 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     /**
-     * 7 ticks is the perfect time to use a wind charge before hitting the ground,
-     * and drastically boosts us higher.
+     * How long we stay on the ground while turning down, before jumping without a charge.
      */
-    const val PREDICTION_TICKS = 7
+    private const val MAX_AIM_TICKS = 10
+
+    private var holdJump = false
+    private var aimTicks = 0
+    private var horizontalPitch: Float? = null
+
+    override fun onDisabled() {
+        holdJump = false
+        aimTicks = 0
+        horizontalPitch = null
+    }
 
     @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
+        if (holdJump) {
+            event.jump = false
+        }
+    }
+
+    /**
+     * A charge thrown from the ground bursts two ticks later, as it spawns at eye height and flies 1.5 blocks a tick.
+     * Jumping one tick after the throw puts our feet right above the burst while the jump still lifts us,
+     * so jump and knockback add up.
+     */
+    @Suppress("unused")
     private val autoWindChargeHandler = tickHandler {
+        holdJump = false
+
         if (player.isFallFlying || player.isSwimming || player.isInLiquid || !mc.options.keyJump.isDown) {
+            aimTicks = 0
             return@tickHandler
         }
 
-        val collision = FallingPlayer
-            .fromPlayer(player)
-            .findCollision(PREDICTION_TICKS) ?: return@tickHandler
-
         val itemSlot = Slots.OffhandWithHotbar.findSlot(Items.WIND_CHARGE) ?: return@tickHandler
-
-        val isHorizontalBoost = HorizontalBoost.enabled && HorizontalBoost.boostKey.isPressed
-        val directionYaw = player.getMovementDirectionOfInput() - 180f
-        val directionPitch = when {
-            isHorizontalBoost -> HorizontalBoost.pitch
-            else -> 90f
+        if (player.cooldowns.isOnCooldown(itemSlot.itemStack)) {
+            return@tickHandler
         }
 
-        var rotation = Rotation(directionYaw, 80f)
+        val rotation = throwRotation()
+
+        if (!player.onGround()) {
+            // Face down before landing, so the throw does not wait for the turn
+            if (Rotate.enabled && isLandingWithin(rotations.calculateTicks(rotation) + 1)) {
+                aim(rotation)
+            }
+            return@tickHandler
+        }
 
         if (Rotate.enabled) {
-            fun isRotationSufficient(): Boolean {
-                return RotationManager.serverRotation.directionAngleTo(rotation) <= 1.0f
-            }
+            aim(rotation)
 
-            tickConditional(20) {
-                CombatManager.pauseCombatForAtLeast(combatPauseTime)
-                RotationManager.setRotationTarget(
-                    rotations.toRotationTarget(rotation),
-                    Priority.IMPORTANT_FOR_USAGE_3,
-                    this@ModuleAutoWindCharge
-                )
-
-                isRotationSufficient()
-            }
-
-            if (!isRotationSufficient()) {
+            if (RotationManager.serverRotation.directionAngleTo(rotation) > 1f) {
+                holdJump = aimTicks++ < MAX_AIM_TICKS
                 return@tickHandler
             }
         }
 
-        val (yaw, pitch) = rotation.normalize()
+        aimTicks = 0
+        holdJump = true
+        horizontalPitch = null
+
+        val (yaw, pitch) = if (Rotate.enabled) RotationManager.serverRotation else rotation.normalize()
         useHotbarSlotOrOffhand(itemSlot, slotResetDelay.random(), yaw, pitch)
+    }
+
+    private fun throwRotation(): Rotation {
+        if (!HorizontalBoost.enabled || !HorizontalBoost.boostKey.isPressed) {
+            return Rotation(player.yRot, 90f)
+        }
+
+        val pitch = horizontalPitch ?: HorizontalBoost.pitch.random().also { horizontalPitch = it }
+        return Rotation(player.getMovementDirectionOfInput() - 180f, pitch)
+    }
+
+    private fun isLandingWithin(ticks: Int) =
+        FallingPlayer.fromPlayer(player, RotationManager.movementYaw).findCollision(ticks) != null
+
+    private fun aim(rotation: Rotation) {
+        CombatManager.pauseCombatForAtLeast(combatPauseTime)
+        RotationManager.setRotationTarget(
+            rotations.toRotationTarget(rotation),
+            Priority.IMPORTANT_FOR_USAGE_3,
+            this
+        )
     }
 
 }

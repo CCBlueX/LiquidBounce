@@ -343,6 +343,12 @@ private fun findTargetPointOnFace(
     val comparator = PointOnFace.comparator(direction)
     var best: PointOnFace? = null
 
+    // A face lies in a single plane, so the sign of its facing is the same for every point on it and can be
+    // decided before any point is sampled. This is the same rejection findBestTargetPlan applies afterwards.
+    val normal = direction.unitVec3
+    val rejectFacingAway = !options.faceHandlingOptions.considerFacingAwayFaces
+    val eyeNormal = (options.playerLocationOnPlacement.eyePos - clickedBlockPos).dot(normal)
+
     outlineShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
         val face = AlignedFace.get(direction, minX, minY, minZ, maxX, maxY, maxZ)
 
@@ -351,6 +357,10 @@ private fun findTargetPointOnFace(
         // Try to aim at the upper portion of the block which makes it easier to switch from full blocks to half blocks
         if (searchFace.to.y >= 0.9) {
             searchFace = searchFace.truncateY(0.51).requireNonEmpty() ?: face
+        }
+
+        if (rejectFacingAway && eyeNormal - searchFace.from.dot(normal) < 0.0) {
+            return@forAllBoxes
         }
 
         val targetPos =

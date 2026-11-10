@@ -21,25 +21,22 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
-import com.mojang.blaze3d.platform.InputConstants
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.OptionalInclusion
+import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.config.types.list.ChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
-import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
-import net.ccbluex.liquidbounce.utils.input.inputByName
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
 import java.util.function.Supplier
@@ -47,7 +44,7 @@ import java.util.function.UnaryOperator
 import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = UnaryOperator<T>
-typealias ValueChangedListener<T> = Consumer<T>
+typealias ValueChangedListener<T> = Consumer<in T>
 
 /**
  * Order by name of [Value] (ignoreCase)
@@ -80,11 +77,11 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val listeners: MutableList<ValueListener<T>> = ObjectArrayList()
+    private val listeners = ObjectArrayList<ValueListener<T>>()
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners: MutableList<ValueChangedListener<T>> = ObjectArrayList()
+    private val changedListeners = ObjectArrayList<ValueChangedListener<T>>()
 
     @Exclude
     @ProtocolExclude
@@ -238,7 +235,7 @@ open class Value<T : Any>(
         var currT = t
         runCatching {
             listeners.forEach {
-                currT = it.apply(t)
+                currT = it.apply(currT)
             }
 
             if (isImmutable) {

@@ -54,7 +54,5 @@ class LiteralShaderSource @JvmOverloads constructor(
     }
 
     override fun getInclude(id: Identifier): ShaderSource.CachedIncludeSource? = null
-    override fun close() {
-        // NOOP
-    }
+    override fun close() = Unit
 }

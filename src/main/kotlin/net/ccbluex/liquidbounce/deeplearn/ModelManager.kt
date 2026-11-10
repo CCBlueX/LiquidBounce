@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.util.Locale
 import kotlin.time.measureTime
 
@@ -90,14 +89,14 @@ object ModelManager : EventListener, ValueGroup("AI") {
      */
     suspend fun load() = lifecycleMutex.withLock {
         logger.info("Loading models...")
-        val activeModelName = withContext(MinecraftDispatcher) {
+        val activeModelName = withContext(Dispatchers.Main) {
             models.activeMode.name
         }
         val choices = withContext(Dispatchers.IO) {
             loadModels()
         }
 
-        val previousModels = withContext(MinecraftDispatcher) {
+        val previousModels = withContext(Dispatchers.Main) {
             val previousModels = models.modes.toTypedArray()
 
             runCatching {

@@ -42,9 +42,10 @@ open class Config(name: String, value: MutableCollection<Value<*>> = mutableList
         }
 
     /**
-     * We write to this temp file, we can safely rename [jsonTmpFile] to [jsonFile],
-     * to eliminate any chances of data loss.
+     * Kept for add-ons compiled against it; a shared path cannot survive concurrent saves.
+     * Every save uses its own temporary file now, so do not write through this one.
      */
+    @Deprecated(message = "Use different temp file for each write", level = DeprecationLevel.ERROR)
     val jsonTmpFile: File
         get() {
             require(this in configs) { "${this.name} is not registered" }

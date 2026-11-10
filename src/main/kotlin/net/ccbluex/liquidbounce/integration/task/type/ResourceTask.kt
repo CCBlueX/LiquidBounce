@@ -19,12 +19,22 @@
 
 package net.ccbluex.liquidbounce.integration.task.type
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+import java.io.InputStream
+import java.io.OutputStream
+import java.time.InstantSource
+import java.time.temporal.ChronoUnit
+
 /**
  * A task with IO progress tracking
  */
-class ResourceTask(
-    name: String
+@AddonApi
+class ResourceTask internal constructor(
+    name: String,
+    private val clock: InstantSource,
 ) : Task(name) {
+
+    constructor(name: String) : this(name, InstantSource.system())
 
     var bytesRead = 0L
         private set
@@ -32,19 +42,43 @@ class ResourceTask(
         private set
 
     /**
-     * Current read speed in bytes per second
+     * Read speed in bytes per second, sampled over [SAMPLE_INTERVAL_MS] instead of averaged over
+     * the whole task lifetime. Drops to 0 once no data arrived for two sample intervals.
      */
     val speed: Long
-        get() {
-            val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0
-            return if (elapsedSeconds > 0) {
-                (bytesRead / elapsedSeconds).toLong()
-            } else {
-                0
+        get() = if (lastSampleTime.until(clock.instant(), ChronoUnit.MILLIS) > 2 * SAMPLE_INTERVAL_MS) {
+            0L
+        } else {
+            sampledSpeed
+        }
+
+    @Volatile
+    private var sampledSpeed = 0L
+
+    @Volatile
+    private var lastSampleTime = clock.instant()
+    private var lastSampleBytes = 0L
+
+    @JvmOverloads
+    fun update(bytesRead: Long, contentLength: Long, done: Boolean = false) {
+        val now = clock.instant()
+        val elapsed = lastSampleTime.until(now, ChronoUnit.MILLIS)
+
+        when {
+            done -> sampledSpeed = 0L
+            // A retried or resumed download restarts the byte counter, so restart sampling too
+            bytesRead < lastSampleBytes -> {
+                sampledSpeed = 0L
+                lastSampleTime = now
+                lastSampleBytes = bytesRead
+            }
+            elapsed >= SAMPLE_INTERVAL_MS -> {
+                sampledSpeed = (bytesRead - lastSampleBytes) * 1000L / elapsed
+                lastSampleTime = now
+                lastSampleBytes = bytesRead
             }
         }
 
-    fun update(bytesRead: Long, contentLength: Long) {
         this.bytesRead = bytesRead
         this.contentLength = contentLength
         this.progress = if (contentLength > 0) {
@@ -52,6 +86,24 @@ class ResourceTask(
         } else {
             0f
         }
+    }
+
+    @JvmOverloads
+    fun transferring(input: InputStream, output: OutputStream, contentLength: Long = -1) {
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+            val bytesRead = input.read(buffer)
+            if (bytesRead == -1) break
+            output.write(buffer, 0, bytesRead)
+            total += bytesRead
+            this.update(total, contentLength, false)
+        }
+        this.update(total, contentLength, true)
+    }
+
+    private companion object {
+        const val SAMPLE_INTERVAL_MS = 500L
     }
 
 }

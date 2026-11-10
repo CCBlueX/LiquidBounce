@@ -1,12 +1,13 @@
 <script lang="ts">
     import type {ConfigurableSetting, Module} from "../../integration/types";
-    import {getModuleSettings, setModuleEnabled, setTyping} from "../../integration/rest";
+    import {getModuleSettings, setModuleEnabled} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import {isClickGuiScreen} from "../../util/utils";
+    import {escapeLayer} from "../../integration/escape";
 
     export let modules: Module[];
 
@@ -38,6 +39,9 @@
         query = "";
         $highlightModuleName = null;
     }
+
+    const layer = escapeLayer(reset);
+    $: layer.setOpen(!!query);
 
     function filterModules(resetIndex: boolean) {
         if (!query) {
@@ -177,8 +181,6 @@
             bind:this={searchInputElement}
             on:input={() => filterModules(true)}
             on:keydown={handleBrowserKeyDown}
-            on:focusin={async () => await setTyping(true)}
-            on:focusout={async () => await setTyping(false)}
     />
 
     {#if query}

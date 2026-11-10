@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.client.error.errors
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
+@AddonApi
 open class ClientError(
     message: String = "",
     val needToReport: Boolean = true

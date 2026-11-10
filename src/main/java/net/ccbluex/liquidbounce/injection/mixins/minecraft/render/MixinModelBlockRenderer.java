@@ -36,6 +36,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.NullMarked;
 import org.objectweb.asm.Opcodes;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -48,6 +49,7 @@ import java.util.List;
 @Mixin(ModelBlockRenderer.class)
 public abstract class MixinModelBlockRenderer {
 
+    @Final
     @Shadow
     private QuadInstance quadInstance;
 
@@ -55,14 +57,12 @@ public abstract class MixinModelBlockRenderer {
     private void wrapXRayTransparentBackground(BlockQuadOutput output, float x, float y, float z,
             BlockAndTintGetter level, BlockPos pos, BlockState state, BlockStateModel model, long seed,
             Operation<Void> original) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (ModuleXRay.renderActive()) {
+            XRayBlockRenderContext.renderIfActive(state,
+                () -> original.call(output, x, y, z, level, pos, state, model, seed));
+        } else {
             original.call(output, x, y, z, level, pos, state, model, seed);
-            return;
         }
-
-        XRayBlockRenderContext.renderTransparentBackground(module.transparentBackgroundAlpha(state),
-            () -> original.call(output, x, y, z, level, pos, state, model, seed));
     }
 
     @Inject(method = {"tesselateFlat", "tesselateAmbientOcclusion"}, at = @At("HEAD"), cancellable = true)
@@ -70,7 +70,7 @@ public abstract class MixinModelBlockRenderer {
             List<BlockStateModelPart> parts, BlockAndTintGetter level, BlockState state, BlockPos pos,
             CallbackInfo ci) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             return;
         }
 
@@ -82,7 +82,7 @@ public abstract class MixinModelBlockRenderer {
     @ModifyExpressionValue(method = "tesselateBlock", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/block/ModelBlockRenderer;ambientOcclusion:Z", opcode = Opcodes.GETFIELD))
     private static boolean injectXRayFullBright(boolean original) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.getFullBright()) {
+        if (!ModuleXRay.renderActive() || !module.getFullBright()) {
             return original;
         }
 
@@ -93,7 +93,7 @@ public abstract class MixinModelBlockRenderer {
     private static boolean injectXRayTransparentBackgroundForceTranslucent(boolean original, boolean cutoutLeaves,
             BlockState state) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning() || !module.shouldRenderTransparentBackground(state)) {
+        if (!ModuleXRay.renderActive() || !module.shouldRenderTransparentBackground(state)) {
             return original;
         }
 
@@ -104,7 +104,7 @@ public abstract class MixinModelBlockRenderer {
     private boolean injectXRayDrawSide(boolean original, BlockAndTintGetter level, BlockState state, Direction direction,
             BlockPos neighborPos) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getRunning()) {
+        if (!ModuleXRay.renderActive()) {
             return original;
         }
 

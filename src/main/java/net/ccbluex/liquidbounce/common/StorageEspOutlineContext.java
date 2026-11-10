@@ -26,7 +26,7 @@ public final class StorageEspOutlineContext {
     }
 
     public static int getOutlineColor() {
-        return OUTLINE_COLOR.isBound() ? OUTLINE_COLOR.get() : 0;
+        return OUTLINE_COLOR.orElse(0);
     }
 
     public static void render(int outlineColor, Runnable render) {

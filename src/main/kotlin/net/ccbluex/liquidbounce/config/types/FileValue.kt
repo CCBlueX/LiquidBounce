@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import org.lwjgl.sdl.SDLError
 import org.lwjgl.sdl.SDLDialog.SDL_ShowOpenFileDialog
 import org.lwjgl.sdl.SDLDialog.SDL_ShowOpenFolderDialog
 import org.lwjgl.sdl.SDLDialog.SDL_ShowSaveFileDialog
+import org.lwjgl.sdl.SDLError
 import org.lwjgl.sdl.SDL_DialogFileCallback
 import org.lwjgl.sdl.SDL_DialogFileFilter
 import org.lwjgl.system.MemoryUtil

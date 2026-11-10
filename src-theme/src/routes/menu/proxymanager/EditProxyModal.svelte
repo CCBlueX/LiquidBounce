@@ -16,6 +16,8 @@
     export let password: string;
     export let requiresAuthentication: boolean;
     export let forwardAuthentication: boolean;
+    export let proxyResourcePacks: boolean;
+    export let proxyDns: boolean;
 
     let hostPort = `${host}:${port}`;
     let loading = false;
@@ -46,7 +48,7 @@
         const [host, port] = hostPort.split(":");
 
         loading = true;
-        await editProxyRest(id, host, parseInt(port), username, password, proxyType, forwardAuthentication);
+        await editProxyRest(id, host, parseInt(port), username, password, proxyType, forwardAuthentication, proxyResourcePacks, proxyDns);
     }
 
     listen("proxyCheckResult", () => {
@@ -64,5 +66,7 @@
         <IconTextInput title="Password" icon="lock" type="password" bind:value={password}/>
     {/if}
     <SwitchSetting title="Forward Microsoft Authentication" bind:value={forwardAuthentication}/>
+    <SwitchSetting title="Proxy Resource Packs" bind:value={proxyResourcePacks}/>
+    <SwitchSetting title="Proxy DNS" bind:value={proxyDns}/>
     <ButtonSetting title="Edit Proxy" {disabled} on:click={editProxy} listenForEnter={true} {loading}/>
 </Modal>

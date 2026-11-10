@@ -38,9 +38,9 @@ import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
@@ -53,7 +53,7 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -112,9 +112,16 @@ object ScreenManager : EventListener {
         if (waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
                 browser.isInitialized && browser.state.isCompleted
             } == null) {
+            val stage = when {
+                !browser.isInitialized -> "the browser was never created"
+                browser.state == BrowserState.Idle -> "the page never started loading"
+                else -> "the page did not finish loading"
+            }
+            val openRequests = ClientInteropServer.openRequests()
+            logger.error("Unanswered interop requests: ${openRequests.ifEmpty { listOf("none") }.joinToString()}")
             ErrorHandler.fatal(
-                error = IllegalStateException("Timed out waiting for integration browser to initialize."),
-                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+                error = IllegalStateException("Timed out waiting for integration browser to initialize: $stage."),
+                quickFix = QuickFixes.BROWSER_IS_NOT_RESPONDING
             )
         }
     }
@@ -144,11 +151,11 @@ object ScreenManager : EventListener {
                     "Failed to initialize integration browser. " +
                         "(code='${state.errorCode}', text='${state.errorText}', url='${state.failedUrl}')"
                 ),
-                quickFix = QuickFix.BROWSER_FAILED_TO_LOAD_UI
+                quickFix = QuickFixes.BROWSER_FAILED_TO_LOAD_UI
             )
             else -> ErrorHandler.fatal(
                 error = IllegalStateException("Invalid browser state past wait"),
-                quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
+                quickFix = QuickFixes.BROWSER_IS_NOT_RESPONDING
             )
         }
     }
@@ -299,23 +306,8 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val scanCode = event.scanCode
-
         if (inGame) {
             return@handler
-        }
-
-        // F12 to toggle GPU acceleration
-        if (event.isPressed && scanCode == InputConstants.KEY_F12) {
-            val backend = BrowserBackendManager.backend ?: return@handler
-            if (!backend.accelerationFlags.isSupported) {
-                logger.warn("GPU acceleration is not supported by the current browser backend.")
-                return@handler
-            }
-
-            val accelerated = GlobalBrowserSettings.accelerated ?: return@handler
-            accelerated.set(!accelerated.get())
-            logger.info("GPU acceleration is now ${if (accelerated.get()) "enabled" else "disabled"}.")
         }
 
         // CTRL + 2x SHIFT to toggle basic mode
@@ -332,6 +324,10 @@ object ScreenManager : EventListener {
     private fun handleCurrentScreen(screen: Screen?): Boolean {
         // We check against mc.gui.screen(), not screen, because somehow this works.
         if (mc.gui.screen() is TaskProgressScreen) {
+            return false
+        }
+
+        if (screen is BrowserSelectionScreen || mc.gui.screen() is BrowserSelectionScreen) {
             return false
         }
 

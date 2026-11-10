@@ -35,8 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_16
-import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
-import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -45,6 +43,8 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
+import net.ccbluex.liquidbounce.utils.network.sendSwapItemWithOffhand
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Item

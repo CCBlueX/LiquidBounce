@@ -48,17 +48,18 @@ import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerDataEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerStatisticsEvent
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.events.ClosedCaptionsEvent
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
+import net.ccbluex.liquidbounce.event.events.ConnectionDetailsEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -98,10 +99,12 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerDeathEvent
 import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerKillEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
@@ -140,6 +143,7 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
+import net.ccbluex.liquidbounce.event.events.WindowTitleEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.events.WorldFeatureSubmitEvent
@@ -148,6 +152,7 @@ import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
 
@@ -171,6 +176,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ScreenRenderEvent::class.java,
     WindowResizeEvent::class.java,
     FramebufferResizeEvent::class.java,
+    WindowTitleEvent::class.java,
     MouseButtonEvent::class.java,
     MouseScrollEvent::class.java,
     MouseCursorEvent::class.java,
@@ -197,6 +203,8 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     EntityHealthUpdateEvent::class.java,
     HealthUpdateEvent::class.java,
     DeathEvent::class.java,
+    PlayerKillEvent::class.java,
+    PlayerDeathEvent::class.java,
     PlayerTickEvent::class.java,
     PlayerPostTickEvent::class.java,
     PlayerMovementTickEvent::class.java,
@@ -209,6 +217,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     PlayerInteractItemEvent::class.java,
     PlayerInteractedItemEvent::class.java,
     ClientPlayerInventoryEvent::class.java,
+    ClientPlayerStatisticsEvent::class.java,
     PlayerVelocityStrafe::class.java,
     PlayerStrideEvent::class.java,
     PlayerSafeWalkEvent::class.java,
@@ -229,7 +238,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClientChatStateChange::class.java,
     ClientChatMessageEvent::class.java,
     ClientChatErrorEvent::class.java,
-    ClientChatJwtTokenEvent::class.java,
     WorldChangeEvent::class.java,
     AccountManagerMessageEvent::class.java,
     AccountManagerAdditionResultEvent::class.java,
@@ -244,6 +252,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     RefreshArrayListEvent::class.java,
     BrowserReadyEvent::class.java,
     ServerConnectEvent::class.java,
+    ConnectionDetailsEvent::class.java,
     ServerPingedEvent::class.java,
     TargetChangeEvent::class.java,
     BlockCountChangeEvent::class.java,
@@ -405,7 +414,7 @@ object EventManager {
      * @param event to call
      */
     fun <T : Event> callEvent(event: T): T {
-        if (isDestructed) {
+        if (isDestructed || ErrorScreen.isShown) {
             return event
         }
 
@@ -430,6 +439,10 @@ object EventManager {
                     additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
                 )
             } catch (e: Throwable) {
+                // A handler that ran into a fatal error has left for the error screen
+                if (ErrorScreen.isShown) {
+                    throw e
+                }
                 logger.error(
                     "Exception while executing event handler of {}, event={}",
                     eventHook.handlerClass.javaClass.simpleName,

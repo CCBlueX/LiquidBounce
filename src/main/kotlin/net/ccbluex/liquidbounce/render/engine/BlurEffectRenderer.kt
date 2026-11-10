@@ -119,7 +119,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         mainTexture!!
             .createRenderPass({ "GUI blur overlay blit pass" })
             .use { pass ->
-                pass.setPipeline(ClientRenderPipelines.JCEF.Blit)
+                pass.setPipeline(ClientRenderPipelines.GuiBlurBlit)
                 pass.setUniform("InSampler", overlayTexture, overlaySampler)
                 pass.draw(3, 1, 0, 0)
             }

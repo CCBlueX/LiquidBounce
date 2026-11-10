@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
@@ -48,25 +49,22 @@ object TrapPlayerSimulation {
 
             val predictedState = simulation.simulateBetween(0..25)
 
-            var wasAirborne = !enemy.onGround()
+            val onGround = enemy.onGround()
+            var wasAirborne = !onGround
 
             var ticks = 1
 
             val predictedPos = predictedState.firstNotNullOfOrNull {
                 if (wasAirborne && it.onGround) {
-                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.position(), false)
+                    // A landing is predicted, the target is not to be trapped where it stands right now
+                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.position(), onGround = false)
                 }
 
                 wasAirborne = !it.onGround
                 ticks++
 
                 null
-            } ?: PredictedPlayerPos(
-                null,
-                null,
-                enemy.position(),
-                enemy.deltaMovement.lengthSqr() < 0.05
-            )
+            } ?: PredictedPlayerPos(null, null, enemy.position(), onGround = onGround)
 
             seenPlayers.add(enemy)
 
@@ -83,8 +81,8 @@ object TrapPlayerSimulation {
     }
 
     /**
-     * Searches for a position where a trap could be laid. Currently, that is just the landing position of
-     * a jumping/falling player.
+     * Searches for a position where a trap could be laid. Currently, that is the landing position of
+     * a jumping/falling player, or the current position of a player standing on the ground.
      *
      * @return position for the trap. `null` if the trap should not be placed.
      */
@@ -97,7 +95,9 @@ object TrapPlayerSimulation {
 
         val lastEntry = simulationCache.last()
 
-        if (lastEntry.isStationary && !isTargetLocked) {
+        // A grounded target is trapped where it stands; where it walks from here is covered by the planner's
+        // offset search, which extrapolates the target's velocity.
+        if (lastEntry.onGround && !isTargetLocked) {
             return lastEntry.currPos
         }
 
@@ -115,19 +115,15 @@ object TrapPlayerSimulation {
             .sumOf { vec -> vec.subtract(avg).lengthSqr() }
             .let { sqrt(it / positions.size) }
 
-        ModuleDebug.debugGeometry(
-            ModuleAutoTrap,
-            "PredictedPlayerPos",
-            ModuleDebug.DebuggedBox(target.dimensions.makeBoundingBox(positions.last()), Color4b.RED.with(a = 127))
-        )
-        ModuleDebug.debugGeometry(
-            ModuleAutoTrap,
-            "PredictedPlayerPosStd",
-            ModuleDebug.DebuggedBox(
+        ModuleAutoTrap.debugGeometry("PredictedPlayerPos") {
+            DebuggedBox(target.dimensions.makeBoundingBox(positions.last()), Color4b.RED.with(a = 127))
+        }
+        ModuleAutoTrap.debugGeometry("PredictedPlayerPosStd") {
+            DebuggedBox(
                 EntityDimensions.fixed((target.dimensions.width * std).toFloat(), 0.5F).makeBoundingBox(avg),
                 Color4b.BLUE.with(a = 127)
             )
-        )
+        }
 
         // The simulation is mostly certain that the player will land at that position
         if (std < 1.5) {
@@ -141,6 +137,6 @@ object TrapPlayerSimulation {
         val nextOnGround: Vec3?,
         val ticksToGround: Int?,
         val currPos: Vec3,
-        val isStationary: Boolean
+        val onGround: Boolean
     )
 }

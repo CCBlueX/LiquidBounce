@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.mod
 
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
@@ -32,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * @tested eu.loyisa.cn
  * @note May cause occasional step flags if player is in a 1x1 water hole.
  */
-internal object LiquidWalkVulcan291 : Mode("Vulcan291") {
+internal object LiquidWalkVulcan291 : Mode("Vulcan-2.9.1", aliases = listOf("Vulcan291")) {
 
     private val motion by float("Motion", 0.8f, 0.2f..1.4f)
 
@@ -40,7 +41,7 @@ internal object LiquidWalkVulcan291 : Mode("Vulcan291") {
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         // It DOES NOT bypass with Lava - do not use [player.isInFluid].
         if (player.isInsideWaterOrBubbleColumn) {
             // One tick speed-up for extra speed

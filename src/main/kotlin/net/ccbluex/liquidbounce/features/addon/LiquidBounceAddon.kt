@@ -40,7 +40,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendProvider
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.error.QuickFix
+import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.fabricmc.loader.api.ModContainer
 
 @AddonApi
@@ -92,8 +96,11 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     internal val registeredNodes = mutableListOf<LiteralCommandNode<ClientCommandSource>>()
     internal val registeredCategories = mutableListOf<ModuleCategory>()
     internal val registeredModes = mutableListOf<Pair<ModeValueGroup<*>, Mode>>()
+    internal val registeredValueGroups = mutableListOf<Pair<ValueGroup, ValueGroup>>()
     internal val registeredConfigs = mutableListOf<Config>()
     internal val registeredItemHandlers = mutableListOf<Pair<MarketplaceItemType, MarketplaceItemHandler>>()
+    internal val registeredBrowserBackends = mutableListOf<BrowserBackendProvider>()
+    internal val registeredQuickFixes = mutableListOf<QuickFix>()
 
     /**
      * Registered for all add-ons before any [onInitialize] runs.
@@ -178,12 +185,44 @@ abstract class LiquidBounceAddon : EventListener, MinecraftShortcuts {
     }
 
     /**
+     * Attaches [group] to [parent], e.g. a sub-group of a core module. Must run in [onInitialize] for
+     * its settings to be restored.
+     */
+    fun <T : ValueGroup> registerValueGroup(parent: ValueGroup, group: T): T {
+        require(parent.inner.none { it.name.equals(group.name, ignoreCase = true) }) {
+            "ValueGroup '${parent.name}' already has a value named '${group.name}'"
+        }
+
+        parent.tree(group)
+        parent.key?.let { group.walkKeyPath(it) }
+        registeredValueGroups += parent to group
+        return group
+    }
+
+    /**
      * Takes over subscribed marketplace items of [type]; [handler] runs once the subscriptions are
      * loaded at startup and after every install, update or removal of one.
      */
     fun registerMarketplaceHandler(type: MarketplaceItemType, handler: MarketplaceItemHandler) {
         MarketplaceManager.registerHandler(type, handler)
         registeredItemHandlers += type to handler
+    }
+
+    /**
+     * Offers a browser backend the player can choose when the client starts.
+     */
+    fun registerBrowserBackend(provider: BrowserBackendProvider) {
+        BrowserBackendManager.registerBackend(provider)
+        registeredBrowserBackends += provider
+    }
+
+    /**
+     * Offers [quickFix] on the fatal error screen for the errors it matches.
+     */
+    fun registerQuickFix(quickFix: QuickFix): QuickFix {
+        QuickFixes.register(quickFix)
+        registeredQuickFixes += quickFix
+        return quickFix
     }
 
     @JvmOverloads

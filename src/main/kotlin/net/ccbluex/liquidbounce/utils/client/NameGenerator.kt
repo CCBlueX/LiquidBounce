@@ -122,7 +122,7 @@ private fun findWordShorterOrEqual(strings: Array<List<String>>, maxLength: Int)
 private fun buildShorterThanList(list: List<String>): Array<List<String>> {
     val sortedList = list.sortedBy { it.length }
 
-    val out = Array<List<String>>(sortedList.last().length) { emptyList() }
+    val out = Array<List<String>>(sortedList.last().length + 1) { emptyList() }
 
     var lastLen = 0
 
@@ -132,6 +132,9 @@ private fun buildShorterThanList(list: List<String>): Array<List<String>> {
             lastLen = s.length
         }
     }
+
+    // Words of the maximum length do not open a new slot in the loop above
+    out[lastLen] = sortedList
 
     // Fill remaining slots
     for (idx in 1 until out.size) {

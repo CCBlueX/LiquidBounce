@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
@@ -44,11 +45,7 @@ private data class QueueEntry<T>(
     val fScore: Double,
 )
 
-/**
- * Finds the shortest path using A* search.
- *
- * Set [heuristic] to zero to get Dijkstra behavior.
- */
+/** Finds the shortest path using A* search. Set [heuristic] to zero to get Dijkstra behavior. */
 fun <T> aStarShortestPath(
     start: T,
     isGoal: Predicate<T>,
@@ -59,73 +56,102 @@ fun <T> aStarShortestPath(
 ): ShortestPath<T>? {
     require(maxIterations > 0) { "maxIterations must be positive." }
 
-    val gScores = Object2DoubleOpenHashMap<T>().apply {
+    return AStarSearch(start, isGoal, neighbors, heuristic, maxCost).advance(maxIterations)
+}
+
+/** An A* search that is advanced in slices, so it can be spread over several calls. Not thread-safe. */
+class AStarSearch<T>(
+    private val start: T,
+    private val isGoal: Predicate<T>,
+    private val neighbors: Function<T, Iterable<WeightedEdge<T>>>,
+    private val heuristic: ToDoubleFunction<T>,
+    private val maxCost: Double = Double.POSITIVE_INFINITY,
+) {
+
+    private val gScores = Object2DoubleOpenHashMap<T>().apply {
         defaultReturnValue(Double.POSITIVE_INFINITY)
         put(start, 0.0)
     }
-    val previous = Object2ObjectOpenHashMap<T, T>()
+    private val previous = Object2ObjectOpenHashMap<T, T>()
+    private val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore }).apply {
+        add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
+    }
 
-    val queue = PriorityQueue(Comparator.comparingDouble<QueueEntry<T>> { it.fScore })
-    queue.add(QueueEntry(start, 0.0, heuristic.applyAsDouble(start)))
-
+    /** Nodes polled so far. */
     var iterations = 0
-    while (queue.isNotEmpty()) {
-        iterations++
-        if (iterations > maxIterations) {
-            break
+        private set
+
+    var result: ShortestPath<T>? = null
+        private set
+
+    private var closest: QueueEntry<T>? = null
+    private var closestHeuristic = Double.POSITIVE_INFINITY
+
+    val isFinished: Boolean
+        get() = result != null || queue.isEmpty()
+
+    /** Polls at most [maxIterations] nodes and returns the path once it is known. */
+    fun advance(maxIterations: Int): ShortestPath<T>? {
+        var budget = maxIterations
+        while (result == null && budget > 0 && queue.isNotEmpty()) {
+            budget--
+            iterations++
+            expand(queue.poll())
         }
 
-        val current = queue.poll()
-        val bestCurrentG = gScores.getDouble(current.node)
-        if (current.gScore > bestCurrentG || current.gScore > maxCost) {
-            continue
+        return result
+    }
+
+    /** The node the best known path to [node] comes from; null for the start and nodes not reached yet. */
+    fun previous(node: T): T? = previous[node]
+
+    /** Cost of the best known path to [node]; infinite for nodes not reached yet. */
+    fun cost(node: T): Double = gScores.getDouble(node)
+
+    /** The path to the explored node with the smallest heuristic, or null if no node beats the start. */
+    fun closestPath(): ShortestPath<T>? =
+        closest?.takeIf { it.node != start }?.let { ShortestPath(pathTo(it.node), it.gScore) }
+
+    private fun expand(current: QueueEntry<T>) {
+        if (current.gScore > gScores.getDouble(current.node) || current.gScore > maxCost) {
+            return
+        }
+
+        val currentHeuristic = current.fScore - current.gScore
+        if (currentHeuristic < closestHeuristic) {
+            closest = current
+            closestHeuristic = currentHeuristic
         }
 
         if (isGoal.test(current.node)) {
-            return ShortestPath(reconstructPath(start, current.node, previous), current.gScore)
+            result = ShortestPath(pathTo(current.node), current.gScore)
+            return
         }
 
         for ((node, cost) in neighbors.apply(current.node)) {
             require(cost >= 0.0) { "Path search edge costs must be non-negative." }
 
             val candidateG = current.gScore + cost
-            if (candidateG > maxCost) {
-                continue
-            }
-
-            val knownG = gScores.getDouble(node)
-            if (candidateG >= knownG) {
+            if (candidateG > maxCost || candidateG >= gScores.getDouble(node)) {
                 continue
             }
 
             gScores.put(node, candidateG)
             previous.put(node, current.node)
-
-            val fScore = candidateG + heuristic.applyAsDouble(node)
-            queue.add(QueueEntry(node, candidateG, fScore))
+            queue.add(QueueEntry(node, candidateG, candidateG + heuristic.applyAsDouble(node)))
         }
     }
 
-    return null
-}
+    private fun pathTo(node: T): List<T> {
+        val path = mutableListOf(node)
+        var current = node
+        while (current != start) {
+            current = previous[current] ?: return emptyList()
+            path += current
+        }
 
-private fun <T> reconstructPath(
-    start: T,
-    goal: T,
-    previous: Object2ObjectOpenHashMap<T, T>,
-): List<T> {
-    val reversedPath = mutableListOf<T>()
-
-    var current = goal
-    reversedPath.add(current)
-
-    while (current != start) {
-        val parent = previous[current]
-            ?: return emptyList()
-        current = parent
-        reversedPath.add(current)
+        path.reverse()
+        return path
     }
 
-    reversedPath.reverse()
-    return reversedPath
 }

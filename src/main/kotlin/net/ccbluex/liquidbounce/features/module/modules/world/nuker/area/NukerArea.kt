@@ -34,7 +34,7 @@ sealed class NukerArea(name: String) : Mode(name) {
     override val parent: ModeValueGroup<*>
         get() = areaMode
 
-    abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>
+    abstract fun lookupTargets(radius: Float, limit: Int? = null): List<Pair<BlockPos, BlockState>>
 
     protected fun isPositionAvailable(
         eyesPos: Vec3,

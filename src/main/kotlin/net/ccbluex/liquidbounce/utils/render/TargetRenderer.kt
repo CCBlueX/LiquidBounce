@@ -50,7 +50,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.AnimatedValueGroup
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.text.plus
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -61,9 +60,9 @@ import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toDegrees
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Style
-import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
@@ -191,7 +190,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                         translate(size / 2.0, size / 2.0, 0.0)
                     }
 
-                    val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
+                    val alpha = (color.a - (i * alphaFactor)).coerceIn(0, color.a)
                     val renderColor = color.alpha(alpha)
 
                     drawSquareTexture(ghostModeTexture, size, renderColor.argb, AnchorPoint.CENTER_LEFT)
@@ -462,13 +461,13 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                     val worldPos = targetPos.add(localOffset)
                     val baseColor = when (heartSlot.type) {
-                        HeartType.Health -> color
-                        HeartType.Absorption -> Color4b(255, 214, 72, color.a)
+                        HeartType.HEALTH -> color
+                        HeartType.ABSORPTION -> Color4b(255, 214, 72, color.a)
                     }
 
                     val renderColor = baseColor.interpolateTo(
                         Color4b.RED.alpha(color.a),
-                        damageFlashStrength.toDouble()
+                        damageFlashStrength
                     )
 
                     drawHeart(worldPos, targetPos, renderColor, heartSlot.fill)
@@ -554,14 +553,14 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
 
                 return buildList {
                     if (dynamicCount) {
-                        addSlots(HeartType.Health, target.health)
+                        addSlots(HeartType.HEALTH, target.health)
                     } else {
                         repeat(heartCount) {
-                            add(HeartSlot(HeartType.Health, 1f))
+                            add(HeartSlot(HeartType.HEALTH, 1f))
                         }
                     }
 
-                    addSlots(HeartType.Absorption, target.absorptionAmount)
+                    addSlots(HeartType.ABSORPTION, target.absorptionAmount)
                 }
             }
 
@@ -572,8 +571,8 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
             )
 
             private enum class HeartType {
-                Health,
-                Absorption,
+                HEALTH,
+                ABSORPTION,
             }
 
             @ValueClassCandidate
@@ -621,7 +620,7 @@ private sealed class TargetRenderAppearance<Ctx : Any>(name: String) : Mode(name
                 val screenPos = calculateScreenPos(pos) ?: return
 
                 texts.forEachIndexed { i, text ->
-                    fontRenderer.draw(text.asPlainText(style)) {
+                    fontRenderer.draw(text.withFormat(style)) {
                         horizontalAnchor = HorizontalAnchor.CENTER
                         verticalAnchor = VerticalAnchor.MIDDLE
                         x = screenPos.x

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
+import net.ccbluex.liquidbounce.utils.entity.usingItemOrNull
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
@@ -32,8 +33,7 @@ object MurderMysteryInfectionMode : UuidBasedMurderMysteryMode("Infection") {
     val tickHandler = handler<GameTickEvent> {
         world.players()
             .filter {
-                it.isUsingItem && player.handItems.any { stack -> stack.item is BowItem } ||
-                    player.handItems.any { stack -> stack.item == Items.ARROW }
+                it.usingItemOrNull?.item is BowItem || it.handItems.any { stack -> stack.item == Items.ARROW }
             }
             .forEach { playerEntity ->
                 handleHasBow(playerEntity)
@@ -50,7 +50,7 @@ object MurderMysteryInfectionMode : UuidBasedMurderMysteryMode("Infection") {
 
     override fun disallowsArrowDodge(): Boolean {
         // Don't dodge if we are not dead yet.
-        return currentPlayerType == MurderMysteryMode.PlayerType.DETECTIVE_LIKE
+        return currentPlayerType == PlayerType.DETECTIVE_LIKE
     }
 
 }

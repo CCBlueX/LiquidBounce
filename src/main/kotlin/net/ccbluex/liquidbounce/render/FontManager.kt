@@ -19,19 +19,20 @@
 package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.io.createFont
-import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.minecraft.util.Util
 import net.minecraft.util.Util.OS.LINUX
 import net.minecraft.util.Util.OS.OSX
 import net.minecraft.util.Util.OS.WINDOWS
+import okio.Buffer
 import java.awt.Font
 import java.io.File
 import java.io.InputStream
@@ -40,13 +41,6 @@ import java.io.InputStream
 object FontManager {
 
     private val logger = clientLogger("FontManager")
-
-    private val STYLES = intArrayOf(
-        Font.PLAIN,
-        Font.BOLD,
-        Font.ITALIC,
-        Font.BOLD or Font.ITALIC,
-    )
 
     /**
      * As fallback, we can use a common font that is available on all systems.
@@ -87,23 +81,26 @@ object FontManager {
         put(COMMON_FONT.name, COMMON_FONT)
     }
 
-    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Minecraft) {
+    private suspend fun addFontFace(fontFace: FontFace) = withContext(Dispatchers.Main) {
         if (fontFaces.put(fontFace.name, fontFace) != null) {
             logger.warn("FontFace ${fontFace.name} already exists, previous one has been replaced")
         }
     }
 
     /**
-     * The active font renderer that all text rendering will be based on.
-     *
-     * TODO: Replaces this with Module-based Font Selection
+     * The active font renderer that all text rendering will be based on, in the font the theme names.
      */
     @JvmStatic
     val FONT_RENDERER
-        get() = defaultFontFace.renderer
+        get() = glyphManager.primaryFace.renderer
 
-    private val defaultFontFace
-        get() = fontFace("Inter Regular") ?: COMMON_FONT
+    /**
+     * The active theme's `nativeFont`, else the included theme's, else a system font.
+     */
+    private val themeFontFace: FontFace
+        get() = listOfNotNull(ThemeManager.theme, ThemeManager.includedTheme)
+            .firstNotNullOfOrNull { theme -> theme.metadata.nativeFont?.let(::fontFace) }
+            ?: COMMON_FONT
 
     /**
      * Since our font renderer does not support dynamic font size changes,
@@ -112,6 +109,10 @@ object FontManager {
     const val DEFAULT_FONT_SIZE: Float = 43f
 
     private var _glyphManager: FontGlyphPageManager? = null
+
+    /** False until the client's start has created the glyph manager, and for good when that failed. */
+    internal val isLoaded get() = _glyphManager != null
+
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */
@@ -126,10 +127,20 @@ object FontManager {
     internal fun createGlyphManager() {
         _glyphManager?.close()
         _glyphManager = FontGlyphPageManager(
-            registeredFaces = ObjectImmutableList(fontFaces.values),
-            primaryFace = defaultFontFace,
+            registeredFonts = ObjectOpenHashSet(fontFaces.values),
+            primaryFace = themeFontFace,
             fallbackFonts = listOfNotNull(COMMON_FONT, CJK_FONT),
         )
+    }
+
+    /**
+     * Rebuilds the glyph pages when the active theme draws with another font.
+     */
+    internal fun updateThemeFont() {
+        val glyphManager = _glyphManager ?: return
+        if (glyphManager.primaryFace !== themeFontFace) {
+            createGlyphManager()
+        }
     }
 
     internal fun closeGlyphManager() {
@@ -149,7 +160,8 @@ object FontManager {
                 return
             }
 
-            if (fontFaces.values.any { it.file == file }) {
+            val source = FontFace.Source.LocalFile(file)
+            if (loadedOrNull(source) != null) {
                 logger.warn("Font file ${file.absolutePath} is already loaded.")
                 return
             }
@@ -158,7 +170,7 @@ object FontManager {
 
             // Name will consist of the font name and family. This makes it possible
             // to select the different styles of the font.
-            val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file)
+            val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, source)
             fontFace.fillDerivedStyles(font)
             addFontFace(fontFace)
         } catch (e: Exception) {
@@ -166,22 +178,43 @@ object FontManager {
         }
     }
 
-    suspend fun queueFontFromStream(stream: InputStream) {
-        val font = stream.createFont().deriveFont(DEFAULT_FONT_SIZE)
-        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, file = null)
+    /**
+     * Read and close the [stream] as font
+     */
+    suspend fun queueFontFromStream(stream: InputStream): Boolean {
+        val buffer = Buffer()
+        stream.use(buffer::readFrom)
+        return queueFontFromBuffer(buffer)
+    }
+
+    suspend fun queueFontFromBuffer(buffer: Buffer): Boolean {
+        val source = FontFace.Source.InMemory(buffer.sha256())
+        if (loadedOrNull(source) != null) {
+            logger.info("Skipping a font that is already loaded.")
+            return false
+        }
+
+        val font = buffer.inputStream().createFont().deriveFont(DEFAULT_FONT_SIZE)
+        val fontFace = FontFace(font.name, DEFAULT_FONT_SIZE, source)
         fontFace.fillDerivedStyles(font)
         addFontFace(fontFace)
+        return true
     }
 
     private suspend fun systemFont(name: String): FontFace {
-        val fontFace = FontFace(name, DEFAULT_FONT_SIZE)
+        val source = FontFace.Source.System(name)
+        // Skip loaded check to prevent class init error
+        val fontFace = FontFace(name, DEFAULT_FONT_SIZE, source)
 
-        STYLES.forEach { style ->
+        for (style in 0..3) {
             val font = Font(name, style, DEFAULT_FONT_SIZE.toInt())
             fontFace.fillStyle(font, style)
         }
 
         return fontFace
     }
+
+    private fun loadedOrNull(source: FontFace.Source): FontFace? =
+        fontFaces.values.firstOrNull { it.source == source }
 
 }

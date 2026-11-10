@@ -31,8 +31,9 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.TickLoopTaskExecutor;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
@@ -41,14 +42,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInte
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
 import net.ccbluex.liquidbounce.render.buffers.StaticGpuBufferPool;
 import net.ccbluex.liquidbounce.render.mesh.MeshDraw;
 import net.ccbluex.liquidbounce.render.utils.RenderingDebug;
+import net.ccbluex.liquidbounce.utils.client.Timer;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
+import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
@@ -201,19 +202,7 @@ public abstract class MixinMinecraft {
             titleBuilder.append(SharedConstants.getCurrentVersion().name());
         }
 
-        // For debugging purposes, will be removed until we have a stable release
-        var backend = BrowserBackendManager.INSTANCE.getBackend();
-        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
-            var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
-
-            if (accelerated != null && accelerated.get()) {
-                titleBuilder.append(" | Accelerated Paint is ON");
-                // Hotkey only works when not in-game
-                if (this.level == null && this.player == null) {
-                    titleBuilder.append(" [Hotkey: F12]");
-                }
-            }
-        }
+        EventManager.INSTANCE.callEvent(new WindowTitleEvent(titleBuilder));
 
         ClientPacketListener clientPlayNetworkHandler = this.getConnection();
         if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isConnected()) {
@@ -263,6 +252,19 @@ public abstract class MixinMinecraft {
     }
 
     /**
+     * Keeps the game loop going behind {@link ErrorScreen} when an error leaves a frame early.
+     */
+    @WrapOperation(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runTick(Z)V"))
+    private void keepRunningForErrorScreen(Minecraft instance, boolean advanceGameTime, Operation<Void> original) {
+        ErrorScreen.markLoopRunning();
+        try {
+            original.call(instance, advanceGameTime);
+        } catch (Throwable throwable) {
+            ErrorScreen.recover(throwable);
+        }
+    }
+
+    /**
      * Hook game render task queue event
      */
     @Inject(method = "runTick", at = @At("HEAD"))
@@ -273,6 +275,14 @@ public abstract class MixinMinecraft {
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V", shift = At.Shift.BEFORE))
     private void hookPacketProcess(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(TickPacketProcessEvent.INSTANCE);
+    }
+
+    /**
+     * Counts the ticks of each frame in real time, and runs the burst ticks of the timer after them.
+     */
+    @ModifyExpressionValue(method = "runTick", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"))
+    private int hookFrameTicks(int ticks, @Local(name = "i") int index) {
+        return Timer.INSTANCE.frameTicks(ticks, index);
     }
 
     /**
@@ -309,6 +319,13 @@ public abstract class MixinMinecraft {
 
         if (ModuleAutoClicker.AttackButton.INSTANCE.getRunning()) {
             var clickAmount = ModuleAutoClicker.AttackButton.INSTANCE.getClicker().getClickAmount();
+            if (clickAmount != null && clickAmount > 0) {
+                return 0;
+            }
+        }
+
+        if (ModuleTriggerBot.INSTANCE.getRunning()) {
+            var clickAmount = ModuleTriggerBot.INSTANCE.getClicker().getClickAmount();
             if (clickAmount != null && clickAmount > 0) {
                 return 0;
             }
@@ -354,8 +371,14 @@ public abstract class MixinMinecraft {
     }
 
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
-    private void hookWorldChangeEvent(ClientLevel world, boolean bl, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
+    private void hookWorldChangeEvent(ClientLevel level, boolean stopSound, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new WorldChangeEvent(level));
+        if (ModuleFreeCam.INSTANCE.getEnabled()) {
+            ModuleFreeCam.INSTANCE.setEnabled(false);
+            // isn't inGame, needs to be called manually
+            // TODO: find a better way to do this
+            ModuleFreeCam.INSTANCE.onDisabled();
+        }
     }
 
     @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",

@@ -57,6 +57,7 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -70,8 +71,10 @@ import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import net.minecraft.util.Util
 import java.io.File
+import java.nio.file.Files
 import java.time.Instant
 import java.time.ZoneId
+import kotlin.io.path.exists
 
 /**
  * LocalConfig Command
@@ -199,23 +202,23 @@ object CommandLocalConfig : CommandRegistrar {
             optionalInclusions = inclusions,
         )
 
-        val file = ConfigSystem.userConfigsFolder.resolve("$name.json")
+        val path = ConfigSystem.userConfigsFolder.resolve("$name.json").toPath()
+
+        if (path.exists() && !overwrite) {
+            chat(markAsError(t("save.alreadyExists", variable(name))))
+            return 1
+        }
+
         try {
-            if (file.exists()) {
-                if (overwrite) {
-                    file.delete()
-                } else {
-                    chat(markAsError(t("save.alreadyExists", variable(name))))
-                    return 1
+            path.atomicWrite { tempPath ->
+                Files.newBufferedWriter(tempPath).use { writer ->
+                    serializeAutoConfig(
+                        writer,
+                        includeConfiguration,
+                        marketplaceItemId = ConfigTracker.trackedItemId
+                    )
                 }
             }
-
-            file.createNewFile()
-            serializeAutoConfig(
-                file.bufferedWriter(),
-                includeConfiguration,
-                marketplaceItemId = ConfigTracker.trackedItemId
-            )
             chat(regular(t("save.created", variable(name))))
         } catch (e: Exception) {
             chat(regular(t("save.failedToCreate", variable(name))))
@@ -237,7 +240,7 @@ object CommandLocalConfig : CommandRegistrar {
                 return 1
             }
 
-            val config = bufferedReader().use { r -> publicGson.newJsonReader(r).parseTree().asJsonObject }
+            val config = publicGson.newJsonReader(bufferedReader()).use { it.parseTree().asJsonObject }
             AutoConfig.withLoading {
                 AutoConfig.loadAutoConfig(config, modules)
             }

@@ -43,12 +43,12 @@ import kotlin.time.Duration
  * it will be retried up to [maxRetries] times.
  * @return A [RetryingJob] object.
  */
-inline fun <T : Any> CoroutineScope.retrying(
+fun <T : Any> CoroutineScope.retrying(
     interval: Duration,
     name: String = "data",
     maxRetries: Int = Int.MAX_VALUE,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    crossinline producer: suspend CoroutineScope.() -> T,
+    producer: suspend CoroutineScope.() -> T,
 ) : RetryingJob<T> {
     val stateFlow = MutableStateFlow<RetryingJob.State<T>>(RetryingJob.State.Init)
     val producerJob = launch(
@@ -62,10 +62,14 @@ inline fun <T : Any> CoroutineScope.retrying(
                 attempt++
                 val value = producer()
                 stateFlow.value = RetryingJob.State.Success(value, attempt)
-                break
+                return@launch
+            } catch (e: CancellationException) {
+                throw e
             } catch (t: Throwable) {
                 logger.warn("Failed to get $name, attempt $attempt/$maxRetries", t)
                 stateFlow.value = RetryingJob.State.Loading(t, attempt)
+            }
+            if (attempt < maxRetries) {
                 delay(interval)
             }
         }
@@ -97,6 +101,8 @@ data class RetryingJob<T : Any>(
     }
 
     suspend fun getFinalState(): State.Final<T> {
+        // Like Job.join(), awaiting the result must start a lazy producer.
+        producerJob.start()
         return stateFlow.first { it is State.Final } as State.Final<T>
     }
 

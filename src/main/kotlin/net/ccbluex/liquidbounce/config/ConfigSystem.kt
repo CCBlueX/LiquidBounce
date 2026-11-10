@@ -31,11 +31,13 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.clientLogger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
-import net.ccbluex.liquidbounce.utils.io.extractZip
 import java.io.File
 import java.io.Reader
 import java.io.Writer
+import java.nio.file.Files
+import java.util.zip.ZipFile
 
 /**
  * A hierarchy config system
@@ -152,7 +154,9 @@ object ConfigSystem {
             zipFile = File(backupFolder, "${fileName}_${suffix++}.zip")
         }
 
-        groups.map { valueGroup -> valueGroup.jsonFile }.createZipArchive(zipFile)
+        zipFile.toPath().atomicWrite {
+            groups.map { valueGroup -> valueGroup.jsonFile }.createZipArchive(it.toFile())
+        }
     }
 
     /**
@@ -162,11 +166,14 @@ object ConfigSystem {
         val zipFile = File(backupFolder, "$fileName.zip")
         check(zipFile.exists()) { "Backup file does not exist" }
 
-        // Store all configs to make sure they are up to date,
-        // before we overwrite some of them through [extractZip]
-        storeAll()
-        extractZip(zipFile, rootFolder)
-        loadAll()
+        // The backup holds the json files of the configs, which load straight from it
+        ZipFile(zipFile).use { zip ->
+            for (config in configs) {
+                val entry = zip.getEntry(config.jsonFile.name) ?: continue
+                deserializeValueGroup(config, zip.getInputStream(entry).bufferedReader())
+                store(config)
+            }
+        }
     }
 
     /**
@@ -213,22 +220,11 @@ object ConfigSystem {
      * The config should be known to the config system.
      */
     fun store(config: Config) {
-        config.jsonTmpFile.runCatching {
-            // Write to temp file
-            logger.debug("Writing config ${config.loweredName}...")
-            if (!exists()) {
-                createNewFile().let { logger.debug("Created new file (status: $it)") }
-            }
-            serializeValueGroup(config, bufferedWriter())
-            logger.debug("Writing config ${config.loweredName}... done")
-
-            // Move temp file to final file
-            if (config.jsonFile.exists() && !config.jsonFile.delete()) {
-                error("Unable to delete old file for config ${config.loweredName}")
-            }
-
-            if (!renameTo(config.jsonFile)) {
-                error("Unable to rename temp file to final file for config ${config.loweredName}")
+        runCatching {
+            config.jsonFile.toPath().atomicWrite { tmp ->
+                Files.newBufferedWriter(tmp).use {
+                    serializeValueGroup(config, it)
+                }
             }
             logger.info("Successfully stored config '${config.loweredName}'.")
         }.onFailure {
@@ -240,8 +236,8 @@ object ConfigSystem {
      * Serialize a config to a writer and close it
      */
     private fun serializeValueGroup(valueGroup: ValueGroup, writer: Writer, gson: Gson = fileGson) {
-        gson.newJsonWriter(writer).use {
-            gson.toJson(valueGroup, ValueGroup::class.javaObjectType, it)
+        writer.use {
+            gson.toJson(valueGroup, ValueGroup::class.java, it)
         }
     }
 
@@ -249,7 +245,13 @@ object ConfigSystem {
      * Serialize a config to a [JsonObject].
      */
     fun serializeValueGroup(valueGroup: ValueGroup, gson: Gson = fileGson): JsonObject =
-        gson.toJsonTree(valueGroup, ValueGroup::class.javaObjectType) as JsonObject
+        gson.toJsonTree(valueGroup, ValueGroup::class.java) as JsonObject
+
+    /**
+     * Deserialize a config from a [CharSequence]
+     */
+    fun deserializeValueGroup(valueGroup: ValueGroup, source: CharSequence, gson: Gson = fileGson) =
+        deserializeValueGroup(valueGroup, Reader.of(source), gson)
 
     /**
      * Deserialize a config from a reader, and close it

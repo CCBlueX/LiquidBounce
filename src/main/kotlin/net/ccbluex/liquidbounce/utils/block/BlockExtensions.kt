@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.booleans.BooleanObjectPair
 import it.unimi.dsi.fastutil.ints.IntCollection
 import it.unimi.dsi.fastutil.ints.IntLongPair
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.liquidbounce.common.TweakedMethods
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
@@ -212,9 +213,9 @@ fun Vec3.searchBlocksInCuboid(
         floor(this.z - radius).toInt(),
     )
     val to = BlockPos(
-        ceil(this.x + radius).toInt(),
-        ceil(this.y + radius).toInt(),
-        ceil(this.z + radius).toInt(),
+        floor(this.x + radius).toInt(),
+        floor(this.y + radius).toInt(),
+        floor(this.z + radius).toInt(),
     )
 
     return buildList {
@@ -314,7 +315,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 }
 
 /**
- * Basically [BlockGetter.raycast] but this method allows us to exclude blocks using [exclude].
+ * Basically [BlockGetter.clip] but this method allows us to exclude blocks using [exclude].
  */
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
@@ -372,14 +373,7 @@ fun BlockGetter.raycast(
 
             if (blockHitDistance <= fluidHitDistance) blockHitResult else fluidHitResult
         },
-        { raycastContext ->
-            val vec = raycastContext.from.subtract(raycastContext.to)
-            BlockHitResult.miss(
-                raycastContext.to,
-                Direction.getApproximateNearest(vec.x, vec.y, vec.z),
-                BlockPos.containing(raycastContext.to)
-            )
-        })
+        TweakedMethods.DEFAULT_MISS_FACTORY)
 }
 
 fun BlockPos.canStandOn(): Boolean {
@@ -417,8 +411,8 @@ inline fun AABB.isBlockAtPosition(
 ): Boolean {
     val blockPos = BlockPos.MutableBlockPos(0, floor(minY).toInt(), 0)
 
-    for (x in floor(minX).toInt()..ceil(maxX).toInt()) {
-        for (z in floor(minZ).toInt()..ceil(maxZ).toInt()) {
+    for (x in floor(minX).toInt()..floor(maxX).toInt()) {
+        for (z in floor(minZ).toInt()..floor(maxZ).toInt()) {
             blockPos.x = x
             blockPos.z = z
 
@@ -460,7 +454,7 @@ inline fun AABB.collideBlockIntersects(
 val AABB.collidingRegion: BoundingBox
     get() = BoundingBox(
         floor(this.minX).toInt(), floor(this.minY).toInt(), floor(this.minZ).toInt(),
-        ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt(),
+        floor(this.maxX).toInt(), floor(this.maxY).toInt(), floor(this.maxZ).toInt(),
     )
 
 val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
@@ -502,7 +496,7 @@ fun doPlacement(
                 val useItemResult = interaction.useItem(player, hand, rotation.yRot, rotation.xRot)
                 if (useItemResult is Success) {
                     if (useItemResult.swingSource == SwingSource.PREDICTED && onItemUseSuccess()) {
-                        swingMode.swing(hand)
+                        swingMode.interactSwing(hand)
                     }
 
                     player.itemUsed(hand)
@@ -536,7 +530,7 @@ private inline fun handleActionsOnAccept(
     }
 
     if (shouldSwing()) {
-        swingMode.swing(hand)
+        swingMode.interactSwing(hand)
     }
 
     if (wasStackUsed) {
@@ -599,10 +593,8 @@ fun doBreak(
     val blockPos = rayTraceResult.blockPos
 
     if (player.isCreative) {
-        if (interaction.startDestroyBlock(blockPos, rayTraceResult.direction)) {
-            swingMode.swing(InteractionHand.MAIN_HAND)
-            return
-        }
+        interaction.startDestroyBlock(blockPos, rayTraceResult.direction)
+        swingMode.attackSwing()
     }
 
     if (immediate) {
@@ -613,7 +605,7 @@ fun doBreak(
                 ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence
             )
         }
-        swingMode.swing(InteractionHand.MAIN_HAND)
+        swingMode.attackSwing()
         interaction.startPrediction(world) { sequence ->
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence
@@ -623,7 +615,7 @@ fun doBreak(
     }
 
     if (interaction.continueDestroyBlock(blockPos, direction)) {
-        swingMode.swing(InteractionHand.MAIN_HAND)
+        swingMode.attackSwing()
         world.addBreakingBlockEffects(blockPos, direction, false)
     }
 }
@@ -649,6 +641,11 @@ fun Block?.fallDamageMultiplier(entity: Entity): Float =
 fun BlockPos.isBlastResistant(): Boolean {
     return getBlock()!!.explosionResistance >= 600f
 }
+
+val UnbreakableFirst: Comparator<Block> = Comparator.comparingDouble<Block> {
+    val hardness = it.defaultDestroyTime()
+    if (hardness == -1f) Double.POSITIVE_INFINITY else hardness.toDouble()
+}.reversed()
 
 @Suppress("UnusedReceiverParameter")
 fun RespawnAnchorBlock.isCharged(state: BlockState): Boolean {
@@ -724,11 +721,7 @@ fun BlockPos.isUnobstructed(
     except: Entity? = null,
     box: AABB = FULL_BOX,
     predicate: Predicate<Entity> = Predicates.alwaysTrue(),
-): Boolean {
-    val posBox = box + this
-    return world.getEntities(except, posBox, PREDICATE_UNOBSTRUCTED.and(predicate))
-        .isEmpty()
-}
+): Boolean = getBlockingEntities(except, box, predicate).isEmpty()
 
 fun BlockPos.getBlockingEntities(
     except: Entity? = null,

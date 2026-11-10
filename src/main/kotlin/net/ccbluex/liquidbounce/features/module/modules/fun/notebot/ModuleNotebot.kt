@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.util.Mth
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 
 /**
@@ -214,7 +213,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
     }
 
     fun getPlayedNote(note: NbsNoteBlock): InstrumentNote {
-        val noteValue = Mth.clamp(note.key - 33, 0, 24)
+        val noteValue = (note.key - 33).coerceIn(0, 24)
         val instrument = if (!this.pianoOnly) {
             note.instrument.toInt()
         } else {

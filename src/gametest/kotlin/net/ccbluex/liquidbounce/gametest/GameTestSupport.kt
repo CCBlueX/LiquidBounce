@@ -19,36 +19,72 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.levelgen.Heightmap
+import net.minecraft.world.phys.Vec3
+import org.apache.commons.lang3.function.FailableConsumer
+import org.apache.commons.lang3.function.FailableFunction
 
 // LiquidBounce holds a TaskProgressScreen until its startup tasks (e.g. the DJL natives) finish
 private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
 
-/**
- * Waits for the title screen behind LiquidBounce's startup tasks.
- */
+/** `-PgameTestAngleSmooth=<mode>` (Sigmoid, Acceleration, ...) runs the tests with every AngleSmooth on that mode. */
+private val angleSmooth: String? = System.getProperty("net.ccbluex.liquidbounce.gametest.angleSmooth")
+
 fun ClientGameTestContext.waitForClient() {
     waitFor({ client -> client.gui.screen() is TitleScreen }, STARTUP_TIMEOUT_TICKS)
     check(fromClient { LiquidBounce.isInitialized }) { "LiquidBounce did not finish initializing" }
+    if (angleSmooth != null) {
+        onClient { ModuleManager.forEach(::useAngleSmooth) }
+    }
 }
 
-/**
- * Runs [block] on the client thread; the game only allows touching it there.
- */
-fun ClientGameTestContext.onClient(block: () -> Unit) = runOnClient<RuntimeException> { block() }
+/** Applies the AngleSmooth mode of the run to settings a test makes itself; modules get it in [waitForClient]. */
+fun useAngleSmooth(group: ValueGroup) {
+    val mode = angleSmooth ?: return
+    group.collectValuesRecursively()
+        .filterIsInstance<ModeValueGroup<*>>()
+        .filter { setting -> setting.name == "AngleSmooth" && setting.modes.any { it.tag == mode } }
+        .forEach { it.setByString(mode) }
+}
 
-fun <T> ClientGameTestContext.fromClient(block: () -> T): T = computeOnClient<T, RuntimeException> { block() }
+fun ClientGameTestContext.onClient(
+    block: FailableConsumer<Minecraft, RuntimeException>
+) = runOnClient<RuntimeException>(block)
 
-/**
- * Runs a client command, without the prefix.
- */
+fun <T> ClientGameTestContext.fromClient(
+    block: FailableFunction<Minecraft, T, RuntimeException>
+): T = computeOnClient(block)
+
 fun ClientGameTestContext.command(command: String) = onClient { CommandManager.execute(command) }
 
-/**
- * The suggestions for [input], a command with the prefix, completed at its end.
- */
+/** The suggestions for [input], a command with the prefix, completed at its end. */
 fun ClientGameTestContext.suggest(input: String): List<String> = fromClient {
     CommandManager.autoComplete(input, input.length).get().list.map { it.text }
+}
+
+fun ClientGameTestContext.playerPosition(): Vec3 = fromClient { checkNotNull(it.player).position() }
+
+fun MinecraftServer.player(): ServerPlayer = playerList.players.first()
+
+fun <T> TestServerContext.player(block: (ServerPlayer) -> T): T =
+    computeOnServer<T, RuntimeException> { block(it.player()) }
+
+fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
+    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
+}
+
+fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int = computeOnServer<Int, RuntimeException> {
+    val level = it.overworld()
+    BlockPos.betweenClosed(from, to).count { pos -> !level.getBlockState(pos).isAir }
 }

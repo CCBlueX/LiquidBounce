@@ -19,12 +19,15 @@
 package net.ccbluex.liquidbounce.api.models.auth
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
 import net.ccbluex.liquidbounce.api.services.user.UserApi
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.utils.client.env
 import java.util.UUID
 
@@ -40,6 +43,9 @@ data class ClientAccount(
     @Exclude
     var cosmetics: Set<Cosmetic>? = null
 ) {
+    @Transient
+    private val renewing = Mutex()
+
     suspend fun takeSession(): OAuthSession = session?.takeIf { !it.accessToken.isExpired() } ?: run {
         renew()
         session ?: error("No session")
@@ -58,7 +64,13 @@ data class ClientAccount(
     }
 
     suspend fun renew() = withContext(Dispatchers.IO) {
-        session = OAuthClient.renewToken(session ?: error("No session"))
+        val spent = session ?: error("No session")
+        renewing.withLock {
+            if (session === spent) {
+                session = OAuthClient.renewToken(spent)
+                ClientAccountManager.saveToDisk()
+            }
+        }
     }
 
     companion object {

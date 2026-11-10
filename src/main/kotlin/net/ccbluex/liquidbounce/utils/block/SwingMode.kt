@@ -25,32 +25,60 @@ import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.world.InteractionHand
-import java.util.function.Consumer
+import net.minecraft.world.item.component.SwingAnimation
+import java.util.EnumSet
 
 @Suppress("unused")
 @AddonApi
 enum class SwingMode(
     override val tag: String,
     val serverSwing: Boolean,
-) : Tagged, Consumer<InteractionHand> {
+) : Tagged {
 
     DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),
     HIDE_CLIENT("HideForClient", true),
     HIDE_SERVER("HideForServer", false);
 
-    fun swing(hand: InteractionHand) = accept(hand)
+    /**
+     * Attack/Break swing, mirroring [net.minecraft.client.Minecraft.startAttack].
+     */
+    fun attackSwing() = swing(InteractionHand.MAIN_HAND, player.mainHandItem.attackAnimation, true)
 
-    override fun accept(hand: InteractionHand) {
-        val animation = player.getItemInHand(hand).attackAnimation
-        when (this) {
-            DO_NOT_HIDE -> {
-                player.swing(hand, animation, false)
-                network.send(ServerboundPunchPacket.INSTANCE)
-            }
-            HIDE_BOTH -> {}
-            HIDE_CLIENT -> network.send(ServerboundPunchPacket.INSTANCE)
-            HIDE_SERVER -> player.swing(hand, animation, false)
+    @Deprecated(
+        message = "You can only do attack swing with main hand",
+        replaceWith = ReplaceWith("this.attackSwing()"),
+    )
+    fun swing(hand: InteractionHand) = attackSwing()
+
+    /**
+     * Interaction swing, mirroring [net.minecraft.client.Minecraft.startUseItem]: the swing is only
+     * predicted locally and the server broadcasts it from its own interaction result. Hence
+     * [HIDE_SERVER] cannot hide it, and no [ServerboundPunchPacket] is sent.
+     */
+    fun interactSwing(hand: InteractionHand) =
+        swing(hand, player.getItemInHand(hand).interactAnimation, false)
+
+    private fun swing(hand: InteractionHand, animation: SwingAnimation, punch: Boolean) {
+        if (this == HIDE_BOTH) {
+            return
         }
+
+        if (this != HIDE_CLIENT) {
+            player.swing(hand, animation, false)
+        }
+
+        if (punch && serverSwing) {
+            network.send(ServerboundPunchPacket.INSTANCE)
+        }
+    }
+
+    companion object {
+        /**
+         * Choices for [interactSwing] only: interactions are swung by the server itself, so
+         * [HIDE_SERVER] behaves like [DO_NOT_HIDE] and [HIDE_BOTH] like [HIDE_CLIENT].
+         */
+        @JvmField
+        val INTERACT_CHOICES: Set<SwingMode> = EnumSet.of(DO_NOT_HIDE, HIDE_CLIENT)
     }
 }

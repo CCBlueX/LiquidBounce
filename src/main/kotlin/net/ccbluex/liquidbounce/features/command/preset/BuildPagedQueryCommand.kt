@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.preset
 
 import com.mojang.brigadier.arguments.IntegerArgumentType
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -114,6 +116,19 @@ private fun buildPaginationText(
 
     return texts.joinToText(PlainText.SPACE)
 }
+
+/**
+ * The page bar of [pagedQuery] for a listing paged elsewhere, such as by the API: each page runs [command].
+ * Nothing for a single page.
+ */
+fun pageNavigation(currentPage: Int, maxPage: Int, command: (page: Int) -> String): Component? =
+    if (maxPage <= 1) {
+        null
+    } else {
+        buildPaginationText(currentPage, maxPage) { page ->
+            runCatching { CommandManager.execute(command(page)) }.onFailure(CommandExecutor::handleExceptions)
+        }
+    }
 
 /**
  * Adds the optional page argument and executor to this literal (e.g. `.help [page]`).

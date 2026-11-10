@@ -54,16 +54,20 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
         val disableWorldFog by boolean("DisableWorldFog", false)
 
-        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", false) {
-            val color by color("Color", Color4b(47, 128, 255, 201))
+        object FogColorOverride : ToggleableValueGroup(this, "FogColorOverride", true) {
+            val color by color("Color", Color4b.LIQUID_BOUNCE.alpha(201))
         }
 
-        private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
+        init {
+            tree(FogColorOverride)
+        }
 
-        private val environmental by floatRange("Environmental", 0f..1024f, -16f..2048f)
+        private val backgroundColor by color("BackgroundColor", Color4b.LIQUID_BOUNCE.alpha(201))
+
+        private val environmental by floatRange("Environmental", 5f..40f, -16f..2048f)
         private val renderDistance by floatRange("RenderDistance", 230f..256f, 0f..1024f)
-        private val skyEnd by float("SkyEnd", 256f, 0f..1024f)
-        private val cloudEnd by float("CloudEnd", 20480f, 0f..4096f)
+        private val skyEnd by float("SkyEnd", 40f, 0f..1024f)
+        private val cloudEnd by float("CloudEnd", 40f, 0f..4096f)
 
         /**
          * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.fog.MixinFogRenderer
@@ -93,7 +97,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
      */
-    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
+    object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", true) {
         val mode = choices("Mode", 0) {
             arrayOf(EditorMode.SingleColor, EditorMode.Custom)
         }
@@ -105,7 +109,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
             abstract fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean
 
             object SingleColor : EditorMode("SingleColor") {
-                private val color by color("Color", Color4b.BLUE)
+                private val color by color("Color", Color4b.LIQUID_BOUNCE)
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
                     texture.clearColor(color)
@@ -115,8 +119,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
 
             object Custom : EditorMode("Custom") {
                 private val blockLightTint by color("BlockLightTint", Color4b.WHITE.alpha(0))
-                private val skyLightColor by color("SkyLightColor", Color4b.BLUE.alpha(0))
-                private val ambientColor by color("AmbientColor", Color4b.BLUE.alpha(0))
+                private val skyLightColor by color("SkyLightColor", Color4b.LIQUID_BOUNCE.alpha(0))
+                private val ambientColor by color("AmbientColor", Color4b.LIQUID_BOUNCE.alpha(0))
                 private val nightVisionColor by color("NightVisionColor", Color4b.WHITE.alpha(0))
 
                 override fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState): Boolean {
@@ -141,7 +145,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     }
 
     object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {
-        val color by color("Color", Color4b.BLUE)
+        val color by color("Color", Color4b.LIQUID_BOUNCE)
     }
 
     init {

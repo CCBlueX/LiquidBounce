@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.utils.math
 import net.minecraft.util.Mth
 import org.joml.Vector2f
 import java.math.RoundingMode
+import kotlin.math.exp
 
 inline fun Float.toRadians() = this * Mth.DEG_TO_RAD
 inline fun Double.toRadians() = this * Mth.DEG_TO_RAD
@@ -39,6 +40,16 @@ inline fun Float.fastSin() = toDouble().fastSin()
 inline fun Double.fastSin() = Mth.sin(this)
 inline fun Float.fastCos() = toDouble().fastCos()
 inline fun Double.fastCos() = Mth.cos(this)
+
+/**
+ * @return [this] + [a] * [b]
+ */
+inline fun Float.fma(a: Float, b: Float) = Math.fma(a, b, this)
+
+/**
+ * @return [this] + [a] * [b]
+ */
+inline fun Double.fma(a: Double, b: Double) = Math.fma(a, b, this)
 
 /**
  * Rounds the given number to the specified decimal place (the first by default).
@@ -63,3 +74,9 @@ fun Long.high32(): Int = (this shr 32).toInt()
 fun Long.low32(): Int = this.toInt()
 
 fun longFrom32(high: Int, low: Int): Long = (high.toLong() shl 32) or (low.toLong() and 0xFFFFFFFF)
+
+/**
+ * Moves towards [target] as far as an exponential decay of [rate] per second gets in [millis].
+ */
+fun Float.approach(target: Float, millis: Float, rate: Float) =
+    this + (target - this) * (1f - exp(-millis / 1000f * rate))

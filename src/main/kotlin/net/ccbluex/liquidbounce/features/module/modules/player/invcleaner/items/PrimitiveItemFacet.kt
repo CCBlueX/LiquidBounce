@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
@@ -31,8 +32,7 @@ class PrimitiveItemFacet(itemSlot: ItemSlot, override val category: ItemCategory
             ComparatorChain<PrimitiveItemFacet>(
                 Comparator.comparingInt { it.worth },
                 PreferStackSize.PREFER_FEWER.asHolderComparator(),
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                DEFAULT_TIE_BREAK,
             )
     }
 

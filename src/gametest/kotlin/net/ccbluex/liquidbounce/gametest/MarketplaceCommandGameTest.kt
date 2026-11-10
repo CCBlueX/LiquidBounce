@@ -66,7 +66,7 @@ class MarketplaceCommandGameTest : FabricClientGameTest {
         context.command("marketplace unsubscribe \"game test glass\"")
         context.waitFor { !MarketplaceManager.isSubscribed(glass.id) }
 
-        // Refused with the ids to pick from, so both stay
+        // Refused with the addresses to pick from, so both stay
         context.command("marketplace unsubscribe GameTestTwin")
         context.waitTicks(SETTLE_TICKS)
         check(context.fromClient { items.count { MarketplaceManager.isSubscribed(it.id) } } == 2) {

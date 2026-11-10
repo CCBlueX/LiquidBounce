@@ -84,9 +84,13 @@ public final class TextBuilder {
         };
         assert result != null;
 
+        this.discard();
+        return result;
+    }
+
+    public void discard() {
         this.inner = null;
         this.size = 0;
-        return result;
     }
 
 }

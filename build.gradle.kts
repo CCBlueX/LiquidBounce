@@ -18,11 +18,13 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
+import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import java.time.Duration
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.dokka.gradle.workers.ProcessIsolation
 import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 plugins {
@@ -39,6 +41,11 @@ base {
     archivesName = project.property("archives_base_name") as String
     version = project.property("mod_version") as String
     group = project.property("maven_group") as String
+}
+
+dokka {
+    // Dokka Generator runs in its own worker process, so org.gradle.jvmargs does not apply here.
+    (dokkaGeneratorIsolation.get() as ProcessIsolation).maxHeapSize = "4g"
 }
 
 /** Includes dependency recursively in the JAR file */
@@ -95,6 +102,8 @@ loom {
 // Client game tests: `src/gametest` is a separate source set/mod, never part of the main jar.
 // Run with `./gradlew runClientGameTest`. Headless, SDL needs EGL, since Xvfb has no sRGB GLX visual:
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
+// `-PgameTestNavigation=false` skips the slow navigation tests. `-PgameTestAngleSmooth=Sigmoid` (or another AngleSmooth
+// mode) runs the tests with every rotation smoothed that way.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -113,6 +122,13 @@ loom.runs.named("clientGameTest") {
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
+    systemProperties.put(
+        "net.ccbluex.liquidbounce.gametest.navigation",
+        providers.gradleProperty("gameTestNavigation").getOrElse("true"),
+    )
+    providers.gradleProperty("gameTestAngleSmooth").orNull?.let {
+        systemProperties.put("net.ccbluex.liquidbounce.gametest.angleSmooth", it)
+    }
 }
 
 tasks.named("runClientGameTest") {
@@ -129,25 +145,35 @@ dependencies {
     api(libs.fabric.api)
     api(libs.fabric.kotlin)
 
+    // Mods the client only needs while developing. They must not reach the published POM - no add-on
+    // declares the Modrinth or ViaVersion repository - so they are compileOnly + localRuntime rather
+    // than api + runtimeOnly.
+
     // Mod menu
-    api(libs.modmenu)
+    compileOnly(libs.modmenu)
+    localRuntime(libs.modmenu)
 
     // Recommended mods (on IDE)
-    api(libs.sodium)
-    api(libs.lithium)
-    runtimeOnly(libs.immediatelyFast)
-    runtimeOnly(libs.iris)
+    compileOnly(libs.sodium)
+    compileOnly(libs.lithium)
+    localRuntime(libs.sodium)
+    localRuntime(libs.lithium)
+    localRuntime(libs.immediatelyFast)
+    localRuntime(libs.iris)
 
     // ViaFabricPlus
-    api(libs.vfp.api)
-    runtimeOnly(libs.vfp)
+    compileOnly(libs.vfp.api)
+    localRuntime(libs.vfp)
 
     // Exploit Preventer
-    api(libs.exploitPreventer.api)
-    runtimeOnly(libs.exploitPreventer)
+    compileOnly(libs.exploitPreventer.api)
+    localRuntime(libs.exploitPreventer)
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
+
+    // LiquidChat protocol client
+    jij(libs.axochat.client)
 
     // TheAltening alt service
     jij(libs.thealtening)
@@ -158,9 +184,10 @@ dependencies {
     // LWJGL EGL
     jij(libs.lwjgl.egl)
 
-    // JCEF Support
-    api(libs.mcef)
-    include(libs.mcef)
+    // Chromium, through the bundled CEF add-on. It depends on the client, so it stays out of the published POM and
+    // brings nothing along.
+    include(libs.liquidbounce.cef)
+    localRuntime(libs.liquidbounce.cef) { isTransitive = false }
 
     // Ktor Server
     jij(libs.ktor.server.core)
@@ -352,6 +379,17 @@ detekt {
     source.from("src/gametest/kotlin")
 }
 
+val detektTypeResolutionTasks = listOf("detektMain", "detektTest", "detektGametest")
+
+tasks.withType<Detekt>().matching { it.name in detektTypeResolutionTasks }.configureEach {
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt-type-resolution.yml"))
+    buildUponDefaultConfig.set(false)
+}
+
+tasks.check {
+    dependsOn(detektTypeResolutionTasks)
+}
+
 tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     description = "Overrides current baseline."
     ignoreFailures.set(true)
@@ -440,16 +478,14 @@ val publishVersion: String = providers.gradleProperty("publish.version").orNull 
 publishing {
     publications {
         create<MavenPublication>("mod") {
+            // Add-ons compile against the client, so they need its dependency metadata. Minecraft
+            // itself is not part of the outgoing variants, so it stays out of the POM.
+            from(components["java"])
+
             groupId = providers.gradleProperty("maven_group").get()
             artifactId = providers.gradleProperty("archives_base_name").get()
             version = publishVersion
 
-            // Dev and production are both Mojang names here, so there is no remapJar to publish.
-            artifact(tasks.jar)
-            artifact(tasks.named("sourcesJar")) { classifier = "sources" }
-
-            // No from(components["java"]): the POM would list com.mojang:minecraft, which no
-            // public repository serves.
             pom {
                 name = "LiquidBounce"
                 description = "A free mixin-based injection hacked-client for Minecraft " +

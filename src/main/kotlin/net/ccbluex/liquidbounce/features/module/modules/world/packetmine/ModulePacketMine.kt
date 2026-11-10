@@ -55,7 +55,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -133,9 +132,8 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
      *
      * Should never be accessed directly by other modules!
      */
-    @Suppress("ObjectPropertyName", "ObjectPropertyNaming")
-    var _target: MineTarget? = null // yes "_" because kotlin lacks package private
-        set(value) { // and I don't want to offer this to modules using this to mine something
+    internal var currentTarget: MineTarget? = null
+        set(value) {
             if (value == field) {
                 return
             }
@@ -166,12 +164,12 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     override fun onDisabled() {
         targetRenderer.clearSilently()
         nextAllowedStartTick = 0L
-        _target = null
+        currentTarget = null
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
-        val mineTarget = _target ?: return@handler
+        val mineTarget = currentTarget ?: return@handler
         mineTarget.updateBlockState()
         rotate(mineTarget)
     }
@@ -179,9 +177,9 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     @Suppress("unused")
     private val repeatable = handler<GameTickEvent> {
         tickCounter++
-        val mineTarget = _target ?: return@handler
+        val mineTarget = currentTarget ?: return@handler
         if (mineTarget.isInvalidOrOutOfRange()) {
-            _target = null
+            currentTarget = null
             return@handler
         }
 
@@ -254,7 +252,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
                 )
             }
 
-            swingMode.swing(InteractionHand.MAIN_HAND)
+            swingMode.attackSwing()
             return
         }
 
@@ -327,7 +325,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     }
 
     override fun breakingProgress(): BreakingProgress? {
-        val target = _target?.takeIf { it.started } ?: return null
+        val target = currentTarget?.takeIf { it.started } ?: return null
         val damage = breakDamage
         val progress = if (damage > 0f) {
             target.progress / damage
@@ -352,7 +350,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         val openScreen = mc.gui.screen() != null
-        val unchangeableActive = !mode.activeMode.canManuallyChange && _target != null
+        val unchangeableActive = !mode.activeMode.canManuallyChange && currentTarget != null
         if (openScreen || unchangeableActive || !player.abilities.mayBuild) {
             return@handler
         }
@@ -366,7 +364,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
         val blockPos = hitResult.blockPos
         val state = blockPos.stateOrEmpty
-        val activeTarget = _target
+        val activeTarget = currentTarget
 
         val shouldTargetBlock = mode.activeMode.shouldTarget(blockPos, state)
         // stop when the block is clicked again
@@ -377,7 +375,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             return@handler
         }
 
-        _target = if (shouldTargetBlock && world.worldBorder.isWithinBounds(blockPos) && !isCancelledByUser) {
+        currentTarget = if (shouldTargetBlock && world.worldBorder.isWithinBounds(blockPos) && !isCancelledByUser) {
             MineTarget(blockPos.immutable)
         } else {
             null
@@ -393,7 +391,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        _target = null
+        currentTarget = null
     }
 
     @Suppress("unused")
@@ -412,13 +410,13 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     }
 
     private fun updatePosOnChange(pos: BlockPos, state: BlockState) {
-        val target = _target ?: return
+        val target = currentTarget ?: return
         if (pos != target.targetPos) {
             return
         }
 
         if (state.isAir && mode.activeMode.stopOnStateChange) {
-            _target = null
+            currentTarget = null
         }
     }
 
@@ -429,19 +427,18 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             return
         }
 
-        val activeTarget = _target
+        val activeTarget = currentTarget
         if (activeTarget != null && shouldBlockTargetChange(activeTarget)) {
             return
         }
 
         if (activeTarget?.finished != false && mode.activeMode.canManuallyChange || activeTarget == null) {
-            _target = MineTarget(blockPos.immutable)
+            currentTarget = MineTarget(blockPos.immutable)
         }
     }
 
-    @Suppress("FunctionNaming", "FunctionName")
-    fun _resetTarget() {
-        _target = null
+    internal fun resetTarget() {
+        currentTarget = null
     }
 
 }

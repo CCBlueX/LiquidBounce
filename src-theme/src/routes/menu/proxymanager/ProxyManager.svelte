@@ -185,6 +185,8 @@
                     port={currentEditProxy.port}
                     proxyType={currentEditProxy.type}
                     forwardAuthentication={currentEditProxy.forwardAuthentication}
+                    proxyResourcePacks={currentEditProxy.proxyResourcePacks}
+                    proxyDns={currentEditProxy.proxyDns}
                     username={currentEditProxy.credentials?.username ?? ""}
                     password={currentEditProxy.credentials?.password ?? ""}
                     requiresAuthentication={currentEditProxy.credentials !== undefined}/>

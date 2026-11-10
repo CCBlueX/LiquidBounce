@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.integration.backend.browser
 
+import net.ccbluex.liquidbounce.features.addon.AddonApi
+
+@AddonApi
 sealed class BrowserState private constructor(val isCompleted: Boolean) {
     data object Idle : BrowserState(false)
     data object Stateless : BrowserState(true)

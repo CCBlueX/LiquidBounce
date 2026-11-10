@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
+import net.ccbluex.liquidbounce.render.engine.ItemChamsEffectRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
@@ -46,6 +47,7 @@ import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -92,11 +94,23 @@ public abstract class MixinGameRenderer {
         RotationManager.INSTANCE.applyChangeLookRotation(deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 
-    @Inject(method = "extractCamera", at = @At("TAIL"))
-    private void hookWorldToScreenMatricesInExtract(
-        DeltaTracker deltaTracker, float worldPartialTicks, CallbackInfo ci, @Local(name = "cameraState") CameraRenderState cameraState
+    /**
+     * The projection the level is drawn with. View bobbing, the hurt shake and the nausea warp are only
+     * multiplied into this copy, so overlays projected with cameraState's own matrix would float.
+     */
+    @Inject(
+        method = "renderLevel",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lorg/joml/Matrix4f;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"
+        )
+    )
+    private void hookWorldToScreenMatrices(
+        CallbackInfo ci,
+        @Local(name = "cameraState") CameraRenderState cameraState,
+        @Local(name = "projectionMatrix") Matrix4f projectionMatrix
     ) {
-        WorldToScreen.setMatrices(cameraState.projectionMatrix, cameraState.viewRotationMatrix, cameraState.pos);
+        WorldToScreen.setMatrices(projectionMatrix, cameraState.viewRotationMatrix, cameraState.pos);
     }
 
     /**
@@ -153,7 +167,18 @@ public abstract class MixinGameRenderer {
         FeatureRenderDispatcher instance, SubmitNodeStorage submitNodeStorage,
         Operation<FeatureRenderDispatcher.PreparedFrame> original
     ) {
-        return ModuleItemChams.Lightmap.doOverride(() -> original.call(instance, submitNodeStorage));
+        var frame =
+            ModuleItemChams.Lightmap.doOverride(() -> original.call(instance, submitNodeStorage));
+        ItemChamsEffectRenderer.capture(frame);
+        return frame;
+    }
+
+    /**
+     * Composes the ItemChams effect layer once the vanilla "Item in hand" pass has been closed.
+     */
+    @Inject(method = "renderItemInHand", at = @At("RETURN"))
+    private void composeItemChamsEffects(CallbackInfo ci) {
+        ItemChamsEffectRenderer.compositeIfNeeded(this.mainRenderTarget);
     }
 
     @Inject(

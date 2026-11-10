@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.ParseResults
 import com.mojang.brigadier.StringReader
+import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestion
 import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntList
@@ -48,10 +50,13 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
+import net.ccbluex.liquidbounce.features.command.commands.client.liquidchat.CommandLiquidChat
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCoordinates
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandFollow
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandGoto
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandPing
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandRemoteView
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandSay
@@ -65,13 +70,13 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.Comman
 import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemStack
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandMapImage
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandPlayerTeleport
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandTeleport
+import net.ccbluex.liquidbounce.features.command.commands.ingame.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandPlayerTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandTeleport
-import net.ccbluex.liquidbounce.features.command.commands.module.teleport.CommandVClip
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoTranslate
 import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTranslate
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
@@ -82,8 +87,10 @@ import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.levenshtein
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentUtils
 import java.util.Locale
 import java.util.TreeMap
 import java.util.concurrent.CompletableFuture
@@ -159,10 +166,13 @@ object CommandManager : EventListener {
         register(CommandBind)
         register(CommandAutoAccount)
         register(CommandCenter)
+        register(CommandGoto)
+        register(CommandFollow)
         register(CommandHelp)
         register(CommandRemoteView)
         register(CommandDebug)
         register(CommandFriend)
+        register(CommandLiquidChat)
         register(CommandClient)
         register(CommandConfig)
         register(CommandLocalConfig)
@@ -295,7 +305,7 @@ object CommandManager : EventListener {
      * the argument part.
      */
     private fun resolvePathTokenCount(tokens: List<String>): Int {
-        var node: com.mojang.brigadier.tree.CommandNode<ClientCommandSource> = getDispatcher().root
+        var node: CommandNode<ClientCommandSource> = getDispatcher().root
         var pathTokenCount = 0
 
         for (token in tokens) {
@@ -383,10 +393,10 @@ object CommandManager : EventListener {
             if (aliases.isEmpty()) {
                 node.name.asPlainText()
             } else {
-                net.ccbluex.liquidbounce.utils.text.textOf(
+                textOf(
                     node.name.asPlainText(),
                     " (".asPlainText(ChatFormatting.DARK_GRAY),
-                    aliases.joinToText(", ".asPlainText(ChatFormatting.DARK_GRAY)),
+                    aliases.joinToText(ComponentUtils.DEFAULT_SEPARATOR),
                     ")".asPlainText(ChatFormatting.DARK_GRAY),
                 )
             }
@@ -397,7 +407,7 @@ object CommandManager : EventListener {
      * Builds the usage lines for a command context, based on the Brigadier tree
      * ([CommandDispatcher.getSmartUsage]).
      */
-    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
+    private fun buildUsage(context: CommandContext<ClientCommandSource>): List<Component> {
         val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
         val commandPath = context.nodes.joinToString(" ") { it.node.name }
 

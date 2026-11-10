@@ -19,63 +19,85 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
+import net.ccbluex.liquidbounce.config.types.group.Mode
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.assumeEmptyBowl
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup.DropAfterUse.wait
-import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.util.Prediction
 
 internal object Soup : HealthBasedBuff("Soup") {
 
-    private object DropAfterUse : ToggleableValueGroup(this, "DropAfterUse", true) {
-        val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
+    private val afterUse = modes<Mode>(this, "AfterUse", activeIndex = 1) {
+        arrayOf(NoneMode(it), Drop, Stack)
+    }
+
+    private abstract class BowlMode(name: String) : Mode(name) {
+
+        override val parent: ModeValueGroup<*>
+            get() = afterUse
+
+        private val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
         val wait by intRange("Wait", 1..2, 1..20, "ticks")
+
+        fun holdsBowl(slot: HotbarItemSlot) =
+            (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL)) && slot != HotbarItemSlot.OFFHAND
+
+        abstract fun handleBowl(slot: HotbarItemSlot)
+
     }
 
-    private object SoupStacker : ToggleableValueGroup(this, "SoupStacker", false) {
-        val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
-        val wait by intRange("Wait", 1..2, 1..20, "ticks")
-        val ignoreInventoryFull by boolean("IgnoreInventoryFull", true)
-        val inventoryConstraints = tree(PlayerInventoryConstraints())
+    private object Drop : BowlMode("Drop") {
+
+        override fun handleBowl(slot: HotbarItemSlot) {
+            interaction.dropItem(player, true)
+        }
+
     }
 
-    private var pendingBowlSlot: HotbarItemSlot? = null
+    /**
+     * Shift-clicks the bowl out of the hotbar, so the bowls stack up in the inventory.
+     */
+    private object Stack : BowlMode("Stack") {
 
-    init {
-        tree(DropAfterUse)
-        tree(SoupStacker)
-    }
+        private val ignoreInventoryFull by boolean("IgnoreInventoryFull", true)
+        private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    @Suppress("unused")
-    private val stackerHandler = handler<ScheduleInventoryActionEvent> { event ->
-        val slot = pendingBowlSlot ?: return@handler
-        pendingBowlSlot = null
+        private var bowlSlot: HotbarItemSlot? = null
 
-        if (slot == HotbarItemSlot.OFFHAND) return@handler
+        override fun handleBowl(slot: HotbarItemSlot) {
+            bowlSlot = slot
+        }
 
-        val shouldStack = SoupStacker.assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL)
-        if (!shouldStack) return@handler
+        @Suppress("unused")
+        private val scheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
+            val slot = bowlSlot ?: return@handler
+            bowlSlot = null
 
-        if (!SoupStacker.ignoreInventoryFull && !hasInventorySpace()) return@handler
+            if (!holdsBowl(slot) || !ignoreInventoryFull && !hasInventorySpace()) {
+                return@handler
+            }
 
-        event.schedule(
-            SoupStacker.inventoryConstraints,
-            InventoryAction.Click.performQuickMove(screen = null, slot = slot),
-            Priority.IMPORTANT_FOR_USAGE_2
-        )
+            event.schedule(
+                inventoryConstraints,
+                InventoryAction.Click.performQuickMove(slot = slot),
+                Priority.IMPORTANT_FOR_USAGE_2
+            )
+        }
+
+        override fun disable() {
+            bowlSlot = null
+        }
+
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
@@ -83,28 +105,19 @@ internal object Soup : HealthBasedBuff("Soup") {
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
-        useHotbarSlotOrOffhand(slot)
+        val mode = afterUse.activeMode as? BowlMode
+        val ticksToWait = mode?.wait?.random() ?: 0
 
-        when {
-            DropAfterUse.enabled -> handleDropAfterUse(slot)
-            SoupStacker.enabled -> handleSoupStacker(slot)
-        }
-    }
+        // Use item (be aware, it will always return false in this case)
+        useHotbarSlotOrOffhand(slot, ticksUntilReset = ticksToWait + 1)
 
-    private suspend fun handleDropAfterUse(slot: HotbarItemSlot) {
-        waitTicks(wait.random())
+        if (mode != null) {
+            waitTicks(ticksToWait)
 
-        if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot != HotbarItemSlot.OFFHAND) {
-            if (player.drop(slot.itemStack, true, Prediction.PREDICTED) != null) {
-                SwingMode.DO_NOT_HIDE.swing(InteractionHand.MAIN_HAND)
+            if (mode.holdsBowl(slot)) {
+                mode.handleBowl(slot)
             }
         }
     }
-
-    private suspend fun handleSoupStacker(slot: HotbarItemSlot) {
-        waitTicks(SoupStacker.wait.random())
-        pendingBowlSlot = slot
-    }
-
 
 }

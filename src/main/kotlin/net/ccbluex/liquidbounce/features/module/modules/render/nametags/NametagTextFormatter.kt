@@ -22,21 +22,22 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
-import net.ccbluex.liquidbounce.utils.text.asPlainText
-import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.entity.shortName
-import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.entity.simpleDisplayName
+import net.ccbluex.liquidbounce.utils.text.withFormat
 import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSequence.codepoint
+import net.minecraft.util.FormattedCharSequence.composite
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -49,12 +50,14 @@ internal object NametagTextFormatter : ValueGroup("Text") {
 
     private val BOT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
 
-    private val BABY_TEXT = "Baby ".asPlainText()
+    private val BABY_TEXT = "Baby ".withFormat()
 
-    private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
+    private val BOT_TEXT = "Bot".withFormat(BOT_STYLE)
 
-    private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
-    private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
+    private val SPACE = codepoint(' '.code, Style.EMPTY)
+
+    private val leftBracket = codepoint('['.code, Style.EMPTY.applyFormat(ChatFormatting.GRAY))
+    private val rightBracket = codepoint(']'.code, Style.EMPTY.applyFormat(ChatFormatting.GRAY))
 
     private val parts by multiEnumChoice(
         "Parts",
@@ -64,16 +67,16 @@ internal object NametagTextFormatter : ValueGroup("Text") {
 
     private enum class Part(override val tag: String) : Tagged {
         DISTANCE("Distance") {
-            override fun apply(entity: Entity): Component? {
+            override fun apply(entity: Entity): FormattedCharSequence? {
                 if (entity === player) return null
 
                 val playerDistanceRounded = player.distanceTo(entity).roundToInt()
-                return "${playerDistanceRounded}m".asPlainText(ChatFormatting.GRAY)
+                return "${playerDistanceRounded}m".withFormat(ChatFormatting.GRAY)
             }
         },
 
         PING("Ping") {
-            override fun apply(entity: Entity): Component? {
+            override fun apply(entity: Entity): FormattedCharSequence? {
                 if (entity !is Player) return null
 
                 val playerPing = entity.ping
@@ -84,37 +87,36 @@ internal object NametagTextFormatter : ValueGroup("Text") {
                     else -> ChatFormatting.GREEN
                 }
 
-                return textOf(
+                return composite(
                     leftBracket,
-                    "${playerPing}ms".asPlainText(coloringBasedOnPing),
+                    "${playerPing}ms".withFormat(coloringBasedOnPing),
                     rightBracket,
                 )
             }
         },
 
         NAME("Name") {
-            override fun apply(entity: Entity): Component {
+            override fun apply(entity: Entity): FormattedCharSequence {
                 val isBaby = entity is LivingEntity && entity.isBaby
 
-                // Optimized entity.getDisplayName()
-                val displayName = entity.team?.getFormattedName(entity.name) ?: entity.name
+                val displayName = entity.simpleDisplayName
 
-                val coloredName = entity.nameColor?.let { nameColor ->
+                val coloredName = (entity.nameColor?.let { nameColor ->
                     displayName.copy().withColor(nameColor)
-                } ?: displayName
+                } ?: displayName).sanitizeForeignInput()
 
                 val count = ModuleCombineMobs.getCombinedCount(entity)
                 return when {
-                    isBaby && count > 1 -> textOf(BABY_TEXT, coloredName, " ($count)".asPlainText(COUNT_STYLE))
-                    isBaby -> textOf(BABY_TEXT, coloredName)
-                    count > 1 -> textOf(coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    isBaby && count > 1 -> composite(BABY_TEXT, coloredName, " ($count)".withFormat(COUNT_STYLE))
+                    isBaby -> composite(BABY_TEXT, coloredName)
+                    count > 1 -> composite(coloredName, " ($count)".withFormat(COUNT_STYLE))
                     else -> coloredName
                 }
             }
         },
 
         HEALTH("Health") {
-            override fun apply(entity: Entity): Component? {
+            override fun apply(entity: Entity): FormattedCharSequence? {
                 if (entity !is LivingEntity) return null
 
                 val actualHealth = (entity.getActualHealth() +
@@ -126,12 +128,12 @@ internal object NametagTextFormatter : ValueGroup("Text") {
                     else -> ChatFormatting.RED
                 }
 
-                return "$actualHealth HP".asPlainText(healthColor)
+                return "$actualHealth HP".withFormat(healthColor)
             }
         },
 
         GAME_MODE("GameMode") {
-            override fun apply(entity: Entity): Component? {
+            override fun apply(entity: Entity): FormattedCharSequence? {
                 if (entity !is Player) return null
 
                 val gameMode = entity.gameMode() ?: return null
@@ -143,25 +145,33 @@ internal object NametagTextFormatter : ValueGroup("Text") {
                     GameType.SPECTATOR -> ChatFormatting.GRAY
                 }
 
-                return textOf(
+                return composite(
                     leftBracket,
-                    gameMode.shortName().asPlainText(gameModeColor),
+                    gameMode.shortName().withFormat(gameModeColor),
                     rightBracket,
                 )
             }
         },
 
         BOT_MARK("BotMark") {
-            override fun apply(entity: Entity): Component? {
+            override fun apply(entity: Entity): FormattedCharSequence? {
                 return if (entity.isBot) BOT_TEXT else null
             }
         };
 
-        abstract fun apply(entity: Entity): Component?
+        abstract fun apply(entity: Entity): FormattedCharSequence?
     }
 
-    fun format(entity: Entity): Component {
-        return parts.mapNotNull { it.apply(entity) }.joinToText(PlainText.SPACE)
+    fun format(entity: Entity): FormattedCharSequence {
+        return FormattedCharSequence.fromList(
+            buildList {
+                for (part in parts) {
+                    val s = part.apply(entity) ?: continue
+                    if (this.isNotEmpty()) this += SPACE
+                    this += s
+                }
+            }
+        )
     }
 
 }

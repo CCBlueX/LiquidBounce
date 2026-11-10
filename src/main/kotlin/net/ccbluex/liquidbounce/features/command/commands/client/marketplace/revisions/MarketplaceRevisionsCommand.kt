@@ -20,15 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client.marketplace.re
 
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 
-/**
- * Manage marketplace item revisions
- */
 object MarketplaceRevisionsCommand {
 
     fun CmdLiteralScope.revisions() {
-        with(MarketplaceListRevisionsCommand) { revisionsList() }
-        // Uploading revision is disabled until proven stable
-        // with(MarketplaceUploadRevisionCommand) { upload() }
+        literal("revisions") {
+            with(MarketplaceListRevisionsCommand) { revisionsList() }
+        }
     }
 
 }
