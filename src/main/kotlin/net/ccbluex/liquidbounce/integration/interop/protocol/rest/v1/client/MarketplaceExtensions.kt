@@ -147,6 +147,16 @@ internal fun parseEpochMillis(dateTime: String?): Long? = dateTime?.let {
     runCatching { LocalDateTime.parse(it).toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
 }
 
+private val LINK = Regex("""https?://[^\s<>"']+""", RegexOption.IGNORE_CASE)
+private const val LINK_TRAILING = ".,;:!?)]*_~"
+
+/**
+ * Whether [text] links to [url]. Punctuation behind a link may belong to the sentence around it.
+ */
+internal fun hasLink(text: String, url: String) = LINK.findAll(text).any { match ->
+    match.value.startsWith(url) && match.value.substring(url.length).all { it in LINK_TRAILING }
+}
+
 internal suspend inline fun <T> collectAllPages(fetch: (page: Int) -> PaginatedResponse<T>): List<T> {
     val items = mutableListOf<T>()
     var page = 1

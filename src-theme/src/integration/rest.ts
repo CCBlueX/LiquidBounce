@@ -245,8 +245,8 @@ export async function getSession(): Promise<Session> {
     return data;
 }
 
-export async function browse(target: string) {
-    await fetch(`${API_BASE}/client/browse`, {
+export async function openLink(target: string) {
+    await fetch(`${API_BASE}/client/openLink`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -297,6 +297,16 @@ export async function openScreen(name: string) {
 export async function deleteScreen() {
     await fetch(`${API_BASE}/client/screen`, {
         method: "DELETE"
+    });
+}
+
+export async function keepScreenEscape(name: string, keep: boolean) {
+    await fetch(`${API_BASE}/client/screen/escape`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name, keep})
     });
 }
 
