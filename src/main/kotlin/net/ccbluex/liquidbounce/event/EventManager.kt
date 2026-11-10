@@ -99,10 +99,12 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerDeathEvent
 import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerKillEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
@@ -201,6 +203,8 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     EntityHealthUpdateEvent::class.java,
     HealthUpdateEvent::class.java,
     DeathEvent::class.java,
+    PlayerKillEvent::class.java,
+    PlayerDeathEvent::class.java,
     PlayerTickEvent::class.java,
     PlayerPostTickEvent::class.java,
     PlayerMovementTickEvent::class.java,
