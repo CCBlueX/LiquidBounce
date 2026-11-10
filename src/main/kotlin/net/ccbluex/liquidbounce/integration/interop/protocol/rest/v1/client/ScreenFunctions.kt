@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode.Companion.NoContent
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -59,7 +60,7 @@ private fun Route.postVirtualScreen() = post("/virtualScreen") {
     }
 
     ScreenManager.screenAcknowledgement.confirm()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(NoContent)
 }
 
 // GET /api/v1/client/screen
@@ -87,7 +88,7 @@ private fun Route.putScreen() = put {
 
     CustomScreenType.byName(screenName)?.open()
         ?: call.forbidden("No screen with name $screenName")
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(NoContent)
 }
 
 // DELETE /api/v1/client/screen
@@ -98,7 +99,7 @@ private fun Route.deleteScreen() = delete {
         mc.execute {
             mc.gui.setScreen(screen.parentScreen)
         }
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(NoContent)
         return@delete
     }
 
@@ -111,7 +112,7 @@ private fun Route.deleteScreen() = delete {
             }
         )
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(NoContent)
 }
 
 // PUT /api/v1/client/screen/escape
@@ -127,7 +128,7 @@ private fun Route.putScreenEscape() = put("/escape") {
 
         screen.pageKeepsEscape = form.keep
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(NoContent)
 }
 
 internal fun Route.screenRoutes() {
