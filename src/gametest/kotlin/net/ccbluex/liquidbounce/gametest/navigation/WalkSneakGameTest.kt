@@ -19,49 +19,20 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
 
-/**
- * A survival player walks sneaking: crouched through a tunnel one and a half blocks high into a closed room, along a
- * bridge one block wide with a turn high over the ground, and along a straight one to a goal it could steer to
- * directly, without taking damage.
- */
+/** A survival player sneaks through a low tunnel and along narrow bridges high over the ground, unhurt. */
 class WalkSneakGameTest : FabricClientGameTest {
 
-    private object Owner : EventListener {
-        @Volatile
-        var active = false
-
-        override val running: Boolean
-            get() = active
-    }
-
-    private class Walker : NavigationBaseValueGroup<Unit>(
-        Owner, "TestSneakWalker", enabled = true, allowBreak = false, allowPlace = false, showRoute = false,
-    ) {
-        @Volatile
-        var goal: Vec3? = null
-
-        override fun createNavigationContext() = Unit
-
-        override fun calculateGoalPosition(context: Unit) = goal
-
-        override fun goalRadius(context: Unit) = GOAL_RADIUS
-    }
-
-    private lateinit var walker: Walker
+    private lateinit var walker: TestWalker
 
     override fun runTest(context: ClientGameTestContext) {
         if (!navigationGameTests) {
@@ -69,38 +40,32 @@ class WalkSneakGameTest : FabricClientGameTest {
         }
         context.waitForClient()
         context.onClient {
-            walker = Walker()
+            walker = TestWalker("TestSneakWalker", GOAL_RADIUS)
             useAngleSmooth(walker)
         }
 
         try {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 buildCourse(server, y)
                 server.runCommand("gamemode survival @a")
                 server.runCommand("clear @a")
                 server.runCommand("gamerule natural_health_regeneration false")
-                context.onClient { Owner.active = true }
+                walker.start(context)
 
                 checkLowTunnel(context, server, y)
                 checkBridge(context, server, y)
                 checkStraightBridge(context, server, y)
             }
         } finally {
-            context.onClient {
-                Owner.active = false
-                walker.goal = null
-            }
+            walker.stop(context)
         }
     }
 
     /**
-     * A stone block at x 10..20 with a closed room at x 14..19, entered only through a tunnel at x 10..13 under top
-     * slabs, so it is one and a half blocks high. Twenty blocks over the ground, a bridge one block wide from x 30 to
-     * x 42, turning at x 42 towards z 10, and a straight one along z -10 from x 33 to x 45.
+     * A closed room at x 14..19, entered through a tunnel under top slabs, one and a half blocks high. Twenty blocks
+     * up, a bridge one block wide that turns at x 42 towards z 10, and a straight one along z -10.
      */
     private fun buildCourse(server: TestServerContext, y: Int) {
         server.runCommand("fill 0 $y -20 60 ${y + 30} 20 air")
@@ -136,52 +101,19 @@ class WalkSneakGameTest : FabricClientGameTest {
     }
 
     private fun walk(context: ClientGameTestContext, server: TestServerContext, goal: Vec3, ticks: Int, what: String) {
-        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        context.onClient { walker.goal = goal }
-        val sneaked = try {
-            TurnWatch.watch(context, "Walking $what") { awaitArrival(context, goal, ticks, what) }
-        } finally {
-            context.onClient { walker.goal = null }
+        val health = server.player { it.health }
+        var sneaked = false
+        walker.walk(context, goal, ticks, "Walking $what", "Did not walk $what") {
+            sneaked = sneaked || it.isShiftKeyDown
         }
 
-        val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
+        val after = server.player { it.health }
         check(after >= health) { "Walking $what hurt the player from $health to $after" }
         check(sneaked) { "Walked $what without sneaking" }
     }
 
-    /**
-     * Waits until the player is at [goal]; true if it sneaked on the way.
-     */
-    private fun awaitArrival(context: ClientGameTestContext, goal: Vec3, ticks: Int, what: String): Boolean {
-        var sneaked = false
-        repeat(ticks) {
-            val (position, sneaking) = context.fromClient {
-                val player = checkNotNull(it.player)
-                player.position() to player.isShiftKeyDown
-            }
-            sneaked = sneaked || sneaking
-            if (position.horizontalDistanceTo(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
-                return sneaked
-            }
-            context.waitTick()
-        }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        error("Did not walk $what to $goal within $ticks ticks, stopped at $position")
-    }
-
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z}")
-        context.waitFor({ client ->
-            client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
-        }, WAIT)
-        context.waitTicks(5)
-    }
-
     private companion object {
         const val GOAL_RADIUS = 0.8
-        const val WAIT = 200
-        const val EPSILON = 1.0E-4
     }
 
 }

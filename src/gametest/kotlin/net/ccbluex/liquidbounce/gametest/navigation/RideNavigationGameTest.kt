@@ -19,20 +19,17 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
-import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.entity.animal.equine.Horse
 import net.minecraft.world.entity.vehicle.boat.AbstractBoat
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -46,14 +43,10 @@ class RideNavigationGameTest : FabricClientGameTest {
             return
         }
         context.waitForClient()
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoWalk) }
-
-        try {
+        context.restoring(ModuleAutoWalk) {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 buildLake(server, y)
                 buildField(server, y)
                 server.runCommand("gamemode survival @a")
@@ -62,18 +55,10 @@ class RideNavigationGameTest : FabricClientGameTest {
                 checkBoat(context, server, y)
                 checkHorse(context, server, y)
             }
-        } finally {
-            context.onClient {
-                ModuleAutoWalk.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleAutoWalk, saved)
-            }
         }
     }
 
-    /**
-     * A lake one block deep from x 4 to 34 and z -10 to 10 with a stone island at x 16..22, z -4..4, in grass
-     * ground at y - 1.
-     */
+    /** A lake one block deep from x 4 to 34 with a stone island at x 16..22, in grass ground at y - 1. */
     private fun buildLake(server: TestServerContext, y: Int) {
         server.runCommand("fill 0 ${y - 3} -14 50 ${y - 2} 14 stone")
         server.runCommand("fill 0 ${y - 1} -14 50 ${y - 1} 14 grass_block")
@@ -83,8 +68,8 @@ class RideNavigationGameTest : FabricClientGameTest {
     }
 
     /**
-     * Grass ground at y - 1 from x 0 to 50 and z 26 to 64, with a stone floor one block higher from x 18 on, a
-     * stone wall topped with a fence across it at x 28 from z 36 on, and a ledge two blocks higher from x 38 on.
+     * Grass ground with a stone floor one block higher from x 18 on, a fenced wall across it at x 28 from z 36 on,
+     * and a ledge two blocks higher from x 38 on.
      */
     private fun buildField(server: TestServerContext, y: Int) {
         server.runCommand("fill 0 ${y - 1} 26 50 ${y - 1} 64 grass_block")
@@ -96,7 +81,7 @@ class RideNavigationGameTest : FabricClientGameTest {
     }
 
     private fun checkBoat(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(8.5, y.toDouble(), 0.5))
+        moveTo(context, server, Vec3(8.5, y.toDouble(), 0.5), yaw = -90f)
         server.runCommand("summon oak_boat 8.5 ${y - 0.4} 0.5 {Rotation:[-90f,0f]}")
         mount(context, server, "oak_boat")
 
@@ -106,7 +91,7 @@ class RideNavigationGameTest : FabricClientGameTest {
             context.command("goto 42 $y 0")
             check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
 
-            await(context, BOAT_TICKS, "Did not arrive across the lake") { player ->
+            awaitPlayer(context, BOAT_TICKS, "Did not arrive across the lake") { player ->
                 val boat = player.vehicle as? AbstractBoat
                 if (boat != null) {
                     farthestAfloat = maxOf(farthestAfloat, boat.x)
@@ -126,7 +111,7 @@ class RideNavigationGameTest : FabricClientGameTest {
     }
 
     private fun checkHorse(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(6.5, y.toDouble(), 50.5))
+        moveTo(context, server, Vec3(6.5, y.toDouble(), 50.5), yaw = -90f)
         server.runCommand(
             "summon horse 6.5 $y 50.5 {Tame:1b,PersistenceRequired:1b,Rotation:[-90f,0f]," +
                 "equipment:{saddle:{id:\"minecraft:saddle\",count:1}}," +
@@ -141,7 +126,7 @@ class RideNavigationGameTest : FabricClientGameTest {
         unhurt(server, "riding the horse") {
             context.command("goto 44 ${y + 3} 50")
             check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
-            await(context, HORSE_TICKS, "Did not ride up to the ledge") { !ModuleAutoWalk.enabled }
+            awaitPlayer(context, HORSE_TICKS, "Did not ride up to the ledge") { !ModuleAutoWalk.enabled }
         }
 
         val (position, riding) = context.fromClient { mc ->
@@ -160,41 +145,8 @@ class RideNavigationGameTest : FabricClientGameTest {
         context.waitTicks(10)
     }
 
-    private fun unhurt(server: TestServerContext, what: String, block: () -> Unit) {
-        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        block()
-        val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        check(after >= health) { "AutoWalk hurt the player $what, from $health to $after" }
-    }
-
-    private fun await(
-        context: ClientGameTestContext,
-        ticks: Int,
-        failure: String,
-        condition: (LocalPlayer) -> Boolean,
-    ) {
-        repeat(ticks) {
-            if (context.fromClient { condition(checkNotNull(it.player)) }) {
-                return
-            }
-            context.waitTick()
-        }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        error("$failure within $ticks ticks, stopped at $position")
-    }
-
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z} -90 0")
-        context.waitFor({ client: Minecraft ->
-            client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
-        }, WAIT)
-        context.waitTicks(5)
-    }
-
     private companion object {
         const val WAIT = 200
-        const val EPSILON = 1.0E-4
         const val BOAT_TICKS = 1200
         const val HORSE_TICKS = 900
         const val SHORE_X = 30.0

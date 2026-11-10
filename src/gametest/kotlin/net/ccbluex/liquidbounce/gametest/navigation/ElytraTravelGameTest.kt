@@ -19,36 +19,29 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
-import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
-import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
 
 /**
- * `.goto` with an elytra over long distances: cruising with rockets from one floating platform to another far over
- * the void of the End, climbing over a pillar on the way, and bouncing along the Nether roof with ElytraRecast,
- * faster than sprinting. Both arrive unhurt.
+ * `.goto` with an elytra over long distances, unhurt: with rockets between platforms over the void of the End, a
+ * pillar in the way, and bouncing along the Nether roof with ElytraRecast, faster than sprinting.
  */
 class ElytraTravelGameTest : FabricClientGameTest {
-
-    private val modules = listOf(ModuleAutoWalk, ModuleElytraRecast)
 
     override fun runTest(context: ClientGameTestContext) {
         if (!navigationGameTests) {
             return
         }
         context.waitForClient()
-        val saved = context.fromClient { modules.map { ConfigSystem.serializeValueGroup(it) } }
-
-        try {
+        context.restoring(ModuleAutoWalk, ModuleElytraRecast) {
             context.worldBuilder().create().use { world ->
                 val server = world.server
                 server.runCommand("gamemode survival @a")
@@ -58,20 +51,10 @@ class ElytraTravelGameTest : FabricClientGameTest {
                 checkEndCruise(context, server)
                 checkRoofBounce(context, server)
             }
-        } finally {
-            context.onClient {
-                for ((module, config) in modules.zip(saved)) {
-                    module.enabled = false
-                    ConfigSystem.deserializeValueGroup(module, config)
-                }
-            }
         }
     }
 
-    /**
-     * Platforms at x 300 and x 650 over the void, the second ten blocks higher, with a pillar reaching above both
-     * halfway.
-     */
+    /** Platforms at x 300 and x 650, the second ten blocks higher, with a pillar reaching above both halfway. */
     private fun checkEndCruise(context: ClientGameTestContext, server: TestServerContext) {
         server.runCommand("item replace entity @a hotbar.0 with firework_rocket 64")
         server.runCommand("gamemode creative @a")
@@ -90,31 +73,27 @@ class ElytraTravelGameTest : FabricClientGameTest {
 
         val start = Vec3(PLATFORM_A + 0.5, LOW + 1.0, 300.5)
         server.runCommand("execute in minecraft:the_end run tp @a ${start.x} ${start.y} ${start.z} -90 0")
-        context.waitFor({ client -> client.player?.position()?.distanceToSqr(start)?.let { it < 0.01 } == true }, 200)
-        context.waitTicks(LOAD_TICKS)
+        awaitPosition(context, start, LOAD_TICKS, NEAR_SQR)
         // Falling in creative still counts towards fall damage, so survival only starts once standing.
         server.runCommand("gamemode survival @a")
         context.waitTicks(SETTLE_TICKS)
 
         val goal = Vec3(PLATFORM_B + 0.5, LOW + RISE + 1.0, 300.5)
-        val glided = goto(context, server, goal, "across the void", CRUISE_TICKS) { it.isFallFlying }
+        val glided = goto(context, server, goal, "across the void", CRUISE_TICKS)
         check(glided) { "Crossed the void without flying" }
     }
 
-    /**
-     * The natural roof of the Nether, flat bedrock with its top at y 127.
-     */
+    /** The natural roof of the Nether, flat bedrock with its top at y 127. */
     private fun checkRoofBounce(context: ClientGameTestContext, server: TestServerContext) {
         server.runCommand("clear @a firework_rocket")
         val start = Vec3(0.5, ROOF, 0.5)
         server.runCommand("execute in minecraft:the_nether run tp @a ${start.x} ${start.y} ${start.z} -90 0")
-        context.waitFor({ client -> client.player?.position()?.distanceToSqr(start)?.let { it < 0.01 } == true }, 200)
-        context.waitTicks(LOAD_TICKS)
+        awaitPosition(context, start, LOAD_TICKS, NEAR_SQR)
         context.onClient { ModuleElytraRecast.enabled = true }
 
         val goal = Vec3(BOUNCE_DISTANCE + 0.5, ROOF, 0.5)
         val began = context.fromClient { it.level!!.gameTime }
-        val bounced = goto(context, server, goal, "along the roof", BOUNCE_TICKS) { it.isFallFlying }
+        val bounced = goto(context, server, goal, "along the roof", BOUNCE_TICKS)
         val ticks = context.fromClient { it.level!!.gameTime } - began
         check(bounced) { "Crossed the roof without the elytra" }
 
@@ -123,38 +102,18 @@ class ElytraTravelGameTest : FabricClientGameTest {
         check(speed > MIN_BOUNCE_SPEED) { "Bounced at only $speed blocks per second" }
     }
 
-    /**
-     * Goes to [goal] with `.goto` within [ticks]; true if [flying] held on the way.
-     */
     private fun goto(
         context: ClientGameTestContext,
         server: TestServerContext,
         goal: Vec3,
         what: String,
         ticks: Int,
-        flying: (LocalPlayer) -> Boolean,
     ): Boolean {
-        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-        context.command("goto ${goal.x} ${goal.y} ${goal.z}")
-        check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
-
-        var flew = false
-        repeat(ticks) {
-            val (arrived, now) = context.fromClient { mc -> !ModuleAutoWalk.enabled to flying(checkNotNull(mc.player)) }
-            flew = flew || now
-            if (arrived) {
-                val position = context.fromClient { checkNotNull(it.player).position() }
-                check(position.distanceTo(goal) <= ARRIVAL) { "AutoWalk stopped at $position going $what" }
-                val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
-                check(after >= health) { "Going $what hurt the player from $health to $after" }
-                return flew
-            }
-            context.waitTick()
-        }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        context.onClient { ModuleAutoWalk.enabled = false }
-        error("Did not get $what to $goal within $ticks ticks, stopped at $position")
+        val health = server.player { it.health }
+        val flew = goto(context, goal, what, ticks, ARRIVAL) { it.isFallFlying }
+        val after = server.player { it.health }
+        check(after >= health) { "Going $what hurt the player from $health to $after" }
+        return flew
     }
 
     private companion object {
@@ -172,6 +131,7 @@ class ElytraTravelGameTest : FabricClientGameTest {
         const val CRUISE_TICKS = 1600
         const val BOUNCE_TICKS = 1600
         const val ARRIVAL = 1.5
+        const val NEAR_SQR = 0.01
     }
 
 }

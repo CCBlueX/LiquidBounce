@@ -43,10 +43,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Block states copied from the client world, safe to read from any thread. Blocks outside the copied
- * region are unknown.
- */
+/** Block states copied from the client world, safe to read from any thread. */
 class WorldSnapshot internal constructor(
     private val minY: Int,
     private val height: Int,
@@ -90,9 +87,6 @@ class WorldSnapshot internal constructor(
 
 }
 
-/**
- * A block box a search may look at.
- */
 data class NavigationRegion(
     val minX: Int,
     val minY: Int,
@@ -102,14 +96,13 @@ data class NavigationRegion(
     val maxZ: Int,
 ) {
 
-    operator fun contains(other: NavigationRegion) =
-        other.minX >= minX && other.minY >= minY && other.minZ >= minZ &&
-            other.maxX <= maxX && other.maxY <= maxY && other.maxZ <= maxZ
+    operator fun contains(pos: BlockPos) =
+        pos.x in minX..maxX && pos.y in minY..maxY && pos.z in minZ..maxZ
 
     companion object {
 
         /**
-         * Every block a route of at most [maxLength] from [start] to one of [ends] can pass, with at most
+         * Every block a route of at most [maxLength] from [start] to one of [ends] can pass, at most
          * [verticalMargin] blocks above or below them.
          */
         fun around(start: Vec3, ends: Collection<Vec3>, maxLength: Double, verticalMargin: Int): NavigationRegion {
@@ -150,19 +143,14 @@ data class NavigationRegion(
 
 }
 
-/**
- * Copies of client chunk sections for route searches. A copy is kept until its section changes, so
- * repeated searches in the same area copy little.
- */
+/** Copies of client chunk sections for route searches, kept until the section changes. */
 object SectionCache : EventListener {
 
     private const val MAX_SECTIONS = 4096
 
     private val copies = Long2ObjectLinkedOpenHashMap<PalettedContainer<BlockState>?>()
 
-    /**
-     * Copies [region] of [level]. Call on the render thread.
-     */
+    /** Call on the render thread. */
     fun capture(level: ClientLevel, region: NavigationRegion): WorldSnapshot {
         val minSectionY = max(region.minY, level.minY) shr 4
         val maxSectionY = min(region.maxY, level.maxY) shr 4
@@ -189,9 +177,7 @@ object SectionCache : EventListener {
         )
     }
 
-    /**
-     * The kept copy of [section], or a new one; null for a section of only air.
-     */
+    // Null for a section of only air.
     private fun copyOf(key: Long, section: LevelChunkSection): PalettedContainer<BlockState>? {
         if (copies.containsKey(key)) {
             return copies.getAndMoveToLast(key)

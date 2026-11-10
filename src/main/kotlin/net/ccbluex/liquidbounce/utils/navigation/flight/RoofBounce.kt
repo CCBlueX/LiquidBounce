@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
@@ -45,74 +46,74 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Bounces along a flat floor, such as the Nether roof, with an elytra and [ModuleElytraRecast]: holding jump reopens
- * the elytra each time the feet touch the floor, which carries the player much faster than running. It bounces while
- * the floor ahead stays flat and open and the goal is far, and leaves the rest to walking.
+ * Bounces along a flat floor, such as the Nether roof, with an elytra and [ModuleElytraRecast], which reopens the
+ * elytra each time the feet touch the floor: much faster than running. The rest of the way is left to walking.
  */
 class RoofBounce(private val owner: EventListener, private val view: RouteView) : EventListener {
 
-    private var goal: Vec3? = null
-    private var floor = Double.NaN
-    private var lineEnd: Vec3? = null
-    private var ticks = 0
+    private var bounce: Bounce? = null
 
     val isActive: Boolean
-        get() = goal != null
+        get() = bounce != null
 
     override fun parent() = owner
 
-    /**
-     * Bounces one tick towards [goal] while an elytra is worn ([abilities]) and ElytraRecast runs; false to walk.
-     */
+    /** Bounces one tick towards [goal] while an elytra is worn and ElytraRecast runs; false to walk. */
     fun navigate(event: MovementInputEvent, goal: Vec3, abilities: GlideAbilities?, frameYaw: Float): Boolean {
-        if (abilities == null || !ModuleElytraRecast.running) {
-            halt()
+        val position = player.position()
+        val active = bounce
+        val bounce = when {
+            abilities == null || !ModuleElytraRecast.running -> null
+            active == null -> start(position, goal)
+            else -> keep(active, position, goal)
+        }
+        this.bounce = bounce
+        if (bounce == null) {
             return false
         }
 
-        val position = player.position()
-        val distance = position.horizontalDistanceTo(goal)
-        val terrain = NavigationTerrain(LiveWorld(world))
-        if (!isActive) {
-            if (!player.onGround() || distance < MIN_DISTANCE) {
-                return false
-            }
-            val end = bounceLine(terrain, position, goal, LOOKAHEAD) ?: return false
-            this.goal = goal
-            floor = position.y
-            lineEnd = end
-            ticks = 0
-        } else {
-            val feet = Vec3(position.x, floor, position.z)
-            val end = bounceLine(terrain, feet, goal, KEEP_LOOKAHEAD)
-            if (distance < STOP_DISTANCE || end == null || position.y < floor - FLOOR_TOLERANCE) {
-                halt()
-                return false
-            }
-            lineEnd = end
-        }
-
-        ticks++
+        bounce.ticks++
         event.directionalInput = steer(goal.subtract(position), frameYaw)
         event.sneak = false
         // Opening the elytra takes a fresh jump press in the air; after that ElytraRecast reopens it on every bounce.
-        event.jump = player.isFallFlying || player.onGround() || ticks % 2 == 0
+        event.jump = player.isFallFlying || player.onGround() || bounce.ticks % 2 == 0
 
         view.breaks = emptyList()
         view.places = emptyList()
-        view.active(listOfNotNull(position, lineEnd), progress)
+        view.active(listOf(position, bounce.lineEnd), progress)
         return true
+    }
+
+    fun halt() {
+        bounce = null
+    }
+
+    private fun start(position: Vec3, goal: Vec3): Bounce? {
+        if (!player.onGround() || position.horizontalDistanceTo(goal) < MIN_DISTANCE) {
+            return null
+        }
+
+        val end = bounceLine(NavigationTerrain(LiveWorld(world)), position, goal, LOOKAHEAD) ?: return null
+        return Bounce(goal, floor = position.y, end)
+    }
+
+    /** [bounce] with its line moved on, or null once the goal is near or the floor ends. */
+    private fun keep(bounce: Bounce, position: Vec3, goal: Vec3): Bounce? {
+        if (position.horizontalDistanceTo(goal) < STOP_DISTANCE || position.y < bounce.floor - FLOOR_TOLERANCE) {
+            return null
+        }
+
+        val feet = position.copy(y = bounce.floor)
+        bounce.lineEnd = bounceLine(NavigationTerrain(LiveWorld(world)), feet, goal, KEEP_LOOKAHEAD) ?: return null
+        return bounce
     }
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
-        val goal = goal ?: return@handler
+        val bounce = bounce ?: return@handler
         RotationManager.setRotationTarget(
             RotationTarget(
-                rotation = Rotation(goal.subtract(player.position()).yaw, PITCH),
-                ticksUntilReset = 1,
-                resetThreshold = 1f,
-                considerInventory = false,
+                Rotation(bounce.goal.subtract(player.position()).yaw, PITCH),
                 movementCorrection = MovementCorrection.STRICT,
             ),
             Priority.IMPORTANT_FOR_USAGE_2,
@@ -120,45 +121,36 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         )
     }
 
-    fun halt() {
-        goal = null
-        floor = Double.NaN
-        lineEnd = null
-        ticks = 0
-    }
-
     private val progress = object : RouteProgress {
         override val isMoving: Boolean
             get() = isActive
 
-        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
-
         override val ahead: List<Vec3>
-            get() = listOfNotNull(lineEnd)
+            get() = listOfNotNull(bounce?.lineEnd)
+
+        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
+    }
+
+    private class Bounce(val goal: Vec3, val floor: Double, var lineEnd: Vec3) {
+        var ticks = 0
     }
 
     companion object {
-
-        /**
-         * The pitch that bounces fastest.
-         */
-        const val PITCH = 75f
-
+        // The pitch that bounces fastest.
+        private const val PITCH = 75f
         private const val MIN_DISTANCE = 32.0
         private const val STOP_DISTANCE = 12.0
         private const val LOOKAHEAD = 24.0
         private const val KEEP_LOOKAHEAD = 12.0
         private const val MIN_KNOWN = 8.0
         private const val STEP = 0.5
-        private const val HALF_WIDTH = 0.4
         private const val FLAT = 1.0E-3
         private const val FLOOR_TOLERANCE = 0.5
         private const val HEADROOM = 2
+        private const val HALF_WIDTH = 0.4
+        private val SIDES = doubleArrayOf(-HALF_WIDTH, 0.0, HALF_WIDTH)
 
-        /**
-         * Where the floor under [feet] runs on flat and open towards [goal] for up to [lookahead] blocks, wide enough
-         * for the player and with room to bounce; null when it does not reach [MIN_KNOWN] blocks or the goal.
-         */
+        /** The point towards [goal], up to [lookahead] blocks on, that the flat open floor under [feet] runs to. */
         fun bounceLine(terrain: NavigationTerrain, feet: Vec3, goal: Vec3, lookahead: Double): Vec3? {
             val dx = goal.x - feet.x
             val dz = goal.z - feet.z
@@ -173,7 +165,7 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
             val y = Mth.floor(feet.y + FLAT)
             var along = 0.0
             while (along <= reach) {
-                for (side in doubleArrayOf(-HALF_WIDTH, 0.0, HALF_WIDTH)) {
+                for (side in SIDES) {
                     val x = Mth.floor(feet.x + ux * along - uz * side)
                     val z = Mth.floor(feet.z + uz * along + ux * side)
                     if (!terrain.isKnown(x, y, z)) {

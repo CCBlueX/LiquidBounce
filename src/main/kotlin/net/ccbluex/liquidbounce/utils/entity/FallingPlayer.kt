@@ -50,7 +50,7 @@ class FallingPlayer(
     private val yRot: Float
 ) {
     companion object {
-        private const val SUPPORT_EPSILON = 1.0E-6
+        internal const val SUPPORT_EPSILON = 1.0E-6
 
         @JvmStatic
         @JvmOverloads

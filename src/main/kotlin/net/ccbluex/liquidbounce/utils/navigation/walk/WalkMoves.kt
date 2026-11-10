@@ -19,6 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.math.component1
+import net.ccbluex.liquidbounce.utils.math.component2
+import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -31,7 +34,7 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 internal fun interface MoveSink {
-    @Suppress("LongParameterList")
+    /** The lists are reused; copy them to keep them. */
     fun accept(
         to: BlockPos,
         move: WalkMove,
@@ -48,12 +51,8 @@ internal fun interface JumpFilter {
 }
 
 /**
- * The moves out of a feet block. Moves only look at [terrain], so a node always yields the same moves.
- *
- * A node reached by breaking or placing is not standable in [terrain]; it counts as standing on its floor. Doors the
- * terrain counts as open are opened on the way, see [NavigationTerrain.opensDoors].
- *
- * Not thread-safe: use it from one thread at a time.
+ * The moves out of a feet block. They only look at [terrain], so a node always yields the same moves. A node reached
+ * by breaking or placing is not standable in [terrain]; it counts as standing on its floor. Not thread-safe.
  */
 @Suppress("TooManyFunctions")
 internal class WalkMoves(private val terrain: NavigationTerrain, private val abilities: WalkAbilities) {
@@ -61,56 +60,41 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     private val walk = if (abilities.canSprint) WalkCosts.SPRINT else WalkCosts.WALK
     private val canPlace = abilities.canPlace && abilities.placeableBlocks > 0
     private val maxDrop = max(abilities.safeFall, abilities.waterFall) + 1
+    private val maxJumpDrop = abilities.safeFall + if (abilities.riskyJumps) RISKY_JUMP_DROP else 1
+    private val jumpPenalty = if (abilities.riskyJumps) 0.0 else WalkCosts.JUMP_PENALTY
     private val halfWidth = terrain.width / 2.0
     private val swim = WalkWater(terrain, abilities.canSprint)
     private val jumps = WalkJumps(terrain, abilities)
     private val jumpTargets = WalkJumpTargets(terrain, abilities.motion)
-    private val maxJumpDrop = abilities.safeFall + if (abilities.riskyJumps) RISKY_JUMP_DROP else 1
-
-    /**
-     * Extra cost of a jump for a walker that takes no risks, so it only jumps where that saves a good while.
-     */
-    private val jumpPenalty = if (abilities.riskyJumps) 0.0 else WalkCosts.JUMP_PENALTY
 
     private val breaks = ArrayList<BlockPos>(3)
     private val places = ArrayList<BlockPos>(1)
     private val opens = ArrayList<BlockPos>(1)
     private var breakCost = 0.0
-    private var jumpFilter = JumpFilter { _, _, _ -> true }
 
-    /**
-     * The node the moves start from, its feet height and whether it is standable in [terrain].
-     */
-    private var origin = BlockPos.ZERO
-    private var originHeight = 0.0
-    private var originStands = true
-
-    /**
-     * Floor factor of the node the moves start from, see [WalkCosts.floorFactor].
-     */
-    private var fromFloor = 1.0
-
-    /**
-     * Whether the floor of the node the moves start from allows a full jump; honey does not.
-     */
+    // The node the moves start from.
+    private var from = BlockPos.ZERO
+    private var fromHeight = 0.0
+    private var fromStands = true
+    private var fromFloorFactor = 1.0
     private var canJump = true
+    private var isJumpWorth = EVERY_JUMP
+    private lateinit var sink: MoveSink
 
-    fun isNode(x: Int, y: Int, z: Int) =
-        !terrain.standHeight(x, y, z).isNaN() || isWater(x, y, z) || isClimb(x, y, z) || isCrouch(x, y, z)
+    fun isNode(x: Int, y: Int, z: Int) = stands(x, y, z) || swims(x, y, z) || climbs(x, y, z) || crouches(x, y, z)
 
-    fun feet(pos: BlockPos) = Vec3(pos.x + 0.5, height(pos.x, pos.y, pos.z), pos.z + 0.5)
+    fun isUnderwater(pos: BlockPos) = swims(pos.x, pos.y, pos.z) && swim.isSubmerged(pos.x, pos.y, pos.z)
 
-    /**
-     * The cheapest move from [from] to [to], or null when there is none.
-     */
+    /** The cheapest move from [from] to [to], or null when there is none. */
     fun step(from: BlockPos, to: BlockPos): WalkStep? {
         var best: WalkStep? = null
         val sink = MoveSink { target, move, cost, breaks, places, opens, jump ->
             val current = best
             if (target == to && (current == null || cost < current.cost)) {
+                val feet = Vec3(to.x + 0.5, height(to.x, to.y, to.z), to.z + 0.5)
                 best = WalkStep(
-                    from, to, move, feet(to), breaks.toList(), places.toList(), opens.toList(), cost,
-                    isSneaking(from, to, move), isUnderwater(to), jump,
+                    from, to, move, feet, breaks.toList(), places.toList(), opens.toList(), cost,
+                    sneak = isSneaking(to, move), underwater = isUnderwater(to), jump = jump,
                 )
             }
         }
@@ -118,133 +102,403 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         return best
     }
 
-    /**
-     * Passes every move out of [node] to [sink]. The lists passed are reused; copy them to keep them. Jumps are only
-     * worked out to spots [isJumpWorth] accepts, as each is simulated.
-     */
-    fun forEach(node: BlockPos, sink: MoveSink, isJumpWorth: JumpFilter = JumpFilter { _, _, _ -> true }) {
-        jumpFilter = isJumpWorth
-        val x = node.x
-        val y = node.y
-        val z = node.z
-        val water = isWater(x, y, z)
-        val climb = isClimb(x, y, z)
-        val stands = !terrain.standHeight(x, y, z).isNaN()
-        val standing = stands || !water && !climb
-        val height = height(x, y, z)
-        origin = node
-        originHeight = height
-        originStands = stands
-        if (isCrouch(x, y, z)) {
-            crouchMoves(node, height, sink)
+    /** Passes every move out of [node] to [sink]. Jumps, each simulated, are only worked out to spots [isJumpWorth]. */
+    fun forEach(node: BlockPos, sink: MoveSink, isJumpWorth: JumpFilter = EVERY_JUMP) {
+        val (x, y, z) = node
+        val water = swims(x, y, z)
+        val climb = climbs(x, y, z)
+        from = node
+        fromHeight = height(x, y, z)
+        fromStands = stands(x, y, z)
+        val standing = fromStands || !water && !climb
+        this.sink = sink
+        this.isJumpWorth = isJumpWorth
+        if (crouches(x, y, z)) {
+            crouchMoves()
             return
         }
 
-        val floor = floorBlock(x, z, height)
-        fromFloor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
+        val floor = floorBlock(x, z, fromHeight)
+        fromFloorFactor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
+        // Honey does not allow a full jump.
         canJump = water || climb || floor.jumpFactor >= 1f
 
-        for (i in 0 until 4) {
-            val dx = DX[i]
-            val dz = DZ[i]
-
+        for (i in DX.indices) {
+            val tx = x + DX[i]
+            val tz = z + DZ[i]
             if (standing || climb) {
-                traverse(node, height, standing, x + dx, z + dz, sink)
-                ascend(node, height, x + dx, z + dz, sink)
+                traverse(tx, tz, standing)
+                ascend(tx, tz)
             }
             if (standing) {
-                fall(node, height, x + dx, z + dz, sink)
-                diagonal(node, height, DIAGONAL_X[i], DIAGONAL_Z[i], sink)
+                fall(tx, tz)
+                diagonal(x + DIAGONAL_X[i], z + DIAGONAL_Z[i])
             }
 
-            swimInto(x + dx, y, z + dz, sink)
+            swimInto(tx, y, tz)
             if (water) {
-                swimOut(node, x + dx, z + dz, sink)
+                swimOut(tx, tz)
             }
         }
 
-        jump(node, height, sink)
-
-        swimInto(x, y + 1, z, sink)
-        swimInto(x, y - 1, z, sink)
-        climb(node, sink)
-
+        parkour()
+        swimInto(x, y + 1, z)
+        swimInto(x, y - 1, z)
+        climb()
         if (standing) {
-            pillar(node, sink)
-            downward(node, sink)
+            pillar()
+            downward()
         }
     }
 
-    private fun traverse(from: BlockPos, height: Double, standing: Boolean, tx: Int, tz: Int, sink: MoveSink) {
+    private fun traverse(tx: Int, tz: Int, standing: Boolean) {
         val y = from.y
         begin()
 
-        val wet = terrain.isWater(from.x, y, from.z) || terrain.isWater(tx, y, tz)
+        val wet = isWet(tx, tz)
         val top = terrain.standHeight(tx, y, tz)
         when {
             !top.isNaN() -> {
-                val jump = jumpCost(top - height)
-                val fits = jump == 0.0 || !jump.isNaN() && hasJumpRoom(from, tx, tz)
-                if (fits && canCross(from, tx, tz, max(height, top))) {
-                    emit(tx, y, tz, WalkMove.TRAVERSE, walking(wet, tx, tz, top) + jump, sink)
+                val jump = jumpCost(top - fromHeight)
+                val fits = jump == 0.0 || !jump.isNaN() && hasJumpRoom(tx, tz)
+                if (fits && canCross(tx, tz, max(fromHeight, top))) {
+                    emit(tx, y, tz, WalkMove.TRAVERSE, walkCost(tx, tz, top, wet) + jump)
                 }
             }
 
-            isClimb(tx, y, tz) -> emit(tx, y, tz, WalkMove.TRAVERSE, walking(wet, tx, tz, y.toDouble()), sink)
-            isCrouch(tx, y, tz) -> {
-                if (terrain.crouchHeight(tx, y, tz) - height <= NavigationTerrain.STEP) {
-                    emit(tx, y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK, sink)
+            climbs(tx, y, tz) -> emit(tx, y, tz, WalkMove.TRAVERSE, walkCost(tx, tz, y.toDouble(), wet))
+            crouches(tx, y, tz) -> {
+                if (terrain.crouchHeight(tx, y, tz) - fromHeight <= NavigationTerrain.STEP) {
+                    emit(tx, y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK)
                 }
             }
 
-            else -> traverseChanging(from, height, standing, tx, tz, wet, sink)
+            else -> traverseChanging(tx, tz, standing, wet)
         }
     }
 
-    /**
-     * Ticks to walk one block onto the floor at [x] [z] with the feet at [top], or to swim when [wet].
-     */
-    private fun walking(wet: Boolean, x: Int, z: Int, top: Double) =
-        if (wet) WalkCosts.SWIM else walk * (fromFloor + WalkCosts.floorFactor(floorBlock(x, z, top))) / 2.0
+    /** A traverse that breaks the way free or places the floor. */
+    private fun traverseChanging(tx: Int, tz: Int, standing: Boolean, wet: Boolean) {
+        val y = from.y
+        if (!passOrBreak(tx, y + 1, tz) || !passOrBreak(tx, y, tz)) {
+            return
+        }
 
-    /**
-     * The block below feet at [height] in column [x] [z] that sets the speed, friction and jump of the player.
-     */
+        // The walker stands on the floor of the node even if that was placed on the way.
+        val onFloor = standing && fromHeight <= y + EPSILON
+        val floor = floorOrPlace(tx, y, tz) { canPlaceAgainst(tx, y - 1, tz, onFloor) }
+        val jump = jumpCost(floor - fromHeight)
+        if (breaks.isEmpty() && places.isEmpty() || jump.isNaN() || jump > 0.0 && !hasJumpRoom(tx, tz)) {
+            return
+        }
+        val cost = walkCost(tx, tz, floor, wet) + jump + breakCost + places.size * WalkCosts.PLACE
+        emit(tx, y, tz, WalkMove.TRAVERSE, cost)
+    }
+
+    private fun diagonal(tx: Int, tz: Int) {
+        val (x, y, z) = from
+        begin()
+
+        val top = terrain.standHeight(tx, y, tz)
+        if (top.isNaN() || top - fromHeight > NavigationTerrain.STEP) {
+            return
+        }
+        if (!terrain.isOpen(tx, y, z) || !terrain.isOpen(x, y, tz) || !canCross(tx, tz, max(fromHeight, top))) {
+            return
+        }
+
+        emit(tx, y, tz, WalkMove.DIAGONAL, DIAGONAL * walkCost(tx, tz, top, isWet(tx, tz)))
+    }
+
+    private fun ascend(tx: Int, tz: Int) {
+        val y = from.y
+        val ty = y + 1
+        begin()
+
+        if (!passOrBreak(from.x, y + 2, from.z)) {
+            return
+        }
+
+        val top = terrain.standHeight(tx, ty, tz)
+        if (!top.isNaN()) {
+            val jump = jumpCost(top - fromHeight)
+            if (!jump.isNaN() && canCross(tx, tz, top)) {
+                emit(tx, ty, tz, WalkMove.ASCEND, walkCost(tx, tz, top) + jump + breakCost)
+            }
+            return
+        }
+
+        val headBreaks = breaks.size
+        if (!passOrBreak(tx, ty + 1, tz) || !passOrBreak(tx, ty, tz)) {
+            return
+        }
+
+        val floor = floorOrPlace(tx, ty, tz) { isSolid(tx, y - 1, tz) }
+        val jump = jumpCost(floor - fromHeight)
+        if (jump.isNaN() || breaks.size == headBreaks && places.isEmpty()) {
+            return
+        }
+        val cost = walkCost(tx, tz, floor) + jump + breakCost + places.size * WalkCosts.PLACE
+        emit(tx, ty, tz, WalkMove.ASCEND, cost)
+    }
+
+    private fun fall(tx: Int, tz: Int) {
+        val y = from.y
+        if (!floorTop(tx, y, tz).isNaN() || terrain.isWater(tx, y, tz)) {
+            return
+        }
+
+        begin()
+        if (!passOrBreak(tx, y + 1, tz) || !passOrBreak(tx, y, tz)) {
+            return
+        }
+        if (breaks.isEmpty() && !canCross(tx, tz, fromHeight)) {
+            return
+        }
+
+        val landing = landing(tx, y - 1, tz, fromHeight) ?: return
+        val blocks = ceil(landing.drop).toInt()
+        val bounce = WalkCosts.bounce(floorBlock(tx, tz, fromHeight - landing.drop), blocks)
+        val cost = walk * fromFloorFactor + WalkCosts.fall(blocks) + bounce + breakCost
+        emit(tx, landing.y, tz, WalkMove.FALL, cost)
+    }
+
+    /** Where a fall down column [x] [z] from block [top] with the feet at [height] ends, null unless safely. */
+    private fun landing(x: Int, top: Int, z: Int, height: Double): Landing? {
+        for (y in top downTo max(top - maxDrop, terrain.minY)) {
+            val stand = terrain.standHeight(x, y, z)
+            return when {
+                swims(x, y, z) -> Landing(y, height - y).takeIf { it.drop <= abilities.waterFall }
+                !stand.isNaN() -> Landing(y, height - stand).takeIf { it.drop <= abilities.safeFall }
+                climbs(x, y, z) -> Landing(y, height - y)
+                terrain.isPassable(x, y, z) -> continue
+                else -> null
+            }
+        }
+
+        return null
+    }
+
+    /** Jumps over a gap or dip to spots out of reach of the other moves, each simulated by [WalkJumps]. */
+    private fun parkour() {
+        val (x, y, z) = from
+        if (!abilities.canParkour || !fromStands || terrain.isWater(x, y, z)) {
+            return
+        }
+
+        begin()
+        val feet = Vec3(x + 0.5, fromHeight, z + 0.5)
+        // Drops to the ground below a course would use up the jumps worked out before the next block of it.
+        var planned = 0
+        var drops = 0
+        jumpTargets.forEach(x, y, z, fromHeight, maxJumpDrop) { tx, ty, tz, top ->
+            val drop = top < fromHeight - DROP_HEIGHT
+            if (drop && drops >= MAX_JUMPS || !isJumpWorth.accept(tx, ty, tz)) {
+                return@forEach planned < MAX_JUMPS
+            }
+            val plan = jumps.plan(from, fromHeight, BlockPos(tx, ty, tz), top)
+            if (plan != null) {
+                emit(tx, ty, tz, WalkMove.PARKOUR, plan.ticks(feet) + jumpPenalty, plan)
+                if (drop) drops++ else planned++
+            }
+            planned < MAX_JUMPS
+        }
+    }
+
+    private fun pillar() {
+        val (x, y, z) = from
+        if (!canJump || !terrain.isPassable(x, y, z) || !isPlaceable(x, y, z)) {
+            return
+        }
+
+        begin()
+        if (!passOrBreak(x, y + 2, z)) {
+            return
+        }
+
+        places += BlockPos(x, y, z)
+        emit(x, y + 1, z, WalkMove.PILLAR, WalkCosts.JUMP + WalkCosts.PLACE + breakCost)
+    }
+
+    private fun downward() {
+        val (x, y, z) = from
+        if (terrain.isPassable(x, y - 1, z)) {
+            return
+        }
+
+        begin()
+        val ticks = breakTicks(x, y - 1, z, floor = true)
+        if (ticks.isNaN() || floorTop(x, y - 1, z).isNaN()) {
+            return
+        }
+
+        breaks += BlockPos(x, y - 1, z)
+        emit(x, y - 1, z, WalkMove.DOWNWARD, ticks + WalkCosts.BREAK_OVERHEAD + WalkCosts.fall(1))
+    }
+
+    /** Swims into the water block; the swimming pose, which needs sprinting, only goes on from water. */
+    private fun swimInto(tx: Int, ty: Int, tz: Int) {
+        if (!swims(tx, ty, tz) || swim.isLow(tx, ty, tz) && !swims(from.x, from.y, from.z)) {
+            return
+        }
+
+        begin()
+        val sprints = abilities.canSprint && ty == from.y && swim.isSubmerged(tx, ty, tz)
+        emit(tx, ty, tz, WalkMove.SWIM, if (sprints) WalkCosts.SPRINT_SWIM else WalkCosts.SWIM)
+    }
+
+    private fun swimOut(tx: Int, tz: Int) {
+        val y = from.y
+        begin()
+        if (stands(tx, y, tz)) {
+            emit(tx, y, tz, WalkMove.SWIM, WalkCosts.SWIM)
+        } else if (stands(tx, y + 1, tz) && terrain.isPassable(from.x, y + 2, from.z)) {
+            emit(tx, y + 1, tz, WalkMove.SWIM, WalkCosts.SWIM + WalkCosts.JUMP)
+        }
+    }
+
+    private fun climb() {
+        val (x, y, z) = from
+        begin()
+
+        if (terrain.isClimbable(x, y, z) && (climbs(x, y + 1, z) || stands(x, y + 1, z))) {
+            emit(x, y + 1, z, WalkMove.CLIMB_UP, WalkCosts.CLIMB_UP)
+        }
+        if (climbs(x, y - 1, z)) {
+            emit(x, y - 1, z, WalkMove.CLIMB_DOWN, WalkCosts.CLIMB_DOWN)
+        }
+    }
+
+    /** Level moves out of a gap only a crouching player fits, where there is no room to jump. */
+    private fun crouchMoves() {
+        val y = from.y
+        begin()
+        for (i in DX.indices) {
+            val tx = from.x + DX[i]
+            val tz = from.z + DZ[i]
+            val top = terrain.standHeight(tx, y, tz).ifNaN { terrain.crouchHeight(tx, y, tz) }
+            if (!top.isNaN() && top - fromHeight <= NavigationTerrain.STEP) {
+                emit(tx, y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK)
+            }
+        }
+    }
+
+    /** Whether the move to [to] is sneaked: through a gap only a crouching player fits, or level past a deadly drop. */
+    private fun isSneaking(to: BlockPos, move: WalkMove): Boolean {
+        val (x, y, z) = from
+        if (crouches(x, y, z) || crouches(to.x, to.y, to.z)) {
+            return true
+        }
+        val level = move == WalkMove.TRAVERSE || move == WalkMove.DIAGONAL
+        if (!level || swims(x, y, z) || swims(to.x, to.y, to.z)) {
+            return false
+        }
+
+        val toHeight = height(to.x, to.y, to.z)
+        // Sneaking stops at every ledge higher than a step, the ones the move goes down included.
+        if (abs(toHeight - fromHeight) > NavigationTerrain.STEP) {
+            return false
+        }
+
+        return isNearDrop(x, y, z, fromHeight) || isNearDrop(to.x, to.y, to.z, toHeight)
+    }
+
+    /** Whether a player in [x] [y] [z] with the feet at [height] can walk off a side into a deadly fall. */
+    private fun isNearDrop(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in DX.indices) {
+            val nx = x + DX[i]
+            val nz = z + DZ[i]
+            val open = terrain.isOpen(nx, y, nz) && floorTop(nx, y, nz).isNaN() && !terrain.isWater(nx, y, nz)
+            if (open && landing(nx, y - 1, nz, height) == null) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun begin() {
+        breaks.clear()
+        places.clear()
+        breakCost = 0.0
+    }
+
+    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, jump: WalkJump? = null) {
+        opens.clear()
+        if (terrain.opensDoors) {
+            val body = terrain.box(from.x + 0.5, fromHeight, from.z + 0.5)
+            terrain.closedIn(body.minmax(terrain.box(x + 0.5, height(x, y, z), z + 0.5)), body, opens)
+        }
+
+        sink.accept(BlockPos(x, y, z), move, cost + opens.size * WalkCosts.OPEN, breaks, places, opens, jump)
+    }
+
+    /** Ticks to walk one block onto the floor at [x] [z] with the feet at [top], or to swim it when [wet]. */
+    private fun walkCost(x: Int, z: Int, top: Double, wet: Boolean = false) =
+        if (wet) WalkCosts.SWIM else walk * (fromFloorFactor + WalkCosts.floorFactor(floorBlock(x, z, top))) / 2.0
+
+    private fun isWet(tx: Int, tz: Int) = terrain.isWater(from.x, from.y, from.z) || terrain.isWater(tx, from.y, tz)
+
+    /** The block below feet at [height] in column [x] [z] that sets the speed, friction and jump of the player. */
     private fun floorBlock(x: Int, z: Int, height: Double): Block =
         terrain.state(x, Mth.floor(height - DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5), z).block
 
-    /**
-     * A traverse that breaks the way free or places the floor.
-     */
-    @Suppress("LongParameterList")
-    private fun traverseChanging(
-        from: BlockPos,
-        height: Double,
-        standing: Boolean,
-        tx: Int,
-        tz: Int,
-        wet: Boolean,
-        sink: MoveSink,
-    ) {
-        val y = from.y
-        if (!clear(tx, y + 1, tz, from) || !clear(tx, y, tz, from)) {
-            return
-        }
-
-        val onFloor = standing && height <= y + EPSILON
-        val floor = floorOrPlace(tx, y, tz) { canPlaceAgainst(tx, y - 1, tz, from, onFloor) }
-        val jump = jumpCost(floor - height)
-        if (breaks.isEmpty() && places.isEmpty() || jump.isNaN() || jump > 0.0 && !hasJumpRoom(from, tx, tz)) {
-            return
-        }
-        val cost = walking(wet, tx, tz, floor) + jump + breakCost + places.size * WalkCosts.PLACE
-        emit(tx, y, tz, WalkMove.TRAVERSE, cost, sink)
+    /** Extra ticks to rise [rise] blocks: nothing up to a step, a jump up to [MAX_JUMP], NaN beyond. */
+    private fun jumpCost(rise: Double) = when {
+        rise <= NavigationTerrain.STEP -> 0.0
+        canJump && rise <= MAX_JUMP -> WalkCosts.JUMP
+        else -> Double.NaN
     }
 
-    /**
-     * Feet height on the floor of [x] [y] [z]. Without a floor, the block below gets placed when it is replaceable
-     * and [hasSupport]; NaN when it cannot.
-     */
+    private fun hasJumpRoom(tx: Int, tz: Int) =
+        terrain.isPassable(from.x, from.y + 2, from.z) && terrain.isPassable(tx, from.y + 2, tz)
+
+    /** Whether no thin block on the edge to [tx] [tz], such as a closed door, is in the way of a body at [height]. */
+    private fun canCross(tx: Int, tz: Int, height: Double) = !fromStands ||
+        terrain.isClear(terrain.box((from.x + tx) / 2.0 + 0.5, height, (from.z + tz) / 2.0 + 0.5))
+
+    private fun passOrBreak(x: Int, y: Int, z: Int): Boolean {
+        if (terrain.isPassable(x, y, z)) {
+            return true
+        }
+
+        val ticks = breakTicks(x, y, z)
+        if (ticks.isNaN()) {
+            return false
+        }
+
+        breaks += BlockPos(x, y, z)
+        breakCost += ticks + WalkCosts.BREAK_OVERHEAD
+        return true
+    }
+
+    /** Ticks to break the cell; NaN when it must not be broken. Only [floor] allows the block the walker stands on. */
+    private fun breakTicks(x: Int, y: Int, z: Int, floor: Boolean = false): Double {
+        val stoodOn = x == from.x && z == from.z && y == from.y - 1
+        if (!abilities.canBreak || !isHarmless(x, y, z) || stoodOn && !floor || !isDry(x, y, z)) {
+            return Double.NaN
+        }
+
+        val state = terrain.state(x, y, z)
+        if (state.isAir || terrain.state(x, y + 1, z).block is FallingBlock) {
+            return Double.NaN
+        }
+        val ticks = abilities.breakTicks.applyAsDouble(state)
+        return if (ticks.isFinite()) ticks else Double.NaN
+    }
+
+    private fun isDry(x: Int, y: Int, z: Int): Boolean {
+        if (!terrain.state(x, y, z).fluidState.isEmpty || !terrain.state(x, y + 1, z).fluidState.isEmpty) {
+            return false
+        }
+        for (i in DX.indices) {
+            if (!terrain.state(x + DX[i], y, z + DZ[i]).fluidState.isEmpty) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /** Feet height on the floor of [x] [y] [z]; without one the block below is placed if [hasSupport]. NaN if not. */
     private inline fun floorOrPlace(x: Int, y: Int, z: Int, hasSupport: () -> Boolean): Double {
         val floor = floorTop(x, y, z)
         if (!floor.isNaN() || !isPlaceable(x, y - 1, z) || !hasSupport()) {
@@ -255,358 +509,13 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         return y.toDouble()
     }
 
-    /**
-     * Extra ticks to rise [rise] blocks between feet heights: nothing up to a step, a jump up to [MAX_JUMP],
-     * NaN beyond.
-     */
-    private fun jumpCost(rise: Double) = when {
-        rise <= NavigationTerrain.STEP -> 0.0
-        canJump && rise <= MAX_JUMP -> WalkCosts.JUMP
-        else -> Double.NaN
-    }
-
-    private fun hasJumpRoom(from: BlockPos, tx: Int, tz: Int) =
-        terrain.isPassable(from.x, from.y + 2, from.z) && terrain.isPassable(tx, from.y + 2, tz)
-
-    private fun diagonal(from: BlockPos, height: Double, dx: Int, dz: Int, sink: MoveSink) {
-        val x = from.x
-        val y = from.y
-        val z = from.z
-        begin()
-
-        val top = terrain.standHeight(x + dx, y, z + dz)
-        if (top.isNaN() || top - height > NavigationTerrain.STEP) {
-            return
-        }
-
-        val cornersClear = terrain.isPassable(x + dx, y, z) && terrain.isPassable(x + dx, y + 1, z) &&
-            terrain.isPassable(x, y, z + dz) && terrain.isPassable(x, y + 1, z + dz)
-        if (!cornersClear || !canCross(from, x + dx, z + dz, max(height, top))) {
-            return
-        }
-
-        val wet = terrain.isWater(x, y, z) || terrain.isWater(x + dx, y, z + dz)
-        emit(x + dx, y, z + dz, WalkMove.DIAGONAL, DIAGONAL * walking(wet, x + dx, z + dz, top), sink)
-    }
-
-    private fun ascend(from: BlockPos, height: Double, tx: Int, tz: Int, sink: MoveSink) {
-        val y = from.y
-        val ty = y + 1
-        begin()
-
-        if (!clear(from.x, y + 2, from.z, from)) {
-            return
-        }
-
-        val top = terrain.standHeight(tx, ty, tz)
-        if (!top.isNaN()) {
-            val jump = jumpCost(top - height)
-            if (!jump.isNaN() && canCross(from, tx, tz, top)) {
-                emit(tx, ty, tz, WalkMove.ASCEND, walking(false, tx, tz, top) + jump + breakCost, sink)
-            }
-            return
-        }
-
-        val headBreaks = breaks.size
-        if (!clear(tx, ty + 1, tz, from) || !clear(tx, ty, tz, from)) {
-            return
-        }
-
-        val floor = floorOrPlace(tx, ty, tz) { isSolid(tx, y - 1, tz) }
-        val jump = jumpCost(floor - height)
-        if (jump.isNaN() || breaks.size == headBreaks && places.isEmpty()) {
-            return
-        }
-        val cost = walking(false, tx, tz, floor) + jump + breakCost + places.size * WalkCosts.PLACE
-        emit(tx, ty, tz, WalkMove.ASCEND, cost, sink)
-    }
-
-    private fun fall(from: BlockPos, height: Double, tx: Int, tz: Int, sink: MoveSink) {
-        val y = from.y
-        if (!floorTop(tx, y, tz).isNaN() || terrain.isWater(tx, y, tz)) {
-            return
-        }
-
-        begin()
-        if (!clear(tx, y + 1, tz, from) || !clear(tx, y, tz, from)) {
-            return
-        }
-
-        if (breaks.isEmpty() && !canCross(from, tx, tz, height)) {
-            return
-        }
-
-        val landing = landing(tx, y - 1, tz, height) ?: return
-        val bounce = WalkCosts.bounce(floorBlock(tx, tz, height - landing.drop), ceil(landing.drop).toInt())
-        val cost = walk * fromFloor + fallCost(landing.drop) + bounce + breakCost
-        emit(tx, landing.y, tz, WalkMove.FALL, cost, sink)
-    }
-
-    /**
-     * Where a fall down column [x] [z] from block [top] with the feet at [height] ends safely: in water, on a spot to
-     * stand or in a climbable block, within the allowed drop. Null when it ends anywhere else.
-     */
-    private fun landing(x: Int, top: Int, z: Int, height: Double): Landing? {
-        for (ly in top downTo max(top - maxDrop, terrain.minY)) {
-            val stand = terrain.standHeight(x, ly, z)
-            return when {
-                isWater(x, ly, z) -> Landing(ly, height - ly).takeIf { it.drop <= abilities.waterFall }
-                !stand.isNaN() -> Landing(ly, height - stand).takeIf { it.drop <= abilities.safeFall }
-                // Climbable blocks catch the fall.
-                isClimb(x, ly, z) -> Landing(ly, height - ly)
-                terrain.isPassable(x, ly, z) -> continue
-                else -> null
-            }
-        }
-
-        return null
-    }
-
-    /**
-     * Jumps from the edge of a gap to spots out of reach of the other moves, each simulated by [WalkJumps].
-     */
-    private fun jump(from: BlockPos, height: Double, sink: MoveSink) {
-        if (!abilities.canParkour || !originStands || terrain.isWater(from.x, from.y, from.z)) {
-            return
-        }
-
-        begin()
-        val feet = Vec3(from.x + 0.5, height, from.z + 0.5)
-        // Drops to the ground below a course would use up the jumps worked out before the next block of it.
-        var planned = 0
-        var drops = 0
-        jumpTargets.forEach(from.x, from.y, from.z, height, maxJumpDrop) { x, y, z, top ->
-            val drop = top < height - DROP_HEIGHT
-            if (drop && drops >= MAX_JUMPS) {
-                return@forEach planned < MAX_JUMPS
-            }
-            val plan = if (jumpFilter.accept(x, y, z)) jumps.plan(from, height, BlockPos(x, y, z), top) else null
-            if (plan != null) {
-                emit(x, y, z, WalkMove.PARKOUR, plan.ticks(feet) + jumpPenalty, sink, plan)
-                if (drop) drops++ else planned++
-            }
-            planned < MAX_JUMPS
-        }
-    }
-
-    private fun pillar(from: BlockPos, sink: MoveSink) {
-        val x = from.x
-        val y = from.y
-        val z = from.z
-        if (!canPlace || !canJump || !terrain.isPassable(x, y, z) || !terrain.state(x, y, z).canBeReplaced()) {
-            return
-        }
-
-        begin()
-        if (!clear(x, y + 2, z, from)) {
-            return
-        }
-
-        places += BlockPos(x, y, z)
-        emit(x, y + 1, z, WalkMove.PILLAR, WalkCosts.JUMP + WalkCosts.PLACE + breakCost, sink)
-    }
-
-    private fun downward(from: BlockPos, sink: MoveSink) {
-        val x = from.x
-        val y = from.y
-        val z = from.z
-        if (terrain.isPassable(x, y - 1, z)) {
-            return
-        }
-
-        begin()
-        val ticks = breakTicks(x, y - 1, z, from, floor = true)
-        if (ticks.isNaN() || floorTop(x, y - 1, z).isNaN()) {
-            return
-        }
-
-        breaks += BlockPos(x, y - 1, z)
-        emit(x, y - 1, z, WalkMove.DOWNWARD, ticks + WalkCosts.BREAK_OVERHEAD + WalkCosts.fall(1), sink)
-    }
-
-    /**
-     * Swims into the water block [tx] [ty] [tz]; sprinting along under water, which only a swimmer coming from water
-     * can do, also where the swimming pose is needed.
-     */
-    private fun swimInto(tx: Int, ty: Int, tz: Int, sink: MoveSink) {
-        if (!isWater(tx, ty, tz) || swim.isLow(tx, ty, tz) && !isWater(origin.x, origin.y, origin.z)) {
-            return
-        }
-
-        begin()
-        val sprints = abilities.canSprint && ty == origin.y && swim.isSubmerged(tx, ty, tz)
-        emit(tx, ty, tz, WalkMove.SWIM, if (sprints) WalkCosts.SPRINT_SWIM else WalkCosts.SWIM, sink)
-    }
-
-    private fun swimOut(from: BlockPos, tx: Int, tz: Int, sink: MoveSink) {
-        val y = from.y
-        begin()
-        if (!terrain.standHeight(tx, y, tz).isNaN()) {
-            emit(tx, y, tz, WalkMove.SWIM, WalkCosts.SWIM, sink)
-        } else if (!terrain.standHeight(tx, y + 1, tz).isNaN() && terrain.isPassable(from.x, y + 2, from.z)) {
-            emit(tx, y + 1, tz, WalkMove.SWIM, WalkCosts.SWIM + WalkCosts.JUMP, sink)
-        }
-    }
-
-    private fun climb(from: BlockPos, sink: MoveSink) {
-        val x = from.x
-        val y = from.y
-        val z = from.z
-        begin()
-
-        if (terrain.isClimbable(x, y, z) && (isClimb(x, y + 1, z) || !terrain.standHeight(x, y + 1, z).isNaN())) {
-            emit(x, y + 1, z, WalkMove.CLIMB_UP, WalkCosts.CLIMB_UP, sink)
-        }
-        if (isClimb(x, y - 1, z)) {
-            emit(x, y - 1, z, WalkMove.CLIMB_DOWN, WalkCosts.CLIMB_DOWN, sink)
-        }
-    }
-
-    /**
-     * Level moves out of a gap only a crouching player fits, where there is no room to jump.
-     */
-    private fun crouchMoves(from: BlockPos, height: Double, sink: MoveSink) {
-        begin()
-        for (i in 0 until 4) {
-            val tx = from.x + DX[i]
-            val tz = from.z + DZ[i]
-            val top = terrain.standHeight(tx, from.y, tz).takeUnless { it.isNaN() }
-                ?: terrain.crouchHeight(tx, from.y, tz)
-            if (!top.isNaN() && top - height <= NavigationTerrain.STEP) {
-                emit(tx, from.y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK, sink)
-            }
-        }
-    }
-
-    /**
-     * Whether the move has to be made sneaking: into, through or out of a gap only a crouching player fits, or
-     * walking level past a drop the player does not survive.
-     */
-    private fun isSneaking(from: BlockPos, to: BlockPos, move: WalkMove): Boolean {
-        if (isCrouch(from.x, from.y, from.z) || isCrouch(to.x, to.y, to.z)) {
-            return true
-        }
-        if (move != WalkMove.TRAVERSE && move != WalkMove.DIAGONAL ||
-            isWater(from.x, from.y, from.z) || isWater(to.x, to.y, to.z)) {
-            return false
-        }
-
-        val fromHeight = height(from.x, from.y, from.z)
-        val toHeight = height(to.x, to.y, to.z)
-        // Sneaking stops at every ledge higher than a step, the ones the move goes down included.
-        if (abs(toHeight - fromHeight) > NavigationTerrain.STEP) {
-            return false
-        }
-
-        return isNearDrop(from.x, from.y, from.z, fromHeight) || isNearDrop(to.x, to.y, to.z, toHeight)
-    }
-
-    /**
-     * Whether a player standing in [x] [y] [z] with the feet at [height] can walk off a side into a fall it does not
-     * survive.
-     */
-    private fun isNearDrop(x: Int, y: Int, z: Int, height: Double): Boolean {
-        for (i in 0 until 4) {
-            val nx = x + DX[i]
-            val nz = z + DZ[i]
-            val open = terrain.isPassable(nx, y, nz) && terrain.isPassable(nx, y + 1, nz) &&
-                floorTop(nx, y, nz).isNaN() && !terrain.isWater(nx, y, nz)
-            if (open && landing(nx, y - 1, nz, height) == null) {
-                return true
-            }
-        }
-        return false
-    }
-
-    /**
-     * Whether [pos] is in water with no air for the head.
-     */
-    fun isUnderwater(pos: BlockPos) =
-        isWater(pos.x, pos.y, pos.z) && swim.isSubmerged(pos.x, pos.y, pos.z)
-
-    private fun begin() {
-        breaks.clear()
-        places.clear()
-        breakCost = 0.0
-    }
-
-    @Suppress("LongParameterList")
-    private fun emit(x: Int, y: Int, z: Int, move: WalkMove, cost: Double, sink: MoveSink, jump: WalkJump? = null) {
-        opens.clear()
-        if (terrain.opensDoors) {
-            val from = terrain.box(origin.x + 0.5, originHeight, origin.z + 0.5)
-            terrain.closedIn(from.minmax(terrain.box(x + 0.5, height(x, y, z), z + 0.5)), from, opens)
-        }
-
-        sink.accept(BlockPos(x, y, z), move, cost + opens.size * WalkCosts.OPEN, breaks, places, opens, jump)
-    }
-
-    /**
-     * Whether the body gets over the edge between [from] and the block next to it at [tx] [tz] with the feet at
-     * [height]. Thin blocks on the edge, such as closed doors, are in the way. Moves out of a node the terrain does
-     * not have yet, as it is reached by breaking or placing, are not checked.
-     */
-    private fun canCross(from: BlockPos, tx: Int, tz: Int, height: Double) = !originStands ||
-        terrain.isClear(terrain.box((from.x + tx) / 2.0 + 0.5, height, (from.z + tz) / 2.0 + 0.5))
-
-    /**
-     * Whether the cell is passable or can be broken; a broken cell is added to the move.
-     */
-    private fun clear(x: Int, y: Int, z: Int, from: BlockPos): Boolean {
-        if (terrain.isPassable(x, y, z)) {
-            return true
-        }
-
-        val ticks = breakTicks(x, y, z, from, floor = false)
-        if (ticks.isNaN()) {
-            return false
-        }
-
-        breaks += BlockPos(x, y, z)
-        breakCost += ticks + WalkCosts.BREAK_OVERHEAD
-        return true
-    }
-
-    /**
-     * Ticks to break the cell, NaN when it must not be broken. [floor] allows the block below [from].
-     */
-    @Suppress("ReturnCount")
-    private fun breakTicks(x: Int, y: Int, z: Int, from: BlockPos, floor: Boolean): Double {
-        if (!abilities.canBreak || !terrain.isKnown(x, y, z) || terrain.isHazard(x, y, z)) {
-            return Double.NaN
-        }
-        if (!floor && x == from.x && z == from.z && y == from.y - 1) {
-            return Double.NaN
-        }
-
-        val state = terrain.state(x, y, z)
-        val above = terrain.state(x, y + 1, z)
-        if (state.isAir || !state.fluidState.isEmpty || !above.fluidState.isEmpty || above.block is FallingBlock) {
-            return Double.NaN
-        }
-        for (i in 0 until 4) {
-            if (!terrain.state(x + DX[i], y, z + DZ[i]).fluidState.isEmpty) {
-                return Double.NaN
-            }
-        }
-
-        val ticks = abilities.breakTicks.applyAsDouble(state)
-        return if (ticks.isFinite()) ticks else Double.NaN
-    }
-
-    private fun isPlaceable(x: Int, y: Int, z: Int) =
-        canPlace && terrain.isKnown(x, y, z) && !terrain.isHazard(x, y, z) && terrain.state(x, y, z).canBeReplaced()
-
-    /**
-     * Whether a block placed at [x] [y] [z] has a side to be placed against. The floor of [from] counts when
-     * [onFloor], since the walker stands on it even if it was placed on the way.
-     */
-    private fun canPlaceAgainst(x: Int, y: Int, z: Int, from: BlockPos, onFloor: Boolean): Boolean {
+    /** Whether a block placed at [x] [y] [z] has a side to place it against; the floor stood on counts if [onFloor]. */
+    private fun canPlaceAgainst(x: Int, y: Int, z: Int, onFloor: Boolean): Boolean {
         if (isSolid(x, y - 1, z)) {
             return true
         }
 
-        for (i in 0 until 4) {
+        for (i in DX.indices) {
             val nx = x + DX[i]
             val nz = z + DZ[i]
             if (onFloor && nx == from.x && nz == from.z && y == from.y - 1 || isSolid(nx, y, nz)) {
@@ -616,44 +525,35 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         return false
     }
 
-    private fun isSolid(x: Int, y: Int, z: Int) =
-        terrain.isKnown(x, y, z) && !terrain.isHazard(x, y, z) && !terrain.shape(x, y, z).isEmpty
+    private fun isHarmless(x: Int, y: Int, z: Int) = terrain.isKnown(x, y, z) && !terrain.isHazard(x, y, z)
 
-    private fun isWater(x: Int, y: Int, z: Int) = swim.fits(x, y, z)
+    private fun isSolid(x: Int, y: Int, z: Int) = isHarmless(x, y, z) && !terrain.isPassable(x, y, z)
 
-    private fun isClimb(x: Int, y: Int, z: Int) = terrain.isClimbable(x, y, z) && isBodyClear(x, y, z)
+    private fun isPlaceable(x: Int, y: Int, z: Int) =
+        canPlace && isHarmless(x, y, z) && terrain.state(x, y, z).canBeReplaced()
 
-    private fun isCrouch(x: Int, y: Int, z: Int) =
-        terrain.standHeight(x, y, z).isNaN() && !terrain.crouchHeight(x, y, z).isNaN() &&
-            !terrain.isWater(x, y, z) && !terrain.isClimbable(x, y, z)
+    private fun stands(x: Int, y: Int, z: Int) = !terrain.standHeight(x, y, z).isNaN()
 
-    private fun isBodyClear(x: Int, y: Int, z: Int) = terrain.isClear(terrain.box(x + 0.5, y.toDouble(), z + 0.5))
+    private fun swims(x: Int, y: Int, z: Int) = swim.fits(x, y, z)
 
-    /**
-     * Feet height in [x] [y] [z]; a node that is not standable in the terrain stands on its floor or a placed block.
-     */
+    private fun climbs(x: Int, y: Int, z: Int) = terrain.isClimbable(x, y, z) && terrain.hasRoom(x, y, z)
+
+    private fun crouches(x: Int, y: Int, z: Int) = !stands(x, y, z) && !terrain.crouchHeight(x, y, z).isNaN() &&
+        !terrain.isWater(x, y, z) && !terrain.isClimbable(x, y, z)
+
+    /** Feet height in [x] [y] [z]; a node the terrain does not have yet stands on its floor or a placed block. */
     private fun height(x: Int, y: Int, z: Int): Double {
         val stand = terrain.standHeight(x, y, z)
-        if (!stand.isNaN()) {
-            return stand
+        return when {
+            !stand.isNaN() -> stand
+            swims(x, y, z) || climbs(x, y, z) -> y.toDouble()
+            else -> terrain.crouchHeight(x, y, z).ifNaN { floorTop(x, y, z).ifNaN { y.toDouble() } }
         }
-        if (isWater(x, y, z) || isClimb(x, y, z)) {
-            return y.toDouble()
-        }
-        val crouch = terrain.crouchHeight(x, y, z)
-        if (!crouch.isNaN()) {
-            return crouch
-        }
-
-        val floor = floorTop(x, y, z)
-        return if (floor.isNaN()) y.toDouble() else floor
     }
 
-    /**
-     * Top of the block below [x] [y] [z] the feet would rest on, ignoring the feet block; NaN without one.
-     */
+    /** Top of the block below [x] [y] [z] the feet would rest on, whatever is in the feet block; NaN without one. */
     private fun floorTop(x: Int, y: Int, z: Int): Double {
-        if (!terrain.isKnown(x, y - 1, z) || terrain.isHazard(x, y - 1, z)) {
+        if (!isHarmless(x, y - 1, z)) {
             return Double.NaN
         }
 
@@ -669,8 +569,6 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         return top
     }
 
-    private fun fallCost(drop: Double) = WalkCosts.fall(ceil(drop).toInt())
-
     private class Landing(val y: Int, val drop: Double)
 
     private companion object {
@@ -684,16 +582,23 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         val DIAGONAL_X = intArrayOf(1, 1, -1, -1)
         val DIAGONAL_Z = intArrayOf(1, -1, 1, -1)
 
-        /**
-         * Jumps tried from one spot, nearest first.
-         */
+        /** Jumps tried from one spot, nearest first. */
         const val MAX_JUMPS = 24
 
-        /**
-         * How much lower a jump has to land to count as a drop, the floor beside a slab included.
-         */
+        /** How much lower a jump has to land to count as a drop, the floor beside a slab included. */
         const val DROP_HEIGHT = 0.25
         const val RISKY_JUMP_DROP = 3
+
+        val EVERY_JUMP = JumpFilter { _, _, _ -> true }
     }
 
 }
+
+/** Whether a body [height] tall fits in the middle of block [x] [y] [z] with the feet at its bottom. */
+internal fun NavigationTerrain.hasRoom(x: Int, y: Int, z: Int, height: Double = this.height) =
+    isClear(box(x + 0.5, y.toDouble(), z + 0.5, height))
+
+/** Whether nothing is in the way of feet and head in [x] [y] [z]. */
+internal fun NavigationTerrain.isOpen(x: Int, y: Int, z: Int) = isPassable(x, y, z) && isPassable(x, y + 1, z)
+
+internal inline fun Double.ifNaN(other: () -> Double) = if (isNaN()) other() else this

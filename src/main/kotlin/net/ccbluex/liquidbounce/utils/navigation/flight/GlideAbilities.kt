@@ -27,23 +27,12 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.Items
 import kotlin.math.min
 
-/**
- * How the player can glide, captured on the render thread for one search.
- */
+/** How the player can glide, captured on the render thread for one search. */
 class GlideAbilities(
-    /**
-     * Rockets in the hotbar and the offhand that may be fired.
-     */
     val rockets: Int,
-
-    /**
-     * Ticks the weakest of them pushes at least.
-     */
+    /** Ticks the weakest rocket pushes. */
     val rocketTicks: Int,
-
-    /**
-     * Ticks the elytra lasts before it would break.
-     */
+    /** Ticks the elytra lasts before it would break. */
     val glideTicks: Int,
 ) {
 
@@ -52,9 +41,6 @@ class GlideAbilities(
         private const val TICKS_PER_DAMAGE = 20
         private const val ROCKET_TICKS_PER_FLIGHT = 10
 
-        /**
-         * The glide of a usable elytra worn on the chest, firing rockets when [useRockets], or null without one.
-         */
         fun capture(useRockets: Boolean): GlideAbilities? {
             val elytra = player.getItemBySlot(EquipmentSlot.CHEST)
             if (!LivingEntity.canGlideUsing(elytra, EquipmentSlot.CHEST)) {

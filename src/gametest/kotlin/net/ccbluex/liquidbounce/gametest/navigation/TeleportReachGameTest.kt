@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
+import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
@@ -36,13 +39,9 @@ import net.minecraft.client.KeyMapping
 import net.minecraft.client.Options
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.core.BlockPos
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.inventory.ChestMenu
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -58,16 +57,12 @@ class TeleportReachGameTest : FabricClientGameTest {
             return
         }
         context.waitForClient()
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTeleportReach) }
-
-        try {
+        context.restoring(ModuleTeleportReach) {
             checkOldNameLoads(context)
 
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 server.runCommand("fill 0 ${y - 1} -12 30 ${y - 1} 12 stone")
                 server.runCommand("fill 0 $y -12 30 ${y + 10} 12 air")
                 server.runCommand("gamemode survival @a")
@@ -82,11 +77,6 @@ class TeleportReachGameTest : FabricClientGameTest {
                 checkChest(context, server, y)
 
                 check(server.player { it.health } == server.player { it.maxHealth }) { "Reaching hurt the player" }
-            }
-        } finally {
-            context.onClient {
-                ModuleTeleportReach.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleTeleportReach, saved)
             }
         }
     }
@@ -117,7 +107,7 @@ class TeleportReachGameTest : FabricClientGameTest {
             position.x > start.x + 4 && !TeleportDispatcher.isMoving
         }, WAIT_TICKS)
 
-        val landed = context.fromClient { checkNotNull(it.player).position() }
+        val landed = context.playerPosition()
         check(landed.y == y.toDouble()) { "Teleport landed at $landed" }
         server.waitFor({ it.player().position().near(landed) }, WAIT_TICKS)
     }
@@ -128,9 +118,7 @@ class TeleportReachGameTest : FabricClientGameTest {
         context.waitTicks(SETTLE_TICKS)
 
         click(context, server, y, BlockPos(16, y + 1, 0), { it.keyAttack }) {
-            server.computeOnServer<Boolean, RuntimeException> { s ->
-                s.overworld().allEntities.any { it is Husk && it.health < it.maxHealth }
-            }
+            server.huskHurt()
         }
         server.runCommand("kill @e[type=husk]")
     }
@@ -174,7 +162,7 @@ class TeleportReachGameTest : FabricClientGameTest {
         context.waitTicks(HOLD_OPEN_TICKS)
         check(context.fromClient { it.gui.screen() is ContainerScreen }) { "The chest closed while held beside it" }
         check(server.player { it.containerMenu is ChestMenu }) { "The server closed the chest" }
-        check(context.fromClient { checkNotNull(it.player).position().near(origin(y)) }) {
+        check(context.playerPosition().near(origin(y))) {
             "The client left its position to open the chest"
         }
 
@@ -182,9 +170,7 @@ class TeleportReachGameTest : FabricClientGameTest {
         awaitReturn(context, server, y)
     }
 
-    /**
-     * Looks at [target], clicks [key] once, waits for [done] and for the player to come back.
-     */
+    /** Looks at [target], clicks [key] once, waits for [done] and for the player to come back. */
     private fun click(
         context: ClientGameTestContext,
         server: TestServerContext,
@@ -217,9 +203,7 @@ class TeleportReachGameTest : FabricClientGameTest {
     private fun origin(y: Int) = Vec3(2.5, y.toDouble(), 0.5)
 
     private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z} -90 0")
-        context.waitFor({ client -> client.player?.position()?.near(position) == true }, WAIT_TICKS)
-        context.waitTicks(SETTLE_TICKS)
+        moveTo(context, server, position, yaw = -90f, toleranceSqr = NEAR_SQ)
     }
 
     private fun TestServerContext.blockAt(pos: BlockPos) =
@@ -227,12 +211,7 @@ class TeleportReachGameTest : FabricClientGameTest {
             it.overworld().getBlockState(pos)
         }
 
-    private fun <T> TestServerContext.player(block: (ServerPlayer) -> T): T =
-        computeOnServer<T, RuntimeException> { block(it.player()) }
-
-    private fun MinecraftServer.player() = playerList.players.first()
-
-    private fun Vec3.near(other: Vec3) = distanceToSqr(other) < NEAR_SQ
+    private fun Vec3.near(other: Vec3): Boolean = near(other, NEAR_SQ)
 
     private companion object {
         const val OLD_RANGE = 42f

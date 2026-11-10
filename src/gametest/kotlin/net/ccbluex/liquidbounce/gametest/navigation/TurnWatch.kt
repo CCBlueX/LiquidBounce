@@ -30,9 +30,8 @@ import net.minecraft.util.Mth
 import kotlin.math.abs
 
 /**
- * Watches the yaw the player sends and finds glances back: turning more than [AWAY] degrees off and back within
- * [BACK] degrees inside [WINDOW] ticks, which no one walking somewhere does. Mining and placing aim at their blocks,
- * wherever those are, so a glance that spans them does not count.
+ * Finds glances back in the yaw the player sends: more than [AWAY] degrees off and back within [BACK] degrees inside
+ * [WINDOW] ticks. Mining and placing aim at their blocks, so a glance that spans them does not count.
  */
 internal object TurnWatch : EventListener {
 
@@ -73,9 +72,6 @@ internal object TurnWatch : EventListener {
         }
     }
 
-    /**
-     * Runs [block] and fails when the player glanced back meanwhile, outside the ticks [acting] holds for.
-     */
     fun <T> watch(
         context: ClientGameTestContext,
         what: String,
