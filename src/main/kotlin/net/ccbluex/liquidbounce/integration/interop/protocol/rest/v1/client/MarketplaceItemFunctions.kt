@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import com.mojang.blaze3d.Blaze3D
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -41,12 +43,14 @@ import net.ccbluex.liquidbounce.features.marketplace.NoCompatibleRevisionExcepti
 import net.ccbluex.liquidbounce.features.marketplace.UpdateResult
 import net.ccbluex.liquidbounce.features.marketplace.installWithDependencies
 import net.ccbluex.liquidbounce.integration.interop.badRequest
+import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import java.net.URI
 
 private const val PAGE_SIZE = 20
 private const val REVISION_PAGE_SIZE = 50
@@ -175,6 +179,25 @@ private fun Route.getInstalled() = get("/installed") {
     call.respond(MarketplaceManager.subscribedItems.map { item -> InstalledItemData(item.id, item.type, item.name) })
 }
 
+/**
+ * Opens a link of the item's description in the system browser. Any other URL is refused.
+ */
+private fun Route.postBrowse() = post("/browse") {
+    data class BrowseRequest(val url: String)
+
+    call.handleMarketplaceErrors {
+        val id = call.requireId()
+        val url = call.receive<BrowseRequest>().url
+        val uri = runCatching { URI(url) }.getOrNull()?.takeIf { it.host != null }
+        if (uri == null || !hasLink(MarketplaceApi.getMarketplaceItem(id, getSessionOrNull()).description, url)) {
+            call.forbidden("Not a link of this item")
+        }
+
+        Blaze3D.openUri(uri)
+    }
+    call.respond(HttpStatusCode.NoContent)
+}
+
 internal fun Route.marketplaceItemRoutes() = route("/marketplace/items") {
     getItems()
     getInstalled()
@@ -184,5 +207,6 @@ internal fun Route.marketplaceItemRoutes() = route("/marketplace/items") {
         postUpdate()
         postRemove()
         postApply()
+        postBrowse()
     }
 }
