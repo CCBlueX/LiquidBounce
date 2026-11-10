@@ -2,13 +2,19 @@
     import {onMount, untrack} from "svelte";
     import Button from "../../../common/Button.svelte";
     import Chip from "../../../common/Chip.svelte";
+    import Switch from "../../../setting/common/Switch.svelte";
     import Placeholder from "../Placeholder.svelte";
     import Reports from "../Reports.svelte";
     import Entry from "./Entry.svelte";
     import EntryList from "./EntryList.svelte";
-    import SearchInput from "./SearchInput.svelte";
+    import FilterBar from "./FilterBar.svelte";
     import TrackerEntry from "./TrackerEntry.svelte";
-    import {getMarketplaceConfigs, getModule, getModuleSettings} from "../../../../../integration/rest";
+    import {
+        getMarketplaceConfigs,
+        getModule,
+        getModuleSettings,
+        loginClientUser
+    } from "../../../../../integration/rest";
     import type {MarketplaceConfig, MarketplaceConfigPage} from "../../../../../integration/types";
     import {formatCount} from "../../../../../util/utils";
     import {
@@ -24,8 +30,9 @@
     } from "../marketplace";
     import {PagedList} from "./paged_list.svelte";
 
-    let {filters = $bindable(), onopen}: {
+    let {filters = $bindable(), tags, onopen}: {
         filters: ConfigFilters;
+        tags: string[];
         onopen: (id: number) => void;
     } = $props();
 
@@ -67,10 +74,33 @@
         query = "";
         filters = {...filters, featured: false, onServer: false, tags: []};
     }
+
+    function toggleTag(tag: string) {
+        filters.tags = filters.tags.includes(tag)
+            ? filters.tags.filter(other => other !== tag)
+            : [...filters.tags, tag];
+    }
 </script>
 
 <div class="top">
-    <SearchInput bind:query placeholder="Search or paste a share code"/>
+    <FilterBar bind:query bind:sort={filters.sort} placeholder="Search or paste a share code">
+        <Switch name="Featured only" bind:value={filters.featured}/>
+        {#if $currentServer}
+            <Switch name="For {$currentServer}" bind:value={filters.onServer}/>
+        {/if}
+        {#if $user}
+            <Button onclick={() => $dialog = {kind: "publish"}}>Publish...</Button>
+        {:else}
+            <Button variant="secondary" onclick={() => loginClientUser()}>Log in</Button>
+        {/if}
+    </FilterBar>
+    {#if tags.length > 0}
+        <div class="tags">
+            {#each tags as tag (tag)}
+                <Chip active={filters.tags.includes(tag)} onclick={() => toggleTag(tag)}>{tag}</Chip>
+            {/each}
+        </div>
+    {/if}
     <TrackerEntry {onopen}/>
 </div>
 
@@ -140,6 +170,12 @@
     flex-direction: column;
     row-gap: 10px;
     padding: 14px 14px 10px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .downloads {

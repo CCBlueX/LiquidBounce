@@ -6,7 +6,7 @@
     import Placeholder from "../Placeholder.svelte";
     import Entry from "./Entry.svelte";
     import EntryList from "./EntryList.svelte";
-    import SearchInput from "./SearchInput.svelte";
+    import FilterBar from "./FilterBar.svelte";
     import {getInstalledMarketplaceItems, getMarketplaceItems} from "../../../../../integration/rest";
     import type {
         MarketplaceInstalledItem,
@@ -20,7 +20,7 @@
     /**
      * [changes] counts the installs and removals made elsewhere, which the list reloads for.
      */
-    let {type, sort, changes, onopen}: {
+    let {type, sort = $bindable(), changes, onopen}: {
         type: ListedType;
         sort: string;
         changes: number;
@@ -47,7 +47,7 @@
 </script>
 
 <div class="top">
-    <SearchInput bind:query placeholder="Search {title}"/>
+    <FilterBar bind:query bind:sort placeholder="Search {title}"/>
 </div>
 
 <EntryList {list} noun="the {title}">
@@ -69,7 +69,7 @@
                     <span>Not for {item.notFor}</span>
                 {/if}
                 {#if item.rating !== undefined}
-                    <span class="rating">{item.rating.toFixed(1)} of 5</span>
+                    <span class="rating">{item.rating.toFixed(1)}</span>
                 {/if}
                 <span>{formatCount(item.downloads)} downloads</span>
             {/snippet}
@@ -100,6 +100,17 @@
   }
 
   .rating {
+    display: inline-flex;
+    align-items: center;
+    column-gap: 5px;
     color: var(--clickgui-marketplace-rating-color);
+
+    &::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      background-color: currentColor;
+      mask: url("/img/menu/icon-favorite-filled.svg") center / contain no-repeat;
+    }
   }
 </style>

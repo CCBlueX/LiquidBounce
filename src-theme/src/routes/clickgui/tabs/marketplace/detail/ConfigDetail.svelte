@@ -100,12 +100,7 @@
     {/snippet}
     {#snippet actions()}
         {#if config && $user}
-            <Button variant="secondary" pressed={detail?.report === true} onclick={() => report(true)}>
-                Works · {config.works}
-            </Button>
-            <Button variant="secondary" pressed={detail?.report === false} onclick={() => report(false)}>
-                Broken · {config.fails}
-            </Button>
+            <Reports works={config.works} fails={config.fails} own={detail?.report} onreport={report}/>
         {:else if config}
             <span class="reports"><Reports works={config.works} fails={config.fails}/></span>
         {/if}

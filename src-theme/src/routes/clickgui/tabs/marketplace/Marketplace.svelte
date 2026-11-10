@@ -11,7 +11,6 @@
     import LoadDialog from "./dialog/LoadDialog.svelte";
     import PublishedDialog from "./dialog/PublishedDialog.svelte";
     import UpdateDialog from "./dialog/UpdateDialog.svelte";
-    import Sidebar from "./Sidebar.svelte";
     import {getMarketplaceTags} from "../../../../integration/rest";
     import {setItem} from "../../../../integration/persistent_storage";
     import {listen} from "../../../../integration/ws";
@@ -22,6 +21,7 @@
         refreshCurrentServer,
         refreshTracker,
         refreshUser,
+        TYPE_TITLES,
         type View
     } from "./marketplace";
 
@@ -77,17 +77,24 @@
 
 <ScaledClickGuiContent>
     <WindowPanel title="Marketplace" icon="world" width={1040} fill>
+        {#snippet actions()}
+            {#each Object.entries(TYPE_TITLES) as [listed, title] (listed)}
+                <button type="button" class="type" class:active={listed === type}
+                        onclick={() => selectType(listed as ListedType)}>
+                    {title}
+                </button>
+            {/each}
+        {/snippet}
+
         <!-- The page stays loaded while the player joins and leaves servers, with nothing telling it -->
         <div class="marketplace" role="presentation" onpointerenter={refreshCurrentServer}>
-            <Sidebar {type} bind:filters {tags} browsing={view.kind === "browse"} onselect={selectType}/>
-
             <!-- The list stays behind a detail page, to come back to where it was scrolled -->
             <div class="view" class:hidden={view.kind !== "browse"}>
                 {#if type === "Config"}
-                    <ConfigBrowser bind:filters onopen={id => open({kind: "config", id})}/>
+                    <ConfigBrowser bind:filters {tags} onopen={id => open({kind: "config", id})}/>
                 {:else}
                     {#key type}
-                        <ItemBrowser {type} sort={filters.sort} changes={itemChanges}
+                        <ItemBrowser {type} bind:sort={filters.sort} changes={itemChanges}
                                      onopen={id => open({kind: "item", id})}/>
                     {/key}
                 {/if}
@@ -125,15 +132,39 @@
 {/if}
 
 <style lang="scss">
+  .type {
+    padding: 5px 12px;
+    border: solid 1px transparent;
+    border-radius: 999px;
+    background-color: transparent;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--clickgui-text-dimmed-color);
+    cursor: pointer;
+    transition: ease background-color 0.2s, ease color 0.2s;
+
+    &:hover, &:focus-visible {
+      color: var(--clickgui-text-color);
+      background-color: var(--clickgui-tab-hover-background-color);
+    }
+
+    &.active {
+      color: var(--clickgui-text-color);
+      background-color: var(--clickgui-tab-active-background-color);
+      border-color: var(--clickgui-tab-active-border-color);
+    }
+  }
+
   .marketplace {
-    display: grid;
-    grid-template-columns: 210px minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     width: 100%;
     min-height: 0;
   }
 
   .view {
-    grid-column: 2;
+    flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;

@@ -2,11 +2,12 @@
     import type {Snippet} from "svelte";
 
     /**
-     * [pressed] makes it a toggle that is on.
+     * [pressed] makes it a toggle that is on. [label] names a button whose content does not.
      */
-    let {onclick, variant = "primary", pressed, disabled = false, autofocus = false, children}: {
+    let {onclick, variant = "primary", label, pressed, disabled = false, autofocus = false, children}: {
         onclick: () => void;
         variant?: "primary" | "secondary" | "danger";
+        label?: string;
         pressed?: boolean;
         disabled?: boolean;
         autofocus?: boolean;
@@ -15,7 +16,8 @@
 </script>
 
 <!-- svelte-ignore a11y_autofocus -->
-<button type="button" class="button {variant}" class:pressed aria-pressed={pressed} {disabled} {autofocus} {onclick}>
+<button type="button" class="button {variant}" class:pressed aria-label={label} aria-pressed={pressed} {disabled}
+        {autofocus} {onclick}>
     {@render children()}
 </button>
 
