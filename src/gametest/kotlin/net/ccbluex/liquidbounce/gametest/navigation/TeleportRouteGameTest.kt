@@ -42,6 +42,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.level.levelgen.Heightmap
@@ -268,7 +269,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
         check(server.player { it.position() }.near(destination)) { "The server did not keep $destination" }
     }
 
-    private fun net.minecraft.server.MinecraftServer.player(): ServerPlayer = playerList.players.first()
+    private fun MinecraftServer.player(): ServerPlayer = playerList.players.first()
 
     private fun ClientGameTestContext.clientPosition(): Vec3 = fromClient { checkNotNull(it.player).position() }
 

@@ -25,7 +25,9 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
 import java.io.File
 import java.io.InputStream
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.LinkOption
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.BasicFileAttributes
@@ -39,7 +41,7 @@ private fun Path.createDirectoryNoFollow(relative: Path) {
     fun Path.readAttrsNoFollow(): BasicFileAttributes? =
         try {
             readAttributes(LinkOption.NOFOLLOW_LINKS)
-        } catch (_: java.nio.file.NoSuchFileException) {
+        } catch (_: NoSuchFileException) {
             null
         }
 
@@ -51,7 +53,7 @@ private fun Path.createDirectoryNoFollow(relative: Path) {
             attrs == null -> current.createDirectory()
             attrs.isSymbolicLink -> throw SecurityException("Symlink in extraction path: $current")
             attrs.isDirectory -> {}
-            else -> throw java.nio.file.FileAlreadyExistsException(current.toString())
+            else -> throw FileAlreadyExistsException(current.toString())
         }
 
         val after = current.readAttrsNoFollow()
