@@ -26,10 +26,8 @@ import net.minecraft.world.phys.Vec3
 enum class RouteState {
     NONE,
 
-    /** Searching. */
     PENDING,
 
-    /** Found or being travelled. */
     ACTIVE,
     DONE,
 
@@ -37,9 +35,7 @@ enum class RouteState {
     INVALID,
 }
 
-/**
- * How far along its route a mover is: where it is and the corners still ahead.
- */
+/** Where a mover is on its route and the corners still ahead. */
 interface RouteProgress {
 
     val isMoving: Boolean
@@ -50,9 +46,7 @@ interface RouteProgress {
 
 }
 
-/**
- * What a navigating module shows, drawn by [RouteRenderer].
- */
+/** What a navigating module shows, drawn by [RouteRenderer]. */
 class RouteView {
 
     var state = RouteState.NONE
@@ -67,9 +61,7 @@ class RouteView {
     var destination: Vec3? = null
         private set
 
-    /**
-     * Corners of the route, feet positions.
-     */
+    /** Corners of the route, feet positions. */
     var path: List<Vec3>? = null
         private set
 
@@ -79,28 +71,18 @@ class RouteView {
     var breaks: Collection<BlockPos> = emptyList()
     var places: Collection<BlockPos> = emptyList()
 
-    /**
-     * Where the server has the player when that differs from the client.
-     */
+    /** Where the server has the player when that differs from the client. */
     var ghost: ((partialTicks: Float) -> Vec3?)? = null
 
     var target: Entity? = null
     var attackPosition: Vec3? = null
 
-    /**
-     * Whether [target] is being attacked right now.
-     */
     var engaged = false
 
-    /**
-     * A destination the player could pick right now, shown while nothing else is.
-     */
+    /** A destination the player could pick right now, shown while nothing else is. */
     var preview: Vec3? = null
     var isPreviewValid = false
 
-    /**
-     * [searched] is the best route of the search so far.
-     */
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start
         this.destination = destination

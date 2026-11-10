@@ -43,16 +43,12 @@ sealed interface RouteResult<out T> {
 
 }
 
-/**
- * A search that is advanced in slices until it has a result.
- */
+/** A search that is advanced in slices until it has a result. */
 interface RouteSearch<out T> {
 
     fun advance(): RouteResult<T>
 
-    /**
-     * Feet positions from the start to the explored spot closest to the goal; read between slices.
-     */
+    /** Feet positions from the start to the explored spot closest to the goal; read between slices. */
     fun preview(): List<Vec3>? = null
 
 }

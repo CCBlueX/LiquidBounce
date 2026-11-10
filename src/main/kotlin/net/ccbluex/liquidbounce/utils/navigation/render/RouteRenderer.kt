@@ -44,9 +44,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-/**
- * Draws [view].
- */
+/** Draws [view]. */
 class RouteRenderer(
     owner: EventListener,
     private val view: RouteView,
@@ -121,9 +119,7 @@ class RouteRenderer(
         return 1f - (System.currentTimeMillis() - view.since).toFloat() / fadeOut
     }
 
-    /**
-     * The route searched so far, a line on to the destination and a pulsing marker where the search got.
-     */
+    /** The route searched so far, a line on to the destination and a pulsing marker where the search got. */
     private fun WorldRenderEnvironment.drawPending(noDepthTest: Boolean) {
         val start = view.start ?: return
         val destination = view.destination ?: return
@@ -215,9 +211,7 @@ class RouteRenderer(
         }
     }
 
-    /**
-     * Arrow heads along [points].
-     */
+    /** Arrow heads along [points]. */
     private fun addChevrons(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
         var offset = CHEVRON_SPACING / 2
         for (index in 0 until points.lastIndex) {

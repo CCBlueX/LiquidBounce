@@ -28,21 +28,15 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
-/**
- * Where a route should end. Positions are the blocks the feet are in.
- */
+/** Where a route should end, in blocks the feet are in. */
 interface NavigationGoal {
 
     fun isGoal(x: Int, y: Int, z: Int): Boolean
 
-    /**
-     * Blocks from [x] [y] [z] to the goal; never more than the real distance.
-     */
+    /** Blocks from [x] [y] [z] to the goal; never more than the real distance. */
     fun distance(x: Int, y: Int, z: Int): Double
 
-    /**
-     * Points the route ends near, which size the searched region.
-     */
+    /** Sizes the searched region. */
     val ends: Collection<Vec3>
 
     fun isGoal(pos: BlockPos) = isGoal(pos.x, pos.y, pos.z)
@@ -72,10 +66,7 @@ class BlockGoal(positions: Collection<BlockPos>) : NavigationGoal {
 
 }
 
-/**
- * Feet within [radius] of [center]. Vertically the block holding [center] counts, as feet on a partial block such as
- * farmland rest below its top.
- */
+/** Feet within [radius] of [center]; vertically from its block, as feet on farmland rest below the block top. */
 data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
 
     override val ends: Collection<Vec3> = listOf(center)
@@ -96,9 +87,8 @@ data class NearGoal(val center: Vec3, val radius: Double) : NavigationGoal {
 }
 
 /**
- * [goal], or a stage on the way to a goal beyond the searched area: feet [range] blocks from [start] or next to
- * blocks [terrain] does not know, and at least [MIN_PROGRESS] blocks closer to [goal] than [start], so stages never
- * lead back.
+ * [goal], or a stage on the way to it: feet [range] blocks from [start] or next to blocks [terrain] does not know,
+ * and at least [MIN_PROGRESS] blocks closer to [goal], so stages never lead back.
  */
 class StageGoal(
     val goal: NavigationGoal,
@@ -132,9 +122,7 @@ class StageGoal(
         fun region(start: Vec3, range: Double, verticalMargin: Int) =
             NavigationRegion.around(start, emptyList(), range, verticalMargin)
 
-        /**
-         * Whether [goal] is farther than [range] from [start] or in blocks [world] does not know.
-         */
+        /** Whether [goal] is farther than [range] from [start] or in blocks [world] does not know. */
         fun isNeeded(world: NavigationWorld, start: Vec3, goal: Vec3, range: Double): Boolean {
             val feet = BlockPos.containing(goal)
             return start.distanceTo(goal) > range || !world.isKnown(feet.x, feet.y, feet.z)

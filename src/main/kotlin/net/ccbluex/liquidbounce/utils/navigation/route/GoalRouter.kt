@@ -29,8 +29,7 @@ import net.minecraft.world.phys.Vec3
 
 /**
  * Searches routes for a navigator whose goal is given anew every tick. Goals beyond half the route length or in
- * chunks not loaded are searched in stages. A new search waits [REPLAN_INTERVAL] ticks after the last one unless
- * urgent, and [RETRY_TICKS] after one that failed.
+ * chunks not loaded are searched in stages.
  */
 internal class GoalRouter<T>(
     owner: EventListener,
@@ -40,24 +39,19 @@ internal class GoalRouter<T>(
 
     private val planner = RoutePlanner<T>(owner, newTerrain)
 
-    /**
-     * Ticks the navigator ran for.
-     */
     var ticks = 0
         private set
     private var lastRequest = Int.MIN_VALUE / 2
     private var retryAt = 0
 
-    private var requestedGoal: Vec3? = null
-    private var requestedStage: NearGoal? = null
-    private var routeGoal: Vec3? = null
+    private var requested: Request? = null
+
+    private var routed: Request? = null
 
     var failed = false
         private set
 
-    /**
-     * Whether the route in use ends at a stage on the way to the goal, see [routeEnds].
-     */
+    /** Whether the route in use ends at a stage on the way to the goal. */
     var endsAtStage = false
         private set
 
@@ -71,9 +65,7 @@ internal class GoalRouter<T>(
         ticks++
     }
 
-    /**
-     * The result of the search, once. After a route was found, tell where it ends with [routeEnds] or [forget] it.
-     */
+    /** The result of the search, once. After a route was found, tell where it ends with [routeEnds] or [forget] it. */
     fun poll(): RouteResult<T> {
         val result = planner.poll()
         when (result) {
@@ -87,7 +79,7 @@ internal class GoalRouter<T>(
             else -> {
                 failed = false
                 endsAtStage = false
-                routeGoal = requestedGoal
+                routed = requested
             }
         }
 
@@ -96,35 +88,24 @@ internal class GoalRouter<T>(
     }
 
     fun routeEnds(end: BlockPos) {
-        endsAtStage = requestedStage?.isGoal(end) == false
+        endsAtStage = routed?.stage?.isGoal(end) == false
     }
 
-    /**
-     * Drops the route found last, so the next one is searched right away.
-     */
     fun forget() {
-        routeGoal = null
+        routed = null
     }
 
-    /**
-     * Whether [goal] moved away from the goal of the route in use, or there is none.
-     */
-    fun hasGoalMoved(goal: Vec3) = isMoved(routeGoal, goal)
+    fun hasGoalMoved(goal: Vec3) = !routed.isFor(goal)
 
-    /**
-     * Whether [goal] differs from the goal searched for last.
-     */
-    fun isNewGoal(goal: Vec3) = isMoved(requestedGoal, goal)
+    fun isNewGoal(goal: Vec3) = !requested.isFor(goal)
 
-    /**
-     * Whether a search may be requested now.
-     */
+    /** A new search waits [REPLAN_INTERVAL] ticks after the last one unless [urgent], [RETRY_TICKS] after a failure. */
     fun isDue(urgent: Boolean) =
         ticks >= retryAt && (urgent || !isSearching && ticks - lastRequest >= REPLAN_INTERVAL)
 
     /**
-     * Searches from [start] to [goal] or, when it is too far or not loaded, to a stage on the way, over routes of
-     * at most [maxLength]. A running search for the same start block, goal and [variant] goes on.
+     * Searches routes of at most [maxLength] from [start] to [goal], or to a stage on the way. A running search for
+     * the same start block, goal and [variant] goes on.
      */
     fun request(
         start: Vec3,
@@ -149,28 +130,27 @@ internal class GoalRouter<T>(
         if (isNewGoal(goal.center)) {
             failed = false
         }
-        requestedGoal = goal.center
-        requestedStage = goal.takeIf { staged }
+        requested = Request(goal.center, goal.takeIf { staged })
         lastRequest = ticks
     }
 
     fun reset() {
         planner.cancel()
+        requested = null
+        routed = null
         failed = false
         endsAtStage = false
-        routeGoal = null
-        requestedGoal = null
-        requestedStage = null
     }
 
-    private fun isMoved(from: Vec3?, to: Vec3) = from == null || from.distanceToSqr(to) > GOAL_MOVED * GOAL_MOVED
+    private fun Request?.isFor(goal: Vec3) =
+        this != null && this.goal.distanceToSqr(goal) <= GOAL_MOVED * GOAL_MOVED
+
+    private class Request(val goal: Vec3, val stage: NearGoal?)
 
     private data class SearchKey(val start: BlockPos, val goal: NearGoal, val staged: Boolean, val variant: Any?)
 
     companion object {
-        /**
-         * Blocks before the end of a stage at which the next one is searched, so the navigator does not stop there.
-         */
+        /** Blocks before the end of a stage at which the next one is searched, so the navigator does not stop there. */
         const val STAGE_LEAD = 12.0
 
         private const val GOAL_MOVED = 1.5

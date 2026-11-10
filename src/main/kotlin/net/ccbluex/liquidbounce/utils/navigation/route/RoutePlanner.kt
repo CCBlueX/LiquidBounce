@@ -52,15 +52,11 @@ class RoutePlanner<T>(
     val isIdle: Boolean
         get() = job == null
 
-    /**
-     * The best route of the running search so far, see [RouteSearch.preview].
-     */
+    /** The best route of the running search so far, see [RouteSearch.preview]. */
     var preview: List<Vec3>? = null
         private set
 
-    /**
-     * Searches with [factory] over [region], unless a search for an equal [key] is running or done.
-     */
+    /** Searches with [factory] over [region], unless a search for an equal [key] is running or done. */
     fun request(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>) {
         if (job?.key == key) {
             return
@@ -70,9 +66,7 @@ class RoutePlanner<T>(
         job = start(key, region, factory)
     }
 
-    /**
-     * Collects the last slice and starts the next one. Call once per tick from the game thread.
-     */
+    /** Collects the last slice and starts the next one. Call once per tick from the game thread. */
     fun poll(): RouteResult<T> {
         var job = job ?: return RouteResult.Searching
         job.polls++
@@ -121,9 +115,7 @@ class RoutePlanner<T>(
         return Job(key, region, factory, terrain, factory.create(terrain))
     }
 
-    /**
-     * Whether a recorded change alters how a block the search looked at is moved through.
-     */
+    /** Whether a recorded change alters how a block the search looked at is moved through. */
     private fun applyChanges(terrain: NavigationTerrain): Boolean {
         val level = mc.level ?: return false
 

@@ -26,9 +26,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.FluidState
 
-/**
- * The blocks a route may be planned through. Unknown blocks are never entered.
- */
+/** The blocks a route may be planned through. Unknown blocks are never entered. */
 interface NavigationWorld : BlockGetter {
 
     fun isKnown(x: Int, y: Int, z: Int): Boolean
@@ -37,9 +35,7 @@ interface NavigationWorld : BlockGetter {
 
 }
 
-/**
- * The client world as it is now. Only for the render thread.
- */
+/** The client world as it is now. Only for the render thread. */
 class LiveWorld(private val level: ClientLevel) : NavigationWorld {
 
     override fun isKnown(x: Int, y: Int, z: Int) =

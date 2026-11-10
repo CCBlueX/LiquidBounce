@@ -42,8 +42,7 @@ import kotlin.math.abs
 /**
  * AutoWalk module
  *
- * Automatically makes you walk: straight ahead, pathfinding the way you are facing, to a destination or after a
- * player.
+ * Walks straight ahead, the way you are facing, to a destination or after a player.
  */
 object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
@@ -130,9 +129,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         private const val MAX_TURN = 20f
     }
 
-    /**
-     * Turns the module off on arrival.
-     */
+    /** Turns the module off on arrival. */
     private object Goto : NavigationMode("Goto") {
         var destination by vec3i("Destination")
 
@@ -173,9 +170,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         var target by text("Player", "")
         private val distance by float("Distance", 3f, 1f..10f)
 
-        /**
-         * Walked on to once [target] goes out of sight.
-         */
+        /** Walked on to once [target] goes out of sight. */
         private var lastSeen: Vec3? = null
 
         override val radius: Double

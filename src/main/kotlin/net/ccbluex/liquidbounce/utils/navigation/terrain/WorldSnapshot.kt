@@ -43,9 +43,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Block states copied from the client world, safe to read from any thread.
- */
+/** Block states copied from the client world, safe to read from any thread. */
 class WorldSnapshot internal constructor(
     private val minY: Int,
     private val height: Int,
@@ -145,18 +143,14 @@ data class NavigationRegion(
 
 }
 
-/**
- * Copies of client chunk sections for route searches, kept until the section changes.
- */
+/** Copies of client chunk sections for route searches, kept until the section changes. */
 object SectionCache : EventListener {
 
     private const val MAX_SECTIONS = 4096
 
     private val copies = Long2ObjectLinkedOpenHashMap<PalettedContainer<BlockState>?>()
 
-    /**
-     * Call on the render thread.
-     */
+    /** Call on the render thread. */
     fun capture(level: ClientLevel, region: NavigationRegion): WorldSnapshot {
         val minSectionY = max(region.minY, level.minY) shr 4
         val maxSectionY = min(region.maxY, level.maxY) shr 4

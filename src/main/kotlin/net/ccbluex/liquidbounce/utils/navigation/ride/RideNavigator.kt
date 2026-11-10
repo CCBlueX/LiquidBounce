@@ -62,9 +62,7 @@ class RideNavigator(
     private var bestDistance = Double.MAX_VALUE
     private var idleTicks = 0
 
-    /**
-     * Whether the vehicle is in the goal node, so only the last bit is left to ride straight.
-     */
+    /** Whether the vehicle is in the goal node, so only the last bit is left to ride straight. */
     private var atGoal = false
     private var approachTicks = 0
     private var dismountTicks = 0
@@ -110,9 +108,7 @@ class RideNavigator(
         return true
     }
 
-    /**
-     * Stops riding to the goal until the next [navigate].
-     */
+    /** Stops riding to the goal until the next [navigate]. */
     fun halt() {
         routes.reset()
         steering.reset()
@@ -154,9 +150,7 @@ class RideNavigator(
         view.active(path.positions, progress)
     }
 
-    /**
-     * The farthest of the next points the vehicle reaches in a straight line without a jump.
-     */
+    /** The farthest of the next points the vehicle reaches in a straight line without a jump. */
     private fun straightAhead(position: Vec3, body: RideBody, path: RidePath): Vec3 {
         val moves = RideMoves(NavigationTerrain.live(), body)
         var target = path.points[index].position
@@ -170,9 +164,7 @@ class RideNavigator(
         return target
     }
 
-    /**
-     * Moves on past the points of [path] the vehicle has got to.
-     */
+    /** Moves on past the points of [path] the vehicle has got to. */
     private fun advance(position: Vec3, body: RideBody, path: RidePath) {
         val arrive = if (body.kind == RideKind.BOAT) BOAT_ARRIVE else MOUNT_ARRIVE
         var reached = -1
@@ -224,9 +216,7 @@ class RideNavigator(
         idleTicks = 0
     }
 
-    /**
-     * Rides straight at [goal] from within its node, and gets off when that does not get the player there.
-     */
+    /** Rides straight at [goal] from within its node, and gets off when that does not get the player there. */
     private fun approach(event: MovementInputEvent, vehicle: Entity, body: RideBody, goal: Vec3) {
         if (++approachTicks > APPROACH_TICKS) {
             dismount(event, goal)
@@ -240,9 +230,7 @@ class RideNavigator(
         view.done()
     }
 
-    /**
-     * Gets off, facing [goal] so the player lands on its side.
-     */
+    /** Gets off, facing [goal] so the player lands on its side. */
     private fun dismount(event: MovementInputEvent, goal: Vec3) {
         if (dismountTicks == 0) {
             routes.reset()
@@ -335,9 +323,7 @@ class RideNavigator(
         const val APPROACH_TICKS = 60
         const val DISMOUNT_DELAY = 2
 
-        /**
-         * Ticks a boat in water takes to coast to a stop.
-         */
+        /** Ticks a boat in water takes to coast to a stop. */
         const val BOAT_COAST_TICKS = 10.0
     }
 

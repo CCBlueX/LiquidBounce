@@ -64,8 +64,6 @@ import kotlin.math.min
  * Walks the player to a goal given every tick: straight on where nothing is in the way, else along a searched path,
  * opening doors and, when allowed, breaking and placing blocks. A ridden vehicle is driven there instead, and the
  * player flies or glides where it can.
- *
- * Its settings go into [values]; it acts while [owner] runs and aims with [rotations], or its own without them.
  */
 @Suppress("TooManyFunctions")
 class WalkNavigator(
@@ -95,40 +93,26 @@ class WalkNavigator(
     private val ride = RideNavigator(this, view) { settings.maxLength }
     private val stuckSpots = StuckSpots()
 
-    /**
-     * Searches in a row that found nothing; each widens the next one.
-     */
+    /** Searches in a row that found nothing; each widens the next one. */
     private var failures = 0
     private var stuck = false
     private var wasOffPath = false
 
-    /**
-     * When a search last found nothing closer to walk to.
-     */
+    /** When a search last found nothing closer to walk to. */
     private var settledAt: Int? = null
 
-    /**
-     * Whether the goal is reached by walking straight on, as of the last tick on the ground.
-     */
+    /** Whether the goal is reached by walking straight on, as of the last tick on the ground. */
     private var straight = false
     private var straightGoal: Vec3? = null
     private var steeringTarget: Vec3? = null
     private var sprintWanted = false
 
-    /**
-     * Held while there is nothing far enough to look at.
-     */
     private var lastLookYaw = Float.NaN
 
-    /**
-     * Whether a block is being mined, placed or opened for the path.
-     */
     val isActing: Boolean
         get() = actions.isActive
 
-    /**
-     * Where the walk heads: the aim of a block action, else the way to the next point, else the movement input.
-     */
+    /** Where the walk heads: the aim of a block action, else the way to the next point, else the movement input. */
     fun movementRotation(): Rotation {
         actions.rotation?.let { return it }
 
@@ -163,9 +147,8 @@ class WalkNavigator(
     }
 
     /**
-     * The yaw to look at on the way to [target], NaN with nothing to look at yet. A target closer than
-     * [LOOK_DISTANCE] turns around as the player passes it, so the path beyond is looked at or the last look held.
-     * While building, the player keeps facing the way of the last aim, as when bridging backwards.
+     * NaN with nothing to look at yet. A target the player is about to pass would turn the look around, so the path
+     * beyond it is looked at or the last look held; while building the player keeps facing the way of the last aim.
      */
     private fun lookYaw(target: Vec3): Float {
         val position = player.position()
@@ -178,7 +161,6 @@ class WalkNavigator(
         return if (backwards) Mth.wrapDegrees(yaw + 2 * QUARTER_TURN) else yaw
     }
 
-    // Swimming under water heads where the player looks.
     private fun divePitch(target: Vec3) = Rotation.fromRotationVec(target.subtract(player.position())).pitch
 
     @Suppress("unused")
@@ -246,18 +228,14 @@ class WalkNavigator(
         return plainWalk
     }
 
-    /**
-     * Stops walking, riding, flying and gliding until the next [navigate]; for ticks without a goal.
-     */
+    /** For ticks without a goal. */
     fun halt() {
         ride.halt()
         haltFlying()
         stopWalking()
     }
 
-    /**
-     * Stops and forgets where it got stuck; for when the owner is turned off.
-     */
+    /** For when the owner is turned off. */
     fun reset() {
         halt()
         stuckSpots.clear()
@@ -353,8 +331,8 @@ class WalkNavigator(
     }
 
     /**
-     * Without a path to walk: the rest of the way within the block the player stands in, else on towards the goal
-     * over plain ground while the first path is searched, else standing still.
+     * Without a path: the rest of the way within the feet block, else on over plain ground while the first path is
+     * searched, else standing still.
      */
     private fun fallback(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         actions.idle()
@@ -449,9 +427,6 @@ class WalkNavigator(
         follower.follow(path, startIndex)
     }
 
-    /**
-     * The step to begin [path] with: the one leading away from the path point the player is at.
-     */
     private fun joinIndex(path: WalkPath, position: Vec3): Int? {
         val points = path.points
         var best: Int? = null
@@ -510,10 +485,7 @@ class WalkNavigator(
         }
     }
 
-    /**
-     * The yaw the movement input is applied relative to: the rotation under strict movement correction, which
-     * keeps the keys but moves along the rotation, else the view.
-     */
+    /** The yaw the keys move relative to: the rotation under strict movement correction, else the view. */
     private fun frameYaw(): Float {
         val strict = RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.STRICT
         return if (strict && RotationManager.currentRotation != null) RotationManager.movementYaw else player.yRot
@@ -573,9 +545,7 @@ class WalkNavigator(
     }
 
     private companion object {
-        /**
-         * How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind.
-         */
+        /** How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind. */
         const val LOOK_DISTANCE = 0.75
         const val QUARTER_TURN = 90f
         const val VERTICAL_MARGIN = 16
@@ -592,17 +562,12 @@ class WalkNavigator(
 
 }
 
-/**
- * Feet blocks the walk got stuck at, which the next searches avoid. Forgotten after [FORGET_TICKS] or when the goal
- * changes.
- */
+/** Feet blocks the walk got stuck at, which searches avoid until [FORGET_TICKS] passed or the goal changed. */
 private class StuckSpots {
 
     val blocks = LongOpenHashSet()
 
-    /**
-     * Changes with [blocks], so a search for the set before is not kept.
-     */
+    /** Changes with [blocks], so a search for the set before is not kept. */
     var version = 0
         private set
 

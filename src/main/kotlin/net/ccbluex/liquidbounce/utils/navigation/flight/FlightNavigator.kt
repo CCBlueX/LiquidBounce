@@ -32,18 +32,14 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
-/**
- * Flies to goals for a walking navigator while the player can fly, see [FlightAbilities.capture].
- */
+/** Flies to goals for a walking navigator while the player can fly, see [FlightAbilities.capture]. */
 class FlightNavigator(private val owner: EventListener, private val view: RouteView) : EventListener {
 
     private val routes = GoalRouter<FlightPath>(this, VERTICAL_MARGIN)
     private val follower = FlightFollower()
     private var stuck = false
 
-    /**
-     * Whether the last tick was flown.
-     */
+    /** Whether the last tick was flown. */
     var isActive = false
         private set
 
@@ -55,9 +51,7 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
 
     override fun parent() = owner
 
-    /**
-     * Flies one tick towards [goal], within [radius], searching routes up to [maxLength] long.
-     */
+    /** Flies one tick towards [goal], within [radius], searching routes up to [maxLength] long. */
     fun navigate(
         event: MovementInputEvent,
         goal: Vec3,
@@ -92,9 +86,7 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
         planIfNeeded(goal, radius, maxLength, position, abilities)
     }
 
-    /**
-     * Stops flying routes until the next [navigate].
-     */
+    /** Stops flying routes until the next [navigate]. */
     fun halt() {
         routes.reset()
         follower.clear()

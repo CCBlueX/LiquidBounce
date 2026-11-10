@@ -54,11 +54,8 @@ enum class DestinationCheck {
 
 /**
  * Block lookups for route searches, cached per block until [invalidate]. Unknown blocks and hazards count as solid.
- *
- * With [opensDoors], closed doors, fence gates and trapdoors a player opens by hand count as open; [closedIn] tells
- * which a move has to open. A trapdoor that is a floor stays closed.
- *
- * Not thread-safe.
+ * With [opensDoors], closed doors, fence gates and trapdoors a player opens by hand count as open, except a trapdoor
+ * that is a floor; [closedIn] tells which a move has to open. Not thread-safe.
  */
 @Suppress("TooManyFunctions")
 class NavigationTerrain(
@@ -74,9 +71,7 @@ class NavigationTerrain(
     private val stands = Long2DoubleOpenHashMap()
     private val crouchStands = Long2DoubleOpenHashMap()
 
-    /**
-     * Collision shapes of the closed blocks that count as open.
-     */
+    /** Collision shapes of the closed blocks that count as open. */
     private val closed = Long2ObjectOpenHashMap<VoxelShape>()
 
     val minY: Int get() = world.minY
@@ -88,9 +83,7 @@ class NavigationTerrain(
     fun box(x: Double, y: Double, z: Double, height: Double = this.height) =
         AABB(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth)
 
-    /**
-     * Whether the block is loaded, copied and inside the world border.
-     */
+    /** Whether the block is loaded, copied and inside the world border. */
     fun isKnown(x: Int, y: Int, z: Int) = world.isKnown(x, y, z) && world.isInsideBorder(x + 0.5, z + 0.5)
 
     fun state(x: Int, y: Int, z: Int): BlockState {
@@ -102,9 +95,6 @@ class NavigationTerrain(
         return state
     }
 
-    /**
-     * Collision shape relative to the block.
-     */
     fun shape(x: Int, y: Int, z: Int): VoxelShape {
         val key = BlockPos.asLong(x, y, z)
         shapes.get(key)?.let { return it }
@@ -189,15 +179,9 @@ class NavigationTerrain(
 
     fun isStandable(feet: BlockPos) = !standHeight(feet.x, feet.y, feet.z).isNaN()
 
-    /**
-     * [standHeight] for a crouching player.
-     */
     fun crouchHeight(x: Int, y: Int, z: Int) =
         crouchStands.cached(BlockPos.asLong(x, y, z)) { computeStandHeight(x, y, z, minOf(height, CROUCH_HEIGHT)) }
 
-    /**
-     * Where the feet rest when standing in [node], or null when the player cannot stand there.
-     */
     fun feet(node: BlockPos): Vec3? {
         val height = standHeight(node.x, node.y, node.z)
         return if (height.isNaN()) null else Vec3(node.x + 0.5, height, node.z + 0.5)
@@ -250,9 +234,7 @@ class NavigationTerrain(
         return true
     }
 
-    /**
-     * Whether something is right below the feet, which is what the server calls on ground.
-     */
+    /** Whether something is right below the feet, which is what the server calls on ground. */
     fun isSupported(feet: Vec3): Boolean {
         val box = box(feet)
         return !isClear(AABB(box.minX, feet.y - SUPPORT_PROBE, box.minZ, box.maxX, feet.y, box.maxZ))
@@ -381,18 +363,14 @@ class NavigationTerrain(
         const val PLAYER_HEIGHT = DEFAULT_BB_HEIGHT.toDouble()
         const val CROUCH_HEIGHT = 1.5
 
-        /**
-         * Highest ledge the player walks onto without jumping.
-         */
+        /** Highest ledge the player walks onto without jumping. */
         const val STEP = 0.6
 
         private const val STAND_REACH = 2
         private const val EPSILON = 1.0E-7
         private const val SUPPORT_PROBE = 1.0E-3
 
-        /**
-         * Offsets from a block to the trapdoors whose counting as open depends on it.
-         */
+        /** Offsets from a block to the trapdoors whose counting as open depends on it. */
         private val TRAPDOOR_NEIGHBOURS = intArrayOf(-2, -1, 1)
 
         private val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
@@ -420,17 +398,13 @@ class NavigationTerrain(
             Blocks.CAVE_VINES_PLANT,
         )
 
-        /**
-         * A terrain over the client world as it is now. Only for the render thread.
-         */
+        /** Only for the render thread. */
         fun live() = NavigationTerrain(LiveWorld(world))
 
         fun isHazard(state: BlockState) =
             state.fluidState.type.isSame(Fluids.LAVA) || state.block is BaseFireBlock || state.block in HAZARDS
 
-        /**
-         * Every block [box] reaches into, and the layer below for blocks taller than a block, like fences.
-         */
+        /** Every block [box] reaches into, and the layer below for blocks taller than a block, like fences. */
         private inline fun forEachBlock(box: AABB, action: (x: Int, y: Int, z: Int) -> Unit) {
             for (x in Mth.floor(box.minX + EPSILON)..Mth.floor(box.maxX - EPSILON)) {
                 for (z in Mth.floor(box.minZ + EPSILON)..Mth.floor(box.maxZ - EPSILON)) {

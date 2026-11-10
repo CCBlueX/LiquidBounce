@@ -31,9 +31,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
 import net.minecraft.world.phys.Vec3
 
-/**
- * Base for features that walk to a goal.
- */
+/** Base for features that walk to a goal. */
 abstract class NavigationBaseValueGroup<T>(
     parent: EventListener? = null,
     name: String,
@@ -52,19 +50,13 @@ abstract class NavigationBaseValueGroup<T>(
 
     protected abstract fun createNavigationContext(): T
 
-    /**
-     * Where to walk, or null to stand still.
-     */
+    /** Where to walk, or null to stand still. */
     protected abstract fun calculateGoalPosition(context: T): Vec3?
 
-    /**
-     * How close to the goal is close enough, in blocks.
-     */
+    /** How close to the goal is close enough, in blocks. */
     protected open fun goalRadius(context: T): Double = DEFAULT_GOAL_RADIUS
 
-    /**
-     * Adds to the movement while walking straight on, such as jumping towards a target.
-     */
+    /** Adds to the movement while walking straight on, such as jumping towards a target. */
     protected open fun handleMovementAssist(event: MovementInputEvent, context: T) = Unit
 
     open fun getMovementRotation(): Rotation = navigator.movementRotation()
