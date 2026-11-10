@@ -26,45 +26,32 @@ import net.minecraft.world.phys.Vec3
 enum class RouteState {
     NONE,
 
-    /**
-     * Searching for a route.
-     */
+    /** Searching. */
     PENDING,
 
-    /**
-     * Route found or being travelled.
-     */
+    /** Found or being travelled. */
     ACTIVE,
     DONE,
 
-    /**
-     * No route, or the server or the world stopped it.
-     */
+    /** No route, or the server or the world stopped it. */
     INVALID,
 }
 
 /**
- * How far along its route a mover is.
+ * How far along its route a mover is: where it is and the corners still ahead.
  */
 interface RouteProgress {
 
     val isMoving: Boolean
 
-    /**
-     * Where the mover is, between the last tick and this one.
-     */
     fun head(partialTicks: Float): Vec3
 
-    /**
-     * The corners still ahead of [head].
-     */
     val ahead: List<Vec3>
 
 }
 
 /**
- * What a navigating module shows: its route, the blocks the route changes, the destination and, for combat,
- * the target it goes for.
+ * What a navigating module shows, drawn by [RouteRenderer].
  */
 class RouteView {
 
@@ -101,7 +88,7 @@ class RouteView {
     var attackPosition: Vec3? = null
 
     /**
-     * Whether the module is attacking [target] right now.
+     * Whether [target] is being attacked right now.
      */
     var engaged = false
 
@@ -112,8 +99,7 @@ class RouteView {
     var isPreviewValid = false
 
     /**
-     * Searching from [start] to [destination]; [searched] is the best route so far, see
-     * [net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner.preview].
+     * [searched] is the best route of the search so far.
      */
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start

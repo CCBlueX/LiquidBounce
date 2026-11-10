@@ -45,8 +45,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 /**
- * Draws the route of [view] with its direction and progress, the blocks it breaks and places, the destination,
- * where the server has the player, and the target with its attack position.
+ * Draws [view].
  */
 class RouteRenderer(
     owner: EventListener,
@@ -123,7 +122,7 @@ class RouteRenderer(
     }
 
     /**
-     * The best route the search has so far, a line on to the destination, and a pulsing marker where the search got.
+     * The route searched so far, a line on to the destination and a pulsing marker where the search got.
      */
     private fun WorldRenderEnvironment.drawPending(noDepthTest: Boolean) {
         val start = view.start ?: return
@@ -217,7 +216,7 @@ class RouteRenderer(
     }
 
     /**
-     * Arrow heads along [points], pointing the way the route goes.
+     * Arrow heads along [points].
      */
     private fun addChevrons(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
         var offset = CHEVRON_SPACING / 2
