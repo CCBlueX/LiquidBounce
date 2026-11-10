@@ -20,13 +20,12 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
-import net.ccbluex.liquidbounce.utils.block.AStarSearch
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
+import net.ccbluex.liquidbounce.utils.navigation.route.AStarRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.NavigationGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -38,52 +37,22 @@ class WalkRouteSearch(
     val start: Vec3,
     val goal: NavigationGoal,
     private val abilities: WalkAbilities,
-    private val limits: RouteLimits,
-) : RouteSearch<WalkPath> {
+    limits: RouteLimits,
+) : AStarRouteSearch<BlockPos, WalkPath>(limits) {
 
     private val moves = WalkMoves(terrain, abilities)
     private val speed = if (abilities.canSprint) WalkCosts.SPRINT else WalkCosts.WALK
     private var startNode = BlockPos.containing(start)
-    private var search: AStarSearch<BlockPos>? = null
-    private var computeNanos = 0L
 
     /** Moves in a row with the head under water on the best path to each expanded node. */
     private val dives = Long2IntOpenHashMap()
     private val maxDive = WalkWater.movesUnderwater(WalkWater.MAX_AIR)
 
-    var result: RouteResult<WalkPath> = RouteResult.Searching
-        private set
-
-    override fun advance(): RouteResult<WalkPath> {
-        if (result != RouteResult.Searching) {
-            return result
-        }
-
-        val began = System.nanoTime()
-        result = search?.let(::continueSearch) ?: begin()
-        computeNanos += System.nanoTime() - began
-
-        if (result == RouteResult.Searching && computeNanos > limits.maxComputeNanos) {
-            result = closestOr(RouteFailure.TIMED_OUT)
-        }
-        return result
-    }
-
     override fun preview(): List<Vec3>? = search?.closestPath()?.nodes?.map(Vec3::atBottomCenterOf)
 
-    private fun begin(): RouteResult<WalkPath> {
+    override fun begin(): RouteResult<WalkPath> {
         startNode = startNode()
-        if (goal.isGoal(startNode)) {
-            return RouteResult.AlreadyThere
-        }
-
-        search = AStarSearch(
-            start = startNode,
-            isGoal = { goal.isGoal(it) },
-            neighbors = ::neighbors,
-            heuristic = { goal.distance(it) * speed },
-        )
-        return RouteResult.Searching
+        return if (isGoal(startNode)) RouteResult.AlreadyThere else searchFrom(startNode)
     }
 
     /** The block of the feet, the one above or below on a partial block, or the one beside whose edge holds them. */
@@ -113,17 +82,11 @@ class WalkRouteSearch(
         return best
     }
 
-    private fun continueSearch(search: AStarSearch<BlockPos>): RouteResult<WalkPath> {
-        val path = search.advance(minOf(limits.expansionsPerSlice, limits.maxExpansions - search.iterations))
-        return when {
-            path != null -> path(path.nodes, complete = true)
-            search.isFinished -> closestOr(RouteFailure.NO_PATH)
-            search.iterations >= limits.maxExpansions -> closestOr(RouteFailure.TOO_COMPLEX)
-            else -> RouteResult.Searching
-        }
-    }
+    override fun isGoal(node: BlockPos) = goal.isGoal(node)
 
-    private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
+    override fun heuristic(node: BlockPos) = goal.distance(node) * speed
+
+    override fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val dive = diveLength(node)
         val edges = ArrayList<WeightedEdge<BlockPos>>()
         // A jump takes at least its time in the air; spots already reached cheaper are not worth simulating.
@@ -154,14 +117,10 @@ class WalkRouteSearch(
         return dive
     }
 
-    /** An incomplete path to the explored spot closest to the goal, or [failure] if that is no real progress. */
-    private fun closestOr(failure: RouteFailure): RouteResult<WalkPath> {
-        val nodes = search?.closestPath()?.nodes
-        if (nodes == null || nodes.size < 2 || goal.distance(startNode) - goal.distance(nodes.last()) < MIN_PROGRESS) {
-            return RouteResult.Failed(failure)
-        }
-        return path(nodes, complete = false)
-    }
+    override fun route(nodes: List<BlockPos>) = path(nodes, complete = true)
+
+    override fun closestOr(failure: RouteFailure): RouteResult<WalkPath> =
+        closestNodes(goal::distance)?.let { path(it, complete = false) } ?: RouteResult.Failed(failure)
 
     private fun path(nodes: List<BlockPos>, complete: Boolean): RouteResult<WalkPath> {
         val steps = ArrayList<WalkStep>(nodes.size - 1)
@@ -172,8 +131,6 @@ class WalkRouteSearch(
     }
 
     private companion object {
-        const val MIN_PROGRESS = 1.0
-
         /** No jump takes fewer ticks: the shortest time in the air. */
         const val MIN_JUMP_TICKS = 6.0
     }

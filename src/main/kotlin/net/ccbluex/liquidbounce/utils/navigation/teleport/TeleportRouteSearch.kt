@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
-import net.ccbluex.liquidbounce.utils.block.AStarSearch
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
+import net.ccbluex.liquidbounce.utils.navigation.route.AStarRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -40,41 +39,26 @@ class TeleportRouteSearch(
     private val terrain: NavigationTerrain,
     private val start: Vec3,
     private val goals: List<BlockPos>,
-    private val limits: RouteLimits,
+    limits: RouteLimits,
     private val stepLength: Double,
-) : RouteSearch<TeleportPlan> {
+) : AStarRouteSearch<BlockPos, TeleportPlan>(limits) {
 
     private val startNode = BlockPos.containing(start)
     private val goalSet = goals.toHashSet()
-    private var search: AStarSearch<BlockPos>? = null
-    private var computeNanos = 0L
-    private var result: RouteResult<TeleportPlan> = RouteResult.Searching
 
-    override fun advance(): RouteResult<TeleportPlan> {
-        if (result != RouteResult.Searching) {
-            return result
-        }
-
-        val began = System.nanoTime()
-        result = search?.let(::continueSearch) ?: begin()
-        computeNanos += System.nanoTime() - began
-
-        if (result == RouteResult.Searching && computeNanos > limits.maxComputeNanos) {
-            result = RouteResult.Failed(RouteFailure.TIMED_OUT)
-        }
-        return result
-    }
+    /** Feet positions of the goals within reach. */
+    private var targets = emptyList<Vec3>()
 
     override fun preview(): List<Vec3>? = search?.closestPath()?.nodes?.mapNotNull(::feetOf)
 
-    private fun begin(): RouteResult<TeleportPlan> {
+    override fun begin(): RouteResult<TeleportPlan> {
         val standable = goals.mapNotNull(::feetOf)
-        val inReach = standable.filter { it.distanceToSqr(start) <= Mth.square(limits.maxLength) }
+        targets = standable.filter { it.distanceToSqr(start) <= Mth.square(limits.maxLength) }
         return when {
             standable.any { it.distanceToSqr(start) < ARRIVED_SQ } -> RouteResult.AlreadyThere
             standable.isEmpty() -> RouteResult.Failed(RouteFailure.INVALID_DESTINATION)
-            inReach.isEmpty() -> RouteResult.Failed(RouteFailure.TOO_FAR)
-            else -> straightRoute(inReach) ?: startSearch(inReach)
+            targets.isEmpty() -> RouteResult.Failed(RouteFailure.TOO_FAR)
+            else -> straightRoute(targets) ?: searchFrom(startNode, maxCost = limits.maxLength)
         }
     }
 
@@ -90,28 +74,13 @@ class TeleportRouteSearch(
         return null
     }
 
-    private fun startSearch(goals: List<Vec3>): RouteResult<TeleportPlan> {
-        search = AStarSearch(
-            start = startNode,
-            isGoal = { it in goalSet && it != startNode },
-            neighbors = ::neighbors,
-            heuristic = { node -> feetOf(node)?.let { feet -> goals.minOf(feet::distanceTo) } ?: 0.0 },
-            maxCost = limits.maxLength,
-        )
-        return RouteResult.Searching
-    }
+    override fun isGoal(node: BlockPos) = node in goalSet && node != startNode
 
-    private fun continueSearch(search: AStarSearch<BlockPos>): RouteResult<TeleportPlan> {
-        val path = search.advance(limits.expansionsPerSlice)
-        return when {
-            path != null -> compact(path.nodes)
-            search.isFinished -> RouteResult.Failed(RouteFailure.NO_PATH)
-            search.iterations >= limits.maxExpansions -> RouteResult.Failed(RouteFailure.TOO_COMPLEX)
-            else -> RouteResult.Searching
-        }
-    }
+    override fun heuristic(node: BlockPos) = feetOf(node)?.let { feet -> targets.minOf(feet::distanceTo) } ?: 0.0
 
-    private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
+    override fun route(nodes: List<BlockPos>) = compact(nodes)
+
+    override fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val from = feetOf(node) ?: return emptyList()
         val edges = ArrayList<WeightedEdge<BlockPos>>()
         val canRise = terrain.isRiseClear(from, node.y + 1.0)
