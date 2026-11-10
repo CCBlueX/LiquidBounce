@@ -119,8 +119,6 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
     val hasBackup get() = backupName.isNotEmpty()
 
-    private val needsBackup get() = !hasBackup || !backupFile(backupName).exists()
-
     /**
      * Config dependencies applied before the tracked config, in order.
      */
@@ -518,7 +516,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
      * @return the settings before the last config, when there was more than one
      */
     private fun apply(configs: List<JsonObject>, modules: Collection<ValueGroup>): Map<String, String>? {
-        val createdBackup = needsBackup
+        val createdBackup = !hasBackup || !backupFile(backupName).exists()
         if (createdBackup) {
             val name = "marketplace_preload_${System.currentTimeMillis()}"
             ConfigSystem.backup(name, backedUpConfigs)
