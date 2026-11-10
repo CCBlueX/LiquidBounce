@@ -182,7 +182,7 @@ class FlightFollower : RouteProgress {
                 isSharp(points, route.corner) -> SHARP_REACH
                 else -> PASS_REACH
             }
-            if (position.distanceTo(points[route.corner]) >= reach) {
+            if (!position.closerThan(points[route.corner], reach)) {
                 break
             }
             route.corner++

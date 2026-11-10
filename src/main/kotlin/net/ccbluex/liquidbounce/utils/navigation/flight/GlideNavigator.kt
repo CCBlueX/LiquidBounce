@@ -130,7 +130,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
             planner.cancel()
             val path = result.value
             // A glide found for where the player stood a moment ago is searched again.
-            if (player.onGround() && player.position().distanceTo(path.start) <= START_TOLERANCE) {
+            if (player.onGround() && player.position().closerThan(path.start, START_TOLERANCE)) {
                 val rockets = GlideRockets(path.rockets, abilities.rocketTicks)
                 Glide(goal, GlideControl(goal, rockets, path.approach), path)
             } else {

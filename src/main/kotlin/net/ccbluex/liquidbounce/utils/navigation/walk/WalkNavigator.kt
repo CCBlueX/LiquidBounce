@@ -190,7 +190,7 @@ class WalkNavigator(
         stuckSpots.tick(goal)
         val position = player.position()
 
-        if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
+        if (player.rootVehicle.position().closerThan(goal, radius)) {
             stop(event)
             lastLookYaw = Float.NaN
             view.done()
