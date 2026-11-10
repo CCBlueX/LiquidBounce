@@ -55,7 +55,7 @@ internal class BlockColliders(private val terrain: NavigationTerrain) {
     }
 
     /** How far a box [halfWidth] around [x] [z] could still move, the shorter way, and stay over the block. */
-    fun overhang(blockX: Int, blockY: Int, blockZ: Int, x: Double, z: Double, halfWidth: Double): Double {
+    fun footing(blockX: Int, blockY: Int, blockZ: Int, x: Double, z: Double, halfWidth: Double): Double {
         val block = boxes(blockX, blockY, blockZ)
         var best = 0.0
         for (offset in block.indices step BOX) {

@@ -371,7 +371,7 @@ internal class PlayerMotion(
         onGround && hasSupport && supportX == x && supportY == y && supportZ == z
 
     /** How far the player could still move, the shorter way, and keep its box on the block. */
-    fun footing(blockX: Int, blockY: Int, blockZ: Int) = colliders.overhang(blockX, blockY, blockZ, x, z, HALF_WIDTH)
+    fun footing(blockX: Int, blockY: Int, blockZ: Int) = colliders.footing(blockX, blockY, blockZ, x, z, HALF_WIDTH)
 
     /** Entity.collide: the movement the blocks in the way leave, stepping up ledges of up to [STEP_HEIGHT]. */
     private fun collide(dx: Double, dy: Double, dz: Double): Vec3 {

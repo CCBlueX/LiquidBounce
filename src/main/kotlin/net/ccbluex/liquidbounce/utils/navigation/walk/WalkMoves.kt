@@ -76,7 +76,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     private var from = BlockPos.ZERO
     private var fromHeight = 0.0
     private var fromStands = true
-    private var fromFloor = 1.0
+    private var fromFloorFactor = 1.0
     private var canJump = true
     private var isJumpWorth = EVERY_JUMP
     private lateinit var sink: MoveSink
@@ -119,7 +119,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         }
 
         val floor = floorBlock(x, z, fromHeight)
-        fromFloor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
+        fromFloorFactor = if (water || climb) 1.0 else WalkCosts.floorFactor(floor)
         // Honey does not allow a full jump.
         canJump = water || climb || floor.jumpFactor >= 1f
 
@@ -162,11 +162,11 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
                 val jump = jumpCost(top - fromHeight)
                 val fits = jump == 0.0 || !jump.isNaN() && hasJumpRoom(tx, tz)
                 if (fits && canCross(tx, tz, max(fromHeight, top))) {
-                    emit(tx, y, tz, WalkMove.TRAVERSE, walking(tx, tz, top, wet) + jump)
+                    emit(tx, y, tz, WalkMove.TRAVERSE, walkCost(tx, tz, top, wet) + jump)
                 }
             }
 
-            climbs(tx, y, tz) -> emit(tx, y, tz, WalkMove.TRAVERSE, walking(tx, tz, y.toDouble(), wet))
+            climbs(tx, y, tz) -> emit(tx, y, tz, WalkMove.TRAVERSE, walkCost(tx, tz, y.toDouble(), wet))
             crouches(tx, y, tz) -> {
                 if (terrain.crouchHeight(tx, y, tz) - fromHeight <= NavigationTerrain.STEP) {
                     emit(tx, y, tz, WalkMove.TRAVERSE, WalkCosts.SNEAK)
@@ -191,7 +191,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         if (breaks.isEmpty() && places.isEmpty() || jump.isNaN() || jump > 0.0 && !hasJumpRoom(tx, tz)) {
             return
         }
-        val cost = walking(tx, tz, floor, wet) + jump + breakCost + places.size * WalkCosts.PLACE
+        val cost = walkCost(tx, tz, floor, wet) + jump + breakCost + places.size * WalkCosts.PLACE
         emit(tx, y, tz, WalkMove.TRAVERSE, cost)
     }
 
@@ -207,7 +207,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
             return
         }
 
-        emit(tx, y, tz, WalkMove.DIAGONAL, DIAGONAL * walking(tx, tz, top, isWet(tx, tz)))
+        emit(tx, y, tz, WalkMove.DIAGONAL, DIAGONAL * walkCost(tx, tz, top, isWet(tx, tz)))
     }
 
     private fun ascend(tx: Int, tz: Int) {
@@ -223,7 +223,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         if (!top.isNaN()) {
             val jump = jumpCost(top - fromHeight)
             if (!jump.isNaN() && canCross(tx, tz, top)) {
-                emit(tx, ty, tz, WalkMove.ASCEND, walking(tx, tz, top) + jump + breakCost)
+                emit(tx, ty, tz, WalkMove.ASCEND, walkCost(tx, tz, top) + jump + breakCost)
             }
             return
         }
@@ -238,7 +238,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         if (jump.isNaN() || breaks.size == headBreaks && places.isEmpty()) {
             return
         }
-        val cost = walking(tx, tz, floor) + jump + breakCost + places.size * WalkCosts.PLACE
+        val cost = walkCost(tx, tz, floor) + jump + breakCost + places.size * WalkCosts.PLACE
         emit(tx, ty, tz, WalkMove.ASCEND, cost)
     }
 
@@ -259,7 +259,7 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
         val landing = landing(tx, y - 1, tz, fromHeight) ?: return
         val blocks = ceil(landing.drop).toInt()
         val bounce = WalkCosts.bounce(floorBlock(tx, tz, fromHeight - landing.drop), blocks)
-        val cost = walk * fromFloor + WalkCosts.fall(blocks) + bounce + breakCost
+        val cost = walk * fromFloorFactor + WalkCosts.fall(blocks) + bounce + breakCost
         emit(tx, landing.y, tz, WalkMove.FALL, cost)
     }
 
@@ -433,8 +433,8 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     }
 
     /** Ticks to walk one block onto the floor at [x] [z] with the feet at [top], or to swim it when [wet]. */
-    private fun walking(x: Int, z: Int, top: Double, wet: Boolean = false) =
-        if (wet) WalkCosts.SWIM else walk * (fromFloor + WalkCosts.floorFactor(floorBlock(x, z, top))) / 2.0
+    private fun walkCost(x: Int, z: Int, top: Double, wet: Boolean = false) =
+        if (wet) WalkCosts.SWIM else walk * (fromFloorFactor + WalkCosts.floorFactor(floorBlock(x, z, top))) / 2.0
 
     private fun isWet(tx: Int, tz: Int) = terrain.isWater(from.x, from.y, from.z) || terrain.isWater(tx, from.y, tz)
 

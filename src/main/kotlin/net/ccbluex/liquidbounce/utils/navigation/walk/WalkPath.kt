@@ -41,7 +41,6 @@ enum class WalkMove {
     CLIMB_DOWN,
 }
 
-@Suppress("LongParameterList")
 class WalkStep(
     val from: BlockPos,
     val to: BlockPos,

@@ -288,14 +288,14 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
 
         var best: WalkJump? = null
         if (runToEdge(firstYaw) && targetHeight < motion.y) {
-            best = landing(runUp, hopTicks + ground.size, jumps = false, hops)
+            best = fly(runUp, hopTicks + ground.size, jumps = false, hops)
         }
 
         estimateTakeoffs(firstYaw)
         for (i in 0 until min(estimates.size, validations)) {
             val estimate = estimates[i]
             motion.copyFrom(estimate.state)
-            val jump = landing(runUp, hopTicks + estimate.takeoff, jumps = true, hops) ?: continue
+            val jump = fly(runUp, hopTicks + estimate.takeoff, jumps = true, hops) ?: continue
             best = better(best, jump)
             if (jump.margin >= GOOD_MARGIN) {
                 break
@@ -399,7 +399,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
     private fun margin(x: Double, z: Double) =
         minOf(x - target.x, target.x + 1.0 - x, z - target.z, target.z + 1.0 - z)
 
-    private fun landing(runUp: Vec3, takeoff: Int, jumps: Boolean, hops: Int): WalkJump? {
+    private fun fly(runUp: Vec3, takeoff: Int, jumps: Boolean, hops: Int): WalkJump? {
         val margin = land()
         if (margin.isNaN()) {
             return null
