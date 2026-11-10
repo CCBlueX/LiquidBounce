@@ -58,142 +58,86 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.HitResult
 
 /**
- * Mines, places and opens the blocks a walking path changes: aims in [RotationUpdateEvent], acts in [GameTickEvent]
- * once the server has the aim.
+ * Mines, places and opens the blocks a walking path changes, one at a time: aims in [RotationUpdateEvent], acts in
+ * [GameTickEvent] once the server has the aim.
  */
-@Suppress("TooManyFunctions")
 class WalkActions(
     private val owner: EventListener,
     private val rotations: RotationsValueGroup,
 ) : EventListener {
 
-    var breaking: BlockPos? = null
-        private set
+    private var action: Action? = null
 
-    var placing: BlockPos? = null
-        private set
-
-    var opening: BlockPos? = null
-        private set
-
-    /**
-     * The aim of the current action, null while there is nothing to aim at.
-     */
+    /** The aim of the current action, null while there is nothing to aim at. */
     var rotation: Rotation? = null
         private set
 
-    private var placeReady = false
-    private var placement: PlacementPlan? = null
     private var useCooldown = 0
 
     val isActive: Boolean
-        get() = breaking != null || placing != null || opening != null
+        get() = action != null
 
     fun mine(pos: BlockPos) {
-        clearPlacing()
-        clearOpening()
-        if (breaking != pos) {
-            stopMining()
-            breaking = pos
+        if ((action as? Action.Mine)?.pos != pos) {
+            idle()
+            action = Action.Mine(pos)
         }
     }
 
-    /**
-     * Places a block at [pos] once [ready]; until then only aims.
-     */
+    /** Places a block at [pos] once [ready]; until then only aims. */
     fun place(pos: BlockPos, ready: Boolean) {
-        stopMining()
-        clearOpening()
-        if (placing != pos) {
-            placement = null
-            placing = pos
+        val placing = action as? Action.Place
+        if (placing?.pos == pos) {
+            placing.ready = ready
+            return
         }
-        placeReady = ready
+
+        // From one block to the next, the aim and the slot stay.
+        if (placing == null) {
+            idle()
+        }
+        action = Action.Place(pos, ready)
     }
 
-    /**
-     * Opens the door, trapdoor or fence gate at [pos] by using it.
-     */
+    /** Uses the door, trapdoor or fence gate at [pos]. */
     fun open(pos: BlockPos) {
-        stopMining()
-        clearPlacing()
-        opening = pos
+        if (action !is Action.Open) {
+            idle()
+        }
+        action = Action.Open(pos)
     }
 
     fun idle() {
-        stopMining()
-        clearPlacing()
-        clearOpening()
-    }
-
-    private fun stopMining() {
-        if (breaking == null) {
-            return
-        }
-
+        val stopped = action ?: return
         // Cleared first, so the cancel handler lets the stop through.
-        breaking = null
+        action = null
         rotation = null
-        mc.gameMode?.takeIf { it.isDestroying }?.stopDestroyBlock()
-        SilentHotbar.resetSlot(this)
-    }
-
-    private fun clearPlacing() {
-        if (placing == null) {
-            return
+        if (stopped is Action.Mine) {
+            mc.gameMode?.takeIf { it.isDestroying }?.stopDestroyBlock()
         }
-
-        placing = null
-        placement = null
-        placeReady = false
-        rotation = null
         SilentHotbar.resetSlot(this)
-    }
-
-    private fun clearOpening() {
-        if (opening != null) {
-            opening = null
-            rotation = null
-        }
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         rotation = null
-        placement = null
+        val action = action ?: return@handler
+        val aim = when (action) {
+            is Action.Place -> {
+                action.plan = placementPlan(action.pos)
+                action.plan?.placementTarget?.rotation
+            }
 
-        val reach = player.blockInteractionRange()
+            else -> {
+                val state = world.getBlockState(action.pos)
+                val reach = player.blockInteractionRange()
+                raytraceBlockRotation(player.eyePosition, action.pos, state, reach, reach)?.rotation
+            }
+        } ?: return@handler
 
-        (breaking ?: opening)?.let { pos ->
-            val state = world.getBlockState(pos)
-            val aim = raytraceBlockRotation(player.eyePosition, pos, state, reach, reach) ?: return@handler
-            aim(aim.rotation)
-            return@handler
-        }
-
-        val pos = placing ?: return@handler
-        val slot = placeableSlot() ?: return@handler
-        // A pillar block goes where the feet are or were; any part of the top below is in reach, and its middle lies
-        // in no particular direction, so the aim keeps to the way the player looks.
-        val underFeet = pos.x == player.blockX && pos.z == player.blockZ && pos.y <= player.blockY
-        val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions.Default,
-            FaceHandlingOptions(
-                if (underFeet) NearestRotationTargetPositionFactory else ClickableCenterTargetPositionFactory,
-            ),
-            slot.itemStack,
-            PlayerLocationOnPlacement(position = player.position()),
-        )
-        val target = findBestBlockPlacementTarget(pos, options) ?: return@handler
-
-        placement = PlacementPlan(pos, target, slot)
-        aim(target.rotation)
-    }
-
-    private fun aim(rotation: Rotation) {
-        this.rotation = rotation
+        rotation = aim
         RotationManager.setRotationTarget(
-            rotation,
+            aim,
             valueGroup = rotations,
             priority = Priority.IMPORTANT_FOR_USAGE_1,
             provider = owner,
@@ -206,18 +150,11 @@ class WalkActions(
             useCooldown--
         }
 
-        breaking?.let { pos ->
-            breakTick(pos)
-            return@handler
-        }
-
-        opening?.let { pos ->
-            openTick(pos)
-            return@handler
-        }
-
-        if (placeReady) {
-            placement?.let(::placeTick)
+        when (val action = action) {
+            is Action.Mine -> breakTick(action.pos)
+            is Action.Open -> openTick(action.pos)
+            is Action.Place -> action.plan?.takeIf { action.ready }?.let(::placeTick)
+            null -> Unit
         }
     }
 
@@ -232,13 +169,8 @@ class WalkActions(
             ?.let { SilentHotbar.selectSlotSilently(this, it, SLOT_RESET_TICKS) }
 
         // The action goes out before this tick's rotation, so it has to match the rotation the server has.
-        val hit = raytraceBlock(
-            player.blockInteractionRange() + 1.0,
-            RotationManager.serverRotation,
-            pos,
-            state,
-        ) ?: return
-
+        val reach = player.blockInteractionRange() + 1.0
+        val hit = raytraceBlock(reach, RotationManager.serverRotation, pos, state) ?: return
         if (hit.type == HitResult.Type.BLOCK && hit.blockPos == pos) {
             doBreak(hit)
         }
@@ -261,43 +193,60 @@ class WalkActions(
     private fun placeTick(plan: PlacementPlan) {
         val rotation = RotationManager.serverRotation
         val hit = plan.placementTarget.verifyClick(rotation) ?: return
-
-        if (!SilentHotbar.selectSlotSilently(this, plan.hotbarItemSlot, SLOT_RESET_TICKS)) {
-            return
+        if (SilentHotbar.selectSlotSilently(this, plan.hotbarItemSlot, SLOT_RESET_TICKS)) {
+            doPlacement(hit, rotation, hand = plan.hotbarItemSlot.useHand)
         }
-
-        doPlacement(hit, rotation, hand = plan.hotbarItemSlot.useHand)
-    }
-
-    private fun placeableSlot(): HotbarItemSlot? {
-        val slots = Slots.OffhandWithHotbar
-        return slots.findClosestSlot { stack ->
-            ScaffoldBlockItemSelection.isValidBlock(stack) && !ScaffoldBlockItemSelection.isBlockUnfavourable(stack)
-        } ?: slots.findClosestSlot { stack -> ScaffoldBlockItemSelection.isValidBlock(stack) }
     }
 
     @Suppress("unused")
     private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> { event ->
-        if (breaking != null) {
+        if (action is Action.Mine) {
             event.cancelEvent()
         }
     }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        breaking = null
-        placing = null
-        opening = null
-        placement = null
-        placeReady = false
+        action = null
         rotation = null
     }
 
     override fun parent() = owner
+
+    private sealed class Action(val pos: BlockPos) {
+        class Mine(pos: BlockPos) : Action(pos)
+        class Open(pos: BlockPos) : Action(pos)
+        class Place(pos: BlockPos, var ready: Boolean) : Action(pos) {
+            var plan: PlacementPlan? = null
+        }
+    }
 
     private companion object {
         const val SLOT_RESET_TICKS = 2
         const val USE_COOLDOWN_TICKS = 10
     }
 
+}
+
+private fun placementPlan(pos: BlockPos): PlacementPlan? {
+    val slot = placeableSlot() ?: return null
+    // The top of the block below a pillar lies in no particular direction; the aim keeps to the way the player looks.
+    val underFeet = pos.x == player.blockX && pos.z == player.blockZ && pos.y <= player.blockY
+    val options = BlockPlacementTargetFindingOptions(
+        BlockOffsetOptions.Default,
+        FaceHandlingOptions(
+            if (underFeet) NearestRotationTargetPositionFactory else ClickableCenterTargetPositionFactory,
+        ),
+        slot.itemStack,
+        PlayerLocationOnPlacement(position = player.position()),
+    )
+    val target = findBestBlockPlacementTarget(pos, options) ?: return null
+    return PlacementPlan(pos, target, slot)
+}
+
+private fun placeableSlot(): HotbarItemSlot? {
+    val slots = Slots.OffhandWithHotbar
+    return slots.findClosestSlot { stack ->
+        ScaffoldBlockItemSelection.isValidBlock(stack) && !ScaffoldBlockItemSelection.isBlockUnfavourable(stack)
+    } ?: slots.findClosestSlot { stack -> ScaffoldBlockItemSelection.isValidBlock(stack) }
 }
