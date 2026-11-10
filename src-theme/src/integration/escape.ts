@@ -1,135 +1,83 @@
 import {onDestroy, tick} from "svelte";
+import {get} from "svelte/store";
 import {location} from "svelte-spa-router";
-import {deleteScreen, keepScreenEscape} from "./rest";
+import {keepScreenEscape} from "./rest";
 import {listenAlways} from "./ws";
-
-/**
- * Something Esc closes before the screen, like a dialog, a dropdown or a search with text.
- */
-export interface EscapeLayer {
-    setOpen(open: boolean): void;
-}
 
 interface Layer {
     close: () => void;
 }
 
-// Innermost last
-const layers: Layer[] = [];
+// In the order they opened, so the innermost is last
+const openLayers = new Set<Layer>();
 
-let screenName = "";
-let requested = {name: "", keep: false};
-// Whether the client confirmed that it leaves Esc to this page
-let kept = false;
-let supported = true;
-let queue = Promise.resolve();
-let scheduled = false;
+let clientKeepsEscape = false;
+let syncQueued = false;
+let requests = Promise.resolve();
 
-function sync() {
-    scheduled = false;
-
-    const keep = layers.length > 0;
-    if (!supported || keep === requested.keep) {
+/**
+ * The client closes the screen on Esc unless the page keeps the key, which it does while a layer is open.
+ */
+async function syncClient() {
+    if (syncQueued) {
         return;
     }
+    syncQueued = true;
 
-    const request = requested = {name: screenName, keep};
-    queue = queue
-        .then(() => keepScreenEscape(request.name, request.keep))
-        .then(status => {
-            // Older clients close the screen on Esc as before
-            if (status === 404 || status === 405) {
-                supported = false;
-            }
+    // A route change closes the layers of the page it leaves, which Svelte has not done yet
+    await tick();
+    syncQueued = false;
 
-            if (requested === request) {
-                kept = request.keep && status === 204;
-            }
-        })
-        .catch(() => {
-            if (requested === request) {
-                kept = false;
-            }
-        });
-}
-
-function schedule() {
-    if (scheduled) {
+    const keep = openLayers.size > 0;
+    if (keep === clientKeepsEscape) {
         return;
     }
+    clientKeepsEscape = keep;
 
-    scheduled = true;
-    tick().then(sync);
+    const screenName = get(location).slice(1);
+    requests = requests
+        .then(() => keepScreenEscape(screenName, keep))
+        .catch(console.error);
 }
 
-// The client lets go of Esc on every screen change, even when the same screen opens again
-function forget() {
-    requested = {name: screenName, keep: false};
-    kept = false;
-    schedule();
+// The client takes Esc back whenever a screen opens, so layers that are still open have to keep it again
+function handleScreenOpen() {
+    clientKeepsEscape = false;
+    syncClient();
 }
 
-function add(layer: Layer) {
-    if (!layers.includes(layer)) {
-        layers.push(layer);
-        schedule();
-    }
-}
+location.subscribe(handleScreenOpen);
 
-function remove(layer: Layer) {
-    const index = layers.indexOf(layer);
-    if (index !== -1) {
-        layers.splice(index, 1);
-        schedule();
-    }
-}
-
-location.subscribe(path => {
-    screenName = path.slice(1);
-    forget();
-});
-
-listenAlways("virtualScreen", forget);
-
-// The cached in-game ClickGUI page stays loaded while hidden and only learns that it opens again from this
+// The in-game ClickGUI keeps its page loaded while closed, so its route does not change when it opens again
 listenAlways("moduleActivation", event => {
     if (event.moduleName === "ClickGUI") {
-        forget();
+        handleScreenOpen();
     }
 });
 
 window.addEventListener("keydown", event => {
-    const layer = layers[layers.length - 1];
-    if (event.key !== "Escape" || !kept || !layer) {
-        return;
+    if (event.key === "Escape") {
+        [...openLayers].at(-1)?.close();
     }
-
-    layer.close();
-
-    // The client kept this Esc, so a layer that stays open would leave the screen without a way out
-    tick().then(() => {
-        if (layers.includes(layer)) {
-            remove(layer);
-            deleteScreen();
-        }
-    });
 });
 
 /**
- * Registers a layer for the calling component that Esc closes with `close` while it is open.
- * The page keeps Esc from the client while any layer is open, so Esc closes the innermost layer instead of the screen.
+ * Makes Esc close a dialog, dropdown or search of the calling component before it closes the screen.
+ * The component says when that layer is open: `$: layer.setOpen(expanded)`.
  */
-export function escapeLayer(close: () => void): EscapeLayer {
+export function escapeLayer(close: () => void) {
     const layer = {close};
-    onDestroy(() => remove(layer));
 
-    return {
-        setOpen(open: boolean) {
-            if (open) {
-                add(layer);
-            } else {
-                remove(layer);
-            }
+    function setOpen(open: boolean) {
+        if (open) {
+            openLayers.add(layer);
+        } else {
+            openLayers.delete(layer);
         }
-    };
+        syncClient();
+    }
+
+    onDestroy(() => setOpen(false));
+
+    return {setOpen};
 }

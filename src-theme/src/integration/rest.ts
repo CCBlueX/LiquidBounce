@@ -272,16 +272,14 @@ export async function deleteScreen() {
     });
 }
 
-export async function keepScreenEscape(name: string, keep: boolean): Promise<number> {
-    const response = await fetch(`${API_BASE}/client/screen/escape`, {
+export async function keepScreenEscape(name: string, keep: boolean) {
+    await fetch(`${API_BASE}/client/screen/escape`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({name, keep})
     });
-
-    return response.status;
 }
 
 export async function getServers(): Promise<Server[]> {
