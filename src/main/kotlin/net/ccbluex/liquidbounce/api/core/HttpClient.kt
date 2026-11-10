@@ -54,6 +54,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.io.File
 import java.io.IOException
+import java.net.Proxy
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
@@ -124,7 +125,7 @@ object HttpClient {
         }
         .addInterceptor(SkipCacheInterceptor { it.isLocalHost() })
         .addInterceptor(DefaultHeaderInterceptor(HttpHeaders.UserAgent) { DEFAULT_AGENT })
-        .proxy(java.net.Proxy.NO_PROXY)
+        .proxy(Proxy.NO_PROXY)
         .build()
 
     /**

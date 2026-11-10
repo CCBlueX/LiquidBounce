@@ -18,6 +18,7 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
+import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import java.time.Duration
@@ -376,6 +377,17 @@ detekt {
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
     // Defaults only cover src/{main,test}/{java,kotlin}.
     source.from("src/gametest/kotlin")
+}
+
+val detektTypeResolutionTasks = listOf("detektMain", "detektTest", "detektGametest")
+
+tasks.withType<Detekt>().matching { it.name in detektTypeResolutionTasks }.configureEach {
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt-type-resolution.yml"))
+    buildUponDefaultConfig.set(false)
+}
+
+tasks.check {
+    dependsOn(detektTypeResolutionTasks)
 }
 
 tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {

@@ -111,6 +111,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
+import net.minecraft.util.Unit as MinecraftUnit
 
 /**
  * LiquidBounce
@@ -561,7 +562,7 @@ object LiquidBounce : EventListener {
             synchronizer: PreparableReloadListener.PreparationBarrier,
             applyExecutor: Executor
         ): CompletableFuture<Void> {
-            return synchronizer.wait(net.minecraft.util.Unit.INSTANCE)
+            return synchronizer.wait(MinecraftUnit.INSTANCE)
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()

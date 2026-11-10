@@ -60,7 +60,7 @@ class TeleportRoutingTest {
 
     private fun search(
         terrain: NavigationTerrain,
-        start: net.minecraft.world.phys.Vec3,
+        start: Vec3,
         goal: BlockPos,
         limits: RouteLimits = RouteLimits(maxLength = 80.0),
     ): RouteResult<TeleportPlan> {
@@ -142,7 +142,7 @@ class TeleportRoutingTest {
     @Test
     fun `sweep follows the server's axis order`() {
         val start = feet(0, 1, 0)
-        val end = net.minecraft.world.phys.Vec3(3.5, 1.0, 1.5)
+        val end = Vec3(3.5, 1.0, 1.5)
 
         // X is the longer axis, so the server moves along X first: the block on that leg stops it.
         assertFalse(flat().set(3, 1, 0, TestNavigationWorld.STONE).terrain().sweep(start, end))

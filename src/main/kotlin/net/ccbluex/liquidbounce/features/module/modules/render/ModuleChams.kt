@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.renderpearl.api.textures.FilterMode
 import net.ccbluex.liquidbounce.annotations.ValueClassCandidate
 import net.ccbluex.liquidbounce.config.types.list.Tagged
@@ -37,12 +38,18 @@ import net.ccbluex.liquidbounce.render.engine.LazyRenderTargetHolder
 import net.ccbluex.liquidbounce.render.setPipeline
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.io.PNG_AND_JPG
+import net.minecraft.client.model.Model
 import net.minecraft.client.renderer.RenderBuffers
 import net.minecraft.client.renderer.SubmitNodeStorage
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher
+import net.minecraft.client.renderer.item.ItemStackRenderState
 import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.client.renderer.texture.UvMapping
+import net.minecraft.client.resources.model.geometry.ItemQuads
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.item.ItemDisplayContext
 import org.joml.Vector2f
+import org.joml.Vector4f
 import java.util.Optional
 import java.util.OptionalDouble
 
@@ -143,21 +150,21 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
      *         `false` when the submission should keep flowing into the main render target.
      */
     fun captureModel(
-        model: net.minecraft.client.model.Model<*>,
+        model: Model<*>,
         state: Any,
-        poseStack: com.mojang.blaze3d.vertex.PoseStack,
+        poseStack: PoseStack,
         renderType: RenderType,
         lightCoords: Int,
         overlayCoords: Int,
         tintedColor: Int,
-        uvMapping: net.minecraft.client.renderer.texture.UvMapping?,
+        uvMapping: UvMapping?,
     ): Boolean {
         if (!captureTargeted(renderType)) return false
         captureDepth++
         try {
             @Suppress("UNCHECKED_CAST")
             chamsStorage.submitModel(
-                model as net.minecraft.client.model.Model<Any>, state, poseStack, renderType,
+                model as Model<Any>, state, poseStack, renderType,
                 lightCoords, overlayCoords, tintedColor, uvMapping, 0
             )
         } finally {
@@ -173,13 +180,13 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
      *         `false` when the submission should keep flowing into the main render target.
      */
     fun captureItem(
-        poseStack: com.mojang.blaze3d.vertex.PoseStack,
-        displayContext: net.minecraft.world.item.ItemDisplayContext,
+        poseStack: PoseStack,
+        displayContext: ItemDisplayContext,
         lightCoords: Int,
         overlayCoords: Int,
         tintLayers: IntArray,
-        quads: net.minecraft.client.resources.model.geometry.ItemQuads,
-        foilType: net.minecraft.client.renderer.item.ItemStackRenderState.FoilType,
+        quads: ItemQuads,
+        foilType: ItemStackRenderState.FoilType,
     ): Boolean {
         if (!captureTargeted()) return false
         captureDepth++
@@ -234,7 +241,7 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
         val frame = chamsFrame ?: return
         target.createRenderPass(
             { "Chams" },
-            Optional.of(org.joml.Vector4f(0f, 0f, 0f, 0f)),
+            Optional.of(Vector4f(0f, 0f, 0f, 0f)),
             OptionalDouble.of(0.0),
         ).use { pass ->
             RenderSystem.bindDefaultUniforms(pass)

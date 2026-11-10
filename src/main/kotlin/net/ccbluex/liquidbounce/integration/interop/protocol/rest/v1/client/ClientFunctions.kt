@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
 import com.mojang.blaze3d.Blaze3D
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -89,7 +90,7 @@ private fun Route.getUpdateInfo() = get("/update") {
 // POST /api/v1/client/exit
 private fun Route.postExit() = post("/exit") {
     mc.stop()
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // PUT /api/v1/client/hud-editor
@@ -100,7 +101,7 @@ private fun Route.putHudEditorState() = put("/hud-editor") {
     withContext(Dispatchers.Main) {
         ModuleHud.hudEditorSelected = selected
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/window
@@ -123,7 +124,7 @@ private fun Route.postOpenLink() = post("/openLink") {
     val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
     Blaze3D.openUri(url)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/browsePath
@@ -148,7 +149,7 @@ private fun Route.postBrowsePath() = post("/browsePath") {
     }
 
     Blaze3D.openPath(directoryToOpen.toPath())
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/fileDialog

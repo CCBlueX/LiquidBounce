@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -60,7 +61,7 @@ private fun Route.getPlayerData() = get {
     if (playerData != null) {
         call.respond(playerData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -70,7 +71,7 @@ private fun Route.getPlayerInventory() = get("/inventory") {
     if (playerInventoryData != null) {
         call.respond(playerInventoryData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -80,7 +81,7 @@ private fun Route.getPlayerStatistics() = get("/statistics") {
     if (statistics != null) {
         call.respond(statistics)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
@@ -90,7 +91,7 @@ private fun Route.getCrosshairData() = get("/crosshair") {
     if (crosshairData != null) {
         call.respond(crosshairData)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 
