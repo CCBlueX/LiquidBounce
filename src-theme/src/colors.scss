@@ -69,6 +69,11 @@
   --clickgui-input-border-color: var(--accent-color);
   --clickgui-button-background-color: var(--accent-color);
   --clickgui-button-hover-background-color: var(--accent-hover-color);
+  --clickgui-button-secondary-background-color: color-mix(in srgb, var(--clickgui-text-color) 8%, transparent);
+  --clickgui-button-secondary-hover-background-color: color-mix(in srgb, var(--clickgui-text-color) 14%, transparent);
+  --clickgui-button-danger-color: var(--error-color);
+  --clickgui-button-danger-background-color: color-mix(in srgb, var(--error-color) 10%, transparent);
+  --clickgui-button-danger-hover-background-color: color-mix(in srgb, var(--error-color) 18%, transparent);
   --clickgui-setting-group-border-color: var(--accent-color);
   --clickgui-dropdown-trigger-background-color: var(--clickgui-button-background-color);
   --clickgui-dropdown-background-color: var(--clickgui-base-color);
@@ -82,6 +87,10 @@
   --clickgui-selection-chip-selected-color: var(--accent-color);
   --clickgui-selection-chip-remove-background-color: color-mix(in srgb, var(--error-color) 10%, transparent);
   --clickgui-selection-chip-remove-color: var(--error-color);
+  --clickgui-chip-background-color: color-mix(in srgb, var(--clickgui-text-color) 8%, transparent);
+  --clickgui-chip-color: var(--clickgui-text-dimmed-color);
+  --clickgui-chip-active-background-color: var(--accent-subtle-background-color);
+  --clickgui-chip-active-color: var(--accent-color);
   --clickgui-switch-track-color: color-mix(in srgb, var(--clickgui-text-color) 45%, black);
   --clickgui-switch-thumb-color: var(--clickgui-text-color);
   --clickgui-switch-track-active-color: color-mix(in srgb, var(--accent-color) 40%, black);
@@ -93,6 +102,24 @@
   --clickgui-curve-accent-color: var(--accent-color);
   --clickgui-curve-grid-color: var(--clickgui-grid-color);
   --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
+
+  --clickgui-modal-backdrop-color: var(--clickgui-base-50-color);
+  --clickgui-modal-background-color: var(--clickgui-base-color);
+
+  --clickgui-marketplace-divider-color: var(--clickgui-global-settings-divider-color);
+  --clickgui-marketplace-nav-hover-background-color: var(--clickgui-module-hover-background-color);
+  --clickgui-marketplace-nav-active-background-color: var(--accent-subtle-background-color);
+  --clickgui-marketplace-nav-active-border-color: var(--accent-color);
+  --clickgui-marketplace-entry-background-color: color-mix(in srgb, var(--clickgui-text-color) 4%, transparent);
+  --clickgui-marketplace-entry-border-color: transparent;
+  --clickgui-marketplace-entry-hover-background-color: var(--accent-subtle-background-color);
+  --clickgui-marketplace-entry-hover-border-color: var(--accent-color);
+  --clickgui-marketplace-works-color: var(--success-color);
+  --clickgui-marketplace-broken-color: var(--error-color);
+  --clickgui-marketplace-rating-color: var(--warning-color);
+  --clickgui-marketplace-link-color: var(--accent-color);
+  --clickgui-marketplace-code-background-color: var(--clickgui-input-background-color);
+  --clickgui-marketplace-viewer-backdrop-color: color-mix(in srgb, black 85%, transparent);
 
   --clickgui-hud-editor-grid-color: var(--clickgui-grid-color);
   --clickgui-hud-editor-anchor-zone-border-color: color-mix(in srgb, var(--clickgui-text-color) 15%, transparent);

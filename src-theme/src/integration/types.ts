@@ -595,6 +595,10 @@ export type MarketplaceItemType = "Config" | "Theme" | "Addon" | "Script" | "Oth
 
 export type MarketplaceVisibility = "public" | "unlisted";
 
+export type MarketplaceSort = "top" | "new";
+
+export type ConfigTrackerState = "None" | "Tracked" | "Editing";
+
 export interface MarketplacePagination {
     current: number;
     pages: number;
@@ -607,11 +611,21 @@ export interface MarketplacePage<T> {
 }
 
 /**
- * [code] tells a page found by share code; [unfeatured] counts the configs the featured filter hides.
+ * `code` is set when the query was a share code, `unfeatured` counts the configs the featured filter hides
+ * when it leaves nothing.
  */
 export interface MarketplaceConfigPage extends MarketplacePage<MarketplaceConfig> {
     code: boolean;
     unfeatured: number;
+}
+
+export interface MarketplaceConfigQuery {
+    page: number;
+    query: string;
+    tags: string[];
+    server: boolean;
+    featured: boolean;
+    sort: MarketplaceSort;
 }
 
 export interface MarketplaceConfig {
@@ -630,6 +644,8 @@ export interface MarketplaceConfig {
     downloads: number;
     updatedAt?: number;
     overlayOn?: string;
+    own: boolean;
+    editable: boolean;
     visibility?: MarketplaceVisibility;
 }
 
@@ -647,13 +663,18 @@ export interface MarketplaceConfigRevision {
     works: number;
     fails: number;
     latest: boolean;
+    loaded: boolean;
     first: boolean;
 }
 
+/**
+ * `report` is the account's own report on the newest revision.
+ */
 export interface MarketplaceConfigDetail {
     config: MarketplaceConfig;
     description: string;
     createdAt?: number;
+    shareCode?: string;
     forkOf?: MarketplaceLinkedConfig;
     configs: MarketplaceLinkedConfig[];
     installs: MarketplaceItem[];
@@ -661,6 +682,41 @@ export interface MarketplaceConfigDetail {
     changes?: string[];
     report?: boolean;
 }
+
+/**
+ * What publishing and editing a config send.
+ */
+export interface MarketplaceConfigListing {
+    name: string;
+    description: string;
+    tags: string[];
+    servers: string[];
+    visibility: MarketplaceVisibility;
+}
+
+export type MarketplacePublishKind = "New" | "Overlay" | "Fork";
+
+export interface MarketplacePublishedConfig {
+    id: number;
+    address: string;
+    shareCode?: string;
+}
+
+/**
+ * `id` is 0 while nothing is tracked. `backup` tells whether the settings from before the first load can be
+ * restored.
+ */
+export interface ConfigTracker {
+    state: ConfigTrackerState;
+    id: number;
+    address: string;
+    image?: string;
+    own: boolean;
+    editable: boolean;
+    backup: boolean;
+}
+
+export type ConfigTrackerAction = "revert" | "restore" | "detach";
 
 export interface MarketplaceRevision {
     id: number;
@@ -670,6 +726,10 @@ export interface MarketplaceRevision {
     changelog?: string;
 }
 
+/**
+ * `summary` is the first line of the description, as Markdown. `notFor` is the running LiquidBounce when no
+ * revision is for it.
+ */
 export interface MarketplaceItem {
     id: number;
     type: MarketplaceItemType;
@@ -690,28 +750,21 @@ export interface MarketplaceItem {
     inUse: boolean;
 }
 
+export interface MarketplaceItemVersion {
+    revision: MarketplaceRevision;
+    installed: boolean;
+    fits: boolean;
+}
+
 export interface MarketplaceItemDetail {
     item: MarketplaceItem;
     description: string;
     liquidbounce: string;
-    versions: {
-        revision: MarketplaceRevision;
-        installed: boolean;
-        fits: boolean;
-    }[];
+    versions: MarketplaceItemVersion[];
 }
 
 export interface MarketplaceInstalledItem {
     id: number;
     type: MarketplaceItemType;
     name: string;
-}
-
-export interface MarketplaceConfigQuery {
-    page: number;
-    query: string;
-    tags: string[];
-    server: boolean;
-    featured: boolean;
-    sort: "top" | "new";
 }

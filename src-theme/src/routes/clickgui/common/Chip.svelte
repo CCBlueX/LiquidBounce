@@ -1,51 +1,54 @@
 <script lang="ts">
+    import type {Snippet} from "svelte";
+
     /**
-     * A plain label, or a toggle when it has an [onclick].
+     * A label, or with [onclick] a choice that is on while [active].
      */
-    let {text, active = false, onclick}: {
-        text: string;
+    let {active = false, onclick, children}: {
         active?: boolean;
         onclick?: () => void;
+        children: Snippet;
     } = $props();
 </script>
 
 {#if onclick}
-    <button type="button" class="chip" class:active {onclick}>{text}</button>
+    <button type="button" class="chip choice" class:active aria-pressed={active} {onclick}>
+        {@render children()}
+    </button>
 {:else}
-    <span class="tag">{text}</span>
+    <span class="chip" class:active>{@render children()}</span>
 {/if}
 
 <style lang="scss">
-  .tag {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--clickgui-text-dimmed-color);
-    background-color: var(--clickgui-global-settings-divider-color);
-    padding: 2px 8px;
-    border-radius: 999px;
-    white-space: nowrap;
-  }
-
   .chip {
+    display: inline-block;
     font-family: "Inter", sans-serif;
     font-size: 12px;
     font-weight: 500;
-    white-space: nowrap;
-    color: var(--clickgui-selection-chip-color);
-    background-color: var(--clickgui-global-settings-divider-color);
+    line-height: 1.2;
+    color: var(--clickgui-chip-color);
+    background-color: var(--clickgui-chip-background-color);
     border: none;
     border-radius: 3px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: ease color .2s;
-
-    &:hover {
-      color: var(--clickgui-text-color);
-    }
+    padding: 3px 6px;
+    white-space: nowrap;
 
     &.active {
-      color: var(--clickgui-selection-chip-selected-color);
-      background-color: var(--clickgui-selection-chip-selected-background-color);
+      background-color: var(--clickgui-chip-active-background-color);
+      color: var(--clickgui-chip-active-color);
+    }
+
+    &.choice {
+      cursor: pointer;
+      transition: ease color 0.2s, ease background-color 0.2s;
+
+      &:hover:not(.active) {
+        color: var(--clickgui-text-color);
+      }
+
+      &:focus-visible {
+        outline: solid 1px var(--clickgui-text-color);
+      }
     }
   }
 </style>

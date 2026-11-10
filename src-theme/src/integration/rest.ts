@@ -16,8 +16,11 @@ import type {
     HitResult,
     HudComponent,
     HudComponentCatalogEntry,
+    ConfigTracker,
+    ConfigTrackerAction,
     MarketplaceConfig,
     MarketplaceConfigDetail,
+    MarketplaceConfigListing,
     MarketplaceConfigPage,
     MarketplaceConfigQuery,
     MarketplaceInstalledItem,
@@ -25,6 +28,9 @@ import type {
     MarketplaceItemDetail,
     MarketplaceItemType,
     MarketplacePage,
+    MarketplacePublishedConfig,
+    MarketplacePublishKind,
+    MarketplaceSort,
     Metadata,
     MinecraftKeybind,
     Module,
@@ -249,6 +255,19 @@ export async function browse(target: string) {
     });
 }
 
+/**
+ * Opens an http(s) link in the system browser.
+ */
+export async function browseUrl(url: string) {
+    await fetch(`${API_BASE}/client/browse`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({url})
+    });
+}
+
 export async function browsePath(path: string) {
     await fetch(`${API_BASE}/client/browsePath`, {
         method: "POST",
@@ -298,19 +317,6 @@ export async function getLanServers(): Promise<Server[]> {
     const data: Server[] = await response.json();
 
     return data;
-}
-
-/**
- * The server the client is connected to, `null` in singleplayer and the menus.
- */
-export async function getCurrentServer(): Promise<Omit<Server, "id" | "online"> | null> {
-    const response = await fetch(`${API_BASE}/client/servers/current`);
-
-    if (response.status === 204) {
-        return null;
-    }
-
-    return await response.json();
 }
 
 export async function connectToServer(address: string) {
@@ -909,6 +915,30 @@ export async function logoutClientUser() {
     });
 }
 
+export function itemTextureUrl(identifier: string) {
+    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
+}
+
+export function effectTextureUrl(effectId: string) {
+    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
+}
+
+/**
+ * The server the client is connected to, `null` in singleplayer and the menus.
+ */
+export async function getCurrentServer(): Promise<Omit<Server, "id" | "online"> | null> {
+    const response = await fetch(`${API_BASE}/client/servers/current`);
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    return await response.json();
+}
+
+/**
+ * A marketplace request the client refused, with the reason it gave. 503 means the marketplace is unreachable.
+ */
 export class MarketplaceError extends Error {
     constructor(message: string, readonly status: number) {
         super(message);
@@ -957,26 +987,66 @@ export async function getMarketplaceConfigModules(id: number): Promise<string[]>
     return await marketplaceRequest(`/configs/${id}/modules`);
 }
 
+/**
+ * Without modules the whole config loads and is tracked.
+ */
 export async function loadMarketplaceConfig(id: number, modules: string[] | null) {
     await marketplaceRequest(`/configs/${id}/load`, "POST", {modules});
 }
 
+/**
+ * Without `works` the report is withdrawn.
+ */
 export async function reportMarketplaceConfig(id: number, works: boolean | null): Promise<MarketplaceConfig> {
     return await marketplaceRequest(`/configs/${id}/report`, "PUT", {works});
+}
+
+export async function editMarketplaceConfig(id: number, listing: MarketplaceConfigListing): Promise<MarketplaceConfig> {
+    return await marketplaceRequest(`/configs/${id}`, "PATCH", listing);
+}
+
+export async function deleteMarketplaceConfig(id: number) {
+    await marketplaceRequest(`/configs/${id}`, "DELETE");
+}
+
+/**
+ * The client puts the share code on the clipboard, pages can not.
+ */
+export async function copyMarketplaceShareCode(id: number) {
+    await marketplaceRequest(`/configs/${id}/share-code`, "POST");
+}
+
+export async function getConfigTracker(): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker");
+}
+
+export async function runConfigTrackerAction(action: ConfigTrackerAction): Promise<ConfigTracker> {
+    return await marketplaceRequest(`/tracker/${action}`, "POST");
+}
+
+export async function publishMarketplaceConfig(
+    kind: MarketplacePublishKind,
+    listing: MarketplaceConfigListing
+): Promise<MarketplacePublishedConfig> {
+    return await marketplaceRequest("/tracker/publish", "POST", {kind, ...listing});
+}
+
+export async function updateTrackedConfig(changelog: string): Promise<ConfigTracker> {
+    return await marketplaceRequest("/tracker/update", "POST", {changelog});
 }
 
 export async function getMarketplaceItems(
     type: MarketplaceItemType,
     page: number,
     query: string,
-    sort: "top" | "new"
+    sort: MarketplaceSort
 ): Promise<MarketplacePage<MarketplaceItem>> {
     const searchParams = new URLSearchParams({type, page: page.toString(), query, sort});
 
     return await marketplaceRequest(`/items?${searchParams.toString()}`);
 }
 
-export async function getMarketplaceItemDetail(id: number): Promise<MarketplaceItemDetail> {
+export async function getMarketplaceItem(id: number): Promise<MarketplaceItemDetail> {
     return await marketplaceRequest(`/items/${id}`);
 }
 
@@ -998,12 +1068,4 @@ export async function removeMarketplaceItem(id: number) {
 
 export async function applyMarketplaceTheme(id: number) {
     await marketplaceRequest(`/items/${id}/apply`, "POST");
-}
-
-export function itemTextureUrl(identifier: string) {
-    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
-}
-
-export function effectTextureUrl(effectId: string) {
-    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

@@ -3,14 +3,20 @@
     import {fade} from "svelte/transition";
     import {quintOut} from "svelte/easing";
 
-    let { title, icon, children } = $props<{
+    /**
+     * A window that fills the screen's height leaves padding and scrolling to its content.
+     */
+    let {title, icon, width = 820, fill = false, actions, children} = $props<{
         title: string;
         icon?: string;
+        width?: number;
+        fill?: boolean;
+        actions?: Snippet;
         children: Snippet;
     }>();
 </script>
 
-<div class="window" transition:fade|global={{duration: 200, easing: quintOut}}>
+<div class="window" class:fill style:--window-width="{width}px" transition:fade|global={{duration: 200, easing: quintOut}}>
     <div class="title">
         {#if icon}
             <img
@@ -20,6 +26,11 @@
             />
         {/if}
         <span class="title-text">{title}</span>
+        {#if actions}
+            <div class="actions">
+                {@render actions()}
+            </div>
+        {/if}
     </div>
     <div class="content">
         {@render children()}
@@ -33,19 +44,31 @@
     top: 70px;
     left: 50%;
     transform: translateX(-50%);
-    width: min(820px, 92vw);
-    --window-max-height: 70vh;
+    width: min(var(--window-width), 92%);
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
     background-color: var(--clickgui-window-background-color);
-    max-height: var(--window-max-height, none);
     border-radius: 5px;
     overflow: hidden;
     box-shadow: 0 0 10px var(--clickgui-window-shadow-color);
     user-select: none;
+
+    &.fill {
+      height: calc(100% - 95px);
+      max-height: none;
+
+      .content {
+        display: flex;
+        padding: 0;
+        overflow: hidden;
+      }
+    }
   }
 
   .title {
     display: grid;
-    grid-template-columns: max-content 1fr;
+    grid-template-columns: max-content 1fr max-content;
     align-items: center;
     column-gap: 12px;
     background-color: var(--clickgui-window-header-background-color);
@@ -60,9 +83,17 @@
     font-weight: 600;
   }
 
+  .actions {
+    display: flex;
+    align-items: center;
+    column-gap: 8px;
+    grid-column: 3;
+  }
+
   .content {
+    flex: 1;
+    min-height: 0;
     padding: 12px 22px 18px;
     overflow: auto;
-    max-height: calc(var(--window-max-height, 9999px) - 60px);
   }
 </style>

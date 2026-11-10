@@ -76,9 +76,8 @@ object ConfigPublishCommand {
                     throw CommandException(t("fork.notEditing", variable(ConfigTracker.itemName)))
                 }
 
-                val item = request {
-                    ConfigTracker.fork(session(), name, description, parseVisibility(visibility))
-                }
+                val details = MarketplaceApi.ItemDetails(visibility = parseVisibility(visibility))
+                val item = request { ConfigTracker.fork(session(), name, description, details) }
                 published(item)
             }
         }
@@ -93,9 +92,8 @@ object ConfigPublishCommand {
                 }
 
                 val base = ConfigTracker.itemName
-                val item = request {
-                    ConfigTracker.overlay(session(), name, description, parseVisibility(visibility))
-                }
+                val details = MarketplaceApi.ItemDetails(visibility = parseVisibility(visibility))
+                val item = request { ConfigTracker.overlay(session(), name, description, details) }
                 published(item)
                 chat(regular(t("overlay.basedOn", variable(base))))
             }

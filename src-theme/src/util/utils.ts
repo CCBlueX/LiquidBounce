@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import dateFormat from "dateformat";
 import type {Screen} from "../integration/types";
 
 export const UNKNOWN_KEY = "key.keyboard.unknown";
@@ -34,47 +33,6 @@ export function isAnniversary() {
     const end = new Date(now.getFullYear(), 3, 7);   // April 7
 
     return now >= start && now <= end;
-}
-
-const DAY = 24 * 60 * 60 * 1000;
-
-export function date(time: number | undefined): string {
-    return time === undefined ? "" : dateFormat(time, "mmm d, yyyy");
-}
-
-export function ago(time: number | undefined): string {
-    if (time === undefined) {
-        return "";
-    }
-
-    const days = Math.floor((Date.now() - time) / DAY);
-    if (days <= 0) {
-        return "today";
-    } else if (days === 1) {
-        return "yesterday";
-    } else if (days < 7) {
-        return `${days} days ago`;
-    } else if (days < 14) {
-        return "last week";
-    } else if (days <= 28) {
-        return `${Math.floor(days / 7)} weeks ago`;
-    }
-    return `on ${date(time)}`;
-}
-
-export function compactNumber(value: number): string {
-    return value < 1000 ? value.toString() : `${(value / 1000).toFixed(1).replace(/\.0$/, "")}k`;
-}
-
-export function errorMessage(e: unknown): string {
-    return e instanceof Error ? e.message : String(e);
-}
-
-/**
- * The values that are set, for lists built from conditions.
- */
-export function present(...values: (string | false | null | undefined)[]): string[] {
-    return values.filter((value): value is string => !!value);
 }
 
 /**
@@ -101,4 +59,33 @@ export function isTextEntry(target: EventTarget | null): boolean {
     }
 
     return target instanceof HTMLElement && target.isContentEditable;
+}
+
+const DAY_MILLIS = 24 * 60 * 60 * 1000;
+const DAYS_SHOWN_RELATIVE = 28;
+const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {month: "short", day: "numeric", year: "numeric"});
+const RELATIVE_FORMAT = new Intl.RelativeTimeFormat("en-US", {numeric: "auto"});
+const COUNT_FORMAT = new Intl.NumberFormat("en-US", {notation: "compact", maximumFractionDigits: 1});
+
+export function formatDate(time: number): string {
+    return DATE_FORMAT.format(time);
+}
+
+/**
+ * "today", "3 days ago" or "last week", and beyond four weeks the date as "on Aug 22, 2026".
+ */
+export function formatTimeAgo(time: number): string {
+    const days = Math.max(0, Math.floor((Date.now() - time) / DAY_MILLIS));
+    if (days > DAYS_SHOWN_RELATIVE) {
+        return `on ${formatDate(time)}`;
+    }
+
+    return days < 7 ? RELATIVE_FORMAT.format(-days, "day") : RELATIVE_FORMAT.format(-Math.floor(days / 7), "week");
+}
+
+/**
+ * 1430 as "1.4K".
+ */
+export function formatCount(value: number): string {
+    return COUNT_FORMAT.format(value);
 }
