@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.ParseResults
 import com.mojang.brigadier.StringReader
+import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestion
 import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntList
@@ -85,6 +87,7 @@ import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.levenshtein
+import net.ccbluex.liquidbounce.utils.text.textOf
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentUtils
@@ -302,7 +305,7 @@ object CommandManager : EventListener {
      * the argument part.
      */
     private fun resolvePathTokenCount(tokens: List<String>): Int {
-        var node: com.mojang.brigadier.tree.CommandNode<ClientCommandSource> = getDispatcher().root
+        var node: CommandNode<ClientCommandSource> = getDispatcher().root
         var pathTokenCount = 0
 
         for (token in tokens) {
@@ -390,7 +393,7 @@ object CommandManager : EventListener {
             if (aliases.isEmpty()) {
                 node.name.asPlainText()
             } else {
-                net.ccbluex.liquidbounce.utils.text.textOf(
+                textOf(
                     node.name.asPlainText(),
                     " (".asPlainText(ChatFormatting.DARK_GRAY),
                     aliases.joinToText(ComponentUtils.DEFAULT_SEPARATOR),
@@ -404,7 +407,7 @@ object CommandManager : EventListener {
      * Builds the usage lines for a command context, based on the Brigadier tree
      * ([CommandDispatcher.getSmartUsage]).
      */
-    private fun buildUsage(context: com.mojang.brigadier.context.CommandContext<ClientCommandSource>): List<Component> {
+    private fun buildUsage(context: CommandContext<ClientCommandSource>): List<Component> {
         val lastNode = context.nodes.lastOrNull()?.node ?: return emptyList()
         val commandPath = context.nodes.joinToString(" ") { it.node.name }
 

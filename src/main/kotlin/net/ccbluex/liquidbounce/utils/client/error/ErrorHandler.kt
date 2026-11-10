@@ -99,7 +99,7 @@ class ErrorHandler private constructor(
 
     private inline val title get() = "${LiquidBounce.CLIENT_NAME} Nextgen"
 
-    private val builder = java.lang.StringBuilder()
+    private val builder = StringBuilder()
 
     private inline fun header(): StringBuilder = builder.append(
         "$title has encountered an error!"

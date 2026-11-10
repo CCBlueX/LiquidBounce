@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -38,7 +39,7 @@ private fun Route.getConnectionDetails() = get("/connection") {
     if (details != null) {
         call.respond(details)
     } else {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 

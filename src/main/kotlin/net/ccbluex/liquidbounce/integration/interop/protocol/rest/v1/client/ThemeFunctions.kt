@@ -85,7 +85,7 @@ private fun Route.getFont() = get("/{name}") {
     val name = call.parameters["name"] ?: call.badRequest("Missing font name")
     val font = FontManager.fontFace(name) ?: call.notFound(name, "Font not found")
     val (file) = font.source as? FontFace.Source.LocalFile ?: run {
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
         return@get
     }
 

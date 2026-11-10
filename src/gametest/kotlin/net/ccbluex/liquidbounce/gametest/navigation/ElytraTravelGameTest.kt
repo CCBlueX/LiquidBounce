@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -131,7 +132,7 @@ class ElytraTravelGameTest : FabricClientGameTest {
         goal: Vec3,
         what: String,
         ticks: Int,
-        flying: (net.minecraft.client.player.LocalPlayer) -> Boolean,
+        flying: (LocalPlayer) -> Boolean,
     ): Boolean {
         val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
         context.command("goto ${goal.x} ${goal.y} ${goal.z}")
