@@ -217,7 +217,7 @@ object ModuleAutoPearl : ClientModule(
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
-        return !Limits.enabled || Limits.destDistance > destination.distanceTo(simulatedDestination)
+        return !Limits.enabled || destination.closerThan(simulatedDestination, Limits.destDistance.toDouble())
     }
 
     private fun runSimulation(

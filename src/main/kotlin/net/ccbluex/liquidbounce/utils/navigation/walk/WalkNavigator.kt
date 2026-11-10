@@ -199,7 +199,7 @@ class WalkNavigator(
 
         if (player.onGround()) {
             // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
-            straight = position.distanceToSqr(goal) <= Mth.square(settings.maxLength) &&
+            straight = position.closerThan(goal, settings.maxLength) &&
                 isStraightWalkable(NavigationTerrain.live(), position, goal, radius, settings.safeFall)
         }
 
