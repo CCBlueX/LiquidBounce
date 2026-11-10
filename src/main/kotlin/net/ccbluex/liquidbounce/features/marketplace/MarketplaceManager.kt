@@ -38,7 +38,7 @@ sealed interface UpdateResult {
 
     data class NoUpdate(val item: SubscribedItem) : UpdateResult
 
-    data class Incompatible(val item: SubscribedItem, val unavailable: Unavailable) : UpdateResult
+    data class Incompatible(val item: SubscribedItem, val unavailable: UnavailableItem) : UpdateResult
 
     /** The item stays on its old revision. */
     data class Failed(val item: SubscribedItem, val error: Throwable) : UpdateResult
@@ -74,7 +74,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     @AddonApi
     fun hasHandler(type: MarketplaceItemType) = type in handlers
 
-    internal fun reloadHandled(type: MarketplaceItemType) {
+    internal fun reloadHandler(type: MarketplaceItemType) {
         val handler = handlers[type] ?: return
         runCatching { handler.reload(getSubscribedItemsOfType(type)) }
             .onFailure { logger.error("Failed to reload $type items", it) }
@@ -83,7 +83,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     /**
      * Runs before module settings load, so what the items register gets its settings back.
      */
-    internal fun reloadHandlers() = handlers.keys.forEach(::reloadHandled)
+    internal fun reloadHandlers() = handlers.keys.forEach(::reloadHandler)
 
     val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 
@@ -117,10 +117,10 @@ object MarketplaceManager : Config("marketplace"), EventListener {
 
         logger.info("Checking for updates for item ${item.id} (${item.type})")
         val installed = item.installedRevisionId
-        val resolution = item.unpackResolved(::fileTask)
-        val compatible = when (resolution) {
-            is RevisionResolution.Compatible -> resolution
-            is RevisionResolution.NoneCompatible -> return@locked incompatible(item, resolution.unavailable)
+        val result = item.unpackCompatibleRevision(::fileTask)
+        val compatible = when (result) {
+            is RevisionResult.Compatible -> result
+            is RevisionResult.NoneCompatible -> return@locked handleIncompatible(item, result.unavailable)
         }
 
         val revisionId = compatible.revision.id
@@ -135,8 +135,8 @@ object MarketplaceManager : Config("marketplace"), EventListener {
         UpdateResult.Updated(item, compatible.revision)
     }
 
-    private fun incompatible(item: SubscribedItem, unavailable: Unavailable): UpdateResult {
-        if (!unavailable.published) {
+    private fun handleIncompatible(item: SubscribedItem, unavailable: UnavailableItem): UpdateResult {
+        if (!unavailable.hasOtherVersions) {
             return UpdateResult.NoUpdate(item)
         }
 
@@ -154,9 +154,9 @@ object MarketplaceManager : Config("marketplace"), EventListener {
                 return@locked false
             }
 
-            val resolution = subscribed.unpackResolved()
-            if (resolution is RevisionResolution.NoneCompatible) {
-                throw NoCompatibleRevisionException(resolution.unavailable)
+            val result = subscribed.unpackCompatibleRevision()
+            if (result is RevisionResult.NoneCompatible) {
+                throw NoCompatibleRevisionException(result.unavailable)
             }
             subscribedItems.add(subscribed)
         }
@@ -171,7 +171,7 @@ object MarketplaceManager : Config("marketplace"), EventListener {
     /**
      * Subscriptions saved before the author was kept lack it.
      */
-    internal suspend fun fillAuthors() {
+    internal suspend fun updateMissingAuthors() {
         val unknown = subscribedItems.filter { it.author == null }
         if (unknown.isEmpty()) {
             return

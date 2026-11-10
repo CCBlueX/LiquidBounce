@@ -48,7 +48,7 @@ private const val RENAME_RETRY_DELAY_MS = 100L
 /**
  * [revisionDir] or its first subfolder that holds files, e.g. `items/265/1713/dist`.
  */
-private fun contentFolder(revisionDir: File): File? {
+private fun findContentFolder(revisionDir: File): File? {
     fun File.containsFile() = isDirectory && !listFiles(File::isFile).isNullOrEmpty()
 
     if (revisionDir.containsFile()) {
@@ -78,7 +78,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
 
     /**
      * Tells apart subscriptions that share a name. Unknown for ones saved before it was kept, until
-     * [MarketplaceManager.fillAuthors] looks it up.
+     * [MarketplaceManager.updateMissingAuthors] looks it up.
      */
     internal var author: String? = null
 
@@ -101,7 +101,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
     private val lock
         get() = itemLocks.computeIfAbsent(id) { Mutex() }
 
-    fun getInstallationFolder(): File? = installedRevisionDir?.let(::contentFolder)
+    fun getInstallationFolder(): File? = installedRevisionDir?.let(::findContentFolder)
 
     suspend fun checkUpdate(): Int? = getNewestRevisionId()
 
@@ -109,10 +109,10 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * The revision to install, when it is not the installed one: the newest one, or for an add-on
      * the newest one the marketplace offers for this game. That can be older than the installed one.
      */
-    suspend fun getNewestRevisionId(): Int? = locked { pendingRevisionId() }
+    suspend fun getNewestRevisionId(): Int? = locked { findPendingRevisionId() }
 
-    private suspend fun pendingRevisionId(): Int? =
-        (resolveRevision() as? RevisionResolution.Compatible)?.revision?.id?.takeIf { it != installedRevisionId }
+    private suspend fun findPendingRevisionId(): Int? =
+        (findCompatibleRevision() as? RevisionResult.Compatible)?.revision?.id?.takeIf { it != installedRevisionId }
 
     /**
      * Does not wait for a running install of this item; `false` until that is done.
@@ -123,7 +123,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         return try {
-            pendingRevisionId() != null
+            findPendingRevisionId() != null
         } finally {
             lock.unlock()
         }
@@ -164,7 +164,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             return false
         }
 
-        commit(fetch(revisionId, subTask), revisionId)
+        activateRevision(downloadRevision(revisionId, subTask), revisionId)
         if (type == MarketplaceItemType.ADDON) {
             AddonInstaller.unpacked(this, revisionId)
         }
@@ -175,7 +175,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * Downloads and unpacks [revisionId] next to the installed revision, where nothing takes it for
      * installed. Callers hold [locked].
      */
-    private suspend fun fetch(revisionId: Int, subTask: ResourceTask?): File {
+    private suspend fun downloadRevision(revisionId: Int, subTask: ResourceTask?): File {
         val unpacked = itemDir.resolve(".$revisionId")
         if (unpacked.isDirectory) {
             return unpacked
@@ -208,7 +208,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
      * Old revisions are renamed away before they are deleted, since a half-deleted one would still
      * count as installed. They go back when the new one cannot take their place.
      */
-    private suspend fun commit(unpacked: File, revisionId: Int) {
+    private suspend fun activateRevision(unpacked: File, revisionId: Int) {
         val retired = mutableListOf<Pair<File, File>>()
         try {
             for (dir in revisionDirs) {
@@ -235,8 +235,8 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
     }
 
-    internal fun addonJar(revisionDir: File): File {
-        val folder = contentFolder(revisionDir) ?: error("Add-on $id has no files in $revisionDir")
+    internal fun getAddonJar(revisionDir: File): File {
+        val folder = findContentFolder(revisionDir) ?: error("Add-on $id has no files in $revisionDir")
         val jars = folder.listFiles { file: File -> file.isFile && file.extension == "jar" }.orEmpty()
         check(jars.size == 1) {
             "Add-on revision must be an archive containing exactly one jar, found ${jars.size} in $folder"

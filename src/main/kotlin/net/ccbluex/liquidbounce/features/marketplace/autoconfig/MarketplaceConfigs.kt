@@ -84,12 +84,12 @@ object MarketplaceConfigs {
      * bare name is ambiguous.
      */
     suspend fun find(input: String, session: OAuthSession? = null): List<MarketplaceItem> =
-        lookup(input, listOf(MarketplaceItemType.CONFIG), session)
+        findItems(input, listOf(MarketplaceItemType.CONFIG), session)
 
     /**
      * Like [find], for anything a config can depend on.
      */
-    suspend fun findDependency(input: String): List<MarketplaceItem> = lookup(
+    suspend fun findDependency(input: String): List<MarketplaceItem> = findItems(
         input,
         listOf(MarketplaceItemType.CONFIG, MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT)
     )
@@ -97,7 +97,7 @@ object MarketplaceConfigs {
     /**
      * Like [find]. A bare name goes to the first of [types] that has it.
      */
-    internal suspend fun lookup(
+    internal suspend fun findItems(
         input: String,
         types: List<MarketplaceItemType>,
         session: OAuthSession? = null,
@@ -109,13 +109,13 @@ object MarketplaceConfigs {
             else -> {
                 val author = input.substringBefore('/', "").takeIf(String::isNotEmpty)
                 val name = input.substringAfter('/')
-                types.firstNotNullOfOrNull { type -> byName(type, name, author, session).takeIf(List<*>::isNotEmpty) }
+                types.firstNotNullOfOrNull { findByName(it, name, author, session).takeIf(List<*>::isNotEmpty) }
                     .orEmpty()
             }
         }.filter { it.type in types }
     }.onFailure { logger.info("Nothing found for $input", it) }.getOrDefault(emptyList())
 
-    private suspend fun byName(type: MarketplaceItemType, name: String, author: String?, session: OAuthSession?) =
+    private suspend fun findByName(type: MarketplaceItemType, name: String, author: String?, session: OAuthSession?) =
         MarketplaceApi.getMarketplaceItems(
             limit = PAGE_LIMIT,
             type = type,

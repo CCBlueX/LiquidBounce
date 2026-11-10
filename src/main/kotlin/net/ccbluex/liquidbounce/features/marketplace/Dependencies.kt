@@ -25,46 +25,46 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 
 /**
- * [configs] in the order they are applied, [installables] after the ones they need. [needs] are the
+ * [configs] in the order they are applied, [installables] after the ones they need. [requiredIds] are the
  * add-ons and scripts the item depends on itself.
  */
-internal class Dependencies(
+internal class ItemDependencies(
     val configs: List<ConfigDependency>,
-    val installables: List<Installable>,
-    val needs: Set<Int>
+    val installables: List<InstallableItem>,
+    val requiredIds: Set<Int>
 )
 
 internal class ConfigDependency(val item: MarketplaceItem, val revision: MarketplaceItemRevision)
 
-internal class Installable(val item: MarketplaceItem, val needs: Set<Int>)
+internal class InstallableItem(val item: MarketplaceItem, val requiredIds: Set<Int>)
 
-internal data class Installed(val installed: List<MarketplaceItem>, val unavailable: List<Unavailable>)
+internal data class InstallResult(val installed: List<MarketplaceItem>, val unavailable: List<UnavailableItem>)
 
-internal class LeftOut(val item: MarketplaceItem, val unavailable: Unavailable)
+internal class SkippedItem(val item: MarketplaceItem, val unavailable: UnavailableItem)
 
 /**
  * An add-on always loads on the next start, a script only while nothing runs scripts.
  */
-internal val MarketplaceItem.installNeedsRestart
+internal val MarketplaceItem.shouldRestartAfterInstall
     get() = type == MarketplaceItemType.ADDON ||
         type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(type)
 
 /**
  * Depth-first, so installables come after the ones they need and an add-on is checked with those installed.
  */
-internal suspend fun dependenciesOf(rootId: Int): Dependencies {
+internal suspend fun getDependencies(rootId: Int): ItemDependencies {
     val configs = linkedMapOf<Int, ConfigDependency>()
-    val installables = linkedMapOf<Int, Installable>()
+    val installables = linkedMapOf<Int, InstallableItem>()
     val visiting = hashSetOf<Int>()
-    val needsOf = hashMapOf<Int, Set<Int>>()
+    val requiredIdsOf = hashMapOf<Int, Set<Int>>()
 
     suspend fun visit(id: Int): Set<Int> {
-        needsOf[id]?.let { return it }
+        requiredIdsOf[id]?.let { return it }
         if (!visiting.add(id)) {
             return emptySet()
         }
 
-        val needs = linkedSetOf<Int>()
+        val requiredIds = linkedSetOf<Int>()
         for (dependency in MarketplaceApi.getItemDependencies(id)) {
             val item = dependency.item.copy(
                 author = dependency.author ?: dependency.item.author,
@@ -79,8 +79,8 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
                 }
 
                 MarketplaceItemType.ADDON, MarketplaceItemType.SCRIPT -> {
-                    installables.putIfAbsent(item.id, Installable(item, visit(item.id)))
-                    needs += item.id
+                    installables.putIfAbsent(item.id, InstallableItem(item, visit(item.id)))
+                    requiredIds += item.id
                 }
 
                 else -> Unit
@@ -88,21 +88,21 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
         }
 
         visiting.remove(id)
-        needsOf[id] = needs
-        return needs
+        requiredIdsOf[id] = requiredIds
+        return requiredIds
     }
 
-    val needs = visit(rootId)
-    return Dependencies(configs.values.toList(), installables.values.toList(), needs)
+    val requiredIds = visit(rootId)
+    return ItemDependencies(configs.values.toList(), installables.values.toList(), requiredIds)
 }
 
 /**
- * Subscribes to the missing [installables]. One that does not fit this game is left out with what
- * needs it, and named in [Installed.unavailable].
+ * Subscribes to the missing [installables]. One that does not fit this game is skipped with what
+ * needs it, and named in [InstallResult.unavailable].
  */
-internal suspend fun installDependencies(installables: Collection<Installable>): Installed {
+internal suspend fun installDependencies(installables: Collection<InstallableItem>): InstallResult {
     val installed = mutableListOf<MarketplaceItem>()
-    val skipped = leftOut(installables) { item ->
+    val skipped = installInOrder(installables) { item ->
         try {
             MarketplaceManager.subscribe(item)
             installed += item
@@ -111,35 +111,35 @@ internal suspend fun installDependencies(installables: Collection<Installable>):
             e.unavailable
         }
     }
-    return Installed(installed, skipped.map { it.unavailable }.distinct())
+    return InstallResult(installed, skipped.map { it.unavailable }.distinct())
 }
 
-internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
-    val dependencies = dependenciesOf(item.id)
-    return installDependencies(dependencies.installables + Installable(item, dependencies.needs))
+internal suspend fun installWithDependencies(item: MarketplaceItem): InstallResult {
+    val dependencies = getDependencies(item.id)
+    return installDependencies(dependencies.installables + InstallableItem(item, dependencies.requiredIds))
 }
 
 /**
- * Runs [install] for each missing installable. Left out are the inactive ones, the ones [install]
+ * Runs [install] for each missing installable. Skipped are the inactive ones, the ones [install]
  * gives a reason for, and what needs any of those, with that reason.
  */
-internal suspend fun leftOut(
-    installables: Collection<Installable>,
-    install: suspend (MarketplaceItem) -> Unavailable?
-): List<LeftOut> {
-    val leftOut = linkedMapOf<Int, LeftOut>()
+internal suspend fun installInOrder(
+    installables: Collection<InstallableItem>,
+    install: suspend (MarketplaceItem) -> UnavailableItem?
+): List<SkippedItem> {
+    val skipped = linkedMapOf<Int, SkippedItem>()
     for (installable in installables) {
         val item = installable.item
         if (MarketplaceManager.isSubscribed(item.id)) {
             continue
         }
 
-        val reason = installable.needs.firstNotNullOfOrNull { leftOut[it]?.unavailable }
-            ?: Unavailable(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
+        val reason = installable.requiredIds.firstNotNullOfOrNull { skipped[it]?.unavailable }
+            ?: UnavailableItem(item.name, false).takeIf { item.status != MarketplaceItemStatus.ACTIVE }
             ?: install(item)
         if (reason != null) {
-            leftOut[item.id] = LeftOut(item, reason)
+            skipped[item.id] = SkippedItem(item, reason)
         }
     }
-    return leftOut.values.toList()
+    return skipped.values.toList()
 }

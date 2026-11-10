@@ -25,7 +25,6 @@ object MarketplaceRevisionsCommand {
     fun CmdLiteralScope.revisions() {
         literal("revisions") {
             with(MarketplaceListRevisionsCommand) { revisionsList() }
-            // MarketplaceUploadRevisionCommand stays unregistered until uploading is proven stable
         }
     }
 

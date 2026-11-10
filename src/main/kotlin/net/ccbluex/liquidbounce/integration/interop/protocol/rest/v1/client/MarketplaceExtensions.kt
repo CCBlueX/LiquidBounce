@@ -54,45 +54,46 @@ import java.time.ZoneOffset
  * Turns what goes wrong in [block] into an [HttpStatusException]. Themes show no errors for actions, so a
  * failed one is announced to the player.
  */
-internal suspend inline fun <T> ApplicationCall.marketplace(block: () -> T): T = try {
+internal suspend inline fun <T> ApplicationCall.handleMarketplaceErrors(block: () -> T): T = try {
     block()
 } catch (e: Exception) {
     val failure = when (e) {
         is HttpStatusException -> e
         is CancellationException -> throw e
-        else -> marketplaceFailure(e)
+        else -> e.toHttpStatusException()
     }
     if (request.httpMethod != HttpMethod.Get) {
-        announce((failure.body["reason"] ?: failure.status.description).asText(), Severity.ERROR)
+        sendFeedback((failure.body["reason"] ?: failure.status.description).asText(), Severity.ERROR)
     }
     throw failure
 }
 
 internal suspend inline fun <reified T : Any> ApplicationCall.respondMarketplace(block: () -> T) =
-    respond(marketplace(block))
+    respond(handleMarketplaceErrors(block))
 
-internal fun marketplaceFailure(e: Exception): HttpStatusException {
-    val http = e.httpException
-    val reason = e.message ?: e.javaClass.simpleName
+internal fun Exception.toHttpStatusException(): HttpStatusException {
+    val http = httpException
+    val reason = message ?: javaClass.simpleName
     return when {
         http != null -> {
             logger.warn("Marketplace request failed: ${http.message}")
-            failure(HttpStatusCode.fromValue(http.code), http.reason)
+            createStatusException(HttpStatusCode.fromValue(http.code), http.reason)
         }
 
-        e is IOException -> failure(HttpStatusCode.ServiceUnavailable, "Can't reach the marketplace")
+        this is IOException -> createStatusException(HttpStatusCode.ServiceUnavailable, "Can't reach the marketplace")
 
-        e is IllegalStateException || e is IllegalArgumentException || e is NoCompatibleRevisionException ->
-            failure(HttpStatusCode.BadRequest, reason)
+        this is IllegalStateException || this is IllegalArgumentException || this is NoCompatibleRevisionException ->
+            createStatusException(HttpStatusCode.BadRequest, reason)
 
         else -> {
-            logger.error("Marketplace request failed", e)
-            failure(HttpStatusCode.InternalServerError, reason)
+            logger.error("Marketplace request failed", this)
+            createStatusException(HttpStatusCode.InternalServerError, reason)
         }
     }
 }
 
-private fun failure(status: HttpStatusCode, reason: String) = HttpStatusException(status, mapOf("reason" to reason))
+private fun createStatusException(status: HttpStatusCode, reason: String) =
+    HttpStatusException(status, mapOf("reason" to reason))
 
 /**
  * The marketplace answers errors as `{"error": "..."}`.
@@ -103,7 +104,7 @@ private val HttpException.reason
 /**
  * Tells the player how an action went, in the chat and as a notification, like the commands do.
  */
-internal fun announce(message: MutableComponent, severity: Severity = Severity.SUCCESS) = mc.execute {
+internal fun sendFeedback(message: MutableComponent, severity: Severity = Severity.SUCCESS) = mc.execute {
     chat(if (severity == Severity.ERROR) markAsError(message) else regular(message))
     notification("Marketplace", message, severity)
 }
@@ -113,29 +114,29 @@ internal suspend fun ApplicationCall.requireSession(): OAuthSession {
     if (account == EMPTY_ACCOUNT) {
         unauthorized("Not logged in")
     }
-    return marketplace { account.takeSession() }
+    return handleMarketplaceErrors { account.takeSession() }
 }
 
 /**
  * `null` while logged out or when the session cannot be renewed, so browsing goes on without it.
  */
-internal suspend fun optionalSession(): OAuthSession? {
+internal suspend fun getSessionOrNull(): OAuthSession? {
     val account = ClientAccountManager.clientAccount.takeIf { it != EMPTY_ACCOUNT } ?: return null
     return runCatching { account.takeSession() }
         .onFailure { logger.debug("Failed to renew the session", it) }
         .getOrNull()
 }
 
-internal fun currentServer() = mc.currentServer?.ip?.dropPort()?.rootDomain()
+internal fun getCurrentServerDomain() = mc.currentServer?.ip?.dropPort()?.rootDomain()
 
 /**
  * The marketplace sends UTC without a zone.
  */
-internal fun epochMillis(dateTime: String?): Long? = dateTime?.let {
+internal fun parseEpochMillis(dateTime: String?): Long? = dateTime?.let {
     runCatching { LocalDateTime.parse(it).toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
 }
 
-internal suspend inline fun <T> allPages(fetch: (page: Int) -> PaginatedResponse<T>): List<T> {
+internal suspend inline fun <T> collectAllPages(fetch: (page: Int) -> PaginatedResponse<T>): List<T> {
     val items = mutableListOf<T>()
     var page = 1
     do {
@@ -145,11 +146,11 @@ internal suspend inline fun <T> allPages(fetch: (page: Int) -> PaginatedResponse
     return items
 }
 
-internal class ListQuery(val page: Int, val query: String?, val sort: MarketplaceApi.Sort)
+internal class ListRequest(val page: Int, val query: String?, val sort: MarketplaceApi.Sort)
 
-internal val ApplicationCall.listQuery
+internal val ApplicationCall.listRequest
     get() = with(request.queryParameters) {
-        ListQuery(
+        ListRequest(
             page = get("page")?.toIntOrNull() ?: 1,
             query = get("query")?.trim()?.takeIf(String::isNotEmpty),
             sort = if (get("sort") == "new") MarketplaceApi.Sort.CREATED else MarketplaceApi.Sort.SCORE,

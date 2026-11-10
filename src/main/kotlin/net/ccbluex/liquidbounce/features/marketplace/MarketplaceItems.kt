@@ -54,6 +54,6 @@ object MarketplaceItems {
      * [input] is a share code, an item id, `author/name` or a bare name. More than one result means the
      * bare name is ambiguous.
      */
-    suspend fun find(input: String): List<MarketplaceItem> = MarketplaceConfigs.lookup(input, subscribable)
+    suspend fun find(input: String): List<MarketplaceItem> = MarketplaceConfigs.findItems(input, subscribable)
 
 }

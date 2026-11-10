@@ -29,26 +29,26 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.chat.MutableComponent
 
-sealed interface RevisionResolution {
+sealed interface RevisionResult {
 
-    data class Compatible(val revision: MarketplaceItemRevision) : RevisionResolution
+    data class Compatible(val revision: MarketplaceItemRevision) : RevisionResult
 
-    data class NoneCompatible(val unavailable: Unavailable) : RevisionResolution
+    data class NoneCompatible(val unavailable: UnavailableItem) : RevisionResult
 
 }
 
 /**
- * No revision of [name] fits this game, though it has [published] ones. Without them, the item is not
+ * No revision of [name] fits this game, though it has others when [hasOtherVersions]. Otherwise the item is not
  * active or has nothing published.
  */
-data class Unavailable(val name: String, val published: Boolean) {
+data class UnavailableItem(val name: String, val hasOtherVersions: Boolean) {
 
     fun describe() = text().string
 
     fun text(): MutableComponent {
         val key = "liquidbounce.marketplace.unavailable"
         val addon = variable(name)
-        return if (published) {
+        return if (hasOtherVersions) {
             translation("$key.version", addon, variable("v${AddonInstaller.liquidbounce}"))
         } else {
             translation("$key.nothing", addon)
@@ -57,39 +57,39 @@ data class Unavailable(val name: String, val published: Boolean) {
 
 }
 
-class NoCompatibleRevisionException(val unavailable: Unavailable) : Exception(unavailable.describe())
+class NoCompatibleRevisionException(val unavailable: UnavailableItem) : Exception(unavailable.describe())
 
 /**
  * The newest revision, for an add-on the newest one the marketplace offers for this game. [known]
  * spares fetching the item. Callers hold [SubscribedItem.locked].
  */
-internal suspend fun SubscribedItem.resolveRevision(known: MarketplaceItem? = null): RevisionResolution {
+internal suspend fun SubscribedItem.findCompatibleRevision(known: MarketplaceItem? = null): RevisionResult {
     val item = known ?: MarketplaceApi.getMarketplaceItem(id)
     if (item.status != MarketplaceItemStatus.ACTIVE) {
-        return RevisionResolution.NoneCompatible(Unavailable(name, false))
+        return RevisionResult.NoneCompatible(UnavailableItem(name, false))
     }
 
-    val fitting = if (type == MarketplaceItemType.ADDON) {
+    val revision = if (type == MarketplaceItemType.ADDON) {
         MarketplaceApi.getMarketplaceItemRevisions(id, 1, 1, AddonInstaller.minecraft, AddonInstaller.liquidbounce)
     } else {
         MarketplaceApi.getMarketplaceItemRevisions(id, 1, 1)
     }.items.firstOrNull()
-    if (fitting != null) {
-        return RevisionResolution.Compatible(fitting)
+    if (revision != null) {
+        return RevisionResult.Compatible(revision)
     }
 
-    val published = type == MarketplaceItemType.ADDON && item.liveRevisionId != null
-    return RevisionResolution.NoneCompatible(Unavailable(name, published))
+    val hasOtherVersions = type == MarketplaceItemType.ADDON && item.liveRevisionId != null
+    return RevisionResult.NoneCompatible(UnavailableItem(name, hasOtherVersions))
 }
 
 /**
- * Unpacks the revision [resolveRevision] picks unless it is installed. Callers hold [SubscribedItem.locked].
+ * Unpacks the revision [findCompatibleRevision] picks unless it is installed. Callers hold [SubscribedItem.locked].
  */
-internal suspend fun SubscribedItem.unpackResolved(subTask: () -> ResourceTask? = { null }): RevisionResolution {
-    val resolution = resolveRevision()
-    val revisionId = (resolution as? RevisionResolution.Compatible)?.revision?.id
+internal suspend fun SubscribedItem.unpackCompatibleRevision(subTask: () -> ResourceTask? = { null }): RevisionResult {
+    val result = findCompatibleRevision()
+    val revisionId = (result as? RevisionResult.Compatible)?.revision?.id
     if (revisionId != null && revisionId != installedRevisionId) {
         unpack(revisionId, subTask())
     }
-    return resolution
+    return result
 }

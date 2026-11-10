@@ -100,7 +100,7 @@ internal suspend fun ownUserId(): String? {
     return account.userInformation?.userId
 }
 
-internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
+internal suspend fun CmdI18n.findConfig(input: String): MarketplaceItem =
     single(input, MarketplaceConfigs.find(input, sessionOrNull()))
 
 internal fun CmdI18n.single(input: String, matches: List<MarketplaceItem>): MarketplaceItem = when (matches.size) {

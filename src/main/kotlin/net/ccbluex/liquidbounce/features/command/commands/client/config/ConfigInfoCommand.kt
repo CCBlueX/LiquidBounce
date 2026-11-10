@@ -58,7 +58,7 @@ object ConfigInfoCommand {
                         requireTracked()
                         ConfigTracker.itemId
                     } else {
-                        resolveConfig(input).id
+                        findConfig(input).id
                     }
 
                     val item = request { MarketplaceApi.getMarketplaceItem(id, sessionOrNull()) }

@@ -50,12 +50,12 @@ import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.marketplace.Dependencies
+import net.ccbluex.liquidbounce.features.marketplace.ItemDependencies
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.features.marketplace.Unavailable
-import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
+import net.ccbluex.liquidbounce.features.marketplace.UnavailableItem
+import net.ccbluex.liquidbounce.features.marketplace.getDependencies
 import net.ccbluex.liquidbounce.features.marketplace.installDependencies
-import net.ccbluex.liquidbounce.features.marketplace.installNeedsRestart
+import net.ccbluex.liquidbounce.features.marketplace.shouldRestartAfterInstall
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.io.atomicWrite
@@ -85,12 +85,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     data class Step(val itemId: Int, val revisionId: Int)
 
     /**
-     * [unavailable] are the dependencies left out since they do not load with this game.
+     * [unavailable] are the dependencies skipped since they do not load with this game.
      */
     data class LoadResult(
         val installed: List<MarketplaceItem>,
         val restartRequired: Boolean,
-        val unavailable: List<Unavailable>
+        val unavailable: List<UnavailableItem>
     )
 
     var state by enumChoice("State", State.NONE)
@@ -173,7 +173,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         revisionId: Int,
         modules: Collection<ValueGroup> = emptyList()
     ): LoadResult {
-        val dependencies = dependenciesOf(item.id)
+        val dependencies = getDependencies(item.id)
         val (installed, unavailable) = installDependencies(dependencies.installables)
         val chain = dependencies.configSteps()
         val configs = readConfigs(chain + Step(item.id, revisionId))
@@ -190,7 +190,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
 
         return LoadResult(
             installed,
-            installed.any { it.installNeedsRestart },
+            installed.any { it.shouldRestartAfterInstall },
             unavailable
         )
     }
@@ -198,12 +198,12 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
     /**
      * The modules loading [revisionId] of [item] sets, its config dependencies included.
      */
-    internal suspend fun modulesToLoad(item: MarketplaceItem, revisionId: Int): List<String> {
-        val steps = dependenciesOf(item.id).configSteps() + Step(item.id, revisionId)
-        return steps.flatMap { modules(it.itemId, it.revisionId) }.distinct()
+    internal suspend fun getLoadableModuleNames(item: MarketplaceItem, revisionId: Int): List<String> {
+        val steps = getDependencies(item.id).configSteps() + Step(item.id, revisionId)
+        return steps.flatMap { getModuleNames(it.itemId, it.revisionId) }.distinct()
     }
 
-    internal suspend fun modules(itemId: Int, revisionId: Int): List<String> {
+    internal suspend fun getModuleNames(itemId: Int, revisionId: Int): List<String> {
         val config = readConfig(itemId, revisionId)
         val modules = if (config.string("name") == "modules") config else config.obj("modules")
         return modules?.get("value")?.asJsonArray?.map { it.asJsonObject["name"].asString }.orEmpty()
@@ -486,7 +486,7 @@ object ConfigTracker : Config("MarketplaceConfig"), EventListener {
         return revision
     }
 
-    private fun Dependencies.configSteps() = configs.map { Step(it.item.id, it.revision.id) }
+    private fun ItemDependencies.configSteps() = configs.map { Step(it.item.id, it.revision.id) }
 
     private suspend fun readConfigs(steps: List<Step>) = steps.map { readConfig(it.itemId, it.revisionId) }
 
