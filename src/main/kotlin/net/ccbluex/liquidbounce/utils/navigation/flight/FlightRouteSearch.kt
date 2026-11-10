@@ -62,7 +62,7 @@ class FlightRouteSearch(
         goal.ends.mapNotNull { end ->
             val node = BlockPos.containing(end)
             moves.point(node).takeIf {
-                start.distanceTo(end) <= limits.maxLength && goal.isGoal(node) && moves.isOpen(node.x, node.y, node.z)
+                start.closerThan(end, limits.maxLength) && goal.isGoal(node) && moves.isOpen(node.x, node.y, node.z)
             }
         }
     }

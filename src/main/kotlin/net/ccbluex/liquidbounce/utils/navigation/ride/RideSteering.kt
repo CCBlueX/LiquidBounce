@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.ride
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.BlockPos
@@ -73,7 +73,7 @@ internal class RideSteering {
         face(desired)
         val aligned = abs(Mth.wrapDegrees(desired - player.yRot)) < MOUNT_FORWARD_ANGLE
 
-        val atJump = jumpTo != null && mount.position().horizontalDistanceTo(jumpTo) < reach
+        val atJump = jumpTo != null && mount.position().horizontalDistanceToSqr(jumpTo) < Mth.square(reach)
         chargeTicks = if (atJump) chargeTicks + 1 else 0
         event.directionalInput = if (aligned) DirectionalInput.FORWARDS else DirectionalInput.NONE
         event.jump = chargeTicks in 1..RideBody.JUMP_CHARGE_TICKS

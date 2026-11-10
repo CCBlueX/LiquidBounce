@@ -143,7 +143,7 @@ internal class GoalRouter<T>(
     }
 
     private fun Request?.isFor(goal: Vec3) =
-        this != null && this.goal.distanceToSqr(goal) <= GOAL_MOVED * GOAL_MOVED
+        this != null && this.goal.closerThan(goal, GOAL_MOVED)
 
     private class Request(val goal: Vec3, val stage: NearGoal?)
 

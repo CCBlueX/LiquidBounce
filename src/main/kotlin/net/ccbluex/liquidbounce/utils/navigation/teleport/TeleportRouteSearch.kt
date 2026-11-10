@@ -53,7 +53,7 @@ class TeleportRouteSearch(
 
     override fun begin(): RouteResult<TeleportPlan> {
         val standable = goals.mapNotNull(::feetOf)
-        targets = standable.filter { it.distanceToSqr(start) <= Mth.square(limits.maxLength) }
+        targets = standable.filter { it.closerThan(start, limits.maxLength) }
         return when {
             standable.any { it.distanceToSqr(start) < ARRIVED_SQ } -> RouteResult.AlreadyThere
             standable.isEmpty() -> RouteResult.Failed(RouteFailure.INVALID_DESTINATION)

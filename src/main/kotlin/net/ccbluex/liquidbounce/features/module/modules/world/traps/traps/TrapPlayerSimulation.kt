@@ -41,7 +41,7 @@ object TrapPlayerSimulation {
         val seenPlayers = ReferenceOpenHashSet<Player>()
 
         for (enemy in enemies) {
-            if (enemy !is Player || enemy.distanceToSqr(player) > SIMULATION_DISTANCE * SIMULATION_DISTANCE) {
+            if (enemy !is Player || !enemy.closerThan(player, SIMULATION_DISTANCE)) {
                 continue
             }
 

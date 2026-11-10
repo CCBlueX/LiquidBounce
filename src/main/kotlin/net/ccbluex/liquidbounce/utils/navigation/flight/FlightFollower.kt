@@ -56,7 +56,7 @@ class FlightFollower : RouteProgress {
         get() = route?.isFinished == false
 
     override val ahead: List<Vec3>
-        get() = route?.run { points.subList(min(corner, points.size), points.size) } ?: emptyList()
+        get() = route?.run { points.subList(min(corner, points.size), points.size) }.orEmpty()
 
     override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
 
@@ -182,7 +182,7 @@ class FlightFollower : RouteProgress {
                 isSharp(points, route.corner) -> SHARP_REACH
                 else -> PASS_REACH
             }
-            if (position.distanceTo(points[route.corner]) >= reach) {
+            if (!position.closerThan(points[route.corner], reach)) {
                 break
             }
             route.corner++

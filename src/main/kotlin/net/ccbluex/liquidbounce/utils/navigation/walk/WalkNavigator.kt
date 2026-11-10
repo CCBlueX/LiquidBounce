@@ -190,7 +190,7 @@ class WalkNavigator(
         stuckSpots.tick(goal)
         val position = player.position()
 
-        if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
+        if (player.rootVehicle.position().closerThan(goal, radius)) {
             stop(event)
             lastLookYaw = Float.NaN
             view.done()
@@ -199,7 +199,7 @@ class WalkNavigator(
 
         if (player.onGround()) {
             // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
-            straight = position.distanceToSqr(goal) <= Mth.square(settings.maxLength) &&
+            straight = position.closerThan(goal, settings.maxLength) &&
                 isStraightWalkable(NavigationTerrain.live(), position, goal, radius, settings.safeFall)
         }
 
@@ -583,7 +583,7 @@ private class StuckSpots {
 
     fun tick(goal: Vec3) {
         val outdated = blocks.isNotEmpty() &&
-            (++age > FORGET_TICKS || this.goal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_CHANGE) })
+            (++age > FORGET_TICKS || this.goal.let { it == null || !it.closerThan(goal, GOAL_CHANGE) })
         if (outdated) {
             blocks.clear()
             version++

@@ -77,7 +77,7 @@ class WalkRoutingTest {
         abilities: WalkAbilities = abilities(),
     ): RouteResult<WalkPath> {
         val terrain = world.terrain(opensDoors = true)
-        return WalkRouteSearch(terrain, start, BlockGoal(listOf(goal)), abilities, LIMITS).advanceToEnd(MAX_SLICES)
+        return WalkRouteSearch(terrain, start, BlockGoal(goal), abilities, LIMITS).advanceToEnd(MAX_SLICES)
     }
 
     private fun isComplete(result: RouteResult<WalkPath>) =

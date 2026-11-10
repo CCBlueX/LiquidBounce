@@ -124,7 +124,7 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
     ) {
         val path = follower.path
         val finished = path != null && follower.isFinished
-        val nearStage = path != null && routes.endsAtStage && position.distanceTo(path.end) < GoalRouter.STAGE_LEAD
+        val nearStage = path != null && routes.endsAtStage && position.closerThan(path.end, GoalRouter.STAGE_LEAD)
         val urgent = stuck || follower.isOffPath()
 
         val needed = path == null || routes.hasGoalMoved(goal) || finished || nearStage || urgent

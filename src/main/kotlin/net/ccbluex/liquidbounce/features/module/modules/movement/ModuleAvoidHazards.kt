@@ -57,7 +57,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * Prevents you walking into blocks that might be malicious for you.
  */
 object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
-    private var mode by enumChoice("Mode", AvoidMode.SHAPE)
+    private val mode by enumChoice("Mode", AvoidMode.SHAPE)
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
     // Solid webs keep NoWeb from ever handling one; steering around them does not
@@ -251,7 +251,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             pos.below().getBlock() is MagmaBlock
         }),
         LAVA("Lava", test = { _, fluidState, _ ->
-            fluidState.`is`(Fluids.LAVA) || fluidState.`is`(Fluids.FLOWING_LAVA)
+            fluidState.type.isSame(Fluids.LAVA)
         }),
         WITHER_ROSE("WitherRose", test = { block, _, _ ->
             block is WitherRoseBlock
