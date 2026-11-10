@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
 
-private const val SUMMARY_LENGTH = 200
 private const val REVIEW_PAGE_SIZE = 100
 
 internal class PageView<T>(val items: List<T>, val pagination: Pagination)
@@ -117,6 +116,7 @@ internal class RevisionView(
 )
 
 /**
+ * @param summary the first line of the description, as markdown
  * @param notFor the running LiquidBounce, when no revision is for it
  */
 internal class ItemView(
@@ -207,7 +207,7 @@ internal suspend fun itemView(item: MarketplaceItem): ItemView = coroutineScope 
         name = item.name,
         author = item.author,
         image = item.thumbnailPid?.let(MarketplaceApi::fileUrl),
-        summary = item.summary(),
+        summary = item.description.lineSequence().map(String::trim).firstOrNull(String::isNotEmpty).orEmpty(),
         featured = item.featured,
         downloads = item.downloads,
         rating = rating.await().average,
@@ -221,22 +221,6 @@ internal suspend fun itemView(item: MarketplaceItem): ItemView = coroutineScope 
         inUse = ThemeManager.marketplaceThemes[item.id]?.let { it === ThemeManager.theme } == true,
     )
 }
-
-private val MARKDOWN_IMAGE = Regex("""!\[[^\]]*]\([^)]*\)""")
-private val MARKDOWN_LINK = Regex("""\[([^\]]*)]\([^)]*\)""")
-
-// Heading, quote and list marks, emphasis, code and HTML tags
-private val MARKDOWN_MARKS =
-    Regex("""^(#+|>|[-*+]|\d+\.)\s+|\*\*|__|~~|`|<[^>]+>|(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)""")
-
-/**
- * The first line of the description that has text, without its markdown.
- */
-private fun MarketplaceItem.summary() = description.lineSequence()
-    .map { it.replace(MARKDOWN_IMAGE, "").replace(MARKDOWN_LINK, "$1").replace(MARKDOWN_MARKS, "").trim() }
-    .firstOrNull(String::isNotEmpty)
-    ?.take(SUMMARY_LENGTH)
-    .orEmpty()
 
 private class Rating(val average: Double?, val count: Int)
 
