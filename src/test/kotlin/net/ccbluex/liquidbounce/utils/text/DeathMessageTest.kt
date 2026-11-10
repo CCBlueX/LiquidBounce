@@ -28,7 +28,7 @@ class DeathMessageTest {
 
     private val names = listOf("Enemy", "Enemy_2", "Self")
 
-    private fun read(message: Component) = message.toDeathMessage(names)
+    private fun read(message: Component) = message.toDeathMessage(names) { it == "Other" }
 
     private fun read(message: String) = read(Component.literal(message))
 
@@ -70,6 +70,26 @@ class DeathMessageTest {
         assertNull(read("[MVP+] Enemy: Self was lucky"))
         assertNull(read("1st Killer - Self - 5"))
         assertNull(read("Selfish was killed by Enemy."))
+    }
+
+    @Test
+    fun `custom messages may follow a server prefix`() {
+        val kill = DeathMessage("Enemy", "Self", exact = false)
+        assertEquals(kill, read("SkyWars ▸ Enemy был убит игроком Self."))
+        assertEquals(DeathMessage("Self", "Enemy", exact = false), read("SkyWars ▸ Self был скинут игроком Enemy."))
+        assertEquals(DeathMessage("Self", null, exact = false), read("SkyWars ▸ Self упал в бездну."))
+        assertEquals(kill, read("Дуэли ▸ Игрок Enemy был убит Self."))
+        assertEquals(kill, read("[BedWars] Enemy was killed by Self."))
+    }
+
+    @Test
+    fun `a prefix with a player is chat`() {
+        assertNull(read("[Игрок] Other → Enemy был убит Self"))
+        assertNull(read("[7⋆] Stranger: Enemy was killed by Self"))
+        assertNull(read("Other was killed by Self with a sword"))
+        assertNull(read("Stranger was killed by Self with a sword"))
+        assertNull(read("Победа за - Self"))
+        assertNull(read("Дуэли ▸ [LEGEND] Other подключился к игре. 2/2"))
     }
 
 }
