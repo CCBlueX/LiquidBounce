@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.ccbluex.liquidbounce.utils.navigation.walk.steer
 import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 import net.minecraft.world.phys.Vec3
+import kotlin.math.min
 
 /**
  * Flies a [FlightPath] with movement input: the keys towards a point ahead on the route, jump to rise and sneak to
@@ -55,7 +56,7 @@ class FlightFollower : RouteProgress {
         get() = route?.isFinished == false
 
     override val ahead: List<Vec3>
-        get() = route?.run { points.subList(corner, points.size) } ?: emptyList()
+        get() = route?.run { points.subList(min(corner, points.size), points.size) } ?: emptyList()
 
     override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
 
