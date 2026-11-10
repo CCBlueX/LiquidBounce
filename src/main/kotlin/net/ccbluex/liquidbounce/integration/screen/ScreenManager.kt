@@ -91,13 +91,6 @@ object ScreenManager : EventListener {
      */
     val screenAcknowledgement = ScreenAcknowledgement()
 
-    /**
-     * The open theme screen whose page keeps Esc for itself while it shows a menu, a form or a search that Esc
-     * should close first (`PUT /screen/escape`). The screen clears it once it is replaced, so a cancelled
-     * [ScreenEvent] keeps it.
-     */
-    var escapeKeptBy: Screen? = null
-
     internal val parent: Screen
         get() = mc.gui.screen() ?: TitleScreen()
 

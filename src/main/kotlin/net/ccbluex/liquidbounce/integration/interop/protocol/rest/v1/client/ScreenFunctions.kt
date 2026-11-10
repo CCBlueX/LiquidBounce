@@ -33,8 +33,8 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screens.LoadingOverlay
@@ -115,28 +115,17 @@ private fun Route.deleteScreen() = delete {
 }
 
 // PUT /api/v1/client/screen/escape
-// The page names its screen, so a late request from a page that already left cannot keep Esc on the next one
 private fun Route.putScreenEscape() = put("/escape") {
-    data class Request(val name: String, val keep: Boolean)
-    val request = call.receive<Request>()
+    data class EscapeForm(val name: String, val keep: Boolean)
+    val form = call.receive<EscapeForm>()
 
-    val kept = withContext(Dispatchers.Main) {
-        val screen = mc.gui.screen()
-        val type = when (screen) {
-            is CustomSharedMinecraftScreen -> screen.screenType
-            is CustomStandaloneMinecraftScreen -> screen.screenType
-            else -> null
-        }
+    withContext(Dispatchers.Main) {
+        // A request can arrive after its screen was replaced, and must not keep Esc on the new one
+        val screen = (mc.gui.screen() as? CustomMinecraftScreen)
+            ?.takeIf { it.screenType.routeName == form.name }
+            ?: call.forbidden("Not the open screen")
 
-        if (type?.routeName == request.name) {
-            ScreenManager.escapeKeptBy = screen.takeIf { request.keep }
-            true
-        } else {
-            false
-        }
-    }
-    if (!kept) {
-        call.forbidden("Not the open screen")
+        screen.pageKeepsEscape = form.keep
     }
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
