@@ -22,27 +22,24 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
+import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
-import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
 /**
- * Flies to goals for a walking navigator while the player can fly, see [FlightAbilities.capture]: plans flight
- * routes, in stages for far goals, and follows them, showing them in [view].
+ * Flies to goals for a walking navigator while the player can fly, see [FlightAbilities.capture].
  */
 class FlightNavigator(private val owner: EventListener, private val view: RouteView) : EventListener {
 
-    private val planner = RoutePlanner<FlightPath>(this)
+    private val routes = GoalRouter<FlightPath>(this, VERTICAL_MARGIN)
     private val follower = FlightFollower()
+    private var stuck = false
 
     /**
      * Whether the last tick was flown.
@@ -50,24 +47,11 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
     var isActive = false
         private set
 
-    /**
-     * Where the player heads, and whether it wants to sprint there.
-     */
     val target: Vec3?
         get() = follower.target
 
     val sprint: Boolean
         get() = follower.sprint
-
-    private var ticks = 0
-    private var lastRequest = Int.MIN_VALUE / 2
-    private var retryAt = 0
-    private var failed = false
-    private var stuck = false
-    private var pathGoal: Vec3? = null
-    private var requestedGoal: Vec3? = null
-    private var requestedStage: NearGoal? = null
-    private var followsStage = false
 
     override fun parent() = owner
 
@@ -82,10 +66,10 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
         abilities: FlightAbilities,
         frameYaw: Float,
     ) {
-        ticks++
+        routes.tick()
         isActive = true
         val position = player.position()
-        collectResult(goal, position)
+        collectRoute(goal, position)
 
         val path = follower.path
         if (path != null && !follower.isFinished) {
@@ -99,8 +83,8 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
             event.jump = false
             event.sneak = false
             when {
-                failed -> view.invalid()
-                !planner.isIdle -> view.pending(position, goal, planner.preview)
+                routes.failed -> view.invalid()
+                routes.isSearching -> view.pending(position, goal, routes.preview)
                 else -> view.done()
             }
         }
@@ -108,115 +92,64 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
         planIfNeeded(goal, radius, maxLength, position, abilities)
     }
 
-    private fun collectResult(goal: Vec3, position: Vec3) {
-        when (val result = planner.poll()) {
+    /**
+     * Stops flying routes until the next [navigate].
+     */
+    fun halt() {
+        routes.reset()
+        follower.clear()
+        isActive = false
+        stuck = false
+    }
+
+    private fun collectRoute(goal: Vec3, position: Vec3) {
+        when (val result = routes.poll()) {
             RouteResult.Searching -> Unit
 
-            RouteResult.AlreadyThere -> {
-                // The search measures from block centres; the rest of the way is a straight line.
-                planner.cancel()
-                accept(FlightPath(position, listOf(position, goal), complete = true))
-            }
+            // The search measures from block centers; the rest of the way is a straight line.
+            RouteResult.AlreadyThere -> accept(FlightPath(position, listOf(position, goal), complete = true))
 
-            is RouteResult.Found -> {
-                planner.cancel()
-                accept(result.value)
-            }
+            is RouteResult.Found -> accept(result.value)
 
-            is RouteResult.Failed -> {
-                planner.cancel()
-                failed = true
-                retryAt = ticks + RETRY_TICKS
-                if (follower.isFinished) {
-                    follower.clear()
-                }
+            is RouteResult.Failed -> if (follower.isFinished) {
+                follower.clear()
             }
         }
     }
 
     private fun accept(path: FlightPath) {
-        failed = false
         stuck = false
-        followsStage = requestedStage.let { it != null && !it.isGoal(BlockPos.containing(path.end)) }
-        pathGoal = requestedGoal
+        routes.routeEnds(BlockPos.containing(path.end))
         follower.follow(path)
     }
 
-    private fun planIfNeeded(goal: Vec3, radius: Double, maxLength: Double, position: Vec3,
-                             abilities: FlightAbilities) {
+    private fun planIfNeeded(
+        goal: Vec3,
+        radius: Double,
+        maxLength: Double,
+        position: Vec3,
+        abilities: FlightAbilities,
+    ) {
         val path = follower.path
-        val offPath = follower.isOffPath()
-        val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
         val finished = path != null && follower.isFinished
-        val nearStage = path != null && followsStage && position.distanceTo(path.end) < STAGE_LEAD
-        val urgent = stuck || offPath
+        val nearStage = path != null && routes.endsAtStage && position.distanceTo(path.end) < GoalRouter.STAGE_LEAD
+        val urgent = stuck || follower.isOffPath()
 
-        val needed = path == null || goalMoved || finished || nearStage || urgent
-        if (!needed || ticks < retryAt) {
-            return
-        }
-        if (!urgent && (!planner.isIdle || ticks - lastRequest < REPLAN_INTERVAL)) {
+        val needed = path == null || routes.hasGoalMoved(goal) || finished || nearStage || urgent
+        if (!needed || !routes.isDue(urgent)) {
             return
         }
 
-        request(goal, radius, maxLength, position, abilities)
-        stuck = false
-    }
-
-    private fun request(goal: Vec3, radius: Double, maxLength: Double, start: Vec3, abilities: FlightAbilities) {
-        val nearGoal = NearGoal(goal, radius)
-        val stageRange = maxLength / 2.0
-        val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
-        val region = if (staged) {
-            StageGoal.region(start, stageRange, VERTICAL_MARGIN)
-        } else {
-            nearGoal.region(start, maxLength, VERTICAL_MARGIN)
-        }
         val limits = RouteLimits(maxLength, maxExpansions = MAX_EXPANSIONS)
-
-        val key = SearchKey(BlockPos.containing(start), nearGoal, staged, abilities.control)
-        planner.request(key, region) { terrain ->
-            val searchGoal = if (staged) StageGoal(nearGoal, start, stageRange, terrain) else nearGoal
-            FlightRouteSearch(terrain, start, searchGoal, abilities, limits)
+        routes.request(position, NearGoal(goal, radius), maxLength, abilities.control) { terrain, searchGoal ->
+            FlightRouteSearch(terrain, position, searchGoal, abilities, limits)
         }
-
-        if (requestedGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }) {
-            failed = false
-        }
-        requestedGoal = goal
-        requestedStage = nearGoal.takeIf { staged }
-        lastRequest = ticks
-    }
-
-    /**
-     * Stops flying routes until the next [navigate].
-     */
-    fun halt() {
-        planner.cancel()
-        follower.clear()
-        isActive = false
-        failed = false
         stuck = false
-        pathGoal = null
-        requestedGoal = null
-        requestedStage = null
-        followsStage = false
     }
-
-    private data class SearchKey(
-        val start: BlockPos,
-        val goal: NearGoal,
-        val staged: Boolean,
-        val control: FlightControl,
-    )
 
     private companion object {
         const val VERTICAL_MARGIN = 32
         const val MAX_EXPANSIONS = 20_000
-        const val GOAL_MOVED = 1.5
-        const val REPLAN_INTERVAL = 5
-        const val RETRY_TICKS = 20
-        const val STAGE_LEAD = 12.0
     }
 
 }

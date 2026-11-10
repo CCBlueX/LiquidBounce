@@ -106,6 +106,9 @@ data class NavigationRegion(
         other.minX >= minX && other.minY >= minY && other.minZ >= minZ &&
             other.maxX <= maxX && other.maxY <= maxY && other.maxZ <= maxZ
 
+    operator fun contains(pos: BlockPos) =
+        pos.x in minX..maxX && pos.y in minY..maxY && pos.z in minZ..maxZ
+
     companion object {
 
         /**

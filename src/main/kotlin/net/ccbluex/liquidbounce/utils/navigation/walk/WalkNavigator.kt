@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
@@ -48,11 +49,10 @@ import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.ride.RideNavigator
+import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
-import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
@@ -63,13 +63,11 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Walks the player to a goal given every tick. Goals within reach of a straight walk are steered to directly,
- * everything else is pathfound, opening doors and gates on the way and breaking and placing blocks when allowed;
- * goals farther than half the path range or in chunks not loaded are walked to in stages, and unreachable goals are
- * walked as close as possible. A boat or mount the player rides is driven there instead, see [RideNavigator].
+ * Walks the player to a goal given every tick: straight on where nothing is in the way, else along a searched path,
+ * opening doors and, when allowed, breaking and placing blocks. A ridden vehicle is driven there instead, and the
+ * player flies or glides where it can.
  *
- * Its settings go into [values]; it acts while [owner] runs. Blocks are aimed at with the [rotations] of the feature
- * it walks for, or with its own when the feature has none.
+ * Its settings go into [values]; it acts while [owner] runs and aims with [rotations], or its own without them.
  */
 @Suppress("TooManyFunctions")
 class WalkNavigator(
@@ -82,7 +80,7 @@ class WalkNavigator(
     showRoute: Boolean = true,
 ) : EventListener {
 
-    private val walkSettings = WalkSettings(values, allowBreak, allowPlace, allowParkour)
+    private val settings = WalkSettings(values, allowBreak, allowPlace, allowParkour)
     private val rotations = rotations ?: values.tree(RotationsValueGroup(owner))
     private val view = RouteView()
 
@@ -90,26 +88,17 @@ class WalkNavigator(
         values.tree(RouteRenderer(owner, view, showRoute))
     }
 
-    private val planner = RoutePlanner<WalkPath>(this) { NavigationTerrain(it, opensDoors = true) }
+    private val routes = GoalRouter<WalkPath>(this, VERTICAL_MARGIN) { NavigationTerrain(it, opensDoors = true) }
     private val actions = WalkActions(this, this.rotations)
     private val follower = WalkFollower(actions)
     private val flight = FlightNavigator(this, view)
     private val glide = GlideNavigator(this, view)
     private val bounce = RoofBounce(this, view)
-    private val ride = RideNavigator(this, view) { walkSettings.maxLength }
-
-    private val avoid = LongOpenHashSet()
-    private var avoidVersion = 0
-    private var avoidSince = 0
-    private var avoidGoal: Vec3? = null
-
-    private var ticks = 0
-    private var lastRequest = Int.MIN_VALUE / 2
-    private var retryAt = 0
-    private var failed = false
+    private val ride = RideNavigator(this, view) { settings.maxLength }
+    private val stuckSpots = StuckSpots()
 
     /**
-     * Searches in a row that found nothing for the same goal.
+     * Searches in a row that found nothing; each widens the next one.
      */
     private var failures = 0
     private var stuck = false
@@ -121,26 +110,15 @@ class WalkNavigator(
     private var settledAt: Int? = null
 
     /**
-     * The goal the followed path was searched for, and the goal of the running search.
+     * Whether the goal is reached by walking straight on, as of the last tick on the ground.
      */
-    private var pathGoal: Vec3? = null
-    private var requestedGoal: Vec3? = null
-
-    /**
-     * The goal of the running search when it looks for a stage on the way to a goal beyond its range, and whether
-     * the followed path ends at such a stage.
-     */
-    private var requestedStage: NearGoal? = null
-    private var followsStage = false
-
     private var straight = false
-    private var direct = false
-    private var directGoal: Vec3? = null
+    private var straightGoal: Vec3? = null
     private var steeringTarget: Vec3? = null
     private var sprintWanted = false
 
     /**
-     * The yaw the walk or an action looked at last, held while there is nothing far enough to look at.
+     * Held while there is nothing far enough to look at.
      */
     private var lastLookYaw = Float.NaN
 
@@ -151,23 +129,20 @@ class WalkNavigator(
         get() = actions.isActive
 
     /**
-     * Where the walk heads: the aim at a block being mined, placed or opened, else the way to the next point, pitched
-     * towards it under water, else the direction of the movement input.
+     * Where the walk heads: the aim of a block action, else the way to the next point, else the movement input.
      */
     fun movementRotation(): Rotation {
         actions.rotation?.let { return it }
 
-        val target = steeringTarget ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
-        val yaw = lookYaw(target).takeUnless { it.isNaN() }
-            ?: return Rotation(player.getMovementDirectionOfInput(), 0f)
+        val target = steeringTarget
+        val yaw = target?.let(::lookYaw)
+        if (target == null || yaw == null || yaw.isNaN()) {
+            return Rotation(player.getMovementDirectionOfInput(), 0f)
+        }
         return Rotation(yaw, if (follower.dive) divePitch(target) else 0f)
     }
 
-    /**
-     * Turns the head the way the walk goes, so the keys press forward under movement correction and the player can
-     * sprint; under water also up or down, so the swimming pose swims there. Mining and placing aim themselves, and
-     * any other feature that rotates takes over. While the next path is worked out, the head stays where it looked.
-     */
+    // Looking the way the walk goes lets the keys press forward under movement correction, so the player can sprint.
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         actions.rotation?.let { aim ->
@@ -190,10 +165,9 @@ class WalkNavigator(
     }
 
     /**
-     * The yaw to look at while heading for [target]. Close to it, the way there turns around with every bit the
-     * player passes it by, so the path further on is looked at, or else the last look held. Along a stretch that is
-     * mined or built, the player keeps facing the way the last block was aimed at, forwards or backwards, as when
-     * bridging backwards. NaN with nothing to look at yet.
+     * The yaw to look at on the way to [target], NaN with nothing to look at yet. A target closer than
+     * [LOOK_DISTANCE] turns around as the player passes it, so the path beyond is looked at or the last look held.
+     * While building, the player keeps facing the way of the last aim, as when bridging backwards.
      */
     private fun lookYaw(target: Vec3): Float {
         val position = player.position()
@@ -206,6 +180,7 @@ class WalkNavigator(
         return if (backwards) Mth.wrapDegrees(yaw + 2 * QUARTER_TURN) else yaw
     }
 
+    // Swimming under water heads where the player looks.
     private fun divePitch(target: Vec3) = Rotation.fromRotationVec(target.subtract(player.position())).pitch
 
     @Suppress("unused")
@@ -227,21 +202,13 @@ class WalkNavigator(
     override fun parent() = owner
 
     /**
-     * Stops walking and forgets where it got stuck; for when the owner is turned off.
-     */
-    fun reset() {
-        halt()
-        avoid.clear()
-    }
-
-    /**
      * Moves one tick towards [goal], within [radius]; true if the movement is a plain walk other features may add
      * to. Call from a [MovementInputEvent] handler at [CRITICAL_MODIFICATION].
      */
     fun navigate(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
-        ticks++
+        routes.tick()
+        stuckSpots.tick(goal)
         val position = player.position()
-        updateAvoid(goal)
 
         if (player.rootVehicle.position().distanceToSqr(goal) <= Mth.square(radius)) {
             stop(event)
@@ -252,9 +219,8 @@ class WalkNavigator(
 
         if (player.onGround()) {
             // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
-            straight = position.distanceToSqr(goal) <= Mth.square(walkSettings.maxLength) &&
-                isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, walkSettings.safeFall)
-            direct = straight
+            straight = position.distanceToSqr(goal) <= Mth.square(settings.maxLength) &&
+                isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, settings.safeFall)
         }
 
         if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
@@ -263,19 +229,19 @@ class WalkNavigator(
             return false
         }
 
-        if (direct) {
-            steerDirectly(event, goal)
+        if (straight) {
+            walkStraight(event, goal)
             return true
         }
 
-        directGoal = null
-        collectResult(position)
+        straightGoal = null
+        collectRoute(position)
 
         val path = follower.path
         val plainWalk = if (path != null && !follower.isFinished) {
-            followPath(event)
+            followPath(event, path)
         } else {
-            fallback(event, goal, radius, path)
+            fallback(event, goal, radius)
         }
 
         planIfNeeded(goal, radius, position)
@@ -283,23 +249,36 @@ class WalkNavigator(
     }
 
     /**
-     * Drives the vehicle the player rides, or gets off it; false when the player rides nothing.
+     * Stops walking, riding, flying and gliding until the next [navigate]; for ticks without a goal.
      */
+    fun halt() {
+        ride.halt()
+        haltFlying()
+        stopWalking()
+    }
+
+    /**
+     * Stops and forgets where it got stuck; for when the owner is turned off.
+     */
+    fun reset() {
+        halt()
+        stuckSpots.clear()
+    }
+
     private fun rideVehicle(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         if (!ride.navigate(event, goal, radius)) {
             return false
         }
 
-        standBy()
+        // The ride shows its own route.
+        haltFlying()
+        resetWalk()
         return true
     }
 
-    /**
-     * Flies this tick when the player can; false to walk. Goals a plain walk reaches are walked to unless the player
-     * flies already.
-     */
     private fun fly(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
-        val abilities = walkSettings.captureFlight()?.takeUnless { direct && !it.isFlying }
+        // Goals a straight walk reaches are walked to unless the player flies already.
+        val abilities = settings.captureFlight()?.takeUnless { straight && !it.isFlying }
         if (abilities == null) {
             flight.halt()
             return false
@@ -311,18 +290,15 @@ class WalkNavigator(
             stopWalking()
         }
 
-        flight.navigate(event, goal, radius, walkSettings.maxLength, abilities, frameYaw())
+        flight.navigate(event, goal, radius, settings.maxLength, abilities, frameYaw())
         steeringTarget = flight.target
         sprintWanted = flight.sprint
         return true
     }
 
-    /**
-     * Glides this tick when an elytra glide is under way or was just found; false to walk.
-     */
     private fun glide(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         val wasGliding = glide.isActive
-        if (!glide.navigate(event, goal, radius, walkSettings.captureGlide(), direct, frameYaw())) {
+        if (!glide.navigate(event, goal, radius, settings.captureGlide(), straight, frameYaw())) {
             return false
         }
 
@@ -334,12 +310,9 @@ class WalkNavigator(
         return true
     }
 
-    /**
-     * Bounces along a flat floor with an elytra and ElytraRecast while that is faster; false to walk.
-     */
     private fun bounce(event: MovementInputEvent, goal: Vec3): Boolean {
         val wasBouncing = bounce.isActive
-        if (!bounce.navigate(event, goal, walkSettings.captureGlide(), frameYaw())) {
+        if (!bounce.navigate(event, goal, settings.captureGlide(), frameYaw())) {
             return false
         }
 
@@ -351,33 +324,24 @@ class WalkNavigator(
         return true
     }
 
-    private fun steerDirectly(event: MovementInputEvent, goal: Vec3) {
-        planner.cancel()
+    private fun walkStraight(event: MovementInputEvent, goal: Vec3) {
+        routes.reset()
         follower.clear()
         actions.idle()
-        pathGoal = null
-        requestedGoal = null
-        failed = false
         stuck = false
 
-        directGoal = goal
-        steeringTarget = goal
-        sprintWanted = true
-        event.directionalInput = steer(goal.subtract(player.position()), frameYaw())
-        event.jump = player.isInWater
-        event.sneak = false
+        straightGoal = goal
+        walkTowards(event, goal, sprint = true)
 
         view.breaks = emptyList()
         view.places = emptyList()
-        view.active(listOf(player.position(), goal), directProgress)
+        view.active(listOf(player.position(), goal), straightProgress)
     }
 
-    private fun followPath(event: MovementInputEvent): Boolean {
-        val path = follower.path ?: return false
+    private fun followPath(event: MovementInputEvent, path: WalkPath): Boolean {
         val state = follower.tick(event, frameYaw())
         if (state == FollowState.STUCK) {
-            follower.stuckAt?.let { avoid.add(it.asLong()) }
-            avoidVersion++
+            follower.stuckAt?.let(stuckSpots::add)
             stuck = true
         }
 
@@ -391,39 +355,28 @@ class WalkNavigator(
     }
 
     /**
-     * Without a path to walk: straight towards the goal if nothing is in the way, else the rest of the way within
-     * the block the player stands in, else on towards the goal while the first path is searched and the next blocks
-     * are plain ground, else standing still.
+     * Without a path to walk: the rest of the way within the block the player stands in, else on towards the goal
+     * over plain ground while the first path is searched, else standing still.
      */
-    private fun fallback(event: MovementInputEvent, goal: Vec3, radius: Double, path: WalkPath?): Boolean {
+    private fun fallback(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         actions.idle()
 
-        val searching = !planner.isIdle
-        val target = when {
-            (failed || path == null) && straight -> goal
-            else -> finalApproach(goal, radius) ?: goal.takeIf { searching && !failed && hasHeadway(it) }
-        }
+        val searching = routes.isSearching
+        val target = finalApproach(goal, radius) ?: goal.takeIf { searching && !routes.failed && hasHeadway(it) }
         if (target != null) {
-            steeringTarget = target
-            sprintWanted = target === goal
-            event.directionalInput = steer(target.subtract(player.position()), frameYaw())
-            event.jump = player.isInWater
-            event.sneak = false
+            walkTowards(event, target, sprint = target === goal)
         } else {
             stop(event)
         }
 
         when {
-            failed -> view.invalid()
-            searching -> view.pending(player.position(), goal, planner.preview)
+            routes.failed -> view.invalid()
+            searching -> view.pending(player.position(), goal, routes.preview)
             else -> view.done()
         }
         return false
     }
 
-    /**
-     * Whether the next [HEADWAY] blocks towards [goal] can be walked straight on.
-     */
     private fun hasHeadway(goal: Vec3): Boolean {
         if (!player.onGround()) {
             return false
@@ -438,17 +391,17 @@ class WalkNavigator(
 
         val ahead = position.fma(min(HEADWAY, length) / length, delta)
         val terrain = NavigationTerrain(LiveWorld(world))
-        return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, walkSettings.safeFall)
+        return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, settings.safeFall)
     }
 
     /**
      * The point of the block the player stands in closest to [goal], if that block is close enough to it. Searches
-     * measure from block centres, so they end in such a block before the player itself is close enough.
+     * measure from block centers, so they end in such a block before the player itself is close enough.
      */
     private fun finalApproach(goal: Vec3, radius: Double): Vec3? {
         val position = player.position()
         val feet = BlockPos.containing(position)
-        if (!NearGoal(goal, radius).isGoal(feet.x, feet.y, feet.z)) {
+        if (!NearGoal(goal, radius).isGoal(feet)) {
             return null
         }
 
@@ -460,28 +413,19 @@ class WalkNavigator(
         )
     }
 
-    private fun collectResult(position: Vec3) {
-        when (val result = planner.poll()) {
+    private fun collectRoute(position: Vec3) {
+        when (val result = routes.poll()) {
             RouteResult.Searching -> Unit
 
             RouteResult.AlreadyThere -> {
-                planner.cancel()
                 follower.clear()
-                pathGoal = requestedGoal
-                failed = false
-                settle()
+                settledAt = routes.ticks
             }
 
-            is RouteResult.Found -> {
-                planner.cancel()
-                accept(result.value, position)
-            }
+            is RouteResult.Found -> accept(result.value, position)
 
             is RouteResult.Failed -> {
-                planner.cancel()
-                failed = true
                 failures++
-                retryAt = ticks + RETRY_TICKS
                 if (follower.isFinished) {
                     follower.clear()
                 }
@@ -490,32 +434,21 @@ class WalkNavigator(
     }
 
     private fun accept(path: WalkPath, position: Vec3) {
-        failed = false
         failures = 0
         stuck = false
         if (path.steps.isEmpty()) {
             // Nothing closer to the goal can be reached from here.
             follower.clear()
-            pathGoal = requestedGoal
-            settle()
+            settledAt = routes.ticks
             return
         }
 
-        val startIndex = joinIndex(path, position)
-        if (startIndex == null) {
-            // The player moved on while searching; the next search starts where the player is now.
-            pathGoal = null
-            return
-        }
+        // The player moved on while searching; the next search starts where the player is now.
+        val startIndex = joinIndex(path, position) ?: return routes.forget()
 
-        followsStage = requestedStage.let { it != null && !it.isGoal(path.steps.last().to) }
-        pathGoal = requestedGoal
+        routes.routeEnds(path.steps.last().to)
         settledAt = null
         follower.follow(path, startIndex)
-    }
-
-    private fun settle() {
-        settledAt = ticks
     }
 
     /**
@@ -543,45 +476,26 @@ class WalkNavigator(
         val leftPath = offPath && !wasOffPath
         wasOffPath = offPath
 
-        val goalMoved = pathGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }
         val finishedShort = path != null && follower.isFinished
-        val nearStage = path != null && followsStage && position.horizontalDistanceTo(path.end) < STAGE_LEAD
-        val urgent = stuck || leftPath
+        val nearStage = path != null && routes.endsAtStage &&
+            position.horizontalDistanceTo(path.end) < GoalRouter.STAGE_LEAD
+        val settled = settledAt.let { it != null && routes.ticks - it < SETTLE_TICKS }
 
-        val settled = settledAt.let { it != null && ticks - it < SETTLE_TICKS }
-        val needed = (path == null && !settled) || goalMoved || offPath || finishedShort || stuck || nearStage
-        if (!needed || ticks < retryAt) {
-            return
+        val needed = (path == null && !settled) || routes.hasGoalMoved(goal) || offPath || finishedShort || stuck ||
+            nearStage
+        if (needed && routes.isDue(urgent = stuck || leftPath)) {
+            request(goal, radius, position)
+            stuck = false
         }
-
-        val searching = !planner.isIdle
-        if (!urgent && (searching || ticks - lastRequest < REPLAN_INTERVAL)) {
-            return
-        }
-
-        request(goal, radius, position)
-        stuck = false
     }
 
-    /**
-     * Searches a path to [goal], or, when it is out of range or not loaded, to the next stage on the way to it.
-     */
     private fun request(goal: Vec3, radius: Double, start: Vec3) {
-        val nearGoal = NearGoal(goal, radius)
-        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
+        if (routes.isNewGoal(goal)) {
             failures = 0
         }
         // After searches that found nothing, the next ones look further around for a detour.
-        val maxLength = walkSettings.maxLength * (1 shl min(failures, MAX_WIDENING))
-        // A stage with its detours stays within the path range.
-        val stageRange = maxLength / 2.0
-        val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
-        val region = if (staged) {
-            StageGoal.region(start, stageRange, VERTICAL_MARGIN)
-        } else {
-            nearGoal.region(start, maxLength, VERTICAL_MARGIN)
-        }
-        val abilities = walkSettings.capture(avoid)
+        val maxLength = settings.maxLength * (1 shl min(failures, MAX_WIDENING))
+        val abilities = settings.capture(stuckSpots.blocks)
         // Every jump considered is simulated, which makes routes with them slower to work out.
         val limits = if (abilities.canParkour) {
             RouteLimits(maxLength, maxExpansions = PARKOUR_EXPANSIONS, maxComputeNanos = PARKOUR_COMPUTE_NANOS)
@@ -589,37 +503,12 @@ class WalkNavigator(
             RouteLimits(maxLength)
         }
 
-        val key = SearchKey(BlockPos.containing(start), nearGoal, avoidVersion, staged)
-        planner.request(key, region) { terrain ->
-            val searchGoal = if (staged) StageGoal(nearGoal, start, stageRange, terrain) else nearGoal
+        routes.request(start, NearGoal(goal, radius), maxLength, stuckSpots.version) { terrain, searchGoal ->
             WalkRouteSearch(terrain, start, searchGoal, abilities, limits)
         }
 
-        if (requestedGoal.let { it == null || it.distanceToSqr(goal) > GOAL_MOVED * GOAL_MOVED }) {
-            failed = false
-        }
-        requestedGoal = goal
-        requestedStage = nearGoal.takeIf { staged }
-        lastRequest = ticks
-        if (follower.path == null && !failed) {
+        if (follower.path == null && !routes.failed) {
             view.pending(start, goal)
-        }
-    }
-
-    private fun updateAvoid(goal: Vec3) {
-        if (avoid.isEmpty()) {
-            avoidGoal = goal
-            avoidSince = ticks
-            return
-        }
-
-        val avoidGoal = avoidGoal
-        val goalChanged = avoidGoal == null || avoidGoal.distanceToSqr(goal) > AVOID_GOAL_CHANGE * AVOID_GOAL_CHANGE
-        if (goalChanged || ticks - avoidSince > AVOID_TICKS) {
-            avoid.clear()
-            avoidVersion++
-            this.avoidGoal = goal
-            avoidSince = ticks
         }
     }
 
@@ -632,6 +521,14 @@ class WalkNavigator(
         return if (strict && RotationManager.currentRotation != null) RotationManager.movementYaw else player.yRot
     }
 
+    private fun walkTowards(event: MovementInputEvent, target: Vec3, sprint: Boolean) {
+        steeringTarget = target
+        sprintWanted = sprint
+        event.directionalInput = steer(target.subtract(player.position()), frameYaw())
+        event.jump = player.isInWater
+        event.sneak = false
+    }
+
     private fun stop(event: MovementInputEvent) {
         actions.idle()
         steeringTarget = null
@@ -641,72 +538,41 @@ class WalkNavigator(
         event.sneak = false
     }
 
-    /**
-     * Drops walking, flying and gliding while the player rides, keeping the route the ride shows.
-     */
-    private fun standBy() {
+    private fun haltFlying() {
         flight.halt()
         glide.halt()
         bounce.halt()
-        planner.cancel()
-        follower.clear()
-        actions.idle()
-        pathGoal = null
-        requestedGoal = null
-        requestedStage = null
-        followsStage = false
-        directGoal = null
-        steeringTarget = null
-        lastLookYaw = Float.NaN
-        sprintWanted = false
-        straight = false
-        direct = false
-    }
-
-    /**
-     * Stops walking, riding, flying and gliding until the next [navigate]; for ticks without a goal.
-     */
-    fun halt() {
-        ride.halt()
-        flight.halt()
-        glide.halt()
-        bounce.halt()
-        stopWalking()
     }
 
     private fun stopWalking() {
-        planner.cancel()
+        resetWalk()
+        view.clear()
+    }
+
+    private fun resetWalk() {
+        routes.reset()
         follower.clear()
         actions.idle()
-        view.clear()
-        pathGoal = null
-        requestedGoal = null
-        requestedStage = null
-        followsStage = false
-        directGoal = null
-        steeringTarget = null
-        lastLookYaw = Float.NaN
-        sprintWanted = false
-        straight = false
-        direct = false
-        failed = false
         failures = 0
         stuck = false
         wasOffPath = false
         settledAt = null
+        straight = false
+        straightGoal = null
+        steeringTarget = null
+        sprintWanted = false
+        lastLookYaw = Float.NaN
     }
 
-    private val directProgress = object : RouteProgress {
+    private val straightProgress = object : RouteProgress {
         override val isMoving: Boolean
-            get() = directGoal != null
+            get() = straightGoal != null
 
         override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
 
         override val ahead: List<Vec3>
-            get() = listOfNotNull(directGoal)
+            get() = listOfNotNull(straightGoal)
     }
-
-    private data class SearchKey(val start: BlockPos, val goal: NearGoal, val avoidVersion: Int, val staged: Boolean)
 
     private companion object {
         /**
@@ -715,25 +581,60 @@ class WalkNavigator(
         const val LOOK_DISTANCE = 0.75
         const val QUARTER_TURN = 90f
         const val VERTICAL_MARGIN = 16
-        const val GOAL_MOVED = 1.5
-        const val REPLAN_INTERVAL = 5
-        const val RETRY_TICKS = 20
         const val SETTLE_TICKS = 100
         const val JOIN_POINTS = 8
         const val JOIN_DISTANCE = 1.0
         const val HEADWAY = 2.0
         const val MIN_HEADWAY = 0.5
         const val HEADWAY_TOLERANCE = 0.75
-        const val AVOID_GOAL_CHANGE = 8.0
-        const val AVOID_TICKS = 600
-
-        /**
-         * Blocks before the end of a stage at which the next stage is searched, so the walk goes on without a stop.
-         */
-        const val STAGE_LEAD = 12.0
         const val PARKOUR_EXPANSIONS = 40_000
         const val MAX_WIDENING = 2
         val PARKOUR_COMPUTE_NANOS = TimeUnit.SECONDS.toNanos(2)
+    }
+
+}
+
+/**
+ * Feet blocks the walk got stuck at, which the next searches avoid. Forgotten after [FORGET_TICKS] or when the goal
+ * changes.
+ */
+private class StuckSpots {
+
+    val blocks = LongOpenHashSet()
+
+    /**
+     * Changes with [blocks], so a search for the set before is not kept.
+     */
+    var version = 0
+        private set
+
+    private var goal: Vec3? = null
+    private var age = 0
+
+    fun add(pos: BlockPos) {
+        blocks.add(pos.asLong())
+        version++
+    }
+
+    fun clear() = blocks.clear()
+
+    fun tick(goal: Vec3) {
+        val outdated = blocks.isNotEmpty() &&
+            (++age > FORGET_TICKS || this.goal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_CHANGE) })
+        if (outdated) {
+            blocks.clear()
+            version++
+        }
+
+        if (blocks.isEmpty()) {
+            this.goal = goal
+            age = 0
+        }
+    }
+
+    private companion object {
+        const val GOAL_CHANGE = 8.0
+        const val FORGET_TICKS = 600
     }
 
 }

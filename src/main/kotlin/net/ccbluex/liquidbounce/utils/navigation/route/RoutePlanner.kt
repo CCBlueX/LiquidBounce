@@ -37,30 +37,20 @@ import net.minecraft.world.phys.Vec3
 import java.util.concurrent.CompletableFuture
 
 /**
- * Runs route searches for one owner off the game thread, one slice per [poll]. Each search reads a copy of its
- * region, so the world can change while it runs; a change only restarts the search when the search had looked
- * at the changed block. The copy is read through the terrain [newTerrain] makes.
+ * Runs one route search at a time off the game thread, a slice per [poll]. The search reads a copy of its region
+ * through the terrain [newTerrain] makes, and starts over when a block it looked at changes.
  */
 class RoutePlanner<T>(
     private val owner: EventListener,
     private val newTerrain: (NavigationWorld) -> NavigationTerrain = ::NavigationTerrain,
 ) : EventListener {
 
-    private var key: Any? = null
-    private var region: NavigationRegion? = null
-    private var factory: RouteSearchFactory<T>? = null
-    private var terrain: NavigationTerrain? = null
-    private var search: RouteSearch<T>? = null
-    private var slice: CompletableFuture<RouteResult<T>>? = null
-    private var result: RouteResult<T> = RouteResult.Searching
-
+    private var job: Job<T>? = null
     private val changes = ArrayList<BlockPos>()
-    private var polls = 0
-    private var startedAt = 0
     private var changesOverflowed = false
 
     val isIdle: Boolean
-        get() = search == null
+        get() = job == null
 
     /**
      * The best route of the running search so far, see [RouteSearch.preview].
@@ -72,96 +62,70 @@ class RoutePlanner<T>(
      * Searches with [factory] over [region], unless a search for an equal [key] is running or done.
      */
     fun request(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>) {
-        if (search != null && key == this.key) {
+        if (job?.key == key) {
             return
         }
 
         cancel()
-        this.key = key
-        this.region = region
-        this.factory = factory
-        start()
+        job = start(key, region, factory)
     }
 
     /**
      * Collects the last slice and starts the next one. Call once per tick from the game thread.
      */
     fun poll(): RouteResult<T> {
-        if (search == null) {
-            return RouteResult.Searching
-        }
-        polls++
+        var job = job ?: return RouteResult.Searching
+        job.polls++
 
-        slice?.let { running ->
-            if (!running.isDone) {
+        job.slice?.let { slice ->
+            if (!slice.isDone) {
                 return RouteResult.Searching
             }
-            result = running.join()
-            slice = null
-            if (result == RouteResult.Searching) {
-                search?.preview()?.let { preview = it }
+            job.result = slice.join()
+            job.slice = null
+            if (job.result == RouteResult.Searching) {
+                job.search.preview()?.let { preview = it }
             }
         }
 
-        // Blocks that change all the time, like a command block running every tick, would otherwise restart the
-        // search before it ever gets anywhere.
-        if (polls - startedAt >= MIN_SEARCH_POLLS && applyChanges()) {
-            start()
+        // Blocks changing all the time, like a command block running every tick, would restart the search forever.
+        if (job.polls >= MIN_SEARCH_POLLS && applyChanges(job.terrain)) {
+            job = start(job.key, job.region, job.factory) ?: run {
+                cancel()
+                return RouteResult.Searching
+            }
+            this.job = job
         }
 
-        val search = search ?: return RouteResult.Searching
-        if (result == RouteResult.Searching) {
-            slice = CompletableFuture.supplyAsync(search::advance, Dispatchers.Default.asExecutor())
+        if (job.result == RouteResult.Searching) {
+            job.slice = CompletableFuture.supplyAsync(job.search::advance, Dispatchers.Default.asExecutor())
                 .exceptionally { throwable ->
                     logger.error("Route search failed", throwable)
                     RouteResult.Failed(RouteFailure.NO_PATH)
                 }
         }
-        return result
+        return job.result
     }
 
     fun cancel() {
-        slice?.cancel(false)
-        slice = null
-        search = null
-        terrain = null
-        key = null
-        region = null
-        factory = null
-        result = RouteResult.Searching
+        job?.slice?.cancel(false)
+        job = null
         preview = null
         changes.clear()
         changesOverflowed = false
     }
 
-    private fun start() {
-        val level = mc.level
-        val region = region
-        val factory = factory
-        if (level == null || region == null || factory == null) {
-            cancel()
-            return
-        }
-
+    private fun start(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>): Job<T>? {
+        val level = mc.level ?: return null
         val terrain = newTerrain(SectionCache.capture(level, region))
-        this.terrain = terrain
-        search = factory.create(terrain)
-        startedAt = polls
-        result = RouteResult.Searching
-        slice = null
-        changes.clear()
-        changesOverflowed = false
+        return Job(key, region, factory, terrain, factory.create(terrain))
     }
 
     /**
-     * True if a changed block was part of the search and changed how it is moved through.
+     * Whether a recorded change alters how a block the search looked at is moved through.
      */
-    private fun applyChanges(): Boolean {
-        val terrain = terrain ?: return false
+    private fun applyChanges(terrain: NavigationTerrain): Boolean {
         val level = mc.level ?: return false
-        if (changes.isEmpty() && !changesOverflowed) {
-            return false
-        }
 
         var affected = changesOverflowed
         for (pos in changes) {
@@ -173,9 +137,8 @@ class RoutePlanner<T>(
     }
 
     private fun recordChange(pos: BlockPos) {
-        val region = region ?: return
-        if (changesOverflowed || pos.x !in region.minX..region.maxX || pos.y !in region.minY..region.maxY ||
-            pos.z !in region.minZ..region.maxZ) {
+        val region = job?.region ?: return
+        if (changesOverflowed || pos !in region) {
             return
         }
 
@@ -203,6 +166,18 @@ class RoutePlanner<T>(
     }
 
     override fun parent() = owner
+
+    private class Job<T>(
+        val key: Any,
+        val region: NavigationRegion,
+        val factory: RouteSearchFactory<T>,
+        val terrain: NavigationTerrain,
+        val search: RouteSearch<T>,
+    ) {
+        var slice: CompletableFuture<RouteResult<T>>? = null
+        var result: RouteResult<T> = RouteResult.Searching
+        var polls = 0
+    }
 
     private companion object {
         const val MAX_PENDING_CHANGES = 1024

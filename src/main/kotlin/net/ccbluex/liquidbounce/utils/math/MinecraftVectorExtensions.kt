@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.math
 
 import it.unimi.dsi.fastutil.longs.LongComparator
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
 import net.minecraft.core.SectionPos
@@ -202,6 +203,11 @@ fun Vec3.horizontalDistanceToSqr(other: Vec3i): Double = horizontalDistanceToSqr
 fun Vec3.horizontalDistanceToSqr(other: Vec3): Double = horizontalDistanceToSqr(other.x, other.z)
 
 fun Vec3.horizontalDistanceToSqr(x: Double, z: Double): Double = Mth.lengthSquared(this.x - x, this.z - z)
+
+fun Vec3.distanceToSegment(from: Vec3, to: Vec3): Double {
+    val nearest = if (to.subtract(from).isLikelyZero) from else LineSegment(from, to).getNearestPointTo(this)
+    return distanceTo(nearest)
+}
 
 fun Position.distanceToCenterSqr(blockPos: Long): Double {
     val dx = this.x() - BlockPos.getX(blockPos) - 0.5
