@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -53,7 +52,6 @@ import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -220,7 +218,7 @@ class WalkNavigator(
         if (player.onGround()) {
             // Goals beyond the path range are walked to in stages; a straight walk there is never checked in full.
             straight = position.distanceToSqr(goal) <= Mth.square(settings.maxLength) &&
-                isStraightWalkable(NavigationTerrain(LiveWorld(world)), position, goal, radius, settings.safeFall)
+                isStraightWalkable(NavigationTerrain.live(), position, goal, radius, settings.safeFall)
         }
 
         if (rideVehicle(event, goal, radius) || fly(event, goal, radius) || glide(event, goal, radius) ||
@@ -390,7 +388,7 @@ class WalkNavigator(
         }
 
         val ahead = position.fma(min(HEADWAY, length) / length, delta)
-        val terrain = NavigationTerrain(LiveWorld(world))
+        val terrain = NavigationTerrain.live()
         return isStraightWalkable(terrain, position, ahead, HEADWAY_TOLERANCE, settings.safeFall)
     }
 

@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.navigation.ride
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
@@ -33,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -160,7 +158,7 @@ class RideNavigator(
      * The farthest of the next points the vehicle reaches in a straight line without a jump.
      */
     private fun straightAhead(position: Vec3, body: RideBody, path: RidePath): Vec3 {
-        val moves = RideMoves(NavigationTerrain(LiveWorld(world)), body)
+        val moves = RideMoves(NavigationTerrain.live(), body)
         var target = path.points[index].position
         for (i in index + 1 until min(path.points.size, index + LOOKAHEAD)) {
             val next = path.points[i]
