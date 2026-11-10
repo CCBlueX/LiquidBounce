@@ -34,7 +34,7 @@ internal class WalkWater(private val terrain: NavigationTerrain, private val can
     fun isSubmerged(x: Int, y: Int, z: Int) = terrain.isWater(x, y + 1, z) || !terrain.isPassable(x, y + 1, z)
 
     companion object {
-        const val SWIMMING_HEIGHT = SWIMMING_BB_HEIGHT.toDouble()
+        private const val SWIMMING_HEIGHT = SWIMMING_BB_HEIGHT.toDouble()
         const val MAX_AIR = TOTAL_AIR_SUPPLY
         private const val AIR_MARGIN = 2
 
