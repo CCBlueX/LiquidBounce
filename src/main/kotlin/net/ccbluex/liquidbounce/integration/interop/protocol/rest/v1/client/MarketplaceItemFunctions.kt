@@ -182,12 +182,12 @@ private fun Route.getInstalled() = get("/installed") {
 /**
  * Opens a link of the item's description in the system browser. Any other URL is refused.
  */
-private fun Route.postBrowse() = post("/browse") {
-    data class BrowseRequest(val url: String)
+private fun Route.postOpenLink() = post("/openLink") {
+    data class OpenLinkRequest(val url: String)
 
     call.handleMarketplaceErrors {
         val id = call.requireId()
-        val url = call.receive<BrowseRequest>().url
+        val url = call.receive<OpenLinkRequest>().url
         val uri = runCatching { URI(url) }.getOrNull()?.takeIf { it.host != null }
         if (uri == null || !hasLink(MarketplaceApi.getMarketplaceItem(id, getSessionOrNull()).description, url)) {
             call.forbidden("Not a link of this item")
@@ -207,6 +207,6 @@ internal fun Route.marketplaceItemRoutes() = route("/marketplace/items") {
         postUpdate()
         postRemove()
         postApply()
-        postBrowse()
+        postOpenLink()
     }
 }
