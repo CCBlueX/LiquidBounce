@@ -37,9 +37,9 @@ class RideBody(
     val width: Double,
     /** Room above where the vehicle rests for the vehicle and the eyes of its rider. */
     val height: Double,
-    val step: Double,
+    val stepHeight: Double,
     /** Highest ledge a fully charged jump reaches; 0 when it cannot jump. */
-    val jump: Double,
+    val jumpHeight: Double,
     val safeFall: Int,
     val speed: Double,
     val iceSpeed: Double = speed,
@@ -67,8 +67,8 @@ class RideBody(
                     kind = RideKind.BOAT,
                     width = vehicle.bbWidth.toDouble(),
                     height = height,
-                    step = 0.0,
-                    jump = 0.0,
+                    stepHeight = 0.0,
+                    jumpHeight = 0.0,
                     safeFall = BOAT_SAFE_FALL,
                     speed = BOAT_WATER_SPEED,
                     iceSpeed = BOAT_ICE_SPEED,
@@ -78,8 +78,8 @@ class RideBody(
                     kind = RideKind.MOUNT,
                     width = vehicle.bbWidth.toDouble(),
                     height = height,
-                    step = vehicle.maxUpStep().toDouble(),
-                    jump = jumpHeight(vehicle),
+                    stepHeight = vehicle.maxUpStep().toDouble(),
+                    jumpHeight = jumpHeightOf(vehicle),
                     safeFall = vehicle.getAttributeValue(Attributes.SAFE_FALL_DISTANCE).toInt() - 1,
                     speed = vehicle.getAttributeValue(Attributes.MOVEMENT_SPEED) * GROUND_SPEED_FACTOR,
                 )
@@ -88,7 +88,7 @@ class RideBody(
             }
         }
 
-        private fun jumpHeight(mount: AbstractHorse): Double {
+        private fun jumpHeightOf(mount: AbstractHorse): Double {
             if (mount is Camel || !mount.canJump()) {
                 return 0.0
             }

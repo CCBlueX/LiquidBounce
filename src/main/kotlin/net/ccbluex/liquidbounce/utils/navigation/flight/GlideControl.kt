@@ -181,7 +181,7 @@ class GlideControl(
         for (pitch in PITCHES) {
             val touchdown = predict(position, velocity, bearing, pitch) ?: continue
             val along = (touchdown.x - target.x) * unitX + (touchdown.z - target.z) * unitZ
-            var error = abs(along + SHORT_OF_GOAL)
+            var error = abs(along + SHORT_OF_TARGET)
             if (touchdown.y < SAFE_SINK) {
                 error += UNSAFE_PENALTY
             }
@@ -238,7 +238,7 @@ class GlideControl(
         private val PITCHES = floatArrayOf(-45f, -35f, -25f, -15f, -10f, -5f, 0f, 5f, 10f, 20f)
         private const val HORIZON_TICKS = 400
         private const val MIN_DISTANCE = 1.0E-6
-        private const val SHORT_OF_GOAL = 1.0
+        private const val SHORT_OF_TARGET = 1.0
         private const val UNSAFE_PENALTY = 100.0
         private const val LANDING_TOLERANCE = 3.0
         private const val ORBIT_TURN = 90f

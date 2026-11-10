@@ -43,7 +43,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
     class Spot(val position: Vec3, val speed: Double)
 
     private val halfWidth = body.width / 2.0
-    private val maxRise = max(body.step, body.jump)
+    private val maxRise = max(body.stepHeight, body.jumpHeight)
     private val spots = Long2ObjectOpenHashMap<Spot>()
 
     fun spot(node: BlockPos) = spot(node.x, node.y, node.z)
@@ -60,7 +60,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
         return spot
     }
 
-    fun isJump(from: Spot, to: Spot) = to.position.y - from.position.y > body.step + EPSILON
+    fun isJump(from: Spot, to: Spot) = to.position.y - from.position.y > body.stepHeight + EPSILON
 
     /** The moves from [node] onto the eight columns around it, with the ticks each takes. */
     fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
@@ -94,7 +94,7 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
             }
 
             val rise = to.position.y - from.position.y
-            if (rise <= body.step + EPSILON && -rise <= body.safeFall + EPSILON &&
+            if (rise <= body.stepHeight + EPSILON && -rise <= body.safeFall + EPSILON &&
                 passes(from.position, to.position)) {
                 edges += WeightedEdge(BlockPos(x, y + dy, z), cost(from, to))
             }
@@ -183,11 +183,11 @@ internal class RideMoves(private val terrain: NavigationTerrain, private val bod
         val half = from.position.horizontalDistanceTo(to.position) / 2.0
         var ticks = half / from.speed + half / to.speed
         if (isJump(from, to)) {
-            ticks += RideBody.JUMP_CHARGE_TICKS + WalkCosts.fall(Mth.ceil(body.jump))
+            ticks += RideBody.JUMP_CHARGE_TICKS + WalkCosts.fall(Mth.ceil(body.jumpHeight))
         }
 
         val drop = from.position.y - to.position.y
-        if (drop > body.step) {
+        if (drop > body.stepHeight) {
             ticks += WalkCosts.fall(Mth.ceil(drop))
         }
         return ticks
