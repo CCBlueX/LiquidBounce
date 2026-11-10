@@ -115,25 +115,16 @@ private fun Route.getWindowInfo() = get("/window") {
     })
 }
 
-// POST /api/v1/client/browse
-// A named target, or an http(s) link such as one in a marketplace description
-private fun Route.postBrowse() = post("/browse") {
+// POST /api/v1/client/openLink
+private fun Route.postOpenLink() = post("/openLink") {
     val jsonObj = call.receive<JsonObject>()
-    val link = jsonObj["url"]?.asString
-    val url = if (link != null) {
-        runCatching { URI(link) }.getOrNull()
-            ?.takeIf { it.host != null && it.scheme?.lowercase() in WEB_SCHEMES }
-            ?: call.badRequest("Not an http or https link")
-    } else {
-        val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
-        POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
-    }
+    val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
+
+    val url = POSSIBLE_URL_TARGETS[target] ?: call.forbidden("Unknown target")
 
     Blaze3D.openUri(url)
     call.respond(io.ktor.http.HttpStatusCode.NoContent)
 }
-
-private val WEB_SCHEMES = setOf("http", "https")
 
 // POST /api/v1/client/browsePath
 @Suppress("ReturnCount")
@@ -190,7 +181,7 @@ internal fun Route.clientRoutes() {
     postExit()
     putHudEditorState()
     getWindowInfo()
-    postBrowse()
+    postOpenLink()
     postBrowsePath()
     postFileDialog()
 }
