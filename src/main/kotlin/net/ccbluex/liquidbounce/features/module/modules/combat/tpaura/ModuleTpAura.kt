@@ -85,14 +85,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         STAY("Stay"),
     }
 
-    private enum class Phase {
-        IDLE,
-        ROUTING,
-        READY,
-        APPROACH,
-        ATTACK,
-        RETURN,
-    }
+    private enum class Phase { IDLE, ROUTING, READY, APPROACH, ATTACK, RETURN }
 
     private class Engagement(val target: LivingEntity) {
         var plan: TeleportPlan? = null
