@@ -48,43 +48,25 @@ import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
- * Glides to goals for a walking navigator while an elytra is worn: plans a glide whenever the goal lies far enough
- * away and below, or rockets can make up for the height, and flies it from the take-off to the touch-down, after
- * which walking takes over again. Goals too far for one glide, or not loaded yet, are cruised to with rockets when
- * there are enough of them.
+ * Glides to goals for a walking navigator while an elytra is worn: plans a glide to goals far enough away and below,
+ * or within reach of rockets, and flies it from take-off to touch-down. Farther goals are cruised to with rockets.
  */
 class GlideNavigator(private val owner: EventListener, private val view: RouteView) : EventListener {
 
     private val planner = RoutePlanner<GlidePath>(this)
-
-    private var path: GlidePath? = null
-    private var cruise: ElytraCruise? = null
-    private var steering: GlideSteering? = null
-    private var goal: Vec3? = null
-
+    private var glide: Glide? = null
     private var ticks = 0
     private var retryAt = 0
-    private var flightTicks = 0
-    private var hasGlided = false
 
-    /**
-     * Whether a glide is under way, from the take-off to the touch-down.
-     */
     val isActive: Boolean
-        get() = path != null || cruise != null
+        get() = glide != null
 
-    /**
-     * Whether the take-off wants to sprint.
-     */
     var sprint = false
         private set
 
     override fun parent() = owner
 
-    /**
-     * Glides one tick towards [goal], within [radius], when a glide is under way or was just found; false to walk
-     * this tick instead. Gliding is planned while the player stands, the goal is not [direct] and [abilities] allow.
-     */
+    /** Glides one tick towards [goal]; false to walk instead. Glides are planned on the ground unless [direct]. */
     fun navigate(
         event: MovementInputEvent,
         goal: Vec3,
@@ -94,86 +76,149 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         frameYaw: Float,
     ): Boolean {
         ticks++
-        if (!isActive) {
-            if (abilities == null) {
-                planner.cancel()
-                return false
-            }
-
-            if (!startCruise(goal, abilities, direct)) {
-                collectResult(goal, abilities)
-            }
-            if (!isActive) {
-                planIfUseful(goal, radius, abilities, direct)
-                return false
-            }
-        }
-
-        return glide(event, frameYaw)
+        val glide = glide ?: start(goal, radius, abilities, direct) ?: return false
+        return fly(event, glide, frameYaw)
     }
 
-    private fun collectResult(goal: Vec3, abilities: GlideAbilities) {
-        when (val result = planner.poll()) {
-            RouteResult.Searching -> Unit
-
-            is RouteResult.Found -> {
-                planner.cancel()
-                val found = result.value
-                // A glide found for where the player stood a moment ago is searched again.
-                if (player.onGround() && player.position().distanceTo(found.start) <= START_TOLERANCE) {
-                    path = found
-                    steering = GlideControl(goal, found.rockets, abilities.rocketTicks, approach = found.approach)
-                    this.goal = goal
-                    flightTicks = 0
-                    hasGlided = false
-                }
-            }
-
-            RouteResult.AlreadyThere, is RouteResult.Failed -> {
-                planner.cancel()
-                retryAt = ticks + RETRY_TICKS
-            }
-        }
+    /** Stops planning and steering; a glide in the air goes on as the game moves it. */
+    fun halt() {
+        planner.cancel()
+        glide = null
+        sprint = false
     }
 
-    /**
-     * Starts a rocket cruise to [goal] when it is too far for one glide or not loaded, the dimension is open above
-     * and the rockets reach; true if it started.
-     */
-    private fun startCruise(goal: Vec3, abilities: GlideAbilities, direct: Boolean): Boolean {
+    private fun start(goal: Vec3, radius: Double, abilities: GlideAbilities?, direct: Boolean): Glide? {
+        if (abilities == null) {
+            planner.cancel()
+            return null
+        }
+
+        glide = cruise(goal, abilities, direct) ?: planned(goal, abilities)
+        if (glide == null) {
+            planIfUseful(goal, radius, abilities, direct)
+        }
+        return glide
+    }
+
+    /** A rocket cruise to a [goal] too far for one glide or not loaded, under an open sky, if the rockets reach. */
+    private fun cruise(goal: Vec3, abilities: GlideAbilities, direct: Boolean): Glide? {
         if (direct || ticks < retryAt || !player.onGround() || world.dimensionType().hasCeiling()) {
-            return false
+            return null
         }
 
         val start = player.position()
         val distance = start.horizontalDistanceTo(goal)
         val loaded = world.hasChunkAt(BlockPos.containing(goal))
         if (distance < MIN_DISTANCE || distance <= MAX_DISTANCE && loaded) {
-            return false
+            return null
         }
 
-        val altitude = ElytraCruise.cruiseAltitude(start, goal, liveHeights)
-        if (abilities.rockets < ElytraCruise.rocketsNeeded(distance, altitude - start.y, abilities.rocketTicks)) {
-            return false
+        val climb = ElytraCruise.cruiseAltitude(start, goal, liveHeights) - start.y
+        if (abilities.rockets < ElytraCruise.rocketsNeeded(distance, climb, abilities.rocketTicks)) {
+            return null
         }
 
         planner.cancel()
-        val cruise = ElytraCruise(goal, liveHeights, abilities.rockets, abilities.rocketTicks, world.maxY, ::groundNear)
-        this.cruise = cruise
-        steering = cruise
-        this.goal = goal
-        flightTicks = 0
-        hasGlided = false
+        val rockets = GlideRockets(abilities.rockets, abilities.rocketTicks)
+        return Glide(goal, ElytraCruise(goal, liveHeights, rockets, world.maxY, ::groundNear))
+    }
+
+    private fun planned(goal: Vec3, abilities: GlideAbilities): Glide? = when (val result = planner.poll()) {
+        RouteResult.Searching -> null
+
+        is RouteResult.Found -> {
+            planner.cancel()
+            val path = result.value
+            // A glide found for where the player stood a moment ago is searched again.
+            if (player.onGround() && player.position().distanceTo(path.start) <= START_TOLERANCE) {
+                val rockets = GlideRockets(path.rockets, abilities.rocketTicks)
+                Glide(goal, GlideControl(goal, rockets, path.approach), path)
+            } else {
+                null
+            }
+        }
+
+        RouteResult.AlreadyThere, is RouteResult.Failed -> {
+            planner.cancel()
+            retryAt = ticks + RETRY_TICKS
+            null
+        }
+    }
+
+    private fun planIfUseful(goal: Vec3, radius: Double, abilities: GlideAbilities, direct: Boolean) {
+        if (!planner.isIdle || ticks < retryAt || direct || !player.onGround()) {
+            return
+        }
+
+        val start = player.position()
+        val distance = start.horizontalDistanceTo(goal)
+        val drop = start.y - goal.y
+        if (distance < MIN_DISTANCE || distance > MAX_DISTANCE || drop < MIN_DROP && abilities.rockets == 0) {
+            return
+        }
+
+        planner.request(BlockPos.containing(start) to goal, GlideRouteSearch.region(start, goal)) { terrain ->
+            GlideRouteSearch(terrain, start, goal, radius, abilities)
+        }
+    }
+
+    /** Jumps and opens the elytra in the air, then leaves the steering to [rotationHandler] until touch-down. */
+    private fun fly(event: MovementInputEvent, glide: Glide, frameYaw: Float): Boolean {
+        glide.ticks++
+        if (player.isFallFlying) {
+            glide.hasOpened = true
+        } else if (glide.hasOpened || glide.ticks > TAKE_OFF_TICKS) {
+            // Touched down, or the elytra did not open.
+            if (!glide.hasOpened) {
+                retryAt = ticks + RETRY_TICKS
+            }
+            halt()
+            return false
+        }
+
+        event.sneak = false
+        if (glide.hasOpened) {
+            event.directionalInput = DirectionalInput.NONE
+            event.jump = false
+        } else {
+            // Jump, let go and jump again in the air, which opens the elytra.
+            event.directionalInput = steer(glide.goal.subtract(player.position()), frameYaw)
+            event.jump = glide.ticks % 2 == 1
+        }
+        sprint = !glide.hasOpened
+
+        view.breaks = emptyList()
+        view.places = emptyList()
+        view.active(glide.points, progress)
         return true
     }
 
-    private val liveHeights = ColumnHeights { x, z ->
-        if (world.hasChunkAt(BlockPos(x, 0, z))) world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) else null
+    @Suppress("unused")
+    private val rotationHandler = handler<RotationUpdateEvent> {
+        val glide = glide ?: return@handler
+
+        val rotation = if (player.isFallFlying) {
+            val input = glide.steering.steer(player.position(), player.deltaMovement)
+            if (input.fireRocket) {
+                Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
+            }
+            Rotation(input.yaw, input.pitch)
+        } else {
+            Rotation(glide.goal.subtract(player.position()).yaw, 0f)
+        }
+
+        RotationManager.setRotationTarget(
+            RotationTarget(rotation, movementCorrection = MovementCorrection.STRICT),
+            Priority.IMPORTANT_FOR_USAGE_2,
+            owner,
+        )
     }
 
-    /**
-     * The loaded ground closest to [position] to glide down to, or null when nothing near holds the player.
-     */
+    private val liveHeights = ColumnHeights { x, z ->
+        if (world.hasChunkAt(x, z)) world.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) else null
+    }
+
+    /** The loaded ground closest to [position] to glide down to, if any. */
     private fun groundNear(position: Vec3): Vec3? {
         var best: Vec3? = null
         var bestDistance = Double.MAX_VALUE
@@ -192,116 +237,27 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         return best
     }
 
-    private fun planIfUseful(goal: Vec3, radius: Double, abilities: GlideAbilities, direct: Boolean) {
-        if (!planner.isIdle || ticks < retryAt || direct || !player.onGround()) {
-            return
-        }
-
-        val start = player.position()
-        val dx = goal.x - start.x
-        val dz = goal.z - start.z
-        val distance = Mth.length(dx, dz)
-        val drop = start.y - goal.y
-        if (distance < MIN_DISTANCE || distance > MAX_DISTANCE || drop < MIN_DROP && abilities.rockets == 0) {
-            return
-        }
-
-        planner.request(SearchKey(BlockPos.containing(start), goal), GlideRouteSearch.region(start, goal)) { terrain ->
-            GlideRouteSearch(terrain, start, goal, radius, abilities)
-        }
-    }
-
-    /**
-     * Jumps and opens the elytra in the air, then leaves the steering to [rotationHandler] until the feet touch
-     * down again.
-     */
-    private fun glide(event: MovementInputEvent, frameYaw: Float): Boolean {
-        val goal = goal ?: return false
-        val points = path?.points ?: cruise?.let { listOf(player.position(), it.target) } ?: return false
-        flightTicks++
-
-        if (player.isFallFlying) {
-            hasGlided = true
-        } else if (hasGlided || flightTicks > TAKE_OFF_TICKS) {
-            // Touched down, or the elytra did not open.
-            if (!hasGlided) {
-                retryAt = ticks + RETRY_TICKS
-            }
-            halt()
-            return false
-        }
-
-        event.sneak = false
-        if (hasGlided) {
-            event.directionalInput = DirectionalInput.NONE
-            event.jump = false
-            sprint = false
-        } else {
-            // Jump, let go and jump again in the air, which opens the elytra.
-            event.directionalInput = steer(goal.subtract(player.position()), frameYaw)
-            event.jump = flightTicks % 2 == 1
-            sprint = true
-        }
-
-        view.breaks = emptyList()
-        view.places = emptyList()
-        view.active(points, progress)
-        return true
-    }
-
-    @Suppress("unused")
-    private val rotationHandler = handler<RotationUpdateEvent> {
-        val steering = steering ?: return@handler
-        val goal = goal ?: return@handler
-
-        val rotation = if (player.isFallFlying) {
-            val input = steering.steer(player.position(), player.deltaMovement)
-            if (input.fireRocket) {
-                Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
-            }
-            Rotation(input.yaw, input.pitch)
-        } else {
-            Rotation(goal.subtract(player.position()).yaw, 0f)
-        }
-
-        RotationManager.setRotationTarget(
-            RotationTarget(
-                rotation = rotation,
-                ticksUntilReset = 1,
-                resetThreshold = 1f,
-                considerInventory = false,
-                movementCorrection = MovementCorrection.STRICT,
-            ),
-            Priority.IMPORTANT_FOR_USAGE_2,
-            owner,
-        )
-    }
-
-    /**
-     * Stops gliding plans and steering; a glide in the air goes on as the game moves it.
-     */
-    fun halt() {
-        planner.cancel()
-        path = null
-        cruise = null
-        steering = null
-        goal = null
-        sprint = false
-        flightTicks = 0
-        hasGlided = false
-    }
-
     private val progress = object : RouteProgress {
         override val isMoving: Boolean
             get() = isActive
 
-        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
-
         override val ahead: List<Vec3>
-            get() = listOfNotNull(path?.landing ?: cruise?.target)
+            get() = listOfNotNull(glide?.landing)
+
+        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
     }
 
-    private data class SearchKey(val start: BlockPos, val goal: Vec3)
+    /** A glide from take-off to touch-down: planned along [path], or a cruise without one. */
+    private class Glide(val goal: Vec3, val steering: GlideSteering, private val path: GlidePath? = null) {
+        var ticks = 0
+        var hasOpened = false
+
+        val points: List<Vec3>
+            get() = path?.points ?: listOf(player.position(), steering.target)
+
+        val landing: Vec3
+            get() = path?.landing ?: steering.target
+    }
 
     private companion object {
         const val MIN_DISTANCE = 16.0

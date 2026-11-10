@@ -21,50 +21,32 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
 import kotlin.math.ceil
 import kotlin.math.max
 
-/**
- * Height of the highest block that stops a glide in column [x] [z], or null while the column is not loaded.
- */
 fun interface ColumnHeights {
+    /** Height of the highest block that stops a glide in column [x] [z], or null while it is not loaded. */
     fun top(x: Int, z: Int): Int?
 }
 
 /**
- * Flies an elytra to a far [goal] with rockets: climbs to a height clear of everything on the line, holds it with
- * rockets while heading for the goal, and hands over to [GlideControl] for the touch-down once the goal is close.
- * Out of rockets on the way, it glides down to [fallback], else to the goal.
- *
- * The cruise height follows the columns of [heights] between the player and the goal, with more height while some
- * are not loaded yet.
+ * Flies an elytra to a far [goal] with rockets: climbs clear of every column of [heights] on the line, holds that
+ * height, and hands over to a [GlideControl] near the goal or, out of rockets, to the ground [fallback] finds.
  */
 class ElytraCruise(
     private val goal: Vec3,
     private val heights: ColumnHeights,
-    rockets: Int,
-    private val rocketTicks: Int,
+    private val rockets: GlideRockets,
     private val ceiling: Int,
-    private val fallback: (Vec3) -> Vec3? = { null },
+    private val fallback: (Vec3) -> Vec3?,
 ) : GlideSteering {
 
-    var rockets = rockets
-        private set
-
-    private var boostTicks = 0
-    private var altitude = Double.NaN
+    private var altitude = 0.0
     private var ticks = 0
     private var landing: GlideControl? = null
 
-    /**
-     * Where the cruise heads now: the goal, or the ground it falls back to.
-     */
-    var target: Vec3 = goal
-        private set
-
-    val isLanding: Boolean
-        get() = landing != null
+    override val target: Vec3
+        get() = landing?.target ?: goal
 
     override fun steer(position: Vec3, velocity: Vec3): GlideInput {
         landing?.let { return it.steer(position, velocity) }
@@ -72,81 +54,56 @@ class ElytraCruise(
         val dx = goal.x - position.x
         val dz = goal.z - position.z
         val distance = Mth.length(dx, dz)
-        if (distance <= HANDOVER || rockets == 0 && boostTicks == 0) {
-            return land(position, velocity, distance)
+        if (distance <= HANDOVER_DISTANCE) {
+            return land(goal, position, velocity)
+        }
+        if (rockets.left == 0 && rockets.boostTicks == 0) {
+            return land(fallback(position) ?: goal, position, velocity)
         }
 
-        if (ticks++ % REPLAN_TICKS == 0 || altitude.isNaN()) {
+        if (ticks++ % REPLAN_TICKS == 0) {
             altitude = cruiseAltitude(position, goal, heights).coerceAtMost(ceiling - CEILING_MARGIN.toDouble())
         }
 
-        val yaw = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
         val below = altitude - position.y
-        val speed = velocity.horizontalDistance()
-        val fire = boostTicks == 0 && rockets > 0 && (speed < MIN_SPEED || below > LOW)
+        val fire = rockets.canFire && (velocity.horizontalDistance() < MIN_SPEED || below > MAX_BELOW)
         if (fire) {
-            rockets--
-            boostTicks = rocketTicks
+            rockets.fire()
         }
 
-        val boosted = boostTicks > 0
-        if (boosted) {
-            boostTicks--
-        }
-
-        val pitch = (-Math.toDegrees(atan2(below, AIM_AHEAD))).toFloat().coerceIn(MIN_PITCH, MAX_PITCH)
-        return GlideInput(yaw, pitch, fire, boosted)
+        val boosted = rockets.tick()
+        val pitch = GlidePhysics.pitchTowards(below, AIM_AHEAD).coerceIn(MIN_PITCH, MAX_PITCH)
+        return GlideInput(GlidePhysics.yawTowards(dx, dz), pitch, fire, boosted)
     }
 
-    private fun land(position: Vec3, velocity: Vec3, distance: Double): GlideInput {
-        val to = if (distance <= HANDOVER) goal else fallback(position) ?: goal
-        target = to
-        val control = GlideControl(to, rockets, rocketTicks, boostTicks)
-        landing = control
-        return control.steer(position, velocity)
-    }
+    private fun land(at: Vec3, position: Vec3, velocity: Vec3): GlideInput =
+        GlideControl(at, rockets).also { landing = it }.steer(position, velocity)
 
     companion object {
+        const val CLEARANCE = 12
+        const val UNKNOWN_CLEARANCE = 24
 
-        /**
-         * Below this the elytra is too slow and a rocket is fired.
-         */
         private const val MIN_SPEED = 1.2
-        private const val LOW = 3.0
+        private const val MAX_BELOW = 3.0
         private const val AIM_AHEAD = 24.0
         private const val MIN_PITCH = -40f
         private const val MAX_PITCH = 15f
-        private const val HANDOVER = 64.0
+        private const val HANDOVER_DISTANCE = 64.0
         private const val REPLAN_TICKS = 20
         private const val CEILING_MARGIN = 4
-
-        /**
-         * Height above every block on the line the cruise keeps.
-         */
-        const val CLEARANCE = 12
-
-        /**
-         * More height kept while part of the line is not loaded yet.
-         */
-        const val UNKNOWN_CLEARANCE = 24
-
-        private const val SAMPLE = 4.0
+        private const val SAMPLE_SPACING = 4.0
         private const val CRUISE_SPEED = 1.5
         private const val EFFICIENCY = 0.7
         private const val CLIMB_RATE = 0.6
         private const val SPARE_ROCKETS = 3
 
-        /**
-         * The height to cruise at from [from] to [goal]: [CLEARANCE] above the start, the goal and every loaded
-         * column on the line between, and [UNKNOWN_CLEARANCE] more while some of them are not loaded.
-         */
+        /** [CLEARANCE] above both ends and every loaded column between, [UNKNOWN_CLEARANCE] more while some are not. */
         fun cruiseAltitude(from: Vec3, goal: Vec3, heights: ColumnHeights): Double {
             var top = max(from.y, goal.y)
             var unknown = false
             val dx = goal.x - from.x
             val dz = goal.z - from.z
-            val length = Mth.length(dx, dz)
-            val samples = ceil(length / SAMPLE).toInt()
+            val samples = ceil(Mth.length(dx, dz) / SAMPLE_SPACING).toInt()
             for (i in 0..samples) {
                 val t = if (samples == 0) 0.0 else i.toDouble() / samples
                 val column = heights.top(Mth.floor(from.x + dx * t), Mth.floor(from.z + dz * t))
@@ -159,10 +116,6 @@ class ElytraCruise(
             return top + CLEARANCE + if (unknown) UNKNOWN_CLEARANCE else 0
         }
 
-        /**
-         * Rockets pushing [rocketTicks] ticks each that a cruise over [distance] blocks needs after climbing
-         * [climb] blocks, with some to spare for the landing.
-         */
         fun rocketsNeeded(distance: Double, climb: Double, rocketTicks: Int): Int {
             if (rocketTicks <= 0) {
                 return Int.MAX_VALUE

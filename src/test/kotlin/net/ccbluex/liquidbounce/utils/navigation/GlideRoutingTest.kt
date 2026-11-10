@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideControl
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePhysics
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePath
+import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRockets
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.minecraft.world.level.block.Blocks
@@ -122,7 +123,7 @@ class GlideRoutingTest {
     @Test
     fun `far too high above the goal it sinks without firing rockets`() {
         val goal = Vec3(0.5, 90.0, 0.5)
-        val control = GlideControl(goal, rockets = 8, rocketTicks = 20)
+        val control = GlideControl(goal, GlideRockets(left = 8, burnTicks = 20))
         var position = Vec3(20.5, 250.0, 0.5)
         var velocity = Vec3(-1.5, 0.0, 0.0)
 
@@ -132,7 +133,7 @@ class GlideRoutingTest {
             velocity = GlidePhysics.step(velocity, input.yaw, input.pitch, input.boosted)
             position = position.add(velocity)
         }
-        assertEquals(8, control.rockets)
+        assertEquals(8, control.rockets.left)
         assertTrue(position.y < 250.0 - 40.0, "only sank to ${position.y}")
     }
 
