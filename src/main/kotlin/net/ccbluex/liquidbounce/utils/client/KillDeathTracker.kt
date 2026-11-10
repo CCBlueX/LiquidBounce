@@ -68,7 +68,9 @@ internal object KillDeathTracker : EventListener {
         val now = System.currentTimeMillis()
         hitAt.values.removeIf { now - it > FIGHT_MS }
 
-        val death = event.textData.toDeathMessage(hitAt.keys + self) ?: return@handler
+        val death = event.textData.toDeathMessage(hitAt.keys + self) { name ->
+            mc.connection?.onlinePlayers?.any { it.profile.name == name } == true
+        } ?: return@handler
         when {
             death.victim == self && (death.exact || now - hurtAt <= FIGHT_MS) -> {
                 hurtAt = 0L
