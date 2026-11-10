@@ -68,8 +68,6 @@ class TeleportRoutingTest {
         limits: RouteLimits = RouteLimits(maxLength = 80.0),
     ) = TeleportRouteSearch(terrain, start, listOf(goal), limits, STEP_LENGTH).advanceToEnd(MAX_SLICES)
 
-    private fun found(result: RouteResult<TeleportPlan>) = assertIs<RouteResult.Found<TeleportPlan>>(result).value
-
     private fun failure(result: RouteResult<TeleportPlan>) = assertIs<RouteResult.Failed>(result).failure
 
     /**

@@ -29,13 +29,10 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.FlightRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.flight.isClearLine
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class FlightRoutingTest {
@@ -46,24 +43,14 @@ class FlightRoutingTest {
         }
 
         private val LIMITS = RouteLimits(maxLength = 64.0, maxExpansions = 20_000, maxComputeNanos = Long.MAX_VALUE)
+        private const val MAX_SLICES = 1000
 
         private val CREATIVE = FlightAbilities(FlightControl.MOMENTUM, 1.089, 0.375, isFlying = false)
     }
 
-    private fun <T> run(search: RouteSearch<T>): RouteResult<T> {
-        var result = search.advance()
-        repeat(1000) {
-            if (result != RouteResult.Searching) {
-                return result
-            }
-            result = search.advance()
-        }
-        return result
-    }
-
     private fun fly(world: TestNavigationWorld, start: Vec3, goal: Vec3): FlightPath {
-        val result = run(FlightRouteSearch(world.terrain(), start, NearGoal(goal, 1.0), CREATIVE, LIMITS))
-        val path = assertIs<RouteResult.Found<FlightPath>>(result).value
+        val search = FlightRouteSearch(world.terrain(), start, NearGoal(goal, 1.0), CREATIVE, LIMITS)
+        val path = found(search.advanceToEnd(MAX_SLICES))
         assertTrue(path.complete, "the flight should reach the goal")
         assertTrue(path.end.distanceTo(goal) <= 1.0, "the flight ends at ${path.end}, away from $goal")
 

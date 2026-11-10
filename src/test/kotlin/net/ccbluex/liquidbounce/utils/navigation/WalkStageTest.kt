@@ -65,7 +65,7 @@ class WalkStageTest {
     }
 
     private fun stageEnd(world: TestNavigationWorld, goal: BlockPos): BlockPos =
-        assertIs<RouteResult.Found<WalkPath>>(stage(world, goal)).value.steps.last().to
+        found(stage(world, goal)).steps.last().to
 
     private fun horizontalDistance(pos: BlockPos, to: Vec3) = Vec3.atCenterOf(pos).horizontalDistanceTo(to)
 
@@ -120,7 +120,7 @@ class WalkStageTest {
             .fill(-3, 1, -2, 60, 3, 2)
             .fill(-2, 1, -1, 59, 3, 1, AIR)
 
-        val path = assertIs<RouteResult.Found<WalkPath>>(stage(world, BlockPos(-150, 1, 0))).value
+        val path = found(stage(world, BlockPos(-150, 1, 0)))
         assertFalse(path.complete)
         assertTrue(path.steps.last().to.x < 0, "walked away from the goal to ${path.steps.last().to}")
     }

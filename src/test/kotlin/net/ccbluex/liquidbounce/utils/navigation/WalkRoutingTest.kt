@@ -50,7 +50,6 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class WalkRoutingTest {
@@ -208,7 +207,7 @@ class WalkRoutingTest {
             .fill(10, 1, 0, 10, 2, 0, AIR)
         val goal = BlockPos(10, 1, 0)
 
-        val path = assertIs<RouteResult.Found<WalkPath>>(search(world, feet(0, 1, 0), goal)).value
+        val path = found(search(world, feet(0, 1, 0), goal))
         assertFalse(path.complete)
         val last = path.steps.last().to
         assertTrue(last.distSqr(goal) < BlockPos(0, 1, 0).distSqr(goal))

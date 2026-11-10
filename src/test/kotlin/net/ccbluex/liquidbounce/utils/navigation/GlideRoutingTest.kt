@@ -20,15 +20,15 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideControl
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePhysics
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlidePath
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRockets
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,6 +43,7 @@ class GlideRoutingTest {
             MinecraftBootstrap.ensureInitialized()
         }
 
+        private const val MAX_SLICES = 1000
         private val GLIDER = GlideAbilities(rockets = 0, rocketTicks = 0, glideTicks = Int.MAX_VALUE)
         private val ROCKETEER = GlideAbilities(rockets = 8, rocketTicks = 20, glideTicks = Int.MAX_VALUE)
     }
@@ -55,25 +56,13 @@ class GlideRoutingTest {
         .fill(-10, 0, -40, 100, 0, 40)
         .fill(-1, 1, -1, 1, towerTop, 1)
 
-    private fun glide(world: TestNavigationWorld, start: Vec3, goal: Vec3, abilities: GlideAbilities):
-        RouteResult<GlidePath> {
-        val search = GlideRouteSearch(world.terrain(), start, goal, 1.0, abilities)
-        var result = search.advance()
-        repeat(1000) {
-            if (result != RouteResult.Searching) {
-                return result
-            }
-            result = search.advance()
-        }
-        return result
-    }
+    private fun glide(world: TestNavigationWorld, start: Vec3, goal: Vec3, abilities: GlideAbilities) =
+        GlideRouteSearch(world.terrain(), start, goal, 1.0, abilities).advanceToEnd(MAX_SLICES)
 
     @Test
     fun `goals close below a high take-off are glided to by circling down`() {
         val goal = feet(40, 1, 0)
-        val result = glide(towerWorld(58), feet(0, 59, 0), goal, GLIDER)
-
-        val path = assertIs<RouteResult.Found<GlidePath>>(result).value
+        val path = found(glide(towerWorld(58), feet(0, 59, 0), goal, GLIDER))
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
     }
 
@@ -82,20 +71,20 @@ class GlideRoutingTest {
         val world = towerWorld(40).fill(30, 1, -40, 36, 30, 40)
         val goal = feet(70, 1, 0)
 
-        val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, feet(0, 41, 0), goal, GLIDER)).value
+        val path = found(glide(world, feet(0, 41, 0), goal, GLIDER))
         assertEquals(1.0, path.landing.y, 1.0E-6, "the glide lands at ${path.landing}")
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
     }
 
     @Test
     fun `slow touch-downs brushing a step at the goal still land`() {
-        val world = towerWorld(40).fill(-10, 1, -40, 100, 1, 40).set(70, 1, 0, Blocks.AIR.defaultBlockState())
+        val world = towerWorld(40).fill(-10, 1, -40, 100, 1, 40).set(70, 1, 0, AIR)
         val goal = feet(70, 1, 0)
 
-        val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, feet(0, 41, 0), goal, GLIDER)).value
+        val path = found(glide(world, feet(0, 41, 0), goal, GLIDER))
         val landing = path.landing
         assertTrue(
-            Vec3(landing.x, goal.y, landing.z).distanceTo(goal) <= 3.0 && landing.y - goal.y <= 1.0,
+            landing.horizontalDistanceTo(goal) <= 3.0 && landing.y - goal.y <= 1.0,
             "the glide lands at $landing, away from $goal",
         )
     }
@@ -115,7 +104,7 @@ class GlideRoutingTest {
 
         assertIs<RouteResult.Failed>(glide(world, start, goal, GLIDER))
 
-        val path = assertIs<RouteResult.Found<GlidePath>>(glide(world, start, goal, ROCKETEER)).value
+        val path = found(glide(world, start, goal, ROCKETEER))
         assertTrue(path.rockets > 0, "the glide needs no rocket")
         assertTrue(path.landing.distanceTo(goal) <= 3.0, "the glide lands at ${path.landing}, away from $goal")
     }

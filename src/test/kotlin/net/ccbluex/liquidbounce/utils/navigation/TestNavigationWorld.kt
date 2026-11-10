@@ -94,11 +94,10 @@ fun <T> RouteSearch<T>.advanceToEnd(maxSlices: Int = Int.MAX_VALUE): RouteResult
     return result
 }
 
-fun completePath(result: RouteResult<WalkPath>, message: String? = "path should reach the goal"): WalkPath {
-    val path = assertIs<RouteResult.Found<WalkPath>>(result).value
-    assertTrue(path.complete, message)
-    return path
-}
+inline fun <reified T> found(result: RouteResult<T>): T = assertIs<RouteResult.Found<T>>(result).value
+
+fun completePath(result: RouteResult<WalkPath>, message: String? = "path should reach the goal"): WalkPath =
+    found(result).also { assertTrue(it.complete, message) }
 
 /** A sprinting walker that takes falls of [safeFall] blocks and mines every block in [breakTicks]. */
 fun walkAbilities(
