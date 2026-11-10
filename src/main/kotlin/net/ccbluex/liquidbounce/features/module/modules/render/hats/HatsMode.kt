@@ -74,7 +74,7 @@ abstract class HatsMode(name: String) : Mode(name) {
             for (entity in world.players()) {
                 val isMe = entity == player
                 val isFriend = FriendManager.isFriend(entity)
-                val inDistance = player.distanceTo(entity) <= friendsOptions.distance
+                val inDistance = player.closerThan(entity, friendsOptions.distance.toDouble())
 
                 val shouldRender = if (isMe) {
                     !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
