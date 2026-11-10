@@ -95,7 +95,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
     private val tickHandler = handler<GameTickEvent> {
         val cameraPos = mc.gameRenderer.mainCamera().position()
         particles.removeIf { particle ->
-            if (particle.alpha <= 0 || cameraPos.distanceToSqr(particle.pos) > 30 * 30) {
+            if (particle.alpha <= 0 || !cameraPos.closerThan(particle.pos, 30.0)) {
                 true
             } else {
                 particle.update()

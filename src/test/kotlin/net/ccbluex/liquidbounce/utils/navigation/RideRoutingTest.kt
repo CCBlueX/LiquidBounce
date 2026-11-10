@@ -141,12 +141,12 @@ class RideRoutingTest {
     @Test
     fun `horses walk up one block steps and jump ledges only within their jump height`() {
         val step = TestNavigationWorld.flat().fill(3, 1, -40, 40, 1, 40)
-        val walked = completePath(search(step, feet(0, 1, 0), BlockGoal(listOf(BlockPos(10, 2, 0))), horse()))
+        val walked = completePath(search(step, feet(0, 1, 0), BlockGoal(BlockPos(10, 2, 0)), horse()))
         assertTrue(walked.points.none { it.jump })
         assertEquals(2.0, walked.end.y)
 
         val ledge = TestNavigationWorld.flat().fill(3, 1, -40, 40, 2, 40)
-        val goal = BlockGoal(listOf(BlockPos(10, 3, 0)))
+        val goal = BlockGoal(BlockPos(10, 3, 0))
         val jumped = completePath(search(ledge, feet(0, 1, 0), goal, horse(jump = 2.3)))
         assertTrue(jumped.points.any { it.jump })
 
@@ -160,7 +160,7 @@ class RideRoutingTest {
         val world = TestNavigationWorld.flat()
             .fill(5, 1, -40, 5, 4, 40)
             .fill(5, 1, 0, 5, 2, 1, AIR)
-        val goal = BlockGoal(listOf(BlockPos(10, 1, 0)))
+        val goal = BlockGoal(BlockPos(10, 1, 0))
 
         val ridden = search(world, feet(0, 1, 0), goal, horse())
         assertFalse(ridden is RouteResult.Found && ridden.value.complete)

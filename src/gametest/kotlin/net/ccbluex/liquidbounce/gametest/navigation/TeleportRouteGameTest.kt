@@ -213,11 +213,11 @@ class TeleportRouteGameTest : FabricClientGameTest {
     ): RouteResult<TeleportPlan> = fromClient { mc ->
         val level = checkNotNull(mc.level)
         val start = checkNotNull(mc.player).position()
-        val region = BlockGoal(listOf(goal)).region(start, maxLength, maxLength.toInt())
+        val region = BlockGoal(goal).region(start, maxLength, maxLength.toInt())
         val search = TeleportRouteSearch(
             NavigationTerrain(SectionCache.capture(level, region)),
             start,
-            listOf(goal),
+            [goal],
             RouteLimits(maxLength),
             stepLength,
         )

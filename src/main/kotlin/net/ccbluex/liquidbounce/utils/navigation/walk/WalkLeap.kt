@@ -110,7 +110,7 @@ internal class WalkLeap {
     private fun moveRunUp(step: WalkStep, jump: WalkJump, jumps: WalkJumps) {
         if (refined == null) {
             refined = jumps.refine(step.from, jump.runUp.y, step.to, step.feet.y)
-                ?.takeIf { it.runUp.distanceToSqr(jump.runUp) > Mth.square(WalkJump.RUN_UP_TOLERANCE) }
+                ?.takeIf { !it.runUp.closerThan(jump.runUp, WalkJump.RUN_UP_TOLERANCE) }
             if (refined != null) {
                 return
             }

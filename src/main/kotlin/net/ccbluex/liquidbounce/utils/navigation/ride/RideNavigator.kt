@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -178,7 +179,7 @@ class RideNavigator(
             val next = path.points.getOrNull(i + 1)
             val distance = position.horizontalDistanceTo(point.position)
             val passed = next != null && !point.jump && !next.jump && distance <= arrive * 2.0 &&
-                position.horizontalDistanceTo(next.position) < point.position.horizontalDistanceTo(next.position)
+                position.horizontalDistanceToSqr(next.position) < point.position.horizontalDistanceToSqr(next.position)
             if (passed || distance <= arrive) {
                 reached = i
             }
@@ -277,7 +278,7 @@ class RideNavigator(
         ) > OFF_PATH
         val finishedShort = path != null && !riding && !path.complete && !path.exhausted
         val nearStage = path != null && routes.endsAtStage &&
-            position.horizontalDistanceTo(path.end) < GoalRouter.STAGE_LEAD
+            position.horizontalDistanceToSqr(path.end) < GoalRouter.STAGE_LEAD * GoalRouter.STAGE_LEAD
         val urgent = stuck || offPath
 
         val needed = routes.hasGoalMoved(goal) || offPath || finishedShort || stuck || nearStage
@@ -301,8 +302,7 @@ class RideNavigator(
             (vehicle ?: player).interpolateCurrentPosition(partialTicks)
 
         override val ahead: List<Vec3>
-            get() = path?.let { it.positions.subList(min(index + 1, it.positions.size), it.positions.size) }
-                ?: emptyList()
+            get() = path?.let { it.positions.subList(min(index + 1, it.positions.size), it.positions.size) }.orEmpty()
     }
 
     override fun parent() = owner

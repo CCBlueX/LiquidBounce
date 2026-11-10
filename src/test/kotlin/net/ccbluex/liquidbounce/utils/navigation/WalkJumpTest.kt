@@ -66,7 +66,7 @@ class WalkJumpTest {
     }
 
     private fun route(world: TestNavigationWorld, goal: BlockPos): WalkPath {
-        val search = WalkRouteSearch(world.terrain(), Vec3(0.5, 1.0, 0.5), BlockGoal(listOf(goal)), abilities(), LIMITS)
+        val search = WalkRouteSearch(world.terrain(), Vec3(0.5, 1.0, 0.5), BlockGoal(goal), abilities(), LIMITS)
         return completePath(search.advanceToEnd(), message = null)
     }
 

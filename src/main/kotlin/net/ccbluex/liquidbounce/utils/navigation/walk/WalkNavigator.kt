@@ -583,7 +583,7 @@ private class StuckSpots {
 
     fun tick(goal: Vec3) {
         val outdated = blocks.isNotEmpty() &&
-            (++age > FORGET_TICKS || this.goal.let { it == null || it.distanceToSqr(goal) > Mth.square(GOAL_CHANGE) })
+            (++age > FORGET_TICKS || this.goal.let { it == null || !it.closerThan(goal, GOAL_CHANGE) })
         if (outdated) {
             blocks.clear()
             version++

@@ -56,7 +56,7 @@ class FlightFollower : RouteProgress {
         get() = route?.isFinished == false
 
     override val ahead: List<Vec3>
-        get() = route?.run { points.subList(min(corner, points.size), points.size) } ?: emptyList()
+        get() = route?.run { points.subList(min(corner, points.size), points.size) }.orEmpty()
 
     override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
 

@@ -168,7 +168,7 @@ object ModuleAutoPearl : ClientModule(
             pos = pearlPos
         )?.location ?: return
 
-        if (Limits.enabled && Limits.activationDistance > destination.distanceTo(player.position())) {
+        if (Limits.enabled && destination.closerThan(player.position(), Limits.activationDistance.toDouble())) {
             return
         }
 

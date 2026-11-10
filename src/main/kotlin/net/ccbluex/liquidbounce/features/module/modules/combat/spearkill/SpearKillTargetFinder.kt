@@ -88,7 +88,7 @@ internal object SpearKillTargetFinder {
         if (distSq >= bestDistSq) return null
 
         val hit = traceFromPlayer(range = distanceToDamage, block = ClipContext.Block.COLLIDER)
-        if (hit.type != HitResult.Type.MISS && hit.location.distanceTo(eye) < distanceToDamage) return null
+        if (hit.type != HitResult.Type.MISS && hit.location.closerThan(eye, distanceToDamage)) return null
 
         return Candidate(entity, distanceToDamage, distSq)
     }

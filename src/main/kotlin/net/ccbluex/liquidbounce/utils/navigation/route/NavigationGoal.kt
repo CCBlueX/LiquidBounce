@@ -50,6 +50,8 @@ interface NavigationGoal {
 
 class BlockGoal(positions: Collection<BlockPos>) : NavigationGoal {
 
+    constructor(position: BlockPos) : this([position])
+
     private val set = positions.toSet()
 
     override val ends: Collection<Vec3> = set.map(Vec3::atBottomCenterOf)
@@ -125,7 +127,7 @@ class StageGoal(
         /** Whether [goal] is farther than [range] from [start] or in blocks [world] does not know. */
         fun isNeeded(world: NavigationWorld, start: Vec3, goal: Vec3, range: Double): Boolean {
             val feet = BlockPos.containing(goal)
-            return start.distanceTo(goal) > range || !world.isKnown(feet.x, feet.y, feet.z)
+            return !start.closerThan(goal, range) || !world.isKnown(feet.x, feet.y, feet.z)
         }
     }
 

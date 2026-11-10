@@ -224,7 +224,7 @@ class RouteRenderer(
 
             val direction = segment.scale(1.0 / length)
             val side = if (direction.horizontalDistanceSqr() < 1.0E-4) {
-                Vec3(1.0, 0.0, 0.0)
+                Vec3.X_AXIS
             } else {
                 Vec3(-direction.z, 0.0, direction.x).normalize()
             }
