@@ -56,7 +56,7 @@
     }
 </script>
 
-<DetailPage noun="item" {error} onretry={load} {onback} name={item?.name}
+<DetailPage {id} noun="item" {error} onretry={load} {onback} name={item?.name}
             address={item ? (item.author ? `${item.author}/${item.name}` : item.name) : undefined}
             image={item?.image} fallbackImage={UNKNOWN_PACK_ICON} description={detail?.description} {facts}>
     {#snippet badges()}

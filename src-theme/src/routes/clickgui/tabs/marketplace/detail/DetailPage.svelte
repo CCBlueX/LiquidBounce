@@ -13,14 +13,16 @@
     import Markdown from "../../../common/Markdown.svelte";
     import Address from "../Address.svelte";
     import Placeholder from "../Placeholder.svelte";
+    import {openMarketplaceLink} from "../../../../../integration/rest";
     import {parseMarkdown} from "../../../../../util/markdown";
 
     /**
-     * The page of a config or item: its head, [facts], the description with its images as a gallery, then
-     * [children]. Until [address] is known it shows nothing, or [error] with a retry. A fact without a value
-     * is left out.
+     * The page of the config or item [id]: its head, [facts], the description with its images as a gallery,
+     * then [children]. Until [address] is known it shows nothing, or [error] with a retry. A fact without a
+     * value is left out.
      */
     let {
+        id,
         noun,
         error,
         onretry,
@@ -36,6 +38,7 @@
         actions,
         children
     }: {
+        id: number;
         noun: string;
         error: string | null;
         onretry: () => void;
@@ -97,7 +100,8 @@
 
         <Gallery images={markdown.images}/>
         {#if markdown.blocks.length > 0}
-            <Markdown tokens={markdown.blocks}/>
+            <!-- The client tells the player when it refuses a link -->
+            <Markdown tokens={markdown.blocks} onlink={url => openMarketplaceLink(id, url).catch(() => null)}/>
         {/if}
 
         {@render children?.()}

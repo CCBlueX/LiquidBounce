@@ -81,7 +81,7 @@
     }
 </script>
 
-<DetailPage noun="config" {error} onretry={load} {onback} address={config?.address} name={config?.name}
+<DetailPage {id} noun="config" {error} onretry={load} {onback} address={config?.address} name={config?.name}
             image={config?.image} fallbackImage={UNKNOWN_SERVER_ICON} description={detail?.description} {facts}>
     {#snippet badges()}
         {#if tracking !== "None"}
@@ -178,8 +178,7 @@
                                 {#if item.notFor}
                                     Not for {item.notFor}
                                 {:else}
-                                    <Markdown tokens={parseMarkdownSummary(item.summary, item.name)} inline
-                                              links={false}/>
+                                    <Markdown tokens={parseMarkdownSummary(item.summary, item.name)} inline/>
                                 {/if}
                             {/snippet}
                         </Entry>

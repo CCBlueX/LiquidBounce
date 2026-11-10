@@ -1,21 +1,21 @@
 <script lang="ts">
     import type {MarkedToken, Token} from "marked";
-    import {browseUrl} from "../../../integration/rest";
     import {decodeEntities, isImageParagraph, toWebUrl} from "../../../util/markdown";
 
     /**
      * Renders lexed Markdown as markup, so nothing of it reaches the page as HTML. Images belong to a gallery;
-     * only one inside a link shows, as its alt text. Without [links], as inside a button, links are plain text.
+     * only one inside a link shows, as its alt text. Links are plain text unless [onlink] opens them, which
+     * gets the link as the Markdown has it.
      */
-    let {tokens, inline = false, links = true}: {
+    let {tokens, inline = false, onlink}: {
         tokens: Token[];
         inline?: boolean;
-        links?: boolean;
+        onlink?: (url: string) => void;
     } = $props();
 
-    function openLink(event: MouseEvent, href: string) {
+    function handleLinkClick(event: MouseEvent, url: string) {
         event.preventDefault();
-        browseUrl(href);
+        onlink?.(url);
     }
 
     function isLineBreak(html: string): boolean {
@@ -32,9 +32,10 @@
         {:else if token.type === "codespan"}<code>{token.text}</code>
         {:else if token.type === "br"}<br/>
         {:else if token.type === "link"}
-            {@const href = links && !inLink ? toWebUrl(decodeEntities(token.href)) : undefined}
+            {@const url = decodeEntities(token.href)}
+            {@const href = onlink && !inLink ? toWebUrl(url) : undefined}
             {#if href}
-                <a {href} onclick={event => openLink(event, href)}
+                <a {href} onclick={event => handleLinkClick(event, url)}
                    onauxclick={event => event.preventDefault()}>{@render spans(token.tokens, true)}</a>
             {:else}{@render spans(token.tokens, true)}{/if}
         {:else if token.type === "image"}{#if inLink}{decodeEntities(token.text)}{/if}

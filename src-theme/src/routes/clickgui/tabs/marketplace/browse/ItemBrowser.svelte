@@ -62,7 +62,7 @@
                 {#if item.featured}<Chip>Featured</Chip>{/if}
             {/snippet}
             {#snippet subtitle()}
-                <Markdown tokens={summary} inline links={false}/>
+                <Markdown tokens={summary} inline/>
             {/snippet}
             {#snippet meta()}
                 {#if item.notFor}

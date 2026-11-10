@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {escapeLayer} from "../../../integration/escape";
     import type {MarkdownImage} from "../../../util/markdown";
 
     /**
@@ -15,7 +16,10 @@
     const shown = $derived(images.filter(image => !failed.includes(image.src)));
     const opened = $derived(openIndex === null ? undefined : shown[openIndex]);
 
+    const layer = escapeLayer(() => viewer?.close());
+
     $effect(() => {
+        layer.setOpen(openIndex !== null);
         if (viewer && !viewer.open) {
             viewer.showModal();
         }

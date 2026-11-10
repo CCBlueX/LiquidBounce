@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount, type Snippet} from "svelte";
+    import {escapeLayer} from "../../../integration/escape";
     import {scaleFactor} from "../clickgui_store";
 
     /**
@@ -16,7 +17,12 @@
     const titleId = $props.id();
     let element: HTMLDialogElement;
 
-    onMount(() => element.showModal());
+    const layer = escapeLayer(() => element.close());
+
+    onMount(() => {
+        element.showModal();
+        layer.setOpen(true);
+    });
 </script>
 
 <!-- The top layer leaves the scaled ClickGUI, so the dialog takes its scale itself -->

@@ -255,19 +255,6 @@ export async function openLink(target: string) {
     });
 }
 
-/**
- * Opens an http(s) link in the system browser.
- */
-export async function browseUrl(url: string) {
-    await fetch(`${API_BASE}/client/browse`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({url})
-    });
-}
-
 export async function browsePath(path: string) {
     await fetch(`${API_BASE}/client/browsePath`, {
         method: "POST",
@@ -1074,6 +1061,13 @@ export async function updateMarketplaceItem(id: number): Promise<MarketplaceItem
 
 export async function removeMarketplaceItem(id: number) {
     await marketplaceRequest(`/items/${id}/remove`, "POST");
+}
+
+/**
+ * Opens a link of the item's or config's description in the system browser. The client refuses any other URL.
+ */
+export async function openMarketplaceLink(id: number, url: string) {
+    await marketplaceRequest(`/items/${id}/openLink`, "POST", {url});
 }
 
 export async function applyMarketplaceTheme(id: number) {
