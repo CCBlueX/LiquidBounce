@@ -23,78 +23,47 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.roundToInt
 
-/**
- * Makes a [WalkMove.PARKOUR] step by simulating the player in the live world every tick: running on and jumping at
- * the tick that lands best when the jump can be made from where the player is, else walking back to the run-up of
- * the [WalkJump] while facing the target, and in the air pressing the keys that land the furthest inside the
- * target block.
- */
+/** Makes one parkour step by simulating the player every tick: jumps where it works, else walks back to the run-up. */
 internal class WalkLeap {
 
-    /**
-     * Where the player looks, the middle of the target block.
-     */
     var target: Vec3? = null
         private set
 
     var sprint = false
         private set
 
-    /**
-     * Hops of a momentum jump made so far; the next one follows right on landing.
-     */
-    private var hops = 0
-
-    /**
-     * How far behind the run-up the player stops, after no jump worked from it.
-     */
-    private var retreat = 0.0
-
-    /**
-     * Ticks the player has stood still on the ground.
-     */
-    private var stillTicks = 0
-
-    /**
-     * Whether the player runs at a jump found on the spot.
-     */
-    private var running = false
-
-    /**
-     * A run-up found on the spot after the planned one did not work.
-     */
-    private var refined: WalkJump? = null
-
-    /**
-     * Whether no jump worked even from as far back as the player goes, so the step should be given up.
-     */
     var hopeless = false
         private set
 
+    private var hopsMade = 0
+    private var stillTicks = 0
+
+    /** How far behind the run-up the player stops, after no jump worked from it. */
+    private var retreat = 0.0
+
+    /** Whether the player runs at a jump found on the spot. */
+    private var running = false
+    private var refined: WalkJump? = null
+
     fun tick(event: MovementInputEvent, frameYaw: Float, step: WalkStep, jump: WalkJump, abilities: WalkAbilities) {
-        val terrain = NavigationTerrain(LiveWorld(world))
+        val terrain = NavigationTerrain.live()
         val state = PlayerMotion(terrain, abilities.motion)
         state.reset(player)
         val input = decide(state, RotationManager.movementYaw, step, jump, WalkJumps(terrain, abilities))
-        event.sneak = input.sneak
         event.directionalInput = keys(input.forward, input.strafe, frameYaw)
         event.jump = input.jump
+        event.sneak = input.sneak
         sprint = input.sprint
     }
 
-    /**
-     * The keys to press this tick in [state], moving along [yaw].
-     */
     fun decide(state: PlayerMotion, yaw: Float, step: WalkStep, planned: WalkJump, jumps: WalkJumps): LeapInput {
         target = step.feet
         if (!state.onGround) {
@@ -106,10 +75,9 @@ internal class WalkLeap {
         }
 
         val jump = refined ?: planned
-        val ready = isReady(state, behind(jump.runUp, step.feet, RUN_UP_BIAS + retreat))
+        val ready = isReady(state, stop(jump, step))
 
-        // Away from the run-up, only a jump with room to spare beats walking back to it; a run started from where
-        // the player was ready goes on as long as it still lands.
+        // Away from the run-up, only a jump with room to spare beats walking back to it; a run once started goes on.
         val now = jumps.fromHere(state, yaw, step.to, step.feet.y)
             ?.takeIf { ready || running || it.margin >= LIVE_MARGIN }
         running = now != null
@@ -119,63 +87,45 @@ internal class WalkLeap {
         }
 
         // A momentum jump hops from its run-up, each hop right after the last one landed.
-        if (hops > 0 && hops < jump.hops || hops == 0 && jump.hops > 0 && ready) {
-            hops++
+        if (hopsMade < jump.hops && (hopsMade > 0 || ready)) {
+            hopsMade++
             return LeapInput(1, 0, jump = true, sprint = jumps.canSprint)
         }
 
-        hops = 0
+        hopsMade = 0
         if (ready && jump.hops == 0) {
             moveRunUp(step, jump, jumps)
         }
-        val runUp = (refined ?: planned).runUp
-        return approach(state, yaw, behind(runUp, step.feet, RUN_UP_BIAS + retreat), step.feet)
+        return approach(state, yaw, stop(refined ?: planned, step), step.feet)
     }
 
-    /**
-     * Whether the player in [state] stands still at [stop]; where the approach cannot get any closer, as at the edge
-     * of the block, the player is as ready as it gets.
-     */
+    /** Standing still for [STILL_TICKS] counts where the approach cannot get closer, as at the edge of a block. */
     private fun isReady(state: PlayerMotion, stop: Vec3): Boolean {
         stillTicks = if (state.horizontalSpeed < READY_SPEED) stillTicks + 1 else 0
         val atStop = stop.horizontalDistanceToSqr(state.x, state.z) < Mth.square(WalkJump.RUN_UP_TOLERANCE)
         return stillTicks > 0 && (atStop || stillTicks >= STILL_TICKS)
     }
 
-    /**
-     * After no jump worked from the run-up of [jump]: a run-up with more room, or one further back.
-     */
+    /** After no jump worked from the run-up of [jump]: once a run-up with more room, then a stop further back. */
     private fun moveRunUp(step: WalkStep, jump: WalkJump, jumps: WalkJumps) {
         if (refined == null) {
-            // The planned run-up only just works and was not hit closely enough: one that works with more room.
             refined = jumps.refine(step.from, jump.runUp.y, step.to, step.feet.y)
                 ?.takeIf { it.runUp.distanceToSqr(jump.runUp) > Mth.square(WalkJump.RUN_UP_TOLERANCE) }
+            if (refined != null) {
+                return
+            }
         }
-        if (refined == null || jump === refined) {
-            // Further back, the run has more room.
-            hopeless = retreat >= MAX_RETREAT
-            retreat = minOf(retreat + RETREAT_STEP, MAX_RETREAT)
-        }
+
+        hopeless = retreat >= MAX_RETREAT
+        retreat = minOf(retreat + RETREAT_STEP, MAX_RETREAT)
     }
 
-    fun clear() {
-        target = null
-        sprint = false
-        hops = 0
-        stillTicks = 0
-        running = false
-        retreat = 0.0
-        refined = null
-        hopeless = false
-    }
-
-    /**
-     * The point [distance] back from [runUp], away from [target]; a stop short of the run-up costs a jump less than
-     * one past it.
-     */
-    private fun behind(runUp: Vec3, target: Vec3, distance: Double): Vec3 {
-        val dx = target.x - runUp.x
-        val dz = target.z - runUp.z
+    /** Where to stand before the run: behind the run-up, as a stop short of it costs a jump less than one past it. */
+    private fun stop(jump: WalkJump, step: WalkStep): Vec3 {
+        val runUp = jump.runUp
+        val distance = RUN_UP_BIAS + retreat
+        val dx = step.feet.x - runUp.x
+        val dz = step.feet.z - runUp.z
         val length = Mth.length(dx, dz)
         if (length < MIN_LENGTH) {
             return runUp
@@ -183,11 +133,8 @@ internal class WalkLeap {
         return Vec3(runUp.x - dx / length * distance, runUp.y, runUp.z - dz / length * distance)
     }
 
-    /**
-     * Keys that bring the player to a stop at [runUp] without leaving the ground, looking at [look]: each choice is
-     * held for a few ticks, walking or sneaking for small steps, and then let go, and the one that stops closest wins.
-     */
-    private fun approach(state: PlayerMotion, yaw: Float, runUp: Vec3, look: Vec3): LeapInput {
+    /** Keys that bring the player to rest at [stop] on the ground: the best of every choice held for a few ticks. */
+    private fun approach(state: PlayerMotion, yaw: Float, stop: Vec3, look: Vec3): LeapInput {
         val probe = state.copy()
         var best = LeapInput(0, 0, jump = false, sprint = false)
         var bestScore = Double.MAX_VALUE
@@ -196,7 +143,7 @@ internal class WalkLeap {
                 for (strafe in -1..1) {
                     probe.copyFrom(state)
                     val input = LeapInput(forward, strafe, jump = false, sprint = false, sneak = sneak)
-                    val score = stopsAt(probe, yaw, input, runUp, look)
+                    val score = restDistanceSqr(probe, yaw, input, stop, look)
                     if (score < bestScore - SCORE_EPSILON) {
                         bestScore = score
                         best = input
@@ -207,14 +154,10 @@ internal class WalkLeap {
         return best
     }
 
-    /**
-     * How far from [runUp], squared, [probe] stops when it holds [input] a few ticks; much more when it leaves the
-     * ground on the way.
-     */
-    private fun stopsAt(probe: PlayerMotion, yaw: Float, input: LeapInput, runUp: Vec3, look: Vec3): Double {
+    private fun restDistanceSqr(probe: PlayerMotion, yaw: Float, input: LeapInput, stop: Vec3, look: Vec3): Double {
         for (tick in 0 until HOLD_TICKS + SETTLE_TICKS) {
             val held = tick < HOLD_TICKS
-            val tickYaw = if (tick == 0) yaw else yawTo(probe, look)
+            val tickYaw = if (tick == 0) yaw else look.subtract(probe.x, probe.y, probe.z).yaw
             probe.tick(
                 tickYaw, if (held) input.forward else 0, if (held) input.strafe else 0, jump = false, sprint = false,
                 sneak = held && input.sneak,
@@ -224,11 +167,8 @@ internal class WalkLeap {
                 return FALL_PENALTY - tick
             }
         }
-
-        return runUp.horizontalDistanceToSqr(probe.x, probe.z)
+        return stop.horizontalDistanceToSqr(probe.x, probe.z)
     }
-
-    private fun yawTo(motion: PlayerMotion, look: Vec3): Float = look.subtract(motion.x, motion.y, motion.z).yaw
 
     private companion object {
         const val HOLD_TICKS = 2
@@ -236,15 +176,8 @@ internal class WalkLeap {
         const val FALL_PENALTY = 100.0
         const val SCORE_EPSILON = 1.0E-4
 
-        /**
-         * Fastest a player may move and still count as standing at a run-up, in blocks a tick.
-         */
         const val READY_SPEED = 0.03
         const val STILL_TICKS = 5
-
-        /**
-         * Least landing margin a jump started elsewhere than at the run-up needs.
-         */
         const val LIVE_MARGIN = 0.35
 
         val SNEAKS = booleanArrayOf(false, true)
@@ -257,9 +190,6 @@ internal class WalkLeap {
 
 }
 
-/**
- * Keys for one tick of a jump: [forward] and [strafe] relative to the movement yaw.
- */
 internal class LeapInput(
     val forward: Int,
     val strafe: Int,
@@ -268,17 +198,14 @@ internal class LeapInput(
     val sneak: Boolean = false,
 )
 
-/**
- * Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. Under silent movement correction
- * the keys are read relative to the camera at [frameYaw] and turned onto the rotation, see MixinKeyboardInput, so
- * they are chosen to come out right after the turn.
- */
+/** Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. */
 internal fun keys(forward: Int, strafe: Int, frameYaw: Float): DirectionalInput {
     val rotation = RotationManager.currentRotation
     if (rotation == null || RotationManager.activeRotationTarget?.movementCorrection != MovementCorrection.SILENT) {
         return DirectionalInput(forward.toFloat(), strafe.toFloat())
     }
 
+    // Silent correction reads the keys relative to the camera at frameYaw and turns them onto the rotation.
     val delta = (frameYaw - rotation.yaw) * Mth.DEG_TO_RAD
     val cos = Mth.cos(delta.toDouble())
     val sin = Mth.sin(delta.toDouble())
