@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
@@ -106,19 +105,10 @@ object ModuleAutoBuff : ClientModule(
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
-    internal val ignoreInventoryOpen by boolean("IgnoreInventoryOpen", false)
-    internal val inventoryCheckMode by enumChoice("InventoryCheckMode", InventoryCheckMode.SERVER_SIDE)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", false)
 
-    enum class InventoryCheckMode(override val tag: String) : Tagged {
-        SERVER_SIDE("ServerSide"),
-        CLIENT_SIDE("ClientSide")
-    }
-
-    internal val isInventoryOpenForCheck: Boolean
-        get() = when (inventoryCheckMode) {
-            InventoryCheckMode.SERVER_SIDE -> InventoryManager.isInventoryOpenServerSide
-            InventoryCheckMode.CLIENT_SIDE -> isInInventoryScreen
-        }
+    internal val isInventoryBlocking: Boolean
+        get() = !ignoreOpenInventory && InventoryManager.isInventoryOpen
 
     internal val activeFeatures
         get() = features.filter { it.enabled }
