@@ -21,10 +21,8 @@ package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
@@ -96,23 +94,10 @@ class WalkParkourGameTest : FabricClientGameTest {
 
         moveTo(context, server, start, settleTicks = SETTLE)
 
-        return walker.walking(context, goal) {
-            TurnWatch.watch(context, course.name) {
-                for (tick in 0 until TIMEOUT) {
-                    val position = context.playerPosition()
-                    if (position.y < lowest) {
-                        return@watch "${course.name}: fell at $position after $tick ticks"
-                    }
-                    if (position.arrivedAt(goal, GOAL_RADIUS)) {
-                        logger.info("PARKOUR ${course.name}: done in $tick ticks")
-                        return@watch null
-                    }
-                    context.waitTick()
-                }
-
-                "${course.name}: not done within $TIMEOUT ticks, stopped at ${context.playerPosition()}"
-            }
+        val failure = walker.walking(context, goal) {
+            runCourse(context, course.name, course.name, lowest, TIMEOUT) { it.arrivedAt(goal, GOAL_RADIUS) }
         }
+        return failure?.let { "${course.name}: $it" }
     }
 
     /** Where the feet stand on top of the block at [pos]. */

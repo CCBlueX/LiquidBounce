@@ -22,9 +22,7 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
 import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
@@ -67,17 +65,15 @@ class ParkourAssistGameTest : FabricClientGameTest {
         }
     }
 
-    /** Why the run failed, or null. */
     private fun run(
         context: ClientGameTestContext,
         server: TestServerContext,
         origin: BlockPos,
         assist: Boolean,
     ): String? {
-        val first = origin.offset(COURSE.first())
-        val last = origin.offset(COURSE.last())
-        val start = Vec3(first.x + 0.5, first.y + 1.0, first.z + 0.5)
-        val goal = Vec3(last.x + 0.5, last.y + 1.0, last.z + 0.5)
+        val start = Vec3.atBottomCenterOf(origin.offset(COURSE.first()).above())
+        val goal = origin.offset(COURSE.last()).above()
+        val lowest = origin.y + COURSE.minOf { it.y }
 
         moveTo(context, server, start, yaw = -90f, settleTicks = SETTLE)
         context.onClient { ModuleParkour.enabled = assist }
@@ -86,21 +82,8 @@ class ParkourAssistGameTest : FabricClientGameTest {
         input.holdKey { it.keyUp }
         input.holdKey { it.keySprint }
         try {
-            return TurnWatch.watch(context, if (assist) "With Parkour" else "Without Parkour") {
-                for (tick in 0 until TIMEOUT) {
-                    val position = context.playerPosition()
-                    if (position.y < origin.y + COURSE.minOf { it.y }) {
-                        return@watch "fell at $position after $tick ticks"
-                    }
-                    if (BlockPos.containing(position) == BlockPos.containing(goal)) {
-                        logger.info("PARKOUR ASSIST: done in $tick ticks")
-                        return@watch null
-                    }
-                    context.waitTick()
-                }
-
-                "not done within $TIMEOUT ticks, stopped at ${context.playerPosition()}"
-            }
+            val title = if (assist) "With Parkour" else "Without Parkour"
+            return runCourse(context, title, "ASSIST", lowest, TIMEOUT) { BlockPos.containing(it) == goal }
         } finally {
             input.releaseKey { it.keyUp }
             input.releaseKey { it.keySprint }

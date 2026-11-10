@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.playerPosition
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -154,6 +155,30 @@ internal inline fun unhurt(server: TestServerContext, what: String, block: () ->
     block()
     val after = server.player { it.health }
     check(after >= health) { "AutoWalk hurt the player $what, from $health to $after" }
+}
+
+/** Watches a run for [timeout] ticks until [arrived] or a fall below [lowest]; why it failed, or null. */
+internal fun runCourse(
+    context: ClientGameTestContext,
+    title: String,
+    tag: String,
+    lowest: Int,
+    timeout: Int,
+    arrived: (Vec3) -> Boolean,
+): String? = TurnWatch.watch(context, title) {
+    for (tick in 0 until timeout) {
+        val position = context.playerPosition()
+        if (position.y < lowest) {
+            return@watch "fell at $position after $tick ticks"
+        }
+        if (arrived(position)) {
+            logger.info("PARKOUR $tag: done in $tick ticks")
+            return@watch null
+        }
+        context.waitTick()
+    }
+
+    "not done within $timeout ticks, stopped at ${context.playerPosition()}"
 }
 
 /** Goes to [goal] with `.goto` until AutoWalk turns off within [arrival] of it; true if [flying] held on the way. */
