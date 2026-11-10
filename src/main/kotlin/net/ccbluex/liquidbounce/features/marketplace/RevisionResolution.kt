@@ -31,9 +31,6 @@ import net.minecraft.network.chat.MutableComponent
 
 sealed interface RevisionResolution {
 
-    /**
-     * [revision] is the one to have installed.
-     */
     data class Compatible(val revision: MarketplaceItemRevision) : RevisionResolution
 
     data class NoneCompatible(val unavailable: Unavailable) : RevisionResolution
@@ -63,9 +60,8 @@ data class Unavailable(val name: String, val published: Boolean) {
 class NoCompatibleRevisionException(val unavailable: Unavailable) : Exception(unavailable.describe())
 
 /**
- * The revision this item should have installed: the newest one, for an add-on the newest one the
- * marketplace offers for this game. [known] spares fetching the item when the caller has it. Callers
- * hold [SubscribedItem.locked].
+ * The newest revision, for an add-on the newest one the marketplace offers for this game. [known]
+ * spares fetching the item. Callers hold [SubscribedItem.locked].
  */
 internal suspend fun SubscribedItem.resolveRevision(known: MarketplaceItem? = null): RevisionResolution {
     val item = known ?: MarketplaceApi.getMarketplaceItem(id)

@@ -30,11 +30,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
-import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent.Severity
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -46,16 +45,12 @@ import net.ccbluex.liquidbounce.integration.interop.notFound
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
 private const val PAGE_SIZE = 20
 private const val REVISION_PAGE_SIZE = 50
 
-/**
- * The messages of `.marketplace`, which a theme's actions tell the same way.
- */
 private val marketplaceCommand = object : CmdI18n {
     override val path = "marketplace"
 }
@@ -83,12 +78,12 @@ private fun Route.getItem() = get {
     val id = call.requireId()
     call.respondMarketplace {
         val item = MarketplaceApi.getMarketplaceItem(id)
-        ItemDetailView(itemView(item), item.description, "v${AddonInstaller.liquidbounce}", versions(item))
+        ItemDetailView(itemView(item), item.description, runningLiquidBounce, versions(item))
     }
 }
 
 /**
- * Every revision, newest first. For an add-on, only those the marketplace offers for this game fit.
+ * Every revision, newest first. Of an add-on, only those the marketplace offers for this game fit.
  */
 private suspend fun versions(item: MarketplaceItem): List<VersionView> {
     val revisions = revisions(item.id)
@@ -104,22 +99,12 @@ private suspend fun versions(item: MarketplaceItem): List<VersionView> {
     }
 }
 
-private suspend fun revisions(
-    id: Int,
-    minecraft: String? = null,
-    liquidbounce: String? = null
-): List<MarketplaceItemRevision> {
-    val revisions = mutableListOf<MarketplaceItemRevision>()
-    var page = 1
-    do {
-        val response = MarketplaceApi.getMarketplaceItemRevisions(id, page, REVISION_PAGE_SIZE, minecraft, liquidbounce)
-        revisions += response.items
-    } while (page++ < response.pagination.pages)
-    return revisions
+private suspend fun revisions(id: Int, minecraft: String? = null, liquidbounce: String? = null) = allPages { page ->
+    MarketplaceApi.getMarketplaceItemRevisions(id, page, REVISION_PAGE_SIZE, minecraft, liquidbounce)
 }
 
 /**
- * Installs the item after what it needs, as `.marketplace subscribe` does.
+ * Installs what the item needs first, like `.marketplace subscribe`.
  */
 private fun Route.postInstall() = post("/install") {
     call.marketplace {
@@ -129,41 +114,29 @@ private fun Route.postInstall() = post("/install") {
             throw NoCompatibleRevisionException(unavailable.first())
         }
 
-        val message = marketplaceCommand.t("subscribe.success", variable(id.toString()))
+        announce(marketplaceCommand.t("subscribe.success", variable(id.toString())))
         val needed = installed.filter { it.id != id }.joinToString(", ") { it.name }
-        mc.execute {
-            chat(regular(message))
-            notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
-            if (needed.isNotEmpty()) {
-                chat(regular(marketplaceCommand.t("subscribe.dependencies", variable(needed))))
-            }
+        if (needed.isNotEmpty()) {
+            mc.execute { chat(regular(marketplaceCommand.t("subscribe.dependencies", variable(needed)))) }
         }
     }
     call.respond(HttpStatusCode.NoContent)
 }
 
 private fun Route.postUpdate() = post("/update") {
-    val view = call.marketplace {
+    call.respondMarketplace {
         val id = call.requireId()
         val subscribed = MarketplaceManager.getItem(id) ?: call.notFound(id.toString(), "Not installed")
-        val (message, severity) = when (val result = MarketplaceManager.update(subscribed)) {
-            is UpdateResult.Updated -> marketplaceCommand.t(
-                "update.success",
-                variable(id.toString()),
-                variable(result.revision.version)
-            ) to NotificationEvent.Severity.SUCCESS
-            is UpdateResult.NoUpdate ->
-                marketplaceCommand.t("update.noUpdate", variable(id.toString())) to NotificationEvent.Severity.INFO
+        val idText = variable(id.toString())
+        when (val result = MarketplaceManager.update(subscribed)) {
+            is UpdateResult.Updated ->
+                announce(marketplaceCommand.t("update.success", idText, variable(result.revision.version)))
+            is UpdateResult.NoUpdate -> announce(marketplaceCommand.t("update.noUpdate", idText), Severity.INFO)
             is UpdateResult.Incompatible -> call.badRequest(result.unavailable.text().string)
             is UpdateResult.Failed -> throw marketplaceFailure(result.error as? Exception ?: Exception(result.error))
         }
-        mc.execute {
-            chat(regular(message))
-            notification("Marketplace", message, severity)
-        }
         itemView(MarketplaceApi.getMarketplaceItem(id))
     }
-    call.respond(view)
 }
 
 private fun Route.postRemove() = post("/remove") {
@@ -174,11 +147,7 @@ private fun Route.postRemove() = post("/remove") {
         }
 
         MarketplaceManager.unsubscribe(id)
-        val message = marketplaceCommand.t("unsubscribe.success", variable(id.toString()))
-        mc.execute {
-            chat(regular(message))
-            notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
-        }
+        announce(marketplaceCommand.t("unsubscribe.success", variable(id.toString())))
     }
     call.respond(HttpStatusCode.NoContent)
 }
@@ -197,7 +166,7 @@ private fun Route.postApply() = post("/apply") {
 }
 
 /**
- * What is installed, without asking the marketplace.
+ * Answered without asking the marketplace.
  */
 private fun Route.getInstalled() = get("/installed") {
     call.respond(MarketplaceManager.subscribedItems.map { item -> InstalledItem(item.id, item.type, item.name) })

@@ -23,9 +23,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.ite
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceDeleteItemCommand
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceEditItemCommand
 
-/**
- * Manage marketplace items
- */
 object MarketplaceItemCommand {
 
     fun CmdLiteralScope.item() {

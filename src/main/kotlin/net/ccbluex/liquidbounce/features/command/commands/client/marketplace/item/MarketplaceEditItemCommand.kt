@@ -32,9 +32,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Edit marketplace item
- */
 object MarketplaceEditItemCommand {
 
     fun CmdLiteralScope.edit() {
@@ -59,7 +56,8 @@ object MarketplaceEditItemCommand {
 
                                 chat(
                                     regular(
-                                        t("item.edit.success",
+                                        t(
+                                            "item.edit.success",
                                             variable(response.id.toString()),
                                             variable(response.name)
                                         )

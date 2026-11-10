@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentT
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.preset.accountOrException
@@ -35,12 +36,8 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
-/**
- * Upload marketplace item revision
- */
 object MarketplaceUploadRevisionCommand {
 
-    @Suppress("LongMethod")
     fun CmdLiteralScope.upload() {
         literal("upload") {
             argument("id", IntegerArgumentType.integer(1)) { id ->
@@ -48,13 +45,11 @@ object MarketplaceUploadRevisionCommand {
                     argument("version", ClientStringArgumentType.word()) { version ->
                         optional("changelog", StringArgumentType.greedyString(), default = null) { changelog ->
                             execSuspend { ctx ->
-                                // Omitting the changelog uploads without one.
                                 this@literal.doUpload(
                                     ctx.get(id),
                                     ctx.get(file),
                                     ctx.get(version),
-                                    ctx.get(changelog) ?: "",
-                                    null
+                                    ctx.get(changelog) ?: ""
                                 )
                             }
                         }
@@ -64,13 +59,7 @@ object MarketplaceUploadRevisionCommand {
         }
     }
 
-    private suspend fun CmdLiteralScope.doUpload(
-        id: Int,
-        filePath: String,
-        version: String,
-        changelog: String,
-        dependencies: String?,
-    ) {
+    private suspend fun CmdI18n.doUpload(id: Int, filePath: String, version: String, changelog: String) {
         val clientAccount = ClientAccountManager.accountOrException()
 
         val file = File(filePath)
@@ -85,25 +74,14 @@ object MarketplaceUploadRevisionCommand {
                 file.name,
                 file.asRequestBody(HttpClient.MediaTypes.OCTET_STREAM),
                 version,
-                changelog,
-                dependencies
+                changelog
             )
 
-            chat(
-                regular(
-                    t("revisions.upload.success",
-                        variable(version),
-                        variable(id.toString())
-                    )
-                )
-            )
+            chat(regular(t("revisions.upload.success", variable(version), variable(id.toString()))))
         } catch (@Suppress("SwallowedException") e: Exception) {
             logger.error("Failed to upload marketplace item revision", e)
 
-            throw CommandException(t("error.updateFailed",
-                id.toString(),
-                e.message ?: "Unknown error"
-            ))
+            throw CommandException(t("error.updateFailed", id.toString(), e.message ?: "Unknown error"))
         }
     }
 

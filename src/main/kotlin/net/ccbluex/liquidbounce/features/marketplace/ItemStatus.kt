@@ -26,47 +26,46 @@ import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonManager
 
 /**
- * Where an add-on, script or theme stands on this client. [fitting] is the newest revision offered
- * for this game. An item that is not [subscribed] installs unless it or something it needs is
- * [unavailable], [notFor] this LiquidBounce when it is for want of a fitting revision.
+ * Where an add-on, script or theme stands on this client.
+ *
+ * @param fitting the newest revision offered for this game
+ * @param installable not subscribed, and it and everything it needs has a fitting revision
+ * @param incompatible it or something it needs has revisions, but none for this LiquidBounce
  */
-internal data class ItemStatus(
+internal class ItemStatus(
     val subscribed: Boolean,
     val installed: MarketplaceItemRevision?,
     val fitting: MarketplaceItemRevision?,
-    val unavailable: Boolean,
-    val notFor: Boolean,
+    val installable: Boolean,
+    val incompatible: Boolean,
     val restartRequired: Boolean,
 ) {
     val hasUpdate get() = subscribed && fitting != null && fitting.id != installed?.id
-
-    val installable get() = !subscribed && fitting != null && !unavailable
 }
 
 internal suspend fun MarketplaceItem.itemStatus(): ItemStatus {
     val subscribed = MarketplaceManager.getItem(id) ?: return unsubscribedStatus()
 
     val resolution = subscribed.locked { subscribed.resolveRevision(known = this) }
-    val compatible = resolution as? RevisionResolution.Compatible
+    val fitting = (resolution as? RevisionResolution.Compatible)?.revision
     val installed = subscribed.installedRevisionId?.let { revisionId ->
         // Null when taken down since it was installed.
-        compatible?.revision?.takeIf { it.id == revisionId }
+        fitting?.takeIf { it.id == revisionId }
             ?: orNotFound { MarketplaceApi.getMarketplaceItemRevision(id, revisionId) }
     }
-    val runtime = if (type == MarketplaceItemType.SCRIPT) runtimeOf(dependenciesOf(id)) else null
 
     return ItemStatus(
         subscribed = true,
         installed = installed,
-        fitting = compatible?.revision,
-        unavailable = compatible == null,
-        notFor = (resolution as? RevisionResolution.NoneCompatible)?.unavailable?.published == true,
-        restartRequired = restartRequired(runtime),
+        fitting = fitting,
+        installable = false,
+        incompatible = (resolution as? RevisionResolution.NoneCompatible)?.unavailable?.published == true,
+        restartRequired = restartRequired(subscribed = true),
     )
 }
 
 /**
- * Which revision installing it picks, walking what it needs as [installDependencies] does, without installing.
+ * Walks what the item needs like installing it does, without installing anything.
  */
 private suspend fun MarketplaceItem.unsubscribedStatus(): ItemStatus {
     val dependencies = dependenciesOf(id)
@@ -89,23 +88,24 @@ private suspend fun MarketplaceItem.unsubscribedStatus(): ItemStatus {
         subscribed = false,
         installed = null,
         fitting = fitting,
-        unavailable = leftOut.isNotEmpty(),
-        notFor = leftOut.any { it.unavailable.published },
-        restartRequired = restartRequired(null),
+        installable = fitting != null && leftOut.isEmpty(),
+        incompatible = leftOut.any { it.unavailable.published },
+        restartRequired = restartRequired(subscribed = false),
     )
 }
 
-private fun runtimeOf(dependencies: Dependencies) = dependencies.installables
-    .map { it.item }
-    .firstOrNull { it.id in dependencies.needs && it.type == MarketplaceItemType.ADDON }
-
-/**
- * An add-on takes effect at the next start, installed or removed; a script once the add-on it runs
- * on loads.
- */
-private fun MarketplaceItem.restartRequired(runtime: MarketplaceItem?) = when (type) {
+private suspend fun MarketplaceItem.restartRequired(subscribed: Boolean) = when (type) {
+    // Also pending after it was removed.
     MarketplaceItemType.ADDON -> AddonManager.isRestartRequired(id)
-    MarketplaceItemType.SCRIPT -> runtime != null && !MarketplaceManager.hasHandler(type) &&
-        MarketplaceManager.isSubscribed(runtime.id) && MarketplaceManager.isSubscribed(id)
+    // Runs once the add-on that runs scripts is loaded.
+    MarketplaceItemType.SCRIPT -> subscribed && !MarketplaceManager.hasHandler(type) &&
+        scriptRuntime()?.let { MarketplaceManager.isSubscribed(it.id) } == true
     else -> false
+}
+
+private suspend fun MarketplaceItem.scriptRuntime(): MarketplaceItem? {
+    val dependencies = dependenciesOf(id)
+    return dependencies.installables
+        .map { it.item }
+        .firstOrNull { it.id in dependencies.needs && it.type == MarketplaceItemType.ADDON }
 }

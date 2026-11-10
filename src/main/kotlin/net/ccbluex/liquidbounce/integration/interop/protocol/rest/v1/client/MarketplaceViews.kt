@@ -16,8 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
-
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import kotlinx.coroutines.async
@@ -32,31 +30,33 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceLinkedItem
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 import net.ccbluex.liquidbounce.features.addon.AddonInstaller
+import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfigs.address
 import net.ccbluex.liquidbounce.features.marketplace.itemStatus
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ServerIcons
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.protocolVersion as clientProtocol
 
-// What themes get from the marketplace routes, and how it comes from the marketplace's models.
-
 private const val SUMMARY_LENGTH = 200
 private const val REVIEW_PAGE_SIZE = 100
 
+internal class PageView<T>(val items: List<T>, val pagination: Pagination)
+
 /**
- * Only a page of configs has [code] and [unfeatured], which tells it apart for the theme.
+ * @param code the query was a share code
+ * @param unfeatured how many configs the featured filter hides when it leaves nothing
  */
-internal data class PageView<T>(
-    val items: List<T>,
+internal class ConfigPageView(
+    val items: List<ConfigView>,
     val pagination: Pagination,
-    val code: Boolean? = null,
-    val unfeatured: Int? = null,
+    val code: Boolean,
+    val unfeatured: Int,
 )
 
 /**
- * A config as themes list it. [overlayOn] is the config it loads on top of.
+ * @param overlayOn the config it loads on top of
  */
-internal data class ConfigView(
+internal class ConfigView(
     val id: Int,
     val name: String,
     val address: String,
@@ -75,13 +75,15 @@ internal data class ConfigView(
     val visibility: MarketplaceItemVisibility?,
 )
 
-internal data class LinkedConfig(val id: Int, val address: String, val image: String?, val featured: Boolean)
+internal class LinkedConfig(val id: Int, val address: String, val image: String?, val featured: Boolean)
 
 /**
- * [configs] load before it in this order and [installs] get installed. [changes] are the modules an overlay
- * sets, [report] the own report on the newest revision.
+ * @param configs loaded before it, in this order
+ * @param installs add-ons and scripts loading it installs
+ * @param changes the modules an overlay sets
+ * @param report the player's own report on the newest revision
  */
-internal data class ConfigDetailView(
+internal class ConfigDetailView(
     val config: ConfigView,
     val description: String,
     val createdAt: Long?,
@@ -93,7 +95,7 @@ internal data class ConfigDetailView(
     val report: Boolean?,
 )
 
-internal data class ConfigRevisionView(
+internal class ConfigRevisionView(
     val id: Int,
     val createdAt: Long?,
     val changelog: String?,
@@ -104,9 +106,9 @@ internal data class ConfigRevisionView(
 )
 
 /**
- * [liquidbounce] are the LiquidBounce versions an add-on revision works with.
+ * @param liquidbounce the LiquidBounce versions an add-on revision works with
  */
-internal data class RevisionView(
+internal class RevisionView(
     val id: Int,
     val version: String,
     val liquidbounce: String?,
@@ -115,9 +117,9 @@ internal data class RevisionView(
 )
 
 /**
- * An add-on, script or theme as themes list it. [notFor] is the running LiquidBounce when nothing fits it.
+ * @param notFor the running LiquidBounce, when no revision is for it
  */
-internal data class ItemView(
+internal class ItemView(
     val id: Int,
     val type: MarketplaceItemType,
     val name: String,
@@ -137,36 +139,34 @@ internal data class ItemView(
     val inUse: Boolean,
 )
 
-internal data class VersionView(val revision: RevisionView, val installed: Boolean, val fits: Boolean)
+internal class VersionView(val revision: RevisionView, val installed: Boolean, val fits: Boolean)
 
 /**
- * [liquidbounce] is the running LiquidBounce, which the versions that do not fit are not for.
+ * @param liquidbounce the running LiquidBounce
  */
-internal data class ItemDetailView(
+internal class ItemDetailView(
     val item: ItemView,
     val description: String,
     val liquidbounce: String,
     val versions: List<VersionView>,
 )
 
-internal data class InstalledItem(val id: Int, val type: MarketplaceItemType, val name: String)
+internal class InstalledItem(val id: Int, val type: MarketplaceItemType, val name: String)
 
-internal val MarketplaceItem.displayAddress get() = author?.let { "$it/$name" } ?: name
+internal val runningLiquidBounce get() = "v${AddonInstaller.liquidbounce}"
 
-private val MarketplaceLinkedItem.displayAddress
+private val MarketplaceLinkedItem.address
     get() = (author ?: item.author)?.let { "$it/${item.name}" } ?: item.name
 
-private val MarketplaceItem.thumbnail get() = thumbnailPid?.let(MarketplaceApi::fileUrl)
-
-private suspend fun serverIcon(servers: List<String>?) = servers.orEmpty().firstNotNullOfOrNull { ServerIcons.of(it) }
+private suspend fun MarketplaceItem.serverIcon() = targetServers.orEmpty().firstNotNullOfOrNull { ServerIcons.of(it) }
 
 internal suspend fun configView(item: MarketplaceItem): ConfigView {
     val base = MarketplaceApi.getItemDependencies(item.id).firstOrNull { it.item.type == MarketplaceItemType.CONFIG }
     return ConfigView(
         id = item.id,
         name = item.name,
-        address = item.displayAddress,
-        image = serverIcon(item.targetServers),
+        address = item.address,
+        image = item.serverIcon(),
         featured = item.featured,
         binds = item.includesBinds == true,
         tags = item.tags.orEmpty().map { it.name },
@@ -177,7 +177,7 @@ internal suspend fun configView(item: MarketplaceItem): ConfigView {
         fails = item.recentFails,
         downloads = item.downloads,
         updatedAt = epochMillis(item.updatedAt ?: item.createdAt),
-        overlayOn = base?.displayAddress,
+        overlayOn = base?.address,
         visibility = item.visibility,
     )
 }
@@ -187,7 +187,7 @@ internal suspend fun configViews(items: List<MarketplaceItem>) = coroutineScope 
 }
 
 internal suspend fun linkedConfig(item: MarketplaceItem) =
-    LinkedConfig(item.id, item.displayAddress, serverIcon(item.targetServers), item.featured)
+    LinkedConfig(item.id, item.address, item.serverIcon(), item.featured)
 
 internal fun MarketplaceItemRevision.view() = RevisionView(
     id = id,
@@ -196,21 +196,6 @@ internal fun MarketplaceItemRevision.view() = RevisionView(
     createdAt = epochMillis(createdAt),
     changelog = changelog?.takeIf(String::isNotBlank),
 )
-
-private val MARKDOWN_IMAGE = Regex("""!\[[^\]]*]\([^)]*\)""")
-private val MARKDOWN_LINK = Regex("""\[([^\]]*)]\([^)]*\)""")
-// Heading, quote and list marks, emphasis, code and HTML tags
-private val MARKDOWN_MARKS =
-    Regex("""^(#+|>|[-*+]|\d+\.)\s+|\*\*|__|~~|`|<[^>]+>|(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)""")
-
-/**
- * The first line of the description with text, without its markdown.
- */
-private fun MarketplaceItem.summary() = description.lineSequence()
-    .map { it.replace(MARKDOWN_IMAGE, "").replace(MARKDOWN_LINK, "$1").replace(MARKDOWN_MARKS, "").trim() }
-    .firstOrNull(String::isNotEmpty)
-    ?.take(SUMMARY_LENGTH)
-    .orEmpty()
 
 internal suspend fun itemView(item: MarketplaceItem): ItemView = coroutineScope {
     val rating = async { rating(item.id) }
@@ -221,15 +206,15 @@ internal suspend fun itemView(item: MarketplaceItem): ItemView = coroutineScope 
         type = item.type,
         name = item.name,
         author = item.author,
-        image = item.thumbnail,
+        image = item.thumbnailPid?.let(MarketplaceApi::fileUrl),
         summary = item.summary(),
         featured = item.featured,
         downloads = item.downloads,
-        rating = rating.await().first,
-        reviews = rating.await().second,
+        rating = rating.await().average,
+        reviews = rating.await().count,
         subscribed = status.subscribed,
         installable = status.installable,
-        notFor = if (status.notFor) "v${AddonInstaller.liquidbounce}" else null,
+        notFor = runningLiquidBounce.takeIf { status.incompatible },
         installed = status.installed?.view(),
         update = status.hasUpdate,
         restartRequired = status.restartRequired,
@@ -237,22 +222,34 @@ internal suspend fun itemView(item: MarketplaceItem): ItemView = coroutineScope 
     )
 }
 
+private val MARKDOWN_IMAGE = Regex("""!\[[^\]]*]\([^)]*\)""")
+private val MARKDOWN_LINK = Regex("""\[([^\]]*)]\([^)]*\)""")
+
+// Heading, quote and list marks, emphasis, code and HTML tags
+private val MARKDOWN_MARKS =
+    Regex("""^(#+|>|[-*+]|\d+\.)\s+|\*\*|__|~~|`|<[^>]+>|(?<!\w)[*_](?=\S)|(?<=\S)[*_](?!\w)""")
+
 /**
- * The average of every review and how many there are. Reviews failing to load leave the item without a
- * rating rather than without the item.
+ * The first line of the description that has text, without its markdown.
  */
-private suspend fun rating(id: Int): Pair<Double?, Int> {
-    val ratings = mutableListOf<Int>()
-    var page = 1
-    try {
-        do {
-            val reviews = MarketplaceApi.getReviews(id, page, REVIEW_PAGE_SIZE)
-            reviews.items.mapTo(ratings) { it.rating }
-        } while (page++ < reviews.pagination.pages)
+private fun MarketplaceItem.summary() = description.lineSequence()
+    .map { it.replace(MARKDOWN_IMAGE, "").replace(MARKDOWN_LINK, "$1").replace(MARKDOWN_MARKS, "").trim() }
+    .firstOrNull(String::isNotEmpty)
+    ?.take(SUMMARY_LENGTH)
+    .orEmpty()
+
+private class Rating(val average: Double?, val count: Int)
+
+/**
+ * Reviews failing to load leave the item without a rating rather than failing the item.
+ */
+private suspend fun rating(id: Int): Rating {
+    val ratings = try {
+        allPages { page -> MarketplaceApi.getReviews(id, page, REVIEW_PAGE_SIZE) }.map { it.rating }
     } catch (e: Exception) {
         if (e.httpException == null) throw e
         logger.debug("Failed to load the reviews of marketplace item $id", e)
-        return null to 0
+        emptyList()
     }
-    return ratings.average().takeIf { ratings.isNotEmpty() } to ratings.size
+    return Rating(ratings.average().takeIf { ratings.isNotEmpty() }, ratings.size)
 }

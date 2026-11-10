@@ -28,9 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Delete marketplace item
- */
 object MarketplaceDeleteItemCommand {
 
     fun CmdLiteralScope.delete() {
@@ -41,13 +38,7 @@ object MarketplaceDeleteItemCommand {
 
                     val itemId = ctx.get(id)
                     MarketplaceApi.deleteMarketplaceItem(clientAccount.takeSession(), itemId)
-                    chat(
-                        regular(
-                            t("item.delete.success",
-                                variable(itemId.toString())
-                            )
-                        )
-                    )
+                    chat(regular(t("item.delete.success", variable(itemId.toString()))))
                 }
             }
         }

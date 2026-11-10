@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.models.pagination.Pagination
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdI18n
 import net.ccbluex.liquidbounce.features.command.commands.client.config.reportInstalled
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
@@ -46,19 +45,13 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.features.marketplace.dependenciesOf
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.badRequest
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.dropPort
 
 private const val PAGE_SIZE = 20
 private const val HISTORY_SIZE = 10
 
-/**
- * The messages of `.config`, which a theme's actions tell the same way.
- */
 private val configCommand = object : CmdI18n {
     override val path = "config"
 }
@@ -73,7 +66,7 @@ private suspend fun tagIds(names: Collection<String>): List<Int> {
 }
 
 /**
- * The config [id] and its newest revision, which loads and reports go to.
+ * The config and its newest revision, the one loads and reports go to.
  */
 private suspend fun liveConfig(id: Int, session: OAuthSession?): Pair<MarketplaceItem, Int> {
     val item = MarketplaceApi.getMarketplaceItem(id, session)
@@ -84,31 +77,25 @@ private fun Route.getTags() = get("/tags") {
     call.respondMarketplace { MarketplaceApi.getTags().map { it.name } }
 }
 
-/**
- * A query with a share code finds that config, unlisted ones included. When the featured filter leaves
- * nothing, the page counts the configs it hides.
- */
 private fun Route.getConfigs() = get {
     val list = call.listQuery
-    val query = list.query
     val parameters = call.queryParameters
     val tags = parameters["tags"]?.split(',')?.map(String::trim)?.filter(String::isNotEmpty).orEmpty()
     val server = if (parameters["server"].toBoolean()) currentServer() else null
-    val featured = parameters["featured"].toBoolean()
+    val featuredOnly = parameters["featured"].toBoolean()
 
     call.respondMarketplace {
-        if (query != null && query.startsWith(MarketplaceConfigs.SHARE_CODE_PREFIX, ignoreCase = true)) {
-            val item = orNotFound { MarketplaceApi.getMarketplaceItemByCode(query) }
-            val items = listOfNotNull(item?.takeIf { it.type == MarketplaceItemType.CONFIG })
-            return@respondMarketplace PageView(configViews(items), Pagination(1, 1, items.size), true, 0)
+        val code = list.query?.takeIf { it.startsWith(MarketplaceConfigs.SHARE_CODE_PREFIX, ignoreCase = true) }
+        if (code != null) {
+            return@respondMarketplace sharedConfig(code)
         }
 
         val session = optionalSession()
         val tagIds = tagIds(tags)
-        suspend fun page(featured: Boolean?, limit: Int) = MarketplaceConfigs.list(
+        suspend fun page(featured: Boolean?, limit: Int = PAGE_SIZE) = MarketplaceConfigs.list(
             page = list.page,
             limit = limit,
-            query = query,
+            query = list.query,
             tags = tagIds,
             targetServer = server,
             featured = featured,
@@ -116,10 +103,23 @@ private fun Route.getConfigs() = get {
             session = session
         )
 
-        val response = page(featured.takeIf { it }, PAGE_SIZE)
-        val unfeatured = if (featured && response.items.isEmpty()) page(null, 1).pagination.items else 0
-        PageView(configViews(response.items), response.pagination, false, unfeatured)
+        val response = page(featured = if (featuredOnly) true else null)
+        val unfeatured = if (featuredOnly && response.items.isEmpty()) {
+            page(featured = null, limit = 1).pagination.items
+        } else {
+            0
+        }
+        ConfigPageView(configViews(response.items), response.pagination, code = false, unfeatured)
     }
+}
+
+/**
+ * A share code also finds unlisted configs.
+ */
+private suspend fun sharedConfig(code: String): ConfigPageView {
+    val item = orNotFound { MarketplaceApi.getMarketplaceItemByCode(code) }
+    val items = listOfNotNull(item?.takeIf { it.type == MarketplaceItemType.CONFIG })
+    return ConfigPageView(configViews(items), Pagination(1, 1, items.size), code = true, unfeatured = 0)
 }
 
 private fun Route.getConfig() = get {
@@ -133,32 +133,34 @@ private suspend fun configDetail(id: Int): ConfigDetailView = coroutineScope {
     val liveRevisionId = item.liveRevisionId
     val config = async { configView(item) }
     val dependencies = async { dependenciesOf(id) }
-    // A linked item leaves out the servers the icon comes from
     val configs = async {
-        dependencies.await().configs.map { async { linkedConfig(MarketplaceApi.getMarketplaceItem(it.item.id)) } }
+        // Fetched again: a linked item lacks the servers the icon comes from.
+        dependencies.await().configs
+            .map { async { linkedConfig(MarketplaceApi.getMarketplaceItem(it.item.id)) } }
+            .awaitAll()
     }
-    val installs = async { dependencies.await().installables.map { async { itemView(it.item) } } }
+    val installs = async { dependencies.await().installables.map { async { itemView(it.item) } }.awaitAll() }
     val revisions = async { revisions(item) }
     val forkOf = async {
         item.forkedFromItemId?.let { runCatching { linkedConfig(MarketplaceApi.getMarketplaceItem(it)) }.getOrNull() }
     }
     val report = async {
-        if (session != null && liveRevisionId != null) {
-            orNotFound { MarketplaceApi.getOwnConfigReport(session, id, liveRevisionId) }?.works
-        } else {
-            null
+        if (session == null || liveRevisionId == null) {
+            return@async null
         }
+        orNotFound { MarketplaceApi.getOwnConfigReport(session, id, liveRevisionId) }?.works
     }
+    val isOverlay = config.await().overlayOn != null
 
     ConfigDetailView(
         config = config.await(),
         description = item.description,
         createdAt = epochMillis(item.createdAt),
         forkOf = forkOf.await(),
-        configs = configs.await().awaitAll(),
-        installs = installs.await().awaitAll(),
+        configs = configs.await(),
+        installs = installs.await(),
         revisions = revisions.await(),
-        changes = liveRevisionId?.takeIf { config.await().overlayOn != null }?.let { ConfigTracker.modules(id, it) },
+        changes = liveRevisionId?.takeIf { isOverlay }?.let { ConfigTracker.modules(id, it) },
         report = report.await(),
     )
 }
@@ -192,7 +194,7 @@ private fun Route.getModules() = get("/modules") {
 }
 
 /**
- * Without modules the whole config loads and is tracked, with them only those modules change.
+ * Without modules the whole config loads and is tracked. With them only those modules change.
  */
 private fun Route.postLoad() = post("/load") {
     data class LoadRequest(val modules: List<String>?)
@@ -207,24 +209,19 @@ private fun Route.postLoad() = post("/load") {
 
         val (item, revisionId) = liveConfig(id, optionalSession())
         val result = ConfigTracker.load(item, revisionId, modules)
-        val message = configCommand.t("load.loaded", variable(item.name))
-        mc.execute {
-            chat(regular(message))
-            notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
-            configCommand.reportInstalled(result)
-        }
+        announce(configCommand.t("load.loaded", variable(item.name)))
+        mc.execute { configCommand.reportInstalled(result) }
     }
     call.respond(HttpStatusCode.NoContent)
 }
 
 /**
- * Reports the newest revision as working or broken, or withdraws the report without [works], and answers the
- * config with the new counts.
+ * Reports the newest revision as working or broken. Without `works` the report is withdrawn.
  */
 private fun Route.putReport() = put("/report") {
     data class ReportRequest(val works: Boolean?)
 
-    val view = call.marketplace {
+    call.respondMarketplace {
         val id = call.requireId()
         val works = call.receive<ReportRequest>().works
         val session = call.requireSession()
@@ -234,15 +231,10 @@ private fun Route.putReport() = put("/report") {
         } else {
             val server = mc.currentServer?.ip?.dropPort()
             MarketplaceApi.putConfigReport(session, id, revisionId, works, LiquidBounce.clientVersion, server)
-            val message = configCommand.t("report.reported", variable(item.name))
-            mc.execute {
-                chat(regular(message))
-                notification("Marketplace", message, NotificationEvent.Severity.SUCCESS)
-            }
+            announce(configCommand.t("report.reported", variable(item.name)))
         }
         configView(MarketplaceApi.getMarketplaceItem(id, session))
     }
-    call.respond(view)
 }
 
 internal fun Route.marketplaceConfigRoutes() = route("/marketplace") {

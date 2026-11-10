@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.api.services.marketplace
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.toRequestBody
@@ -43,34 +42,6 @@ object MarketplaceApi {
     private val baseUrl = config.apiEndpointV3
 
     private val service: MarketplaceService = config.retrofitApiV3.create()
-
-    private data class MarketplaceParams(
-        val page: Int = 1,
-        val limit: Int = 10,
-        val query: String? = null,
-        val type: MarketplaceItemType? = null,
-        val featured: Boolean = false,
-        val uid: String? = null,
-        val branch: String? = API_BRANCH,
-        val filter: Filter = Filter(),
-    ) {
-        fun toQuery() = buildMap {
-            put("page", page.toString())
-            put("limit", limit.toString())
-            put("featured", featured.toString())
-            query?.let { put("q", it) }
-            type?.let { put("type", it.tag) }
-            uid?.let { put("uid", it) }
-            branch?.let { put("branch", it) }
-            filter.name?.let { put("name", it) }
-            filter.author?.let { put("author", it) }
-            filter.featured?.let { put("is_featured", it.toString()) }
-            filter.tags.takeIf { it.isNotEmpty() }?.let { put("tags", it.joinToString(",")) }
-            filter.targetServer?.let { put("target_server", it) }
-            filter.forkedFrom?.let { put("forked_from", it.toString()) }
-            filter.sort?.let { put("sort", it.tag) }
-        }
-    }
 
     enum class Sort(val tag: String) {
         CREATED("created"),
@@ -120,7 +91,6 @@ object MarketplaceApi {
         details.writeTo(this)
     }.toRequestBody()
 
-    // Marketplace Items
     @Suppress("LongParameterList")
     suspend fun getMarketplaceItems(
         page: Int = 1,
@@ -133,7 +103,22 @@ object MarketplaceApi {
         filter: Filter = Filter(),
         session: OAuthSession? = null
     ): PaginatedResponse<MarketplaceItem> = service.items(
-        MarketplaceParams(page, limit, query, type, featured, uid, branch, filter).toQuery(),
+        buildMap {
+            put("page", page.toString())
+            put("limit", limit.toString())
+            put("featured", featured.toString())
+            query?.let { put("q", it) }
+            type?.let { put("type", it.tag) }
+            uid?.let { put("uid", it) }
+            branch?.let { put("branch", it) }
+            filter.name?.let { put("name", it) }
+            filter.author?.let { put("author", it) }
+            filter.featured?.let { put("is_featured", it.toString()) }
+            filter.tags.takeIf { it.isNotEmpty() }?.let { put("tags", it.joinToString(",")) }
+            filter.targetServer?.let { put("target_server", it) }
+            filter.forkedFrom?.let { put("forked_from", it.toString()) }
+            filter.sort?.let { put("sort", it.tag) }
+        },
         session?.authorization,
     )
 
@@ -166,7 +151,6 @@ object MarketplaceApi {
     suspend fun getMarketplaceItemByCode(shareCode: String, session: OAuthSession? = null) =
         service.itemByCode(shareCode, session?.authorization)
 
-    // Revisions
     /**
      * With [minecraft], an add-on only lists the revisions that work with that version.
      */
@@ -218,7 +202,6 @@ object MarketplaceApi {
 
     fun fileUrl(pid: String) = "$baseUrl/file/$pid"
 
-    // Dependencies
     suspend fun getItemDependencies(id: Int) = service.dependencies(id)
 
     suspend fun addItemDependency(session: OAuthSession, id: Int, dependencyItemId: Int) =
@@ -240,7 +223,7 @@ object MarketplaceApi {
         dependencyRevisionId: Int
     ) = service.addRevisionDependency(
         id, revisionId,
-        JsonObject().apply { addProperty("dependency_revision_id", dependencyRevisionId) }.toRequestBody(),
+        revisionDependencyBody(dependencyRevisionId),
         session.authorization,
     )
 
@@ -251,11 +234,13 @@ object MarketplaceApi {
         dependencyRevisionId: Int
     ) = service.removeRevisionDependency(
         id, revisionId,
-        JsonObject().apply { addProperty("dependency_revision_id", dependencyRevisionId) }.toRequestBody(),
+        revisionDependencyBody(dependencyRevisionId),
         session.authorization,
     )
 
-    // Reviews
+    private fun revisionDependencyBody(dependencyRevisionId: Int) =
+        JsonObject().apply { addProperty("dependency_revision_id", dependencyRevisionId) }.toRequestBody()
+
     suspend fun getReviews(id: Int, page: Int = 1, limit: Int = 10) = service.reviews(id, page, limit)
 
     suspend fun createReview(
@@ -275,7 +260,6 @@ object MarketplaceApi {
     suspend fun deleteReview(session: OAuthSession, id: Int, reviewId: Int) =
         service.deleteReview(id, reviewId, session.authorization)
 
-    // Config reports
     @Suppress("LongParameterList")
     suspend fun putConfigReport(
         session: OAuthSession,
@@ -303,7 +287,6 @@ object MarketplaceApi {
 
     suspend fun getConfigReports(id: Int) = service.configReports(id)
 
-    // Thumbnails
     suspend fun uploadThumbnail(session: OAuthSession, id: Int, thumbnailFile: File) {
         service.uploadThumbnail(
             id,

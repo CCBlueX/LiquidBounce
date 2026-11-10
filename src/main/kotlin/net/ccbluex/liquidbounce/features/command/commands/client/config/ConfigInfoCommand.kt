@@ -40,9 +40,6 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentUtils.DEFAULT_SEPARATOR
 
-/**
- * Shows a marketplace config, by default the tracked one
- */
 object ConfigInfoCommand {
 
     private const val DESCRIPTION_PREVIEW = 200
@@ -100,9 +97,10 @@ object ConfigInfoCommand {
         item.sourceUrl?.let { field(regular(t("info.source", variable(it).copyable()))) }
         val dependencies = request { MarketplaceApi.getItemDependencies(item.id) }
         if (dependencies.isNotEmpty()) {
-            val names = dependencies.joinToText(DEFAULT_SEPARATOR) {
-                variable("${it.author?.let { author -> "$author/${it.item.name}" }
-                    ?: it.item.address} (${it.item.type.tag})")
+            val names = dependencies.joinToText(DEFAULT_SEPARATOR) { dependency ->
+                val needed = dependency.item
+                val address = dependency.author?.let { "$it/${needed.name}" } ?: needed.address
+                variable("$address (${needed.type.tag})")
             }
             field(regular(t("info.dependencies", names)))
         }
@@ -116,9 +114,7 @@ object ConfigInfoCommand {
         }
         field(regular(t("info.reports", votes(item))))
         item.updatedAt?.let { field(regular(t("info.updated", ago(it)))) }
-        item.shareCode?.let { code ->
-            field(regular(t("info.shareCode", variable(code).copyable())))
-        }
+        item.shareCode?.let { field(regular(t("info.shareCode", variable(it).copyable()))) }
     }
 
 }

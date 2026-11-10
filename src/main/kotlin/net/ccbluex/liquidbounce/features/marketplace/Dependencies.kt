@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
 
 /**
- * What an item depends on: configs in the order they are applied, and add-ons and scripts after the
- * ones they need. [needs] are the add-ons and scripts the item depends on itself.
+ * [configs] in the order they are applied, [installables] after the ones they need. [needs] are the
+ * add-ons and scripts the item depends on itself.
  */
 internal class Dependencies(
     val configs: List<ConfigDependency>,
@@ -43,16 +43,14 @@ internal data class Installed(val installed: List<MarketplaceItem>, val unavaila
 internal class LeftOut(val item: MarketplaceItem, val unavailable: Unavailable)
 
 /**
- * Whether installing it takes effect only after a restart: for an add-on always, for a script while
- * nothing runs scripts.
+ * An add-on always loads on the next start, a script only while nothing runs scripts.
  */
 internal val MarketplaceItem.installNeedsRestart
     get() = type == MarketplaceItemType.ADDON ||
         type == MarketplaceItemType.SCRIPT && !MarketplaceManager.hasHandler(type)
 
 /**
- * Walks the dependencies of [rootId] depth-first. Config dependencies come out in the order they are
- * applied, installables after the ones they need, so an add-on is checked with those installed.
+ * Depth-first, so installables come after the ones they need and an add-on is checked with those installed.
  */
 internal suspend fun dependenciesOf(rootId: Int): Dependencies {
     val configs = linkedMapOf<Int, ConfigDependency>()
@@ -85,7 +83,7 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
                     needs += item.id
                 }
 
-                else -> {}
+                else -> Unit
             }
         }
 
@@ -99,8 +97,8 @@ internal suspend fun dependenciesOf(rootId: Int): Dependencies {
 }
 
 /**
- * Subscribes to the [installables] that are missing. One that does not fit this game does not
- * stop the others; it and what needs it are left out, and [Installed.unavailable] names it.
+ * Subscribes to the missing [installables]. One that does not fit this game is left out with what
+ * needs it, and named in [Installed.unavailable].
  */
 internal suspend fun installDependencies(installables: Collection<Installable>): Installed {
     val installed = mutableListOf<MarketplaceItem>()
@@ -116,17 +114,14 @@ internal suspend fun installDependencies(installables: Collection<Installable>):
     return Installed(installed, skipped.map { it.unavailable }.distinct())
 }
 
-/**
- * Subscribes to [item] after what it needs, as [installDependencies] does.
- */
 internal suspend fun installWithDependencies(item: MarketplaceItem): Installed {
     val dependencies = dependenciesOf(item.id)
     return installDependencies(dependencies.installables + Installable(item, dependencies.needs))
 }
 
 /**
- * What of the [installables] is left out, running [install] for each missing one: the inactive ones, the ones
- * [install] gives a reason for, and what needs any of those, with its reason.
+ * Runs [install] for each missing installable. Left out are the inactive ones, the ones [install]
+ * gives a reason for, and what needs any of those, with that reason.
  */
 internal suspend fun leftOut(
     installables: Collection<Installable>,

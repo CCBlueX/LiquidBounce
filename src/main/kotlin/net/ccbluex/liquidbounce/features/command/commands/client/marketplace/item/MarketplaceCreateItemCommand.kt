@@ -31,9 +31,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 
-/**
- * Create marketplace item
- */
 object MarketplaceCreateItemCommand {
     fun CmdLiteralScope.create() {
         literal("create") {
@@ -52,10 +49,7 @@ object MarketplaceCreateItemCommand {
 
                             chat(
                                 regular(
-                                    t("item.create.success",
-                                        variable(response.id.toString()),
-                                        variable(response.name)
-                                    )
+                                    t("item.create.success", variable(response.id.toString()), variable(response.name))
                                 )
                             )
                         }
