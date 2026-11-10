@@ -1,6 +1,7 @@
 <script lang="ts">
     import {quintOut} from "svelte/easing";
     import {fade} from "svelte/transition";
+    import {escapeLayer} from "../../../../../integration/escape";
 
     export let closeOnInternalClick: boolean;
 
@@ -25,6 +26,9 @@
             }
         }
     }
+
+    const layer = escapeLayer(() => expanded = false);
+    $: layer.setOpen(expanded);
 </script>
 
 <svelte:window on:click={handleWindowClick}/>

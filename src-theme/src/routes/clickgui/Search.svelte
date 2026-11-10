@@ -7,6 +7,7 @@
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
     import {isClickGuiScreen} from "../../util/utils";
+    import {escapeLayer} from "../../integration/escape";
 
     export let modules: Module[];
 
@@ -38,6 +39,9 @@
         query = "";
         $highlightModuleName = null;
     }
+
+    const layer = escapeLayer(reset);
+    $: layer.setOpen(!!query);
 
     function filterModules(resetIndex: boolean) {
         if (!query) {
