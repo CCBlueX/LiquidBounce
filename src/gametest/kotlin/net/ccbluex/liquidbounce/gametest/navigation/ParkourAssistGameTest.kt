@@ -20,21 +20,20 @@
 package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleParkour
-import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
- * A player who only holds forward and sprint, looking along a Jump 'n' Run course high over a lake, makes it to the
- * end with Parkour on: gaps of two and three blocks, a jump up, a jump down and blocks off to the side. Without
- * Parkour the same run ends in the lake at the first gap.
+ * A player who only holds forward and sprint along a Jump 'n' Run course over a lake makes it to the end with
+ * Parkour on, and falls into the lake without it.
  */
 class ParkourAssistGameTest : FabricClientGameTest {
 
@@ -47,9 +46,7 @@ class ParkourAssistGameTest : FabricClientGameTest {
         try {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val ground = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val ground = server.groundY()
                 val origin = BlockPos(0, ground + HEIGHT, 0)
                 server.runCommand("gamemode survival @a")
                 server.runCommand("effect give @a saturation infinite 0 true")
@@ -70,9 +67,7 @@ class ParkourAssistGameTest : FabricClientGameTest {
         }
     }
 
-    /**
-     * Holds forward and sprint along the course from its first block; why it failed, or null.
-     */
+    /** Why the run failed, or null. */
     private fun run(
         context: ClientGameTestContext,
         server: TestServerContext,
@@ -84,9 +79,7 @@ class ParkourAssistGameTest : FabricClientGameTest {
         val start = Vec3(first.x + 0.5, first.y + 1.0, first.z + 0.5)
         val goal = Vec3(last.x + 0.5, last.y + 1.0, last.z + 0.5)
 
-        server.runCommand("tp @a ${start.x} ${start.y} ${start.z} -90 0")
-        context.waitFor({ it.player?.position()?.distanceToSqr(start)?.let { d -> d < EPSILON } == true }, WAIT)
-        context.waitTicks(SETTLE)
+        moveTo(context, server, start, yaw = -90f, settleTicks = SETTLE)
         context.onClient { ModuleParkour.enabled = assist }
 
         val input = context.input
@@ -95,7 +88,7 @@ class ParkourAssistGameTest : FabricClientGameTest {
         try {
             return TurnWatch.watch(context, if (assist) "With Parkour" else "Without Parkour") {
                 for (tick in 0 until TIMEOUT) {
-                    val position = context.fromClient { checkNotNull(it.player).position() }
+                    val position = context.playerPosition()
                     if (position.y < origin.y + COURSE.minOf { it.y }) {
                         return@watch "fell at $position after $tick ticks"
                     }
@@ -106,8 +99,7 @@ class ParkourAssistGameTest : FabricClientGameTest {
                     context.waitTick()
                 }
 
-                val position = context.fromClient { checkNotNull(it.player).position() }
-                "not done within $TIMEOUT ticks, stopped at $position"
+                "not done within $TIMEOUT ticks, stopped at ${context.playerPosition()}"
             }
         } finally {
             input.releaseKey { it.keyUp }
@@ -118,15 +110,10 @@ class ParkourAssistGameTest : FabricClientGameTest {
 
     private companion object {
         const val HEIGHT = 24
-        const val WAIT = 200
         const val SETTLE = 10
         const val TIMEOUT = 600
-        const val EPSILON = 1.0E-4
 
-        /**
-         * Along +X, the player looking that way: a gap of two, three, a jump up, one down, and two blocks off to the
-         * side the look does not point at exactly.
-         */
+        /** Along +X: a gap of two, three, a jump up, one down, and two blocks off to the side. */
         val COURSE = listOf(
             BlockPos(0, 0, 0), BlockPos(1, 0, 0), BlockPos(4, 0, 0), BlockPos(8, 0, 0), BlockPos(11, 1, 0),
             BlockPos(15, 0, 0), BlockPos(18, 0, 1), BlockPos(21, 0, 0), BlockPos(22, 0, 0),

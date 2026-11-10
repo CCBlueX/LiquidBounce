@@ -19,14 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.navigation
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
-import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJump
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumps
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkLeap
@@ -41,14 +40,11 @@ import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/**
- * Jumps between single blocks over the void, simulated as the game moves a player.
- */
+/** Jumps between single blocks over the void, simulated as the game moves a player. */
 class WalkJumpTest {
 
     companion object {
@@ -60,22 +56,9 @@ class WalkJumpTest {
         private const val MAX_LEAP_TICKS = 200
     }
 
-    private fun abilities(riskyJumps: Boolean = true) = WalkAbilities(
-        canBreak = false,
-        canPlace = false,
-        placeableBlocks = 0,
-        canParkour = true,
-        riskyJumps = riskyJumps,
-        canSprint = true,
-        safeFall = 3,
-        waterFall = 20,
-        breakTicks = { Double.POSITIVE_INFINITY },
-        avoid = LongOpenHashSet(),
-    )
+    private fun abilities(riskyJumps: Boolean = true) = walkAbilities(canParkour = true, riskyJumps = riskyJumps)
 
-    /**
-     * Whether a jump from a single block at the origin to a single block [dx] [dy] [dz] away works.
-     */
+    /** Whether a jump from a single block at the origin to a single block [dx] [dy] [dz] away works. */
     private fun canJump(dx: Int, dy: Int, dz: Int, riskyJumps: Boolean = true): Boolean {
         val world = TestNavigationWorld().fill(0, 0, 0, 0, 0, 0).fill(dx, dy, dz, dx, dy, dz)
         return WalkJumps(world.terrain(), abilities(riskyJumps))
@@ -84,13 +67,7 @@ class WalkJumpTest {
 
     private fun route(world: TestNavigationWorld, goal: BlockPos): WalkPath {
         val search = WalkRouteSearch(world.terrain(), Vec3(0.5, 1.0, 0.5), BlockGoal(listOf(goal)), abilities(), LIMITS)
-        var result = search.advance()
-        while (result == RouteResult.Searching) {
-            result = search.advance()
-        }
-        val path = assertIs<RouteResult.Found<WalkPath>>(result).value
-        assertTrue(path.complete)
-        return path
+        return completePath(search.advanceToEnd(), message = null)
     }
 
     /**
@@ -245,7 +222,7 @@ class WalkJumpTest {
     fun `a jump into a hole in a wall is run at to the end`() {
         // A wall along z = 3 with a hole one block wide and two high, entered at an angle and a block up.
         val world = TestNavigationWorld().fill(0, 0, 0, 0, 0, 0).fill(-3, 1, 3, 5, 4, 3)
-            .fill(1, 2, 3, 1, 3, 3, Blocks.AIR.defaultBlockState()).fill(-3, 1, 4, 5, 1, 6)
+            .fill(1, 2, 3, 1, 3, 3, AIR).fill(-3, 1, 4, 5, 1, 6)
         assertTrue(leap(world, Vec3(0.5, 1.0, 0.5), BlockPos(0, 1, 0), BlockPos(1, 2, 3)))
     }
 
@@ -276,7 +253,7 @@ class WalkJumpTest {
             BlockPos(0, 0, 0), BlockPos(2, 0, 0), BlockPos(5, 0, 0), BlockPos(7, 1, 1), BlockPos(9, 1, 4),
             BlockPos(11, 0, 6), BlockPos(14, 0, 6),
         )
-        course.forEach { world.set(it.x, it.y, it.z, Blocks.STONE.defaultBlockState()) }
+        course.forEach { world.set(it.x, it.y, it.z, STONE) }
         val goal = course.last().above()
 
         val path = route(world, goal)

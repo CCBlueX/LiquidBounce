@@ -30,12 +30,14 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
+import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.suggest
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
@@ -56,9 +58,7 @@ class TeleportCommandGameTest : FabricClientGameTest {
             assertStaleConfigLoads(context)
 
             context.worldBuilder().create().use { world ->
-                val groundY = world.server.computeOnServer<Int, RuntimeException> { server ->
-                    server.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }.toDouble()
+                val groundY = world.server.groundY().toDouble()
                 world.server.runCommand("gamemode creative @a")
                 world.server.runCommand("tp @a 8.5 $groundY 8.5")
                 context.waitFor({ client -> client.player?.position()?.near(Vec3(8.5, groundY, 8.5)) == true }, 200)
@@ -67,15 +67,10 @@ class TeleportCommandGameTest : FabricClientGameTest {
                 context.command("teleport ${target.x} ${target.y} ${target.z}")
                 context.waitFor({ client -> client.player?.position()?.near(target) == true }, 20)
                 context.waitTicks(10)
-                check(context.fromClient { checkNotNull(it.player).position().near(target) }) {
+                check(context.playerPosition().near(target)) {
                     "The client was set back after teleporting"
                 }
-                val serverPosition = world.server.computeOnServer<Vec3, RuntimeException> {
-                    it.playerList.players.first().position()
-                }
-                check(serverPosition.near(target)) {
-                    "The server did not accept the teleport"
-                }
+                check(world.server.player { it.position() }.near(target)) { "The server did not accept the teleport" }
 
                 context.command("tp ~3 ~ ~")
                 val relative = target.add(3.0, 0.0, 0.0)
@@ -144,9 +139,7 @@ class TeleportCommandGameTest : FabricClientGameTest {
         }
     }
 
-    /**
-     * Players in the world are found by name even when the tab list does not show them, such as a fake player.
-     */
+    /** Players in the world are found by name even when the tab list does not show them, such as a fake player. */
     private fun checkPlayerTeleport(context: ClientGameTestContext, groundY: Double) {
         val twin = Vec3(14.5, groundY, 6.5)
         context.command("teleport ${twin.x} ${twin.y} ${twin.z}")
@@ -169,7 +162,7 @@ class TeleportCommandGameTest : FabricClientGameTest {
         add("value", value)
     }
 
-    private fun Vec3.near(other: Vec3) = distanceToSqr(other) < EPSILON * EPSILON
+    private fun Vec3.near(other: Vec3): Boolean = near(other, EPSILON * EPSILON)
 
     private companion object {
         const val EPSILON = 1.0E-3

@@ -19,18 +19,24 @@
 
 package net.ccbluex.liquidbounce.utils.navigation
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import it.unimi.dsi.fastutil.longs.LongSet
+import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
+import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
+import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
+import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.phys.Vec3
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
-/**
- * An in-memory world for routing tests; every block is air unless filled.
- */
+/** An in-memory world for routing tests; every block is air unless filled. */
 class TestNavigationWorld(
     private val known: (x: Int, z: Int) -> Boolean = { _, _ -> true },
 ) : NavigationWorld {
@@ -69,9 +75,7 @@ class TestNavigationWorld(
         val STONE: BlockState get() = Blocks.STONE.defaultBlockState()
         val AIR: BlockState get() = Blocks.AIR.defaultBlockState()
 
-        /**
-         * A stone floor at y = 0 from -40 to 40, so feet stand at y = 1.
-         */
+        /** A stone floor at y = 0 from -40 to 40, so feet stand at y = 1. */
         fun flat(known: (x: Int, z: Int) -> Boolean = { _, _ -> true }) =
             TestNavigationWorld(known).fill(-40, 0, -40, 40, 0, 40)
 
@@ -79,3 +83,41 @@ class TestNavigationWorld(
     }
 
 }
+
+/** Advances the search until it is done, after the first slice at most [maxSlices] more times. */
+fun <T> RouteSearch<T>.advanceToEnd(maxSlices: Int = Int.MAX_VALUE): RouteResult<T> {
+    var result = advance()
+    var slices = 0
+    while (result == RouteResult.Searching && slices++ < maxSlices) {
+        result = advance()
+    }
+    return result
+}
+
+fun completePath(result: RouteResult<WalkPath>, message: String? = "path should reach the goal"): WalkPath {
+    val path = assertIs<RouteResult.Found<WalkPath>>(result).value
+    assertTrue(path.complete, message)
+    return path
+}
+
+/** A sprinting walker that takes falls of [safeFall] blocks and mines every block in [breakTicks]. */
+fun walkAbilities(
+    canBreak: Boolean = false,
+    canPlace: Boolean = false,
+    canParkour: Boolean = false,
+    riskyJumps: Boolean = false,
+    safeFall: Int = 3,
+    breakTicks: Double = Double.POSITIVE_INFINITY,
+    avoid: LongSet = LongOpenHashSet(),
+) = WalkAbilities(
+    canBreak = canBreak,
+    canPlace = canPlace,
+    placeableBlocks = if (canPlace) 64 else 0,
+    canParkour = canParkour,
+    riskyJumps = riskyJumps,
+    canSprint = true,
+    safeFall = safeFall,
+    waterFall = 20,
+    breakTicks = { breakTicks },
+    avoid = avoid,
+)

@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
+import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
@@ -42,10 +44,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.monster.zombie.Husk
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -62,14 +61,10 @@ class TeleportRouteGameTest : FabricClientGameTest {
             return
         }
         context.waitForClient()
-        val savedTpAura = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTpAura) }
-
-        try {
+        context.restoring(ModuleTpAura) {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 buildArena(server, y)
                 server.runCommand("gamemode survival @a")
                 server.runCommand("gamerule natural_health_regeneration false")
@@ -82,11 +77,6 @@ class TeleportRouteGameTest : FabricClientGameTest {
                 checkTpAura(context, server, y)
 
                 check(server.player { it.health } == server.player { it.maxHealth }) { "A route hurt the player" }
-            }
-        } finally {
-            context.onClient {
-                ModuleTpAura.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleTpAura, savedTpAura)
             }
         }
     }
@@ -125,7 +115,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
         val hold = travel(context, found(context.route(BlockPos(26, y, 0))), RunFinish.HOLD)
         check(hold.state == RunState.DONE) { "The held run ended as ${hold.state}" }
         server.waitFor({ it.player().position().near(below) }, WAIT_TICKS)
-        check(context.clientPosition().near(top)) { "The client moved with a held run" }
+        check(context.playerPosition().near(top)) { "The client moved with a held run" }
         check(context.fromClient { TeleportDispatcher.serverPosition?.near(below) == true })
 
         context.onClient { TeleportDispatcher.undo(Owner) }
@@ -153,8 +143,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
 
         check(run.state == RunState.REJECTED) { "A setback ended the run as ${run.state}" }
         check(context.fromClient { !TeleportDispatcher.holds(Owner) && TeleportDispatcher.serverPosition == null })
-        context.waitFor({ client -> client.player?.position()?.near(setback) == true }, WAIT_TICKS)
-        context.waitTicks(SETTLE_TICKS)
+        awaitPosition(context, setback)
         check(server.player { it.position() }.near(setback)) { "The rejected run kept moving the player" }
     }
 
@@ -169,9 +158,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
         check((midAir as? RouteResult.Failed)?.failure == RouteFailure.INVALID_DESTINATION) { "Mid-air gave $midAir" }
     }
 
-    /**
-     * TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up.
-     */
+    /** TpAura reaches a husk on open ground, one 14 blocks below a tower and one on a platform 13 blocks up. */
     private fun checkTpAura(context: ClientGameTestContext, server: TestServerContext, y: Int) {
         checkTpAuraAttack(context, server, Vec3(2.5, y.toDouble(), -10.5), Vec3(16.5, y.toDouble(), -10.5))
 
@@ -208,7 +195,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
 
         context.onClient { ModuleTpAura.enabled = false }
         context.waitFor({ !TeleportDispatcher.holds(ModuleTpAura) && !TeleportDispatcher.isMoving }, WAIT_TICKS)
-        check(context.clientPosition().near(origin)) { "TpAura moved the client from $origin" }
+        check(context.playerPosition().near(origin)) { "TpAura moved the client from $origin" }
         server.waitFor({ it.player().position().near(origin) }, WAIT_TICKS)
 
         val (after, source) = server.player { it.health to it.lastDamageSource?.type()?.msgId() }
@@ -218,15 +205,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
         context.waitFor({ client -> client.level?.entitiesForRendering()?.none { it is Husk } == true }, WAIT_TICKS)
     }
 
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z}")
-        context.waitFor({ client -> client.player?.position()?.near(position) == true }, WAIT_TICKS)
-        context.waitTicks(SETTLE_TICKS)
-    }
-
-    /**
-     * Searches like a module does: over a copy of the world, slice by slice.
-     */
+    /** Searches like a module does: over a copy of the world, slice by slice. */
     private fun ClientGameTestContext.route(
         goal: BlockPos,
         maxLength: Double = 80.0,
@@ -265,21 +244,11 @@ class TeleportRouteGameTest : FabricClientGameTest {
         check(run.state == RunState.DONE) { "The run to $destination ended as ${run.state}" }
         server.waitFor({ it.player().position().near(destination) }, WAIT_TICKS)
         context.waitTicks(SETTLE_TICKS)
-        check(context.clientPosition().near(destination)) { "Set back from $destination" }
+        check(context.playerPosition().near(destination)) { "Set back from $destination" }
         check(server.player { it.position() }.near(destination)) { "The server did not keep $destination" }
     }
 
-    private fun MinecraftServer.player(): ServerPlayer = playerList.players.first()
-
-    private fun ClientGameTestContext.clientPosition(): Vec3 = fromClient { checkNotNull(it.player).position() }
-
-    private fun <T> TestServerContext.player(block: (ServerPlayer) -> T): T =
-        computeOnServer<T, RuntimeException> { block(it.player()) }
-
-    private fun Vec3.near(other: Vec3) = distanceToSqr(other) < EPSILON
-
     private companion object {
-        const val EPSILON = 1.0E-4
         const val WAIT_TICKS = 200
         const val TPAURA_TICKS = 400
         const val SETTLE_TICKS = 5

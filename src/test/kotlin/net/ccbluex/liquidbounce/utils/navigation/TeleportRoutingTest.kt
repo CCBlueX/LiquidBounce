@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.flat
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
@@ -56,6 +58,7 @@ class TeleportRoutingTest {
         }
 
         private const val STEP_LENGTH = 5.0
+        private const val MAX_SLICES = 1000
     }
 
     private fun search(
@@ -63,15 +66,7 @@ class TeleportRoutingTest {
         start: Vec3,
         goal: BlockPos,
         limits: RouteLimits = RouteLimits(maxLength = 80.0),
-    ): RouteResult<TeleportPlan> {
-        val search = TeleportRouteSearch(terrain, start, listOf(goal), limits, STEP_LENGTH)
-        var result = search.advance()
-        repeat(1000) {
-            if (result != RouteResult.Searching) return result
-            result = search.advance()
-        }
-        return result
-    }
+    ) = TeleportRouteSearch(terrain, start, listOf(goal), limits, STEP_LENGTH).advanceToEnd(MAX_SLICES)
 
     private fun found(result: RouteResult<TeleportPlan>) = assertIs<RouteResult.Found<TeleportPlan>>(result).value
 
@@ -145,10 +140,10 @@ class TeleportRoutingTest {
         val end = Vec3(3.5, 1.0, 1.5)
 
         // X is the longer axis, so the server moves along X first: the block on that leg stops it.
-        assertFalse(flat().set(3, 1, 0, TestNavigationWorld.STONE).terrain().sweep(start, end))
+        assertFalse(flat().set(3, 1, 0, STONE).terrain().sweep(start, end))
 
         // The opposite corner is only passed by a Z-first move.
-        assertTrue(flat().set(0, 1, 1, TestNavigationWorld.STONE).terrain().sweep(start, end))
+        assertTrue(flat().set(0, 1, 1, STONE).terrain().sweep(start, end))
     }
 
     @Test
@@ -158,15 +153,15 @@ class TeleportRoutingTest {
         assertTrue(terrain.isStandable(BlockPos(0, 1, 0)))
         assertTrue(terrain.isStandable(BlockPos(1, 1, 0)))
 
-        world.set(10, 5, 10, TestNavigationWorld.STONE)
-        assertFalse(terrain.invalidate(BlockPos(10, 5, 10), TestNavigationWorld.STONE))
+        world.set(10, 5, 10, STONE)
+        assertFalse(terrain.invalidate(BlockPos(10, 5, 10), STONE))
 
         val grown = Blocks.WHEAT.defaultBlockState().setValue(CropBlock.AGE, CropBlock.MAX_AGE)
         world.set(1, 1, 0, grown)
         assertFalse(terrain.invalidate(BlockPos(1, 1, 0), grown))
 
-        world.set(0, 2, 0, TestNavigationWorld.STONE)
-        assertTrue(terrain.invalidate(BlockPos(0, 2, 0), TestNavigationWorld.STONE))
+        world.set(0, 2, 0, STONE)
+        assertTrue(terrain.invalidate(BlockPos(0, 2, 0), STONE))
         assertFalse(terrain.isStandable(BlockPos(0, 1, 0)))
     }
 
@@ -298,7 +293,7 @@ class TeleportRoutingTest {
     @Test
     fun `arriving, missing and impossible destinations are told apart`() {
         // A standable cell walled in on every side.
-        val terrain = flat().fill(19, 1, -1, 21, 3, 1).fill(20, 1, 0, 20, 2, 0, TestNavigationWorld.AIR).terrain()
+        val terrain = flat().fill(19, 1, -1, 21, 3, 1).fill(20, 1, 0, 20, 2, 0, AIR).terrain()
         val start = feet(0, 1, 0)
 
         assertEquals(RouteResult.AlreadyThere, search(terrain, start, BlockPos(0, 1, 0)))

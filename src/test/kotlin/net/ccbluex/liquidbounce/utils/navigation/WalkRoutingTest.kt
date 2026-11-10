@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
@@ -60,25 +61,15 @@ class WalkRoutingTest {
         }
 
         private val LIMITS = RouteLimits(maxLength = 64.0, maxExpansions = 20_000, maxComputeNanos = Long.MAX_VALUE)
+        private const val MAX_SLICES = 1000
     }
 
     private fun abilities(
         canBreak: Boolean = false,
         canPlace: Boolean = false,
         canParkour: Boolean = false,
-        safeFall: Int = 3,
         avoid: LongSet = LongOpenHashSet(),
-    ) = WalkAbilities(
-        canBreak = canBreak,
-        canPlace = canPlace,
-        placeableBlocks = if (canPlace) 64 else 0,
-        canParkour = canParkour,
-        canSprint = true,
-        safeFall = safeFall,
-        waterFall = 20,
-        breakTicks = { 20.0 },
-        avoid = avoid,
-    )
+    ) = walkAbilities(canBreak, canPlace, canParkour, breakTicks = 20.0, avoid = avoid)
 
     private fun search(
         world: TestNavigationWorld,
@@ -87,21 +78,7 @@ class WalkRoutingTest {
         abilities: WalkAbilities = abilities(),
     ): RouteResult<WalkPath> {
         val terrain = world.terrain(opensDoors = true)
-        val search = WalkRouteSearch(terrain, start, BlockGoal(listOf(goal)), abilities, LIMITS)
-        var result = search.advance()
-        repeat(1000) {
-            if (result != RouteResult.Searching) {
-                return result
-            }
-            result = search.advance()
-        }
-        return result
-    }
-
-    private fun completePath(result: RouteResult<WalkPath>): WalkPath {
-        val path = assertIs<RouteResult.Found<WalkPath>>(result).value
-        assertTrue(path.complete, "path should reach the goal")
-        return path
+        return WalkRouteSearch(terrain, start, BlockGoal(listOf(goal)), abilities, LIMITS).advanceToEnd(MAX_SLICES)
     }
 
     private fun isComplete(result: RouteResult<WalkPath>) =
@@ -195,7 +172,7 @@ class WalkRoutingTest {
     @Test
     fun `leaning over the corner of a bridge, the path starts on the block holding the player`() {
         // A bridge eight blocks up ending at x 5; the feet hang past its corner, held by the last block.
-        val world = TestNavigationWorld.flat().fill(0, 8, -1, 4, 8, 1).set(5, 8, 0, TestNavigationWorld.STONE)
+        val world = TestNavigationWorld.flat().fill(0, 8, -1, 4, 8, 1).set(5, 8, 0, STONE)
         val start = Vec3(6.29, 9.0, 1.29)
 
         val path = completePath(search(world, start, BlockPos(9, 9, 0), abilities(canPlace = true)))
@@ -349,12 +326,8 @@ class WalkRoutingTest {
         val world = TestNavigationWorld.flat().fill(5, 0, -1, 7, 0, 1, Blocks.FARMLAND.defaultBlockState())
         val item = Vec3(6.7, 0.9375, 0.8)
         val search = WalkRouteSearch(world.terrain(), feet(0, 1, 0), NearGoal(item, 0.75), abilities(), LIMITS)
-        var result = search.advance()
-        while (result == RouteResult.Searching) {
-            result = search.advance()
-        }
 
-        val path = completePath(result)
+        val path = completePath(search.advanceToEnd())
         assertTrue(path.end.distanceTo(item) <= 0.75, "the path ends at ${path.end}, away from $item")
     }
 
