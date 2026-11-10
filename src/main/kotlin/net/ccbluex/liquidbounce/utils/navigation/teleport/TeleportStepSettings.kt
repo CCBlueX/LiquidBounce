@@ -16,14 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 
-/**
- * How a route is cut into position packets. Drops are cut further, see [TeleportSteps.MAX_FALL].
- */
 class TeleportStepSettings : ValueGroup("Steps") {
 
     private val length by float("Length", DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks")

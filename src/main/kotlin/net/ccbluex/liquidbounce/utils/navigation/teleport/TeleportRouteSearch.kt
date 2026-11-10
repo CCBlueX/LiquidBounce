@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.utils.block.AStarSearch
@@ -34,18 +33,13 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Finds a teleport route from [start] to the closest of [goals], the blocks the feet end in.
- *
- * A straight route when it is clear, otherwise an A* over standable positions that runs in slices of
- * [RouteLimits.expansionsPerSlice] and gets compacted into few waypoints.
- *
- * Not thread-safe: advance it from one thread at a time.
+ * Finds a teleport route from [start] to the closest of [goals], the blocks the feet end in: a straight one when it
+ * is clear, otherwise an A* over standable positions, compacted into few waypoints. Not thread-safe.
  */
-@Suppress("TooManyFunctions")
 class TeleportRouteSearch(
     private val terrain: NavigationTerrain,
-    val start: Vec3,
-    val goals: List<BlockPos>,
+    private val start: Vec3,
+    private val goals: List<BlockPos>,
     private val limits: RouteLimits,
     private val stepLength: Double,
 ) : RouteSearch<TeleportPlan> {
@@ -54,9 +48,7 @@ class TeleportRouteSearch(
     private val goalSet = goals.toHashSet()
     private var search: AStarSearch<BlockPos>? = null
     private var computeNanos = 0L
-
-    var result: RouteResult<TeleportPlan> = RouteResult.Searching
-        private set
+    private var result: RouteResult<TeleportPlan> = RouteResult.Searching
 
     override fun advance(): RouteResult<TeleportPlan> {
         if (result != RouteResult.Searching) {
@@ -76,16 +68,13 @@ class TeleportRouteSearch(
     override fun preview(): List<Vec3>? = search?.closestPath()?.nodes?.mapNotNull(::feetOf)
 
     private fun begin(): RouteResult<TeleportPlan> {
-        val standable = goals.mapNotNull { goal -> feetOf(goal)?.let { goal to it } }
-        if (standable.any { (_, feet) -> feet.distanceToSqr(start) < ARRIVED_SQ }) {
-            return RouteResult.AlreadyThere
-        }
-
-        val inReach = standable.filter { (_, feet) -> feet.distanceToSqr(start) <= Mth.square(limits.maxLength) }
+        val standable = goals.mapNotNull(::feetOf)
+        val inReach = standable.filter { it.distanceToSqr(start) <= Mth.square(limits.maxLength) }
         return when {
+            standable.any { it.distanceToSqr(start) < ARRIVED_SQ } -> RouteResult.AlreadyThere
             standable.isEmpty() -> RouteResult.Failed(RouteFailure.INVALID_DESTINATION)
             inReach.isEmpty() -> RouteResult.Failed(RouteFailure.TOO_FAR)
-            else -> straightRoute(inReach.map { it.second }) ?: startSearch(inReach.map { it.second })
+            else -> straightRoute(inReach) ?: startSearch(inReach)
         }
     }
 
@@ -101,12 +90,12 @@ class TeleportRouteSearch(
         return null
     }
 
-    private fun startSearch(goalFeet: List<Vec3>): RouteResult<TeleportPlan> {
+    private fun startSearch(goals: List<Vec3>): RouteResult<TeleportPlan> {
         search = AStarSearch(
             start = startNode,
             isGoal = { it in goalSet && it != startNode },
             neighbors = ::neighbors,
-            heuristic = { node -> feetOf(node)?.let { feet -> goalFeet.minOf(feet::distanceTo) } ?: 0.0 },
+            heuristic = { node -> feetOf(node)?.let { feet -> goals.minOf(feet::distanceTo) } ?: 0.0 },
             maxCost = limits.maxLength,
         )
         return RouteResult.Searching
@@ -125,7 +114,7 @@ class TeleportRouteSearch(
     private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val from = feetOf(node) ?: return emptyList()
         val edges = ArrayList<WeightedEdge<BlockPos>>()
-        val canRise = isRiseClear(from, node.y + 1.0)
+        val canRise = terrain.isRiseClear(from, node.y + 1.0)
 
         for ((dx, dz) in HORIZONTAL) {
             val horizontal = if (dx != 0 && dz != 0) DIAGONAL else 1.0
@@ -138,10 +127,7 @@ class TeleportRouteSearch(
         return edges
     }
 
-    /**
-     * The first standable position in column [x] [z] at or below the level of [node]. Its floor hides every
-     * lower one.
-     */
+    /** The first standable position in column [x] [z] at or below [node]. Its floor hides every lower one. */
     private fun addLanding(
         edges: MutableList<WeightedEdge<BlockPos>>,
         node: BlockPos,
@@ -156,7 +142,7 @@ class TeleportRouteSearch(
             val height = terrain.standHeight(x, y, z)
             if (!height.isNaN()) {
                 val to = Vec3(x + 0.5, height, z + 0.5)
-                if (isRiseClear(from, height) && isCrossingClear(from, to)) {
+                if (terrain.isRiseClear(from, height) && terrain.isCrossingClear(from, to)) {
                     edges += WeightedEdge(BlockPos(x, y, z), horizontal + abs(y - node.y))
                 }
                 return
@@ -169,8 +155,8 @@ class TeleportRouteSearch(
     }
 
     /**
-     * Standable positions in column [x] [z] above the level of [node], reached by rising in the column of [node].
-     * Stops at the first one a ceiling keeps the rise from, as every higher one needs a longer rise.
+     * Standable positions in column [x] [z] above [node], reached by rising in the column of [node]. Stops at the
+     * first one a ceiling keeps the rise from, as every higher one needs a longer rise.
      */
     private fun addRises(
         edges: MutableList<WeightedEdge<BlockPos>>,
@@ -187,33 +173,17 @@ class TeleportRouteSearch(
             if (height.isNaN()) {
                 continue
             }
-            if (!isRiseClear(from, height)) {
+            if (!terrain.isRiseClear(from, height)) {
                 return
             }
 
-            if (isCrossingClear(from, Vec3(x + 0.5, height, z + 0.5))) {
+            if (terrain.isCrossingClear(from, Vec3(x + 0.5, height, z + 0.5))) {
                 edges += WeightedEdge(BlockPos(x, y, z), horizontal + (y - node.y))
             }
         }
     }
 
-    private fun isRiseClear(from: Vec3, height: Double) =
-        height <= from.y || terrain.isClear(terrain.box(from).expandTowards(0.0, height - from.y, 0.0))
-
-    /**
-     * The crossing at the higher level and the drop into the column of [to], checked as boxes.
-     */
-    private fun isCrossingClear(from: Vec3, to: Vec3): Boolean {
-        val top = max(from.y, to.y)
-        val crossing = terrain.box(from.x, top, from.z).minmax(terrain.box(to.x, top, to.z))
-
-        return terrain.isClear(crossing) &&
-            (to.y >= from.y || terrain.isClear(terrain.box(to).expandTowards(0.0, from.y - to.y, 0.0)))
-    }
-
-    /**
-     * Keeps a node only where the straight route from the previous waypoint stops being clear.
-     */
+    /** Keeps a node only where the straight route from the previous waypoint stops being clear. */
     private fun compact(nodes: List<BlockPos>): RouteResult<TeleportPlan> {
         val positions = nodes.map { feetOf(it) ?: return RouteResult.Failed(RouteFailure.NO_PATH) }
         val waypoints = arrayListOf(positions.first())
@@ -224,9 +194,7 @@ class TeleportRouteSearch(
         var anchor = 0
         while (anchor < positions.lastIndex) {
             var next = -1
-            accepted.clear()
-
-            val farthest = minOf(positions.lastIndex, anchor + MAX_LOOKAHEAD)
+            val farthest = min(positions.lastIndex, anchor + MAX_LOOKAHEAD)
             for (candidate in anchor + 1..farthest) {
                 scratch.clear()
                 val clear = TeleportSteps.appendSegment(
@@ -263,22 +231,30 @@ class TeleportRouteSearch(
 
     private fun feetOf(node: BlockPos): Vec3? = if (node == startNode) start else terrain.feet(node)
 
-    companion object {
-        private const val ARRIVED_SQ = 0.25 * 0.25
-        private const val MAX_LOOKAHEAD = 32
-        private val DIAGONAL = Mth.SQRT_OF_TWO.toDouble()
+    private companion object {
+        const val ARRIVED_SQ = 0.25 * 0.25
+        const val MAX_LOOKAHEAD = 32
+        val DIAGONAL = Mth.SQRT_OF_TWO.toDouble()
 
-        /**
-         * Highest rise and deepest drop to a neighbouring column. Drops end on the first floor below, so only
-         * rises cost a scan of their full height.
-         */
-        private const val MAX_RISE = 24
-        private const val MAX_DROP = 48
+        // Drops end on the first floor below, so only rises cost a scan of their full height.
+        const val MAX_RISE = 24
+        const val MAX_DROP = 48
 
-        private val HORIZONTAL = arrayOf(
+        val HORIZONTAL = arrayOf(
             intArrayOf(1, 0), intArrayOf(-1, 0), intArrayOf(0, 1), intArrayOf(0, -1),
             intArrayOf(1, 1), intArrayOf(1, -1), intArrayOf(-1, 1), intArrayOf(-1, -1),
         )
     }
 
+}
+
+private fun NavigationTerrain.isRiseClear(from: Vec3, height: Double) =
+    height <= from.y || isClear(box(from).expandTowards(0.0, height - from.y, 0.0))
+
+/** The crossing at the higher level and the drop into the column of [to], checked as boxes. */
+private fun NavigationTerrain.isCrossingClear(from: Vec3, to: Vec3): Boolean {
+    val top = max(from.y, to.y)
+    val crossing = box(from.x, top, from.z).minmax(box(to.x, top, to.z))
+
+    return isClear(crossing) && (to.y >= from.y || isClear(box(to).expandTowards(0.0, from.y - to.y, 0.0)))
 }

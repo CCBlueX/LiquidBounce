@@ -16,15 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.world.phys.Vec3
 
-/**
- * Moves the player, or the vehicle it rides, on the client. The next movement packet carries the new position.
- */
 fun teleportPlayer(x: Double, y: Double, z: Double, resetMotion: Boolean) {
     val entity = player.vehicle ?: player
     entity.absSnapTo(x, y, z)

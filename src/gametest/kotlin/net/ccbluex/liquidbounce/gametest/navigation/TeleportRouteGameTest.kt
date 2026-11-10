@@ -142,7 +142,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
         }
         val far = found(context.route(BlockPos(2, y, 0), stepLength = SLOW_STEP))
         val run = context.fromClient {
-            checkNotNull(TeleportDispatcher.dispatch(Owner, far.route, far.steps, RunFinish.LAND, slow))
+            checkNotNull(TeleportDispatcher.dispatch(Owner, far, RunFinish.LAND, slow))
         }
         check(run.ticks > SETTLE_TICKS * 2) { "The slow run is too short to interrupt" }
 
@@ -255,7 +255,7 @@ class TeleportRouteGameTest : FabricClientGameTest {
 
     private fun travel(context: ClientGameTestContext, plan: TeleportPlan, finish: RunFinish): TeleportRun {
         val run = context.fromClient {
-            checkNotNull(TeleportDispatcher.dispatch(Owner, plan.route, plan.steps, finish, TeleportStepSettings()))
+            checkNotNull(TeleportDispatcher.dispatch(Owner, plan, finish, TeleportStepSettings()))
         }
         context.waitFor({ run.state != RunState.ACTIVE }, WAIT_TICKS)
         return run

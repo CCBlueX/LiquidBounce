@@ -28,15 +28,12 @@ import kotlin.math.ceil
 
 private const val MAX_REACH_POSITIONS = 8
 
-/**
- * The extra depth below [box] the feet may stand at, as the eyes are above them.
- */
+/** Blocks below the box the feet may still stand at, as the eyes are above them. */
 private const val EYE_DEPTH = 2
 
-/**
- * Standable feet positions around [box] from which the eyes are within [reach] of it and see it, closest to [from]
- * first. [block] is the block [box] belongs to, which does not hide itself.
- */
+fun eyesAt(feet: Vec3): Vec3 = feet.add(0.0, player.eyeHeight.toDouble(), 0.0)
+
+/** Standable feet positions whose eyes see [box] within [reach], closest to [from] first; [block] does not hide it. */
 fun reachPositions(
     terrain: NavigationTerrain,
     box: AABB,
@@ -46,7 +43,6 @@ fun reachPositions(
 ): List<BlockPos> {
     val center = BlockPos.containing(box.center)
     val radius = ceil(reach).toInt()
-    val eyeHeight = player.eyeHeight.toDouble()
     val positions = ArrayList<BlockPos>()
 
     for (dx in -radius..radius) {
@@ -54,7 +50,7 @@ fun reachPositions(
             for (dy in -radius - EYE_DEPTH..radius) {
                 val position = center.offset(dx, dy, dz)
                 val feet = terrain.feet(position) ?: continue
-                val eyes = feet.add(0.0, eyeHeight, 0.0)
+                val eyes = eyesAt(feet)
                 if (!terrain.box(feet).intersects(box) && box.distanceToSqr(eyes) <= reach * reach &&
                     canSeeBox(eyes, box, reach, 0.0, block)
                 ) {
