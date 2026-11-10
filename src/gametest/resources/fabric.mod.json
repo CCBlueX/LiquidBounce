@@ -30,10 +30,9 @@
       "net.ccbluex.liquidbounce.gametest.navigation.RideNavigationGameTest",
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
       "net.ccbluex.liquidbounce.gametest.HitFXSoundRegistryGameTest",
-      "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
-      "net.ccbluex.liquidbounce.gametest.ThemeEscapeGameTest"
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
+      "net.ccbluex.liquidbounce.gametest.ThemeEscapeGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest"
     ]
   },
