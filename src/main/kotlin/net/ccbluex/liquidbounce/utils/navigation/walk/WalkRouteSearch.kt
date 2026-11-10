@@ -32,14 +32,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
-/**
- * Finds a walking path from [start] to [goal], an A* over feet blocks that runs in slices of
- * [RouteLimits.expansionsPerSlice].
- *
- * When the goal cannot be reached, the path ends at the explored spot closest to it.
- *
- * Not thread-safe: advance it from one thread at a time.
- */
+/** An A* over feet blocks from [start] to [goal]; an unreachable goal gives the path that gets closest to it. */
 class WalkRouteSearch(
     terrain: NavigationTerrain,
     val start: Vec3,
@@ -54,11 +47,9 @@ class WalkRouteSearch(
     private var search: AStarSearch<BlockPos>? = null
     private var computeNanos = 0L
 
-    /**
-     * Moves in a row with the head under water on the best path to each expanded node.
-     */
+    /** Moves in a row with the head under water on the best path to each expanded node. */
     private val dives = Long2IntOpenHashMap()
-    private val maxDive = WalkWater.dive(WalkWater.MAX_AIR)
+    private val maxDive = WalkWater.movesUnderwater(WalkWater.MAX_AIR)
 
     var result: RouteResult<WalkPath> = RouteResult.Searching
         private set
@@ -95,10 +86,7 @@ class WalkRouteSearch(
         return RouteResult.Searching
     }
 
-    /**
-     * The block containing the feet, or the one above or below when the player stands on a partial block or is
-     * between blocks, or the one beside whose edge holds the player up, as when leaning over it while bridging.
-     */
+    /** The block of the feet, the one above or below on a partial block, or the one beside whose edge holds them. */
     private fun startNode(): BlockPos {
         val node = BlockPos.containing(start)
         return when {
@@ -109,17 +97,13 @@ class WalkRouteSearch(
         }
     }
 
-    /**
-     * The node beside [node] under the player's footprint closest to the feet, if any.
-     */
+    /** The node beside [node] under the player's footprint closest to the feet, as when leaning out to bridge. */
     private fun heldBy(node: BlockPos): BlockPos? {
         var best: BlockPos? = null
         var bestDistance = Double.MAX_VALUE
-        for (x in Mth.floor(start.x - HALF_WIDTH)..Mth.floor(start.x + HALF_WIDTH)) {
-            for (z in Mth.floor(start.z - HALF_WIDTH)..Mth.floor(start.z + HALF_WIDTH)) {
-                val dx = x + 0.5 - start.x
-                val dz = z + 0.5 - start.z
-                val distance = dx * dx + dz * dz
+        for (x in Mth.floor(start.x - PlayerMotion.HALF_WIDTH)..Mth.floor(start.x + PlayerMotion.HALF_WIDTH)) {
+            for (z in Mth.floor(start.z - PlayerMotion.HALF_WIDTH)..Mth.floor(start.z + PlayerMotion.HALF_WIDTH)) {
+                val distance = Mth.lengthSquared(x + 0.5 - start.x, z + 0.5 - start.z)
                 if ((x != node.x || z != node.z) && distance < bestDistance && moves.isNode(x, node.y, z)) {
                     best = BlockPos(x, node.y, z)
                     bestDistance = distance
@@ -142,7 +126,7 @@ class WalkRouteSearch(
     private fun neighbors(node: BlockPos): List<WeightedEdge<BlockPos>> {
         val dive = diveLength(node)
         val edges = ArrayList<WeightedEdge<BlockPos>>()
-        // A jump costs at least its time in the air; spots already reached cheaper are not worth simulating.
+        // A jump takes at least its time in the air; spots already reached cheaper are not worth simulating.
         val reachable = (search?.cost(node) ?: 0.0) + MIN_JUMP_TICKS
         val sink = MoveSink { to, _, cost, _, _, _, _ ->
             // Out of air, the only way on under water is straight up.
@@ -159,23 +143,18 @@ class WalkRouteSearch(
         return edges
     }
 
-    /**
-     * Moves in a row with the head under water that end at [node]; the start counts the air already used.
-     */
+    /** Moves in a row with the head under water that end at [node]; the start counts the air already used. */
     private fun diveLength(node: BlockPos): Int {
         val dive = when {
             !moves.isUnderwater(node) -> 0
-            node == startNode -> maxDive - WalkWater.dive(abilities.air)
+            node == startNode -> maxDive - WalkWater.movesUnderwater(abilities.air)
             else -> (search?.previous(node)?.let { dives.get(it.asLong()) } ?: 0) + 1
         }
         dives.put(node.asLong(), dive)
         return dive
     }
 
-    /**
-     * An incomplete path to the explored spot closest to the goal, or [failure] when it gets no closer than
-     * [MIN_PROGRESS].
-     */
+    /** An incomplete path to the explored spot closest to the goal, or [failure] if that is no real progress. */
     private fun closestOr(failure: RouteFailure): RouteResult<WalkPath> {
         val nodes = search?.closestPath()?.nodes
         if (nodes == null || nodes.size < 2 || goal.distance(startNode) - goal.distance(nodes.last()) < MIN_PROGRESS) {
@@ -194,11 +173,8 @@ class WalkRouteSearch(
 
     private companion object {
         const val MIN_PROGRESS = 1.0
-        const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
 
-        /**
-         * Fewest ticks any jump takes, the shortest time in the air.
-         */
+        /** No jump takes fewer ticks: the shortest time in the air. */
         const val MIN_JUMP_TICKS = 6.0
     }
 

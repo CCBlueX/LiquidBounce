@@ -27,45 +27,29 @@ import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
 import net.minecraft.world.entity.LivingEntity.BASE_VERTICAL_AIR_DRAG
 import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
 import net.minecraft.world.phys.Vec3
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.min
-import kotlin.math.abs
 
-/**
- * How a jump from one feet block to another is made: run from [runUp] towards [aim], sprinting, first with [hops]
- * for speed if set, jump [takeoff] ticks later (or run off the edge without jumping when [jumps] is false) and keep
- * running towards the middle of the target block in the air until landing.
- */
+/** A jump between two feet blocks: sprint from [runUp] towards [aim], jump [takeoff] ticks later, steer in the air. */
 class WalkJump(
-    /**
-     * Where the run starts, at rest, on the floor of the block jumped from.
-     */
+    /** Where the run starts, at rest. */
     val runUp: Vec3,
     val takeoff: Int,
+
+    /** False to run off the edge without jumping. */
     val jumps: Boolean,
     val airTicks: Int,
 
-    /**
-     * How far the player could still slide, along the shorter way, and keep standing on the block landed on, or for
-     * a ladder or vine caught how far inside its block the player gets; the more, the more a jump may be off.
-     */
+    /** How far the landing could still slide and stay on its block, or how deep it gets into a ladder caught. */
     val margin: Double,
 
-    /**
-     * Jumps on the same floor the run starts with, one right after the other, which land faster than running gets.
-     */
+    /** Jumps in a row on the floor of the run-up before the run, for speed. */
     val hops: Int,
-
-    /**
-     * What the run on the ground heads for: the middle of the target block, or a little beside it to get around
-     * something in the way.
-     */
     val aim: Vec3,
 ) {
 
-    /**
-     * Estimated duration in ticks, the walk back to [runUp] included.
-     */
+    /** Estimated duration in ticks, the walk from [from] back to [runUp] included. */
     fun ticks(from: Vec3): Double {
         val back = from.horizontalDistanceTo(runUp)
         val backTicks = if (back > RUN_UP_TOLERANCE) back * WalkCosts.WALK + STOP_TICKS else 0.0
@@ -73,214 +57,114 @@ class WalkJump(
     }
 
     companion object {
-        /**
-         * How close to [runUp] counts as standing there.
-         */
         const val RUN_UP_TOLERANCE = 0.15
         private const val STOP_TICKS = 4.0
         private const val LANDING_TICKS = 2.0
     }
 }
 
-/**
- * Finds out by simulation whether and how a jump between two feet blocks works, see [WalkJump].
- *
- * Not thread-safe: use it from one thread at a time.
- */
+/** Finds out by simulation whether and how a jump between two feet blocks works. Not thread-safe. */
 @Suppress("TooManyFunctions")
 internal class WalkJumps(private val terrain: NavigationTerrain, private val abilities: WalkAbilities) {
 
     val canSprint: Boolean
         get() = abilities.canSprint
 
-    /**
-     * Least margin of a jump; a walker that takes no risks only makes jumps with room to spare.
-     */
     private val minMargin = if (abilities.riskyJumps) MIN_MARGIN else CAREFUL_MARGIN
+    private val maxFall = abilities.safeFall + if (abilities.riskyJumps) RISKY_EXTRA_FALL else 0.0
 
     private val motion = PlayerMotion(terrain, abilities.motion)
-    private val start = motion.copy()
+    private val rest = motion.copy()
     private val ground = ArrayList<PlayerMotion>()
     private val pool = ArrayList<PlayerMotion>()
     private val estimates = ArrayList<Estimate>()
 
+    private var fromX = 0.0
+    private var fromY = 0.0
+    private var fromZ = 0.0
+    private var target = BlockPos.ZERO
     private var targetX = 0.0
     private var targetZ = 0.0
-    private var aimX = 0.0
-    private var aimZ = 0.0
-    private var target = BlockPos.ZERO
     private var targetHeight = 0.0
-    private var fromX = 0.0
-    private var fromZ = 0.0
+
+    /** Whether the target is a ladder or vine the jump catches rather than lands on. */
+    private var catches = false
     private var dirX = 0.0
     private var dirZ = 0.0
     private var distance = 0.0
+    private var aimX = 0.0
+    private var aimZ = 0.0
+
+    /** How far ahead of the middle of the block jumped from its floor reaches, which hops must land short of. */
+    private var edge = Double.MAX_VALUE
     private var airTicks = 0
 
-    /**
-     * Whether the target is a ladder or vine the jump catches rather than lands on.
-     */
-    private var catches = false
-
-    /**
-     * How far ahead of the middle of the block jumped from its floor reaches, which hops must land short of.
-     */
-    private var edge = Double.MAX_VALUE
-
-    /**
-     * The best way to jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight], or null.
-     */
+    /** The best way to jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight], or null. */
     fun plan(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): WalkJump? {
-        aim(from.x + 0.5, from.z + 0.5, to, toHeight)
-        if (!abilities.riskyJumps && !isSafe(fromHeight)) {
+        setCourse(from.x + 0.5, fromHeight, from.z + 0.5, to, toHeight)
+        if (!abilities.riskyJumps && !isSafe()) {
             return null
         }
 
-        val center = Vec3(fromX, fromHeight, fromZ)
-        var best = fromRest(center, hops = 0)
-        if (best == null || best.margin < GOOD_MARGIN) {
+        val center = behind(0.0)
+        var best = fromRest(center)
+        if (!best.has(GOOD_MARGIN)) {
             // Longer run-ups are faster, but the right take-off spot can be anywhere on the way.
-            val longest = runUpLength(fromHeight, MAX_RUN_UP)
+            val longest = runUpLength(MAX_RUN_UP)
             var back = RUN_UP_SPACING
-            while (back < longest + RUN_UP_SPACING && (best == null || best.margin < GOOD_MARGIN)) {
-                val length = minOf(back, longest)
-                best = better(best, fromRest(Vec3(fromX - dirX * length, fromHeight, fromZ - dirZ * length), hops = 0))
+            while (back < longest + RUN_UP_SPACING && !best.has(GOOD_MARGIN)) {
+                best = better(best, fromRest(behind(minOf(back, longest))))
                 back += RUN_UP_SPACING
             }
         }
-        if ((best == null || best.margin < minMargin) && distance <= HOP_REACH) {
-            best = better(best, hopped(fromHeight))
+        if (!best.has(minMargin) && distance <= HOP_REACH) {
+            best = better(best, hopped())
         }
-        // Around something in the way.
         for (offset in SIDE_AIMS) {
-            if (best != null && best.margin >= minMargin) {
+            if (best.has(minMargin)) {
                 break
             }
-            offsetAim(offset)
-            best = better(best, fromRest(center, hops = 0))
+            aimBeside(offset)
+            best = better(best, fromRest(center))
         }
 
         return best?.takeIf { it.margin >= minMargin }
     }
 
-    /**
-     * The jump from [from], standing at [fromHeight], to [to] with the feet at [toHeight] that lands best from rest
-     * anywhere on the way back from the middle of [from], tried in small steps; or null.
-     */
+    /** Like [plan], but from the run-up that lands best, tried in small steps back from the middle of [from]. */
     fun refine(from: BlockPos, fromHeight: Double, to: BlockPos, toHeight: Double): WalkJump? {
-        aim(from.x + 0.5, from.z + 0.5, to, toHeight)
-        val longest = runUpLength(fromHeight, MAX_RUN_UP)
+        setCourse(from.x + 0.5, fromHeight, from.z + 0.5, to, toHeight)
+        val longest = runUpLength(MAX_RUN_UP)
         var best: WalkJump? = null
         var back = 0.0
         while (back <= longest) {
-            best = better(best, fromRest(Vec3(fromX - dirX * back, fromHeight, fromZ - dirZ * back), hops = 0))
+            best = better(best, fromRest(behind(back)))
             back += RUN_UP_STEP
         }
         return best?.takeIf { it.margin >= minMargin }
     }
 
-    /**
-     * A jump out of reach of a run made after hops along a runway, started so far back that the last hop lands
-     * right before the edge and the jump keeps its speed.
-     */
-    private fun hopped(fromHeight: Double): WalkJump? {
-        val runway = runUpLength(fromHeight, MAX_HOP_RUN_UP)
-        edge = edgeLength(fromHeight)
-        for (hops in 1..MAX_HOPS) {
-            val travel = hopTravel(fromHeight, runway, hops)
-            val back = travel + HOP_LEAD - edge
-            if (travel.isNaN() || back > runway) {
-                return null
-            }
-
-            val jump = fromRest(Vec3(fromX - dirX * back, fromHeight, fromZ - dirZ * back), hops)
-            if (jump != null && jump.margin >= minMargin) {
-                return jump
-            }
-        }
-        return null
-    }
-
-    /**
-     * How far [hops] from rest at the back of the [runway] carry the player along it; NaN when one does not land on
-     * the same floor.
-     */
-    private fun hopTravel(height: Double, runway: Double, hops: Int): Double {
-        motion.reset(Vec3(fromX - dirX * runway, height, fromZ - dirZ * runway), PlayerMotion.RESTING, onGround = true)
-        val startX = motion.x
-        val startZ = motion.z
-        if (hop(hops, height) < 0) {
-            return Double.NaN
-        }
-        return (motion.x - startX) * dirX + (motion.z - startZ) * dirZ
-    }
-
-    /**
-     * Makes [motion] jump [hops] times in a row towards the target; the ticks it took, or -1 when one did not land
-     * at [height] on the runway, before the [edge] of the block jumped from.
-     */
-    private fun hop(hops: Int, height: Double): Int {
-        var ticks = 0
-        repeat(hops) {
-            var air = 0
-            do {
-                motion.tick(yawToTarget(motion.x, motion.z), 1, 0, jump = air == 0, sprint = abilities.canSprint)
-                air++
-            } while (!motion.onGround && air < MAX_AIR_TICKS)
-            val progress = (motion.x - fromX) * dirX + (motion.z - fromZ) * dirZ
-            if (!motion.onGround || abs(motion.y - height) > LANDING_PROBE || progress > edge) {
-                return -1
-            }
-            ticks += air
-        }
-        return ticks
-    }
-
-    /**
-     * How far ahead of the middle of the block jumped from, towards the target, the floor still holds the player.
-     */
-    private fun edgeLength(height: Double): Double {
-        var length = 0.0
-        while (length + RUN_UP_STEP <= MAX_EDGE) {
-            val feet = Vec3(fromX + dirX * (length + RUN_UP_STEP), height, fromZ + dirZ * (length + RUN_UP_STEP))
-            if (!terrain.isSupported(feet)) {
-                break
-            }
-            length += RUN_UP_STEP
-        }
-        return length
-    }
-
-    private fun better(a: WalkJump?, b: WalkJump?) = if (a == null || b != null && b.margin > a.margin) b else a
-
-    /**
-     * The jump onto [to] from where [state], a player on the ground, is now, moving this tick with [yaw]; null
-     * when no take-off in reach lands on it.
-     */
+    /** The jump onto [to] from where [state], a player on the ground, is now, moving this tick with [yaw]. */
     fun fromHere(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): WalkJump? {
-        // Once per tick, so every promising take-off can be simulated in full.
-        aim(state.x, state.z, to, toHeight)
-        var best = attempt(state, state.position, yaw, hops = 0, validations = Int.MAX_VALUE)
+        setCourse(state.x, state.y, state.z, to, toHeight)
+        val here = state.position
+        var best = attempt(state, here, yaw, hops = 0, validations = Int.MAX_VALUE)
         for (offset in SIDE_AIMS) {
-            aim(state.x, state.z, to, toHeight)
-            offsetAim(offset)
-            best = better(best, attempt(state, state.position, yaw, hops = 0, validations = Int.MAX_VALUE))
+            aimBeside(offset)
+            best = better(best, attempt(state, here, yaw, hops = 0, validations = Int.MAX_VALUE))
         }
         return best
     }
 
-    /**
-     * The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]; null
-     * when no keys land on it.
-     */
+    /** The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. */
     fun airKeys(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): AirKeys? {
-        aim(state.x, state.z, to, toHeight)
+        setCourse(state.x, state.y, state.z, to, toHeight)
         var best: AirKeys? = null
         for (forward in 1 downTo -1) {
             for (strafe in STRAFES) {
                 motion.copyFrom(state)
                 motion.tick(yaw, forward, strafe, jump = false, sprint = abilities.canSprint)
-                val margin = land(state.y)
+                val margin = land()
                 if (!margin.isNaN() && (best == null || margin > best.margin + KEY_PREFERENCE)) {
                     best = AirKeys(forward, strafe, margin)
                 }
@@ -291,16 +175,17 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
 
     class AirKeys(val forward: Int, val strafe: Int, val margin: Double)
 
-    private fun aim(fromX: Double, fromZ: Double, to: BlockPos, toHeight: Double) {
+    private fun setCourse(fromX: Double, fromY: Double, fromZ: Double, to: BlockPos, toHeight: Double) {
         this.fromX = fromX
+        this.fromY = fromY
         this.fromZ = fromZ
+        target = to
         targetX = to.x + 0.5
         targetZ = to.z + 0.5
-        aimX = targetX
-        aimZ = targetZ
-        target = to
         targetHeight = toHeight
         catches = terrain.isClimbable(to.x, to.y, to.z)
+        aimX = targetX
+        aimZ = targetZ
         edge = Double.MAX_VALUE
         dirX = targetX - fromX
         dirZ = targetZ - fromZ
@@ -311,198 +196,242 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         }
     }
 
-    /**
-     * How far back from the middle of the block jumped from, away from the target, the player can stand on the same
-     * floor to run up.
-     */
-    private fun runUpLength(height: Double, max: Double): Double {
+    /** Aims the run [offset] blocks to the left of the middle of the target, to get around something in the way. */
+    private fun aimBeside(offset: Double) {
+        aimX = targetX - dirZ * offset
+        aimZ = targetZ + dirX * offset
+    }
+
+    /** The spot [distance] blocks behind where the jump starts, away from the target; ahead of it when negative. */
+    private fun behind(distance: Double) = Vec3(fromX - dirX * distance, fromY, fromZ - dirZ * distance)
+
+    private fun runUpLength(max: Double): Double {
         var length = 0.0
-        while (length + RUN_UP_STEP <= max) {
-            val x = fromX - dirX * (length + RUN_UP_STEP)
-            val z = fromZ - dirZ * (length + RUN_UP_STEP)
-            val feet = Vec3(x, height, z)
-            if (!terrain.isSupported(feet) || !terrain.isClear(terrain.box(feet))) {
-                break
-            }
+        while (length + RUN_UP_STEP <= max && canStandAt(behind(length + RUN_UP_STEP))) {
             length += RUN_UP_STEP
         }
         return length
     }
 
-    private fun fromRest(runUp: Vec3, hops: Int): WalkJump? {
-        start.reset(runUp, PlayerMotion.RESTING, onGround = true)
-        return attempt(start, runUp, null, hops, VALIDATED_TAKEOFFS)
+    private fun canStandAt(feet: Vec3) = terrain.isSupported(feet) && terrain.isClear(terrain.box(feet))
+
+    private fun edgeLength(): Double {
+        var length = 0.0
+        while (length + RUN_UP_STEP <= MAX_EDGE && terrain.isSupported(behind(-(length + RUN_UP_STEP)))) {
+            length += RUN_UP_STEP
+        }
+        return length
     }
 
-    /**
-     * Runs from [state] towards the target, after [hops] that have to land on the same floor, estimates for every
-     * tick on the ground how jumping then would land and simulates up to [validations] of the most promising
-     * take-offs, and running off the edge, in full. The first tick moves with [firstYaw] when given, every other one
-     * aims at the target.
-     */
-    @Suppress("CognitiveComplexMethod", "LongParameterList")
+    /** A jump out of reach of a run: hops along a runway first, the last landing right before the edge. */
+    private fun hopped(): WalkJump? {
+        val runway = runUpLength(MAX_HOP_RUN_UP)
+        edge = edgeLength()
+        for (hops in 1..MAX_HOPS) {
+            val travel = hopTravel(runway, hops)
+            val back = travel + HOP_LEAD - edge
+            if (travel.isNaN() || back > runway) {
+                return null
+            }
+
+            val jump = fromRest(behind(back), hops)
+            if (jump.has(minMargin)) {
+                return jump
+            }
+        }
+        return null
+    }
+
+    /** How far [hops] from rest at the back of the [runway] get along it; NaN when one leaves its floor. */
+    private fun hopTravel(runway: Double, hops: Int): Double {
+        motion.reset(behind(runway), PlayerMotion.RESTING, onGround = true)
+        val startX = motion.x
+        val startZ = motion.z
+        if (hop(hops) < 0) {
+            return Double.NaN
+        }
+        return (motion.x - startX) * dirX + (motion.z - startZ) * dirZ
+    }
+
+    /** Makes [motion] hop [hops] times in a row; the ticks it took, or -1 when a hop leaves the floor before [edge]. */
+    private fun hop(hops: Int): Int {
+        var ticks = 0
+        repeat(hops) {
+            var air = 0
+            do {
+                run(yawToTarget(), jump = air == 0)
+                air++
+            } while (!motion.onGround && air < MAX_AIR_TICKS)
+            val progress = (motion.x - fromX) * dirX + (motion.z - fromZ) * dirZ
+            if (!motion.onGround || abs(motion.y - fromY) > LANDING_PROBE || progress > edge) {
+                return -1
+            }
+            ticks += air
+        }
+        return ticks
+    }
+
+    private fun fromRest(runUp: Vec3, hops: Int = 0): WalkJump? {
+        rest.reset(runUp, PlayerMotion.RESTING, onGround = true)
+        return attempt(rest, runUp, null, hops, VALIDATED_TAKEOFFS)
+    }
+
+    /** Runs on from [state] after [hops] and simulates running off the edge and the [validations] best take-offs. */
     private fun attempt(state: PlayerMotion, runUp: Vec3, firstYaw: Float?, hops: Int, validations: Int): WalkJump? {
-        recycle()
+        pool += ground
+        ground.clear()
         motion.copyFrom(state)
-        val hopTicks = hop(hops, runUp.y)
+        val hopTicks = hop(hops)
         if (hopTicks < 0) {
             return null
         }
 
-        var ranOff: PlayerMotion? = null
-        for (tick in 0 until MAX_GROUND_TICKS) {
-            ground += snapshot(motion)
-            motion.tick(yawAt(tick, firstYaw), 1, 0, jump = false, sprint = abilities.canSprint)
-            // Grazing a wall, the run slides on along it; only a wall it stops at ends it.
-            if (motion.horizontalCollision && motion.horizontalSpeed < STOPPED_SPEED) {
-                break
-            }
-            if (!motion.onGround) {
-                ranOff = snapshot(motion)
-                break
-            }
-        }
-
         var best: WalkJump? = null
-        if (ranOff != null && targetHeight < ranOff.y) {
-            best = jump(ranOff, runUp, hopTicks + ground.size, jumps = false, hops)
-            pool += ranOff
+        if (runToEdge(firstYaw) && targetHeight < motion.y) {
+            best = landing(runUp, hopTicks + ground.size, jumps = false, hops)
         }
 
-        estimates.clear()
-        for (takeoff in ground.indices) {
-            motion.copyFrom(ground[takeoff])
-            motion.tick(yawAt(takeoff, firstYaw), 1, 0, jump = true, sprint = abilities.canSprint)
-            val margin = if (motion.onGround) Double.NaN else estimate(motion)
-            if (!margin.isNaN()) {
-                estimates += Estimate(takeoff, margin, snapshot(motion))
-            }
-        }
-
-        estimates.sortByDescending(Estimate::margin)
+        estimateTakeoffs(firstYaw)
         for (i in 0 until min(estimates.size, validations)) {
             val estimate = estimates[i]
-            val jump = jump(estimate.state, runUp, hopTicks + estimate.takeoff, jumps = true, hops) ?: continue
+            motion.copyFrom(estimate.state)
+            val jump = landing(runUp, hopTicks + estimate.takeoff, jumps = true, hops) ?: continue
             best = better(best, jump)
             if (jump.margin >= GOOD_MARGIN) {
                 break
             }
         }
         estimates.forEach { pool += it.state }
-
         return best
     }
 
+    /** Runs [motion] on, with a snapshot before every tick in [ground]; whether it ran off an edge. */
+    private fun runToEdge(firstYaw: Float?): Boolean {
+        for (tick in 0 until MAX_GROUND_TICKS) {
+            ground += snapshot()
+            run(yawAt(tick, firstYaw))
+            // Grazing a wall, the run slides on along it; only a wall it stops at ends it.
+            if (motion.horizontalCollision && motion.horizontalSpeed < STOPPED_SPEED) {
+                return false
+            }
+            if (!motion.onGround) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun estimateTakeoffs(firstYaw: Float?) {
+        estimates.clear()
+        for (takeoff in ground.indices) {
+            motion.copyFrom(ground[takeoff])
+            run(yawAt(takeoff, firstYaw), jump = true)
+            val margin = if (motion.onGround) Double.NaN else estimate()
+            if (!margin.isNaN()) {
+                estimates += Estimate(takeoff, margin, snapshot())
+            }
+        }
+        estimates.sortByDescending(Estimate::margin)
+    }
+
+    private fun run(yaw: Float, jump: Boolean = false) = motion.tick(yaw, 1, 0, jump, abilities.canSprint)
+
     private fun yawAt(tick: Int, firstYaw: Float?) =
-        if (tick == 0 && firstYaw != null) firstYaw else yawTo(aimX, aimZ, motion.x, motion.z)
+        if (tick == 0 && firstYaw != null) firstYaw else yawTo(aimX, aimZ)
 
-    /**
-     * Margin of the landing on the target a jump from [state], just off the ground, makes when nothing else is in
-     * the way; NaN when it misses. Cheap enough to try every take-off.
-     */
+    private fun yawToTarget() = yawTo(targetX, targetZ)
+
+    private fun yawTo(x: Double, z: Double): Float =
+        (atan2(z - motion.z, x - motion.x) * Mth.RAD_TO_DEG - QUARTER_TURN).toFloat()
+
+    /** Margin of the landing [motion], just off the ground, makes with nothing in the way; NaN when it misses. */
     @Suppress("CognitiveComplexMethod")
-    private fun estimate(state: PlayerMotion): Double {
-        var x = state.x
-        var y = state.y
-        var z = state.z
-        var motionX = state.motionX
-        var motionY = state.motionY
-        var motionZ = state.motionZ
-        val acceleration = if (state.sprinting) SPRINT_AIR_ACCELERATION else AIR_ACCELERATION
-        val minX = target.x - PlayerMotion.HALF_WIDTH
-        val maxX = target.x + 1.0 + PlayerMotion.HALF_WIDTH
-        val minZ = target.z - PlayerMotion.HALF_WIDTH
-        val maxZ = target.z + 1.0 + PlayerMotion.HALF_WIDTH
+    private fun estimate(): Double {
+        var x = motion.x
+        var y = motion.y
+        var z = motion.z
+        var motionX = motion.motionX
+        var motionY = motion.motionY
+        var motionZ = motion.motionZ
+        val acceleration = if (motion.sprinting) SPRINT_AIR_ACCELERATION else AIR_ACCELERATION
 
-        for (tick in 0 until MAX_AIR_TICKS) {
+        repeat(MAX_AIR_TICKS) {
             val toX = targetX - x
             val toZ = targetZ - z
             val length = Mth.length(toX, toZ)
             if (length > 1.0E-4) {
-                val push = when {
-                    catches || !overshoots(x, y, z, motionX, motionY, motionZ) -> acceleration
-                    else -> -AIR_ACCELERATION
-                }
+                val speed = (motionX * toX + motionZ * toZ) / length
+                val push = if (catches || !overshoots(length, speed, y, motionY)) acceleration else -AIR_ACCELERATION
                 motionX += toX / length * push
                 motionZ += toZ / length * push
             }
 
-            val over = x > minX && x < maxX && z > minZ && z < maxZ
             val nextY = y + motionY
             if (!catches && motionY < 0.0 && nextY <= targetHeight && y >= targetHeight - LANDING_PROBE) {
-                return if (over) margin(x + motionX, z + motionZ) else Double.NaN
+                return if (isOver(x, z)) margin(x + motionX, z + motionZ) else Double.NaN
             }
-            y = nextY
-
             x += motionX
+            y = nextY
             z += motionZ
             if (catches && isInTarget(x, y, z)) {
                 return margin(x, z)
             }
             // Rising against the side, the player slides up it; only sinking into it misses.
-            val hitsSide = motionY <= 0.0 && y < targetHeight && x > minX && x < maxX && z > minZ && z < maxZ
+            val hitsSide = motionY <= 0.0 && y < targetHeight && isOver(x, z)
             if (hitsSide || y < targetHeight - MAX_BELOW) {
                 return Double.NaN
             }
 
             motionX *= BASE_HORIZONTAL_AIR_DRAG
-            motionZ *= BASE_HORIZONTAL_AIR_DRAG
             motionY = (motionY - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
+            motionZ *= BASE_HORIZONTAL_AIR_DRAG
         }
         return Double.NaN
     }
 
+    private fun isOver(x: Double, z: Double) =
+        x > target.x - PlayerMotion.HALF_WIDTH && x < target.x + 1.0 + PlayerMotion.HALF_WIDTH &&
+            z > target.z - PlayerMotion.HALF_WIDTH && z < target.z + 1.0 + PlayerMotion.HALF_WIDTH
+
+    private fun isInTarget(x: Double, y: Double, z: Double) =
+        Mth.floor(x) == target.x && Mth.floor(y) == target.y && Mth.floor(z) == target.z
+
     private fun margin(x: Double, z: Double) =
         minOf(x - target.x, target.x + 1.0 - x, z - target.z, target.z + 1.0 - z)
 
-    /**
-     * Jumping from [start], already off the ground, onto the target, or null when it does not land there.
-     */
-    private fun jump(start: PlayerMotion, runUp: Vec3, takeoff: Int, jumps: Boolean, hops: Int): WalkJump? {
-        motion.copyFrom(start)
-        val margin = land(runUp.y)
-        return if (margin.isNaN()) {
-            null
-        } else {
-            WalkJump(runUp, takeoff, jumps, airTicks, margin, hops, Vec3(aimX, targetHeight, aimZ))
+    private fun landing(runUp: Vec3, takeoff: Int, jumps: Boolean, hops: Int): WalkJump? {
+        val margin = land()
+        if (margin.isNaN()) {
+            return null
         }
+        return WalkJump(runUp, takeoff, jumps, airTicks, margin, hops, Vec3(aimX, targetHeight, aimZ))
     }
 
-    /**
-     * Keeps [motion] running towards the target in the air until it lands; the margin of the landing on the target,
-     * right on touching down or after a few careful steps on, whichever is more; NaN when it lands anywhere else,
-     * too hard, or not at all. The ticks in the air go to [airTicks].
-     */
-    private fun land(fromHeight: Double): Double {
-        val floor = min(targetHeight, fromHeight) - MAX_BELOW
+    /** Flies [motion] on to the ground; the margin of its landing on the target, NaN for any other end. */
+    private fun land(): Double {
+        val floor = min(targetHeight, fromY) - MAX_BELOW
         airTicks = 1
         while (!motion.onGround && motion.y > floor && airTicks < MAX_AIR_TICKS) {
             if (catches && isInTarget(motion.x, motion.y, motion.z)) {
                 return margin(motion.x, motion.z)
             }
-            val back = !catches && overshoots(motion)
-            motion.tick(
-                yawToTarget(motion.x, motion.z), if (back) -1 else 1, 0, jump = false,
-                sprint = abilities.canSprint && !back,
-            )
+            val back = !catches && overshoots()
+            motion.tick(yawToTarget(), if (back) -1 else 1, 0, jump = false, sprint = abilities.canSprint && !back)
             airTicks++
         }
 
-        if (catches || !motion.onGround || motion.landingFall > maxFall()) {
+        if (catches || !motion.onGround || motion.landingFall > maxFall) {
             return Double.NaN
         }
         val touchdown = footing()
         // A landing on the lip of a block is followed by a few careful steps onto it, as into a hole between walls.
         repeat(SETTLE_TICKS) {
-            motion.tick(yawToTarget(motion.x, motion.z), 1, 0, jump = false, sprint = false, sneak = true)
+            motion.tick(yawToTarget(), 1, 0, jump = false, sprint = false, sneak = true)
         }
         val settled = footing()
         return if (touchdown.isNaN() || settled > touchdown) settled else touchdown
     }
 
-    /**
-     * How far [motion] could still slide and keep standing on the target, NaN when it does not stand on it.
-     */
     private fun footing() = when {
         !motion.onGround || abs(motion.y - targetHeight) > HEIGHT_TOLERANCE -> Double.NaN
         motion.standsOn(target.x, target.y, target.z) -> motion.footing(target.x, target.y, target.z)
@@ -510,67 +439,46 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         else -> Double.NaN
     }
 
-    private fun overshoots(motion: PlayerMotion) =
-        overshoots(motion.x, motion.y, motion.z, motion.motionX, motion.motionY, motion.motionZ)
-
-    /**
-     * Whether pushing on towards the middle of the target would carry a player at [x] [y] [z], moving [motionX]
-     * [motionY] [motionZ], past it before it comes down to the target's height; then it holds back instead.
-     */
-    @Suppress("LongParameterList")
-    private fun overshoots(
-        x: Double,
-        y: Double,
-        z: Double,
-        motionX: Double,
-        motionY: Double,
-        motionZ: Double,
-    ): Boolean {
-        val toX = targetX - x
-        val toZ = targetZ - z
+    private fun overshoots(): Boolean {
+        val toX = targetX - motion.x
+        val toZ = targetZ - motion.z
         val remaining = Mth.length(toX, toZ)
         if (remaining < 1.0E-4) {
             return false
         }
+        val speed = (motion.motionX * toX + motion.motionZ * toZ) / remaining
+        return overshoots(remaining, speed, motion.y, motion.motionY)
+    }
 
-        var speed = (motionX * toX + motionZ * toZ) / remaining
-
-        var height = y
+    /** Whether pushing on at [speed] carries a player past the target, [remaining] blocks away, before it is down. */
+    private fun overshoots(remaining: Double, speed: Double, height: Double, motionY: Double): Boolean {
+        var forward = speed
+        var y = height
         var vertical = motionY
         var travel = 0.0
-        for (tick in 0 until MAX_AIR_TICKS) {
-            speed += SPRINT_AIR_ACCELERATION
-            travel += speed
-            height += vertical
+        repeat(MAX_AIR_TICKS) {
+            forward += SPRINT_AIR_ACCELERATION
+            travel += forward
+            y += vertical
             if (travel > remaining + BRAKE_SLACK) {
                 return true
             }
-            if (vertical < 0.0 && height <= targetHeight) {
+            if (vertical < 0.0 && y <= targetHeight) {
                 return false
             }
-            speed *= BASE_HORIZONTAL_AIR_DRAG
+            forward *= BASE_HORIZONTAL_AIR_DRAG
             vertical = (vertical - DEFAULT_BASE_GRAVITY) * BASE_VERTICAL_AIR_DRAG
         }
         return false
     }
 
-    private fun isInTarget(x: Double, y: Double, z: Double) =
-        Mth.floor(x) == target.x && Mth.floor(y) == target.y && Mth.floor(z) == target.z
-
-    private fun maxFall() =
-        if (abilities.riskyJumps) abilities.safeFall + RISKY_EXTRA_FALL else abilities.safeFall.toDouble()
-
-    private class Estimate(val takeoff: Int, val margin: Double, val state: PlayerMotion)
-
-    /**
-     * Whether every column between the jump's start and target catches a fall the walker survives.
-     */
-    private fun isSafe(height: Double): Boolean {
+    /** Whether every column between the start and the target catches a fall the walker survives. */
+    private fun isSafe(): Boolean {
         var travelled = HALF_BLOCK
         while (travelled < distance - HALF_BLOCK) {
             val x = Mth.floor(fromX + dirX * travelled)
             val z = Mth.floor(fromZ + dirZ * travelled)
-            if (!catchesFall(x, Mth.floor(height), z, height)) {
+            if (!catchesFall(x, Mth.floor(fromY), z)) {
                 return false
             }
             travelled += SAFETY_STEP
@@ -578,57 +486,39 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         return true
     }
 
-    private fun catchesFall(x: Int, top: Int, z: Int, height: Double): Boolean {
+    private fun catchesFall(x: Int, top: Int, z: Int): Boolean {
         for (y in top downTo maxOf(top - abilities.safeFall - 1, terrain.minY)) {
             val stand = terrain.standHeight(x, y, z)
             when {
                 terrain.isWater(x, y, z) -> return true
-                !stand.isNaN() -> return height - stand <= abilities.safeFall
+                !stand.isNaN() -> return fromY - stand <= abilities.safeFall
                 !terrain.isPassable(x, y, z) -> return true
             }
         }
         return false
     }
 
-    private fun yawToTarget(x: Double, z: Double) = yawTo(targetX, targetZ, x, z)
+    private fun snapshot(): PlayerMotion =
+        if (pool.isEmpty()) motion.copy() else pool.removeLast().also { it.copyFrom(motion) }
 
-    private fun yawTo(toX: Double, toZ: Double, x: Double, z: Double): Float =
-        (atan2(toZ - z, toX - x) * Mth.RAD_TO_DEG - QUARTER_TURN).toFloat()
+    private fun better(a: WalkJump?, b: WalkJump?) = if (a == null || b != null && b.margin > a.margin) b else a
 
-    /**
-     * Moves the aim of the run [offset] blocks to the left of the middle of the target, across the jump.
-     */
-    private fun offsetAim(offset: Double) {
-        aimX = targetX - dirZ * offset
-        aimZ = targetZ + dirX * offset
-    }
+    private fun WalkJump?.has(margin: Double) = this != null && this.margin >= margin
 
-    private fun snapshot(source: PlayerMotion): PlayerMotion =
-        if (pool.isEmpty()) source.copy() else pool.removeLast().also { it.copyFrom(source) }
-
-    private fun recycle() {
-        pool += ground
-        ground.clear()
-    }
+    private class Estimate(val takeoff: Int, val margin: Double, val state: PlayerMotion)
 
     private companion object {
         const val MAX_RUN_UP = 1.6
         const val RUN_UP_SPACING = 0.3
+        const val RUN_UP_STEP = 0.1
 
-        /**
-         * Hops: at most this many in a row, on runways up to this long, for jumps up to [HOP_REACH] apart; the last
-         * lands [HOP_LEAD] blocks before the edge.
-         */
         const val MAX_HOPS = 2
         const val MAX_HOP_RUN_UP = 8.0
         const val HOP_REACH = 6.2
-        const val HOP_LEAD = 0.3
 
-        /**
-         * Farthest ahead of the middle of a block its floor is looked for.
-         */
+        /** How far before the edge the last hop lands. */
+        const val HOP_LEAD = 0.3
         const val MAX_EDGE = 1.5
-        const val RUN_UP_STEP = 0.1
         const val MAX_GROUND_TICKS = 16
         const val MAX_AIR_TICKS = 60
         const val MAX_BELOW = 4.0
@@ -637,10 +527,7 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         const val SETTLE_TICKS = 3
         const val STOPPED_SPEED = 0.01
 
-        /**
-         * How far past the middle of the target a landing may go before the air control holds back; braking for the
-         * exact middle lands short.
-         */
+        /** How far past the middle of the target a landing may go before the air control holds back. */
         const val BRAKE_SLACK = 0.25
         const val HALF_BLOCK = 0.5
         const val SAFETY_STEP = 0.5
@@ -648,28 +535,18 @@ internal class WalkJumps(private val terrain: NavigationTerrain, private val abi
         const val RISKY_EXTRA_FALL = 4.5
         const val VALIDATED_TAKEOFFS = 4
 
-        /**
-         * How far beside the middle of the target, across the jump, runs may aim when straight at it does not work.
-         */
         val SIDE_AIMS = doubleArrayOf(0.3, -0.3)
 
-        /**
-         * How much better a margin must be for other keys than the ones tried first: forward, no strafe.
-         */
+        /** How much better a margin must be for other keys than the ones tried first: forward, no strafe. */
         const val KEY_PREFERENCE = 0.02
         val STRAFES = intArrayOf(0, 1, -1)
-        const val AIR_ACCELERATION = 0.02f * 0.98f
-        const val SPRINT_AIR_ACCELERATION = 0.025999999f * 0.98f
+        const val AIR_ACCELERATION = PlayerMotion.AIR_SPEED * PlayerMotion.INPUT_FRICTION
+        const val SPRINT_AIR_ACCELERATION = PlayerMotion.SPRINT_AIR_SPEED * PlayerMotion.INPUT_FRICTION
 
-        /**
-         * Least margin of a jump, see [WalkJump.margin].
-         */
         const val MIN_MARGIN = 0.15
         const val CAREFUL_MARGIN = 0.35
 
-        /**
-         * A margin that makes a run-up from further back not worth it.
-         */
+        /** A margin that makes a run-up from further back not worth it. */
         const val GOOD_MARGIN = 0.45
     }
 

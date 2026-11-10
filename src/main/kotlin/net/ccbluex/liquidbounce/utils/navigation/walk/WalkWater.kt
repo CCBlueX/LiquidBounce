@@ -23,50 +23,22 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.world.entity.Avatar.SWIMMING_BB_HEIGHT
 import net.minecraft.world.entity.Entity.TOTAL_AIR_SUPPLY
 
-/**
- * Where a swimmer fits in water and where it has air to breathe.
- */
-internal class WalkWater(private val terrain: NavigationTerrain, private val canSwim: Boolean) {
+/** Where a swimmer fits in water: upright, or submerged in the swimming pose, which needs sprinting. */
+internal class WalkWater(private val terrain: NavigationTerrain, private val canSprint: Boolean) {
 
-    /**
-     * Whether a swimmer fits in the water block [x] [y] [z]: upright, or in the swimming pose with the head under
-     * water when [canSwim], which needs sprinting.
-     */
     fun fits(x: Int, y: Int, z: Int) = terrain.isWater(x, y, z) &&
-        (fitsUpright(x, y, z) || canSwim && isSubmerged(x, y, z) && fitsSwimming(x, y, z))
+        (!isLow(x, y, z) || canSprint && isSubmerged(x, y, z) && terrain.hasRoom(x, y, z, SWIMMING_HEIGHT))
 
-    /**
-     * Whether a swimmer that [fits] in [x] [y] [z] has to be in the swimming pose there.
-     */
-    fun isLow(x: Int, y: Int, z: Int) = !fitsUpright(x, y, z)
+    fun isLow(x: Int, y: Int, z: Int) = !terrain.hasRoom(x, y, z)
 
-    /**
-     * Whether a swimmer in [x] [y] [z] has no air to breathe: the head is under water or under a ceiling.
-     */
     fun isSubmerged(x: Int, y: Int, z: Int) = terrain.isWater(x, y + 1, z) || !terrain.isPassable(x, y + 1, z)
 
-    private fun fitsUpright(x: Int, y: Int, z: Int) =
-        terrain.isClear(terrain.box(x + 0.5, y.toDouble(), z + 0.5))
-
-    private fun fitsSwimming(x: Int, y: Int, z: Int) =
-        terrain.isClear(terrain.box(x + 0.5, y.toDouble(), z + 0.5, SWIMMING_HEIGHT))
-
     companion object {
-        /**
-         * Height of a player in the swimming pose.
-         */
         const val SWIMMING_HEIGHT = SWIMMING_BB_HEIGHT.toDouble()
-
-        /**
-         * Ticks of air a player has when breathing freely.
-         */
         const val MAX_AIR = TOTAL_AIR_SUPPLY
+        private const val AIR_MARGIN = 2
 
-        /**
-         * Moves in a row with the head under water that [air] ticks of air last for: half of them at the speed of
-         * swimming without sprinting, so the walk keeps a margin.
-         */
-        fun dive(air: Int) = (air / 2 / WalkCosts.SWIM).toInt()
+        fun movesUnderwater(air: Int) = (air / AIR_MARGIN / WalkCosts.SWIM).toInt()
     }
 
 }
