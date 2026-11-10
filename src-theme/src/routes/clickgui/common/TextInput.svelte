@@ -1,5 +1,14 @@
 <script lang="ts">
-    let {value = $bindable(), label, placeholder = "", multiline = false, maxlength, autofocus = false, oninput}: {
+    let {
+        value = $bindable(),
+        label,
+        placeholder = "",
+        multiline = false,
+        maxlength,
+        autofocus = false,
+        oninput,
+        onsubmit
+    }: {
         value: string;
         label?: string;
         placeholder?: string;
@@ -7,6 +16,7 @@
         maxlength?: number;
         autofocus?: boolean;
         oninput?: () => void;
+        onsubmit?: () => void;
     } = $props();
 </script>
 
@@ -20,7 +30,7 @@
                   bind:value></textarea>
     {:else}
         <input class="input" type="text" spellcheck="false" {placeholder} {maxlength} {autofocus} {oninput}
-               bind:value/>
+               onkeydown={event => event.key === "Enter" && onsubmit?.()} bind:value/>
     {/if}
 </label>
 

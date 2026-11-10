@@ -59,9 +59,10 @@
   }
 
   .text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.5;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    user-select: text;
   }
 
   .meta {

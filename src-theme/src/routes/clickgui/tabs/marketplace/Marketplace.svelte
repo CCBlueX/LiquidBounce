@@ -11,6 +11,7 @@
     import LoadDialog from "./dialog/LoadDialog.svelte";
     import PublishedDialog from "./dialog/PublishedDialog.svelte";
     import UpdateDialog from "./dialog/UpdateDialog.svelte";
+    import {escapeLayer} from "../../../../integration/escape";
     import {getMarketplaceTags} from "../../../../integration/rest";
     import {setItem} from "../../../../integration/persistent_storage";
     import {listen} from "../../../../integration/ws";
@@ -36,8 +37,14 @@
     let tags = $state<string[]>([]);
     let itemChanges = $state(0);
 
+    const detailLayer = escapeLayer(showList);
+
     $effect(() => {
         setItem(STORAGE_KEY, JSON.stringify({type, filters}));
+    });
+
+    $effect(() => {
+        detailLayer.setOpen(view.kind !== "browse");
     });
 
     onMount(() => {
@@ -47,7 +54,8 @@
         getMarketplaceTags().then(names => tags = names, () => tags = []);
     });
 
-    listen("configTrackerChange", refreshTracker);
+    // Listeners are removed by identity, and another instance of the tab can still be fading out
+    listen("configTrackerChange", () => refreshTracker());
     listen("userLoggedIn", refreshAccount);
     listen("userLoggedOut", refreshAccount);
 
@@ -65,9 +73,13 @@
         view = next;
     }
 
+    function showList() {
+        open({kind: "browse"});
+    }
+
     function selectType(next: ListedType) {
         type = next;
-        open({kind: "browse"});
+        showList();
     }
 
     function closeDialog() {
@@ -76,7 +88,8 @@
 </script>
 
 <ScaledClickGuiContent>
-    <WindowPanel title="Marketplace" icon="world" width={1040} fill>
+    <WindowPanel title="Marketplace" icon="world" width={1040} fill
+                 onback={view.kind === "browse" ? undefined : showList}>
         {#snippet actions()}
             {#each Object.entries(TYPE_TITLES) as [listed, title] (listed)}
                 <button type="button" class="type" class:active={listed === type}
@@ -103,10 +116,9 @@
                 <div class="view">
                     {#key view.id}
                         {#if view.kind === "config"}
-                            <ConfigDetail id={view.id} onback={() => open({kind: "browse"})} onopen={open}/>
+                            <ConfigDetail id={view.id} ondelete={showList} onopen={open}/>
                         {:else}
-                            <ItemDetail id={view.id} onback={() => open({kind: "browse"})}
-                                        onchange={() => itemChanges++}/>
+                            <ItemDetail id={view.id} onchange={() => itemChanges++}/>
                         {/if}
                     {/key}
                 </div>

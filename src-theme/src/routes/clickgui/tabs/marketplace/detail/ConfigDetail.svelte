@@ -5,7 +5,7 @@
     import Markdown from "../../../common/Markdown.svelte";
     import Entry from "../browse/Entry.svelte";
     import Reports from "../Reports.svelte";
-    import DetailPage, {type Fact} from "./DetailPage.svelte";
+    import DetailPage from "./DetailPage.svelte";
     import RevisionEntry from "./RevisionEntry.svelte";
     import RevisionList from "./RevisionList.svelte";
     import Section from "./Section.svelte";
@@ -16,9 +16,10 @@
     } from "../../../../../integration/rest";
     import type {MarketplaceConfigDetail} from "../../../../../integration/types";
     import {parseMarkdownSummary} from "../../../../../util/markdown";
-    import {formatCount, formatDate, formatTimeAgo} from "../../../../../util/utils";
+    import {formatCount, formatDate} from "../../../../../util/utils";
     import {
         dialog,
+        formatConfigSubtitle,
         formatVersion,
         getTrackingState,
         tracker,
@@ -29,9 +30,9 @@
         type View
     } from "../marketplace";
 
-    let {id, onback, onopen}: {
+    let {id, ondelete, onopen}: {
         id: number;
-        onback: () => void;
+        ondelete: () => void;
         onopen: (view: View) => void;
     } = $props();
 
@@ -41,21 +42,7 @@
     const config = $derived(detail?.config);
     const tracking = $derived(getTrackingState(id, $tracker));
     const canUpdate = $derived(!!$user && tracking === "Editing" && !!$tracker?.editable);
-    const facts = $derived.by((): Fact[] => {
-        if (!detail || !config) {
-            return [];
-        }
-
-        const forkOf = detail.forkOf;
-        return [
-            {label: "Downloads", value: formatCount(config.downloads)},
-            {label: "Made on", value: config.protocol},
-            {label: "Servers", value: config.servers.join(", ") || "Any server"},
-            {label: "Visibility", value: config.visibility === "unlisted" ? "Unlisted" : "Public"},
-            {label: "Published", value: detail.createdAt === undefined ? undefined : formatDate(detail.createdAt)},
-            {label: "Fork of", value: forkOf?.address, onclick: () => forkOf && onopen({kind: "config", id: forkOf.id})}
-        ];
-    });
+    const forkOf = $derived(detail?.forkOf);
 
     $effect(() => {
         // The account decides what it may do here, the tracker which revision counts as loaded
@@ -81,22 +68,31 @@
     }
 </script>
 
-<DetailPage {id} noun="config" {error} onretry={load} {onback} address={config?.address} name={config?.name}
-            image={config?.image} fallbackImage={UNKNOWN_SERVER_ICON} description={detail?.description} {facts}>
+<DetailPage {id} noun="config" {error} onretry={load} address={config?.address} name={config?.name}
+            image={config?.image} fallbackImage={UNKNOWN_SERVER_ICON} description={detail?.description}>
     {#snippet badges()}
         {#if tracking !== "None"}
             <Chip active>{tracking === "Editing" ? "Edited" : "Tracked"}</Chip>
         {/if}
         {#if config?.featured}<Chip>Featured</Chip>{/if}
         {#if config?.own}<Chip>Yours</Chip>{/if}
-        {#if config?.overlayOn}<Chip>Overlay</Chip>{:else if detail?.forkOf}<Chip>Fork</Chip>{/if}
+        {#if config?.visibility === "unlisted"}<Chip>Unlisted</Chip>{/if}
+        {#if config?.overlayOn}<Chip>Overlay</Chip>{/if}
         {#if config?.binds}<Chip>Binds</Chip>{/if}
         {#each config?.tags ?? [] as tag (tag)}
             <Chip>{tag}</Chip>
         {/each}
     {/snippet}
     {#snippet subtitle()}
-        {#if config?.updatedAt !== undefined}Updated {formatTimeAgo(config.updatedAt)}{/if}
+        {#if config}
+            {formatConfigSubtitle(config)} · {formatCount(config.downloads)} downloads
+            {#if forkOf}
+                · fork of
+                <button type="button" class="link" onclick={() => onopen({kind: "config", id: forkOf.id})}>
+                    {forkOf.address}
+                </button>
+            {/if}
+        {/if}
     {/snippet}
     {#snippet actions()}
         {#if config && $user}
@@ -131,7 +127,7 @@
                     {/if}
                     {#if config.own}
                         <span class="spacer"></span>
-                        <Button variant="danger" onclick={() => $dialog = {kind: "delete", config, ondone: onback}}>
+                        <Button variant="danger" onclick={() => $dialog = {kind: "delete", config, ondone: ondelete}}>
                             Delete
                         </Button>
                     {/if}
@@ -183,30 +179,29 @@
         {/if}
 
         {#if detail.changes && detail.changes.length > 0}
+            {@const named = detail.changes.slice(0, 8)}
             <Section title="Changes">
-                <div class="chips">
-                    {#each detail.changes as module (module)}
-                        <Chip>{module}</Chip>
-                    {/each}
-                </div>
+                <p class="changes">
+                    {named.join(", ")}{#if detail.changes.length > named.length}
+                        and {detail.changes.length - named.length} more{/if}
+                </p>
             </Section>
         {/if}
 
-        <Section title="History">
-            <RevisionList>
-                {#each detail.revisions as revision (revision.id)}
+        <Section title="Changelog">
+            <RevisionList items={detail.revisions} noun="revision">
+                {#snippet entry(revision)}
                     <RevisionEntry title={revision.createdAt === undefined ? "" : formatDate(revision.createdAt)}
                                    text={revision.changelog ?? (revision.first ? "First version" : "")}
                                    highlighted={revision.loaded}>
                         {#snippet badges()}
-                            {#if revision.latest}<Chip>Latest</Chip>{/if}
                             {#if revision.loaded}<Chip active>Loaded</Chip>{/if}
                         {/snippet}
                         {#snippet meta()}
                             <Reports works={revision.works} fails={revision.fails}/>
                         {/snippet}
                     </RevisionEntry>
-                {/each}
+                {/snippet}
             </RevisionList>
         </Section>
     {/if}
@@ -218,6 +213,19 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--clickgui-text-dimmed-color);
+  }
+
+  .link {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: var(--clickgui-text-color);
+    cursor: pointer;
+
+    &:hover, &:focus-visible {
+      text-decoration: underline;
+    }
   }
 
   .manage {
@@ -245,9 +253,10 @@
     row-gap: 6px;
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  .changes {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--clickgui-text-dimmed-color);
   }
 </style>

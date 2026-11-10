@@ -4,13 +4,15 @@
     import {quintOut} from "svelte/easing";
 
     /**
-     * A window that fills the screen's height leaves padding and scrolling to its content.
+     * A window that fills the screen's height leaves padding and scrolling to its content. With [onback] the
+     * icon makes way for a button that goes back.
      */
-    let {title, icon, width = 820, fill = false, actions, children} = $props<{
+    let {title, icon, width = 820, fill = false, onback, actions, children} = $props<{
         title: string;
         icon?: string;
         width?: number;
         fill?: boolean;
+        onback?: () => void;
         actions?: Snippet;
         children: Snippet;
     }>();
@@ -18,7 +20,9 @@
 
 <div class="window" class:fill style:--window-width="{width}px" transition:fade|global={{duration: 200, easing: quintOut}}>
     <div class="title">
-        {#if icon}
+        {#if onback}
+            <button type="button" class="back" aria-label="Back" onclick={onback}></button>
+        {:else if icon}
             <img
                     class="icon"
                     src="img/clickgui/icon-{icon}.svg"
@@ -77,6 +81,20 @@
     font-weight: 600;
     color: var(--clickgui-text-color);
     border-bottom: 2px solid var(--clickgui-window-header-border-color);
+  }
+
+  .back {
+    width: 17px;
+    height: 17px;
+    border: none;
+    background: url("/img/menu/icon-back.svg") center / contain no-repeat;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: ease opacity 0.2s;
+
+    &:hover, &:focus-visible {
+      opacity: 1;
+    }
   }
 
   .title-text {

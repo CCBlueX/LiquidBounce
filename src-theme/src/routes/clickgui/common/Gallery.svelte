@@ -94,7 +94,8 @@
 
   .thumbnail {
     flex: none;
-    height: 120px;
+    width: calc((100% - 16px) / 3);
+    aspect-ratio: 16 / 9;
     padding: 0;
     border: solid 2px transparent;
     border-radius: 5px;
@@ -109,8 +110,8 @@
 
     img {
       display: block;
+      width: 100%;
       height: 100%;
-      max-width: 320px;
       object-fit: cover;
     }
   }
