@@ -115,8 +115,8 @@ private fun Route.getWindowInfo() = get("/window") {
     })
 }
 
-// POST /api/v1/client/browse
-private fun Route.postBrowse() = post("/browse") {
+// POST /api/v1/client/openLink
+private fun Route.postOpenLink() = post("/openLink") {
     val jsonObj = call.receive<JsonObject>()
     val target = jsonObj["target"]?.asString ?: call.forbidden("No target specified")
 
@@ -181,7 +181,7 @@ internal fun Route.clientRoutes() {
     postExit()
     putHudEditorState()
     getWindowInfo()
-    postBrowse()
+    postOpenLink()
     postBrowsePath()
     postFileDialog()
 }

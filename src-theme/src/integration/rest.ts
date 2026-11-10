@@ -230,8 +230,8 @@ export async function getSession(): Promise<Session> {
     return data;
 }
 
-export async function browse(target: string) {
-    await fetch(`${API_BASE}/client/browse`, {
+export async function openLink(target: string) {
+    await fetch(`${API_BASE}/client/openLink`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
