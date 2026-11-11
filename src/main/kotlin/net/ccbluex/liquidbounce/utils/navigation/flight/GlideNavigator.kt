@@ -95,6 +95,10 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
             planner.cancel()
             return null
         }
+        // Landed, but the server has not closed the elytra yet
+        if (player.isFallFlying) {
+            return null
+        }
 
         glide = cruise(goal, abilities, direct) ?: planned(goal, abilities)
         if (glide == null) {
@@ -168,10 +172,10 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     /** Jumps and opens the elytra in the air, then leaves the steering to [rotationHandler] until touch-down. */
     private fun fly(event: MovementInputEvent, glide: Glide, frameYaw: Float): Boolean {
         glide.ticks++
-        if (player.isFallFlying) {
+        if (player.isFallFlying && !player.onGround()) {
             glide.hasOpened = true
-        } else if (glide.hasOpened || glide.ticks > TAKE_OFF_TICKS) {
-            // Touched down, or the elytra did not open.
+        } else if (glide.hasOpened && player.onGround() || !glide.hasOpened && glide.ticks > TAKE_OFF_TICKS) {
+            // Touched down, even if the server has not told yet that the elytra closed, or it did not open.
             if (!glide.hasOpened) {
                 retryAt = ticks + RETRY_TICKS
             }
@@ -180,19 +184,34 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         }
 
         event.sneak = false
-        if (glide.hasOpened) {
-            event.directionalInput = DirectionalInput.NONE
-            event.jump = false
+        event.jump = when {
+            player.isFallFlying -> false
+            player.onGround() -> true
+            else -> pressToOpen(glide)
+        }
+        event.directionalInput = if (glide.hasOpened) {
+            DirectionalInput.NONE
         } else {
-            // Jump, let go and jump again in the air, which opens the elytra.
-            event.directionalInput = steer(glide.goal.subtract(player.position()), frameYaw)
-            event.jump = glide.ticks % 2 == 1
+            steer(glide.goal.subtract(player.position()), frameYaw)
         }
         sprint = !glide.hasOpened
 
         view.breaks = emptyList()
         view.places = emptyList()
         view.active(glide.points, progress)
+        return true
+    }
+
+    /**
+     * A fresh jump press in the air opens the elytra. The server may answer with the elytra closed for a moment
+     * first, and another press before its answer would close it, so the next press waits.
+     */
+    private fun pressToOpen(glide: Glide): Boolean {
+        if (player.input.keyPresses.jump() || glide.ticks - glide.pressedAt < REOPEN_TICKS) {
+            return false
+        }
+
+        glide.pressedAt = glide.ticks
         return true
     }
 
@@ -261,6 +280,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     private class Glide(val goal: Vec3, val steering: GlideSteering, private val path: GlidePath? = null) {
         var ticks = 0
         var hasOpened = false
+        var pressedAt = -REOPEN_TICKS
 
         val points: List<Vec3>
             get() = path?.points ?: listOf(player.position(), steering.target)
@@ -277,7 +297,8 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         const val RETRY_TICKS = 40
         const val GROUND_SCAN = 96
         const val GROUND_STEP = 8
-        const val TAKE_OFF_TICKS = 8
+        const val TAKE_OFF_TICKS = 24
+        const val REOPEN_TICKS = 10
     }
 
 }
