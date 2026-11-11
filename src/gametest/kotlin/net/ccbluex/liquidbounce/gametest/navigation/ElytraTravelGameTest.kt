@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.gametest.harness.Anticheat
 import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.gametest.harness.action.awaitAnswer
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
@@ -54,7 +55,10 @@ class ElytraTravelGameTest : LiquidBounceGameTest({
         run("item replace entity $playerName armor.chest with minecraft:elytra")
 
         checkEndCruise()
-        checkRoofBounce()
+        // ElytraRecast is made for vanilla servers
+        if (anticheat == Anticheat.VANILLA) {
+            checkRoofBounce()
+        }
     }
 })
 
