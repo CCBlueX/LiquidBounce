@@ -35,11 +35,17 @@
       "net.ccbluex.liquidbounce.gametest.EspGlowGameTest",
       "net.ccbluex.liquidbounce.gametest.NoRotateSetGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest",
-      "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest"
+      "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.HarnessGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.LegitMovementGameTest",
+      "net.ccbluex.liquidbounce.gametest.server.SprintGameTest",
+      "net.ccbluex.gametest.harness.ResultsGameTest"
     ]
   },
   "depends": {
     "liquidbounce": "*",
+    "liquidbounce-gametest-harness": "*",
+    "gametest-harness": "*",
     "fabric-client-gametest-api-v1": "*"
   }
 }
