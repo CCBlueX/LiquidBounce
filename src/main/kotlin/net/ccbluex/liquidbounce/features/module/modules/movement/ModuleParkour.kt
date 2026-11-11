@@ -175,7 +175,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         heading: Float,
     ): JumpTarget? {
         val position = player.position()
-        val feet = BlockPos.containing(position)
+        // Over the edge, the player still stands on the block behind it.
+        val feet = BlockPos.containing(position).let { feet ->
+            player.mainSupportingBlockPos.map { BlockPos(it.x, feet.y, it.z) }.orElse(feet)
+        }
         val height = targets.terrain.standHeight(feet.x, feet.y, feet.z).ifNaN { position.y }
         val maxAngle = Assist.maxAngle
         var best: JumpTarget? = null
