@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
-import net.ccbluex.liquidbounce.features.session.BackgroundGame;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.BackgroundGame;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
@@ -63,11 +63,11 @@ public abstract class MixinGui {
     private static final ScopedValue<Void> RECURSIVE_SCREEN_OPENING = ScopedValue.newInstance();
 
     /**
-     * The window shows the screens of the active session only.
+     * The window shows the screens of the active client only.
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void keepBackgroundScreenOffTheWindow(@Nullable Screen screen, CallbackInfo callbackInfo) {
-        if (SessionContext.isBackground()) {
+        if (ClientContext.isBackground()) {
             BackgroundGame.INSTANCE.setScreen(screen);
             callbackInfo.cancel();
         }

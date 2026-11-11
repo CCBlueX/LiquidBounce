@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
 import it.unimi.dsi.fastutil.ints.IntCollection
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleBasePlace
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.OnlyAboveCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.PredictBlockageCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.ValidHeightCondition
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
@@ -38,8 +38,8 @@ import net.minecraft.core.BlockPos
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
-    var placementTarget: BlockPos? by sessionState { null }
-    var previousTarget: BlockPos? by sessionState { null }
+    var placementTarget: BlockPos? by clientState { null }
+    var previousTarget: BlockPos? by clientState { null }
 
     /**
      * Conditions to include a position into the positions to consider.
@@ -53,7 +53,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         PredictBlockageCondition
     )
 
-    private var sphere: Array<BlockPos> by sessionState { BlockPos.ZERO.getSortedSphere(4.5f) }
+    private var sphere: Array<BlockPos> by clientState { BlockPos.ZERO.getSortedSphere(4.5f) }
 
     fun updateSphere() {
         sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())

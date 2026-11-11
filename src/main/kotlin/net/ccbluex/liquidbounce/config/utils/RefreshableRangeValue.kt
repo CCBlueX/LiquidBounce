@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.config.utils
 
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 interface RefreshableIntState {
@@ -38,7 +38,7 @@ fun Value<IntRange>.asRefreshable(): RefreshableIntState = object : RefreshableI
         onChanged { refresh() }
     }
 
-    private val state = sessionState { get().random() }
+    private val state = clientState { get().random() }
 
     override val current
         get() = state.get()
@@ -51,7 +51,7 @@ fun Value<ClosedFloatingPointRange<Float>>.asRefreshable(): RefreshableFloatStat
         onChanged { refresh() }
     }
 
-    private val state = sessionState { get().random() }
+    private val state = clientState { get().random() }
 
     override val current
         get() = state.get()

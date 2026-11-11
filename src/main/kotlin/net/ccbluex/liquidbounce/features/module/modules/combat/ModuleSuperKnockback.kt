@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.network.sendStartSprinting
 import net.ccbluex.liquidbounce.utils.network.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
@@ -122,7 +122,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
 
         private val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
 
-        private var cancelSprint by sessionState { false }
+        private var cancelSprint by clientState { false }
 
         @Suppress("unused", "ComplexCondition")
         private val attackHandler = sequenceHandler<AttackEntityEvent>(
@@ -138,7 +138,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
             tickUntil {
-                val player = currentSession.player ?: return@tickUntil true
+                val player = currentClient.player ?: return@tickUntil true
                 !player.isSprinting && !player.wasSprinting
             }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
@@ -173,8 +173,8 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.CO
         private val ticksUntilAllowedMovement by intRange("UntilAllowedMovement", 0..1, 0..10,
             "ticks")
 
-        private var inSequence by sessionState { false }
-        private var cancelMovement by sessionState { false }
+        private var inSequence by clientState { false }
+        private var cancelMovement by clientState { false }
 
         @Suppress("unused", "ComplexCondition")
         private val attackHandler = sequenceHandler<AttackEntityEvent>(

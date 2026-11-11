@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -49,8 +49,8 @@ object FlyGrim2373 : Mode("Grim-2.3.73", aliases = listOf("Grim2373Jan15")) {
     private val autoLag by boolean("AutoLagInAir", true)
     private val airTick by int("AirTick", 3, 0..12, "ticks")
 
-    private var isStarted by sessionState { false }
-    private var shouldDelay by sessionState { false }
+    private var isStarted by clientState { false }
+    private var shouldDelay by clientState { false }
 
     override fun disable() {
         isStarted = false

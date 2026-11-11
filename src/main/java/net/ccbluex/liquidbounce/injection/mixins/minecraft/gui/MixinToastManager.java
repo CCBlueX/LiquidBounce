@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinToastManager {
 
     @Inject(method = "addToast", at = @At("HEAD"), cancellable = true)
-    private void skipBackgroundSession(Toast toast, CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+    private void skipBackgroundClient(Toast toast, CallbackInfo ci) {
+        if (ClientContext.isBackground()) {
             ci.cancel();
         }
     }

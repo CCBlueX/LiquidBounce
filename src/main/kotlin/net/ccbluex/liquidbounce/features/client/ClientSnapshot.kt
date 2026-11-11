@@ -16,16 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.world.item.ItemStack
 
 /**
- * What a session is doing right now, for whatever shows sessions next to each other.
+ * What a client is doing right now, for whatever shows clients next to each other.
  */
-data class SessionSnapshot(
+data class ClientSnapshot(
     val id: Int,
     val username: String,
     val avatar: String,

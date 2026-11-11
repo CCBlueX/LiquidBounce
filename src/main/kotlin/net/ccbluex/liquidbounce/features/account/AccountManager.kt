@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
-import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsAvailabilityAccessor
 import net.ccbluex.liquidbounce.injection.mixins.realms.MixinRealmsClientAccessor
@@ -69,10 +69,10 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Logs the current session in as [account].
+     * Logs the current client in as [account].
      */
     fun loginDirectAccount(account: MinecraftAccount) = try {
-        SessionContext.current.account = authenticate(account)
+        ClientContext.current.account = authenticate(account)
         invalidateRealms()
 
         EventManager.callEvent(SessionEvent(mc.user))
@@ -349,10 +349,10 @@ object AccountManager : Config("Accounts"), EventListener {
     }
 
     /**
-     * Returns the current session to the account the game was started with.
+     * Returns the current client to the account the game was started with.
      */
     fun restoreInitial() {
-        SessionContext.current.account = null
+        ClientContext.current.account = null
         invalidateRealms()
 
         EventManager.callEvent(SessionEvent(mc.user))

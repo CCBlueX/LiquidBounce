@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoclicker.ModuleTriggerBot
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.allowsCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
@@ -66,7 +66,7 @@ object CriticalsJump : Mode("Jump") {
      * Only true when auto-jumping is currently taking place so that normal jumps
      * are not affected.
      */
-    private var adjustNextJump by sessionState { false }
+    private var adjustNextJump by clientState { false }
 
     @Suppress("unused")
     private val movementInputEvent = handler<MovementInputEvent> { event ->

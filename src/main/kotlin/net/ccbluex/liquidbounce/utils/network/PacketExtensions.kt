@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.network
 
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.toNullable
@@ -55,13 +55,13 @@ fun Packet<*>?.isLocalPlayerDamage(): Boolean {
         returns(true) implies (this@isLocalPlayerDamage is ClientboundDamageEventPacket)
     }
 
-    return this is ClientboundDamageEventPacket && this.entityId == currentSession.player?.id
+    return this is ClientboundDamageEventPacket && this.entityId == currentClient.player?.id
 }
 
 @JvmOverloads
 fun Packet<*>?.isLocalPlayerVelocity(considerExplosion: Boolean = true): Boolean {
     return when (this) {
-        is ClientboundSetEntityMotionPacket -> this.id == currentSession.player?.id
+        is ClientboundSetEntityMotionPacket -> this.id == currentClient.player?.id
         is ClientboundExplodePacket -> this.playerKnockback.isPresent && considerExplosion
         else -> false
     }

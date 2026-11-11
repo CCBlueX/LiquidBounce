@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -42,10 +42,10 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
      */
     private val igniteTimeout by int("IgniteTimeout", 2000, 200..10000, "ms")
 
-    private var phase by sessionState { Phase.BUILD }
-    private var portal: NetherPortal? by sessionState { null }
-    private var missingItemReported by sessionState { false }
-    private val igniteChronometer by sessionState { Chronometer() }
+    private var phase by clientState { Phase.BUILD }
+    private var portal: NetherPortal? by clientState { null }
+    private var missingItemReported by clientState { false }
+    private val igniteChronometer by clientState { Chronometer() }
 
     override fun enabled() {
         phase = Phase.BUILD

@@ -1,17 +1,17 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import {fly} from "svelte/transition";
-    import {getSessions} from "../../../integration/rest";
+    import {getClients} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
-    import type {SessionsUpdateEvent} from "../../../integration/events";
-    import type {ClientSession, ClientSessionActivity} from "../../../integration/types";
+    import type {ClientsUpdateEvent} from "../../../integration/events";
+    import type {Client, ClientActivity} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import ItemStackView from "./inventory/ItemStackView.svelte";
 
     const MAX_MODULES = 3;
 
-    const activities: Record<ClientSessionActivity, string> = {
+    const activities: Record<ClientActivity, string> = {
         DEAD: "Dead",
         FIGHTING: "Fighting",
         MINING: "Mining",
@@ -25,15 +25,15 @@
         IDLE: "Idle"
     };
 
-    let sessions: ClientSession[] = $state([]);
+    let clients: Client[] = $state([]);
 
-    // The active session is the one on screen already
-    const others = $derived(sessions.filter(session => !session.active));
+    // The active client is the one on screen already
+    const others = $derived(clients.filter(client => !client.active));
 
-    function describe(session: ClientSession): string {
-        switch (session.status) {
+    function describe(client: Client): string {
+        switch (client.status) {
             case "IN_GAME":
-                return session.activity ? activities[session.activity] : "";
+                return client.activity ? activities[client.activity] : "";
             case "CONNECTING":
                 return "Connecting";
             case "DISCONNECTED":
@@ -43,61 +43,61 @@
         }
     }
 
-    listen("sessionsUpdate", (event: SessionsUpdateEvent) => {
-        sessions = event.sessions;
+    listen("clientsUpdate", (event: ClientsUpdateEvent) => {
+        clients = event.clients;
     });
 
     onMount(async () => {
-        sessions = await getSessions();
+        clients = await getClients();
     });
 </script>
 
 {#if others.length > 0}
-    <div class="sessions">
-        {#each others as session (session.id)}
-            <div class="session" transition:fly={{ x: 10, duration: 200 }}>
-                <img class="avatar" src={session.avatar} alt="avatar">
+    <div class="clients">
+        {#each others as client (client.id)}
+            <div class="client" transition:fly={{ x: 10, duration: 200 }}>
+                <img class="avatar" src={client.avatar} alt="avatar">
 
-                <div class="name">{session.username}</div>
-                <div class="state" class:offline={session.status === "DISCONNECTED"}>
-                    {describe(session)}{#if session.server}<span class="server">{session.server}</span>{/if}
+                <div class="name">{client.username}</div>
+                <div class="state" class:offline={client.status === "DISCONNECTED"}>
+                    {describe(client)}{#if client.server}<span class="server">{client.server}</span>{/if}
                 </div>
 
-                {#if session.status === "IN_GAME"}
+                {#if client.status === "IN_GAME"}
                     <div class="stats">
                         <div class="stat">
-                            <span class="value">{Math.ceil(session.health ?? 0)}</span>
+                            <span class="value">{Math.ceil(client.health ?? 0)}</span>
                             <img class="icon" src="img/hud/targethud/icon-health.svg" alt="health">
                         </div>
                         <div class="stat">
-                            <span class="value">{session.food ?? 0}</span>
+                            <span class="value">{client.food ?? 0}</span>
                             <img class="icon" src="img/hud/hotbar/icon-food.svg" alt="food">
                         </div>
                     </div>
 
-                    {#if session.heldItem}
+                    {#if client.heldItem}
                         <div class="held-item">
-                            {#key `${session.heldItem.identifier}:${session.heldItem.count}:${session.heldItem.damage}`}
-                                <ItemStackView stack={session.heldItem}/>
+                            {#key `${client.heldItem.identifier}:${client.heldItem.count}:${client.heldItem.damage}`}
+                                <ItemStackView stack={client.heldItem}/>
                             {/key}
                         </div>
                     {/if}
 
-                    {#if session.modules.length > 0}
+                    {#if client.modules.length > 0}
                         <div class="modules">
-                            {#each session.modules.slice(0, MAX_MODULES) as module (module)}
+                            {#each client.modules.slice(0, MAX_MODULES) as module (module)}
                                 <span class="module">{$spaceSeperatedNames ? convertToSpacedString(module) : module}</span>
                             {/each}
-                            {#if session.modules.length > MAX_MODULES}
-                                <span class="more">+{session.modules.length - MAX_MODULES}</span>
+                            {#if client.modules.length > MAX_MODULES}
+                                <span class="more">+{client.modules.length - MAX_MODULES}</span>
                             {/if}
                         </div>
                     {/if}
                 {/if}
 
-                {#if session.lastMessage}
+                {#if client.lastMessage}
                     <div class="message">
-                        <TextComponent textComponent={session.lastMessage} fontSize={12}/>
+                        <TextComponent textComponent={client.lastMessage} fontSize={12}/>
                     </div>
                 {/if}
             </div>
@@ -107,14 +107,14 @@
 
 <style lang="scss">
 
-  .sessions {
+  .clients {
     display: flex;
     flex-direction: column;
     gap: 6px;
     width: 230px;
   }
 
-  .session {
+  .client {
     display: grid;
     grid-template-areas:
       "avatar name stats item"
@@ -127,8 +127,8 @@
     align-items: center;
     padding: 8px 12px;
     border-radius: 5px;
-    background-color: var(--sessions-background-color);
-    color: var(--sessions-text-color);
+    background-color: var(--clients-background-color);
+    color: var(--clients-text-color);
     font-size: 14px;
   }
 
@@ -150,14 +150,14 @@
 
   .state {
     grid-area: state;
-    color: var(--sessions-text-dimmed-color);
+    color: var(--clients-text-dimmed-color);
     font-size: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 
     &.offline {
-      color: var(--sessions-health-color);
+      color: var(--clients-health-color);
     }
 
     .server::before {
@@ -178,7 +178,7 @@
     }
 
     .value {
-      color: var(--sessions-text-dimmed-color);
+      color: var(--clients-text-dimmed-color);
       font-size: 12px;
     }
 
@@ -202,12 +202,12 @@
     font-size: 12px;
 
     .module {
-      color: var(--sessions-module-color);
+      color: var(--clients-module-color);
       font-weight: 500;
     }
 
     .more {
-      color: var(--sessions-text-dimmed-color);
+      color: var(--clients-text-dimmed-color);
     }
   }
 

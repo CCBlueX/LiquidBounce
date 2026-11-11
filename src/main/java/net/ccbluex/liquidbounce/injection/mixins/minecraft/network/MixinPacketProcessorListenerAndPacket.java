@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.minecraft.network.PacketListener;
 import org.spongepowered.asm.mixin.Final;
@@ -36,11 +36,11 @@ public abstract class MixinPacketProcessorListenerAndPacket {
     private PacketListener listener;
 
     @Inject(method = "handle", at = @At("HEAD"))
-    private void handleWithinSession(CallbackInfo ci) {
+    private void handleWithinClient(CallbackInfo ci) {
         if (this.listener instanceof ConnectionAddition owned) {
-            var session = owned.liquid_bounce$getSession();
-            if (session != null) {
-                SessionContext.enter(session);
+            var client = owned.liquid_bounce$getClient();
+            if (client != null) {
+                ClientContext.enter(client);
             }
         }
     }

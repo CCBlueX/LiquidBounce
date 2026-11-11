@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.collidesWithAnythingElse
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.standingOnWater
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -45,7 +45,7 @@ internal object LiquidWalkVerusB3901 : Mode("Verus-b3901", aliases = listOf("Ver
     override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
-    private var spoof by sessionState { true }
+    private var spoof by clientState { true }
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->

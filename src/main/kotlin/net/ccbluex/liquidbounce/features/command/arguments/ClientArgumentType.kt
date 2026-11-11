@@ -23,22 +23,22 @@ import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.ccbluex.liquidbounce.features.session.ClientSession
-import net.ccbluex.liquidbounce.features.session.SessionManager
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientManager
 import java.util.concurrent.CompletableFuture
 
 /**
- * An open session, named by the account it plays as. Accounts can be open more than once,
- * so the id of the session works as well.
+ * An open client, named by the account it plays as. Accounts can be open more than once,
+ * so the id of the client works as well.
  */
-object SessionArgumentType : ArgumentType<ClientSession> {
+object ClientArgumentType : ArgumentType<Client> {
 
-    override fun parse(reader: StringReader): ClientSession {
+    override fun parse(reader: StringReader): Client {
         val name = reader.readClientString()
 
-        return SessionManager.sessions.firstOrNull { it.user.name.equals(name, true) }
-            ?: name.toIntOrNull()?.let(SessionManager::byId)
-            ?: throw CommandErrors.NO_SUCH_SESSION.createWithContext(reader, name)
+        return ClientManager.clients.firstOrNull { it.user.name.equals(name, true) }
+            ?: name.toIntOrNull()?.let(ClientManager::byId)
+            ?: throw CommandErrors.NO_SUCH_CLIENT.createWithContext(reader, name)
     }
 
     override fun <S> listSuggestions(
@@ -47,7 +47,7 @@ object SessionArgumentType : ArgumentType<ClientSession> {
     ): CompletableFuture<Suggestions> {
         val prefix = builder.remaining
 
-        SessionManager.sessions.map { it.user.name }
+        ClientManager.clients.map { it.user.name }
             .filter { it.startsWith(prefix, true) }
             .forEach(builder::suggest)
 

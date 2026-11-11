@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -181,7 +181,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
         blockState: BlockState,
         playerBox: AABB,
     ): Boolean {
-        val collisionShape = blockState.getCollisionShape(currentSession.level!!, pos)
+        val collisionShape = blockState.getCollisionShape(currentClient.level!!, pos)
 
         // The player is currently colliding with the wall, but not inside of it. So we need to expand the
         // player box a bit so that we can check if we collide with that box.
@@ -214,7 +214,7 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
         playerBox: AABB,
         tolerateLowBoundingBoxes: Boolean,
     ): Boolean {
-        val collisionShape = blockState.getCollisionShape(currentSession.level!!, pos)
+        val collisionShape = blockState.getCollisionShape(currentClient.level!!, pos)
 
         // The player is currently colliding with the wall, but not inside of it. So we need to expand the
         // player box a bit so that we can check if we collide with that box.

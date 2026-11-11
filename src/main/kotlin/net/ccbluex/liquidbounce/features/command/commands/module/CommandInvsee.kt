@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.module
 
 import com.mojang.brigadier.CommandDispatcher
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.PlayerInfoArgumentType
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleInventoryTracker
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
@@ -40,7 +40,7 @@ import java.util.UUID
  * Module: [ModuleInventoryTracker]
  */
 object CommandInvsee : CommandRegistrar {
-    var viewedPlayer: UUID? by sessionState { null }
+    var viewedPlayer: UUID? by clientState { null }
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("invsee") {

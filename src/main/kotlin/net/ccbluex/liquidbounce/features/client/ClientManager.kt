@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.cancelEventListenerScopes
-import net.ccbluex.liquidbounce.event.events.SessionSwitchEvent
+import net.ccbluex.liquidbounce.event.events.ClientSwitchEvent
 import net.ccbluex.liquidbounce.features.account.SessionBundle
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -35,52 +35,52 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Keeps the sessions of the client. [main] is the one the game starts with and can never be closed.
+ * Keeps the clients of the client. [main] is the one the game starts with and can never be closed.
  */
-object SessionManager {
+object ClientManager {
 
-    val main = ClientSession(ClientSession.MAIN_ID)
+    val main = Client(Client.MAIN_ID)
 
     /**
-     * The session the window shows and the user plays.
+     * The client the window shows and the user plays.
      */
     @Volatile
-    var active: ClientSession = main
+    var active: Client = main
         private set
 
-    private val openSessions = CopyOnWriteArrayList(listOf(main))
+    private val openClients = CopyOnWriteArrayList(listOf(main))
 
-    val sessions: List<ClientSession>
-        get() = openSessions
+    val clients: List<Client>
+        get() = openClients
 
-    private var nextId = ClientSession.MAIN_ID + 1
+    private var nextId = Client.MAIN_ID + 1
 
     @Volatile
-    private var requestedSwitch: ClientSession? = null
-    private val closing = ConcurrentLinkedQueue<ClientSession>()
+    private var requestedSwitch: Client? = null
+    private val closing = ConcurrentLinkedQueue<Client>()
 
-    fun byId(id: Int): ClientSession? = openSessions.find { it.id == id }
+    fun byId(id: Int): Client? = openClients.find { it.id == id }
 
     /**
-     * Opens a session that plays as [account]. It starts in the background and without a connection.
+     * Opens a client that plays as [account]. It starts in the background and without a connection.
      */
-    fun open(account: SessionBundle?): ClientSession {
-        check(SessionContext.isGameThread) { "Sessions are opened on the game thread" }
+    fun open(account: SessionBundle?): Client {
+        check(ClientContext.isGameThread) { "Clients are opened on the game thread" }
 
-        val session = ClientSession(nextId++)
-        session.account = account
-        ModuleManager.copyTo(session)
-        openSessions += session
+        val client = Client(nextId++)
+        client.account = account
+        ModuleManager.copyTo(client)
+        openClients += client
 
-        logger.info("Opened session ${session.id} for ${session.user.name}")
-        return session
+        logger.info("Opened client ${client.id} for ${client.user.name}")
+        return client
     }
 
-    fun connect(session: ClientSession, address: String) {
-        check(SessionContext.isGameThread) { "Sessions connect on the game thread" }
+    fun connect(client: Client, address: String) {
+        check(ClientContext.isGameThread) { "Clients connect on the game thread" }
         require(ServerAddress.isValidAddress(address)) { "Invalid server address: $address" }
 
-        SessionContext.within(session) {
+        ClientContext.within(client) {
             ConnectScreen.startConnecting(
                 TitleScreen(),
                 mc,
@@ -93,19 +93,19 @@ object SessionManager {
     }
 
     /**
-     * Hands the window to [session] at the start of the next frame.
+     * Hands the window to [client] at the start of the next frame.
      */
-    fun activate(session: ClientSession) {
-        require(session in openSessions) { "$session is closed" }
-        requestedSwitch = session
+    fun activate(client: Client) {
+        require(client in openClients) { "$client is closed" }
+        requestedSwitch = client
     }
 
     /**
-     * Disconnects [session] and forgets it at the start of the next frame.
+     * Disconnects [client] and forgets it at the start of the next frame.
      */
-    fun close(session: ClientSession) {
-        require(!session.isMain) { "The main session cannot be closed" }
-        closing += session
+    fun close(client: Client) {
+        require(!client.isMain) { "The main client cannot be closed" }
+        closing += client
     }
 
     /**
@@ -117,77 +117,77 @@ object SessionManager {
             leave(closing.poll() ?: break)
         }
 
-        requestedSwitch?.let { session ->
+        requestedSwitch?.let { client ->
             requestedSwitch = null
-            if (session in openSessions) {
-                show(session)
+            if (client in openClients) {
+                show(client)
             }
         }
 
-        for (session in openSessions) {
-            if (session.isActive) {
+        for (client in openClients) {
+            if (client.isActive) {
                 continue
             }
 
-            SessionContext.within(session) {
-                repeat(session.dueTicks()) {
+            ClientContext.within(client) {
+                repeat(client.dueTicks()) {
                     BackgroundGame.tick()
                 }
             }
         }
 
-        SessionOverview.announce()
+        ClientOverview.announce()
     }
 
     /**
-     * Leaves only the main session behind, so that Minecraft saves and closes its world as usual.
+     * Leaves only the main client behind, so that Minecraft saves and closes its world as usual.
      */
     @JvmStatic
     fun shutdown() {
-        for (session in openSessions) {
-            if (!session.isMain) {
-                leave(session)
+        for (client in openClients) {
+            if (!client.isMain) {
+                leave(client)
             }
         }
     }
 
-    private fun leave(session: ClientSession) {
-        if (!openSessions.remove(session)) {
+    private fun leave(client: Client) {
+        if (!openClients.remove(client)) {
             return
         }
-        if (session.isActive) {
+        if (client.isActive) {
             show(main)
         }
 
-        SessionContext.within(session) {
+        ClientContext.within(client) {
             mc.level?.disconnect(ClientLevel.DEFAULT_QUIT_MESSAGE)
             mc.disconnectWithProgressScreen(false)
             cancelEventListenerScopes()
         }
-        EventManager.unregisterSession(session)
-        logger.info("Closed session ${session.id}")
+        EventManager.unregisterClient(client)
+        logger.info("Closed client ${client.id}")
     }
 
-    private fun show(session: ClientSession) {
+    private fun show(client: Client) {
         val previous = active
-        if (previous === session) {
+        if (previous === client) {
             return
         }
 
-        // Keys the user still holds would otherwise stay held in the session that leaves the window.
+        // Keys the user still holds would otherwise stay held in the client that leaves the window.
         KeyMapping.releaseAll()
         previous.restartClock()
 
-        SessionContext.rest(session)
-        active = session
+        ClientContext.rest(client)
+        active = client
         present()
 
-        logger.info("Switched from session ${previous.id} to session ${session.id}")
-        EventManager.callEvent(SessionSwitchEvent(session.id))
+        logger.info("Switched from client ${previous.id} to client ${client.id}")
+        EventManager.callEvent(ClientSwitchEvent(client.id))
     }
 
     /**
-     * Puts the loaded session on the window: its level into the renderer and its screen through
+     * Puts the loaded client on the window: its level into the renderer and its screen through
      * the regular path, which the screen never took while it was in the background.
      */
     private fun present() {

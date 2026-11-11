@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPla
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.submitTextAlwaysOnTop
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.Font
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
@@ -46,7 +46,7 @@ data class BreakingProgress(val pos: BlockPos, val value: Float) {
 
         companion object Default : Provider {
             override fun breakingProgress(): BreakingProgress? {
-                val interaction = currentSession.gameMode ?: return null
+                val interaction = currentClient.gameMode ?: return null
                 if (!interaction.isDestroying) {
                     return null
                 }
@@ -59,7 +59,7 @@ data class BreakingProgress(val pos: BlockPos, val value: Float) {
              * without restoring `isDestroying` when continuing a previously stopped target.
              */
             fun breakingProgress(pos: BlockPos): BreakingProgress? {
-                val interaction = currentSession.gameMode ?: return null
+                val interaction = currentClient.gameMode ?: return null
                 return interaction.breakingProgress().takeIf {
                     it.pos == pos && (interaction.isDestroying || it.value > 0f)
                 }

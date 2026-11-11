@@ -48,7 +48,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC113
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286TeleportMC18
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
@@ -119,7 +119,7 @@ object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = list
 
     private val disableOnSetback by boolean("DisableOnSetback", false)
 
-    private var wasFlyingAllowed by sessionState { false }
+    private var wasFlyingAllowed by clientState { false }
 
     override fun onEnabled() {
         wasFlyingAllowed = player.abilities.mayfly

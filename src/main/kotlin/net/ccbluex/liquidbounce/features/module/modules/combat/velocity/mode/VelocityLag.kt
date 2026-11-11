@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
@@ -45,9 +45,9 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val jumpReset by boolean("JumpReset", false)
     private val considerExplosion by boolean("ConsiderExplosion", true)
 
-    private var shouldLag by sessionState { false }
-    private var lagTicks by sessionState { 0 }
-    private var shouldJump by sessionState { false }
+    private var shouldLag by clientState { false }
+    private var lagTicks by clientState { 0 }
+    private var shouldJump by clientState { false }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

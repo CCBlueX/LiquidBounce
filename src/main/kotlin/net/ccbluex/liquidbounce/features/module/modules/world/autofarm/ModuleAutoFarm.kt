@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -90,7 +90,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     }
 
     internal object AutoUseBoneMeal : ToggleableValueGroup(this, "AutoUseBoneMeal", false) {
-        private val chronometer by sessionState { Chronometer() }
+        private val chronometer by clientState { Chronometer() }
         // TODO Use filter (wheat/potato/...)
         private val useDelay = intRange("UseDelay", 20..200, 0..20000, "ms").asRefreshable()
         val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
@@ -127,7 +127,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             }
     }
 
-    var currentTarget: BlockPos? by sessionState { null }
+    var currentTarget: BlockPos? by clientState { null }
         private set
 
     // Find the target on RotationUpdateEvent, which runs right before RotationManager.update, so the

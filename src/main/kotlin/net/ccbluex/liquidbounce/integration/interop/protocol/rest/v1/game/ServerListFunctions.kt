@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.option.MixinServerListAccessor
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.internalServerError
@@ -47,7 +48,6 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -376,7 +376,7 @@ object ActiveServerList : EventListener {
     }
 
     override val running
-        get() = SessionContext.current.isActive
+        get() = ClientContext.current.isActive
 
 }
 

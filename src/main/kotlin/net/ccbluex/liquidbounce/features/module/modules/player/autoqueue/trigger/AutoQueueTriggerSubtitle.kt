@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigge
 
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 
 object AutoQueueTriggerSubtitle : AutoQueueTrigger("Title") {
-    private val triggered = sessionState { false }
+    private val triggered = clientState { false }
 
     /**
      * Reading it takes the trigger back.

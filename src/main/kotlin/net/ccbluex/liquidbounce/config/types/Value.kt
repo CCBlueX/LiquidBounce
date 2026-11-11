@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.features.session.ClientSession
-import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
@@ -223,17 +223,17 @@ open class Value<T : Any>(
 
 
     /**
-     * The value as the current session has it. Only settings of modules differ between sessions,
-     * see [giveTo]; everything else reads [inner] of the main session.
+     * The value as the current client has it. Only settings of modules differ between clients,
+     * see [giveTo]; everything else reads [inner] of the main client.
      */
     fun get(): T {
-        val session = SessionContext.current
-        if (session.isMain) {
+        val client = ClientContext.current
+        if (client.isMain) {
             return inner
         }
 
         @Suppress("UNCHECKED_CAST")
-        return session.values[this] as T? ?: inner
+        return client.values[this] as T? ?: inner
     }
 
     fun set(t: T) {
@@ -246,20 +246,20 @@ open class Value<T : Any>(
     }
 
     private fun store(value: T) {
-        val session = SessionContext.current
-        if (session.isMain || session.values.replace(this, value) == null) {
+        val client = ClientContext.current
+        if (client.isMain || client.values.replace(this, value) == null) {
             inner = value
         }
     }
 
     /**
-     * Lets [session] keep its own copy of this value, starting from the one of the current session.
+     * Lets [client] keep its own copy of this value, starting from the one of the current client.
      */
-    internal open fun giveTo(session: ClientSession) {
+    internal open fun giveTo(client: Client) {
         val value = get()
 
         // Collections are changed in place by the settings holding them.
-        session.values[this] = if (value is MutableCollection<*> && value is Cloneable) {
+        client.values[this] = if (value is MutableCollection<*> && value is Cloneable) {
             value.javaClass.getMethod("clone").invoke(value)
         } else {
             value
@@ -280,7 +280,7 @@ open class Value<T : Any>(
             apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it.accept(currT) }
-            if (SessionContext.current.isActive) {
+            if (ClientContext.current.isActive) {
                 stateFlow.value = currT
             }
         }.onFailure { ex ->

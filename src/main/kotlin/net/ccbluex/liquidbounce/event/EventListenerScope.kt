@@ -28,9 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.SessionElement
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.ClientElement
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
@@ -41,14 +41,14 @@ import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 
 /**
- * The scopes of the current session. A listener has one in every session it launched something in.
+ * The scopes of the current client. A listener has one in every client it launched something in.
  */
-private val scopes by sessionState { ConcurrentHashMap<EventListener, CoroutineScope>() }
+private val scopes by clientState { ConcurrentHashMap<EventListener, CoroutineScope>() }
 
 /**
- * Get the related [CoroutineScope] of receiver [EventListener] in the current session.
+ * Get the related [CoroutineScope] of receiver [EventListener] in the current client.
  *
- * All tasks will check [EventListener.running] on suspend, and stay in the session they were launched in.
+ * All tasks will check [EventListener.running] on suspend, and stay in the client they were launched in.
  */
 val EventListener.eventListenerScope: CoroutineScope
     get() = scopes.computeIfAbsent(this) {
@@ -64,7 +64,7 @@ val EventListener.eventListenerScope: CoroutineScope
                 }
             }
                 + CoroutineName(it.toString()) // Name
-                + SessionElement(SessionContext.current)
+                + ClientElement(ClientContext.current)
                 // Render thread + Auto cancel on not listening
                 + it.wrapContinuationInterceptor(Dispatchers.Main)
         )
@@ -80,7 +80,7 @@ fun EventListener.removeEventListenerScope() {
 }
 
 /**
- * Cancels whatever the listeners still have running in the current session.
+ * Cancels whatever the listeners still have running in the current client.
  */
 internal fun cancelEventListenerScopes() {
     for ((listener, scope) in scopes) {
@@ -132,12 +132,12 @@ private class EventListenerRunningContinuationInterceptor(
             override val context get() = continuation.context
 
             override fun resumeWith(result: Result<T>) {
-                // Whoever resumes may be on a thread of another session, like the one that sent a packet
-                val session = context[SessionElement]?.session
-                if (session == null) {
+                // Whoever resumes may be on a thread of another client, like the one that sent a packet
+                val client = context[ClientElement]?.client
+                if (client == null) {
                     resumeIfRunning(result)
                 } else {
-                    SessionContext.within(session) { resumeIfRunning(result) }
+                    ClientContext.within(client) { resumeIfRunning(result) }
                 }
             }
 

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
@@ -74,11 +74,11 @@ object ModuleEasyPearl :
 
     private val showDistance by boolean("ShowDistance", true)
 
-    private var targetPosition: Vec3? by sessionState { null }
+    private var targetPosition: Vec3? by clientState { null }
 
     private val fontRenderer get() = FontManager.FONT_RENDERER
 
-    var currentTargetRotation : Rotation? by sessionState { null }
+    var currentTargetRotation : Rotation? by clientState { null }
         private set
 
     private val enderPearlSlot: HotbarItemSlot?

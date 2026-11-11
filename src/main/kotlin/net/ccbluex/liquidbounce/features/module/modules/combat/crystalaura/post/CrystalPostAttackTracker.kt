@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
@@ -37,7 +37,7 @@ import net.minecraft.sounds.SoundEvents
  */
 abstract class CrystalPostAttackTracker : EventListener {
 
-    protected val attackedIds by sessionState { Int2LongLinkedOpenHashMap().synchronized() }
+    protected val attackedIds by clientState { Int2LongLinkedOpenHashMap().synchronized() }
 
     @Suppress("unused")
     private val repeatable = handler<GameTickEvent>(FIRST_PRIORITY) {

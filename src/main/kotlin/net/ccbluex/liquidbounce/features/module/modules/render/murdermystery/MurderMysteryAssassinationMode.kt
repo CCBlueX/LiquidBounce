@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.item.mapSavedData
 import net.ccbluex.liquidbounce.utils.math.levenshtein
 import net.minecraft.client.multiplayer.ClientLevel
@@ -40,13 +40,13 @@ import kotlin.math.absoluteValue
 
 object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
 
-    private var lastMap: MapId? by sessionState { null }
-    private var currentAssassinationTarget: UUID? by sessionState { null }
-    private var currentAssassin: UUID? by sessionState { null }
+    private var lastMap: MapId? by clientState { null }
+    private var currentAssassinationTarget: UUID? by clientState { null }
+    private var currentAssassin: UUID? by clientState { null }
 
     val packetHandler =
         handler<PacketEvent> { packetEvent ->
-            val world = currentSession.level ?: return@handler
+            val world = currentClient.level ?: return@handler
 
             if (packetEvent.packet is ClientboundSoundPacket) {
                 val packet = packetEvent.packet

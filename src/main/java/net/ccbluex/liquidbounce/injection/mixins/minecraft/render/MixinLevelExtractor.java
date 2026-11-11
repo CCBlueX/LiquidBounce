@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.renderer.extract.LevelExtractor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Every level reports its changes to the one renderer, which only draws the level of the active session.
+ * Every level reports its changes to the one renderer, which only draws the level of the active client.
  */
 @Mixin(LevelExtractor.class)
 public abstract class MixinLevelExtractor {
@@ -40,8 +40,8 @@ public abstract class MixinLevelExtractor {
         "setSectionDirty",
         "queueTransientBlock"
     }, at = @At("HEAD"), cancellable = true)
-    private void skipBackgroundSession(CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+    private void skipBackgroundClient(CallbackInfo ci) {
+        if (ClientContext.isBackground()) {
             ci.cancel();
         }
     }

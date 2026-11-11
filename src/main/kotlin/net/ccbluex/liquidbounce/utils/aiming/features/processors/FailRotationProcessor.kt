@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -51,9 +51,9 @@ class FailRotationProcessor(owner: EventListener? = null)
     private var transitionInDuration by intRange("TransitionInDuration", 1..4, 0..20,
         "ticks")
 
-    private var ticksElapsed by sessionState { 0 }
-    private var currentTransitionInDuration by sessionState { transitionInDuration.random() }
-    private var shiftRotation by sessionState { Rotation(0f, 0f) }
+    private var ticksElapsed by clientState { 0 }
+    private var currentTransitionInDuration by clientState { transitionInDuration.random() }
+    private var shiftRotation by clientState { Rotation(0f, 0f) }
 
     val isInFailState: Boolean
         get() = running && ticksElapsed < currentTransitionInDuration

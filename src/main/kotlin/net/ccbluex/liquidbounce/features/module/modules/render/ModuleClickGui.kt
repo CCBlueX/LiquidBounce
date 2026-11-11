@@ -32,10 +32,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -55,9 +55,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_
 object ModuleClickGui :
     ClientModule("ClickGUI", ModuleCategories.RENDER, bind = InputConstants.KEY_RSHIFT, disableActivation = true) {
 
-    override val running get() = SessionContext.current.isActive
+    override val running get() = ClientContext.current.isActive
 
-    override val perSession get() = false
+    override val perClient get() = false
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
@@ -105,7 +105,7 @@ object ModuleClickGui :
     }
 
     // Standalone screen instance for caching
-    private var standaloneScreen: CustomStandaloneMinecraftScreen? by sessionState { null }
+    private var standaloneScreen: CustomStandaloneMinecraftScreen? by clientState { null }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {

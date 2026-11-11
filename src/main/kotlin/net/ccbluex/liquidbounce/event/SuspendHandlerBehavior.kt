@@ -27,13 +27,13 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
 /**
  * How a handler deals with an event that arrives while an earlier one is still being handled.
- * Each session is handled on its own.
+ * Each client is handled on its own.
  */
 sealed interface SuspendHandlerBehavior {
 
@@ -77,7 +77,7 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val channelRefs = sessionState { AtomicReference<Channel<T>?>() }
+            val channelRefs = clientState { AtomicReference<Channel<T>?>() }
 
             return handler(eventClass, priority) { event ->
                 val channelRef = channelRefs.get()
@@ -111,7 +111,7 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val jobRefs = sessionState { AtomicReference<Job?>() }
+            val jobRefs = clientState { AtomicReference<Job?>() }
             return handler(eventClass, priority) { event ->
                 jobRefs.get().getAndSet(eventListenerScope.launch(wrappedContext) {
                     handler(event)
@@ -131,7 +131,7 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val jobRefs = sessionState { AtomicReference<Job?>() }
+            val jobRefs = clientState { AtomicReference<Job?>() }
             return handler(eventClass, priority) { event ->
                 val jobRef = jobRefs.get()
                 var newJob: Job? = null

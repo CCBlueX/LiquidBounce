@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.Ant
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -57,8 +57,8 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
     // Flags indicating if an action has been already taken or needs to be taken.
-    var isLikelyFalling by sessionState { false }
-    var rescuePosition: Vec3? by sessionState { null }
+    var isLikelyFalling by clientState { false }
+    var rescuePosition: Vec3? by clientState { null }
         private set
 
     // How many future ticks to simulate to ensure safety.

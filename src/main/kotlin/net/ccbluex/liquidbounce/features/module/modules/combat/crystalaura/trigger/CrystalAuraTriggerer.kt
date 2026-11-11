@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trig
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.notWhileUsingItem
@@ -31,8 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.SelfMoveTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.TickTrigger
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinClientPacketListener
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPlayerGameMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -65,12 +65,12 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     /**
      * The currently executed placement task.
      */
-    private var currentPlaceTask: Future<*>? by sessionState { null }
+    private var currentPlaceTask: Future<*>? by clientState { null }
 
     /**
      * The currently executed destroy task.
      */
-    private var currentDestroyTask: Future<*>? by sessionState { null }
+    private var currentDestroyTask: Future<*>? by clientState { null }
 
     private val canCache: BooleanSupplier
 
@@ -111,7 +111,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentPlaceTask = service.submit(SessionContext.pinned(runnable))
+            currentPlaceTask = service.submit(ClientContext.pinned(runnable))
         } else {
             currentPlaceTask?.cancel(true)
             currentPlaceTask = null
@@ -127,7 +127,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentDestroyTask = service.submit(SessionContext.pinned(runnable))
+            currentDestroyTask = service.submit(ClientContext.pinned(runnable))
         } else {
             currentDestroyTask?.cancel(true)
             currentDestroyTask = null

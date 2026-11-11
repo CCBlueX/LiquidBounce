@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 
@@ -48,7 +48,7 @@ object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
 
         val brightness by int("Brightness", 15, 1..15)
 
-        var gamma by sessionState { 0.0F }
+        var gamma by clientState { 0.0F }
             private set
 
         override fun enable() {

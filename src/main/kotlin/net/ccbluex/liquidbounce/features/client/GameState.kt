@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
@@ -37,7 +37,7 @@ import net.minecraft.world.phys.HitResult
 
 /**
  * Everything Minecraft keeps once per client although it belongs to one connection.
- * Holds it for a session while another session is loaded.
+ * Holds it for a client while another client is loaded.
  */
 internal class GameState {
 

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
@@ -38,10 +38,10 @@ class FlightNavigator(private val owner: EventListener, private val view: RouteV
 
     private val routes = GoalRouter<FlightPath>(this, VERTICAL_MARGIN)
     private val follower = FlightFollower()
-    private var stuck by sessionState { false }
+    private var stuck by clientState { false }
 
     /** Whether the last tick was flown. */
-    var isActive by sessionState { false }
+    var isActive by clientState { false }
         private set
 
     val target: Vec3?

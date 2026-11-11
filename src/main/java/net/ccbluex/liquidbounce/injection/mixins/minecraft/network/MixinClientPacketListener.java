@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.minecraft.world.entity.player.ProfileKeyPair;
 import com.llamalad7.mixinextras.sugar.Cancellable;
@@ -71,21 +71,21 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
     /**
      * Runs once the profile keys were fetched, long after the packet that asked for them.
-     * It only sends the chat session if it runs as the account of its own session.
+     * It only sends the chat session if it runs as the account of its own client.
      */
     @WrapMethod(method = "setKeyPair")
-    private void setKeyPairWithinSession(ProfileKeyPair keyPair, Operation<Void> original) {
-        var session = ((ConnectionAddition) this.connection).liquid_bounce$getSession();
-        if (session == null) {
+    private void setKeyPairWithinClient(ProfileKeyPair keyPair, Operation<Void> original) {
+        var client = ((ConnectionAddition) this.connection).liquid_bounce$getClient();
+        if (client == null) {
             original.call(keyPair);
             return;
         }
 
-        var previous = SessionContext.enter(session);
+        var previous = ClientContext.enter(client);
         try {
             original.call(keyPair);
         } finally {
-            SessionContext.exit(previous);
+            ClientContext.exit(previous);
         }
     }
 

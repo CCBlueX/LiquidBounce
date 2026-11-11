@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
@@ -73,28 +73,28 @@ object ServerObserver : EventListener {
         "negativity"
     )
 
-    var serverInfo: ServerData? by sessionState { null }
+    var serverInfo: ServerData? by clientState { null }
         private set
-    var serverAddress: ServerAddress? by sessionState { null }
+    var serverAddress: ServerAddress? by clientState { null }
         private set
-    var serverId: String? by sessionState { null }
+    var serverId: String? by clientState { null }
         private set
-    var serverType: ServerType? by sessionState { null }
+    var serverType: ServerType? by clientState { null }
         private set
-    val payloadChannels: TreeSet<Identifier> by sessionState { TreeSet<Identifier>() }
+    val payloadChannels: TreeSet<Identifier> by clientState { TreeSet<Identifier>() }
 
-    val transactions by sessionState { mutableListOf<Int>() }
-    var isCapturingTransactions by sessionState { false }
+    val transactions by clientState { mutableListOf<Int>() }
+    var isCapturingTransactions by clientState { false }
 
     // defines how many packets are recorded to get the average
     private const val AVERAGE_OF = 15
 
     // stores last intervals between WorldTimeUpdateS2CPackets
-    private val intervals by sessionState { ArrayDeque<Double>(AVERAGE_OF + 1) }
-    private val chronometer by sessionState { Chronometer() }
-    private var wasDisconnected by sessionState { true }
+    private val intervals by clientState { ArrayDeque<Double>(AVERAGE_OF + 1) }
+    private val chronometer by clientState { Chronometer() }
+    private var wasDisconnected by clientState { true }
 
-    var tps by sessionState { Double.NaN }
+    var tps by clientState { Double.NaN }
         private set
 
     /**
@@ -103,16 +103,16 @@ object ServerObserver : EventListener {
      */
     val tickSpeed: Double
         get() {
-            val level = currentSession.level
+            val level = currentClient.level
             return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
         }
 
-    var serverVersion: String? by sessionState { null }
+    var serverVersion: String? by clientState { null }
         private set
-    var hostingInformation: IpInfoApi.IpData? by sessionState { null }
+    var hostingInformation: IpInfoApi.IpData? by clientState { null }
         private set
 
-    var plugins: Set<String>? by sessionState { null }
+    var plugins: Set<String>? by clientState { null }
         private set
 
     val formattedPluginList: List<Component>?

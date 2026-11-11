@@ -25,7 +25,7 @@ import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
@@ -37,11 +37,11 @@ import net.minecraft.world.item.PotionItem
 
 object AutoShopInventoryManager : EventListener {
 
-    private val prevInventoryItems by sessionState { Object2IntOpenHashMap<String>() }
-    private val currentInventoryItems by sessionState { Object2IntOpenHashMap<String>() }
-    private val pendingItems by sessionState { Object2IntOpenHashMap<String>() }
+    private val prevInventoryItems by clientState { Object2IntOpenHashMap<String>() }
+    private val currentInventoryItems by clientState { Object2IntOpenHashMap<String>() }
+    private val pendingItems by clientState { Object2IntOpenHashMap<String>() }
 
-    private val inventoryItems by sessionState { ArrayList<ItemStack>(36 + 4 + 1) }
+    private val inventoryItems by clientState { ArrayList<ItemStack>(36 + 4 + 1) }
 
     @Suppress("unused")
     // update the items from the player's inventory every tick

@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 
 /**
@@ -39,8 +39,8 @@ internal class PointProcessorDelay(parent: EventListener) : PointProcessor(paren
         currentDelay = range.random()
     }
 
-    private var currentDelay: Int by sessionState { delay.random() }
-    private var currentPoint: PointInsideBox? by sessionState { null }
+    private var currentDelay: Int by clientState { delay.random() }
+    private var currentPoint: PointInsideBox? by clientState { null }
 
     override fun process(point: PointInsideBox): PointInsideBox {
         if (point == currentPoint) {

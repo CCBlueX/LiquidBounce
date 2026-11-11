@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.ping
@@ -59,21 +59,21 @@ import kotlin.math.roundToInt
 object CombatManager : EventListener {
 
     // useful for something like autoSoup
-    private var pauseCombat: Int by sessionState { 0 }
+    private var pauseCombat: Int by clientState { 0 }
 
     // useful for something like autopot
-    private var pauseRotation: Int by sessionState { 0 }
+    private var pauseRotation: Int by clientState { 0 }
 
     // useful for autoblock
-    private var pauseBlocking: Int by sessionState { 0 }
+    private var pauseBlocking: Int by clientState { 0 }
 
     const val PAUSE_COMBAT = 40 // 40 ticks = 2 seconds
-    var duringCombat: Int by sessionState { 0 }
+    var duringCombat: Int by clientState { 0 }
 
     /**
      * [Timer.realTicks] when the server last restarted our attack cooldown.
      */
-    private var cooldownResetTicks by sessionState { 0.0 }
+    private var cooldownResetTicks by clientState { 0.0 }
 
     /**
      * Ticks the server has counted towards our attack cooldown by [ticks] ticks of real time from now. It counts real
@@ -93,7 +93,7 @@ object CombatManager : EventListener {
     /**
      * [Util.getMillis] when the server last restarted the attack cooldown of other players, by entity id.
      */
-    private val cooldownResets by sessionState { Int2LongOpenHashMap() }
+    private val cooldownResets by clientState { Int2LongOpenHashMap() }
 
     /**
      * Like [attackCooldownProgress] for [other], [ticks] ticks of real time from now. Null when we have not seen its
@@ -148,7 +148,7 @@ object CombatManager : EventListener {
     val tickHandler = handler<GameTickEvent> {
         update()
 
-        val player = currentSession.player ?: return@handler
+        val player = currentClient.player ?: return@handler
         debugParameter("Client Cooldown Ticks") { player.attackStrengthTicker }
         debugParameter("Server Cooldown Ticks") { attackCooldownTicks() }
     }
@@ -184,7 +184,7 @@ object CombatManager : EventListener {
             is ClientboundSetEquipmentPacket -> {
                 val millis = Util.getMillis()
                 mc.execute {
-                    val entity = currentSession.level?.getEntity(packet.entity) as? LivingEntity ?: return@execute
+                    val entity = currentClient.level?.getEntity(packet.entity) as? LivingEntity ?: return@execute
                     val item = packet.slots.firstOrNull { it.first == EquipmentSlot.MAINHAND }?.second
                         ?: return@execute
                     if (!ItemStack.isSameItem(entity.mainHandItem, item)) {

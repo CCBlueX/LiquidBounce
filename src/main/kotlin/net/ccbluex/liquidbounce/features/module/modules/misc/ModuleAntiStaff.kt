@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -44,7 +44,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 object ModuleAntiStaff : ClientModule("AntiStaff", ModuleCategories.MISC) {
 
     private val showInTabList by boolean("ShowInTabList", true)
-    private val serverStaffList by sessionState { hashMapOf<String, Set<String>>() }
+    private val serverStaffList by clientState { hashMapOf<String, Set<String>>() }
 
     override suspend fun enabledEffect() {
         val serverEntry = mc.currentServer ?: return

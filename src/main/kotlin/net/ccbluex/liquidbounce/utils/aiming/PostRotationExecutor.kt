@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 
@@ -44,19 +44,19 @@ object PostRotationExecutor : EventListener {
     /**
      * This should be used by actions that depend on the rotation sent in the tick movement packet.
      */
-    private var priorityAction: ModuleAction? by sessionState { null }
+    private var priorityAction: ModuleAction? by clientState { null }
 
-    private var priorityActionPostMove by sessionState { false }
+    private var priorityActionPostMove by clientState { false }
 
     /**
      * All other actions that should be executed on post-move.
      */
-    private val postMoveTasks by sessionState { ArrayDeque<ModuleAction>() }
+    private val postMoveTasks by clientState { ArrayDeque<ModuleAction>() }
 
     /**
      * All other actions that should be executed on tick.
      */
-    private val normalTasks by sessionState { ArrayDeque<ModuleAction>() }
+    private val normalTasks by clientState { ArrayDeque<ModuleAction>() }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {

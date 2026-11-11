@@ -22,7 +22,7 @@ import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.mapReadOnly
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -71,7 +71,7 @@ object AutoFarmAutoWalk : NavigationBaseValueGroup<AutoFarmAutoWalk.WalkTarget?>
     private const val BLOCK_RADIUS = 1.5
     private const val ITEM_RADIUS = 0.75
 
-    private var invHadSpace by sessionState { true }
+    private var invHadSpace by clientState { true }
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
         // we should only walk to farmland/soulsand blocks if we have plantable items

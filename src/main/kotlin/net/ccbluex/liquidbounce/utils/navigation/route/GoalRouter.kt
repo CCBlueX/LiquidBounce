@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.route
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
@@ -40,20 +40,20 @@ internal class GoalRouter<T>(
 
     private val planner = RoutePlanner<T>(owner, newTerrain)
 
-    var ticks by sessionState { 0 }
+    var ticks by clientState { 0 }
         private set
-    private var lastRequest by sessionState { Int.MIN_VALUE / 2 }
-    private var retryAt by sessionState { 0 }
+    private var lastRequest by clientState { Int.MIN_VALUE / 2 }
+    private var retryAt by clientState { 0 }
 
-    private var requested: Request? by sessionState { null }
+    private var requested: Request? by clientState { null }
 
-    private var routed: Request? by sessionState { null }
+    private var routed: Request? by clientState { null }
 
-    var failed by sessionState { false }
+    var failed by clientState { false }
         private set
 
     /** Whether the route in use ends at a stage on the way to the goal. */
-    var endsAtStage by sessionState { false }
+    var endsAtStage by clientState { false }
         private set
 
     val isSearching: Boolean

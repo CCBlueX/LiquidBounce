@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -67,7 +67,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
         private val boostSpeed by float("BoostSpeed", 2f, 0.1f..20f)
         private val boostSpeedTicks by int("BoostSpeedTicks", 20, 1..500, "ticks")
         private val onMove by boolean("OnMove", false)
-        private var currentState: TimerState by sessionState { TimerState.NORMAL_SPEED }
+        private var currentState: TimerState by clientState { TimerState.NORMAL_SPEED }
 
         override fun enable() {
             currentState = TimerState.NORMAL_SPEED
@@ -120,7 +120,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
         private val balance by intRange("Balance", 0..20, -100..200, "ticks")
 
         @Suppress("unused")
-        private val balanceReset by sessionState { balanceReset() }
+        private val balanceReset by clientState { balanceReset() }
 
         val repeatable = handler<GameTickEvent> {
             if (normalizeDuringCombat && CombatManager.isInCombat) {

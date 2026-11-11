@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker
 
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.SphereNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.InstantNukerMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.LegitNukerMode
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -77,7 +77,7 @@ object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit
             targetRenderer.addBlock(value ?: return)
         }
 
-    private val wasTargetState = sessionState<BlockPos?> { null }
+    private val wasTargetState = clientState<BlockPos?> { null }
 
     fun isValid(blockState: BlockState): Boolean {
         return filter.invoke(blockState.block, blocks)

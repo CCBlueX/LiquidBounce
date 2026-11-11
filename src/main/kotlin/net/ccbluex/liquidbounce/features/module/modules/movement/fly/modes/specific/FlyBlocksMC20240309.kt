@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -69,10 +69,10 @@ object FlyBlocksMC20240309 : Mode("NcpClip") {
     override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    private var startPosition: Vec3? by sessionState { null }
-    private var damage by sessionState { false }
+    private var startPosition: Vec3? by clientState { null }
+    private var damage by clientState { false }
 
-    private var shouldLag by sessionState { false }
+    private var shouldLag by clientState { false }
 
     @Suppress("unused")
     val tickHandler = tickHandler {

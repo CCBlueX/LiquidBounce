@@ -26,13 +26,13 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.client.ClientContext
 
 /**
- * Values are written field by field, and their field holds the value of the main session.
- * In any other session the value of that session takes its place.
+ * Values are written field by field, and their field holds the value of the main client.
+ * In any other client the value of that client takes its place.
  */
-object SessionValueAdapterFactory : TypeAdapterFactory {
+object ClientValueAdapterFactory : TypeAdapterFactory {
 
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
         val rawType = type.rawType
@@ -43,7 +43,7 @@ object SessionValueAdapterFactory : TypeAdapterFactory {
         val delegate = gson.getDelegateAdapter(this, type)
         return object : TypeAdapter<T>() {
             override fun write(writer: JsonWriter, value: T) {
-                if (SessionContext.current.isMain) {
+                if (ClientContext.current.isMain) {
                     delegate.write(writer, value)
                     return
                 }

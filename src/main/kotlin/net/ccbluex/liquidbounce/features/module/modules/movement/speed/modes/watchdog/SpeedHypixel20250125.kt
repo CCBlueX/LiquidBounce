@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -39,7 +39,7 @@ import net.minecraft.world.effect.MobEffects
 class SpeedHypixel20250125(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelLowHop", parent) {
 
     companion {
-        var shouldStrafe by sessionState { false }
+        var shouldStrafe by clientState { false }
     }
 
     private var glide by boolean("Glide", false)

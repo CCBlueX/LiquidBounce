@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 
 /**
  * HighJump module
@@ -68,7 +68,7 @@ object ModuleHighJump : ClientModule("HighJump", ModuleCategories.MOVEMENT) {
 
         private val glide by boolean("Glide", false)
 
-        private var shouldGlide by sessionState { false }
+        private var shouldGlide by clientState { false }
 
         @Suppress("unused")
         val repeatable = handler<GameTickEvent> {

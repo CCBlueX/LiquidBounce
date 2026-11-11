@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.clientLogger
@@ -79,14 +79,14 @@ open class ClientModule @JvmOverloads constructor(
      */
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable) &&
-            (perSession || SessionContext.current.isActive)
+            (perClient || ClientContext.current.isActive)
 
     /**
-     * Whether every session has its own settings and state of this module, so that it can be on for one
-     * account and off for another. Modules that only serve the window are shared and follow the active session.
+     * Whether every client has its own settings and state of this module, so that it can be on for one
+     * account and off for another. Modules that only serve the window are shared and follow the active client.
      */
     @AddonApi
-    open val perSession: Boolean
+    open val perClient: Boolean
         get() = true
 
     @AddonApi
@@ -137,7 +137,7 @@ open class ClientModule @JvmOverloads constructor(
      * On client startup, the [onToggled] of enabled modules (in configuration) will be called when the player first
      * joins a world.
      */
-    internal var calledSinceStartup by sessionState { false }
+    internal var calledSinceStartup by clientState { false }
 
     /**
      * Called when the module is registered in the module manager.

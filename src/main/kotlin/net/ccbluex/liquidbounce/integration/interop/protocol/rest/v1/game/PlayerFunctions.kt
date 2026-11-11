@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleN
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -58,7 +58,7 @@ import kotlin.math.min
 
 // GET /api/v1/client/player
 private fun Route.getPlayerData() = get {
-    val playerData = currentSession.player?.let(PlayerData::fromPlayer)
+    val playerData = currentClient.player?.let(PlayerData::fromPlayer)
     if (playerData != null) {
         call.respond(playerData)
     } else {
@@ -68,7 +68,7 @@ private fun Route.getPlayerData() = get {
 
 // GET /api/v1/client/player/inventory
 private fun Route.getPlayerInventory() = get("/inventory") {
-    val playerInventoryData = currentSession.player?.let(PlayerInventoryData::fromPlayer)
+    val playerInventoryData = currentClient.player?.let(PlayerInventoryData::fromPlayer)
     if (playerInventoryData != null) {
         call.respond(playerInventoryData)
     } else {
@@ -155,7 +155,7 @@ data class PlayerData(
             player.ping,
             player.activeEffects.toList(),
             player.mainHandItem,
-            if (player == currentSession.player && shouldHideOffhand() && hideShieldSlot) {
+            if (player == currentClient.player && shouldHideOffhand() && hideShieldSlot) {
                 ItemStack.EMPTY
             } else {
                 player.offhandItem
@@ -184,7 +184,7 @@ data class PlayerInventoryData(
             main = player.inventory.nonEquipmentItems.map(ItemStack::copy),
             crafting = player.inventoryMenu.craftSlots.items.map(ItemStack::copy),
             /** player.enderChestInventory.getHeldStacks().map(ItemStack::copy) */
-            enderChest = if (player === currentSession.player) EnderChestInventoryTracker.stacks else [],
+            enderChest = if (player === currentClient.player) EnderChestInventoryTracker.stacks else [],
         )
     }
 
@@ -209,7 +209,7 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
             scoreboard ?: return null
 
-            val team = currentSession.player?.let { player ->
+            val team = currentClient.player?.let { player ->
                 scoreboard.getPlayersTeam(player.scoreboardName)
             }
 

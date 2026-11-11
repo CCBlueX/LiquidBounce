@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.ClientsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
-import net.ccbluex.liquidbounce.event.events.SessionsUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -41,30 +41,30 @@ private const val ANNOUNCE_INTERVAL_NANOS = 250_000_000L
 private const val MOVING_SPEED_SQR = 1.0E-4
 
 /**
- * Describes what the sessions are doing, which is all the user sees of the ones in the background.
+ * Describes what the clients are doing, which is all the user sees of the ones in the background.
  */
-object SessionOverview : EventListener {
+object ClientOverview : EventListener {
 
     private var announcedAt = 0L
     private var announcedSeveral = false
 
     /**
-     * The last line a server wrote into the chat of the session.
+     * The last line a server wrote into the chat of the client.
      */
-    private var lastMessage: Component? by sessionState { null }
+    private var lastMessage: Component? by clientState { null }
 
     /**
      * Has to be asked on the game thread.
      */
-    fun snapshots(): List<SessionSnapshot> = SessionManager.sessions.map(::snapshot)
+    fun snapshots(): List<ClientSnapshot> = ClientManager.clients.map(::snapshot)
 
-    fun snapshot(session: ClientSession): SessionSnapshot = SessionContext.within(session) { describe(session) }
+    fun snapshot(client: Client): ClientSnapshot = ClientContext.within(client) { describe(client) }
 
     /**
-     * Tells the theme what the sessions are doing, and once more when only one is left.
+     * Tells the theme what the clients are doing, and once more when only one is left.
      */
     internal fun announce() {
-        val several = SessionManager.sessions.size > 1
+        val several = ClientManager.clients.size > 1
         if (!several && !announcedSeveral) {
             return
         }
@@ -76,7 +76,7 @@ object SessionOverview : EventListener {
 
         announcedAt = now
         announcedSeveral = several
-        EventManager.callEvent(SessionsUpdateEvent(snapshots()))
+        EventManager.callEvent(ClientsUpdateEvent(snapshots()))
     }
 
     @Suppress("unused")
@@ -92,23 +92,23 @@ object SessionOverview : EventListener {
     }
 
     /**
-     * Reads the game of the loaded session, which has to be [session].
+     * Reads the game of the loaded client, which has to be [client].
      */
-    private fun describe(session: ClientSession): SessionSnapshot {
+    private fun describe(client: Client): ClientSnapshot {
         val player = mc.player?.takeIf { mc.level != null }
         val screen = mc.gui.screen()
-        val user = session.user
+        val user = client.user
 
-        return SessionSnapshot(
-            id = session.id,
+        return ClientSnapshot(
+            id = client.id,
             username = user.name,
             avatar = ApiConfig.formatAvatarUrl(user.profileId, user.name),
-            active = session.isActive,
+            active = client.isActive,
             status = when {
-                player != null -> SessionSnapshot.Status.IN_GAME
-                screen is DisconnectedScreen -> SessionSnapshot.Status.DISCONNECTED
-                screen is ConnectScreen || mc.pendingConnection != null -> SessionSnapshot.Status.CONNECTING
-                else -> SessionSnapshot.Status.MENU
+                player != null -> ClientSnapshot.Status.IN_GAME
+                screen is DisconnectedScreen -> ClientSnapshot.Status.DISCONNECTED
+                screen is ConnectScreen || mc.pendingConnection != null -> ClientSnapshot.Status.CONNECTING
+                else -> ClientSnapshot.Status.MENU
             },
             server = mc.currentServer?.ip ?: ServerObserver.serverInfo?.ip,
             activity = player?.let(::activityOf),
@@ -118,24 +118,24 @@ object SessionOverview : EventListener {
             position = player?.blockPosition(),
             heldItem = player?.mainHandItem?.takeUnless { it.isEmpty },
             modules = ModuleManager
-                .filter { it.perSession && it.category != ModuleCategories.RENDER && it.enabled && !it.hidden }
+                .filter { it.perClient && it.category != ModuleCategories.RENDER && it.enabled && !it.hidden }
                 .map { it.name },
             lastMessage = lastMessage,
         )
     }
 
     private fun activityOf(player: LocalPlayer) = when {
-        player.isDeadOrDying -> SessionSnapshot.Activity.DEAD
-        CombatManager.isInCombat -> SessionSnapshot.Activity.FIGHTING
-        mc.gameMode?.isDestroying == true -> SessionSnapshot.Activity.MINING
-        player.isUsingItem -> SessionSnapshot.Activity.USING_ITEM
-        mc.gui.screen() is AbstractContainerScreen<*> -> SessionSnapshot.Activity.IN_CONTAINER
-        player.isSleeping -> SessionSnapshot.Activity.SLEEPING
-        player.isPassenger -> SessionSnapshot.Activity.RIDING
-        player.isFallFlying -> SessionSnapshot.Activity.GLIDING
-        player.isSwimming -> SessionSnapshot.Activity.SWIMMING
-        player.deltaMovement.horizontalDistanceSqr() > MOVING_SPEED_SQR -> SessionSnapshot.Activity.MOVING
-        else -> SessionSnapshot.Activity.IDLE
+        player.isDeadOrDying -> ClientSnapshot.Activity.DEAD
+        CombatManager.isInCombat -> ClientSnapshot.Activity.FIGHTING
+        mc.gameMode?.isDestroying == true -> ClientSnapshot.Activity.MINING
+        player.isUsingItem -> ClientSnapshot.Activity.USING_ITEM
+        mc.gui.screen() is AbstractContainerScreen<*> -> ClientSnapshot.Activity.IN_CONTAINER
+        player.isSleeping -> ClientSnapshot.Activity.SLEEPING
+        player.isPassenger -> ClientSnapshot.Activity.RIDING
+        player.isFallFlying -> ClientSnapshot.Activity.GLIDING
+        player.isSwimming -> ClientSnapshot.Activity.SWIMMING
+        player.deltaMovement.horizontalDistanceSqr() > MOVING_SPEED_SQR -> ClientSnapshot.Activity.MOVING
+        else -> ClientSnapshot.Activity.IDLE
     }
 
 }

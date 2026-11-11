@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -40,7 +40,7 @@ abstract class Buff(
     internal open val passesRequirements: Boolean
         get() = enabled && !ModuleAutoBuff.isInventoryBlocking
 
-    private var forceUseKey by sessionState { false }
+    private var forceUseKey by clientState { false }
 
     @Suppress("unused")
     private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->

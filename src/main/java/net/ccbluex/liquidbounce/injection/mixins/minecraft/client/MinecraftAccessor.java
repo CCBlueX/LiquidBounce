@@ -33,7 +33,7 @@ public interface MinecraftAccessor {
     void callStartUseItem();
 
     /**
-     * The account the game was started with. {@link Minecraft#getUser()} answers for the current session.
+     * The account the game was started with. {@link Minecraft#getUser()} answers for the current client.
      */
     @Accessor("user")
     User getLaunchUser();

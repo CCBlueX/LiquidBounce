@@ -23,9 +23,9 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.io.toJsonArray
 import net.minecraft.world.entity.Entity
 import java.util.concurrent.CopyOnWriteArraySet
@@ -34,7 +34,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
 
     private data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
 
-    private val waitingEntities by sessionState { CopyOnWriteArraySet<ScheduledEntityDebug>() }
+    private val waitingEntities by clientState { CopyOnWriteArraySet<ScheduledEntityDebug>() }
 
     fun debugEntityIn(entity: Entity, ticks: Int) {
         waitingEntities.add(ScheduledEntityDebug(ticks, entity.id))

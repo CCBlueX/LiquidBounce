@@ -16,54 +16,54 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /**
- * State a module or manager keeps once per [ClientSession] instead of once per client.
+ * State a module or manager keeps once per [Client] instead of once per client.
  *
  * ```
- * private var ticksSinceHit by sessionState { 0 }
- * private val queue by sessionState { ArrayDeque<Packet<*>>() }
+ * private var ticksSinceHit by clientState { 0 }
+ * private val queue by clientState { ArrayDeque<Packet<*>>() }
  * ```
  *
- * [initial] runs the first time a session reads the state.
+ * [initial] runs the first time a client reads the state.
  */
 @AddonApi
-fun <T> sessionState(initial: () -> T) = SessionState(initial)
+fun <T> clientState(initial: () -> T) = ClientState(initial)
 
 @AddonApi
-class SessionState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> {
+class ClientState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> {
 
     /**
-     * The main session gets a plain field, which keeps the cost of a client with one session at a field read.
+     * The main client gets a plain field, which keeps the cost of a client with one client at a field read.
      */
     @Volatile
     private var main: Any? = Unset
 
     @Suppress("UNCHECKED_CAST")
     fun get(): T {
-        val session = SessionContext.current
-        if (session.isMain) {
+        val client = ClientContext.current
+        if (client.isMain) {
             if (main === Unset) {
                 main = initial()
             }
             return main as T
         }
 
-        val value = session.states.computeIfAbsent(this) { initial() ?: Null }
+        val value = client.states.computeIfAbsent(this) { initial() ?: Null }
         return (if (value === Null) null else value) as T
     }
 
     fun set(value: T) {
-        val session = SessionContext.current
-        if (session.isMain) {
+        val client = ClientContext.current
+        if (client.isMain) {
             main = value
         } else {
-            session.states[this] = value ?: Null
+            client.states[this] = value ?: Null
         }
     }
 

@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
-import net.ccbluex.liquidbounce.features.session.sessionState
 
 /**
  * Spider Bypass for Vulcan 2.8.8
@@ -42,7 +42,7 @@ internal object SpiderVulcan288 : Mode("Vulcan-2.8.8", aliases = listOf("Vulcan2
     override val parent: ModeValueGroup<Mode>
         get() = ModuleSpider.modes
 
-    private var requiresStop by sessionState { false }
+    private var requiresStop by clientState { false }
 
     val repeatable = tickHandler {
         if (player.horizontalCollision) {

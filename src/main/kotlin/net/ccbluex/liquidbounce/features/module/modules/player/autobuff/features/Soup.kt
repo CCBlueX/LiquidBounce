@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.config.types.group.NoneMode
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
@@ -73,7 +73,7 @@ internal object Soup : HealthBasedBuff("Soup") {
         private val ignoreInventoryFull by boolean("IgnoreInventoryFull", true)
         private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-        private var bowlSlot: HotbarItemSlot? by sessionState { null }
+        private var bowlSlot: HotbarItemSlot? by clientState { null }
 
         override fun handleBowl(slot: HotbarItemSlot) {
             bowlSlot = slot

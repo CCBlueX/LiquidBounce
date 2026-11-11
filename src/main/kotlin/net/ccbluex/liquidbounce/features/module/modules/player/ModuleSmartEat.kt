@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -216,7 +216,7 @@ object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
     private object AutoEat : ToggleableValueGroup(this, "AutoEat", true) {
 
         private val minHunger by int("MinHunger", 15, 0..20)
-        private var forceUseKey by sessionState { false }
+        private var forceUseKey by clientState { false }
 
         @Suppress("unused")
         private val tickHandler = tickHandler {

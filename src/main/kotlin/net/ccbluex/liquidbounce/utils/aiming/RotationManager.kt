@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -48,7 +48,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -83,7 +83,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     private val rotationTarget
         get() = rotationTargetHandler.getActiveRequestValue()
-    private val rotationTargetHandler by sessionState { RequestHandler<RotationTarget>() }
+    private val rotationTargetHandler by clientState { RequestHandler<RotationTarget>() }
 
     @Suppress("unused")
     private val lifecycleListener = object : EventListener {
@@ -92,7 +92,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
-    internal var previousRotationTarget: RotationTarget? by sessionState { null }
+    internal var previousRotationTarget: RotationTarget? by clientState { null }
         private set
 
     /**
@@ -105,18 +105,18 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
             lastRotation = if (value == null) {
                 null
             } else {
-                currentRotationState.get() ?: currentSession.player?.rotation ?: Rotation.ZERO
+                currentRotationState.get() ?: currentClient.player?.rotation ?: Rotation.ZERO
             }
 
             currentRotationState.set(value)
         }
 
-    private val currentRotationState = sessionState<Rotation?> { null }
+    private val currentRotationState = clientState<Rotation?> { null }
 
     // Used for rotation interpolation
-    var playerRotation: Rotation? by sessionState { null }
+    var playerRotation: Rotation? by clientState { null }
         private set
-    var lastRotation: Rotation? by sessionState { null }
+    var lastRotation: Rotation? by clientState { null }
         private set
 
     private val fakeLagging
@@ -144,10 +144,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
      */
-    var actualServerRotation by sessionState { Rotation.ZERO }
+    var actualServerRotation by clientState { Rotation.ZERO }
         private set
 
-    private var theoreticalServerRotation by sessionState { Rotation.ZERO }
+    private var theoreticalServerRotation by clientState { Rotation.ZERO }
 
     private fun reset() {
         rotationTargetHandler.clear()
@@ -321,7 +321,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     private fun allowedToUpdate() = !CombatManager.shouldPauseRotation
 
     fun rotationMatchesPreviousRotation(): Boolean {
-        val player = currentSession.player ?: return false
+        val player = currentClient.player ?: return false
 
         currentRotation?.let {
             return it == lastRotation

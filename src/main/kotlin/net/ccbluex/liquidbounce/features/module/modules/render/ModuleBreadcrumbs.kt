@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCustomMesh
@@ -68,8 +68,8 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, 
         tree(TemporaryValueGroup)
     }
 
-    private val trails by sessionState { IdentityHashMap<Entity, Trail>() }
-    private val lastPositions by sessionState { IdentityHashMap<Entity, Vec3>() }
+    private val trails by clientState { IdentityHashMap<Entity, Trail>() }
+    private val lastPositions by clientState { IdentityHashMap<Entity, Vec3>() }
 
     override fun onDisabled() {
         clear()

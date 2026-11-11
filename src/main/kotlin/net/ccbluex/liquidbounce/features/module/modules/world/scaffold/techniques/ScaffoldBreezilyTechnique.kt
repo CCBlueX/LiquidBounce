@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.rawInput
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -48,9 +48,9 @@ import kotlin.math.round
 
 object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
 
-    private var lastSideways by sessionState { 0f }
-    private var lastAirTime by sessionState { 0L }
-    private var currentEdgeDistanceRandom by sessionState { 0.45 }
+    private var lastSideways by clientState { 0f }
+    private var lastAirTime by clientState { 0L }
+    private var currentEdgeDistanceRandom by clientState { 0.45 }
 
     private val edgeDistance by floatRange(
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"

@@ -267,8 +267,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
-import net.ccbluex.liquidbounce.features.session.ClientSession
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -291,8 +291,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
     private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
 
-    private val smartKeyboardStates by sessionState { Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>() }
-    private val smartMouseStates by sessionState { Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>() }
+    private val smartKeyboardStates by clientState { Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>() }
+    private val smartMouseStates by clientState { Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>() }
 
     private fun modulesWithOwnBinds() = modules.filterNot(ClientModule::externalBind)
 
@@ -716,18 +716,18 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
 
     /**
-     * Gives [session] its own copy of every module: the settings of the current session, with only the
+     * Gives [client] its own copy of every module: the settings of the current client, with only the
      * modules running that cannot do anything on a server.
      */
-    internal fun copyTo(session: ClientSession) {
+    internal fun copyTo(client: Client) {
         for (module in modules) {
-            if (!module.perSession) {
+            if (!module.perClient) {
                 continue
             }
 
-            module.giveTo(session)
+            module.giveTo(client)
             if (module.category != ModuleCategories.RENDER) {
-                session.values[module.enabledValue] = false
+                client.values[module.enabledValue] = false
             }
         }
     }

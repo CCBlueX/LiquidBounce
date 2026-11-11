@@ -16,23 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import kotlinx.coroutines.ThreadContextElement
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Keeps a coroutine in the session it was started in, on whichever thread it continues.
+ * Keeps a coroutine in the client it was started in, on whichever thread it continues.
  */
-class SessionElement(val session: ClientSession) :
-    AbstractCoroutineContextElement(Key), ThreadContextElement<ClientSession?> {
+class ClientElement(val client: Client) :
+    AbstractCoroutineContextElement(Key), ThreadContextElement<Client?> {
 
-    companion object Key : CoroutineContext.Key<SessionElement>
+    companion object Key : CoroutineContext.Key<ClientElement>
 
-    override fun updateThreadContext(context: CoroutineContext): ClientSession? = SessionContext.enter(session)
+    override fun updateThreadContext(context: CoroutineContext): Client? = ClientContext.enter(client)
 
-    override fun restoreThreadContext(context: CoroutineContext, oldState: ClientSession?) =
-        SessionContext.exit(oldState)
+    override fun restoreThreadContext(context: CoroutineContext, oldState: Client?) =
+        ClientContext.exit(oldState)
 
 }

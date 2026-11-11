@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
-import net.ccbluex.liquidbounce.features.session.ClientSession;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.Client;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Connection;
@@ -62,17 +62,17 @@ public abstract class MixinConnection implements ConnectionAddition {
     }
 
     @Unique
-    private @Nullable ClientSession liquid_bounce$session;
+    private @Nullable Client liquid_bounce$client;
 
     @Override
-    public @Nullable ClientSession liquid_bounce$getSession() {
-        return this.liquid_bounce$session;
+    public @Nullable Client liquid_bounce$getClient() {
+        return this.liquid_bounce$client;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void joinSession(PacketFlow receiving, CallbackInfo ci) {
+    private void joinClient(PacketFlow receiving, CallbackInfo ci) {
         if (receiving == PacketFlow.CLIENTBOUND) {
-            this.liquid_bounce$session = SessionContext.getCurrent();
+            this.liquid_bounce$client = ClientContext.getCurrent();
         }
     }
 
@@ -80,34 +80,34 @@ public abstract class MixinConnection implements ConnectionAddition {
      * Packets are read on a network thread, which has to know whose packets they are.
      */
     @WrapMethod(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V")
-    private void readWithinSession(ChannelHandlerContext context, Packet<?> packet, Operation<Void> original) {
-        var session = this.liquid_bounce$session;
-        if (session == null) {
+    private void readWithinClient(ChannelHandlerContext context, Packet<?> packet, Operation<Void> original) {
+        var client = this.liquid_bounce$client;
+        if (client == null) {
             original.call(context, packet);
             return;
         }
 
-        var previous = SessionContext.enter(session);
+        var previous = ClientContext.enter(client);
         try {
             original.call(context, packet);
         } finally {
-            SessionContext.exit(previous);
+            ClientContext.exit(previous);
         }
     }
 
     @WrapMethod(method = "send(Lnet/minecraft/network/protocol/Packet;)V")
-    private void sendWithinSession(Packet<?> packet, Operation<Void> original) {
-        var session = this.liquid_bounce$session;
-        if (session == null) {
+    private void sendWithinClient(Packet<?> packet, Operation<Void> original) {
+        var client = this.liquid_bounce$client;
+        if (client == null) {
             original.call(packet);
             return;
         }
 
-        var previous = SessionContext.enter(session);
+        var previous = ClientContext.enter(client);
         try {
             original.call(packet);
         } finally {
-            SessionContext.exit(previous);
+            ClientContext.exit(previous);
         }
     }
 

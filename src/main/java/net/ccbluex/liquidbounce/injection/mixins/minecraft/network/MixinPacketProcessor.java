@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.network.PacketProcessor;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -28,21 +28,21 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class MixinPacketProcessor {
 
     /**
-     * Each packet enters the session of its connection, see {@link MixinPacketProcessorListenerAndPacket}.
-     * The session that was loaded before returns once the queue is empty.
+     * Each packet enters the client of its connection, see {@link MixinPacketProcessorListenerAndPacket}.
+     * The client that was loaded before returns once the queue is empty.
      */
     @WrapMethod(method = "processQueuedPackets")
-    private void returnToSessionAfterPackets(Operation<Void> original) {
-        if (!SessionContext.isGameThread()) {
+    private void returnToClientAfterPackets(Operation<Void> original) {
+        if (!ClientContext.isGameThread()) {
             original.call();
             return;
         }
 
-        var loaded = SessionContext.getLoaded();
+        var loaded = ClientContext.getLoaded();
         try {
             original.call();
         } finally {
-            SessionContext.exit(loaded);
+            ClientContext.exit(loaded);
         }
     }
 

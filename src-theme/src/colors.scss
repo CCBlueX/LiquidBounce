@@ -272,11 +272,11 @@
   --keybinds-header-background-color: var(--scoreboard-base-50-color);
   --keybinds-accent-color: var(--accent-color);
 
-  --sessions-background-color: color-mix(in srgb, var(--surface-color) 68%, transparent);
-  --sessions-text-color: var(--text-color);
-  --sessions-text-dimmed-color: var(--text-dimmed-color);
-  --sessions-module-color: var(--accent-color);
-  --sessions-health-color: var(--hotbar-health-color);
+  --clients-background-color: color-mix(in srgb, var(--surface-color) 68%, transparent);
+  --clients-text-color: var(--text-color);
+  --clients-text-dimmed-color: var(--text-dimmed-color);
+  --clients-module-color: var(--accent-color);
+  --clients-health-color: var(--hotbar-health-color);
 
   --effects-amplifier-color: var(--error-color);
   --effects-name-color: var(--text-color);

@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
@@ -45,9 +45,9 @@ import net.minecraft.world.phys.AABB
 @Suppress("TooManyFunctions")
 class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
-    private val inList by sessionState { Long2ObjectOpenHashMap<InOutBlockData>() }
-    private val currentList by sessionState { Long2ObjectOpenHashMap<CurrentBlockData>() }
-    private val outList by sessionState { Long2ObjectOpenHashMap<InOutBlockData>() }
+    private val inList by clientState { Long2ObjectOpenHashMap<InOutBlockData>() }
+    private val currentList by clientState { Long2ObjectOpenHashMap<CurrentBlockData>() }
+    private val outList by clientState { Long2ObjectOpenHashMap<InOutBlockData>() }
 
     private val culler = BlockCuller(this)
 

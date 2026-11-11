@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.util;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.thread.BlockableEventLoop;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,11 +29,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public abstract class MixinBlockableEventLoop {
 
     /**
-     * A task of the game thread runs for the session that scheduled it.
+     * A task of the game thread runs for the client that scheduled it.
      */
     @ModifyVariable(method = "schedule(Ljava/lang/Runnable;)V", at = @At("HEAD"), argsOnly = true)
-    private Runnable keepTaskInItsSession(Runnable task) {
-        return (Object) this instanceof Minecraft ? SessionContext.pinned(task) : task;
+    private Runnable keepTaskInItsClient(Runnable task) {
+        return (Object) this instanceof Minecraft ? ClientContext.pinned(task) : task;
     }
 
 }

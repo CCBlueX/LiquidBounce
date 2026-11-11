@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -35,7 +35,7 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     private val fallDistance = modes("FallDistance", Smart, arrayOf(Smart, Constant))
     private val timing = modes("Timing", Landing, arrayOf(Landing, Falling))
 
-    private var falling by sessionState { false }
+    private var falling by clientState { false }
 
     val tickHandler = handler<PlayerTickEvent> {
         falling = player.fallDistance > fallDistance.activeMode.value

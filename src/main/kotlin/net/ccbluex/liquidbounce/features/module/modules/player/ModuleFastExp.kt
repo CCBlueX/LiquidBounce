@@ -24,11 +24,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -132,10 +132,10 @@ object ModuleFastExp : ClientModule(
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
-    private var bottlesRequired by sessionState { 0 }
-    private var bottlesUsed by sessionState { 0 }
-    private var itemsToThrow by sessionState { 0f }
-    private var repairing by sessionState { false }
+    private var bottlesRequired by clientState { 0 }
+    private var bottlesUsed by clientState { 0 }
+    private var itemsToThrow by clientState { 0f }
+    private var repairing by clientState { false }
 
     override fun onDisabled() {
         bottlesUsed = 0

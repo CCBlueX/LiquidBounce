@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.world.entity.player.Player
@@ -35,8 +35,8 @@ import java.util.UUID
  */
 object AntiBotIntave20220728 : AntiBotMode("Intave-2022-07-28", aliases = listOf("IntaveHeavy")) {
 
-    private val suspectList by sessionState { hashMapOf<UUID, SuspectInfo>() }
-    private val botList by sessionState { objectHashSetOf<UUID>() }
+    private val suspectList by clientState { hashMapOf<UUID, SuspectInfo>() }
+    private val botList by clientState { objectHashSetOf<UUID>() }
 
     /**
      * ## Ping logic:

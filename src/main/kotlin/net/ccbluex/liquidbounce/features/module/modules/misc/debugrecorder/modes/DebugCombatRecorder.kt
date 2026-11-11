@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -67,12 +67,12 @@ object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>
         // Start tracking when 10 blocks away
         rangeValue =  FloatValueProvider("Range", 10f, 7f..12f)
     ))
-    private var previous: Rotation by sessionState { Rotation(0f, 0f) }
+    private var previous: Rotation by clientState { Rotation(0f, 0f) }
 
-    private val fightMap by sessionState { Int2ObjectOpenHashMap<Fight>() }
-    private val trainingCollection by sessionState { Int2ObjectOpenHashMap<MutableList<CombatSample>>() }
+    private val fightMap by clientState { Int2ObjectOpenHashMap<Fight>() }
+    private val trainingCollection by clientState { Int2ObjectOpenHashMap<MutableList<CombatSample>>() }
 
-    private var targetEntityId: Int? by sessionState { null }
+    private var targetEntityId: Int? by clientState { null }
 
     private class Fight {
         var ticks: Int = 0

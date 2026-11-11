@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -98,8 +98,8 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         pauseOnUnblockTicks = range.random()
     }
 
-    var reblockTicks: Int by sessionState { reblockTicksRange.random() }
-    var pauseOnUnblockTicks: Int by sessionState { pauseOnUnblockTicksRange.random() }
+    var reblockTicks: Int by clientState { reblockTicksRange.random() }
+    var pauseOnUnblockTicks: Int by clientState { pauseOnUnblockTicksRange.random() }
 
     private val chance = percentageChance("Chance", 100f)
     val blink by int("Blink", 0, 0..10, "ticks")
@@ -141,7 +141,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     /** For 1.9~1.21.4 protocol on 1.8 server, server will send a shield to your offhand on using item */
     private val assumeShield by boolean("AssumeShield", false)
 
-    private var blockingTicks by sessionState { 0 }
+    private var blockingTicks by clientState { 0 }
 
     /**
      * Enforces the blocking state on the Input
@@ -162,7 +162,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             enforcedBlockingHandState.set(value)
         }
 
-    private val enforcedBlockingHandState = sessionState<InteractionHand?> { null }
+    private val enforcedBlockingHandState = clientState<InteractionHand?> { null }
 
     /**
      * Visual blocking shows a blocking state, while not actually blocking.
@@ -175,7 +175,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
             (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
         set(value) = blockVisualState.set(value)
 
-    private val blockVisualState = sessionState { false }
+    private val blockVisualState = clientState { false }
 
     val shouldUnblockToHit
         get() = unblockMode != UnblockMode.NONE
@@ -183,9 +183,9 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
     val blockImmediate
         get() = reblockTicks == 0
 
-    var hasBlockedSinceAttack by sessionState { false }
+    var hasBlockedSinceAttack by clientState { false }
 
-    private var isInDanger by sessionState { false }
+    private var isInDanger by clientState { false }
 
     /**
      * This will decrease our CPS and prioritize blocking.
@@ -277,7 +277,7 @@ object KillAuraAutoBlock : ToggleableValueGroup(ModuleKillAura, "AutoBlocking", 
         return true
     }
 
-    private var flushTicks by sessionState { 0 }
+    private var flushTicks by clientState { 0 }
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent> {

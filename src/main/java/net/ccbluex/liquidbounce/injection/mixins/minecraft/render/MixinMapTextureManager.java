@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.resources.MapTextureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,14 +27,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Map textures are kept by map id, which every server counts from zero.
- * They are drawn again from the map data of the session that takes the window.
+ * They are drawn again from the map data of the client that takes the window.
  */
 @Mixin(MapTextureManager.class)
 public abstract class MixinMapTextureManager {
 
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
-    private void skipBackgroundSession(CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+    private void skipBackgroundClient(CallbackInfo ci) {
+        if (ClientContext.isBackground()) {
             ci.cancel();
         }
     }

@@ -22,7 +22,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferClient;
 import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.ccbluex.liquidbounce.utils.text.PlainText;
@@ -45,20 +45,20 @@ public abstract class MixinClientHandshakePacketListenerImplMixin {
     private Connection connection;
 
     /**
-     * Runs on a worker thread and has to join the server as the account of its own session.
+     * Runs on a worker thread and has to join the server as the account of its own client.
      */
     @WrapMethod(method = "authenticateServer")
-    private Component authenticateAsSession(String digest, Operation<Component> original) {
-        var session = ((ConnectionAddition) this.connection).liquid_bounce$getSession();
-        if (session == null) {
+    private Component authenticateAsClient(String digest, Operation<Component> original) {
+        var client = ((ConnectionAddition) this.connection).liquid_bounce$getClient();
+        if (client == null) {
             return original.call(digest);
         }
 
-        var previous = SessionContext.enter(session);
+        var previous = ClientContext.enter(client);
         try {
             return original.call(digest);
         } finally {
-            SessionContext.exit(previous);
+            ClientContext.exit(previous);
         }
     }
 

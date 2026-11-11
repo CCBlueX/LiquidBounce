@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
@@ -36,8 +36,8 @@ import java.util.UUID
 
 object AntiBotMatrix20211018 : AntiBotMode("Matrix-2021-10-18", aliases = listOf("Matrix")) {
 
-    private val suspectList by sessionState { objectHashSetOf<UUID>() }
-    private val botList by sessionState { objectHashSetOf<UUID>() }
+    private val suspectList by clientState { objectHashSetOf<UUID>() }
+    private val botList by clientState { objectHashSetOf<UUID>() }
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {

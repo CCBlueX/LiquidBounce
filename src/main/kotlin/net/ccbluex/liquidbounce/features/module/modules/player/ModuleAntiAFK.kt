@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotations
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -78,7 +78,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        var randomDirection by sessionState { DirectionalInput.NONE }
+        var randomDirection by clientState { DirectionalInput.NONE }
 
         private val interactions by multiEnumChoice("Interaction",
             Interaction.YAW,

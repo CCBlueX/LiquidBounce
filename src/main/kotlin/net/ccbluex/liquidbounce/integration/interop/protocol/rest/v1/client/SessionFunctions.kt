@@ -32,10 +32,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.features.account.AccountManager
-import net.ccbluex.liquidbounce.features.session.ClientSession
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.SessionManager
-import net.ccbluex.liquidbounce.features.session.SessionOverview
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.ClientManager
+import net.ccbluex.liquidbounce.features.client.ClientOverview
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
@@ -51,20 +51,20 @@ private fun Route.getLocationInfo() = get("/location") {
     call.respond(locationInfo)
 }
 
-// GET /api/v1/client/sessions
-private fun Route.getSessions() = get {
-    call.respond(withContext(Dispatchers.Main) { SessionOverview.snapshots() })
+// GET /api/v1/client/clients
+private fun Route.getClients() = get {
+    call.respond(withContext(Dispatchers.Main) { ClientOverview.snapshots() })
 }
 
 /**
- * Opens a session for an account of the alt manager. It joins the given server, or the one the active
- * session is on. With no server to join it takes the window, so that the menus can send it somewhere.
+ * Opens a client for an account of the alt manager. It joins the given server, or the one the active
+ * client is on. With no server to join it takes the window, so that the menus can send it somewhere.
  */
-// POST /api/v1/client/sessions
-private fun Route.postSession() = post {
-    data class SessionForm(val account: Int, val address: String?)
+// POST /api/v1/client/clients
+private fun Route.postClient() = post {
+    data class ClientForm(val account: Int, val address: String?)
 
-    val form = call.receive<SessionForm>()
+    val form = call.receive<ClientForm>()
     val account = AccountManager.accounts.getOrNull(form.account) ?: call.badRequest("Account not found")
     if (form.address != null && !ServerAddress.isValidAddress(form.address)) {
         call.badRequest("Invalid server address")
@@ -72,47 +72,47 @@ private fun Route.postSession() = post {
 
     val login = withContext(Dispatchers.IO) { AccountManager.authenticate(account) }
     withContext(Dispatchers.Main) {
-        val address = form.address ?: SessionContext.current.connection?.serverData?.ip
-        val session = SessionManager.open(login)
+        val address = form.address ?: ClientContext.current.connection?.serverData?.ip
+        val client = ClientManager.open(login)
         if (address != null) {
-            SessionManager.connect(session, address)
+            ClientManager.connect(client, address)
         } else {
-            SessionManager.activate(session)
+            ClientManager.activate(client)
         }
     }
     call.respond(NoContent)
 }
 
-// POST /api/v1/client/sessions/{id}/activate
-private fun Route.postActivateSession() = post("/{id}/activate") {
-    SessionManager.activate(call.session())
+// POST /api/v1/client/clients/{id}/activate
+private fun Route.postActivateClient() = post("/{id}/activate") {
+    ClientManager.activate(call.client())
     call.respond(NoContent)
 }
 
-// DELETE /api/v1/client/sessions/{id}
-private fun Route.deleteSession() = delete("/{id}") {
-    val session = call.session()
-    if (session.isMain) {
-        call.forbidden("The main session cannot be closed")
+// DELETE /api/v1/client/clients/{id}
+private fun Route.deleteClient() = delete("/{id}") {
+    val client = call.client()
+    if (client.isMain) {
+        call.forbidden("The main client cannot be closed")
     }
 
-    SessionManager.close(session)
+    ClientManager.close(client)
     call.respond(NoContent)
 }
 
-private suspend fun RoutingCall.session(): ClientSession {
-    val id = parameters["id"]?.toIntOrNull() ?: badRequest("Missing session id")
-    return SessionManager.byId(id) ?: notFound("/sessions/$id", "Session not found")
+private suspend fun RoutingCall.client(): Client {
+    val id = parameters["id"]?.toIntOrNull() ?: badRequest("Missing client id")
+    return ClientManager.byId(id) ?: notFound("/clients/$id", "Client not found")
 }
 
 internal fun Route.sessionRoutes() {
     getSessionInfo()
     getLocationInfo()
 
-    route("/sessions") {
-        getSessions()
-        postSession()
-        postActivateSession()
-        deleteSession()
+    route("/clients") {
+        getClients()
+        postClient()
+        postActivateClient()
+        deleteClient()
     }
 }

@@ -42,9 +42,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.session.BackgroundGame;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
-import net.ccbluex.liquidbounce.features.session.SessionManager;
+import net.ccbluex.liquidbounce.features.client.BackgroundGame;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
+import net.ccbluex.liquidbounce.features.client.ClientManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntityAccessor;
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
@@ -146,7 +146,7 @@ public abstract class MixinMinecraft {
      */
     @Inject(method = "<init>(Lnet/minecraft/client/main/GameConfig;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeGui()V"))
     private void startClient(CallbackInfo callback) {
-        SessionContext.attachGameThread();
+        ClientContext.attachGameThread();
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
 
@@ -288,11 +288,11 @@ public abstract class MixinMinecraft {
     }
 
     /**
-     * Switches the active session and ticks the background ones.
+     * Switches the active client and ticks the background ones.
      */
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V", shift = At.Shift.AFTER))
-    private void runSessions(CallbackInfo callbackInfo) {
-        SessionManager.runFrame();
+    private void runClients(CallbackInfo callbackInfo) {
+        ClientManager.runFrame();
     }
 
     /**
@@ -391,7 +391,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"))
     private void hookWorldChangeEvent(ClientLevel level, boolean stopSound, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(level));
-        if (!SessionContext.isBackground() && ModuleFreeCam.INSTANCE.getEnabled()) {
+        if (!ClientContext.isBackground() && ModuleFreeCam.INSTANCE.getEnabled()) {
             ModuleFreeCam.INSTANCE.setEnabled(false);
             // isn't inGame, needs to be called manually
             // TODO: find a better way to do this
@@ -400,19 +400,19 @@ public abstract class MixinMinecraft {
     }
 
     /**
-     * A background session changes its level without the renderer, the sound and the window title following.
+     * A background client changes its level without the renderer, the sound and the window title following.
      */
     @Inject(method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;Z)V", at = @At("HEAD"), cancellable = true)
     private void keepBackgroundLevelOffTheRenderer(ClientLevel level, boolean stopSound, CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+        if (ClientContext.isBackground()) {
             BackgroundGame.INSTANCE.levelChanged();
             ci.cancel();
         }
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"), cancellable = true)
-    private void disconnectBackgroundSession(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+    private void disconnectBackgroundClient(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
+        if (ClientContext.isBackground()) {
             BackgroundGame.INSTANCE.disconnect(screen, keepResourcePacks);
             ci.cancel();
         }
@@ -420,26 +420,26 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "clearClientLevel", at = @At("HEAD"), cancellable = true)
     private void clearBackgroundLevel(Screen screen, CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+        if (ClientContext.isBackground()) {
             BackgroundGame.INSTANCE.clearLevel(screen);
             ci.cancel();
         }
     }
 
     /**
-     * Dropping every queued task would also drop those of the other sessions.
+     * Dropping every queued task would also drop those of the other clients.
      */
     @WrapWithCondition(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dropAllTasks()V"))
-    private boolean keepTasksOfOtherSessions(Minecraft instance) {
-        return SessionManager.INSTANCE.getSessions().size() == 1;
+    private boolean keepTasksOfOtherClients(Minecraft instance) {
+        return ClientManager.INSTANCE.getClients().size() == 1;
     }
 
     /**
-     * Server resource packs belong to the main session, see MixinCommonNetworkHandler.
+     * Server resource packs belong to the main client, see MixinCommonNetworkHandler.
      */
     @WrapWithCondition(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;clearDownloadedResourcePacks()V"))
-    private boolean keepServerPacksOfMainSession(Minecraft instance) {
-        if (SessionContext.getLoaded().isMain()) {
+    private boolean keepServerPacksOfMainClient(Minecraft instance) {
+        if (ClientContext.getLoaded().isMain()) {
             return true;
         }
 
@@ -448,44 +448,44 @@ public abstract class MixinMinecraft {
     }
 
     @WrapWithCondition(method = "setScreenAndShow", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;renderFrame(Z)V"))
-    private boolean drawOnlyTheActiveSession(Minecraft instance, boolean advanceGameTime) {
-        return !SessionContext.isBackground();
+    private boolean drawOnlyTheActiveClient(Minecraft instance, boolean advanceGameTime) {
+        return !ClientContext.isBackground();
     }
 
     @WrapWithCondition(method = "setCameraEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;checkEntityPostEffect(Lnet/minecraft/world/entity/Entity;)V"))
-    private boolean keepPostEffectOfActiveSession(GameRenderer instance, Entity cameraEntity) {
-        return !SessionContext.isBackground();
+    private boolean keepPostEffectOfActiveClient(GameRenderer instance, Entity cameraEntity) {
+        return !ClientContext.isBackground();
     }
 
     /**
-     * Keys of a background session are only ever pressed by its modules, which do not need the mouse.
+     * Keys of a background client are only ever pressed by its modules, which do not need the mouse.
      */
     @ModifyExpressionValue(method = "handleKeybinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MouseHandler;isMouseGrabbed()Z"))
-    private boolean backgroundSessionNeedsNoMouse(boolean grabbed) {
-        return grabbed || SessionContext.isBackground();
+    private boolean backgroundClientNeedsNoMouse(boolean grabbed) {
+        return grabbed || ClientContext.isBackground();
     }
 
     @ModifyReturnValue(method = "getUser", at = @At("RETURN"))
-    private User useSessionUser(User launchUser) {
-        var account = SessionContext.getCurrent().getAccount();
+    private User useClientUser(User launchUser) {
+        var account = ClientContext.getCurrent().getAccount();
         return account != null ? account.getSession() : launchUser;
     }
 
     @ModifyReturnValue(method = "services", at = @At("RETURN"))
-    private Services useSessionServices(Services launchServices) {
-        var account = SessionContext.getCurrent().getAccount();
+    private Services useClientServices(Services launchServices) {
+        var account = ClientContext.getCurrent().getAccount();
         return account != null ? account.getServices() : launchServices;
     }
 
     @ModifyReturnValue(method = "getProfileKeyPairManager", at = @At("RETURN"))
-    private ProfileKeyPairManager useSessionProfileKeys(ProfileKeyPairManager launchProfileKeys) {
-        var account = SessionContext.getCurrent().getAccount();
+    private ProfileKeyPairManager useClientProfileKeys(ProfileKeyPairManager launchProfileKeys) {
+        var account = ClientContext.getCurrent().getAccount();
         return account != null ? account.getProfileKeys() : launchProfileKeys;
     }
 
     @Inject(method = "exitWorldAndClose", at = @At("HEAD"))
-    private void closeSessions(CallbackInfo ci) {
-        SessionManager.shutdown();
+    private void closeClients(CallbackInfo ci) {
+        ClientManager.shutdown();
     }
 
     @Inject(method = "renderFrame", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;fps:I",

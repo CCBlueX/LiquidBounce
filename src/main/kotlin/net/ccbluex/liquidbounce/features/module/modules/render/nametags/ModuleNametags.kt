@@ -22,9 +22,9 @@ import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -61,7 +61,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
 
     private val nametagPool = Pool(::NametagRenderState, NametagRenderState::reset)
 
-    private val nametagsToRender by sessionState { mutableListOf<NametagRenderState>() }
+    private val nametagsToRender by clientState { mutableListOf<NametagRenderState>() }
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)

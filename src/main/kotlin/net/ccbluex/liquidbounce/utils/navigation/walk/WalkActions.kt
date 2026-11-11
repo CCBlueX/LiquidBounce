@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
@@ -68,13 +68,13 @@ class WalkActions(
     private val rotations: RotationsValueGroup,
 ) : EventListener {
 
-    private var action: Action? by sessionState { null }
+    private var action: Action? by clientState { null }
 
     /** The aim of the current action, null while there is nothing to aim at. */
-    var rotation: Rotation? by sessionState { null }
+    var rotation: Rotation? by clientState { null }
         private set
 
-    private var useCooldown by sessionState { 0 }
+    private var useCooldown by clientState { 0 }
 
     val isActive: Boolean
         get() = action != null
@@ -115,7 +115,7 @@ class WalkActions(
         action = null
         rotation = null
         if (stopped is Action.Mine) {
-            currentSession.gameMode?.takeIf { it.isDestroying }?.stopDestroyBlock()
+            currentClient.gameMode?.takeIf { it.isDestroying }?.stopDestroyBlock()
         }
         SilentHotbar.resetSlot(this)
     }

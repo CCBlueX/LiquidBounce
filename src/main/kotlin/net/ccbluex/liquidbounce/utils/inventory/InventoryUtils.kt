@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -118,7 +118,7 @@ fun <T : ItemSlot> Iterable<T>.findBestToolToMineBlock(
     ignoreDurability: Boolean = true,
     predicate: BiPredicate<ItemStack, BlockState> = BiPredicate { _, _ -> true },
 ): T? {
-    val player = currentSession.player ?: return null
+    val player = currentClient.player ?: return null
 
     val candidates = filter {
         val stack = it.itemStack

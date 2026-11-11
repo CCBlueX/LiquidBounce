@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.route
 
-import java.util.function.Supplier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import net.ccbluex.liquidbounce.event.EventListener
@@ -27,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.sessionState
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 /**
  * Runs one route search at a time off the game thread, a slice per [poll]. The search reads a copy of its region
@@ -49,15 +49,15 @@ class RoutePlanner<T>(
     private val newTerrain: (NavigationWorld) -> NavigationTerrain = ::NavigationTerrain,
 ) : EventListener {
 
-    private var job: Job<T>? by sessionState { null }
-    private val changes by sessionState { ArrayList<BlockPos>() }
-    private var changesOverflowed by sessionState { false }
+    private var job: Job<T>? by clientState { null }
+    private val changes by clientState { ArrayList<BlockPos>() }
+    private var changesOverflowed by clientState { false }
 
     val isIdle: Boolean
         get() = job == null
 
     /** The best route of the running search so far, see [RouteSearch.preview]. */
-    var preview: List<Vec3>? by sessionState { null }
+    var preview: List<Vec3>? by clientState { null }
         private set
 
     /** Searches with [factory] over [region], unless a search for an equal [key] is running or done. */
@@ -97,7 +97,7 @@ class RoutePlanner<T>(
 
         if (job.result == RouteResult.Searching) {
             job.slice = CompletableFuture
-                .supplyAsync(SessionContext.pinned(Supplier(job.search::advance)), Dispatchers.Default.asExecutor())
+                .supplyAsync(ClientContext.pinned(Supplier(job.search::advance)), Dispatchers.Default.asExecutor())
                 .exceptionally { throwable ->
                     logger.error("Route search failed", throwable)
                     RouteResult.Failed(RouteFailure.NO_PATH)
@@ -115,14 +115,14 @@ class RoutePlanner<T>(
     }
 
     private fun start(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>): Job<T>? {
-        val level = currentSession.level ?: return null
+        val level = currentClient.level ?: return null
         val terrain = newTerrain(SectionCache.capture(level, region))
         return Job(key, region, factory, terrain, factory.create(terrain))
     }
 
     /** Whether a recorded change alters how a block the search looked at is moved through. */
     private fun applyChanges(terrain: NavigationTerrain): Boolean {
-        val level = currentSession.level ?: return false
+        val level = currentClient.level ?: return false
 
         var affected = changesOverflowed
         for (pos in changes) {

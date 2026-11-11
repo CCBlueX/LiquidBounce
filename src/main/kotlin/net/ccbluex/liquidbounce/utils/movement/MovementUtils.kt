@@ -22,7 +22,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -130,7 +130,7 @@ private fun collectCollisionBoundingBoxes(
     to: Vec3,
     allowedDropDown: Float,
 ): ArrayList<AABB> {
-    val playerDims = currentSession.player!!.getDimensions(Pose.STANDING)
+    val playerDims = currentClient.player!!.getDimensions(Pose.STANDING)
 
     val fromBox: AABB = playerDims.makeBoundingBox(from)
     val toBox: AABB = playerDims.makeBoundingBox(to)
@@ -156,7 +156,7 @@ private fun collectCollisionBoundingBoxes(
 
     val foundBoxes = ArrayList<AABB>()
 
-    val world = currentSession.level!!
+    val world = currentClient.level!!
 
     for (pos in fromBlockPos..toBlockPos) {
         val state = world.getBlockState(pos)

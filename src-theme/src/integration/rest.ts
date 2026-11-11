@@ -5,7 +5,7 @@ import type {
     Alignment,
     Browser,
     ClientInfo,
-    ClientSession,
+    Client,
     ClientUpdate,
     ClientUser,
     ConfigurableSetting,
@@ -231,18 +231,18 @@ export async function getSession(): Promise<Session> {
     return data;
 }
 
-export async function getSessions(): Promise<ClientSession[]> {
-    const response = await fetch(`${API_BASE}/client/sessions`);
-    const data: ClientSession[] = await response.json();
+export async function getClients(): Promise<Client[]> {
+    const response = await fetch(`${API_BASE}/client/clients`);
+    const data: Client[] = await response.json();
 
     return data;
 }
 
 /**
- * Opens a session for an account of the alt manager. It joins the given server, or stays in the menus.
+ * Opens a client for an account of the alt manager. It joins the given server, or stays in the menus.
  */
-export async function openSession(account: number, address?: string) {
-    await fetch(`${API_BASE}/client/sessions`, {
+export async function openClient(account: number, address?: string) {
+    await fetch(`${API_BASE}/client/clients`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -251,14 +251,14 @@ export async function openSession(account: number, address?: string) {
     });
 }
 
-export async function activateSession(id: number) {
-    await fetch(`${API_BASE}/client/sessions/${id}/activate`, {
+export async function activateClient(id: number) {
+    await fetch(`${API_BASE}/client/clients/${id}/activate`, {
         method: "POST"
     });
 }
 
-export async function closeSession(id: number) {
-    await fetch(`${API_BASE}/client/sessions/${id}`, {
+export async function closeClient(id: number) {
+    await fetch(`${API_BASE}/client/clients/${id}`, {
         method: "DELETE"
     });
 }

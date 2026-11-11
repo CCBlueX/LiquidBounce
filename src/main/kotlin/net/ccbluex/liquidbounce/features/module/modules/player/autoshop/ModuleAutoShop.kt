@@ -32,6 +32,7 @@ import net.ccbluex.fastutil.intListOf
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig.loadAutoShopConfig
@@ -42,9 +43,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.text.stripMinecraftColorCodes
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -74,14 +74,14 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         0..10, "ticks")
     private val autoClose by boolean("AutoClose", true)
 
-    private var waitedBeforeTheFirstClick by sessionState { false }
-    private var canAutoClose by sessionState { false }    // allows closing the shop menu only after a purchase
-    private var prevCategorySlot by sessionState { -1 }
-    var currentConfig by sessionState { ShopConfig.Empty }
+    private var waitedBeforeTheFirstClick by clientState { false }
+    private var canAutoClose by clientState { false }    // allows closing the shop menu only after a purchase
+    private var prevCategorySlot by clientState { -1 }
+    var currentConfig by clientState { ShopConfig.Empty }
 
     // Debug
-    private val recordedClicks by sessionState { IntArrayList() }
-    private var startMilliseconds by sessionState { 0L }
+    private val recordedClicks by clientState { IntArrayList() }
+    private var startMilliseconds by clientState { 0L }
 
     init {
         // Update [currentConfig] on module initialization
@@ -170,7 +170,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             nextCategorySlot,
             0,
             NormalPurchaseMode.action.input,
-            currentSession.player!!
+            currentClient.player!!
         )
 
         if (ModuleDebug.running) {
@@ -190,7 +190,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
             itemSlot,
             0,
             NormalPurchaseMode.action.input,
-            currentSession.player!!
+            currentClient.player!!
         )
 
         if (ModuleDebug.running) {
@@ -237,7 +237,7 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
                 slot,
                 0,
                 ContainerInput.PICKUP,
-                currentSession.player!!
+                currentClient.player!!
             )
 
             if (ModuleDebug.running) {

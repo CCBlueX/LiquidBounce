@@ -22,18 +22,18 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
 import net.minecraft.core.BlockPos
 
 object HoleManager : EventListener, MinecraftShortcuts {
 
     internal val movableRegionScanner = MovableRegionScanner()
-    private val activeModules by sessionState { ReferenceOpenHashSet<HoleManagerSubscriber>() }
+    private val activeModules by clientState { ReferenceOpenHashSet<HoleManagerSubscriber>() }
     private val playerPos = BlockPos.MutableBlockPos()
 
     override val running: Boolean
@@ -43,7 +43,7 @@ object HoleManager : EventListener, MinecraftShortcuts {
         activeModules += subscriber
         if (activeModules.size == 1) {
             ChunkScanner.subscribe(HoleTracker)
-            currentSession.player?.blockPosition()?.let(::updateScanRegion)
+            currentClient.player?.blockPosition()?.let(::updateScanRegion)
         }
     }
 

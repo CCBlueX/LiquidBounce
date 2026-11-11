@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.toBlockPos
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -99,8 +99,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
      * walked.
      */
     private object Direction : NavigationMode("Direction") {
-        private var goal: Vec3? by sessionState { null }
-        private var goalYaw by sessionState { 0f }
+        private var goal: Vec3? by clientState { null }
+        private var goalYaw by clientState { 0f }
 
         override val radius: Double
             get() = RADIUS
@@ -134,8 +134,8 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
     private object Goto : NavigationMode("Goto") {
         var destination by vec3i("Destination")
 
-        private var goalOf: Vec3i? by sessionState { null }
-        private var goal by sessionState { Vec3.ZERO }
+        private var goalOf: Vec3i? by clientState { null }
+        private var goal by clientState { Vec3.ZERO }
 
         override fun goal(): Vec3? {
             val destination = destination
@@ -172,7 +172,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
         private val distance by float("Distance", 3f, 1f..10f)
 
         /** Walked on to once [target] goes out of sight. */
-        private var lastSeen: Vec3? by sessionState { null }
+        private var lastSeen: Vec3? by clientState { null }
 
         override val radius: Double
             get() = distance.toDouble()

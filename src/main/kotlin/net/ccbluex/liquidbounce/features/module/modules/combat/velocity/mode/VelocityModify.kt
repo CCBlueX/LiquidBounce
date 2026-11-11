@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -45,7 +45,7 @@ internal object VelocityModify : VelocityMode("Modify") {
     private val transactionBufferAmount by int("TransactionBuffer", 0, 0..3)
     private val considerExplosion by boolean("ConsiderExplosion", true)
 
-    private var transactionBuffer by sessionState { 0 }
+    private var transactionBuffer by clientState { 0 }
 
     override fun disable() {
         super.disable()

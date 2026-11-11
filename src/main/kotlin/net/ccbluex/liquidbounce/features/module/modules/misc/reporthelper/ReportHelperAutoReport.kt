@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import kotlin.random.Random
-import net.ccbluex.liquidbounce.features.session.sessionState
 
 internal object ReportHelperAutoReport : ToggleableValueGroup(ModuleReportHelper, "AutoReport", false) {
 
@@ -39,7 +39,7 @@ internal object ReportHelperAutoReport : ToggleableValueGroup(ModuleReportHelper
     private val chance by int("Chance", 100, 1..100, "%")
     private val pattern by text("CommandPattern", "report %s")
 
-    private val reported: MutableSet<String> by sessionState { ObjectRBTreeSet(String.CASE_INSENSITIVE_ORDER) }
+    private val reported: MutableSet<String> by clientState { ObjectRBTreeSet(String.CASE_INSENSITIVE_ORDER) }
 
     @Suppress("unused")
     private val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->

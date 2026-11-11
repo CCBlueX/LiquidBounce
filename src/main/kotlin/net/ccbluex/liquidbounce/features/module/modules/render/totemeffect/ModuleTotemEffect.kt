@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.modes.TotemEffectShockwave
@@ -36,7 +36,7 @@ import net.minecraft.world.phys.Vec3
 
 object ModuleTotemEffect : ClientModule("TotemEffect", ModuleCategories.RENDER) {
 
-    val entities by sessionState { ExpiringList<TotemPopSnapshot>() }
+    val entities by clientState { ExpiringList<TotemPopSnapshot>() }
 
     val modes = choices("Mode", 0) {
         arrayOf(

@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -108,17 +108,17 @@ object VelocityReduce : VelocityMode("Reduce") {
     private val canLag: Boolean
         get() = !lagRequireKillAura || ModuleKillAura.running
 
-    private var target: Entity? by sessionState { null }
-    private var renderTarget: Entity? by sessionState { null }
-    private var renderTargetPos: TrackedEntityPosition? by sessionState { null }
+    private var target: Entity? by clientState { null }
+    private var renderTarget: Entity? by clientState { null }
+    private var renderTargetPos: TrackedEntityPosition? by clientState { null }
 
-    var remainingAttackCount by sessionState { 0 }
+    var remainingAttackCount by clientState { 0 }
         private set
-    private var currentGameTick by sessionState { 0L }
-    private var forwardInputAttackGameTick by sessionState { -1L }
-    private var receiveDamage by sessionState { false }
-    private var lagTicks by sessionState { -1 }
-    private var releaseReason: ReleaseReason? by sessionState { null }
+    private var currentGameTick by clientState { 0L }
+    private var forwardInputAttackGameTick by clientState { -1L }
+    private var receiveDamage by clientState { false }
+    private var lagTicks by clientState { -1 }
+    private var releaseReason: ReleaseReason? by clientState { null }
 
     private enum class ReleaseReason(val debugSuffix: String?) {
         TARGET_REACHED(null),

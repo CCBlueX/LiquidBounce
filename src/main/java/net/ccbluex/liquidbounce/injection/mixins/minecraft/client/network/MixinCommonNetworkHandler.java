@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.network;
 
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
-import net.ccbluex.liquidbounce.features.session.ClientSession;
+import net.ccbluex.liquidbounce.features.client.Client;
 import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
 import net.minecraft.network.Connection;
@@ -45,8 +45,8 @@ public abstract class MixinCommonNetworkHandler implements ConnectionAddition {
     protected Connection connection;
 
     @Override
-    public @Nullable ClientSession liquid_bounce$getSession() {
-        return ((ConnectionAddition) this.connection).liquid_bounce$getSession();
+    public @Nullable Client liquid_bounce$getClient() {
+        return ((ConnectionAddition) this.connection).liquid_bounce$getClient();
     }
 
     @Inject(method = "onPacketError", at = @At(value = "HEAD"), cancellable = true)
@@ -58,8 +58,8 @@ public abstract class MixinCommonNetworkHandler implements ConnectionAddition {
     }
 
     /**
-     * The game loads one set of server resource packs, and that is the one of the main session.
-     * Every other session tells its server what it wants to hear.
+     * The game loads one set of server resource packs, and that is the one of the main client.
+     * Every other client tells its server what it wants to hear.
      */
     @Inject(method = "handleResourcePackPush", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER), cancellable = true)
     private void acceptPackWithoutLoading(ClientboundResourcePackPushPacket packet, CallbackInfo ci) {
@@ -81,8 +81,8 @@ public abstract class MixinCommonNetworkHandler implements ConnectionAddition {
     }
 
     private boolean liquid_bounce$loadsServerPacks() {
-        var session = liquid_bounce$getSession();
-        return session == null || session.isMain();
+        var client = liquid_bounce$getClient();
+        return client == null || client.isMain();
     }
 
 }

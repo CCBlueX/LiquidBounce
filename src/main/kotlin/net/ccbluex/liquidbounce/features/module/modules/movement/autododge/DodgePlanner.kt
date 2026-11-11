@@ -22,7 +22,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.mapToDoubleArray
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -53,7 +53,7 @@ fun planEvasion(
     config: DodgePlannerConfig,
     inflictedHit: ModuleAutoDodge.HitInfo,
 ): DodgePlan? {
-    val player = currentSession.player!!
+    val player = currentClient.player!!
     val arrowVelocity2d = inflictedHit.arrowVelocity.copy(y = 0.0)
     if (arrowVelocity2d.isLikelyZero) {
         return null
@@ -205,7 +205,7 @@ private fun getDodgeMovementWithoutAngleChange(positionRelativeToPlayer: Vec3): 
 }
 
 fun findOptimalDodgePosition(baseLine: Line): Vec3 {
-    val player = currentSession.player!!
+    val player = currentClient.player!!
 
     val playerPos2d = player.position().copy(y = 0.0)
     // Usually it takes around two ticks to change the movement to whatever we want. In this time we will keep the
@@ -241,7 +241,7 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3 {
 }
 
 fun getWalkableDistance(basePos: Vec3, dodgePos: Vec3): Double {
-    val playerY = currentSession.player!!.y
+    val playerY = currentClient.player!!.y
     val rayYs = doubleArrayOf(0.6, 1.6)
 
     val worstRay =

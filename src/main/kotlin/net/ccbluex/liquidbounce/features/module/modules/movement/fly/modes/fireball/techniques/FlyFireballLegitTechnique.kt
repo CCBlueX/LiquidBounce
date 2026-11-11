@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -52,7 +52,7 @@ object FlyFireballLegitTechnique : Mode("Legit") {
     // Stop moving when module is active to avoid falling off, for example a bridge.
     private val stopMove by boolean("StopMove", true)
 
-    private var canMove by sessionState { true }
+    private var canMove by clientState { true }
 
     private object Rotations : RotationsValueGroup(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
@@ -74,7 +74,7 @@ object FlyFireballLegitTechnique : Mode("Legit") {
         )
     }
 
-    private var shouldJump by sessionState { false }
+    private var shouldJump by clientState { false }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->

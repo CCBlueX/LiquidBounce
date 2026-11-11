@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -65,12 +65,12 @@ object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
         tree(Pickup)
     }
 
-    private var currentTarget: PlacementPlan? by sessionState { null }
+    private var currentTarget: PlacementPlan? by clientState { null }
 
     private val rotations = tree(RotationsValueGroup(this))
 
-    private val cooldownTimer by sessionState { Chronometer() }
-    private val pickupTracker by sessionState { TimedPickupTracker(capacity = 1) }
+    private val cooldownTimer by clientState { Chronometer() }
+    private val pickupTracker by clientState { TimedPickupTracker(capacity = 1) }
 
     override fun onEnabled() {
         currentTarget = null

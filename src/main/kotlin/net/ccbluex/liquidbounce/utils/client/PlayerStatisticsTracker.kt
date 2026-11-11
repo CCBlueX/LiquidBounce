@@ -25,14 +25,14 @@ import net.ccbluex.liquidbounce.event.events.PlayerDeathEvent
 import net.ccbluex.liquidbounce.event.events.PlayerKillEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 
 @JvmRecord
 data class PlayerStatistics(val joinedAt: Long, val kills: Int, val deaths: Int)
 
 internal object PlayerStatisticsTracker : EventListener {
 
-    var statistics: PlayerStatistics? by sessionState { null }
+    var statistics: PlayerStatistics? by clientState { null }
         private set
 
     // Proxies keep the session when they move the player to the next minigame

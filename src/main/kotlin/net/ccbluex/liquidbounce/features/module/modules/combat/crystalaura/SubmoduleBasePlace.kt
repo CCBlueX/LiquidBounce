@@ -23,9 +23,9 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.isUnobstructed
@@ -125,7 +125,7 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
         },
     ))
 
-    private val currentTargetState = sessionState<PlacementPositionCandidate?> { null }
+    private val currentTargetState = clientState<PlacementPositionCandidate?> { null }
 
     var currentTarget: PlacementPositionCandidate?
         get() = currentTargetState.get()
@@ -145,8 +145,8 @@ object SubmoduleBasePlace : ToggleableValueGroup(ModuleCrystalAura, "BasePlace",
             } ?: run { placer.clear() }
         }
 
-    private val calculations by sessionState { Chronometer() }
-    private val trying by sessionState { Chronometer() }
+    private val calculations by clientState { Chronometer() }
+    private val trying by clientState { Chronometer() }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

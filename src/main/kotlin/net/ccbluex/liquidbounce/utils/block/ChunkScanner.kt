@@ -34,12 +34,12 @@ import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.ClientElement
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.SessionElement
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.clientLogger
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.kotlin.CommonCoroutineExceptionHandler
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -61,18 +61,18 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     private val logger = clientLogger("ChunkScanner")
 
-    private val loadedChunks by sessionState { LongOpenHashSet() }
+    private val loadedChunks by clientState { LongOpenHashSet() }
 
     private val threadLocalBlockPos = ThreadLocal.withInitial(BlockPos::MutableBlockPos)
 
-    private val subscribers by sessionState { CopyOnWriteArrayList<BlockChangeSubscriber>() }
+    private val subscribers by clientState { CopyOnWriteArrayList<BlockChangeSubscriber>() }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
         if (!this.subscribers.addIfAbsent(newSubscriber)) {
             error("Subscriber ${newSubscriber.debugName} already registered")
         }
 
-        val world = currentSession.level ?: return
+        val world = currentClient.level ?: return
         if (this.loadedChunks.isEmpty()) return
 
         val chunkArray = this.loadedChunks.mapToArray { longChunkPos ->
@@ -148,17 +148,17 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
         .limitedParallelism((Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(2))
 
     /**
-     * The parent job for the client world of the current session.
+     * The parent job for the client world of the current client.
      * All children will be cancelled on [WorldChangeEvent].
      */
-    private val worldJob by sessionState { SupervisorJob() }
+    private val worldJob by clientState { SupervisorJob() }
 
     /**
      * Scans run on worker threads, which have to know whose subscribers they are scanning for.
      */
-    private val scope by sessionState {
+    private val scope by clientState {
         CoroutineScope(
-            dispatcher + worldJob + SessionElement(SessionContext.current) + CommonCoroutineExceptionHandler { logger }
+            dispatcher + worldJob + ClientElement(ClientContext.current) + CommonCoroutineExceptionHandler { logger }
         )
     }
 

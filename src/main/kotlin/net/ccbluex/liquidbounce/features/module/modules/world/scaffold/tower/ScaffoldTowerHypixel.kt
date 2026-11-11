@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.isEqual1_8
@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel-2026-07-12", aliases = listOf("Hypixel")) {
-    private var notifiedWrongProtocol by sessionState { false }
-    private var notifiedStationary by sessionState { false }
+    private var notifiedWrongProtocol by clientState { false }
+    private var notifiedStationary by clientState { false }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

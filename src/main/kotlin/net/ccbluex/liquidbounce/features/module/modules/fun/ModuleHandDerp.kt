@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.network.protocol.game.ServerboundPunchPacket
@@ -46,7 +46,7 @@ object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
 
 
     private val originalHand = mc.options.mainHand().get()
-    private var currentHand by sessionState { mc.options.mainHand().get() }
+    private var currentHand by clientState { mc.options.mainHand().get() }
 
     private fun calculatePlayerPartValue(): Int {
         var value = 0

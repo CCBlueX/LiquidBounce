@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -27,11 +27,11 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinLevelLoadTrackerWaitingForPlayerChunk {
 
     /**
-     * The player enters the world once its chunk is rendered, which never happens for a session in the background.
+     * The player enters the world once its chunk is rendered, which never happens for a client in the background.
      */
     @ModifyReturnValue(method = "isReady", at = @At("RETURN"))
-    private boolean hookBackgroundSession(boolean original) {
-        return original || SessionContext.isBackground();
+    private boolean hookBackgroundClient(boolean original) {
+        return original || ClientContext.isBackground();
     }
 
 }

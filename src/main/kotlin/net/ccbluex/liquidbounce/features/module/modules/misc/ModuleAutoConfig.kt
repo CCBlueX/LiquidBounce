@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.marketplace.autoconfig.MarketplaceConfi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.text.dropPort
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -50,7 +50,7 @@ object ModuleAutoConfig : ClientModule(
         "loyisa.cn",
         "anticheat-test.com"
     )
-    private var isScheduled by sessionState { false }
+    private var isScheduled by clientState { false }
 
     private val onlyFeatured by boolean("OnlyFeatured", true)
 

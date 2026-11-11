@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.render
 
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -50,39 +50,39 @@ interface RouteProgress {
 /** What a navigating module shows, drawn by [RouteRenderer]. */
 class RouteView {
 
-    var state by sessionState { RouteState.NONE }
+    var state by clientState { RouteState.NONE }
         private set
 
-    var since by sessionState { 0L }
+    var since by clientState { 0L }
         private set
 
-    var start: Vec3? by sessionState { null }
+    var start: Vec3? by clientState { null }
         private set
 
-    var destination: Vec3? by sessionState { null }
+    var destination: Vec3? by clientState { null }
         private set
 
     /** Corners of the route, feet positions. */
-    var path: List<Vec3>? by sessionState { null }
+    var path: List<Vec3>? by clientState { null }
         private set
 
-    var progress: RouteProgress? by sessionState { null }
+    var progress: RouteProgress? by clientState { null }
         private set
 
-    var breaks: Collection<BlockPos> by sessionState { emptyList() }
-    var places: Collection<BlockPos> by sessionState { emptyList() }
+    var breaks: Collection<BlockPos> by clientState { emptyList() }
+    var places: Collection<BlockPos> by clientState { emptyList() }
 
     /** Where the server has the player when that differs from the client. */
-    var ghost: ((partialTicks: Float) -> Vec3?)? by sessionState { null }
+    var ghost: ((partialTicks: Float) -> Vec3?)? by clientState { null }
 
-    var target: Entity? by sessionState { null }
-    var attackPosition: Vec3? by sessionState { null }
+    var target: Entity? by clientState { null }
+    var attackPosition: Vec3? by clientState { null }
 
-    var engaged by sessionState { false }
+    var engaged by clientState { false }
 
     /** A destination the player could pick right now, shown while nothing else is. */
-    var preview: Vec3? by sessionState { null }
-    var isPreviewValid by sessionState { false }
+    var preview: Vec3? by clientState { null }
+    var isPreviewValid by clientState { false }
 
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start

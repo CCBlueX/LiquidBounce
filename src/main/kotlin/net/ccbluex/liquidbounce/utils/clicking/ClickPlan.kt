@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import it.unimi.dsi.fastutil.longs.LongArrayList
+import net.ccbluex.liquidbounce.features.client.clientState
 import java.util.Random
 import java.util.function.IntPredicate
 import kotlin.math.abs
-import net.ccbluex.liquidbounce.features.session.sessionState
 
 /**
  * Press timestamps planned ahead in milliseconds and batched into ticks the way
@@ -64,18 +64,18 @@ class ClickPlan(
     /**
      * Adds a guaranteed click to tick `n` when nothing is planned for it.
      */
-    var enforced by sessionState { IntPredicate { false } }
+    var enforced by clientState { IntPredicate { false } }
 
-    var tickTime by sessionState { 0L }
+    var tickTime by clientState { 0L }
         private set
 
-    private val times by sessionState { LongArrayList() }
-    private val intervals by sessionState { LongArrayList() }
-    private var next by sessionState { 0 }
-    private var comboStart by sessionState { 0L }
-    private var due by sessionState { 0 }
-    private var consumed by sessionState { 0 }
-    private var idleSince by sessionState { NONE }
+    private val times by clientState { LongArrayList() }
+    private val intervals by clientState { LongArrayList() }
+    private var next by clientState { 0 }
+    private var comboStart by clientState { 0L }
+    private var due by clientState { 0 }
+    private var consumed by clientState { 0 }
+    private var idleSince by clientState { NONE }
 
     val comboMs get() = tickTime - comboStart
 

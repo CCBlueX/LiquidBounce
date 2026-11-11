@@ -19,7 +19,7 @@
     import Browser from "./routes/browser/Browser.svelte";
     import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
     import {intToRgba, rgbaToHex} from "./integration/util";
-    import type {SessionSwitchEvent, ThemeColorChangeEvent} from "./integration/events";
+    import type {ClientSwitchEvent, ThemeColorChangeEvent} from "./integration/events";
     import Menu from "./routes/menu/common/Menu.svelte";
     import MenuContent from "./routes/menu/common/MenuContent.svelte";
     import {push} from "./integration/router";
@@ -45,8 +45,8 @@
 
     const SURFACE_TINT_MIX = 18;
 
-    // Everything on the page belongs to the active session, so the page starts over when it changes
-    let activeSession = 0;
+    // Everything on the page belongs to the active client, so the page starts over when it changes
+    let activeClient = 0;
 
     function isMenuRoute(route: string): boolean {
         return route in menuRoutes;
@@ -108,9 +108,9 @@
             }
         });
 
-        listenAlways("sessionSwitch", (event: SessionSwitchEvent) => {
+        listenAlways("clientSwitch", (event: ClientSwitchEvent) => {
             cleanupListeners();
-            activeSession = event.id;
+            activeClient = event.id;
         });
 
         if (isStatic) {
@@ -142,7 +142,7 @@
 </script>
 
 <main>
-    {#key activeSession}
+    {#key activeClient}
         {#if isMenuRoute($location)}
             <Menu>
                 {#key $location}

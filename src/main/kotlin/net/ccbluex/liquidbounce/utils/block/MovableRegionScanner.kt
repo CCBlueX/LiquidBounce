@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.math.contains
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.levelgen.structure.BoundingBox
@@ -26,7 +26,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox
 private val ORIGIN = BoundingBox(BlockPos.ZERO)
 
 class MovableRegionScanner {
-    var currentRegion by sessionState { ORIGIN }
+    var currentRegion by clientState { ORIGIN }
         private set
 
     /**

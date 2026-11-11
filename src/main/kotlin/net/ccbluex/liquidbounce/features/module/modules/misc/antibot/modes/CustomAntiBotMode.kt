@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.item.isGlider
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -229,15 +229,15 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
         tree(Name)
     }
 
-    private val flyingSet by sessionState { Int2IntOpenHashMap() }
-    private val hitSet by sessionState { IntOpenHashSet() }
-    private val notAlwaysInRadiusSet by sessionState { IntOpenHashSet() }
+    private val flyingSet by clientState { Int2IntOpenHashMap() }
+    private val hitSet by clientState { IntOpenHashSet() }
+    private val notAlwaysInRadiusSet by clientState { IntOpenHashSet() }
 
-    private val swungSet by sessionState { IntOpenHashSet() }
-    private val crittedSet by sessionState { IntOpenHashSet() }
-    private val attributesSet by sessionState { IntOpenHashSet() }
+    private val swungSet by clientState { IntOpenHashSet() }
+    private val crittedSet by clientState { IntOpenHashSet() }
+    private val attributesSet by clientState { IntOpenHashSet() }
 
-    private val armorSet by sessionState { IntOpenHashSet() }
+    private val armorSet by clientState { IntOpenHashSet() }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = CRITICAL_MODIFICATION) {

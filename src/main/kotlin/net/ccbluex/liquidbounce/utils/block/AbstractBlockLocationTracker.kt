@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.forEachLong
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.math.contains
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
@@ -107,9 +107,9 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see AbstractBlockLocationTracker
      */
     abstract class State2BlockPos<T> : AbstractBlockLocationTracker<T>() {
-        private val stateAndPositions by sessionState { Object2ObjectOpenHashMap<T, LongSet>() }
+        private val stateAndPositions by clientState { Object2ObjectOpenHashMap<T, LongSet>() }
 
-        private val lock by sessionState { ReentrantReadWriteLock() }
+        private val lock by clientState { ReentrantReadWriteLock() }
 
         final override fun allPositions() = sequence<BlockPos> {
             val mutable = BlockPos.MutableBlockPos()
@@ -211,7 +211,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see AbstractBlockLocationTracker
      */
     abstract class BlockPos2State<T : Any> : AbstractBlockLocationTracker<T>() {
-        private val positionAndState by sessionState { ConcurrentHashMap<BlockPos, T>() }
+        private val positionAndState by clientState { ConcurrentHashMap<BlockPos, T>() }
 
         final override fun allPositions() = positionAndState.keys.asSequence()
 

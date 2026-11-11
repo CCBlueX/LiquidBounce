@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
@@ -44,7 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.LevelLoadingScreen
 import net.minecraft.client.gui.screens.Screen
-import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.client.ClientContext
 
 /**
  * Module HUD
@@ -55,12 +55,12 @@ import net.ccbluex.liquidbounce.features.session.SessionContext
 object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hide = true) {
 
     override val running
-        get() = this.enabled && !isDestructed && SessionContext.current.isActive
+        get() = this.enabled && !isDestructed && ClientContext.current.isActive
 
     /**
-     * There is one HUD, and it shows the active session.
+     * There is one HUD, and it shows the active client.
      */
-    override val perSession
+    override val perClient
         get() = false
     override val baseKey: String
         get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
@@ -76,7 +76,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         get() = mc.gui.hud.isHidden
 
     /** [isHudHidden] as of the last visibility evaluation, so the tick handler only reacts to changes. */
-    private var lastHudHidden by sessionState { false }
+    private var lastHudHidden by clientState { false }
 
     var hudEditorSelected = false
         set(value) {
@@ -110,7 +110,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         }
     }
 
-    private var overlay by sessionState { CustomOverlay(
+    private var overlay by clientState { CustomOverlay(
         screenType = CustomScreenType.HUD,
         browserSettings = BrowserSettings(60, ::reopen)
     ) }

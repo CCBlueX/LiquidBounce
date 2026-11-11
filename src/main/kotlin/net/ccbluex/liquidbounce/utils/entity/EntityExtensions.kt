@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -189,7 +189,7 @@ val ClientInput.initial: Input
     get() = (this as ClientInputAddition).`liquid_bounce$getInitial`()
 
 val Player.ping: Int
-    get() = currentSession.connection?.getPlayerInfo(uuid)?.latency ?: 0
+    get() = currentClient.connection?.getPlayerInfo(uuid)?.latency ?: 0
 
 /**
  * @see Entity.getDisplayName

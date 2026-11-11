@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -59,7 +59,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
     private val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
     private val usePrechargedCrossbow by boolean("UsePrechargedCrossbow", false)
 
-    private var currentChargeRandom: Int? by sessionState { null }
+    private var currentChargeRandom: Int? by clientState { null }
 
     private fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
@@ -78,7 +78,7 @@ object AutoBowAutoShootFeature : ToggleableValueGroup(ModuleAutoBow, "AutoShoot"
         return currentChargeRandom!!
     }
 
-    private var forceUncharged by sessionState { false }
+    private var forceUncharged by clientState { false }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

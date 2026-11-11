@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.ride
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
@@ -35,10 +35,10 @@ import kotlin.math.abs
 /** Drives a ridden vehicle by movement input: a boat with left, right and forward, a mount by where its rider looks. */
 internal class RideSteering {
 
-    private var lastYaw by sessionState { Float.NaN }
+    private var lastYaw by clientState { Float.NaN }
 
     /** Ticks the jump key is held for the next jump, counting on after its release until the jump is retried. */
-    private var chargeTicks by sessionState { 0 }
+    private var chargeTicks by clientState { 0 }
 
     fun reset() {
         lastYaw = Float.NaN

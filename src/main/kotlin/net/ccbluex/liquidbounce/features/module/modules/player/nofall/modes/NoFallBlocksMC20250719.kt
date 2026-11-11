@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object NoFallBlocksMC20250719 : NoFallMode("BlocksMC") {
 
-    private var shouldClip by sessionState { false }
-    private var fallMotion by sessionState { 0.0 }
+    private var shouldClip by clientState { false }
+    private var fallMotion by clientState { 0.0 }
 
     // Prevents this from running during AntiBot verification
     const val MIN_AGE = 20 * 5

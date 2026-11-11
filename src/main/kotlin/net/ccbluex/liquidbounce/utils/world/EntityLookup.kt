@@ -24,9 +24,9 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.session.sessionState
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.entity.LevelEntityGetter
 import kotlin.reflect.KProperty
@@ -37,9 +37,9 @@ class EntityLookup<T : Entity> private constructor(
     private val collector: Collector<T>,
 ) : MinecraftShortcuts {
 
-    private val entities: ReferenceCollection<T> by sessionState { ReferenceOpenHashSet() }
+    private val entities: ReferenceCollection<T> by clientState { ReferenceOpenHashSet() }
 
-    private var ticks by sessionState { 0 }
+    private var ticks by clientState { 0 }
 
     fun clear() {
         entities.clear()
@@ -57,7 +57,7 @@ class EntityLookup<T : Entity> private constructor(
 
         entities.clear()
         with(collector) {
-            currentSession.level?.entityGetter?.collect(entities)
+            currentClient.level?.entityGetter?.collect(entities)
         }
     }
 

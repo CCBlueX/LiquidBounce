@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.features.session.ClientSession
-import net.ccbluex.liquidbounce.features.session.SessionContext
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.clientState
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
@@ -35,9 +35,9 @@ class EventHook<T : Event>(
     val handlerClass: EventListener,
     val priority: Short,
     /**
-     * Set on hooks that wait for something to happen in one session. Events of other sessions pass them by.
+     * Set on hooks that wait for something to happen in one client. Events of other clients pass them by.
      */
-    val session: ClientSession?,
+    val client: Client?,
     val handler: Consumer<T>,
 ) {
 
@@ -134,12 +134,12 @@ interface EventListener : DebuggedOwner {
 
 /**
  * A listener that serves the window: the theme, the browser, the HUD. It only hears the events of the
- * active session, where a plain [EventListener] hears those of every session.
+ * active client, where a plain [EventListener] hears those of every client.
  */
-interface ActiveSessionListener : EventListener {
+interface ActiveClientListener : EventListener {
 
     override val running: Boolean
-        get() = super.running && SessionContext.current.isActive
+        get() = super.running && ClientContext.current.isActive
 
 }
 
@@ -164,7 +164,7 @@ inline fun <reified T : Event> EventListener.until(
     crossinline handler: (T) -> Boolean
 ): EventHook<T> {
     lateinit var eventHook: EventHook<T>
-    eventHook = EventHook(this, priority, SessionContext.current) {
+    eventHook = EventHook(this, priority, ClientContext.current) {
         if (!this.running || handler(it)) {
             EventManager.unregisterEventHook(T::class.java, eventHook)
         }
@@ -214,7 +214,7 @@ inline fun <reified E : Event, V> EventListener.computedOn(
     priority: Short = 0,
     crossinline accumulator: (event: E, prev: V) -> V,
 ): ReadWriteProperty<EventListener, V> = object : ReadWriteProperty<EventListener, V> {
-    private val state = sessionState { initialValue }
+    private val state = clientState { initialValue }
 
     @Suppress("unused") // May be useful?
     private val eventHook = handler<E>(priority) { event ->

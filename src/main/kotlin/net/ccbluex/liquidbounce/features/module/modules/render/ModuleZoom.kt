@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -64,14 +64,14 @@ object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = I
     private val transition by easing("Transition", Easing.QUAD_IN)
     private val durationFactor by float("DurationFactor", 2f, 0f..10f, "x")
 
-    private val chronometer by sessionState { Chronometer() }
+    private val chronometer by clientState { Chronometer() }
     // TODO: Whole degrees only, so re-anchoring a transition (scroll wheel, re-enabling) snaps the displayed
     //  fov back to this integer base and can jump by up to one degree. Holding the displayed fov as a float
     //  would remove that last step.
-    private var targetFov by sessionState { 0 }
-    private var previousFov by sessionState { 0 }
-    private var scaledDifference by sessionState { 0.0 }
-    private var disableAnimationFinished by sessionState { true }
+    private var targetFov by clientState { 0 }
+    private var previousFov by clientState { 0 }
+    private var scaledDifference by clientState { 0.0 }
+    private var disableAnimationFinished by clientState { true }
 
     override fun onEnabled() {
         // Continue from the fov that is currently on screen: the disabling animation may still be running,

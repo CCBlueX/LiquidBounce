@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autodeposit
 
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeValueGroup
@@ -73,8 +73,8 @@ object ModuleAutoDeposit : ClientModule(
     }
 
     // Session state so we only auto-close containers we actually deposited into.
-    private var currentSyncId by sessionState { -1 }
-    private var depositedAnything by sessionState { false }
+    private var currentSyncId by clientState { -1 }
+    private var depositedAnything by clientState { false }
 
     override fun onDisabled() {
         super.onDisabled()

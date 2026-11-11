@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.network.isC2SContainerPacket
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
@@ -41,15 +41,15 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
     private val DEFAULT = Array(27) { ItemStack.EMPTY }.asList()
 
-    var stacks: List<ItemStack> by sessionState { DEFAULT }
+    var stacks: List<ItemStack> by clientState { DEFAULT }
         private set
 
-    private var isInEnderChestScreen by sessionState { false }
+    private var isInEnderChestScreen by clientState { false }
 
     private fun remember(stacks: List<ItemStack>) {
         this.stacks = stacks
 
-        val player = currentSession.player ?: return
+        val player = currentClient.player ?: return
         EventManager.callEvent(ClientPlayerInventoryEvent(PlayerInventoryData.fromPlayer(player)))
     }
 

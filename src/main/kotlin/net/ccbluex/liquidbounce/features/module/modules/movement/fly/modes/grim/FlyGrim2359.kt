@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.phys.Vec3
@@ -47,8 +47,8 @@ internal object FlyGrim2359 : Mode("Grim-2.3.59", aliases = listOf("Grim2859-V")
         get() = modes
 
 
-    var ticks by sessionState { 0 }
-    var pos: Vec3? by sessionState { null }
+    var ticks by clientState { 0 }
+    var pos: Vec3? by clientState { null }
 
     override fun enable() {
         ticks = 0

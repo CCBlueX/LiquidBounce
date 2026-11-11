@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import net.ccbluex.liquidbounce.features.session.ClientSession;
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.Client;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.resources.server.DownloadedPackSource;
 import net.minecraft.client.resources.server.ServerPackManager;
 import net.minecraft.network.Connection;
@@ -37,24 +37,24 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinConnectScreenConnector {
 
     @Unique
-    private final ClientSession liquid_bounce$session = SessionContext.getCurrent();
+    private final Client liquid_bounce$client = ClientContext.getCurrent();
 
     /**
-     * The connection belongs to the session that asked for it, and logs in as its account.
+     * The connection belongs to the client that asked for it, and logs in as its account.
      */
     @WrapMethod(method = "run")
-    private void connectWithinSession(Operation<Void> original) {
-        var previous = SessionContext.enter(this.liquid_bounce$session);
+    private void connectWithinClient(Operation<Void> original) {
+        var previous = ClientContext.enter(this.liquid_bounce$client);
         try {
             original.call();
         } finally {
-            SessionContext.exit(previous);
+            ClientContext.exit(previous);
         }
     }
 
     @WrapWithCondition(method = "run", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/server/DownloadedPackSource;configureForServerControl(Lnet/minecraft/network/Connection;Lnet/minecraft/client/resources/server/ServerPackManager$PackPromptStatus;)V"))
-    private boolean onlyMainSessionLoadsServerPacks(DownloadedPackSource source, Connection connection, ServerPackManager.PackPromptStatus status) {
-        return this.liquid_bounce$session.isMain();
+    private boolean onlyMainClientLoadsServerPacks(DownloadedPackSource source, Connection connection, ServerPackManager.PackPromptStatus status) {
+        return this.liquid_bounce$client.isMain();
     }
 
 }

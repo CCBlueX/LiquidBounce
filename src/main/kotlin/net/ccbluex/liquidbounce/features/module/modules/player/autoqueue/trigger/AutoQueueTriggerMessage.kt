@@ -22,14 +22,14 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigge
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 
 /**
  * Can be used for different server that use paper to join a game
  */
 object AutoQueueTriggerMessage : AutoQueueTrigger("Message") {
 
-    private val triggered = sessionState { false }
+    private val triggered = clientState { false }
 
     /**
      * Reading it takes the trigger back.

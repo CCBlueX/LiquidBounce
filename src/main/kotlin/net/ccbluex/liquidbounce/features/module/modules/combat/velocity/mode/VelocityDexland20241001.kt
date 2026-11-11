@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.math.multiply
 
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
@@ -29,8 +29,8 @@ internal object VelocityDexland20241001 : VelocityMode("Dexland") {
     private val hReduce by float("HReduce", 0.3f, 0f..1f)
     private val times by int("AttacksToWork", 4, 1..10)
 
-    private var lastAttackTime by sessionState { 0L }
-    var count by sessionState { 0 }
+    private var lastAttackTime by clientState { 0L }
+    var count by clientState { 0 }
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->

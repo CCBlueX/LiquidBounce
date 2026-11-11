@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -44,9 +44,9 @@ internal object FlyVerusB3896Damage : Mode("Verus-b3896-Damage", aliases = listO
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    private var flyTicks by sessionState { 0 }
-    private var shouldStop by sessionState { false }
-    private var gotDamage by sessionState { false }
+    private var flyTicks by clientState { 0 }
+    private var shouldStop by clientState { false }
+    private var gotDamage by clientState { false }
 
     override fun enable() {
         network.send(

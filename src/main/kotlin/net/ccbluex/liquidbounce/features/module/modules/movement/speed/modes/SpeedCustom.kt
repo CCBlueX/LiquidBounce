@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -132,7 +132,7 @@ class SpeedCustom(parent: ModeValueGroup<*>) : SpeedBHopBase("Custom", parent) {
         private val velocityTimeout by int("VelocityTimeout", 0, 0..20, "ticks")
         private val strafeKnock by boolean("StrafeKnock", false)
 
-        private var ticksTimeout by sessionState { 0 }
+        private var ticksTimeout by clientState { 0 }
 
         @Suppress("unused")
         private val strafeHandler = handler<GameTickEvent> {

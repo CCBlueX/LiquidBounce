@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.utils.block.hole
 
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap
 import net.ccbluex.fastutil.referenceHashSetOf
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.state
@@ -51,7 +51,7 @@ private typealias BlockStateBuffer = Long2ByteOpenHashMap
 
 object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
 
-    val holes by sessionState { ConcurrentSkipListSet<Hole>() }
+    val holes by clientState { ConcurrentSkipListSet<Hole>() }
     private val mutable by ThreadLocal.withInitial(BlockPos::MutableBlockPos)
     private val BLAST_RESISTANT_BLOCKS: Set<Block> by lazy {
         BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {

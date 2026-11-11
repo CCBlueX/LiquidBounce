@@ -1,6 +1,6 @@
 {
-  "name": "Sessions",
-  "description": "Shows what your other sessions are doing.",
+  "name": "Clients",
+  "description": "Shows what your other clients are doing.",
   "enabled": true,
   "singleton": true,
   "alignment": {

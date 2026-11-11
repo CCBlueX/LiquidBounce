@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 /**
@@ -37,7 +37,7 @@ object ModuleKeepSprint : ClientModule("KeepSprint", ModuleCategories.COMBAT) {
     private val chance = percentageChance("Chance", 100f)
 
     // prevents getting slowed multiple times in a tick (without knockback item)
-    var sprinting by sessionState { false }
+    var sprinting by clientState { false }
 
     @Suppress("unused")
     private val postTickHandler = handler<PlayerPostTickEvent> {

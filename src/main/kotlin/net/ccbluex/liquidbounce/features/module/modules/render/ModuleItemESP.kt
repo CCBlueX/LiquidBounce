@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
@@ -134,7 +134,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
         private val mergeIntersecting by boolean("MergeIntersecting", false)
 
-        private val entities by sessionState { mutableListOf<Entity>() }
+        private val entities by clientState { mutableListOf<Entity>() }
 
         override fun disable() {
             entities.clear()
@@ -192,7 +192,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val yOffset by float("YOffset", 0f, -1f..1f)
         private val backgroundAlpha by int("BackgroundAlpha", 150, 0..255)
 
-        private val entities by sessionState { mutableListOf<Entity>() }
+        private val entities by clientState { mutableListOf<Entity>() }
 
         override fun disable() {
             entities.clear()

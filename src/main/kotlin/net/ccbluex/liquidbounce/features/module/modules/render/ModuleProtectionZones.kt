@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.math.center
@@ -138,7 +138,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
     }
 
     private fun isHoldingProtBlock(): Boolean {
-        val player = currentSession.player ?: return false
+        val player = currentClient.player ?: return false
         val main = player.mainHandItem.getBlock()
         val off = player.offhandItem.getBlock()
         return (main != null && main in protBlocks)
@@ -213,8 +213,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         centers: List<BlockPos>, zones: Array<AABB>, camOffset: Vec3
     ) {
         if (centers.isEmpty()) return
-        val player = currentSession.player ?: return
-        val world = currentSession.level ?: return
+        val player = currentClient.player ?: return
+        val world = currentClient.level ?: return
 
         val playerBlockPos = player.blockPosition()
         val refCenter = centers.first()
@@ -247,8 +247,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         val holdingProt = isHoldingProtBlock()
         if (Renderer.holdBlockToRender && !holdingProt) return@handler
 
-        val world = currentSession.level ?: return@handler
-        val player = currentSession.player ?: return@handler
+        val world = currentClient.level ?: return@handler
+        val player = currentClient.player ?: return@handler
 
         val centers = nearestCenters(
             centers = BlockTracker.allPositions(),

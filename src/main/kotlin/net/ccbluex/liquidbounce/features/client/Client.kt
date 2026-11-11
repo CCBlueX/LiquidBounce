@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import com.google.common.collect.MapMaker
 import net.ccbluex.liquidbounce.config.types.Value
@@ -38,19 +38,19 @@ import kotlin.math.min
 /**
  * One account with its own connection, world and module states.
  *
- * Exactly one session is [SessionManager.active]: it has the window, the input and the sound.
+ * Exactly one client is [ClientManager.active]: it has the window, the input and the sound.
  * The others keep playing in the background.
  */
-class ClientSession internal constructor(val id: Int) {
+class Client internal constructor(val id: Int) {
 
     val isMain: Boolean
         get() = id == MAIN_ID
 
     val isActive: Boolean
-        get() = this === SessionManager.active
+        get() = this === ClientManager.active
 
     /**
-     * The account this session plays as, null for the one the game was started with.
+     * The account this client plays as, null for the one the game was started with.
      */
     @Volatile
     var account: SessionBundle? = null
@@ -59,16 +59,16 @@ class ClientSession internal constructor(val id: Int) {
         get() = account?.session ?: (mc as MinecraftAccessor).launchUser
 
     val player: LocalPlayer?
-        get() = if (SessionContext.holds(this)) NullableBypass.mc()?.player else game.player
+        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.player else game.player
 
     val level: ClientLevel?
-        get() = if (SessionContext.holds(this)) NullableBypass.mc()?.level else game.level
+        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.level else game.level
 
     val gameMode: MultiPlayerGameMode?
-        get() = if (SessionContext.holds(this)) NullableBypass.mc()?.gameMode else game.gameMode
+        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.gameMode else game.gameMode
 
     val screen: Screen?
-        get() = if (SessionContext.holds(this)) NullableBypass.mc()?.gui?.screen() else game.screen
+        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.gui?.screen() else game.screen
 
     val connection: ClientPacketListener?
         get() = player?.connection
@@ -79,12 +79,12 @@ class ClientSession internal constructor(val id: Int) {
     internal val game = GameState()
 
     /**
-     * See [SessionState]. Keyed weakly, so that state of something short-lived goes with it.
+     * See [ClientState]. Keyed weakly, so that state of something short-lived goes with it.
      */
-    internal val states: ConcurrentMap<SessionState<*>, Any> = MapMaker().weakKeys().makeMap()
+    internal val states: ConcurrentMap<ClientState<*>, Any> = MapMaker().weakKeys().makeMap()
 
     /**
-     * Module settings this session keeps for itself. Any other setting is the one of the main session.
+     * Module settings this client keeps for itself. Any other setting is the one of the main client.
      */
     internal val values: ConcurrentMap<Value<*>, Any> = MapMaker().weakKeys().makeMap()
     internal val activeModes: ConcurrentMap<ModeValueGroup<*>, Mode> = MapMaker().weakKeys().makeMap()
@@ -93,8 +93,8 @@ class ClientSession internal constructor(val id: Int) {
     private var partialTicks = 0f
 
     /**
-     * Ticks that became due since the last call. Background sessions keep their own time, so a timer
-     * running in the active session does not speed them up.
+     * Ticks that became due since the last call. Background clients keep their own time, so a timer
+     * running in the active client does not speed them up.
      */
     internal fun dueTicks(): Int {
         val now = System.nanoTime()
@@ -114,7 +114,7 @@ class ClientSession internal constructor(val id: Int) {
         partialTicks = 0f
     }
 
-    override fun toString() = "ClientSession(id=$id, user=${user.name})"
+    override fun toString() = "Client(id=$id, user=${user.name})"
 
     companion object {
         const val MAIN_ID = 0

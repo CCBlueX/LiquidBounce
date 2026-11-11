@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -45,20 +45,20 @@ import net.minecraft.world.phys.Vec3
 object TeleportDispatcher : EventListener {
 
     /** The latest run, also after it ended. */
-    var run: TeleportRun? by sessionState { null }
+    var run: TeleportRun? by clientState { null }
         private set
 
-    private var holder: EventListener? by sessionState { null }
+    private var holder: EventListener? by clientState { null }
 
     /** The last step the server got, while it has the player somewhere else than the client. */
-    private var lastSent: TeleportStep? by sessionState { null }
+    private var lastSent: TeleportStep? by clientState { null }
 
-    private var setback by sessionState { false }
+    private var setback by clientState { false }
 
     /** Where the current excursion began, followed by the route points it passed. */
-    private val trail by sessionState { ArrayList<Vec3>() }
-    private var stepLength by sessionState { TeleportStepSettings.DEFAULT_STEP_LENGTH }
-    private var packetsPerTick by sessionState { TeleportStepSettings.DEFAULT_PACKETS_PER_TICK }
+    private val trail by clientState { ArrayList<Vec3>() }
+    private var stepLength by clientState { TeleportStepSettings.DEFAULT_STEP_LENGTH }
+    private var packetsPerTick by clientState { TeleportStepSettings.DEFAULT_PACKETS_PER_TICK }
 
     val serverPosition: Vec3?
         get() = lastSent?.position
@@ -180,7 +180,7 @@ object TeleportDispatcher : EventListener {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val run = run ?: return@handler
-        if (currentSession.player == null) {
+        if (currentClient.player == null) {
             return@handler
         }
 

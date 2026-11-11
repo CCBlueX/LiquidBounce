@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -67,7 +67,7 @@ class SpeedHypixel20231212(parent: ModeValueGroup<*>) : SpeedBHopBase("HypixelBH
 
     }
 
-    private var wasFlagged by sessionState { false }
+    private var wasFlagged by clientState { false }
 
     val repeatable = handler<GameTickEvent> {
         if (player.onGround()) {

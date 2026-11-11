@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.outlineBox
@@ -79,7 +79,7 @@ open class PlacementRenderer(
         doNotIncludeAlways()
     }
 
-    private var outAnimationsFinished by sessionState { true }
+    private var outAnimationsFinished by clientState { true }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

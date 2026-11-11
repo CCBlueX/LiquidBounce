@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -52,7 +52,7 @@ import kotlin.math.min
  */
 class RoofBounce(private val owner: EventListener, private val view: RouteView) : EventListener {
 
-    private var bounce: Bounce? by sessionState { null }
+    private var bounce: Bounce? by clientState { null }
 
     val isActive: Boolean
         get() = bounce != null

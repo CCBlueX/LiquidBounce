@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.anotherBedPartDirection
 import net.ccbluex.liquidbounce.utils.block.isBed
@@ -92,7 +92,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
     class SpawnLocation(parent: ModeValueGroup<*>) : IsSelfBedMode("SpawnLocation", parent) {
 
         private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
-        private val trackedSpawnLocation by sessionState { Vector3d(Double.MAX_VALUE) }
+        private val trackedSpawnLocation by clientState { Vector3d(Double.MAX_VALUE) }
 
         override fun isSelfBed(block: BedBlock, pos: BlockPos) =
             trackedSpawnLocation.distanceSquared(

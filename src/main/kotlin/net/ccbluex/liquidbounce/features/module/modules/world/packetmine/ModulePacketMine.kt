@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
@@ -34,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Al
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.NeverToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -124,10 +124,10 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     )
     private val progressRenderer = targetRenderer.tree(BreakingProgressRenderer(targetRenderer, this))
 
-    private val chronometer by sessionState { Chronometer() }
-    private var rotation: Rotation? by sessionState { null }
-    private var tickCounter by sessionState { 0L }
-    private var nextAllowedStartTick by sessionState { 0L }
+    private val chronometer by clientState { Chronometer() }
+    private var rotation: Rotation? by clientState { null }
+    private var tickCounter by clientState { 0L }
+    private var nextAllowedStartTick by clientState { 0L }
 
     /**
      * The current target of the module.
@@ -147,7 +147,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
             currentTargetState.set(value)
         }
 
-    private val currentTargetState = sessionState<MineTarget?> { null }
+    private val currentTargetState = clientState<MineTarget?> { null }
 
     private fun shouldBlockTargetChange(mineTarget: MineTarget): Boolean {
         return mode.activeMode.shouldPreventTargetChange(mineTarget)
@@ -155,7 +155,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     init {
         mode.onChanged {
-            if (currentSession.level != null && currentSession.player != null) {
+            if (currentClient.level != null && currentClient.player != null) {
                 onDisabled()
                 onEnabled()
             }

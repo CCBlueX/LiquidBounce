@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -51,8 +51,8 @@ internal object FlyEnderpearl : Mode("Enderpearl") {
 
     private val speed by float("Speed", 1f, 0.5f..2f)
 
-    private var threwPearl by sessionState { false }
-    private var shouldFly by sessionState { false }
+    private var threwPearl by clientState { false }
+    private var shouldFly by clientState { false }
 
     private val rotations = tree(RotationsValueGroup(this))
 

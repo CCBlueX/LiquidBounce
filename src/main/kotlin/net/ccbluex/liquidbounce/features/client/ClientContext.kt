@@ -16,34 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import java.util.function.Supplier
 
 /**
- * Tells which [ClientSession] the running code belongs to.
+ * Tells which [Client] the running code belongs to.
  *
- * Minecraft keeps one player, level and screen per client. On the game thread a session is entered by moving
+ * Minecraft keeps one player, level and screen per client. On the game thread a client is entered by moving
  * its [GameState] into those fields, so vanilla code runs unchanged. Other threads only carry the reference.
  */
-object SessionContext {
+object ClientContext {
 
     private var gameThread: Thread? = null
 
     /**
-     * The session whose game state sits in the Minecraft fields. Only the game thread moves it.
+     * The client whose game state sits in the Minecraft fields. Only the game thread moves it.
      */
     @JvmStatic
-    var loaded: ClientSession = SessionManager.main
+    var loaded: Client = ClientManager.main
         private set
 
     /**
      * [loaded] as other threads may see it: null while the fields are being moved.
      */
     @Volatile
-    private var settled: ClientSession? = loaded
+    private var settled: Client? = loaded
 
-    private val bound = ThreadLocal<ClientSession>()
+    private val bound = ThreadLocal<Client>()
 
     @JvmStatic
     val isGameThread: Boolean
@@ -53,45 +53,45 @@ object SessionContext {
         }
 
     /**
-     * Threads that never entered a session act for the active one.
+     * Threads that never entered a client act for the active one.
      */
     @JvmStatic
-    val current: ClientSession
-        get() = if (isGameThread) loaded else bound.get() ?: SessionManager.active
+    val current: Client
+        get() = if (isGameThread) loaded else bound.get() ?: ClientManager.active
 
     /**
-     * True while the game thread runs a session the window does not show.
+     * True while the game thread runs a client the window does not show.
      */
     @JvmStatic
     val isBackground: Boolean
-        get() = isGameThread && loaded !== SessionManager.active
+        get() = isGameThread && loaded !== ClientManager.active
 
     @JvmStatic
     fun attachGameThread() {
         gameThread = Thread.currentThread()
     }
 
-    internal fun holds(session: ClientSession) =
-        if (isGameThread) loaded === session else settled === session
+    internal fun holds(client: Client) =
+        if (isGameThread) loaded === client else settled === client
 
     /**
-     * @return what [exit] needs to leave [session] again
+     * @return what [exit] needs to leave [client] again
      */
     @JvmStatic
-    fun enter(session: ClientSession): ClientSession? {
+    fun enter(client: Client): Client? {
         if (isGameThread) {
             val previous = loaded
-            load(session)
+            load(client)
             return previous
         }
 
         val previous = bound.get()
-        bound.set(session)
+        bound.set(client)
         return previous
     }
 
     @JvmStatic
-    fun exit(previous: ClientSession?) {
+    fun exit(previous: Client?) {
         when {
             isGameThread -> load(previous!!)
             previous == null -> bound.remove()
@@ -100,15 +100,15 @@ object SessionContext {
     }
 
     /**
-     * Makes [session] the one that stays loaded between frames.
+     * Makes [client] the one that stays loaded between frames.
      */
-    internal fun rest(session: ClientSession) {
-        check(isGameThread) { "Only the game thread moves sessions" }
-        load(session)
+    internal fun rest(client: Client) {
+        check(isGameThread) { "Only the game thread moves clients" }
+        load(client)
     }
 
-    inline fun <T> within(session: ClientSession, block: () -> T): T {
-        val previous = enter(session)
+    inline fun <T> within(client: Client, block: () -> T): T {
+        val previous = enter(client)
         try {
             return block()
         } finally {
@@ -117,38 +117,38 @@ object SessionContext {
     }
 
     /**
-     * [task], run for the session of the thread that schedules it. The active session needs no wrapping
+     * [task], run for the client of the thread that schedules it. The active client needs no wrapping
      * on the game thread: its tasks run before the window can change hands.
      */
     @JvmStatic
     fun pinned(task: Runnable): Runnable {
-        val session = if (isGameThread) loaded.takeUnless { it.isActive } else bound.get()
-        session ?: return task
+        val client = if (isGameThread) loaded.takeUnless { it.isActive } else bound.get()
+        client ?: return task
 
-        return Runnable { within(session) { task.run() } }
+        return Runnable { within(client) { task.run() } }
     }
 
     /**
-     * [supplier], run for the session that asks for it. For work that is handed to a worker thread.
+     * [supplier], run for the client that asks for it. For work that is handed to a worker thread.
      */
     @JvmStatic
     fun <T> pinned(supplier: Supplier<T>): Supplier<T> {
-        val session = current
-        return Supplier { within(session) { supplier.get() } }
+        val client = current
+        return Supplier { within(client) { supplier.get() } }
     }
 
-    private fun load(session: ClientSession) {
+    private fun load(client: Client) {
         val previous = loaded
-        if (previous === session) {
+        if (previous === client) {
             return
         }
 
-        // A thread still sees the fields as the previous session's until they are saved, never half moved.
+        // A thread still sees the fields as the previous client's until they are saved, never half moved.
         previous.game.capture()
         settled = null
-        session.game.install()
-        loaded = session
-        settled = session
+        client.game.install()
+        loaded = client
+        settled = client
     }
 
 }

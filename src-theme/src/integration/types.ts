@@ -294,16 +294,16 @@ export interface Session {
 }
 
 /**
- * One of the accounts playing at the same time, see GET /api/v1/client/sessions.
+ * One of the accounts playing at the same time, see GET /api/v1/client/clients.
  */
-export interface ClientSession {
+export interface Client {
     id: number;
     username: string;
     avatar: string;
     active: boolean;
     status: "MENU" | "CONNECTING" | "IN_GAME" | "DISCONNECTED";
     server?: string;
-    activity?: ClientSessionActivity;
+    activity?: ClientActivity;
     health?: number;
     maxHealth?: number;
     food?: number;
@@ -313,7 +313,7 @@ export interface ClientSession {
     lastMessage?: TextComponent | string;
 }
 
-export type ClientSessionActivity =
+export type ClientActivity =
     | "DEAD"
     | "FIGHTING"
     | "MINING"

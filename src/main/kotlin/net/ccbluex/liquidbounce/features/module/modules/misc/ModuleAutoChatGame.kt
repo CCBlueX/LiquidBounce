@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import kotlin.time.Duration.Companion.milliseconds
@@ -96,9 +96,9 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", ModuleCategories.MISC) 
         }
     }
 
-    private val chatBuffer by sessionState { mutableListOf<String>() }
-    private val triggerWordChronometer by sessionState { Chronometer() }
-    private val cooldownChronometer by sessionState { Chronometer() }
+    private val chatBuffer by clientState { mutableListOf<String>() }
+    private val triggerWordChronometer by clientState { Chronometer() }
+    private val cooldownChronometer by clientState { Chronometer() }
 
     @Suppress("unused")
     val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->

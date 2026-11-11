@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 /**
@@ -36,7 +36,7 @@ internal class NoSlowSharedGrim2371(override val parent: ModeValueGroup<*>) : Mo
 ) {
 
     companion {
-        var shouldPreventNoSlow by sessionState { false }
+        var shouldPreventNoSlow by clientState { false }
             private set
     }
 

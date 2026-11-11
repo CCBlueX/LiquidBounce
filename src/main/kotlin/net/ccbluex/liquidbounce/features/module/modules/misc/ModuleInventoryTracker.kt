@@ -24,11 +24,11 @@ import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
@@ -58,8 +58,8 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategorie
      * the render distance. */
     private val savePlayers by boolean("SavePlayers", false).onChanged { playerMap.clear() }
 
-    private val inventoryMap by sessionState { Object2ObjectOpenHashMap<UUID, TrackedInventory>() }
-    val playerMap by sessionState { Object2ObjectOpenHashMap<UUID, Player>() }
+    private val inventoryMap by clientState { Object2ObjectOpenHashMap<UUID, TrackedInventory>() }
+    val playerMap by clientState { Object2ObjectOpenHashMap<UUID, Player>() }
 
     @Suppress("unused")
     val playerEquipmentChangeHandler = handler<EntityEquipmentChangeEvent> { event ->

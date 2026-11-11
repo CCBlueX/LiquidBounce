@@ -24,15 +24,15 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.player.AbstractClientPlayer
@@ -49,8 +49,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.AABB
 
 object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.RENDER) {
-    var playHurt by sessionState { false }
-    var playBow by sessionState { false }
+    var playHurt by clientState { false }
+    var playBow by clientState { false }
 
     private val setTeamPrefix by boolean("SetTeamPrefix", true)
 
@@ -108,7 +108,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.REND
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
-        val world = currentSession.level ?: return@handler
+        val world = currentClient.level ?: return@handler
 
         when (val packet = packetEvent.packet) {
             is ClientboundSetEquipmentPacket -> {

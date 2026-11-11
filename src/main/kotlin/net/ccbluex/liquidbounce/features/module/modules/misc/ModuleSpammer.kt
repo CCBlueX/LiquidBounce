@@ -30,11 +30,11 @@ import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.io.readUtf8LineAt
 import net.ccbluex.liquidbounce.utils.io.scanLineStarts
@@ -71,7 +71,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         abstract fun nextMessage(): String
 
         object Setting : MessageProvider("Setting") {
-            private val linear by sessionState { atomic(0) }
+            private val linear by clientState { atomic(0) }
 
             private val texts by textList("Message", mutableListOf(
                 "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
@@ -95,14 +95,14 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
                 ioScope.launch(coroutineName) { reload() }
             }
 
-            private val linear by sessionState { atomic(0) }
+            private val linear by clientState { atomic(0) }
 
             /**
              * Line start offsets of the source file, along with the metadata of the file they were scanned from.
              */
             private class LineIndex(val starts: LongList, val size: Long, val lastModified: Long)
 
-            private var lineIndex by sessionState { LineIndex(longListOf(), 0L, 0L) }
+            private var lineIndex by clientState { LineIndex(longListOf(), 0L, 0L) }
 
             override fun nextMessage(): String {
                 val index = currentIndex()
@@ -192,7 +192,7 @@ object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQ
         }
 
         if (formattedText.contains("@a")) {
-            currentSession.connection?.onlinePlayers?.mapNotNull {
+            currentClient.connection?.onlinePlayers?.mapNotNull {
                 it?.profile?.name.takeIf { n -> n != player.gameProfile?.name }
             }?.takeIf { it.isNotEmpty() }?.let { playerNameList ->
                 formattedText = formattedText.replace("@a") { playerNameList.random() }

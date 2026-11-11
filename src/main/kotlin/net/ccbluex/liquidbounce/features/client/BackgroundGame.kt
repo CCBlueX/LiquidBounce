@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.session
+package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.event.CoroutineTicker
 import net.ccbluex.liquidbounce.event.EventManager
@@ -29,10 +29,10 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket
 
 /**
- * Runs a session the window does not show: what Minecraft's tick, screen and disconnect code does for
+ * Runs a client the window does not show: what Minecraft's tick, screen and disconnect code does for
  * the connection, without what it does to the window.
  *
- * Every function expects its session to be the loaded one.
+ * Every function expects its client to be the loaded one.
  */
 internal object BackgroundGame {
 
@@ -146,7 +146,7 @@ internal object BackgroundGame {
     }
 
     /**
-     * The part of updateLevelInEngines that is about the session and not about the renderer.
+     * The part of updateLevelInEngines that is about the client and not about the renderer.
      */
     fun levelChanged() {
         mc.gameRenderer.mainCamera().entity = null

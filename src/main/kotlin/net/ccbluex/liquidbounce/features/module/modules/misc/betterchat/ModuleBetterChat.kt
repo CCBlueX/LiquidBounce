@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -122,7 +122,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
         tree(Copy)
     }
 
-    var antiChatClearPaused by sessionState { false }
+    var antiChatClearPaused by clientState { false }
 
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> {

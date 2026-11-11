@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
@@ -82,18 +82,18 @@ object InventoryManager : EventListener {
             inventoryOpenServerSide.set(value)
         }
 
-    private val inventoryOpenServerSide = sessionState { false }
+    private val inventoryOpenServerSide = clientState { false }
 
-    var lastClickedSlot: Int by sessionState { -1 }
+    var lastClickedSlot: Int by clientState { -1 }
         internal set
 
-    private var recentInventoryOpen by sessionState { false }
+    private var recentInventoryOpen by clientState { false }
 
     /**
      * As soon the inventory changes unexpectedly,
      * we have to update the scheduled inventory actions
      */
-    private var requiresUpdate by sessionState { false }
+    private var requiresUpdate by clientState { false }
 
     /**
      * We keep running during the entire time

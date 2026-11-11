@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.fabric;
 
-import net.ccbluex.liquidbounce.features.session.SessionState;
+import net.ccbluex.liquidbounce.features.client.ClientState;
 import net.fabricmc.fabric.impl.networking.client.ClientConfigurationNetworkAddon;
 import net.fabricmc.fabric.impl.networking.client.ClientNetworkingImpl;
 import net.fabricmc.fabric.impl.networking.client.ClientPlayNetworkAddon;
@@ -29,40 +29,40 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
- * Fabric API keeps the network addon of the one connection there used to be in a static field. Sessions
- * configuring at the same time would overwrite each other's, so every session gets its own.
+ * Fabric API keeps the network addon of the one connection there used to be in a static field. Clients
+ * configuring at the same time would overwrite each other's, so every client gets its own.
  */
 @Mixin(value = ClientNetworkingImpl.class, remap = false)
 public abstract class MixinClientNetworkingImpl {
 
     @Unique
-    private static final SessionState<ClientConfigurationNetworkAddon> CONFIGURATION_ADDON =
-        new SessionState<>(() -> null);
+    private static final ClientState<ClientConfigurationNetworkAddon> CONFIGURATION_ADDON =
+        new ClientState<>(() -> null);
 
     @Unique
-    private static final SessionState<ClientPlayNetworkAddon> PLAY_ADDON = new SessionState<>(() -> null);
+    private static final ClientState<ClientPlayNetworkAddon> PLAY_ADDON = new ClientState<>(() -> null);
 
     @Redirect(method = "*", at = @At(value = "FIELD", opcode = Opcodes.GETSTATIC,
         target = "Lnet/fabricmc/fabric/impl/networking/client/ClientNetworkingImpl;currentConfigurationAddon:Lnet/fabricmc/fabric/impl/networking/client/ClientConfigurationNetworkAddon;"))
-    private static ClientConfigurationNetworkAddon getConfigurationAddonOfSession() {
+    private static ClientConfigurationNetworkAddon getConfigurationAddonOfClient() {
         return CONFIGURATION_ADDON.get();
     }
 
     @Redirect(method = "*", at = @At(value = "FIELD", opcode = Opcodes.PUTSTATIC,
         target = "Lnet/fabricmc/fabric/impl/networking/client/ClientNetworkingImpl;currentConfigurationAddon:Lnet/fabricmc/fabric/impl/networking/client/ClientConfigurationNetworkAddon;"))
-    private static void setConfigurationAddonOfSession(ClientConfigurationNetworkAddon addon) {
+    private static void setConfigurationAddonOfClient(ClientConfigurationNetworkAddon addon) {
         CONFIGURATION_ADDON.set(addon);
     }
 
     @Redirect(method = "*", at = @At(value = "FIELD", opcode = Opcodes.GETSTATIC,
         target = "Lnet/fabricmc/fabric/impl/networking/client/ClientNetworkingImpl;currentPlayAddon:Lnet/fabricmc/fabric/impl/networking/client/ClientPlayNetworkAddon;"))
-    private static ClientPlayNetworkAddon getPlayAddonOfSession() {
+    private static ClientPlayNetworkAddon getPlayAddonOfClient() {
         return PLAY_ADDON.get();
     }
 
     @Redirect(method = "*", at = @At(value = "FIELD", opcode = Opcodes.PUTSTATIC,
         target = "Lnet/fabricmc/fabric/impl/networking/client/ClientNetworkingImpl;currentPlayAddon:Lnet/fabricmc/fabric/impl/networking/client/ClientPlayNetworkAddon;"))
-    private static void setPlayAddonOfSession(ClientPlayNetworkAddon addon) {
+    private static void setPlayAddonOfClient(ClientPlayNetworkAddon addon) {
         PLAY_ADDON.set(addon);
     }
 

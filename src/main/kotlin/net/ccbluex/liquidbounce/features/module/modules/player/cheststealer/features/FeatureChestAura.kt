@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
@@ -110,13 +110,13 @@ object FeatureChestAura : ToggleableValueGroup(ModuleChestStealer, "Aura", true)
     private val rotations = tree(RotationsValueGroup(this))
 
     // The block position currently being interacted with
-    private var currentTargetBlock: BlockPos? by sessionState { null }
-    private val interactedBlocks by sessionState { hashSetOf<BlockPos>() }
+    private var currentTargetBlock: BlockPos? by clientState { null }
+    private val interactedBlocks by clientState { hashSetOf<BlockPos>() }
     val interactedBlocksSet: Set<BlockPos>
         get() = interactedBlocks
 
     // Counter for the number of tries performed to interact with a block
-    private var interactionAttempts by sessionState { 0 }
+    private var interactionAttempts by clientState { 0 }
 
     override val running: Boolean
         get() = super.running && pauseOn.none { it.asBoolean }

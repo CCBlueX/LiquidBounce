@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -41,7 +41,7 @@ object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
     private val onlyInVehicle by boolean("OnlyInVehicle", false)
     private val disableOnSetback by boolean("DisableOnSetback", true)
 
-    private var noClipSet by sessionState { false }
+    private var noClipSet by clientState { false }
 
     @Suppress("unused")
     private val handleGameTick = handler<GameTickEvent> {
@@ -95,6 +95,6 @@ object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
         player.controlledVehicle?.let { it.noPhysics = false }
     }
 
-    fun paused() = onlyInVehicle && currentSession.player?.controlledVehicle == null
+    fun paused() = onlyInVehicle && currentClient.player?.controlledVehicle == null
 
 }

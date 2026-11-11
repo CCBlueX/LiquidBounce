@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsLoa
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.NbsNoteBlock
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -76,7 +76,7 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
 
     val renderer = tree(NotebotRenderer)
 
-    var engine: NotebotEngine? by sessionState { null }
+    var engine: NotebotEngine? by clientState { null }
         private set
 
     @Suppress("unused")

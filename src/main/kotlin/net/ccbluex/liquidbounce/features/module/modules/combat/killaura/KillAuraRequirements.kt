@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -49,7 +49,7 @@ enum class KillAuraRequirements(
             WEAPON -> player.mainHandItem.isWeapon()
             EMPTY_HAND -> player.mainHandItem.isEmpty
             VANILLA_NAME -> player.mainHandItem.customName == null
-            NOT_BREAKING -> currentSession.gameMode?.isDestroying == false
+            NOT_BREAKING -> currentClient.gameMode?.isDestroying == false
         }
 }
 

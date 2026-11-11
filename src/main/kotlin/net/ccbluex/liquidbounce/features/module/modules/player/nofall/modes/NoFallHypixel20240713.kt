@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object NoFallHypixel20240713 : NoFallMode("Hypixel") {
 
-    private var doJump by sessionState { false }
+    private var doJump by clientState { false }
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet

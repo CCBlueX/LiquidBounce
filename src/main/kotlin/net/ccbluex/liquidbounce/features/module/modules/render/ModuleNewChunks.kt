@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -59,7 +59,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
     private val newColor by color("NewColor", Color4b(0, 255, 0, 80))
     private val oldColor by color("OldColor", Color4b(255, 0, 0, 80))
 
-    private val chunks by sessionState { ConcurrentHashMap<ChunkPos, Boolean>() }
+    private val chunks by clientState { ConcurrentHashMap<ChunkPos, Boolean>() }
 
     private fun reset() {
         chunks.clear()

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming.utils
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_12_2
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -119,7 +119,7 @@ object RotationUtil {
      * descending instead of converting back to degrees.
      */
     fun crosshairCosToEntity(entity: Entity): Double {
-        val player = currentSession.player ?: return 1.0
+        val player = currentClient.player ?: return 1.0
 
         return maxCosToBox(player.eyePosition, player.rotation.directionVector, entity.boundingBox)
     }

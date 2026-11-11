@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_6
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
@@ -78,7 +78,7 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     private object Vanilla : Mode("Vanilla") {
 
-        private var networkSneaking by sessionState { false }
+        private var networkSneaking by clientState { false }
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -119,7 +119,7 @@ object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     private object Switch : Mode("Switch") {
 
-        private var networkSneaking by sessionState { false }
+        private var networkSneaking by clientState { false }
 
         override val parent: ModeValueGroup<Mode>
             get() = modes

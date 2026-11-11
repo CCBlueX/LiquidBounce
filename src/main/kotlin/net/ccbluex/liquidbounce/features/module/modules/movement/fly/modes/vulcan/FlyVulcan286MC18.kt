@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.message
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -54,8 +54,8 @@ internal object FlyVulcan286MC18 : Mode("Vulcan-2.8.6-MC1.8", aliases = listOf("
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    var flags by sessionState { 0 }
-    private var flagPos: Vec3? by sessionState { null }
+    var flags by clientState { 0 }
+    private var flagPos: Vec3? by clientState { null }
 
     override fun enable() {
         flags = 0

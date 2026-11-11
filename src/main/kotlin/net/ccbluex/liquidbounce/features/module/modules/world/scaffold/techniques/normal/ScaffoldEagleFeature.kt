@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -35,7 +35,7 @@ object ScaffoldEagleFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Eag
     private val onlyOnGround by boolean("OnlyOnGround", true)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
-    private var placedBlocks by sessionState { 0 }
+    private var placedBlocks by clientState { 0 }
 
     override fun onEnabled() {
         placedBlocks = 0

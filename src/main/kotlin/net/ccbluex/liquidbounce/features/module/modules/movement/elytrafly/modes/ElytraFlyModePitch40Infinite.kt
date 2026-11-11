@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.notification
 
 internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") {
@@ -30,8 +30,8 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
     private val maxHeight by int("MaxHeight", 200, 50..360)
     private val pitchIncrement by float("PitchIncrement", 3f, 1f..10f)
 
-    private var infinitePitch by sessionState { 0f }
-    private var infiniteFlag by sessionState { false }
+    private var infinitePitch by clientState { 0f }
+    private var infiniteFlag by clientState { false }
 
     // Speed conversion constant (m/s to km/h approximately)
     private const val SPEED_CONVERSION_FACTOR = 72f

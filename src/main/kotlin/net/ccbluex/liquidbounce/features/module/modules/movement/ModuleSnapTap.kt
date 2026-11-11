@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
@@ -57,9 +57,9 @@ object ModuleSnapTap : ClientModule("SnapTap", ModuleCategories.MOVEMENT, aliase
     }
 
     // Holding Left and Right key
-    private val horizontal by sessionState { AxisState() }
+    private val horizontal by clientState { AxisState() }
     // Holding Forward and Backward key
-    private val vertical by sessionState { AxisState() }
+    private val vertical by clientState { AxisState() }
 
     @Suppress("unused")
     val onKeyState = handler<KeyboardKeyEvent> { event ->

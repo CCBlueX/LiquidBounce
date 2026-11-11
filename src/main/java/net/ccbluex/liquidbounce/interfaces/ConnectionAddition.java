@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.ccbluex.liquidbounce.features.session.ClientSession;
+import net.ccbluex.liquidbounce.features.client.Client;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,8 +27,8 @@ import org.jspecify.annotations.Nullable;
 public interface ConnectionAddition {
 
     /**
-     * The session this connection was opened for, null on the server side.
+     * The client this connection was opened for, null on the server side.
      */
-    @Nullable ClientSession liquid_bounce$getSession();
+    @Nullable Client liquid_bounce$getClient();
 
 }

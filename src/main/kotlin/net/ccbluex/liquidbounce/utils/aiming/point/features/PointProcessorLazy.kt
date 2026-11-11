@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.aiming.point.features
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -41,8 +41,8 @@ internal class PointProcessorLazy(parent: EventListener) : PointProcessor(parent
         currentThreshold = range.random()
     }
 
-    private var currentThreshold: Float by sessionState { threshold.random() }
-    private var currentPoint: PointInsideBox? by sessionState { null }
+    private var currentThreshold: Float by clientState { threshold.random() }
+    private var currentPoint: PointInsideBox? by clientState { null }
 
     override fun process(point: PointInsideBox): PointInsideBox {
         val currentPoint = currentPoint ?: run {

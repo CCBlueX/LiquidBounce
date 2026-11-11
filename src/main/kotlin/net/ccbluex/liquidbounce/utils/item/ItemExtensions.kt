@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -109,7 +109,7 @@ fun ClientLevel.createItem(raw: String) = ItemParser(registryAccess())
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack =
-    ItemParser(currentSession.level!!.registryAccess()).parse(StringReader(stack)).let {
+    ItemParser(currentClient.level!!.registryAccess()).parse(StringReader(stack)).let {
         ItemInput(it.item, it.components).createItemStack(amount)
     }
 
@@ -240,7 +240,7 @@ fun DataComponentGetter.getAttributeValue(
 }
 
 fun <E : Any> ResourceKey<Registry<E>>.getOrNull(): Registry<E>? =
-    currentSession.level?.registryAccess()?.lookup(this)?.getOrNull()
+    currentClient.level?.registryAccess()?.lookup(this)?.getOrNull()
 
 fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? =
     Registries.ENCHANTMENT.getOrNull()?.get(this)?.getOrNull()
@@ -276,7 +276,7 @@ fun ItemStack.getBlock(): Block? {
 
 fun ItemStack.isFullBlock(): Boolean {
     val block = this.getBlock() ?: return false
-    return block.defaultBlockState().isCollisionShapeFullBlock(currentSession.level!!, BlockPos.ZERO)
+    return block.defaultBlockState().isCollisionShapeFullBlock(currentClient.level!!, BlockPos.ZERO)
 }
 
 fun ItemStack.isInteractable(): Boolean {

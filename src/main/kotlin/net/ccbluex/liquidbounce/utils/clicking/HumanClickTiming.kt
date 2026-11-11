@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import it.unimi.dsi.fastutil.longs.LongList
+import net.ccbluex.liquidbounce.features.client.clientState
 import java.util.Random
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.roundToLong
-import net.ccbluex.liquidbounce.features.session.sessionState
 
 /**
  * Log-normal intervals around a CPS drawn once per combo.
@@ -36,8 +36,8 @@ class HumanClickTiming : ClickTiming {
         private const val MAX_INTERVAL_MS = 1000L
     }
 
-    private var comboCps by sessionState { 0.0 }
-    private var range: IntRange? by sessionState { null }
+    private var comboCps by clientState { 0.0 }
+    private var range: IntRange? by clientState { null }
 
     override fun nextInterval(recent: LongList, comboMs: Long, cps: IntRange, random: Random): Long {
         if (comboMs == 0L || cps != range) {

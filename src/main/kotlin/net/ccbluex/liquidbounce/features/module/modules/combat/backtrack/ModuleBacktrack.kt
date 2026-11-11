@@ -35,10 +35,10 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspData
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspModel
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspNone
 import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -65,7 +65,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private val nextBacktrackDelay by intRange("NextBacktrackDelay", 0..10, 0..2000, "ms")
     private val trackingBuffer by int("TrackingBuffer", 500, 0..2000, "ms")
     private val chance = percentageChance("Chance", 50f)
-    private var chancePassed by sessionState { chance.asBoolean }
+    private var chancePassed by clientState { chance.asBoolean }
 
     private object PauseOnHurtTime : ToggleableValueGroup(this, "PauseOnHurtTime", false) {
         val hurtTime by int("HurtTime", 3, 0..10)
@@ -92,16 +92,16 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         doNotIncludeAlways()
     }
 
-    private val chronometer by sessionState { Chronometer() }
-    private val trackingBufferChronometer by sessionState { Chronometer() }
-    private val attackChronometer by sessionState { Chronometer() }
+    private val chronometer by clientState { Chronometer() }
+    private val trackingBufferChronometer by clientState { Chronometer() }
+    private val attackChronometer by clientState { Chronometer() }
 
-    private var shouldPause by sessionState { false }
+    private var shouldPause by clientState { false }
 
-    private var target: Entity? by sessionState { null }
+    private var target: Entity? by clientState { null }
     private val position = TrackedEntityPosition()
 
-    var currentDelay by sessionState { delay.random() }
+    var currentDelay by clientState { delay.random() }
 
     @Suppress("unused")
     private val queuePacketHandler = handler<BlinkPacketEvent> { event ->

@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.serviceUnavailable
-import net.ccbluex.liquidbounce.utils.client.currentSession
+import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toName
@@ -301,7 +301,7 @@ private fun Route.getRegistryGroups() = get("/groups") {
 
             "blocks" -> {
                 val parentMap = hashMapOf<Identifier, Identifier>()
-                val world = currentSession.level ?: call.forbidden("No world")
+                val world = currentClient.level ?: call.forbidden("No world")
 
                 BuiltInRegistries.BLOCK.forEach { block ->
                     val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)

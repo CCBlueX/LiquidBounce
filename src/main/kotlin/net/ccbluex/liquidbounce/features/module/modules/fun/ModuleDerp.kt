@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -94,7 +94,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     private object YawJitter : YawMode("Jitter") {
 
-        override var yaw by sessionState { 0.0f }
+        override var yaw by clientState { 0.0f }
 
         val yawForwardTicks by int("ForwardTicks", 2, 0..100, "ticks")
         val yawBackwardTicks by int("BackwardTicks", 2, 0..100, "ticks")
@@ -116,7 +116,7 @@ object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     private object YawSpin : YawMode("Spin") {
 
-        override var yaw by sessionState { 0.0f }
+        override var yaw by clientState { 0.0f }
 
         val yawSpinSpeed by int("Speed", 50, -70..70, "°/tick")
 

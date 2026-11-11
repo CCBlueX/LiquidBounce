@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeomet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -163,8 +163,8 @@ object ModuleFucker : ClientModule(
             .distanceToSqr(player.eyePosition)
     }
 
-    private var currentTarget: DestroyerTarget? by sessionState { null }
-    private var oldTarget: DestroyerTarget? by sessionState { null }
+    private var currentTarget: DestroyerTarget? by clientState { null }
+    private var oldTarget: DestroyerTarget? by clientState { null }
 
     internal val hasTarget: Boolean
         get() = currentTarget != null

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,14 +28,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Only the level of the active session has particles.
+ * Only the level of the active client has particles.
  */
 @Mixin(ParticleEngine.class)
 public abstract class MixinParticleEngine {
 
     @Inject(method = "createParticle", at = @At("HEAD"), cancellable = true)
-    private void skipBackgroundSession(CallbackInfoReturnable<Particle> cir) {
-        if (SessionContext.isBackground()) {
+    private void skipBackgroundClient(CallbackInfoReturnable<Particle> cir) {
+        if (ClientContext.isBackground()) {
             cir.setReturnValue(null);
         }
     }
@@ -44,8 +44,8 @@ public abstract class MixinParticleEngine {
         "add",
         "createTrackingEmitter(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/core/particles/ParticleOptions;I)V"
     }, at = @At("HEAD"), cancellable = true)
-    private void skipBackgroundSession(CallbackInfo ci) {
-        if (SessionContext.isBackground()) {
+    private void skipBackgroundClient(CallbackInfo ci) {
+        if (ClientContext.isBackground()) {
             ci.cancel();
         }
     }
