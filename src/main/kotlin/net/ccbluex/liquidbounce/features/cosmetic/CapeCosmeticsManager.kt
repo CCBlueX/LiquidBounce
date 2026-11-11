@@ -70,6 +70,9 @@ object CapeCosmeticsManager : EventListener {
         ioScope.launch {
             val uuid = player.id
 
+            // Asked once per player, so it waits for the carriers to be up to date
+            CosmeticService.refreshCarriers()
+
             CosmeticService.fetchCosmetic(uuid, category) { cosmetic ->
                 // Get url of cape from cape service
                 val name = cosmetic.extra ?: return@fetchCosmetic

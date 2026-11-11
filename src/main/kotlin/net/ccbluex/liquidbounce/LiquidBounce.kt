@@ -348,9 +348,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Load cosmetics
-                CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
-                }
+                CosmeticService.refreshCarriers(force = true)
             }
             launch {
                 MarketplaceConfigs.refresh()
