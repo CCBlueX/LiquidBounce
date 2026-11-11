@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDete
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -40,6 +41,7 @@ import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.common.ClientboundPingPacket
 import net.minecraft.network.protocol.configuration.ClientboundSelectKnownPacks
 import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket
@@ -55,23 +57,6 @@ import kotlin.time.Duration
 
 object ServerObserver : EventListener {
 
-    @Suppress("SpellCheckingInspection")
-    private val knownAntiCheats = setOf(
-        "nocheatplus",
-        "grimac",
-        "aac",
-        "intave",
-        "horizon",
-        "vulcan",
-        "Vulcan",
-        "spartan",
-        "kauri",
-        "anticheatreloaded",
-        "matrix",
-        "themis",
-        "negativity"
-    )
-
     var serverInfo: ServerData? = null
         private set
     var serverAddress: ServerAddress? = null
@@ -84,6 +69,10 @@ object ServerObserver : EventListener {
 
     val transactions = mutableListOf<Int>()
     var isCapturingTransactions = false
+    private const val TRANSACTIONS = 5
+
+    private val keepAlives = mutableListOf<Long>()
+    private const val KEEP_ALIVES = 5
 
     // defines how many packets are recorded to get the average
     private const val AVERAGE_OF = 15
@@ -117,7 +106,7 @@ object ServerObserver : EventListener {
     val formattedPluginList: List<Component>?
         get() = plugins?.map { pluginName ->
             pluginName.asPlainText(
-                if (knownAntiCheats.contains(pluginName)) {
+                if (AntiCheat.ofPlugin(pluginName) != null) {
                     ChatFormatting.GREEN
                 } else {
                     ChatFormatting.RED
@@ -280,15 +269,20 @@ object ServerObserver : EventListener {
             }
 
             is ClientboundPingPacket -> if (isCapturingTransactions) {
-                transactions.add(packet.id)
-                if (transactions.size >= 5) {
+                transactions.add(transactionId(packet.id))
+                if (transactions.size >= TRANSACTIONS) {
                     ModuleAntiCheatDetect.completed()
                     isCapturingTransactions = false
                 }
             }
 
+            is ClientboundKeepAlivePacket -> if (keepAlives.size < KEEP_ALIVES) {
+                keepAlives.add(packet.id)
+            }
+
             is ClientboundLoginPacket -> {
                 transactions.clear()
+                keepAlives.clear()
                 isCapturingTransactions = true
             }
 
@@ -311,58 +305,19 @@ object ServerObserver : EventListener {
         this.serverType = null
         this.payloadChannels.clear()
         this.transactions.clear()
+        this.keepAlives.clear()
     }
 
     /**
-     * Reference: https://github.com/CCBlueX/LiquidBounce/blob/legacy/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AnticheatDetector.kt
-     * @author RtxOP
+     * The most certain [AntiCheat] for the current connection.
      */
-    fun guessAntiCheat(address: String?): String? {
-        if (transactions.size < 5) {
-            return null
-        }
-
-        val diffs = transactions.windowed(2) { it[1] - it[0] }
-        val first = transactions.first()
-
-        return when {
-            address?.endsWith("hypixel.net", true) == true -> "Watchdog"
-
-            diffs.all { it == diffs.first() } -> when (diffs.first()) {
-                1 -> when (first) {
-                    in -23772..-23762 -> "Vulcan"
-                    in 95..105, in -20005..-19995 -> "Matrix"
-                    in -32773..-32762 -> "Grizzly"
-                    else -> "Verus"
-                }
-                -1 -> when {
-                    first in -8287..-8280 -> "Errata"
-                    first < -3000 -> "Intave"
-                    first in -5..0 -> "Grim"
-                    first in -3000..-2995 -> "Karhu"
-                    else -> "Polar"
-                }
-                else -> null
-            }
-
-            transactions.take(2).let { it[0] == it[1] }
-                && transactions.drop(2).windowed(2).all { it[1] - it[0] == 1 }
-                -> "Verus"
-
-            diffs.take(2).let { it[0] >= 100 && it[1] == -1 }
-                && diffs.drop(2).all { it == -1 }
-                -> "Polar"
-
-            transactions.first() < -3000 && transactions.contains(0)
-                -> "Intave"
-
-            transactions.take(3) == listOf(-30767, -30766, -25767)
-                && transactions.drop(3).windowed(2).all { it[1] - it[0] == 1 }
-                -> "Old Vulcan"
-
-            else -> "Unknown"
-        }
-    }
+    fun guessAntiCheat(address: String?): AntiCheatGuess? = AntiCheat.guess(
+        address,
+        // Channels the server registered through minecraft:register
+        if (mc.connection == null) emptySet() else ClientPlayNetworking.getSendable(),
+        transactions.takeIf { it.size >= TRANSACTIONS },
+        keepAlives,
+    )
 
     enum class ServerType(override val tag: String) : Tagged {
 
