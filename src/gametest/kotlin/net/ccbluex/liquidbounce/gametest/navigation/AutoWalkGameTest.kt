@@ -243,6 +243,8 @@ private fun GameTestScope.checkFarmItem(y: Int) {
 private fun GameTestScope.checkFuckerTargets(y: Int) {
     moveTo(Vec3(33.5, y + 9.0, 0.5))
     context.onClient {
+        // Anticheats allow no more than the reach of the game
+        ModuleFucker.containedValues.first { it.name == "Range" }.setByString("4.5")
         FuckerAutoWalk.enabled = true
         ModuleFucker.enabled = true
     }
