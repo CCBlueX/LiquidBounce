@@ -49,7 +49,7 @@ abstract class LocalGameTest : FabricClientGameTest {
     private companion object {
         const val STARTUP_TIMEOUT = 20 * 60 * 5
 
-        /** CI runs the server game tests once per anticheat, and the tests of the client alone in a job of their own. */
+        /** CI runs the tests of the client alone in a job of their own, without an anticheat. */
         val localRun = System.getenv("GAMETEST_SERVER_ANTICHEAT").isNullOrBlank()
     }
 
