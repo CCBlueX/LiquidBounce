@@ -93,6 +93,11 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
         val canSwapArmor by boolean("CanSwapArmor", false)
     }
 
+    /**
+     * Keeps a worn elytra instead of replacing it with a chestplate.
+     */
+    private val keepElytra by boolean("KeepElytra", true)
+
     init {
         tree(UseHotbar)
         tree(AutoArmorSaveArmor)
@@ -116,30 +121,31 @@ object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
                 mode = comparatorMode,
                 considerProjectileProtection = considerProjectileProtection
             )
-            .values.filterNotNull().filter { !it.isAlreadyEquipped }
+            .values.filterNotNull().filter(::shouldEquip)
 
         for (armorPiece in armorToEquip) {
             event.schedule(
                 inventoryConstraints,
-                equipArmorPiece(armorPiece) ?: continue,
+                equipArmorPiece(armorPiece),
                 Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
         }
     }
 
     /**
+     * Whether [armorPiece] should be put on: it is not worn yet and its slot does not hold an elytra kept by
+     * [keepElytra].
+     */
+    internal fun shouldEquip(armorPiece: ArmorPiece) =
+        !armorPiece.isAlreadyEquipped && !(keepElytra && player.inventory.getItem(armorPiece.inventorySlot).isGlider)
+
+    /**
      * Tries to move the given armor piece in the target slot in the inventory. There are two possible behaviors:
      * 1. If there is no free space in the target slot, it will make space in that slot (see [performMoveOrHotbarClick])
      * 2. If there is free space, it will move the armor piece there
-     *
-     * @return false if a move was not possible, true if a move occurred
      */
-    private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
+    private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction {
         val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
-
-        if (stackInArmor.isGlider) {
-            return null
-        }
 
         return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isEmpty)
     }
