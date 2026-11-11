@@ -23,10 +23,13 @@ import net.minecraft.resources.Identifier
 
 /**
  * Anticheats [ServerObserver] recognizes by what they send every player after joining: the plugin channels they
- * register, the ids of their transactions (pings) and of their keep-alives. Each entry says how it was sampled.
+ * register, the ids of their transactions (pings) and of their keep-alives.
  *
  * Every piece of evidence has a certainty of its own. Evidence for the same anticheat adds up, the most certain
- * anticheat wins and ties go to the one declared first.
+ * anticheat wins and ties go to the one declared first. Entries without evidence only show in the plugin list.
+ *
+ * `@testedOn` lists the servers an entry was sampled on, `@testedWith` the clients that joined them, `@untested`
+ * marks entries never sampled.
  *
  * [plugins] are the plugin names that prefix their commands, lowercase as Paper registers them. They only mark
  * anticheats in the plugin list, as the command list is no reliable evidence.
@@ -39,14 +42,16 @@ enum class AntiCheat(
 ) : Tagged {
 
     /**
-     * Hypixel's own anticheat, recognized by the address alone. Not sampled.
+     * @untested
      */
     WATCHDOG("Watchdog", emptySet(), host("hypixel.net")),
 
     /**
-     * Sampled with a 26.3 client on a Paper 26.3 and a 1.8.8 server with ViaVersion, each running only GrimAC 2.3.75,
-     * joined directly and behind Velocity and BungeeCord, there also as a 1.8 client through ViaFabricPlus. The ids
-     * are the same everywhere.
+     * @testedOn Paper 26.3, only GrimAC 2.3.75
+     * @testedOn 1.8.8 with ViaVersion 5.12.2, only GrimAC 2.3.75
+     * @testedOn Velocity and BungeeCord, lobby without anticheat, then Paper 26.3 with GrimAC 2.3.75
+     * @testedWith 26.3
+     * @testedWith 1.8 through ViaFabricPlus
      */
     GRIM(
         "Grim",
@@ -57,9 +62,9 @@ enum class AntiCheat(
     ),
 
     /**
-     * Sampled with a 26.3 client on a Paper 26.3 and a 1.8.8 server with ViaVersion, each running only
-     * Intave 14.9.7. The ids differ between the two. The last two patterns come from the legacy detector and showed
-     * up in no sample.
+     * @testedOn Paper 26.3, only Intave 14.9.7
+     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Intave 14.9.7
+     * @testedWith 26.3
      */
     INTAVE(
         "Intave",
@@ -71,12 +76,16 @@ enum class AntiCheat(
         },
         // On 1.8 to 1.16 servers, counting up from -23767
         steadyTransactions(step = 1, first = -23767..-23762, certainty = 85),
+        // Legacy detector, in no sample
         steadyTransactions(step = -1, first = Int.MIN_VALUE..-3001, certainty = 50),
+        // Legacy detector, in no sample
         transactions(certainty = 50) { ids -> ids.first() < -3000 && 0 in ids },
     ),
 
     /**
-     * Sampled like [INTAVE], with only Vulcan 2.9.7.29. The ids are the same on both servers.
+     * @testedOn Paper 26.3, only Vulcan 2.9.7.29
+     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Vulcan 2.9.7.29
+     * @testedWith 26.3
      */
     VULCAN(
         "Vulcan",
@@ -88,14 +97,17 @@ enum class AntiCheat(
     ),
 
     /**
-     * Sampled like [INTAVE], with only Matrix 7.27.0. The ids are the same on both servers. The two counting
-     * patterns come from the legacy detector and showed up in no sample.
+     * @testedOn Paper 26.3, only Matrix 7.27.0
+     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Matrix 7.27.0
+     * @testedWith 26.3
      */
     MATRIX(
         "Matrix",
         setOf("matrix"),
         channel("matrix"),
+        // Legacy detector, in no sample
         steadyTransactions(step = 1, first = 95..105, certainty = 60),
+        // Legacy detector, in no sample
         steadyTransactions(step = 1, first = -20005..-19995, certainty = 60),
         // Random negative short ids
         transactions(certainty = 50) { ids ->
@@ -105,8 +117,8 @@ enum class AntiCheat(
     ),
 
     /**
-     * Sampled twice with a 26.3 client on anticheat-test.com, a 1.8 server running several anticheats at once. The
-     * second pattern comes from the legacy detector.
+     * @testedOn anticheat-test.com, 1.8 with several anticheats
+     * @testedWith 26.3
      */
     KARHU(
         "Karhu",
@@ -115,23 +127,27 @@ enum class AntiCheat(
         transactions(certainty = 90) { ids ->
             ids[0] == Short.MIN_VALUE + 1 && ids[1] in -3000..-2995 && ids.drop(1).countsBy(-1)
         },
+        // Legacy detector, in no sample
         steadyTransactions(step = -1, first = -3000..-2995, certainty = 60),
     ),
 
     /**
-     * Sampled like [KARHU]. The first pattern comes from the legacy detector and showed up in no sample.
+     * @testedOn anticheat-test.com, 1.8 with several anticheats
+     * @testedWith 26.3
      */
     VERUS(
         "Verus",
         setOf("verus"),
+        // Legacy detector, in no sample
         transactions(certainty = 60) { ids -> ids[0] == ids[1] && ids.drop(2).countsBy(1) },
         // Counts up from a random id
         steadyTransactions(step = 1, certainty = 60),
     ),
 
     /**
-     * Sampled twice each with a 26.3 client in games on pika.host and gamster.org, 1.8 servers behind Velocity whose
-     * lobbies run no anticheat. The counting down fallback comes from the legacy detector.
+     * @testedOn pika.host, 1.8 behind Velocity
+     * @testedOn gamster.org, 1.8 behind Velocity
+     * @testedWith 26.3
      */
     POLAR(
         "Polar",
@@ -141,53 +157,56 @@ enum class AntiCheat(
             val differences = ids.differences()
             differences[0] >= 100 && differences.drop(1).all { it == -1 }
         },
+        // Legacy detector, in no sample
         steadyTransactions(step = -1, certainty = 30),
         // Its keep-alives reuse every 20th transaction id
         keepAlives(certainty = 90) { ids -> ids.count { it in Short.MIN_VALUE.toLong()..-1L } >= 2 },
     ),
 
     /**
-     * Sampled on a Paper 26.3 server running only NoCheatPlus 3.17.1. It sends nothing a client could tell apart, so
-     * only the plugin list shows it.
+     * @testedOn Paper 26.3, only NoCheatPlus 3.17.1
+     * @testedWith 26.3
      */
     NOCHEATPLUS("NoCheatPlus", setOf("nocheatplus")),
 
     /**
-     * Sampled twice each with a 26.3 client and a 1.8 client through ViaFabricPlus on a 1.8.8 server running only
-     * AAC 5.0.14, which needs FoxViaRestore for the old ViaVersion API there. It sends nothing a client could tell
-     * apart, so only the plugin list shows it.
+     * @testedOn 1.8.8 with ViaVersion 5.12.2 and FoxViaRestore, only AAC 5.0.14
+     * @testedWith 26.3
+     * @testedWith 1.8 through ViaFabricPlus
      */
     AAC("AAC", setOf("aac", "aac5")),
 
     /**
-     * Sampled like [AAC], with only Horizon BETA17. It sends nothing a client could tell apart, so only the plugin
-     * list shows it.
+     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Horizon BETA17
+     * @testedWith 26.3
+     * @testedWith 1.8 through ViaFabricPlus
      */
     HORIZON("Horizon", setOf("horizon")),
 
     /**
-     * Sampled on a Paper 26.3 server running only Spartan 4.0.9 and on its official test server. It sends nothing a
-     * client could tell apart, so only the plugin list shows it.
+     * @testedOn Paper 26.3, only Spartan 4.0.9
+     * @testedOn minecraft.vagdedes.com, its official test server
+     * @testedWith 26.3
      */
     SPARTAN("Spartan", setOf("spartan")),
 
     /**
-     * Not sampled. Only the plugin list shows it.
+     * @untested
      */
     KAURI("Kauri", setOf("kauri")),
 
     /**
-     * Not sampled. Only the plugin list shows it.
+     * @untested
      */
     ANTICHEAT_RELOADED("AntiCheatReloaded", setOf("anticheatreloaded")),
 
     /**
-     * Not sampled, as Themis only runs on 1.17 to 1.21. Only the plugin list shows it.
+     * @untested runs only on 1.17 to 1.21
      */
     THEMIS("Themis", setOf("themis")),
 
     /**
-     * Not sampled. Only the plugin list shows it.
+     * @untested
      */
     NEGATIVITY("Negativity", setOf("negativity"));
 
