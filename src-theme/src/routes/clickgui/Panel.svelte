@@ -1,7 +1,7 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import type {Module as TModule} from "../../integration/types";
-    import {listen} from "../../integration/ws";
+    import {listen, listenClient} from "../../integration/ws";
     import Module from "./Module.svelte";
     import type {KeyboardKeyEvent, ModuleToggleEvent} from "../../integration/events";
     import {fade} from "svelte/transition";
@@ -10,6 +10,7 @@
         gridSize,
         highlightModuleName,
         maxPanelZIndex,
+        pickedClient,
         scaleFactor,
         showGrid,
         snappingEnabled
@@ -170,7 +171,7 @@
         }
     });
 
-    listen("moduleToggle", (e: ModuleToggleEvent) => {
+    listenClient("moduleToggle", $pickedClient, (e: ModuleToggleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
