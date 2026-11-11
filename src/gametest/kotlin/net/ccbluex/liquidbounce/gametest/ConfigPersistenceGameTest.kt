@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.gametest
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,10 +30,9 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 
-class ConfigPersistenceGameTest : FabricClientGameTest {
+class ConfigPersistenceGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         context.onClient {
             val config = Config("GameTestPersistence")
             val value = config.int("Number", 1, 0..10)

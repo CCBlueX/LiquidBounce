@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
 import net.minecraft.client.KeyMapping
@@ -47,11 +46,9 @@ import kotlin.jvm.optionals.getOrNull
  * went through. A simulation is made both before the player's tick and during it, where the client makes most of its
  * own.
  */
-class PlayerSimulationGameTest : FabricClientGameTest {
+class PlayerSimulationGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             world.server.runCommand("gamemode survival @a")
             world.server.runCommand("attribute @p minecraft:fall_damage_multiplier base set 0")

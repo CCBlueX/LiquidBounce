@@ -107,9 +107,10 @@ loom {
 // Tests that extend `LiquidBounceGameTest` play on the game test server (https://github.com/CCBlueX/gametest)
 // with an anticheat of choice watching. They need a LiquidBounce API token in GAMETEST_API_TOKEN, or a server
 // of one's own: `GAMETEST_SERVER_ADDRESS=localhost:25565 ./gradlew runClientGameTest` against its `docker compose up`.
-// GAMETEST_SERVER_ANTICHEAT picks the anticheat (https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md);
-// `-PgameTestServerOnly=Harness,Sprint` runs only those server tests, and `build/run/clientGameTest/gametest` keeps
-// what the server told them.
+// GAMETEST_SERVER_ANTICHEAT picks the anticheat (https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md).
+// The other tests, `LocalGameTest`s, need no server and run only when GAMETEST_SERVER_ANTICHEAT is not set.
+// `-PgameTestServerOnly=Harness,Sprint` runs only those tests, and `build/run/clientGameTest/gametest` keeps what
+// the server told them.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -177,7 +178,7 @@ loom.runs.named("clientGameTest") {
 tasks.named("runClientGameTest") {
     // A game that cannot start may wait on an error dialog forever. The server tests wait up to two minutes for
     // a game test server that is restarting, and up to three for a free session.
-    timeout = Duration.ofMinutes(15)
+    timeout = Duration.ofMinutes(30)
 }
 
 dependencies {

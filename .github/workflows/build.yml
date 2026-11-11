@@ -243,19 +243,19 @@ jobs:
           sarif_file: build/reports/detekt/detekt.sarif
 
   gametest:
-    name: gametest (${{ matrix.anticheat }})
+    name: gametest (${{ matrix.run }})
     runs-on: ubuntu-latest
     needs: extract-versions
-    # A normal run takes about 6 minutes; the Gradle task gives up after 15
-    timeout-minutes: 25
+    # A run with the navigation tests takes about 15 minutes; the Gradle task gives up after 30
+    timeout-minutes: 40
     # nextgen fills the library cache that pull requests read
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/nextgen'
     strategy:
       fail-fast: false
       matrix:
-        # The game test server watches each run's bots with this anticheat, see
-        # https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md
-        anticheat: [grim, intave, vulcan]
+        # `local` runs the tests of the client alone. The others play on the game test server, whose bots this
+        # anticheat watches, see https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md
+        run: [local, vanilla, grim]
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v7
@@ -319,14 +319,14 @@ jobs:
           NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
           # The game test server lets in bots of LiquidBounce accounts; empty on pull requests from forks, which
           # then skip the tests on it
-          GAMETEST_API_TOKEN: ${{ secrets.API_TOKEN }}
-          GAMETEST_SERVER_ANTICHEAT: ${{ matrix.anticheat }}
+          GAMETEST_API_TOKEN: ${{ matrix.run != 'local' && secrets.API_TOKEN || '' }}
+          GAMETEST_SERVER_ANTICHEAT: ${{ matrix.run != 'local' && matrix.run || '' }}
         run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"
       - name: Upload game test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: gametest-${{ matrix.anticheat }}
+          name: gametest-${{ matrix.run }}
           # The client's log, its screenshots and what the game test server told each server test
           path: |
             build/run/clientGameTest/logs/latest.log

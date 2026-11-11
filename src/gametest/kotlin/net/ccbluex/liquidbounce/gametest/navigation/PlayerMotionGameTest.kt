@@ -19,16 +19,15 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
+import net.ccbluex.liquidbounce.gametest.LocalGameTest
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.groundY
-import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
@@ -37,14 +36,9 @@ import net.minecraft.world.phys.Vec3
  * [PlayerMotion], which route searches plan jumps with, has to move like the game moves the player on land. It is
  * held against [SimulatedPlayer], which is the game's own movement, with the same keys from the same spot.
  */
-class PlayerMotionGameTest : FabricClientGameTest {
+class PlayerMotionGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        if (!navigationGameTests) {
-            return
-        }
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             val server = world.server
             val y = server.groundY()
@@ -54,7 +48,10 @@ class PlayerMotionGameTest : FabricClientGameTest {
                 server.runCommand("fill 0 $y -4 40 ${y + 9} 4 air")
                 server.runCommand("fill 0 ${y - 1} -4 40 ${y - 1} 4 stone")
                 course.build(y).forEach(server::runCommand)
-                moveTo(context, server, Vec3(2.5, (y + course.height).toDouble(), 0.5), yaw = -90f, settleTicks = 10)
+                val start = Vec3(2.5, (y + course.height).toDouble(), 0.5)
+                server.runCommand("tp @a ${start.x} ${start.y} ${start.z} -90 0")
+                context.waitFor({ it.player?.position()?.near(start) == true }, ARRIVAL_TICKS)
+                context.waitTicks(SETTLE_TICKS)
 
                 context.fromClient { client -> course.difference(checkNotNull(client.player)) }
             }
@@ -100,6 +97,9 @@ class PlayerMotionGameTest : FabricClientGameTest {
     private companion object {
         /** The motion works out its turns with a sine table. */
         const val TOLERANCE = 1.0E-4
+
+        const val ARRIVAL_TICKS = 200
+        const val SETTLE_TICKS = 10
 
         fun platform(y: Int) = listOf("fill 0 $y -1 5 ${y + 2} 1 stone")
 

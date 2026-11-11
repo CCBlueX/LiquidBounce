@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.ShaderGlow
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.gui.Hud
@@ -36,10 +35,9 @@ import net.minecraft.world.level.levelgen.Heightmap
  * and post effect lists, where resource packs and servers could find them. Leaves a screenshot of every style in front
  * of a few mobs, some behind a wall.
  */
-class EspGlowGameTest : FabricClientGameTest {
+class EspGlowGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleESP) }
 
         try {

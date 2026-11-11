@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
@@ -28,11 +27,9 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
  * to tell a modified client from a vanilla one. They must be resolvable after the client loaded and removable by
  * [HitFXRegistry.unregisterSounds].
  */
-class HitFXSoundRegistryGameTest : FabricClientGameTest {
+class HitFXSoundRegistryGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         check(context.clientSounds().isNotEmpty()) {
             "HitFX sounds are missing from the client sound registry"
         }

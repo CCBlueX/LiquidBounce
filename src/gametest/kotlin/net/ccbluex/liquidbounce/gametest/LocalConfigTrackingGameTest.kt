@@ -22,7 +22,6 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.marketplace.autoconfig.ConfigTracker
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoConfig
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import java.io.File
 
@@ -32,12 +31,11 @@ import java.io.File
  *
  * The tracked config is faked through the tracker's stored values, so nothing is downloaded.
  */
-class LocalConfigTrackingGameTest : FabricClientGameTest {
+class LocalConfigTrackingGameTest : LocalGameTest() {
 
     private class Tracking(val state: ConfigTracker.State, val itemId: Int?, val localName: String, val tag: String?)
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         val folder = context.fromClient { ConfigSystem.userConfigsFolder }
 
         try {
