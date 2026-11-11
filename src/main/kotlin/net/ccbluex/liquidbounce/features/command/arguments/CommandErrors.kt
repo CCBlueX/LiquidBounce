@@ -69,6 +69,12 @@ object CommandErrors {
         translation("liquidbounce.commandManager.noSuchPlayer", name)
     }
 
+    /** `%s` = rejected session name. */
+    @JvmField
+    val NO_SUCH_SESSION = DynamicCommandExceptionType { name ->
+        translation("liquidbounce.commandManager.noSuchSession", name)
+    }
+
     /** `%s` = rejected friend name. */
     @JvmField
     val NOT_A_FRIEND = DynamicCommandExceptionType { name ->

@@ -130,6 +130,8 @@ import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.events.ServerPingedEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.events.SessionSwitchEvent
+import net.ccbluex.liquidbounce.event.events.SessionsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
@@ -245,6 +247,8 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     AccountManagerAdditionResultEvent::class.java,
     AccountManagerRemovalResultEvent::class.java,
     AccountManagerLoginResultEvent::class.java,
+    SessionSwitchEvent::class.java,
+    SessionsUpdateEvent::class.java,
     VirtualScreenEvent::class.java,
     FpsChangeEvent::class.java,
     FpsLimitEvent::class.java,

@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandAddon
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandSession
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
@@ -172,6 +173,7 @@ object CommandManager : ActiveSessionListener {
         register(CommandRemoteView)
         register(CommandDebug)
         register(CommandFriend)
+        register(CommandSession)
         register(CommandLiquidChat)
         register(CommandClient)
         register(CommandConfig)

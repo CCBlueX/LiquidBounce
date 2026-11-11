@@ -5,6 +5,7 @@ import type {
     Alignment,
     Browser,
     ClientInfo,
+    ClientSession,
     ClientUpdate,
     ClientUser,
     ConfigurableSetting,
@@ -228,6 +229,38 @@ export async function getSession(): Promise<Session> {
     const data: Session = await response.json();
 
     return data;
+}
+
+export async function getSessions(): Promise<ClientSession[]> {
+    const response = await fetch(`${API_BASE}/client/sessions`);
+    const data: ClientSession[] = await response.json();
+
+    return data;
+}
+
+/**
+ * Opens a session for an account of the alt manager. It joins the given server, or stays in the menus.
+ */
+export async function openSession(account: number, address?: string) {
+    await fetch(`${API_BASE}/client/sessions`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({account, address})
+    });
+}
+
+export async function activateSession(id: number) {
+    await fetch(`${API_BASE}/client/sessions/${id}/activate`, {
+        method: "POST"
+    });
+}
+
+export async function closeSession(id: number) {
+    await fetch(`${API_BASE}/client/sessions/${id}`, {
+        method: "DELETE"
+    });
 }
 
 export async function openLink(target: string) {

@@ -51,6 +51,7 @@
     "Image",
     "Text",
     "KeyBinds",
+    "Sessions",
     "ClosedCaptions"
   ],
   "fonts": [

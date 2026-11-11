@@ -1,5 +1,6 @@
 import type {
     BedState,
+    ClientSession,
     ConfigurableSetting,
     ConnectionDetails,
     HudComponent,
@@ -71,6 +72,8 @@ export interface EventMap {
     key: KeyEvent;
     keybindChange: void;
     session: SessionEvent;
+    sessionSwitch: SessionSwitchEvent;
+    sessionsUpdate: SessionsUpdateEvent;
     chatSend: ChatSendEvent;
     chatReceive: ChatReceiveEvent;
     disconnect: void;
@@ -79,6 +82,14 @@ export interface EventMap {
 
     //PlayerEvents.kt
     death: void;
+}
+
+export interface SessionSwitchEvent {
+    id: number;
+}
+
+export interface SessionsUpdateEvent {
+    sessions: ClientSession[];
 }
 
 export interface ThemeColorChangeEvent {

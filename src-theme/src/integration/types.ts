@@ -293,6 +293,39 @@ export interface Session {
     uuid: string;
 }
 
+/**
+ * One of the accounts playing at the same time, see GET /api/v1/client/sessions.
+ */
+export interface ClientSession {
+    id: number;
+    username: string;
+    avatar: string;
+    active: boolean;
+    status: "MENU" | "CONNECTING" | "IN_GAME" | "DISCONNECTED";
+    server?: string;
+    activity?: ClientSessionActivity;
+    health?: number;
+    maxHealth?: number;
+    food?: number;
+    position?: Vec3;
+    heldItem?: ItemStack;
+    modules: string[];
+    lastMessage?: TextComponent | string;
+}
+
+export type ClientSessionActivity =
+    | "DEAD"
+    | "FIGHTING"
+    | "MINING"
+    | "USING_ITEM"
+    | "IN_CONTAINER"
+    | "SLEEPING"
+    | "RIDING"
+    | "GLIDING"
+    | "SWIMMING"
+    | "MOVING"
+    | "IDLE";
+
 export interface Server {
     id: number;
     address: string;

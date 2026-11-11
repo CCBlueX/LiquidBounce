@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.session
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.cancelEventListenerScopes
+import net.ccbluex.liquidbounce.event.events.SessionSwitchEvent
 import net.ccbluex.liquidbounce.features.account.SessionBundle
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -134,6 +135,8 @@ object SessionManager {
                 }
             }
         }
+
+        SessionOverview.announce()
     }
 
     /**
@@ -180,6 +183,7 @@ object SessionManager {
         present()
 
         logger.info("Switched from session ${previous.id} to session ${session.id}")
+        EventManager.callEvent(SessionSwitchEvent(session.id))
     }
 
     /**

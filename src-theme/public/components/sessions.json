@@ -1,0 +1,12 @@
+{
+  "name": "Sessions",
+  "description": "Shows what your other sessions are doing.",
+  "enabled": true,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "Right",
+    "horizontalOffset": 15,
+    "verticalAlignment": "CenterTranslated",
+    "verticalOffset": 0
+  }
+}

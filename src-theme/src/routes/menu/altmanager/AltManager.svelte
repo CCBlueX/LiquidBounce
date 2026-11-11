@@ -1,8 +1,12 @@
 <script lang="ts">
     import {
+        activateSession,
+        closeSession,
         deleteScreen,
         getAccounts,
+        getSessions,
         loginToAccount as loginToAccountRest,
+        openSession,
         orderAccounts,
         removeAccount as restRemoveAccount,
         restoreSession,
@@ -18,7 +22,7 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import Search from "../common/Search.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
-    import type {Account} from "../../../integration/types";
+    import type {Account, ClientSession} from "../../../integration/types";
     import {onMount} from "svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
@@ -27,6 +31,7 @@
     import type {
         AccountManagerAdditionEvent,
         AccountManagerLoginEvent,
+        SessionsUpdateEvent,
     } from "../../../integration/events.js";
     import DirectLoginModal from "./directLogin/DirectLoginModal.svelte";
 
@@ -36,6 +41,10 @@
     let accounts: Account[] = [];
     let renderedAccounts: Account[] = [];
     let searchQuery = "";
+
+    // Sessions only show up once there is more than the one the game starts with
+    let sessions: ClientSession[] = [];
+    $: openSessions = sessions.length > 1 ? sessions : [];
 
     let addAccountModalVisible = false;
     let directLoginModalVisible = false;
@@ -67,6 +76,7 @@
     onMount(async () => {
         await refreshAccounts();
         renderedAccounts = accounts;
+        sessions = await getSessions();
     });
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
@@ -109,6 +119,32 @@
         await loginToAccountRest(id);
     }
 
+    async function openSessionFor(account: Account) {
+        notification.set({
+            title: "AltManager",
+            message: `Opening a session for ${account.username}...`,
+            error: false
+        });
+        await openSession(account.id);
+    }
+
+    function describeSession(session: ClientSession): string {
+        switch (session.status) {
+            case "IN_GAME":
+                return session.server ?? "In game";
+            case "CONNECTING":
+                return `Connecting to ${session.server}`;
+            case "DISCONNECTED":
+                return "Disconnected";
+            default:
+                return "In the menu";
+        }
+    }
+
+    listen("sessionsUpdate", (e: SessionsUpdateEvent) => {
+        sessions = e.sessions;
+    });
+
     listen("accountManagerAddition", (e: AccountManagerAdditionEvent) => {
         addAccountModalVisible = false;
         refreshAccounts();
@@ -131,8 +167,34 @@
     <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
 </OptionBar>
 
-<MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
+<MenuList sortable={accounts.length === renderedAccounts.length && openSessions.length === 0}
+          elementCount={accounts.length}
           on:sort={handleAccountSort}>
+    {#each openSessions as session (session.id)}
+        <MenuListItem image={session.avatar} title={session.username}>
+            <svelte:fragment slot="subtitle">
+                {describeSession(session)}
+            </svelte:fragment>
+
+            <svelte:fragment slot="tag">
+                <MenuListItemTag text={session.active ? "Active session" : "Session"}/>
+            </svelte:fragment>
+
+            <svelte:fragment slot="active-visible">
+                {#if session.id !== 0}
+                    <MenuListItemButton title="Close session" icon="disconnect"
+                                        on:click={() => closeSession(session.id)}/>
+                {/if}
+            </svelte:fragment>
+
+            <svelte:fragment slot="always-visible">
+                {#if !session.active}
+                    <MenuListItemButton title="Switch" icon="play" on:click={() => activateSession(session.id)}/>
+                {/if}
+            </svelte:fragment>
+        </MenuListItem>
+    {/each}
+
     {#each renderedAccounts as account}
         <MenuListItem
                 image={account.avatar}
@@ -151,6 +213,8 @@
                 <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
                 <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
                                     on:click={() => toggleFavorite(account.id, !account.favorite)}/>
+                <MenuListItemButton title="Open session" icon="plus-circle"
+                                    on:click={() => openSessionFor(account)}/>
             </svelte:fragment>
 
             <svelte:fragment slot="always-visible">

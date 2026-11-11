@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
+import net.ccbluex.liquidbounce.features.session.SessionSnapshot
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
@@ -167,6 +168,18 @@ class AccountManagerMessageEvent(val message: String) : Event(), WebSocketEvent
 
 @Tag("accountManagerLogin")
 class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event(), WebSocketEvent
+
+/**
+ * The window was handed to another session. Everything on screen belongs to it from now on.
+ */
+@Tag("sessionSwitch")
+class SessionSwitchEvent(val id: Int) : Event(), WebSocketEvent
+
+/**
+ * What every open session is doing. Only fired while there is more than one.
+ */
+@Tag("sessionsUpdate")
+class SessionsUpdateEvent(val sessions: List<SessionSnapshot>) : Event(), WebSocketEvent
 
 @Tag("accountManagerAddition")
 class AccountManagerAdditionResultEvent(
