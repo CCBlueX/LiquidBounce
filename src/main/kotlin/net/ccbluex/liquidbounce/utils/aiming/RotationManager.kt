@@ -109,13 +109,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         }
 
     // Used for rotation interpolation
-    var playerRotation: Rotation? = null
-        private set
     var lastRotation: Rotation? = null
         private set
-
-    // Tick-stable base for CHANGE_LOOK interpolation to prevent speed damping
-    private var changeLookBaseRotation: Rotation? = null
 
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
@@ -151,9 +146,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         rotationTargetHandler.clear()
         previousRotationTarget = null
         currentRotation = null
-        playerRotation = null
         lastRotation = null
-        changeLookBaseRotation = null
         actualServerRotation = Rotation.ZERO
         theoreticalServerRotation = Rotation.ZERO
     }
@@ -245,7 +238,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
-        val playerRotation = player.rotation.also { this.playerRotation = it }
+        val playerRotation = player.rotation
         val activeRotationTarget = this.activeRotationTarget ?: return
         val rotationTarget = this.rotationTarget
 
@@ -269,16 +262,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
                 currentRotation = null
                 previousRotationTarget = null
-                changeLookBaseRotation = null
             } else {
-                if (activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-                    // Capture the rotation from the end of the previous tick before it gets overwritten.
-                    // This ensures a stable interpolation base throughout the current tick.
-                    changeLookBaseRotation = currentRotation ?: playerRotation
-                } else {
-                    changeLookBaseRotation = null
-                }
-
                 currentRotation = rotation
                 previousRotationTarget = activeRotationTarget
 
@@ -296,13 +280,9 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
             val currentRotation = currentRotation ?: return
+            val lastRotation = lastRotation ?: currentRotation
 
-            // Use a tick-stable interpolation base to prevent speed damping.
-            // lastRotation is unsafe here because MouseRotationEvent assigns currentRotation,
-            // and the currentRotation setter updates lastRotation during the same tick.
-            val baseRotation = changeLookBaseRotation ?: lastRotation ?: currentRotation
-            val interpolated = baseRotation.interpolateTo(currentRotation, partialTicks)
-            player.setRotation(interpolated)
+            player.setRotation(lastRotation.interpolateTo(currentRotation, partialTicks))
         }
     }
 
@@ -317,13 +297,12 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         fun adjustRotation(rotation: Rotation): Rotation =
             RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
-        playerRotation?.let { rotation ->
-            playerRotation = adjustRotation(rotation)
-        }
+        val currentRotation = currentRotation ?: return@handler
+        val lastRotation = lastRotation ?: currentRotation
 
-        currentRotation?.let { rotation ->
-            currentRotation = adjustRotation(rotation)
-        }
+        // The setter would move lastRotation onto the old currentRotation, so shift both ends instead
+        this.currentRotation = adjustRotation(currentRotation)
+        this.lastRotation = adjustRotation(lastRotation)
     }
 
     /**
