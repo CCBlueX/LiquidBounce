@@ -40,6 +40,7 @@ import net.minecraft.world.level.block.WallBlock
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
+import kotlin.math.sign
 import kotlin.math.sqrt
 
 private const val SPRINT_FACTOR = 1.3f
@@ -89,6 +90,11 @@ internal class PlayerMotion(
     /** Entity.onGroundNoBlocks */
     private var groundWithoutBlocks = false
 
+    private var crouching = false
+    private var sneaking = false
+    private var heldX = 0.0
+    private var heldZ = 0.0
+
     val position: Vec3
         get() = Vec3(x, y, z)
 
@@ -106,6 +112,7 @@ internal class PlayerMotion(
         this.sprinting = sprinting
         this.jumpDelay = jumpDelay
         horizontalCollision = false
+        crouching = false
         peakY = y
         if (onGround) findSupport(0.0, 0.0) else hasSupport = false
         groundWithoutBlocks = onGround && !hasSupport
@@ -114,6 +121,7 @@ internal class PlayerMotion(
     /** Call on the render thread. */
     fun reset(player: Player) {
         reset(player.position(), player.deltaMovement, player.onGround(), player.isSprinting, player.noJumpDelay)
+        crouching = player.isCrouching
         player.mainSupportingBlockPos.ifPresent { support ->
             supportX = support.x
             supportY = support.y
@@ -142,6 +150,7 @@ internal class PlayerMotion(
         supportZ = other.supportZ
         hasSupport = other.hasSupport
         groundWithoutBlocks = other.groundWithoutBlocks
+        crouching = other.crouching
     }
 
     /** One tick with the [forward] and [strafe] keys (-1, 0 or 1, strafe positive to the left) relative to [yaw]. */
@@ -157,7 +166,11 @@ internal class PlayerMotion(
             motionY = 0.0
         }
 
-        sprinting = sprint && forward > 0 && !horizontalCollision && !sneak
+        // LocalPlayer.aiStep works out crouching before it reads the keys, so the sneak key slows down a tick later.
+        val slow = crouching
+        crouching = sneak
+        sneaking = sneak
+        sprinting = sprint && forward > 0 && !horizontalCollision && (sprinting || !slow)
 
         if (!jump) {
             jumpDelay = 0
@@ -166,7 +179,7 @@ internal class PlayerMotion(
             jumpDelay = JUMP_DELAY
         }
 
-        travel(yaw, forward, strafe, if (sneak) INPUT_FRICTION * SNEAK_SPEED else INPUT_FRICTION)
+        travel(yaw, forward, strafe, if (slow) INPUT_FRICTION * SNEAK_SPEED else INPUT_FRICTION)
     }
 
     private fun jumpFromGround(yaw: Float) {
@@ -230,7 +243,14 @@ internal class PlayerMotion(
         motionZ += vectorZ * cos + vectorX * sin
     }
 
-    private fun move(dx: Double, dy: Double, dz: Double) {
+    private fun move(wantedX: Double, dy: Double, wantedZ: Double) {
+        var dx = wantedX
+        var dz = wantedZ
+        if (sneaking && dy <= 0.0 && isAboveGround()) {
+            backOffFromEdge(dx, dz)
+            dx = heldX
+            dz = heldZ
+        }
         val movement = collide(dx, dy, dz)
         x += movement.x
         y += movement.y
@@ -267,6 +287,47 @@ internal class PlayerMotion(
         val speedFactor = speedFactor()
         motionX *= speedFactor
         motionZ *= speedFactor
+    }
+
+    /** Player.maybeBackOffFromEdge: how much of [dx] and [dz] keeps a sneaking player over the ground it is on. */
+    private fun backOffFromEdge(dx: Double, dz: Double) {
+        heldX = dx
+        heldZ = dz
+        while (heldX != 0.0 && canFall(heldX, 0.0, STEP_HEIGHT.toDouble())) {
+            heldX = shortened(heldX)
+        }
+        while (heldZ != 0.0 && canFall(0.0, heldZ, STEP_HEIGHT.toDouble())) {
+            heldZ = shortened(heldZ)
+        }
+        while (heldX != 0.0 && heldZ != 0.0 && canFall(heldX, heldZ, STEP_HEIGHT.toDouble())) {
+            heldX = shortened(heldX)
+            heldZ = shortened(heldZ)
+        }
+    }
+
+    private fun shortened(delta: Double) = if (abs(delta) <= EDGE_STEP) 0.0 else delta - sign(delta) * EDGE_STEP
+
+    private fun isAboveGround(): Boolean {
+        val fallen = peakY - y
+        return onGround || fallen < STEP_HEIGHT && !canFall(0.0, 0.0, STEP_HEIGHT - fallen)
+    }
+
+    /** Whether nothing is within [depth] below the player moved by [dx] and [dz]. */
+    private fun canFall(dx: Double, dz: Double, depth: Double): Boolean {
+        val minX = x - HALF_WIDTH + EDGE_INSET + dx
+        val minZ = z - HALF_WIDTH + EDGE_INSET + dz
+        val width = 2 * (HALF_WIDTH - EDGE_INSET)
+        val probe = AABB(minX, y - depth - EDGE_INSET, minZ, minX + width, y, minZ + width)
+        for (bx in Mth.floor(probe.minX)..Mth.floor(probe.maxX)) {
+            for (bz in Mth.floor(probe.minZ)..Mth.floor(probe.maxZ)) {
+                for (by in Mth.floor(probe.minY) - 1..Mth.floor(probe.maxY)) {
+                    if (colliders.intersects(bx, by, bz, probe)) {
+                        return false
+                    }
+                }
+            }
+        }
+        return true
     }
 
     private fun updateSupport(movement: Vec3) {
@@ -426,6 +487,8 @@ internal class PlayerMotion(
         private const val SLIME_STEP_BASE = 0.4
         private const val SLIME_STEP_FACTOR = 0.2
         private const val STEP_PROBE = 1.0E-5
+        private const val EDGE_STEP = 0.05
+        private const val EDGE_INSET = 1.0E-7
     }
 
 }

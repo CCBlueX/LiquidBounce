@@ -429,6 +429,11 @@ kotlin {
         freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
     }
 
+    // Game tests check internals, as unit tests do
+    target.compilations.named("gametest") {
+        associateWith(target.compilations.getByName("main"))
+    }
+
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.
     @OptIn(ExperimentalAbiValidation::class)
     abiValidation {
