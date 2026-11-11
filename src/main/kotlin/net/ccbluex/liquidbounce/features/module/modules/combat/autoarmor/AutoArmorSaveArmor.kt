@@ -103,7 +103,7 @@ object AutoArmorSaveArmor : ToggleableValueGroup(ModuleAutoArmor, "SaveArmor", t
             .findBestArmorPieces(durabilityThreshold = durabilityThreshold)
             .values
             .filterNotNull()
-            .filter { !it.isAlreadyEquipped && it.itemSlot.itemStack.isPlayerArmor }
+            .filter { ModuleAutoArmor.shouldEquip(it) && it.itemSlot.itemStack.isPlayerArmor }
 
         val hasAnyHotBarReplacement = booleanArrayOf(
             UseHotbar.enabled,
