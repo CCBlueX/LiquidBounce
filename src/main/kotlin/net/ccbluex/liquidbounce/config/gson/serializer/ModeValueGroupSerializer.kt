@@ -63,6 +63,7 @@ class ModeValueGroupSerializer private constructor(
         obj.add("choices", choices)
         if (withValueType) {
             obj.add("valueType", context.serialize(src.valueType))
+            obj.addProperty("defaultActive", src.defaultMode.tag)
         }
 
         return obj

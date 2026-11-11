@@ -60,7 +60,7 @@ val VALUE_NAME_ORDER: Comparator<in Value<*>> = compareBy(String.CASE_INSENSITIV
 open class Value<T : Any>(
     @SerializedName("name") val name: String,
     @Exclude @ProtocolExclude val aliases: List<String> = emptyList(),
-    @Exclude @ProtocolExclude private var defaultValue: T,
+    defaultValue: T,
     @Exclude val valueType: ValueType,
 
     /**
@@ -71,6 +71,17 @@ open class Value<T : Any>(
 
     @SerializedName("value")
     internal var inner: T = defaultValue
+
+    @Exclude
+    @ProtocolExclude
+    private val initialValue: T = defaultValue
+
+    /**
+     * The default as the GUI gets it. A collection is edited in place, so this is a copy of it.
+     */
+    @Exclude
+    @SerializedName("defaultValue")
+    private val defaultSnapshot: Any = (defaultValue as? Collection<*>)?.toList() ?: defaultValue
 
     internal val loweredName
         get() = name.lowercase()
@@ -116,7 +127,7 @@ open class Value<T : Any>(
         private set
 
     /**
-     * If true, value will always keep [inner] equals [defaultValue].
+     * If true, value will always keep [inner] equals [initialValue].
      */
     @Exclude
     @ProtocolExclude
@@ -255,7 +266,7 @@ open class Value<T : Any>(
      * Restore value to default value
      */
     open fun restore() {
-        set(defaultValue)
+        set(initialValue)
     }
 
     fun type() = valueType
