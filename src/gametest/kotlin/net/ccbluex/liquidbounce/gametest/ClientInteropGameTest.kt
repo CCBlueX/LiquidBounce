@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.gametest
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.features.account.AccountManager
-import net.ccbluex.liquidbounce.features.account.CrackedAccount
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.client.ClientManager
@@ -34,7 +32,6 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.net.http.WebSocket
-import java.util.Properties
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -52,21 +49,13 @@ class ClientInteropGameTest : FabricClientGameTest {
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
 
-        val properties = Properties().apply {
-            setProperty("online-mode", "false")
-            setProperty("white-list", "false")
-            setProperty("max-players", "2")
-        }
-        context.worldBuilder().createServer(properties).use { server ->
+        context.createMultiClientServer().use { server ->
             server.connect().use { connection ->
                 connection.waitForChunksDownload()
-                val address = "localhost:${server.computeOnServer<Int, RuntimeException> { it.port }}"
+                val address = server.address
 
                 val main = ClientManager.main
-                val second = context.fromClient {
-                    val account = CrackedAccount("Second", false).also { it.refresh() }
-                    ClientManager.open(AccountManager.authenticate(account)).also { ClientManager.connect(it, address) }
-                }
+                val second = context.openClient("Second", address)
                 context.waitFor({ second.inGame }, JOIN_TIMEOUT_TICKS)
 
                 val interop = Interop(context)

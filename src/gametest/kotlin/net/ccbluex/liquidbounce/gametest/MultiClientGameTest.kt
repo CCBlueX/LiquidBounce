@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.liquidbounce.features.account.AccountManager
-import net.ccbluex.liquidbounce.features.account.CrackedAccount
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.client.ClientManager
@@ -32,7 +30,6 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestDedicatedServerContext
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.phys.Vec3
-import java.util.Properties
 
 private const val JOIN_TIMEOUT_TICKS = 30 * 20
 private const val WALK_TICKS = 60
@@ -51,15 +48,10 @@ class MultiClientGameTest : FabricClientGameTest {
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
 
-        val properties = Properties().apply {
-            setProperty("online-mode", "false")
-            setProperty("white-list", "false")
-            setProperty("max-players", "8")
-        }
-        context.worldBuilder().createServer(properties).use { server ->
+        context.createMultiClientServer().use { server ->
             server.connect().use { connection ->
                 connection.waitForChunksDownload()
-                val address = "localhost:${server.fromServer { it.port }}"
+                val address = server.address
 
                 val main = ClientManager.main
                 val second = context.openClient("Second", address)
@@ -171,10 +163,6 @@ private fun ModuleSprint.mode() = containedValues.first { it.name == "Mode" }
 
 private fun ClientGameTestContext.name(client: Client): String = fromClient { client.user.name }
 
-private fun ClientGameTestContext.openClient(name: String, address: String): Client = fromClient {
-    val account = CrackedAccount(name, false).also { it.refresh() }
-    ClientManager.open(AccountManager.authenticate(account)).also { ClientManager.connect(it, address) }
-}
 
 private fun <T> TestDedicatedServerContext.fromServer(block: (MinecraftServer) -> T): T =
     computeOnServer<T, RuntimeException> { block(it) }

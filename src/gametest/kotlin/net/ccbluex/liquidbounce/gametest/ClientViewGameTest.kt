@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.liquidbounce.features.account.AccountManager
-import net.ccbluex.liquidbounce.features.account.CrackedAccount
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
@@ -32,7 +30,6 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.Properties
 import javax.imageio.ImageIO
 
 private const val JOIN_TIMEOUT_TICKS = 30 * 20
@@ -46,16 +43,11 @@ class ClientViewGameTest : FabricClientGameTest {
     override fun runTest(context: ClientGameTestContext) {
         context.waitForClient()
 
-        val properties = Properties().apply {
-            setProperty("online-mode", "false")
-            setProperty("white-list", "false")
-            setProperty("max-players", "8")
-        }
-        context.worldBuilder().createServer(properties).use { server ->
+        context.createMultiClientServer().use { server ->
             server.connect().use { connection ->
                 connection.waitForChunksDownload()
                 val y = server.groundY()
-                val address = "localhost:${server.computeOnServer<Int, RuntimeException> { it.port }}"
+                val address = server.address
 
                 server.runCommand("time set noon")
                 server.runCommand("fill 20 $y -6 20 ${y + 12} 6 red_concrete")
@@ -180,7 +172,3 @@ private fun viewRequest(id: Int): HttpRequest = HttpRequest.newBuilder()
     .header("Accept-Encoding", "gzip")
     .build()
 
-private fun ClientGameTestContext.openClient(name: String, address: String): Client = fromClient {
-    val account = CrackedAccount(name, false).also { it.refresh() }
-    ClientManager.open(AccountManager.authenticate(account)).also { ClientManager.connect(it, address) }
-}
