@@ -19,29 +19,72 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.gametest.harness.Anticheat
+import net.ccbluex.gametest.harness.GameTestScope
+import net.ccbluex.gametest.harness.action.awaitServer
+import net.ccbluex.gametest.harness.connection.GameTestEnvironment
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.health
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.monster.zombie.Husk
+import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
 /** `-PgameTestNavigation=false` skips the navigation game tests, which take minutes. */
-val navigationGameTests = System.getProperty("net.ccbluex.liquidbounce.gametest.navigation") != "false"
+private val navigationGameTests = System.getProperty("net.ccbluex.liquidbounce.gametest.navigation") != "false"
 
-private const val WAIT_TICKS = 200
-private const val SETTLE_TICKS = 5
+/** The navigation game tests, one entrypoint so that they can be skipped together. */
+class NavigationGameTests : FabricClientGameTest {
+
+    /**
+     * The teleport engine moves the player further per packet than walking could. Every anticheat catches that,
+     * Paper's own checks are what it is made for.
+     */
+    private val paperOnly = listOf(
+        TeleportCommandGameTest(),
+        TeleportRouteGameTest(),
+        TeleportReachGameTest(),
+    )
+
+    private val tests = listOf(
+        WalkNavigationGameTest(),
+        AutoWalkGameTest(),
+        AutoWalkStagesGameTest(),
+        WalkParkourGameTest(),
+        ParkourAssistGameTest(),
+        WalkSneakGameTest(),
+        WalkSwimGameTest(),
+        WalkBlockedGameTest(),
+        PlayerMotionGameTest(),
+        FlightNavigationGameTest(),
+        RideNavigationGameTest(),
+        ElytraTravelGameTest(),
+    )
+
+    override fun runTest(context: ClientGameTestContext) {
+        if (!navigationGameTests) {
+            return
+        }
+        // Server game tests report at the end of the run; a local one that fails must not keep the others from it
+        val run = if (GameTestEnvironment.anticheat == Anticheat.VANILLA) paperOnly + tests else tests
+        val failures = run.mapNotNull { test -> runCatching { test.runTest(context) }.exceptionOrNull() }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
+    }
+
+}
+
 private const val NEAR_SQR = 1.0E-4
 
 /** Walks to [goal] while [active]; make it on the client thread. */
@@ -108,29 +151,19 @@ internal fun Vec3.arrivedAt(goal: Vec3, radius: Double) =
 
 internal fun Vec3.near(other: Vec3, toleranceSqr: Double = NEAR_SQR) = distanceToSqr(other) < toleranceSqr
 
-/** Teleports the player to [position], facing [yaw] if given, and waits until the client is there. */
-internal fun moveTo(
-    context: ClientGameTestContext,
-    server: TestServerContext,
-    position: Vec3,
-    yaw: Float? = null,
-    settleTicks: Int = SETTLE_TICKS,
-    toleranceSqr: Double = NEAR_SQR,
-) {
-    val rotation = yaw?.let { " $it 0" }.orEmpty()
-    server.runCommand("tp @a ${position.x} ${position.y} ${position.z}$rotation")
-    awaitPosition(context, position, settleTicks, toleranceSqr)
+/** Teleports the player to [position], facing [yaw], and waits until it stands there. */
+internal fun GameTestScope.moveTo(position: Vec3, yaw: Float = 0f) = travel(BlockPos.containing(position), yaw)
+
+/** Runs [block] and fails if it cost the player health on the server. */
+internal inline fun GameTestScope.unhurt(what: String, block: () -> Unit) {
+    val before = health()
+    block()
+    val after = health()
+    check(after >= before) { "$what: hurt the player from $before to $after" }
 }
 
-internal fun awaitPosition(
-    context: ClientGameTestContext,
-    position: Vec3,
-    settleTicks: Int = SETTLE_TICKS,
-    toleranceSqr: Double = NEAR_SQR,
-) {
-    context.waitFor({ it.player?.position()?.near(position, toleranceSqr) == true }, WAIT_TICKS)
-    context.waitTicks(settleTicks)
-}
+internal fun GameTestScope.awaitHuskHurt(timeout: Int) =
+    awaitServer("entity @e[type=minecraft:husk,nbt=!{Health:20.0f}]", timeout)
 
 /** Waits up to [ticks] for [condition] and fails with [failure] and where the player stopped. */
 internal inline fun await(context: ClientGameTestContext, ticks: Int, failure: String, condition: () -> Boolean) {
@@ -149,13 +182,6 @@ internal fun awaitPlayer(
     failure: String,
     condition: (LocalPlayer) -> Boolean,
 ) = await(context, ticks, failure) { context.fromClient { condition(checkNotNull(it.player)) } }
-
-internal inline fun unhurt(server: TestServerContext, what: String, block: () -> Unit) {
-    val health = server.player { it.health }
-    block()
-    val after = server.player { it.health }
-    check(after >= health) { "AutoWalk hurt the player $what, from $health to $after" }
-}
 
 /** Watches a run for [timeout] ticks until [arrived] or a fall below [lowest]; why it failed, or null. */
 internal fun runCourse(
@@ -210,21 +236,3 @@ internal fun goto(
     error("Did not get $what to $goal within $ticks ticks, stopped at $position")
 }
 
-/** Runs [block], then turns [modules] off and puts their settings back. */
-internal inline fun ClientGameTestContext.restoring(vararg modules: ClientModule, block: () -> Unit) {
-    val saved = fromClient { modules.map { ConfigSystem.serializeValueGroup(it) } }
-    try {
-        block()
-    } finally {
-        onClient {
-            for ((module, config) in modules.zip(saved)) {
-                module.enabled = false
-                ConfigSystem.deserializeValueGroup(module, config)
-            }
-        }
-    }
-}
-
-internal fun TestServerContext.huskHurt(): Boolean = computeOnServer<Boolean, RuntimeException> { server ->
-    server.overworld().allEntities.any { it is Husk && it.health < it.maxHealth }
-}

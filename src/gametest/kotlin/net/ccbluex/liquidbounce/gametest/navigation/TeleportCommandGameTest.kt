@@ -22,156 +22,147 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import net.ccbluex.gametest.harness.GameTestScope
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTeleportReach
+import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.groundY
+import net.ccbluex.liquidbounce.gametest.harness.LiquidBounceGameTest
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.player
-import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.suggest
-import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
+private const val EPSILON = 1.0E-3
+private const val ARRIVAL_TICKS = 20
+
 /** The teleport commands work without the retired Teleport module, and old configs still load. */
-class TeleportCommandGameTest : FabricClientGameTest {
+class TeleportCommandGameTest : LiquidBounceGameTest({
+    check(context.fromClient { ModuleManager["Teleport"] == null }) { "The Teleport module is still registered" }
 
-    override fun runTest(context: ClientGameTestContext) {
-        if (!navigationGameTests) {
-            return
-        }
-        context.waitForClient()
-        check(context.fromClient { ModuleManager["Teleport"] == null }) { "The Teleport module is still registered" }
+    val savedTeleport = context.fromClient { ConfigSystem.serializeValueGroup(GlobalSettingsTeleport) }
+    val savedTpAura = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTpAura) }
 
-        val savedTeleport = context.fromClient { ConfigSystem.serializeValueGroup(GlobalSettingsTeleport) }
-        val savedTpAura = context.fromClient { ConfigSystem.serializeValueGroup(ModuleTpAura) }
+    try {
+        assertStaleConfigLoads(context)
 
-        try {
-            assertStaleConfigLoads(context)
+        val groundY = origin.y.toDouble()
+        run("gamemode creative $playerName")
+        awaitClient("creative mode") { checkNotNull(it.player).abilities.mayfly }
+        moveTo(Vec3(8.5, groundY, 8.5))
 
-            context.worldBuilder().create().use { world ->
-                val groundY = world.server.groundY().toDouble()
-                world.server.runCommand("gamemode creative @a")
-                world.server.runCommand("tp @a 8.5 $groundY 8.5")
-                context.waitFor({ client -> client.player?.position()?.near(Vec3(8.5, groundY, 8.5)) == true }, 200)
-
-                checkTeleport(context, world.server, Vec3(10.5, groundY, 12.5))
-                checkHighTeleport(context, groundY + 5.0)
-                checkVclip(context)
-                checkPlayerTeleport(context, groundY)
-            }
-        } finally {
-            context.onClient {
-                ConfigSystem.deserializeValueGroup(GlobalSettingsTeleport, savedTeleport)
-                ConfigSystem.deserializeValueGroup(ModuleTpAura, savedTpAura)
-            }
+        checkTeleport(Vec3(10.5, groundY, 12.5))
+        checkHighTeleport(groundY + 5.0)
+        checkVclip()
+        checkPlayerTeleport(groundY)
+    } finally {
+        context.onClient {
+            ConfigSystem.deserializeValueGroup(GlobalSettingsTeleport, savedTeleport)
+            ConfigSystem.deserializeValueGroup(ModuleTpAura, savedTpAura)
         }
     }
+})
 
-    private fun checkTeleport(context: ClientGameTestContext, server: TestServerContext, target: Vec3) {
-        context.command("teleport ${target.x} ${target.y} ${target.z}")
-        context.waitFor({ client -> client.player?.position()?.near(target) == true }, 20)
-        context.waitTicks(10)
-        check(context.playerPosition().near(target)) { "The client was set back after teleporting" }
-        check(server.player { it.position() }.near(target)) { "The server did not accept the teleport" }
-
-        context.command("tp ~3 ~ ~")
-        val relative = target.add(3.0, 0.0, 0.0)
-        context.waitFor({ client -> client.player?.position()?.near(relative) == true }, 20)
+private fun GameTestScope.checkTeleport(target: Vec3) {
+    context.command("teleport ${target.x} ${target.y} ${target.z}")
+    awaitClient("the teleport", ARRIVAL_TICKS) { it.player?.position()?.near(target) == true }
+    awaitServerAt(target)
+    check(context.fromClient { checkNotNull(it.player).position() }.near(target)) {
+        "The client was set back after teleporting"
     }
 
-    private fun checkHighTeleport(context: ClientGameTestContext, highY: Double) {
-        val highTpY = context.fromClient { mc ->
-            val amount = GlobalSettingsTeleport.containedValues.first { it.name == "HighTPAmount" }
-            amount.setByString(highY.toString())
-            CommandManager.execute("teleport 9.5 ~ 9.5 true")
-            checkNotNull(mc.player).y
-        }
-        check(abs(highTpY - highY) < EPSILON) { "HighTP moved to $highTpY instead of $highY" }
+    context.command("tp ~3 ~ ~")
+    val relative = target.add(3.0, 0.0, 0.0)
+    awaitClient("the relative teleport", ARRIVAL_TICKS) { it.player?.position()?.near(relative) == true }
+    awaitServerAt(relative)
+}
+
+private fun GameTestScope.checkHighTeleport(highY: Double) {
+    val highTpY = context.fromClient { mc ->
+        val amount = GlobalSettingsTeleport.containedValues.first { it.name == "HighTPAmount" }
+        amount.setByString(highY.toString())
+        CommandManager.execute("teleport 9.5 ~ 9.5 true")
+        checkNotNull(mc.player).y
     }
+    check(abs(highTpY - highY) < EPSILON) { "HighTP moved to $highTpY instead of $highY" }
+}
 
-    private fun checkVclip(context: ClientGameTestContext) {
-        val (before, after) = context.fromClient { mc ->
-            val player = checkNotNull(mc.player)
-            val before = player.y
-            CommandManager.execute("vclip by 2")
-            before to player.y
-        }
-        check(abs(after - before - 2.0) < EPSILON) { "vclip moved from $before to $after" }
+private fun GameTestScope.checkVclip() {
+    val (before, after) = context.fromClient { mc ->
+        val player = checkNotNull(mc.player)
+        val before = player.y
+        CommandManager.execute("vclip by 2")
+        before to player.y
     }
+    check(abs(after - before - 2.0) < EPSILON) { "vclip moved from $before to $after" }
+}
 
-    private fun assertStaleConfigLoads(context: ClientGameTestContext) = context.onClient {
-        val tpAuraBefore = ConfigSystem.serializeValueGroup(ModuleTpAura).toString()
-        val clickTpBefore = ConfigSystem.serializeValueGroup(ModuleTeleportReach).toString()
-        val enabledBefore = ModuleManager.associate { it.name to it.enabled }
+/** Players in the world are found by name even when the tab list does not show them, such as a fake player. */
+private fun GameTestScope.checkPlayerTeleport(groundY: Double) {
+    val twin = Vec3(14.5, groundY, 6.5)
+    context.command("teleport ${twin.x} ${twin.y} ${twin.z}")
+    awaitServerAt(twin)
+    context.command("fakeplayer spawn Twin")
+    context.command("teleport 8.5 $groundY 8.5")
+    awaitServerAt(Vec3(8.5, groundY, 8.5))
+    try {
+        check(context.suggest(".playerteleport Tw").contains("Twin")) { "The fake player was not suggested" }
+        context.command("playerteleport Twin")
+        awaitClient("the teleport to the fake player", ARRIVAL_TICKS) { it.player?.position()?.near(twin) == true }
+        awaitServerAt(twin)
+    } finally {
+        context.command("fakeplayer clear")
+    }
+}
 
-        val json = ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig)
-        val modules = json.getAsJsonArray("value")
-        modules.valuesOf(ModuleTpAura.name).apply {
-            add(JsonObject().apply {
-                addProperty("name", "Mode")
-                addProperty("active", "AStar")
-                add("choices", JsonObject())
-                add("value", JsonArray())
-            })
-            add(namedValue("AttackRange", JsonPrimitive(4.2)))
-        }
-        modules.valuesOf(ModuleTeleportReach.name).add(namedValue("LagAfter", JsonPrimitive(40)))
-        modules.add(JsonObject().apply {
-            addProperty("name", "Teleport")
-            add("value", JsonArray().apply { add(namedValue("Enabled", JsonPrimitive(true))) })
+private fun Vec3.near(other: Vec3): Boolean = near(other, EPSILON * EPSILON)
+
+private fun assertStaleConfigLoads(context: ClientGameTestContext) = context.onClient {
+    val tpAuraBefore = ConfigSystem.serializeValueGroup(ModuleTpAura).toString()
+    val clickTpBefore = ConfigSystem.serializeValueGroup(ModuleTeleportReach).toString()
+    val enabledBefore = ModuleManager.associate { it.name to it.enabled }
+
+    val json = ConfigSystem.serializeValueGroup(ModuleManager.modulesConfig)
+    val modules = json.getAsJsonArray("value")
+    modules.valuesOf(ModuleTpAura.name).apply {
+        add(JsonObject().apply {
+            addProperty("name", "Mode")
+            addProperty("active", "AStar")
+            add("choices", JsonObject())
+            add("value", JsonArray())
         })
-
-        ConfigSystem.deserializeValueGroup(ModuleManager.modulesConfig, json)
-
-        check(ModuleManager["Teleport"] == null) { "Loading a stale config registered a Teleport module" }
-        check(ConfigSystem.serializeValueGroup(ModuleTpAura).toString() == tpAuraBefore) {
-            "Stale TpAura settings changed the current ones"
-        }
-        check(ConfigSystem.serializeValueGroup(ModuleTeleportReach).toString() == clickTpBefore) {
-            "Stale ClickTp settings changed the current ones"
-        }
-        check(ModuleManager.associate { it.name to it.enabled } == enabledBefore) {
-            "Loading a stale config changed other modules"
-        }
+        add(namedValue("AttackRange", JsonPrimitive(4.2)))
     }
+    modules.valuesOf(ModuleTeleportReach.name).add(namedValue("LagAfter", JsonPrimitive(40)))
+    modules.add(JsonObject().apply {
+        addProperty("name", "Teleport")
+        add("value", JsonArray().apply { add(namedValue("Enabled", JsonPrimitive(true))) })
+    })
 
-    /** Players in the world are found by name even when the tab list does not show them, such as a fake player. */
-    private fun checkPlayerTeleport(context: ClientGameTestContext, groundY: Double) {
-        val twin = Vec3(14.5, groundY, 6.5)
-        context.command("teleport ${twin.x} ${twin.y} ${twin.z}")
-        context.command("fakeplayer spawn Twin")
-        context.command("teleport 8.5 $groundY 8.5")
-        try {
-            check(context.suggest(".playerteleport Tw").contains("Twin")) { "The fake player was not suggested" }
-            context.command("playerteleport Twin")
-            context.waitFor({ client -> client.player?.position()?.near(twin) == true }, 20)
-        } finally {
-            context.command("fakeplayer clear")
-        }
+    ConfigSystem.deserializeValueGroup(ModuleManager.modulesConfig, json)
+
+    check(ModuleManager["Teleport"] == null) { "Loading a stale config registered a Teleport module" }
+    check(ConfigSystem.serializeValueGroup(ModuleTpAura).toString() == tpAuraBefore) {
+        "Stale TpAura settings changed the current ones"
     }
-
-    private fun JsonArray.valuesOf(module: String) =
-        first { it.asJsonObject["name"].asString == module }.asJsonObject.getAsJsonArray("value")
-
-    private fun namedValue(name: String, value: JsonPrimitive) = JsonObject().apply {
-        addProperty("name", name)
-        add("value", value)
+    check(ConfigSystem.serializeValueGroup(ModuleTeleportReach).toString() == clickTpBefore) {
+        "Stale ClickTp settings changed the current ones"
     }
-
-    private fun Vec3.near(other: Vec3): Boolean = near(other, EPSILON * EPSILON)
-
-    private companion object {
-        const val EPSILON = 1.0E-3
+    check(ModuleManager.associate { it.name to it.enabled } == enabledBefore) {
+        "Loading a stale config changed other modules"
     }
+}
 
+private fun JsonArray.valuesOf(module: String) =
+    first { it.asJsonObject["name"].asString == module }.asJsonObject.getAsJsonArray("value")
+
+private fun namedValue(name: String, value: JsonPrimitive) = JsonObject().apply {
+    addProperty("name", name)
+    add("value", value)
 }

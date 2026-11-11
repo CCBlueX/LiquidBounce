@@ -243,12 +243,19 @@ jobs:
           sarif_file: build/reports/detekt/detekt.sarif
 
   gametest:
+    name: gametest (${{ matrix.run }})
     runs-on: ubuntu-latest
     needs: extract-versions
-    # A normal run takes about 5 minutes; the Gradle task gives up after 10
-    timeout-minutes: 20
+    # A run with the navigation tests takes about 15 minutes; the Gradle task gives up after 30
+    timeout-minutes: 40
     # nextgen fills the library cache that pull requests read
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/nextgen'
+    strategy:
+      fail-fast: false
+      matrix:
+        # `local` runs the client-only tests, the others the server tests against this anticheat:
+        # https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md
+        run: [local, vanilla, grim]
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v7
@@ -310,4 +317,19 @@ jobs:
           SDL_VIDEO_FORCE_EGL: 1
           # Pull requests that leave navigation alone skip its game tests, which take minutes
           NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
+          # Bots join with a LiquidBounce account token; forks get none and skip the server tests
+          GAMETEST_API_TOKEN: ${{ matrix.run != 'local' && secrets.API_TOKEN || '' }}
+          GAMETEST_SERVER_ANTICHEAT: ${{ matrix.run != 'local' && matrix.run || '' }}
         run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"
+      - name: Upload game test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gametest-${{ matrix.run }}
+          # The client's log, its screenshots and what the game test server told each server test
+          path: |
+            build/run/clientGameTest/logs/latest.log
+            build/run/clientGameTest/crash-reports/
+            build/run/clientGameTest/screenshots/
+            build/run/clientGameTest/gametest/
+          if-no-files-found: ignore
