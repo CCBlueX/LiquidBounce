@@ -317,13 +317,15 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         val squaredNormalRange = range.interactionRange.sq()
 
         // Find a suitable target
-        val target = targetTracker.targets()
+        val enemies = targetTracker.targets()
             .filter { entity -> entity.squaredBoxedDistanceTo(player) <= squaredMaxRange }
             .sortedBy { entity -> if (entity.squaredBoxedDistanceTo(player) <= squaredNormalRange) 0 else 1 }
-            .firstOrNull { entity -> processTarget(entity, maximumRange, range.interactionThroughWallsRange) }
+        val aim = targetTracker.select(enemies) { entity ->
+            findRotation(entity, maximumRange, range.interactionThroughWallsRange)?.let { entity to it.rotation }
+        }
 
-        if (target != null) {
-            targetTracker.target = target
+        if (aim != null) {
+            processTarget(aim.first, aim.second)
         } else if (KillAuraFightBot.enabled) {
             KillAuraFightBot.updateTarget()
 
@@ -335,18 +337,10 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleKillAura
             )
-        } else {
-            targetTracker.reset()
         }
     }
 
-    @Suppress("ReturnCount")
-    private fun processTarget(
-        entity: LivingEntity,
-        range: Float,
-        wallsRange: Float
-    ): Boolean {
-        val (rotation, _) = findRotation(entity, range, wallsRange) ?: return false
+    private fun processTarget(entity: LivingEntity, rotation: Rotation) {
         val ticks = rotations.calculateTicks(rotation)
         debugParameter("Rotation Ticks") { ticks }
 
@@ -355,14 +349,14 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             // If our click scheduler is not going to click the moment we reach the target,
             // we should not start aiming towards the target just yet.
             SNAP -> if (!clicker.willClickAt(ticks.coerceAtLeast(1))) {
-                return true
+                return
             }
 
             // [ON_TICK] will always instantly aim onto the target on attack, however, if
             // our rotation is unable to be ready in time, we can at least start aiming towards
             // the target.
             ON_TICK -> if (ticks <= 1) {
-                return true
+                return
             }
 
             else -> {
@@ -379,7 +373,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleKillAura
         )
-        return true
     }
 
     /**

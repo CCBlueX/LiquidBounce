@@ -210,7 +210,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
-        for (entity in targets()) {
+        return targetTracker.select(targets()) { entity ->
             if (lazyRotation) {
                 val currentRotation = player.rotation
                 val currentHit = isLookingAtEntity(
@@ -222,8 +222,7 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                 )
 
                 if (currentHit != null) {
-                    targetTracker.target = entity as? LivingEntity
-                    return entity to RotationWithVector(currentRotation, currentHit.location)
+                    return@select entity to RotationWithVector(currentRotation, currentHit.location)
                 }
             }
 
@@ -240,14 +239,10 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
                 range = targetTracker.maxRange.toDouble(),
                 wallsRange = wallRange.toDouble(),
                 rotationPreference = rotationPreference
-            ) ?: continue
+            ) ?: return@select null
 
-            targetTracker.target = entity as? LivingEntity
-            return entity to rotation
+            entity to rotation
         }
-
-        targetTracker.reset()
-        return null
     }
 
     private fun targets(): List<Entity> {
