@@ -42,8 +42,8 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
 import net.ccbluex.liquidbounce.utils.navigation.teleport.Teleport
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.navigation.teleport.WaypointSearch
-import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.monster.zombie.Husk

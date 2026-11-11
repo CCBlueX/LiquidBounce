@@ -17,11 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.navigation.terrain
+package net.ccbluex.liquidbounce.utils.world
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.longs.LongPredicate
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent
@@ -30,118 +29,13 @@ import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.multiplayer.ClientLevel
-import net.minecraft.core.BlockPos
 import net.minecraft.core.SectionPos
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunkSection
 import net.minecraft.world.level.chunk.PalettedContainer
 import net.minecraft.world.level.chunk.status.ChunkStatus
-import net.minecraft.world.level.material.FluidState
-import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 import kotlin.math.min
-
-/** Block states copied from the client world, safe to read from any thread. */
-class WorldSnapshot internal constructor(
-    private val minY: Int,
-    private val height: Int,
-    private val sections: Long2ObjectOpenHashMap<PalettedContainer<BlockState>?>,
-    private val borderMinX: Double,
-    private val borderMaxX: Double,
-    private val borderMinZ: Double,
-    private val borderMaxZ: Double,
-) : NavigationWorld {
-
-    override fun isKnown(x: Int, y: Int, z: Int) =
-        y >= minY && y < minY + height && sections.containsKey(sectionKey(x, y, z))
-
-    override fun isInsideBorder(x: Double, z: Double) =
-        x >= borderMinX && x < borderMaxX && z >= borderMinZ && z < borderMaxZ
-
-    override fun getBlockState(pos: BlockPos): BlockState {
-        if (pos.y < minY || pos.y >= minY + height) {
-            return VOID_AIR
-        }
-
-        val key = sectionKey(pos.x, pos.y, pos.z)
-        val states = sections.get(key) ?: return if (sections.containsKey(key)) AIR else VOID_AIR
-        return states.get(pos.x and 15, pos.y and 15, pos.z and 15)
-    }
-
-    override fun getFluidState(pos: BlockPos): FluidState = getBlockState(pos).fluidState
-
-    override fun getBlockEntity(pos: BlockPos): BlockEntity? = null
-
-    override fun getHeight() = height
-
-    override fun getMinY() = minY
-
-    private companion object {
-        val AIR: BlockState = Blocks.AIR.defaultBlockState()
-        val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
-
-        fun sectionKey(x: Int, y: Int, z: Int) = SectionPos.asLong(x shr 4, y shr 4, z shr 4)
-    }
-
-}
-
-data class NavigationRegion(
-    val minX: Int,
-    val minY: Int,
-    val minZ: Int,
-    val maxX: Int,
-    val maxY: Int,
-    val maxZ: Int,
-) {
-
-    operator fun contains(pos: BlockPos) =
-        pos.x in minX..maxX && pos.y in minY..maxY && pos.z in minZ..maxZ
-
-    companion object {
-
-        /**
-         * Every block a route of at most [maxLength] from [start] to one of [ends] can pass, at most
-         * [verticalMargin] blocks above or below them.
-         */
-        fun around(start: Vec3, ends: Collection<Vec3>, maxLength: Double, verticalMargin: Int): NavigationRegion {
-            var minX = start.x
-            var minY = start.y
-            var minZ = start.z
-            var maxX = start.x
-            var maxY = start.y
-            var maxZ = start.z
-            var closest = Double.MAX_VALUE
-
-            for (end in ends) {
-                minX = min(minX, end.x)
-                minY = min(minY, end.y)
-                minZ = min(minZ, end.z)
-                maxX = max(maxX, end.x)
-                maxY = max(maxY, end.y)
-                maxZ = max(maxZ, end.z)
-                closest = min(closest, start.distanceTo(end))
-            }
-
-            val detour = if (closest == Double.MAX_VALUE) maxLength else max(0.0, (maxLength - closest) / 2.0)
-            val horizontal = detour + EDGE
-            val vertical = min(detour, verticalMargin.toDouble()) + EDGE
-
-            return NavigationRegion(
-                (minX - horizontal).toInt() - 1,
-                (minY - vertical).toInt() - 1,
-                (minZ - horizontal).toInt() - 1,
-                (maxX + horizontal).toInt() + 1,
-                (maxY + vertical).toInt() + 1,
-                (maxZ + horizontal).toInt() + 1,
-            )
-        }
-
-        private const val EDGE = 3.0
-    }
-
-}
 
 /** Copies of client chunk sections for route searches, kept until the section changes. */
 object SectionCache : EventListener {
@@ -151,7 +45,7 @@ object SectionCache : EventListener {
     private val copies = Long2ObjectLinkedOpenHashMap<PalettedContainer<BlockState>?>()
 
     /** Call on the render thread. */
-    fun capture(level: ClientLevel, region: NavigationRegion): WorldSnapshot {
+    fun capture(level: ClientLevel, region: BlockRegion): WorldSnapshot {
         val minSectionY = max(region.minY, level.minY) shr 4
         val maxSectionY = min(region.maxY, level.maxY) shr 4
         val sections = Long2ObjectOpenHashMap<PalettedContainer<BlockState>?>()

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.glide
 
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkSettings
+import net.ccbluex.liquidbounce.utils.navigation.Settings
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
@@ -73,4 +73,4 @@ class Abilities(
 
 }
 
-internal fun WalkSettings.captureGlide(): Abilities? = if (allowElytra) Abilities.capture(elytraRockets) else null
+internal fun Settings.captureGlide(): Abilities? = if (allowElytra) Abilities.capture(elytraRockets) else null

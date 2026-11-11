@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.flat
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.STONE
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.flat
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult

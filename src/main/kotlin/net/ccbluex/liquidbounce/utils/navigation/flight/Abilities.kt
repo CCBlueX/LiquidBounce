@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkSettings
+import net.ccbluex.liquidbounce.utils.navigation.Settings
 import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 
 /** Whether the keys build up speed that fades, as in creative flight, or set it right away, as Fly's Vanilla mode. */
@@ -72,4 +72,4 @@ class Abilities(
 
 }
 
-internal fun WalkSettings.captureFlight(): Abilities? = if (allowFly) Abilities.capture() else null
+internal fun Settings.captureFlight(): Abilities? = if (allowFly) Abilities.capture() else null

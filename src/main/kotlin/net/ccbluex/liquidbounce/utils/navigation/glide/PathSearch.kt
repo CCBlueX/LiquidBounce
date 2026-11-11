@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.BlockRegion
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
 import net.minecraft.world.entity.LivingEntity.BASE_JUMP_POWER
@@ -190,9 +190,9 @@ class PathSearch(
         private const val HORIZONTAL_MARGIN = 48
 
         /** The blocks a glide can pass: around both ends, with room to circle down to the goal and to climb above. */
-        fun region(start: Vec3, goal: Vec3): NavigationRegion {
+        fun region(start: Vec3, goal: Vec3): BlockRegion {
             val margin = min(start.horizontalDistanceTo(goal), HORIZONTAL_MARGIN.toDouble()).toInt() + 2
-            return NavigationRegion(
+            return BlockRegion(
                 Mth.floor(min(start.x, goal.x)) - margin,
                 Mth.floor(min(start.y, goal.y)) - 2,
                 Mth.floor(min(start.z, goal.z)) - margin,

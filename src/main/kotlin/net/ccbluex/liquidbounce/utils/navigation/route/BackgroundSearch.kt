@@ -28,10 +28,10 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
-import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.BlockRegion
+import net.ccbluex.liquidbounce.utils.world.SectionCache
+import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.CompletableFuture
@@ -42,7 +42,7 @@ import java.util.concurrent.CompletableFuture
  */
 class BackgroundSearch<T>(
     private val owner: EventListener,
-    private val newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
+    private val newTerrain: (WorldBlocks) -> Terrain = ::Terrain,
 ) : EventListener {
 
     private var job: Job<T>? = null
@@ -57,7 +57,7 @@ class BackgroundSearch<T>(
         private set
 
     /** Searches with [newSearch] over [region], unless a search for an equal [key] is running or done. */
-    fun request(key: Any, region: NavigationRegion, newSearch: (Terrain) -> RouteSearch<T>) {
+    fun request(key: Any, region: BlockRegion, newSearch: (Terrain) -> RouteSearch<T>) {
         if (job?.key == key) {
             return
         }
@@ -109,7 +109,7 @@ class BackgroundSearch<T>(
         changesOverflowed = false
     }
 
-    private fun start(key: Any, region: NavigationRegion, newSearch: (Terrain) -> RouteSearch<T>): Job<T>? {
+    private fun start(key: Any, region: BlockRegion, newSearch: (Terrain) -> RouteSearch<T>): Job<T>? {
         val level = mc.level ?: return null
         val terrain = newTerrain(SectionCache.capture(level, region))
         return Job(key, region, newSearch, terrain, newSearch(terrain))
@@ -161,7 +161,7 @@ class BackgroundSearch<T>(
 
     private class Job<T>(
         val key: Any,
-        val region: NavigationRegion,
+        val region: BlockRegion,
         val newSearch: (Terrain) -> RouteSearch<T>,
         val terrain: Terrain,
         val search: RouteSearch<T>,

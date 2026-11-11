@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.utils.navigation.teleport
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.BackgroundSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
+import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 

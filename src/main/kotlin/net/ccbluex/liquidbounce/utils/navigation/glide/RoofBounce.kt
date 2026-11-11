@@ -35,10 +35,10 @@ import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
+import net.ccbluex.liquidbounce.utils.render.route.TargetProgress
+import net.ccbluex.liquidbounce.utils.world.LiveWorld
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs

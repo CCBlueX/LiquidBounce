@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
+import net.ccbluex.liquidbounce.utils.world.LiveWorld
+import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -63,7 +65,7 @@ enum class DestinationCheck {
  */
 @Suppress("TooManyFunctions")
 class Terrain(
-    val world: NavigationWorld,
+    val world: WorldBlocks,
     val width: Double = PLAYER_WIDTH,
     val height: Double = PLAYER_HEIGHT,
     val opensDoors: Boolean = false,

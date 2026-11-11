@@ -37,10 +37,10 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
 import net.ccbluex.liquidbounce.utils.navigation.route.BackgroundSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
+import net.ccbluex.liquidbounce.utils.render.route.TargetProgress
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.Items

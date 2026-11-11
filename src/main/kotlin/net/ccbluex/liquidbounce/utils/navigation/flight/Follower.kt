@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.FollowState
 import net.ccbluex.liquidbounce.utils.navigation.ProgressWatch
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
+import net.ccbluex.liquidbounce.utils.render.route.RouteProgress
 import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min

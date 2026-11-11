@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.utils.navigation.route
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.LiveWorld
+import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
@@ -34,7 +34,7 @@ import net.minecraft.world.phys.Vec3
 internal class Replanner<T>(
     owner: EventListener,
     private val verticalMargin: Int,
-    newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
+    newTerrain: (WorldBlocks) -> Terrain = ::Terrain,
 ) {
 
     private val background = BackgroundSearch<T>(owner, newTerrain)

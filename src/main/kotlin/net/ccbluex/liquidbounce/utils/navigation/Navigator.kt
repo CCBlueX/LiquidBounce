@@ -46,9 +46,6 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.captureFlight
 import net.ccbluex.liquidbounce.utils.navigation.glide.Gliding
 import net.ccbluex.liquidbounce.utils.navigation.glide.RoofBounce
 import net.ccbluex.liquidbounce.utils.navigation.glide.captureGlide
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
 import net.ccbluex.liquidbounce.utils.navigation.ride.Riding
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
@@ -59,8 +56,10 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.BlockActions
 import net.ccbluex.liquidbounce.utils.navigation.walk.Follower
 import net.ccbluex.liquidbounce.utils.navigation.walk.Path
 import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkSettings
 import net.ccbluex.liquidbounce.utils.navigation.walk.isStraightWalkable
+import net.ccbluex.liquidbounce.utils.render.route.RouteRenderer
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
+import net.ccbluex.liquidbounce.utils.render.route.TargetProgress
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -84,7 +83,7 @@ class Navigator(
     showRoute: Boolean = true,
 ) : EventListener {
 
-    private val settings = WalkSettings(values, allowBreak, allowPlace, allowParkour)
+    private val settings = Settings(values, allowBreak, allowPlace, allowParkour)
     private val rotations = rotations ?: values.tree(RotationsValueGroup(owner))
     private val view = RouteView()
 

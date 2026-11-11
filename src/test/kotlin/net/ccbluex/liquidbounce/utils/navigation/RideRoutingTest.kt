@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.ride.Body
 import net.ccbluex.liquidbounce.utils.navigation.ride.Path
 import net.ccbluex.liquidbounce.utils.navigation.ride.PathSearch
@@ -79,7 +79,7 @@ class RideRoutingTest {
          * A lake of water at y = 0 over x -15..15 and z -10..10 on a stone floor, with a stone shore two blocks
          * high around it.
          */
-        private fun lake() = TestNavigationWorld()
+        private fun lake() = TestWorld()
             .fill(-17, -1, -12, 17, -1, 12)
             .fill(-17, 0, -12, 17, 1, 12)
             .fill(-15, 0, -10, 15, 0, 10, WATER)
@@ -89,7 +89,7 @@ class RideRoutingTest {
         private fun afloat(x: Int, z: Int) = Vec3(x + 0.5, 0.52, z + 0.5)
     }
 
-    private fun search(world: TestNavigationWorld, start: Vec3, goal: Goal, body: Body) =
+    private fun search(world: TestWorld, start: Vec3, goal: Goal, body: Body) =
         PathSearch(world.terrain(), start, goal, body, LIMITS).advanceToEnd(MAX_SLICES)
 
     private fun completePath(result: RouteResult<Path>): Path =
@@ -127,7 +127,7 @@ class RideRoutingTest {
 
     @Test
     fun `boats slide over ice but not over other ground`() {
-        val world = TestNavigationWorld.flat().fill(-20, 0, -1, 20, 0, 1, ICE)
+        val world = TestWorld.flat().fill(-20, 0, -1, 20, 0, 1, ICE)
         val path = completePath(search(world, feet(-15, 1, 0), NearGoal(Vec3(15.5, 1.0, 0.5), 1.0), BOAT))
         assertTrue(path.points.all { it.node.y == 1 && it.node.z in -1..1 })
 
@@ -140,12 +140,12 @@ class RideRoutingTest {
 
     @Test
     fun `horses walk up one block steps and jump ledges only within their jump height`() {
-        val step = TestNavigationWorld.flat().fill(3, 1, -40, 40, 1, 40)
+        val step = TestWorld.flat().fill(3, 1, -40, 40, 1, 40)
         val walked = completePath(search(step, feet(0, 1, 0), BlockGoal(BlockPos(10, 2, 0)), horse()))
         assertTrue(walked.points.none { it.jump })
         assertEquals(2.0, walked.end.y)
 
-        val ledge = TestNavigationWorld.flat().fill(3, 1, -40, 40, 2, 40)
+        val ledge = TestWorld.flat().fill(3, 1, -40, 40, 2, 40)
         val goal = BlockGoal(BlockPos(10, 3, 0))
         val jumped = completePath(search(ledge, feet(0, 1, 0), goal, horse(jump = 2.3)))
         assertTrue(jumped.points.any { it.jump })
@@ -157,7 +157,7 @@ class RideRoutingTest {
     @Test
     fun `a doorway two blocks high lets the player through but not a horse`() {
         // A wall across the whole floor with an opening two wide and two high.
-        val world = TestNavigationWorld.flat()
+        val world = TestWorld.flat()
             .fill(5, 1, -40, 5, 4, 40)
             .fill(5, 1, 0, 5, 2, 1, AIR)
         val goal = BlockGoal(BlockPos(10, 1, 0))

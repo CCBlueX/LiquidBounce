@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.utils.navigation.route
 
 import net.ccbluex.liquidbounce.utils.math.distSqr
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.world.BlockRegion
+import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -44,7 +44,7 @@ interface Goal {
     fun distance(pos: BlockPos) = distance(pos.x, pos.y, pos.z)
 
     fun region(start: Vec3, maxLength: Double, verticalMargin: Int) =
-        NavigationRegion.around(start, ends, maxLength, verticalMargin)
+        BlockRegion.around(start, ends, maxLength, verticalMargin)
 
 }
 
@@ -122,10 +122,10 @@ class StageGoal(
         private const val MIN_PROGRESS = 2.0
 
         fun region(start: Vec3, range: Double, verticalMargin: Int) =
-            NavigationRegion.around(start, emptyList(), range, verticalMargin)
+            BlockRegion.around(start, emptyList(), range, verticalMargin)
 
         /** Whether [goal] is farther than [range] from [start] or in blocks [world] does not know. */
-        fun isNeeded(world: NavigationWorld, start: Vec3, goal: Vec3, range: Double): Boolean {
+        fun isNeeded(world: WorldBlocks, start: Vec3, goal: Vec3, range: Double): Boolean {
             val feet = BlockPos.containing(goal)
             return !start.closerThan(goal, range) || !world.isKnown(feet.x, feet.y, feet.z)
         }

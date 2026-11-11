@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.navigation.terrain
+package net.ccbluex.liquidbounce.utils.world
 
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.BlockPos
@@ -27,7 +27,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.FluidState
 
 /** The blocks a route may be planned through. Unknown blocks are never entered. */
-interface NavigationWorld : BlockGetter {
+interface WorldBlocks : BlockGetter {
 
     fun isKnown(x: Int, y: Int, z: Int): Boolean
 
@@ -36,7 +36,7 @@ interface NavigationWorld : BlockGetter {
 }
 
 /** The client world as it is now. Only for the render thread. */
-class LiveWorld(private val level: ClientLevel) : NavigationWorld {
+class LiveWorld(private val level: ClientLevel) : WorldBlocks {
 
     override fun isKnown(x: Int, y: Int, z: Int) =
         y >= level.minY && y <= level.maxY && level.hasChunkAt(x, z)

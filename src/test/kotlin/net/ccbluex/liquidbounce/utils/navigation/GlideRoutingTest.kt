@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.glide.Abilities
 import net.ccbluex.liquidbounce.utils.navigation.glide.Landing
 import net.ccbluex.liquidbounce.utils.navigation.glide.PathSearch
@@ -52,11 +52,11 @@ class GlideRoutingTest {
      * Ground at y = 0 from x -10 to 100, so feet stand at y = 1, and a stone tower on x -1..1, z -1..1 with its top
      * at [towerTop].
      */
-    private fun towerWorld(towerTop: Int) = TestNavigationWorld()
+    private fun towerWorld(towerTop: Int) = TestWorld()
         .fill(-10, 0, -40, 100, 0, 40)
         .fill(-1, 1, -1, 1, towerTop, 1)
 
-    private fun glide(world: TestNavigationWorld, start: Vec3, goal: Vec3, abilities: Abilities) =
+    private fun glide(world: TestWorld, start: Vec3, goal: Vec3, abilities: Abilities) =
         PathSearch(world.terrain(), start, goal, 1.0, abilities).advanceToEnd(MAX_SLICES)
 
     @Test

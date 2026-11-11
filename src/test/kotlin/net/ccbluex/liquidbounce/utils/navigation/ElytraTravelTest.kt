@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.glide.ColumnHeights
 import net.ccbluex.liquidbounce.utils.navigation.glide.Cruise
 import net.ccbluex.liquidbounce.utils.navigation.glide.RoofBounce
@@ -69,14 +69,14 @@ class ElytraTravelTest {
 
     @Test
     fun `a flat open roof is a bounce line, a wall, a step or a hole ahead ends it`() {
-        val line = RoofBounce.bounceLine(TestNavigationWorld.flat().terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
+        val line = RoofBounce.bounceLine(TestWorld.flat().terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0)
         assertNotNull(line)
         assertEquals(24.0, line.x - 0.5, 1.0E-6)
 
-        val wall = TestNavigationWorld.flat().fill(10, 1, -2, 10, 3, 2)
-        val step = TestNavigationWorld.flat().fill(10, 1, -2, 12, 1, 2)
-        val hole = TestNavigationWorld.flat().set(12, 0, 0, AIR)
-        val low = TestNavigationWorld.flat().fill(10, 3, -2, 12, 3, 2)
+        val wall = TestWorld.flat().fill(10, 1, -2, 10, 3, 2)
+        val step = TestWorld.flat().fill(10, 1, -2, 12, 1, 2)
+        val hole = TestWorld.flat().set(12, 0, 0, AIR)
+        val low = TestWorld.flat().fill(10, 3, -2, 12, 3, 2)
         for (world in listOf(wall, step, hole, low)) {
             assertNull(RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(35, 1, 0), 24.0))
         }
@@ -84,11 +84,11 @@ class ElytraTravelTest {
 
     @Test
     fun `unloaded ground ahead still bounces once enough is known`() {
-        val world = TestNavigationWorld.flat { x, _ -> x < 16 }
+        val world = TestWorld.flat { x, _ -> x < 16 }
         val line = assertNotNull(RoofBounce.bounceLine(world.terrain(), feet(0, 1, 0), feet(200, 1, 0), 24.0))
         assertTrue(line.x in 8.0..16.0, "the line ended at ${line.x}")
 
-        val close = TestNavigationWorld.flat { x, _ -> x < 4 }
+        val close = TestWorld.flat { x, _ -> x < 4 }
         assertNull(RoofBounce.bounceLine(close.terrain(), feet(0, 1, 0), feet(200, 1, 0), 24.0))
     }
 

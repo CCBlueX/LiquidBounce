@@ -23,10 +23,10 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
 import net.ccbluex.liquidbounce.utils.navigation.walk.Path
+import net.ccbluex.liquidbounce.utils.world.WorldBlocks
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -37,9 +37,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** An in-memory world for routing tests; every block is air unless filled. */
-class TestNavigationWorld(
+class TestWorld(
     private val known: (x: Int, z: Int) -> Boolean = { _, _ -> true },
-) : NavigationWorld {
+) : WorldBlocks {
 
     private val blocks = HashMap<BlockPos, BlockState>()
 
@@ -77,7 +77,7 @@ class TestNavigationWorld(
 
         /** A stone floor at y = 0 from -40 to 40, so feet stand at y = 1. */
         fun flat(known: (x: Int, z: Int) -> Boolean = { _, _ -> true }) =
-            TestNavigationWorld(known).fill(-40, 0, -40, 40, 0, 40)
+            TestWorld(known).fill(-40, 0, -40, 40, 0, 40)
 
         fun feet(x: Int, y: Int, z: Int): Vec3 = Vec3.atBottomCenterOf(BlockPos(x, y, z))
     }

@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.navigation.walk
+package net.ccbluex.liquidbounce.utils.navigation
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.MotionTraits
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity.BASE_SAFE_FALL_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -40,7 +41,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 /** What a walking navigator may do on its way, as settings of [values]. */
-class WalkSettings(
+class Settings(
     values: ValueGroup,
     allowBreak: Boolean,
     allowPlace: Boolean,

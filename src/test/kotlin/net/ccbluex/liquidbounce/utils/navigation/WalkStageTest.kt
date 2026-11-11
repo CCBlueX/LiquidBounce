@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
@@ -53,18 +53,18 @@ class WalkStageTest {
 
         /** A stone floor at y = 0 from x -10 to 200 and z -40 to 40. */
         private fun field(known: (x: Int, z: Int) -> Boolean = { _, _ -> true }) =
-            TestNavigationWorld(known).fill(-10, 0, -40, 200, 0, 40)
+            TestWorld(known).fill(-10, 0, -40, 200, 0, 40)
     }
 
     private val abilities = walkAbilities()
 
-    private fun stage(world: TestNavigationWorld, goal: BlockPos): RouteResult<Path> {
+    private fun stage(world: TestWorld, goal: BlockPos): RouteResult<Path> {
         val terrain = world.terrain()
         val stageGoal = StageGoal(NearGoal(Vec3.atBottomCenterOf(goal), 1.0), START, RANGE, terrain)
         return PathSearch(terrain, START, stageGoal, abilities, LIMITS).advanceToEnd(MAX_SLICES)
     }
 
-    private fun stageEnd(world: TestNavigationWorld, goal: BlockPos): BlockPos =
+    private fun stageEnd(world: TestWorld, goal: BlockPos): BlockPos =
         found(stage(world, goal)).steps.last().to
 
     private fun horizontalDistance(pos: BlockPos, to: Vec3) = Vec3.atCenterOf(pos).horizontalDistanceTo(to)

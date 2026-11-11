@@ -28,13 +28,13 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.ProgressWatch
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.render.route.RouteProgress
+import net.ccbluex.liquidbounce.utils.render.route.RouteView
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import java.util.function.DoubleSupplier
