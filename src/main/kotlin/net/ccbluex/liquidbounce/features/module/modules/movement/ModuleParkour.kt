@@ -44,25 +44,29 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.AssistedJump
 import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
 import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
 import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
+import net.ccbluex.liquidbounce.utils.render.route.JumpRenderer
 
 /**
  * Parkour module
  *
  * Jumps at the very edge of a block. With [Assist], it picks the block across the gap you are heading for, jumps at
- * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings.
+ * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings, and shows
+ * the jump it goes for.
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
+
+    private val assisted = AssistedJump()
 
     private object Assist : ToggleableValueGroup(this, "Assist", true) {
         val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")
         val rotations = tree(RotationsValueGroup(this))
+        val render = tree(JumpRenderer(this, assisted))
     }
 
     init {
         tree(Assist)
     }
 
-    private val assisted = AssistedJump()
     private var aimYaw = Float.NaN
     private var sprint = false
 
@@ -137,10 +141,15 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             sprint = player.isSprinting,
         )
         val heading = getMovementDirectionOfInput(player.yRot, input)
-        return assisted.tick(
-            state, RotationManager.movementYaw, heading, keys, Assist.maxAngle, Jumps(terrain, abilities),
-            JumpTargets(terrain, abilities.motion),
+        val yaw = RotationManager.movementYaw
+        val jumps = Jumps(terrain, abilities)
+        val assist = assisted.tick(
+            state, yaw, heading, keys, Assist.maxAngle, jumps, JumpTargets(terrain, abilities.motion),
         )
+        if (Assist.render.enabled) {
+            assisted.trace(state, yaw, jumps)
+        }
+        return assist
     }
 
     /** Jumps on the last tick before running off a block. */

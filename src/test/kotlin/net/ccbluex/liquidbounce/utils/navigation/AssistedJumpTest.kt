@@ -30,6 +30,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * The Parkour assist driving a player who looks at the next block of a course and holds forward and sprint, simulated
@@ -45,6 +47,8 @@ class AssistedJumpTest {
         private const val MAX_ANGLE = 35f
         private const val MIN_AIM_DISTANCE = 0.75
         private const val TICKS_PER_BLOCK = 60
+        private const val MAX_JUMP_TICKS = 40
+        private const val LANDING_TOLERANCE = 0.3
     }
 
     /**
@@ -137,6 +141,46 @@ class AssistedJumpTest {
         val course = course(world, BlockPos(94, 19, 9), BlockPos(97, 20, 9), BlockPos(99, 20, 5), BlockPos(96, 21, 3))
 
         assertEquals(course, run(world, TestWorld.feet(92, 19, 9), course))
+    }
+
+    @Test
+    fun `the traced way of a jump is the way the player takes`() {
+        val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
+        val terrain = world.terrain()
+        val jumps = Jumps(terrain, walkAbilities(canParkour = true, riskyJumps = true))
+        val targets = JumpTargets(terrain)
+        val assisted = AssistedJump()
+        val state = PlayerMotion(terrain)
+        state.reset(TestWorld.feet(3, 20, 3).add(0.0, 0.0, 0.7), PlayerMotion.RESTING, onGround = true)
+        val held = LeapInput(1, 0, jump = false, sprint = true)
+
+        assisted.tick(state, 0f, 0f, held, MAX_ANGLE, jumps, targets)
+        assisted.trace(state, 0f, jumps)
+        val target = assertNotNull(assisted.target)
+        val path = ArrayList(assisted.path)
+        val takeoff = assisted.takeoff
+        assertTrue(takeoff >= 0, "the jump starts on the ground")
+
+        var yaw = 0f
+        var ground = state.position
+        var lastGround = 0
+        for (tick in 1..MAX_JUMP_TICKS) {
+            val keys = assisted.tick(state, yaw, yaw, held, MAX_ANGLE, jumps, targets) ?: held
+            state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
+            if (state.onGround && tick > takeoff + 1) {
+                break
+            }
+            if (state.onGround) {
+                ground = state.position
+                lastGround = tick
+            }
+            yaw = target.aim.subtract(state.position).yaw
+        }
+
+        assertEquals(takeoff, lastGround, "take-off tick")
+        assertEquals(0.0, ground.distanceTo(path[takeoff]), 1.0E-6, "take-off spot")
+        assertTrue(state.standsOn(3, 20, 7), "lands on the target, at ${state.position}")
+        assertTrue(path.last().distanceTo(state.position) < LANDING_TOLERANCE, "predicted landing ${path.last()}")
     }
 
     /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */

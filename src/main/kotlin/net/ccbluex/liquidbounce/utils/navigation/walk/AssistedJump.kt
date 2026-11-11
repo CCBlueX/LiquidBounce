@@ -45,6 +45,13 @@ internal class AssistedJump {
     var target: Target? = null
         private set
 
+    /** The way to [target], tick for tick, as [trace] predicted it: from its run-up when it has one. */
+    val path = ArrayList<Vec3>()
+
+    /** The index in [path] of the last position on the ground before the jump, or -1 when it is not on the way. */
+    var takeoff = -1
+        private set
+
     private var leap = Leap()
 
     /** Whether an assisted jump is in the air. */
@@ -94,12 +101,28 @@ internal class AssistedJump {
         return LeapInput(1, 0, jump = jumpNow, sprint = true)
     }
 
+    /** Predicts the way to [target] for [state], a player moving with [yaw], into [path]. */
+    fun trace(state: PlayerMotion, yaw: Float, jumps: Jumps) {
+        val target = target
+        if (target == null) {
+            path.clear()
+            takeoff = -1
+            return
+        }
+
+        val runUp = target.step?.let {
+            state.copy().apply { reset(target.jump.runUp, PlayerMotion.RESTING, onGround = true) }
+        }
+        takeoff = jumps.trace(runUp ?: state, if (runUp == null) yaw else null, target.pos, target.feet, target.jump, path)
+    }
+
     fun release() {
         target = null
+        path.clear()
     }
 
     fun reset() {
-        target = null
+        release()
         airborne = false
         ticksSinceLanding = BRAKE_TICKS
     }
