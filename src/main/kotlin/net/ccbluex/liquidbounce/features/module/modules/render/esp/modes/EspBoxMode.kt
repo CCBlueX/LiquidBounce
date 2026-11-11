@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -34,18 +35,18 @@ import net.minecraft.world.phys.AABB
 
 object EspBoxMode : EspMode.BoxBased("Box") {
 
-    private val outline by boolean("Outline", true)
+    private val shader = tree(ShaderLayer())
     private val mergeIntersecting by boolean("MergeIntersecting", false)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             val preparedBoxes = collectPreparedBoxes(event.partialTicks)
 
             if (!mergeIntersecting) {
                 for ((entity, localBox, position) in preparedBoxes) {
                     withPositionRelativeToCamera(position) {
-                        drawColoredBox(localBox, getColor(entity))
+                        drawBox(localBox, getColor(entity))
                     }
                 }
                 return@renderEnvironment
@@ -60,16 +61,10 @@ object EspBoxMode : EspMode.BoxBased("Box") {
             for ((box, color) in mergedBoxes) {
                 val (origin, localBox) = box.worldToLocal()
                 withPositionRelativeToCamera(origin) {
-                    drawColoredBox(localBox, color)
+                    drawBox(localBox, color)
                 }
             }
         }
-    }
-
-    private fun WorldRenderEnvironment.drawColoredBox(box: AABB, color: Color4b) {
-        val baseColor = color.with(a = 50)
-        val outlineColor = color.with(a = 100).takeIf { outline }
-        drawBox(box, baseColor, outlineColor)
     }
 
 }

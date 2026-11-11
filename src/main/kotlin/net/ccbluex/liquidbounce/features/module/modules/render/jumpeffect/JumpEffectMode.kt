@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.circles
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.ModuleJumpEffect.modes
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.shiftHue
@@ -46,23 +47,35 @@ abstract class JumpEffectMode(name: String) : Mode(name) {
     val lifetime by intRange("Lifetime", 15..15, 1..120, "anim/life")
     protected val canBeCovered by boolean("CanBeCovered", false)
 
+    /**
+     * The layer the effect is drawn into as a silhouette. Textured effects have none and are drawn onto the scene.
+     */
+    protected open val shader: ShaderLayer? get() = null
+
     protected abstract fun WorldRenderEnvironment.drawJumpEffect(progress: Float, age: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment {
-            circles.forEach {
-                val age = lifetime.last - circles.timeToDie(it) + event.partialTicks
+        val shader = shader
+        if (shader != null) {
+            event.renderEnvironment(shader) { drawJumpEffects(event) }
+        } else {
+            event.renderEnvironment { drawJumpEffects(event) }
+        }
+    }
 
-                val progress = animCurve
-                    .transform(age / lifetime.first)
-                    .coerceIn(0f, 1f)
+    private fun WorldRenderEnvironment.drawJumpEffects(event: WorldRenderEvent) {
+        circles.forEach {
+            val age = lifetime.last - circles.timeToDie(it) + event.partialTicks
 
-                // small offset to exclude artifacts
-                withPositionRelativeToCamera(it.value.add(0.0, 0.01, 0.0)) {
-                    poseStack.withPush {
-                        drawJumpEffect(progress, age)
-                    }
+            val progress = animCurve
+                .transform(age / lifetime.first)
+                .coerceIn(0f, 1f)
+
+            // small offset to exclude artifacts
+            withPositionRelativeToCamera(it.value.add(0.0, 0.01, 0.0)) {
+                poseStack.withPush {
+                    drawJumpEffect(progress, age)
                 }
             }
         }

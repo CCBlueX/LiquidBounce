@@ -80,7 +80,7 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
             true,
             ModuleCrystalAura,
             clump = false,
-            defaultColor = Color4b.WHITE.with(a = 90)
+            defaultColor = Color4b.WHITE
         )
     )
 

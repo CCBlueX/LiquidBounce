@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawPlane
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -55,8 +56,10 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
     private val smooth by boolean("Smooth", true)
     private val persist by boolean("Persist", true)
 
-    private val newColor by color("NewColor", Color4b(0, 255, 0, 80))
-    private val oldColor by color("OldColor", Color4b(255, 0, 0, 80))
+    private val newColor by color("NewColor", Color4b(0, 255, 0, 255))
+    private val oldColor by color("OldColor", Color4b(255, 0, 0, 255))
+
+    private val shader = tree(ShaderLayer())
 
     private val chunks = ConcurrentHashMap<ChunkPos, Boolean>()
 
@@ -113,7 +116,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
 
         val drawY = if (autoY) player.y - 100.0 else renderY.toDouble()
 
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             for ((chunk, isNew) in chunks) {
                 val chunkX = chunk.minBlockX
                 val chunkZ = chunk.minBlockZ
@@ -147,7 +150,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                 }
 
                 withPositionRelativeToCamera(Vec3(chunkX.toDouble(), drawY, chunkZ.toDouble())) {
-                    drawPlane(16f, 16f, color, color.darker())
+                    drawPlane(16f, 16f, color)
                 }
             }
         }

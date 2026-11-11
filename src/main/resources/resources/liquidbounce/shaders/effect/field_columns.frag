@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 // Output of field_rows
 uniform sampler2D InSampler;
@@ -13,7 +13,7 @@ float rowDistance(vec4 texel) {
     return texel.a >= 1.0 ? NONE : floor(texel.a * 255.0 + 0.5);
 }
 
-// Color and euclidean distance of the nearest covered pixel, see encodeField
+// The nearest covered pixel and the euclidean distance to it, see encodeField
 void main() {
     ivec2 size = textureSize(InSampler, 0);
     ivec2 p = pixelAt(texCoord, size);
@@ -21,7 +21,7 @@ void main() {
     vec4 center = texelFetch(InSampler, p, 0);
     float centerDistance = rowDistance(center);
     float best = centerDistance * centerDistance;
-    vec3 color = center.rgb;
+    vec3 silhouette = center.rgb;
 
     int range = int(ceil(Range));
     for (int i = 1; i <= range; i++) {
@@ -35,7 +35,7 @@ void main() {
             float dx = rowDistance(up);
             if (dx < NONE && dx * dx + dy2 < best) {
                 best = dx * dx + dy2;
-                color = up.rgb;
+                silhouette = up.rgb;
             }
         }
 
@@ -44,11 +44,11 @@ void main() {
             float dx = rowDistance(down);
             if (dx < NONE && dx * dx + dy2 < best) {
                 best = dx * dx + dy2;
-                color = down.rgb;
+                silhouette = down.rgb;
             }
         }
     }
 
     float dist = sqrt(best);
-    fragColor = encodeField(color, dist <= Range + 0.5 ? dist : NONE);
+    fragColor = encodeField(silhouette, dist <= Range + 0.5 ? dist : NONE);
 }

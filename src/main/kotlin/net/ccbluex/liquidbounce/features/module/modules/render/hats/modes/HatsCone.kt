@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 import net.ccbluex.liquidbounce.render.setColor
@@ -51,6 +52,8 @@ internal object HatsCone : HatsMode("Cone") {
         tree(HatConeSettings.RadiusSettings)
         tree(colors)
     }
+
+    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.triangles(noDepthTest = true)) { matrix ->

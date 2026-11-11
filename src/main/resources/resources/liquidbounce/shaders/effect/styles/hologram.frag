@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 // Accent: stripe color
 #define SPACING Params0.x
@@ -32,11 +32,11 @@ void main() {
         vec2 pixel = texCoord * vec2(size);
         float wave = 0.5 + 0.5 * sin((dot(pixel, DIRECTION) / SPACING - Time * SPEED) * TAU);
         float stripe = pow(wave, 6.0) * STRIPES;
-        fragColor = glow(mix(field.rgb, Accent.rgb, stripe), (FILL + stripe) * flicker);
+        fragColor = glow(mix(fieldColor(field), Accent.rgb, stripe), (FILL + stripe) * flicker * fieldStrength(field));
         return;
     }
 
     float edge = edgeOf(dist);
     float alpha = max(band(edge, EDGE_WIDTH, 1.0), 0.35 * exp(-edge / 2.0));
-    fragColor = glow(field.rgb, alpha * flicker);
+    fragColor = glow(fieldColor(field), alpha * flicker * fieldStrength(field));
 }

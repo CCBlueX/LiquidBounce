@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 #define RADIUS Params0.x
 #define HEIGHT Params0.y
@@ -23,7 +23,7 @@ void main() {
 
     vec4 own = texelFetch(InSampler, pixelAt(texCoord, size), 0);
     if (fieldDistance(own) == 0.0) {
-        fragColor = glow(own.rgb, FILL);
+        fragColor = glow(fieldColor(own), FILL * fieldStrength(own));
         return;
     }
 
@@ -42,5 +42,5 @@ void main() {
     }
 
     float k = 1.0 - clamp(edgeOf(dist) / RADIUS, 0.0, 1.0);
-    fragColor = glow(mix(field.rgb, vec3(1.0), HEAT * k * k * k), INTENSITY * k * k);
+    fragColor = glow(mix(fieldColor(field), vec3(1.0), HEAT * k * k * k), INTENSITY * k * k * fieldStrength(field));
 }

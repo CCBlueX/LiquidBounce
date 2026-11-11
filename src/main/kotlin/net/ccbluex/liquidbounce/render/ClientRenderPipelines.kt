@@ -232,25 +232,6 @@ object ClientRenderPipelines {
     @JvmStatic
     fun lines(noDepthTest: Boolean) = if (noDepthTest) Lines else LinesDepthTested
 
-    private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
-        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosColorSnippet(PrimitiveTopology.DEBUG_LINES)
-        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
-        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        forWorldRender()
-    }
-
-    private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
-        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        relativePosSnippet(PrimitiveTopology.DEBUG_LINES)
-        withUniformBuffer(ClientUniformDefine.MESH_BASE_BLOCK_POS)
-        withUniformBuffer(ClientUniformDefine.DISTANCE_FADE)
-        forWorldRender()
-    }
-
-    @JvmStatic
-    fun relativeLines(useColor: Boolean) = if (useColor) LinesRelativeToCamera else LinesRelativeToCameraNoColor
-
     @JvmField
     val LineStrip = newPipeline("line_strip") {
         posColorSnippet(PrimitiveTopology.DEBUG_LINE_STRIP)
@@ -432,25 +413,6 @@ object ClientRenderPipelines {
     fun heart(noDepthTest: Boolean) = if (noDepthTest) HeartNoDepthTest else Heart
 
     // Special
-
-    /**
-     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-     * @see RenderPipelines.OUTLINE_SNIPPET
-     */
-    @JvmField
-    val Outline = newPipeline("outline") {
-        screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-        withColorTargetState(
-            ColorTargetState(
-                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
-                GpuFormat.RGBA8_UNORM,
-                ColorTargetState.WRITE_COLOR,
-            )
-        )
-        withDepthStencilState(optional())
-    }
 
     @JvmField
     val ChamsImage = newPipeline("chams/image_blit") {

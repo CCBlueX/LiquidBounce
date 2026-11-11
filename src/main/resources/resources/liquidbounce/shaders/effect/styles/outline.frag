@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 #define WIDTH Params0.x
 #define SOFTNESS Params0.y
@@ -31,5 +31,5 @@ void main() {
         alpha = max(band(edge, WIDTH, SOFTNESS), glowAlpha);
     }
 
-    fragColor = glow(field.rgb, alpha);
+    fragColor = glow(fieldColor(field), alpha * fieldStrength(field));
 }

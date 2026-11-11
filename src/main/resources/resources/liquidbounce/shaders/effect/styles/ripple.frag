@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 // Range: how far the rings travel
 #define SPACING Params0.x
@@ -31,5 +31,5 @@ void main() {
         alpha = max(line, ring * fade * fade);
     }
 
-    fragColor = glow(field.rgb, alpha);
+    fragColor = glow(fieldColor(field), alpha * fieldStrength(field));
 }

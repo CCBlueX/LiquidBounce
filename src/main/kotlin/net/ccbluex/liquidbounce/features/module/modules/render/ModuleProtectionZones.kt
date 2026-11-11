@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -56,11 +57,10 @@ import kotlin.math.roundToInt
  */
 object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.RENDER) {
 
-    private val DEFAULT_ZONE_FILL = Color4b(0, 255, 0, 51)
+    private val DEFAULT_ZONE_FILL = Color4b(0, 255, 0, 255)
     private val DEFAULT_ZONE_OUTLINE = Color4b(0, 255, 0, 255)
     private val DEFAULT_CENTER_OUTLINE = Color4b(0, 255, 207, 255)
-    private val DEFAULT_INDICATOR_OUTLINE = Color4b(255, 240, 0, 255)
-    private val DEFAULT_INDICATOR_FILL = Color4b(255, 240, 0, 51)
+    private val DEFAULT_INDICATOR_FILL = Color4b(255, 240, 0, 255)
     private const val HIGHLIGHT_RADIUS: Float = 5.0f
 
     private val protBlocks by blocks(
@@ -91,7 +91,6 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         }
 
         object IndicatorColors : ValueGroup("IndicatorColors") {
-            val indicatorOutline by color("IndicatorOutline", DEFAULT_INDICATOR_OUTLINE)
             val indicatorFill by color("IndicatorFill", DEFAULT_INDICATOR_FILL)
         }
 
@@ -107,6 +106,9 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
     init {
         treeAll(Radius, Indicator, Renderer)
     }
+
+    private val shader = tree(ShaderLayer())
+    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
 
     private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<Block>(), Predicate<BlockState> {
         override val shouldCallRecordBlockOnChunkUpdate: Boolean
@@ -188,24 +190,11 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         return null
     }
 
-    private fun WorldRenderEnvironment.drawZones(
-        zones: Array<AABB>, centers: List<BlockPos>, highlightIndex: Int?, camOffset: Vec3
-    ) {
+    private fun WorldRenderEnvironment.drawZoneOutlines(zones: Array<AABB>, centers: List<BlockPos>, camOffset: Vec3) {
         val colors = Renderer.ProtectionColors
-        val viewZones = ArrayList<AABB>(zones.size)
-        val centerBoxes = ArrayList<AABB>(centers.size)
-        for (i in zones.indices) {
-            viewZones += zones[i].move(camOffset)
-            centerBoxes += AABB(centers[i]).move(camOffset)
-        }
 
-        for (b in viewZones) drawBox(b, outlineColor = colors.zoneOutline)
-        for (c in centerBoxes) drawBox(c, outlineColor = colors.centerZoneOutline)
-
-        if (highlightIndex != null && highlightIndex in viewZones.indices) {
-            val highlighted = viewZones[highlightIndex]
-            drawBox(highlighted, faceColor = colors.zoneFill)
-        }
+        for (zone in zones) drawBox(zone.move(camOffset), outlineColor = colors.zoneOutline)
+        for (center in centers) drawBox(AABB(center).move(camOffset), outlineColor = colors.centerZoneOutline)
     }
 
     private fun WorldRenderEnvironment.drawIndicator(
@@ -233,11 +222,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         if (zones.any { it.contains(indicatorCenter) }) return
         val indicatorBox = AABB(indicatorPos).move(camOffset)
 
-        drawBox(
-            indicatorBox,
-            faceColor = Renderer.IndicatorColors.indicatorFill,
-            outlineColor = Renderer.IndicatorColors.indicatorOutline,
-        )
+        drawBox(indicatorBox, faceColor = Renderer.IndicatorColors.indicatorFill)
     }
 
     @Suppress("unused")
@@ -259,9 +244,15 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.
         val zones = computeZones(centers, world)
         val highlightIndex = findHighlightIndex(zones, playerPos = player.position())
 
-        e.renderEnvironment {
-            val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
-            drawZones(zones, centers, highlightIndex, camOffset)
+        val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
+
+        e.renderEnvironment(lineShader) {
+            drawZoneOutlines(zones, centers, camOffset)
+        }
+        e.renderEnvironment(shader) {
+            if (highlightIndex != null) {
+                drawBox(zones[highlightIndex].move(camOffset), faceColor = Renderer.ProtectionColors.zoneFill)
+            }
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)
             }

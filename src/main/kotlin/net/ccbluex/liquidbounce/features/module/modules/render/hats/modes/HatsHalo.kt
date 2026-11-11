@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addTorusQuad
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.segmentAngle
 
@@ -45,6 +46,8 @@ internal object HatsHalo : HatsMode("Halo") {
         tree(HatHaloSettings)
         tree(colors)
     }
+
+    override val shader = tree(ShaderLayer())
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.quads(noDepthTest = true)) { matrix ->

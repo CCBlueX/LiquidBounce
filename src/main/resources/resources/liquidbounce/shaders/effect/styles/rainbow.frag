@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 #define WIDTH Params0.x
 #define GLOW_RADIUS Params0.y
@@ -28,7 +28,7 @@ void main() {
 
     vec2 pixel = texCoord * vec2(size);
     float hue = fract((pixel.x + pixel.y) / SPREAD - Time * SPEED);
-    vec3 color = mix(hsv2rgb(vec3(hue, SATURATION, 1.0)), field.rgb, ENTITY_MIX);
+    vec3 color = mix(hsv2rgb(vec3(hue, SATURATION, 1.0)), fieldColor(field), ENTITY_MIX);
 
     float alpha = FILL;
     if (dist > 0.0) {
@@ -37,5 +37,5 @@ void main() {
         alpha = max(band(edge, WIDTH, 1.0), GLOW_INTENSITY * exp(-3.0 * t * t));
     }
 
-    fragColor = glow(color, alpha);
+    fragColor = glow(color, alpha * fieldStrength(field));
 }

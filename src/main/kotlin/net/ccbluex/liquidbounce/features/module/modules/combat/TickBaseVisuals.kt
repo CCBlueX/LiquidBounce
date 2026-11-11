@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawLinesWithWidth
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
@@ -56,6 +57,9 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
 
     private val color by color("Color", Color4b.LIQUID_BOUNCE).doNotIncludeAlways()
     private val balanceRing by boolean("BalanceRing", true)
+
+    private val shader = tree(ShaderLayer())
+    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
 
     /**
      * The coming positions of the player from now up to where the hit on [hit] lands. Empty without a hit.
@@ -97,20 +101,31 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         val time = clientStartDurationMs
         val origin = player.interpolateCurrentPosition(event.partialTicks)
 
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             if (balanceRing) {
                 renderBalance(origin, player.getViewYRot(event.partialTicks))
             }
             hit?.takeIf { path.isNotEmpty() }?.let { hit ->
-                renderPath(origin)
                 renderLanding(hit)
             }
             renderAfterimage(time)
         }
+
+        event.renderEnvironment(lineShader) {
+            if (balanceRing) {
+                withPositionRelativeToCamera(origin.add(0.0, 0.01, 0.0)) {
+                    drawCircleOutline(0.6f, color.fade(0.2f))
+                }
+            }
+            hit?.takeIf { path.isNotEmpty() }?.let { hit ->
+                renderPath(origin)
+                renderStrike(hit)
+            }
+        }
     }
 
     /**
-     * A ring around the feet filled by the balance, centred on where the player looks.
+     * The balance as a part of the ring around the feet, centred on where the player looks.
      */
     private fun WorldRenderEnvironment.renderBalance(origin: Vec3, yRot: Float) {
         val range = ModuleTickBase.balance
@@ -120,12 +135,11 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
             0f
         }
 
-        withPositionRelativeToCamera(origin.add(0.0, 0.01, 0.0)) {
-            drawCircleOutline(0.6f, color.fade(0.2f))
-            if (fraction <= 0f) {
-                return@withPositionRelativeToCamera
-            }
+        if (fraction <= 0f) {
+            return
+        }
 
+        withPositionRelativeToCamera(origin.add(0.0, 0.01, 0.0)) {
             val sweep = fraction * Mth.TWO_PI
             val start = (yRot + 90f).toRadians() - sweep / 2f
             val segments = max(2, (48 * fraction).toInt())
@@ -156,7 +170,7 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
     }
 
     /**
-     * The player where the hit lands, and the strike from its eyes to the hit.
+     * The player where the hit lands.
      */
     private fun WorldRenderEnvironment.renderLanding(hit: Vec3) {
         val pos = path.last()
@@ -167,8 +181,15 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
             ghost.pos = pos
             ghost.pose = player.pose
             ghost.setRotation(Rotation.lookingAt(hit, eyes))
-            ghost.render(color.fade(0.12f * fade), color.fade(0.9f * fade))
+            ghost.render(color.fade(fade))
         }
+    }
+
+    /**
+     * The strike from the eyes of the player where the hit lands to the hit.
+     */
+    private fun WorldRenderEnvironment.renderStrike(hit: Vec3) {
+        val eyes = path.last().add(0.0, player.eyeHeight.toDouble(), 0.0)
 
         withPositionRelativeToCamera(eyes) {
             drawCustomMesh(ClientRenderPipelines.lines(noDepthTest = true)) { pose ->
@@ -192,7 +213,7 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
         ghost.pose = image.pose
         ghost.yRot = image.yRot
         ghost.xRot = 0f
-        ghost.render(color.fade(0.08f * fade), color.fade(0.6f * fade))
+        ghost.render(color.fade(fade))
     }
 
     // Ghosts close to the camera would fill the screen in first person

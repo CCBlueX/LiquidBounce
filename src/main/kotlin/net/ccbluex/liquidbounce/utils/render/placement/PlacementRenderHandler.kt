@@ -28,9 +28,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.expandToBoundingBox
-import net.ccbluex.liquidbounce.utils.math.high32
 import net.ccbluex.liquidbounce.utils.math.iterator
-import net.ccbluex.liquidbounce.utils.math.low32
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -51,12 +49,12 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     private val culler = BlockCuller(this)
 
     @JvmRecord
-    private data class InOutBlockData(val startTime: Long, val cullData: Long, val box: AABB) {
+    private data class InOutBlockData(val startTime: Long, val cullData: Int, val box: AABB) {
         fun toCurrent() = CurrentBlockData(cullData, box)
     }
 
     @JvmRecord
-    private data class CurrentBlockData(val cullData: Long, val box: AABB) {
+    private data class CurrentBlockData(val cullData: Int, val box: AABB) {
         fun toInOut(startTime: Long) = InOutBlockData(startTime, cullData, box)
     }
 
@@ -66,18 +64,11 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     fun render(event: WorldRenderEvent, time: Long) {
         with(placementRenderer) {
             val color = getColor(id)
-            val outlineColor = getOutlineColor(id)
 
-            event.renderEnvironment {
-                fun drawEntryBox(blockPos: Long, cullData: Long, box: AABB, colorFactor: Float) {
+            event.renderEnvironment(shader) {
+                fun drawEntryBox(blockPos: Long, cullData: Int, box: AABB, colorFactor: Float) {
                     withPositionRelativeToCamera(blockPosCache.set(blockPos)) {
-                        drawBox(
-                            box,
-                            color.fade(colorFactor),
-                            outlineColor.fade(colorFactor),
-                            cullData.high32(),
-                            cullData.low32(),
-                        )
+                        drawBox(box, color.fade(colorFactor), faceVertices = cullData)
                     }
                 }
 
@@ -195,7 +186,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = FULL_BOX) {
         val longValue = pos.asLong()
         if (!currentList.containsKey(longValue) && !inList.containsKey(longValue)) {
-            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), -1L, box))
+            inList.put(longValue, InOutBlockData(System.currentTimeMillis(), -1, box))
             if (update) {
                 updateNeighbors(pos)
             }
@@ -211,7 +202,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      */
     fun removeBlock(pos: BlockPos) {
         val longValue = pos.asLong()
-        var cullData = 0L
+        var cullData = 0
         var box: AABB? = null
 
         currentList.remove(longValue)?.let {

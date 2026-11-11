@@ -16,42 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.AuraGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.ChromaticGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowStyle
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.HalftoneGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.HologramGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.NeonGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.OutlineGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.RainbowGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.RippleGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.SmoothGlow
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.VanillaGlow
+import net.ccbluex.liquidbounce.render.effect.ShaderStyle
+import net.ccbluex.liquidbounce.render.effect.StyleChain
+import net.ccbluex.liquidbounce.render.effect.VanillaStyle
+import net.ccbluex.liquidbounce.render.effect.postStyles
+import net.minecraft.client.renderer.LevelTargetBundle
+import net.minecraft.client.renderer.PostChain
 
 object EspGlowMode : EspMode("Glow", requiresTrueSight = true) {
 
-    val styles = modes("Style", SmoothGlow, arrayOf<GlowStyle>(
-        VanillaGlow,
-        SmoothGlow,
-        OutlineGlow,
-        NeonGlow,
-        RainbowGlow,
-        RippleGlow,
-        HologramGlow,
-        HalftoneGlow,
-        ChromaticGlow,
-        AuraGlow,
-    ))
-
-    init {
-        for (style in styles.modes) {
-            for (value in style.containedValues) {
-                value.onChanged { GlowPostEffect.invalidate() }
-            }
-        }
+    val styles = modes<ShaderStyle>("Style", SMOOTH) {
+        arrayOf(VanillaStyle(it), *postStyles(it).toTypedArray())
     }
+
+    private val chain = StyleChain(styles, LevelTargetBundle.ENTITY_OUTLINE_TARGET_ID)
+
+    /**
+     * The chain of the chosen style in place of the game's entity outline post chain.
+     */
+    @JvmStatic
+    fun replace(original: PostChain?): PostChain? = if (running) chain.get() ?: original else original
+
+    private const val SMOOTH = 1
 
 }

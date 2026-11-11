@@ -25,8 +25,8 @@ import net.minecraft.util.Mth
 
 class HatsColorSettings : ValueGroup("Colors") {
     val syncColors by boolean("SyncColors", true)
-    val firstColor by color("FirstColor", Color4b.LIQUID_BOUNCE.alpha(125))
-    val secondColor by color("SecondColor", Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.5F).alpha(125))
+    val firstColor by color("FirstColor", Color4b.LIQUID_BOUNCE)
+    val secondColor by color("SecondColor", Color4b.LIQUID_BOUNCE.interpolateTo(Color4b.WHITE, 0.5F))
     val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
 
     fun getCurrentStepColor(angle: Float): Color4b {

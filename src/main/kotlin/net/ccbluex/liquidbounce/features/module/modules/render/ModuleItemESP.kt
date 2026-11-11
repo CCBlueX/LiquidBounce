@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -98,13 +99,15 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         )
     }
 
+    private val tracerShader = tree(ShaderLayer(solid = true, name = "TracerShader"))
+
     // showTracers
     @Suppress("unused")
     private val tracerRenderHandler = handler<WorldRenderEvent> { event ->
         // Check if the tracer option is enabled
         if (!showTracers) return@handler
 
-        event.renderEnvironment {
+        event.renderEnvironment(tracerShader) {
             val eyeVector = Vec3f.eyeVector(camera)
 
             val entities = world.entitiesForRendering()
@@ -133,6 +136,8 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
         private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
         private val mergeIntersecting by boolean("MergeIntersecting", false)
 
+        private val shader = tree(ShaderLayer())
+
         private val entities = mutableListOf<Entity>()
 
         override fun disable() {
@@ -151,16 +156,14 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             if (entities.isEmpty()) return@handler
 
             val color = getColor()
-            val faceColor = color.with(a = 50)
-            val outlineColor = color.with(a = 100)
 
-            event.renderEnvironment {
+            event.renderEnvironment(shader) {
                 if (!mergeIntersecting) {
                     for (entity in entities) {
                         val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
                         withPositionRelativeToCamera(pos) {
-                            drawBox(box, faceColor, outlineColor)
+                            drawBox(box, color)
                         }
                     }
                     return@renderEnvironment
@@ -176,7 +179,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                 for ((mergedBox, _) in mergedBoxes) {
                     val (origin, localBox) = mergedBox.worldToLocal()
                     withPositionRelativeToCamera(origin) {
-                        drawBox(localBox, faceColor, outlineColor)
+                        drawBox(localBox, color)
                     }
                 }
             }
@@ -189,7 +192,8 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
         private val scale by float("Scale", 0.1f, 0.02f..0.3f)
         private val yOffset by float("YOffset", 0f, -1f..1f)
-        private val backgroundAlpha by int("BackgroundAlpha", 150, 0..255)
+
+        private val shader = tree(ShaderLayer(solid = true))
 
         private val entities = mutableListOf<Entity>()
 
@@ -209,9 +213,8 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
             if (entities.isEmpty()) return@handler
 
             val color = getColor().argb
-            val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
 
-            event.renderEnvironment {
+            event.renderEnvironment(shader) {
                 for (entity in entities) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
 
@@ -220,7 +223,6 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                         entityHeight = entity.boundingBox.ysize,
                         scale = scale,
                         foregroundArgb = color,
-                        backgroundArgb = backgroundColor
                     )
                 }
             }

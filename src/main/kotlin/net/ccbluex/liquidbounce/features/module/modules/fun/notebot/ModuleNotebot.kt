@@ -237,11 +237,10 @@ object ModuleNotebot : ClientModule("Notebot", ModuleCategories.FUN, disableOnQu
     enum class NotebotStage(
         val stageStartDelay: () -> Int,
         val blockColor: () -> Color4b,
-        val blockOutlineColor: () -> Color4b
     ) {
-        TEST(StartDelay::test, NotebotRenderer::testColor, NotebotRenderer::outlineTestColor),
-        TUNE(StartDelay::tune, NotebotRenderer::tuneColor, NotebotRenderer::outlineTuneColor),
-        PLAY(StartDelay::play, NotebotRenderer::colorSetting, NotebotRenderer::outlineColorSetting)
+        TEST(StartDelay::test, NotebotRenderer::testColor),
+        TUNE(StartDelay::tune, NotebotRenderer::tuneColor),
+        PLAY(StartDelay::play, NotebotRenderer::colorSetting)
     }
 
     interface NotebotStageHandler {

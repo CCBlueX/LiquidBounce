@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 #define WIDTH Params0.x
 #define SPLIT Params0.y
@@ -40,12 +40,13 @@ void main() {
     vec4 center = fieldAt(pixel);
     float centerDistance = fieldDistance(center);
     if (centerDistance == 0.0) {
-        fragColor = glow(center.rgb, FILL);
+        fragColor = glow(fieldColor(center), FILL * fieldStrength(center));
         return;
     }
 
     vec3 split = vec3(lineAt(pixel + offset), lineAt(pixel), lineAt(pixel - offset));
     float alpha = max(split.r, max(split.g, split.b));
-    vec3 tint = mix(vec3(1.0), centerDistance < NONE ? center.rgb : vec3(1.0), TINT);
-    fragColor = glow(split * tint / max(alpha, 0.0001), alpha);
+    bool inRange = centerDistance < NONE;
+    vec3 tint = mix(vec3(1.0), inRange ? fieldColor(center) : vec3(1.0), TINT);
+    fragColor = glow(split * tint / max(alpha, 0.0001), alpha * (inRange ? fieldStrength(center) : 1.0));
 }

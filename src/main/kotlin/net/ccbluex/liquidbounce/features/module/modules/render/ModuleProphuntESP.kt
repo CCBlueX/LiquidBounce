@@ -37,7 +37,7 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
 ) {
 
     private val renderer = PlacementRenderer("RenderBlockUpdates", true, this,
-        defaultColor = Color4b(255, 179, 72, 90), keep = false
+        defaultColor = Color4b(255, 179, 72), keep = false
     )
 
     private val tracking by multiEnumChoice("Tracking", Tracking.entries, canBeNone = false)

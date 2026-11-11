@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
     private const val TRANSITION_TIME = 300L
 
-    val testColor by color("TestColor", Color4b.RED.with(a = 90))
-    val outlineTestColor by color("TestOutlineColor", Color4b.RED)
-    val tuneColor by color("TuneColor", Color4b.YELLOW.with(a = 90))
-    val outlineTuneColor by color("TuneOutlineColor", Color4b.YELLOW)
+    val testColor by color("TestColor", Color4b.RED)
+    val tuneColor by color("TuneColor", Color4b.YELLOW)
 
     private val stageChangeChronometer = Chronometer()
 
@@ -38,10 +36,6 @@ object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
 
     override fun getColor(id: Int): Color4b {
         return lastStage.blockColor().interpolateTo(currentStage.blockColor(), getTransitionProgress())
-    }
-
-    override fun getOutlineColor(id: Int): Color4b {
-        return lastStage.blockOutlineColor().interpolateTo(currentStage.blockOutlineColor(), getTransitionProgress())
     }
 
     fun onStateChange(stage: NotebotStage) {

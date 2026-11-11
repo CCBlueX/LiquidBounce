@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -31,24 +31,23 @@ object EspLegacy2DMode : EspMode("Legacy2D") {
 
     private val scale by float("Scale", 0.1f, 0.02f..0.3f)
     private val yOffset by float("YOffset", 0f, -1f..1f)
-    private val backgroundAlpha by int("BackgroundAlpha", 150, 0..255)
+
+    private val shader = tree(ShaderLayer(solid = true))
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             for (entity in RenderedEntities) {
                 if (!shouldRender(entity)) continue
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks).add(0.0, yOffset.toDouble(), 0.0)
                 val color = getColor(entity).argb
-                val backgroundColor = Color4b.BLACK.with(a = backgroundAlpha).argb
 
                 drawLegacy2DMarker(
                     pos = pos,
                     entityHeight = entity.boundingBox.ysize,
                     scale = scale,
                     foregroundArgb = color,
-                    backgroundArgb = backgroundColor
                 )
             }
         }

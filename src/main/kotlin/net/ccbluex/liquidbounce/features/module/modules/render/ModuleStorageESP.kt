@@ -33,12 +33,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addShapeFaces
-import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
@@ -146,6 +146,8 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
     private val distanceFade = tree(DistanceFadeUniformValueGroup())
 
+    private val tracerShader = tree(ShaderLayer(solid = true, name = "TracerShader"))
+
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
     }
@@ -160,8 +162,9 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         private val dirtyFlag = atomic(true)
 
+        private val shader = tree(ShaderLayer())
+
         private val blockFacesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
-        private val blockOutlinesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
 
         fun markDirty() {
             if (this.running) {
@@ -174,25 +177,21 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
             super.enable()
         }
 
-        private val outline by boolean("Outline", true)
-
         private val entityBoxes = mutableListOf<EntityBox>()
 
         override fun disable() {
             blockFacesRenderState.clearStates()
             blockFacesRenderState.clearBuffers()
-            blockOutlinesRenderState.clearStates()
-            blockOutlinesRenderState.clearBuffers()
             entityBoxes.clear()
             super.disable()
         }
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (outline) {
-                mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
-                    renderState = blockOutlinesRenderState,
-                    pipeline = ClientRenderPipelines.relativeLines(useColor = true),
+            shader.draw(event) { target ->
+                target.drawGenericBlockESP(
+                    renderState = blockFacesRenderState,
+                    pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
                     distanceFade = distanceFade,
                 ) {
                     getDynamicTransformsUniform(
@@ -201,28 +200,12 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 }
             }
 
-            mc.gameRenderer.mainRenderTarget().drawGenericBlockESP(
-                renderState = blockFacesRenderState,
-                pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
-                distanceFade = distanceFade,
-            ) {
-                getDynamicTransformsUniform(
-                    modelView = event.poseStack.last().pose(),
-                )
-            }
-
             if (entityBoxes.isEmpty()) return@handler
 
-            val matrixStack = event.poseStack
-
-            event.renderEnvironment {
+            event.renderEnvironment(shader) {
                 for ((entity, box, color) in entityBoxes) {
-                    val baseColor = color.with(a = 50)
-                    val outlineColor = if (outline) color.with(a = 100) else null
-
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(box, baseColor, outlineColor)
+                    withPositionRelativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)) {
+                        drawBox(box, color)
                     }
                 }
             }
@@ -252,7 +235,6 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
             if (StorageScanner.isEmpty()) {
                 blockFacesRenderState.clearStates()
-                blockOutlinesRenderState.clearStates()
                 return@handler
             }
 
@@ -269,21 +251,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 for (mergedShape in mergedShapes) {
                     pose.withPush {
                         translate(mergedShape.blockPos, origin)
-                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(50))
-                    }
-                }
-            }
-
-            if (outline) {
-                blockOutlinesRenderState.buildMesh(
-                    pipeline = ClientRenderPipelines.relativeLines(useColor = true),
-                    origin = player.blockPosition(),
-                ) { pose, origin ->
-                    for (mergedShape in mergedShapes) {
-                        pose.withPush {
-                            translate(mergedShape.blockPos, origin)
-                            addShapeOutlines(last().pose(), mergedShape.shape, mergedShape.key.color.alpha(100))
-                        }
+                        addShapeFaces(last().pose(), mergedShape.shape, mergedShape.key.color)
                     }
                 }
             }
@@ -361,7 +329,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         val types = allTypes.filter { it.tracers && !it.color.isTransparent }
         if (types.isEmpty()) return@handler
 
-        event.renderEnvironment {
+        event.renderEnvironment(tracerShader) {
             val eyeVector = Vec3f.eyeVector(camera)
 
             if (!StorageScanner.isEmpty()) {

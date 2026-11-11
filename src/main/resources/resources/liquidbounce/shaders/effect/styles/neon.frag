@@ -1,7 +1,7 @@
 #version 330
 #extension GL_ARB_separate_shader_objects : require
 
-#include <liquidbounce:esp_glow/glow.glsl>
+#include <liquidbounce:effect/effect.glsl>
 
 // Accent: core color
 #define CORE_WIDTH Params0.x
@@ -27,7 +27,7 @@ void main() {
 
     float pulse = 1.0 - PULSE_AMOUNT * (0.5 + 0.5 * sin(Time * PULSE_SPEED * TAU));
     if (dist == 0.0) {
-        fragColor = glow(field.rgb, FILL * pulse);
+        fragColor = glow(fieldColor(field), FILL * pulse * fieldStrength(field));
         return;
     }
 
@@ -36,6 +36,7 @@ void main() {
     float bloom = clamp(BLOOM_INTENSITY * pulse * exp(-2.5 * edge / BLOOM_RADIUS), 0.0, 1.0) * (1.0 - core);
 
     float alpha = core + bloom;
-    vec3 color = (mix(field.rgb, Accent.rgb, CORE_MIX) * core + field.rgb * bloom) / max(alpha, 0.0001);
-    fragColor = glow(color, alpha);
+    vec3 base = fieldColor(field);
+    vec3 color = (mix(base, Accent.rgb, CORE_MIX) * core + base * bloom) / max(alpha, 0.0001);
+    fragColor = glow(color, alpha * fieldStrength(field));
 }

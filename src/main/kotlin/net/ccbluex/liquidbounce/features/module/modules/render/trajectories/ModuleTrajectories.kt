@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -75,6 +76,9 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         tree(TrajectoryDetailedInfoRenderer)
     }
 
+    private val shader = tree(ShaderLayer())
+    private val lineShader = tree(ShaderLayer(solid = true, name = "LineShader"))
+
     internal val simulationResults =
         mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
 
@@ -84,7 +88,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
-        event.renderEnvironment {
+        val hits = shader.environment(event)
+        event.renderEnvironment(lineShader) {
             val viewPos = camera.position()
             val viewDirection = camera.forwardVector()
             val maxRenderDistanceSq = maxRenderDistance.sq().toDouble()
@@ -128,6 +133,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 )
 
                 simulationResults += trajectoryRenderer to trajectoryRenderer.drawTrajectoryForProjectile(
+                    hits,
                     maxSimulatedTicks,
                     event.partialTicks,
                     trajectoryColor = color,
@@ -151,10 +157,10 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                     }
 
                     // Including the user
-                    drawHypotheticalTrajectory(otherPlayer, event.partialTicks)
+                    drawHypotheticalTrajectory(hits, otherPlayer, event.partialTicks)
                 }
             } else {
-                drawHypotheticalTrajectory(player, event.partialTicks)
+                drawHypotheticalTrajectory(hits, player, event.partialTicks)
             }
         }
 
@@ -162,9 +168,10 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     }
 
     /**
-     * Draws the trajectory for an item in the player's hand
+     * Draws the trajectory for an item in the player's hand, what it hits goes into [hits]
      */
     private fun WorldRenderEnvironment.drawHypotheticalTrajectory(
+        hits: WorldRenderEnvironment,
         otherPlayer: Player,
         partialTicks: Float,
     ) {
@@ -219,14 +226,15 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
             )
 
             simulationResults += renderer to renderer.drawTrajectoryForProjectile(
+                hits,
                 maxSimulatedTicks,
                 partialTicks,
                 trajectoryColor = TrajectoryDisplayResolver.resolveTrajectoryColor(
                     trajectoryType = shotDescriptor.trajectoryType,
                     colorSource = shotDescriptor.colorSource,
                 ),
-                blockHitColor = Color4b.LIQUID_BOUNCE.alpha(150),
-                entityHitColor = Color4b.RED.alpha(100),
+                blockHitColor = Color4b.LIQUID_BOUNCE,
+                entityHitColor = Color4b.RED,
                 lineWidth = lineWidth,
             )
         }

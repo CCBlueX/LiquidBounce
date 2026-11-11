@@ -50,7 +50,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -131,10 +130,8 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment {
-            renderFailedHits()
-            KillAuraRangeIndicator.render(this, event.partialTicks)
-        }
+        renderFailedHits(event)
+        KillAuraRangeIndicator.render(event)
     }
 
     @Suppress("unused")

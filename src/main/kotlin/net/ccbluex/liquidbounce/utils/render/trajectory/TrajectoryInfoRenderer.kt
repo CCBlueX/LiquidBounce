@@ -273,8 +273,12 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         }
     }
 
+    /**
+     * Draws the path into [env] and what it hits into [hits], as lines and filled shapes need a layer each.
+     */
     context(env: WorldRenderEnvironment)
     fun drawTrajectoryForProjectile(
+        hits: WorldRenderEnvironment,
         maxTicks: Int,
         partialTicks: Float,
         trajectoryColor: Color4b,
@@ -291,18 +295,18 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         when (landingPosition) {
             null -> return simulationResult
             is BlockHitResult -> if (blockHitColor != null) {
-                env.renderHitBlockFace(landingPosition, blockHitColor)
+                hits.renderHitBlockFace(landingPosition, blockHitColor)
             }
             is EntityHitResult -> if (entityHitColor != null) {
                 val entities = listOf(landingPosition.entity)
 
-                env.drawHitEntities(entityHitColor, entities, partialTicks)
+                hits.drawHitEntities(entityHitColor, entities, partialTicks)
             }
             else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
         }
 
         if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            env.drawSplashPotionTargets(landingPosition.location, trajectoryInfo, partialTicks, entityHitColor)
+            hits.drawSplashPotionTargets(landingPosition.location, trajectoryInfo, partialTicks, entityHitColor)
         }
 
         return simulationResult

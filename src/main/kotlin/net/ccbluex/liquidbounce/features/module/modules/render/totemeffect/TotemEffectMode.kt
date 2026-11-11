@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.TotemPopSnapshot
 import net.ccbluex.liquidbounce.features.module.modules.render.totemeffect.ModuleTotemEffect.entities
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -39,25 +40,37 @@ abstract class TotemEffectMode(name: String) : Mode(name) {
     protected val animCurve by easing("AnimCurve", Easing.EXPONENTIAL_OUT)
     protected val canBeCovered by boolean("CanBeCovered", false)
 
+    /**
+     * The layer the effect is drawn into as a silhouette. Textured effects have none and are drawn onto the scene.
+     */
+    protected open val shader: ShaderLayer? get() = null
+
     protected abstract fun WorldRenderEnvironment
         .drawTotemEffect(progress: Float, age: Float, entity: TotemPopSnapshot, fade: Float)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        event.renderEnvironment {
-            entities.forEach {
-                val entity = it.value
-                val age = lifetime - entities.timeToDie(it) + event.partialTicks
+        val shader = shader
+        if (shader != null) {
+            event.renderEnvironment(shader) { drawTotemEffects(event) }
+        } else {
+            event.renderEnvironment { drawTotemEffects(event) }
+        }
+    }
 
-                val progress = animCurve
-                    .transform(age / lifetime)
-                    .coerceIn(0f, 1f)
+    private fun WorldRenderEnvironment.drawTotemEffects(event: WorldRenderEvent) {
+        entities.forEach {
+            val entity = it.value
+            val age = lifetime - entities.timeToDie(it) + event.partialTicks
 
-                val fade = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
+            val progress = animCurve
+                .transform(age / lifetime)
+                .coerceIn(0f, 1f)
 
-                poseStack.withPush {
-                    drawTotemEffect(progress, age, entity, fade)
-                }
+            val fade = if (progress >= fade) (progress - fade) / (1f - fade).coerceAtLeast(0.001f) else 0f
+
+            poseStack.withPush {
+                drawTotemEffect(progress, age, entity, fade)
             }
         }
     }

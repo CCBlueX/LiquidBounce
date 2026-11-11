@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.gametest
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.ShaderGlow
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
 import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.liquidbounce.render.effect.PostStyle
+import net.ccbluex.liquidbounce.render.effect.StyleChain
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.gui.Hud
@@ -60,14 +60,14 @@ class EspGlowGameTest : LocalGameTest() {
                     context.waitTicks(STYLE_TICKS)
                     context.takeScreenshot("esp-glow-${style.tag.lowercase()}")
 
-                    if (style is ShaderGlow) {
-                        check(context.fromClient { GlowPostEffect.compiles(style) }) { "${style.tag} did not compile" }
+                    if (style is PostStyle) {
+                        check(context.fromClient { StyleChain.compiles(style) }) { "${style.tag} did not compile" }
                     }
                 }
 
                 val registered = context.fromClient { client ->
-                    val ours = EspGlowMode.styles.modes.filterIsInstance<ShaderGlow>().map { it.pipeline } +
-                        GlowPostEffect.FieldRows + GlowPostEffect.FieldColumns
+                    val ours = EspGlowMode.styles.modes.filterIsInstance<PostStyle>().map { it.pipeline } +
+                        StyleChain.FieldRows + StyleChain.FieldColumns
                     val pipelines = (RenderPipelines.requiredPipelines() + RenderPipelines.optionalPipelines())
                         .filter { it in ours }
                         .map { it.location }

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSides
+import net.ccbluex.liquidbounce.render.effect.ShaderLayer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -37,15 +38,15 @@ import net.ccbluex.liquidbounce.utils.math.sq
  */
 object AutoFarmBlockESP : ToggleableValueGroup(ModuleAutoFarm, "BlockESP", true) {
 
-    private val outline by boolean("Outline", true)
-
     private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
-    private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
+    private val placeColor by color("PlaceColor", Color4b(191, 245, 66))
     private val range by int("Range", 50, 10..128)
 
     private val colorRainbow by boolean("Rainbow", false)
 
     private val placeTargets by multiEnumChoice("PlaceTargets", AutoFarmTrackedState.Plantable.entries)
+
+    private val shader = tree(ShaderLayer())
 
     private object CurrentTarget : ToggleableValueGroup(AutoFarmBlockESP, "CurrentTarget", true) {
         private val color by color("Color", Color4b(66, 120, 245, 255))
@@ -56,7 +57,7 @@ object AutoFarmBlockESP : ToggleableValueGroup(ModuleAutoFarm, "BlockESP", true)
             val target = ModuleAutoFarm.currentTarget ?: return
             with(renderEnvironment) {
                 withPositionRelativeToCamera(target) {
-                    drawBox(FULL_BOX, if (colorRainbow) rainbow(alpha = 0.2f) else color.with(a = 50))
+                    drawBox(FULL_BOX, if (colorRainbow) rainbow() else color)
                 }
             }
         }
@@ -68,33 +69,20 @@ object AutoFarmBlockESP : ToggleableValueGroup(ModuleAutoFarm, "BlockESP", true)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val baseColor = if (colorRainbow) rainbow() else readyColor
+        val harvestColor = if (colorRainbow) rainbow() else readyColor
 
-        val fillColor = baseColor.with(a = 50)
-
-        event.renderEnvironment {
+        event.renderEnvironment(shader) {
             CurrentTarget.render(this)
             for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                 if (player.position().horizontalDistanceToSqr(pos) > range.sq()) continue
 
                 withPositionRelativeToCamera(pos) {
                     when (type) {
-                        AutoFarmTrackedState.ReadyForHarvest -> {
-                            drawBox(
-                                FULL_BOX,
-                                fillColor,
-                                if (outline) baseColor.with(a = 100) else null,
-                            )
-                        }
+                        AutoFarmTrackedState.ReadyForHarvest -> drawBox(FULL_BOX, harvestColor)
 
                         is AutoFarmTrackedState.Plantable -> if (type in placeTargets) {
                             val availableSides = type.findPlantableSides(pos, world.getBlockState(pos))
-                            drawBoxSides(
-                                FULL_BOX,
-                                sides = availableSides,
-                                faceColor = placeColor,
-                                outlineColor = if (outline) baseColor.with(a = 100) else null,
-                            )
+                            drawBoxSides(FULL_BOX, sides = availableSides, faceColor = placeColor)
                         }
 
                         AutoFarmTrackedState.Bonemealable -> {
