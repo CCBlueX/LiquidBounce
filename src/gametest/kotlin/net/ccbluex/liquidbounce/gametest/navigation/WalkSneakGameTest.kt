@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.gametest.navigation
 import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.player
-import net.ccbluex.liquidbounce.gametest.useAngleSmooth
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -41,7 +40,6 @@ class WalkSneakGameTest : FabricClientGameTest {
         context.waitForClient()
         context.onClient {
             walker = TestWalker("TestSneakWalker", GOAL_RADIUS)
-            useAngleSmooth(walker)
         }
 
         try {
