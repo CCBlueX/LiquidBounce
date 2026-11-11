@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
-import net.ccbluex.liquidbounce.utils.combat.TargetSelector
+import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -67,7 +67,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     private val afterAttack by enumChoice("AfterAttack", AfterAttack.RETURN)
     private val hold by int("Hold", 10, 1..40, "ticks")
 
-    private val targetSelector = tree(TargetSelector(TargetPriority.DISTANCE, rangeValue))
+    private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE, rangeValue))
     private val clicker = tree(Clicker(this, mc.options.keyAttack))
     private val rotations = tree(RotationsValueGroup(this, combatSpecific = true))
     private val steps = tree(TeleportStepSettings())
@@ -107,7 +107,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     /** The engagement while its target is still one. */
     private val liveEngagement: Engagement?
-        get() = engagement?.takeIf { targetSelector.validate(it.target) }
+        get() = engagement?.takeIf { targetTracker.validate(it.target) }
 
     override fun onDisabled() {
         TeleportDispatcher.undo(this)
@@ -170,7 +170,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         val origin = trip.feet
-        val target = targetSelector.targets().firstOrNull { unreachable.getOrDefault(it.id, 0) <= ticks }
+        val target = targetTracker.selectFirst { unreachable.getOrDefault(it.id, 0) <= ticks }
         engagement = target?.let(::Engagement)
         if (target == null) {
             view.clear()

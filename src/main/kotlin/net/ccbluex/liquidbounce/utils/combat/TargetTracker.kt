@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT
 import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT_RANGE
 import net.ccbluex.liquidbounce.config.types.ValueType.INT
 import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.mapReadOnly
@@ -40,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.player.Player
@@ -56,18 +58,27 @@ open class TargetTracker(
     constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
         this(defaultPriority, DummyRangedValueProvider(range))
 
+    private val reaction = tree(TargetReaction())
+
     var target: LivingEntity? = null
 
     fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
         val enemies = targets()
         val selected = if (predicate != null) enemies.firstOrNull(predicate::test) else enemies.firstOrNull()
-        return selected.also { this.target = it }
+        return selected?.takeIf(reaction::hasReactedTo).also { this.target = it }
     }
 
-    fun <R> select(evaluator: (LivingEntity) -> R): R? {
-        for (enemy in targets()) {
+    /**
+     * Makes the first of [enemies] that [evaluator] has a value for the target.
+     */
+    fun <R> select(enemies: List<LivingEntity> = targets(), evaluator: (LivingEntity) -> R): R? {
+        for (enemy in enemies) {
             val value = evaluator(enemy)
             if (value != null) {
+                if (!reaction.hasReactedTo(enemy)) {
+                    break
+                }
+
                 target = enemy
                 return value
             }
@@ -88,6 +99,42 @@ open class TargetTracker(
             reset()
         }
     }
+}
+
+/**
+ * Holds a newly picked entity back for a reaction time, counted from the tick it was picked first. Only the
+ * entity handed out last is free of it, however long it was lost.
+ */
+class TargetReaction : ToggleableValueGroup(name = "Reaction", enabled = false) {
+
+    private val delay by intRange("Delay", 3..5, 1..20, "ticks")
+
+    private var reactedId = -1
+    private var pendingId = -1
+    private var pendingSince = 0
+    private var pendingTicks = 0
+
+    fun hasReactedTo(entity: Entity): Boolean {
+        if (!enabled || entity.id == reactedId) {
+            pendingId = -1
+            return true
+        }
+
+        if (entity.id != pendingId) {
+            pendingId = entity.id
+            pendingSince = player.tickCount
+            pendingTicks = delay.random()
+        }
+
+        // A respawned player counts its ticks from zero again
+        if (player.tickCount - pendingSince in 0..<pendingTicks) {
+            return false
+        }
+
+        reactedId = entity.id
+        return true
+    }
+
 }
 
 open class TargetSelector(
