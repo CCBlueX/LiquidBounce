@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.f
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveTimerFeature
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
@@ -88,7 +89,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
     private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
-    private val movementKeys =
+    private val movementKeys by sessionState {
         referenceBooleanArrayMapOf(
             mc.options.keyUp, false,
             mc.options.keyLeft, false,
@@ -97,6 +98,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
             mc.options.keyJump, false,
             mc.options.keyShift, false,
         )
+    }
 
     init {
         tree(InventoryMoveSprintControlFeature)
@@ -139,7 +141,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVE
         }
     }
 
-    private val delayedContainerPackets = ArrayList<Packet<*>>()
+    private val delayedContainerPackets by sessionState { ArrayList<Packet<*>>() }
 
     override fun onDisabled() {
         delayedContainerPackets.clear()

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
@@ -55,8 +56,8 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     private val features by multiEnumChoice("Features", Features.CLEANUP)
     private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
-    private val trackedHotbarItems = enumMapOf<HotbarItemSlot, ItemAndComponents>()
-    private val chronometer = Chronometer()
+    private val trackedHotbarItems by sessionState { enumMapOf<HotbarItemSlot, ItemAndComponents>() }
+    private val chronometer by sessionState { Chronometer() }
 
     private fun clear() {
         trackedHotbarItems.clear()

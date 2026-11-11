@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.client.player.AbstractClientPlayer
 
@@ -88,7 +89,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
         private val whenNoLock by enumChoice("WhenNoLock", NoLockMode.ALLOW_ALL)
 
         // Combination of [entityId] and [time]
-        private val lockList = Int2LongLinkedOpenHashMap()
+        private val lockList by sessionState { Int2LongLinkedOpenHashMap() }
 
         enum class NoLockMode(override val tag: String) : Tagged {
             ALLOW_ALL("AllowAll"),

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModulePacketLogger
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -240,7 +241,7 @@ fun MultiPlayerGameMode.useItem(
 }
 
 fun handlePacket(packet: Packet<*>) =
-    runCatching { (packet as Packet<ClientGamePacketListener>).handle(mc.connection!!) }
+    runCatching { (packet as Packet<ClientGamePacketListener>).handle(currentSession.connection!!) }
 
 @AddonApi
 fun sendPacketSilently(packet: Packet<*>) {
@@ -249,7 +250,7 @@ fun sendPacketSilently(packet: Packet<*>) {
     RotationManager.packetHandler.handler.accept(packetEvent)
     PositionPacketSeparator.packetHandler.handler.accept(packetEvent)
     ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
-    mc.connection?.connection?.send(packetEvent.packet, null)
+    currentSession.connection?.connection?.send(packetEvent.packet, null)
 }
 
 enum class MovePacketType(override val tag: String) : Tagged {

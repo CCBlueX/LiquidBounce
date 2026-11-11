@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -48,7 +49,7 @@ object FlyHypixel20250121 : Mode("Hypixel") {
 
     private val timer by float("Timer", 1.0f, 0.1f..1.0f)
 
-    private var isFlying = false
+    private var isFlying by sessionState { false }
 
     override fun disable() {
         isFlying = false

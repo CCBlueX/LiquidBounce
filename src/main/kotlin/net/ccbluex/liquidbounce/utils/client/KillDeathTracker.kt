@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerDeathEvent
 import net.ccbluex.liquidbounce.event.events.PlayerKillEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.text.toDeathMessage
 import net.minecraft.world.entity.player.Player
@@ -39,9 +40,9 @@ internal object KillDeathTracker : EventListener {
 
     private const val FIGHT_MS = 10_000L
 
-    private val hitAt = HashMap<String, Long>()
-    private var hurtAt = 0L
-    private var lastHurtTime = 0
+    private val hitAt by sessionState { HashMap<String, Long>() }
+    private var hurtAt by sessionState { 0L }
+    private var lastHurtTime by sessionState { 0 }
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
@@ -62,14 +63,14 @@ internal object KillDeathTracker : EventListener {
 
     @Suppress("unused")
     private val chatHandler = handler<ChatReceiveEvent> { event ->
-        val self = mc.player?.scoreboardName ?: return@handler
+        val self = currentSession.player?.scoreboardName ?: return@handler
         // A death message can come in the same tick as the final hit
         noteHurt()
         val now = System.currentTimeMillis()
         hitAt.values.removeIf { now - it > FIGHT_MS }
 
         val death = event.textData.toDeathMessage(hitAt.keys + self) { name ->
-            mc.connection?.onlinePlayers?.any { it.profile.name == name } == true
+            currentSession.connection?.onlinePlayers?.any { it.profile.name == name } == true
         } ?: return@handler
         when {
             death.victim == self && (death.exact || now - hurtAt <= FIGHT_MS) -> {
@@ -84,7 +85,7 @@ internal object KillDeathTracker : EventListener {
 
     // The hurt animation restarts with every hit taken
     private fun noteHurt() {
-        val hurtTime = mc.player?.hurtTime ?: 0
+        val hurtTime = currentSession.player?.hurtTime ?: 0
         if (hurtTime > lastHurtTime) {
             hurtAt = System.currentTimeMillis()
         }

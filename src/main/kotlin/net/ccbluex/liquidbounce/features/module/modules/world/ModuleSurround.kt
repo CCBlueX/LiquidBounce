@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
 import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter.CenterHandlerState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
@@ -137,7 +138,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
             tree(ExtraLayer)
         }
 
-        val broken = LongOpenHashSet()
+        val broken by sessionState { LongOpenHashSet() }
 
         /**
          * With a higher priority so that it runs before [CrystalDestroyFeature].
@@ -216,9 +217,9 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
         { filter.getSlot(blocks) }
     ))
 
-    private var addExtraLayerBlocks = false
-    private var startY = 0.0
-    private val centerPos = Vector2d()
+    private var addExtraLayerBlocks by sessionState { false }
+    private var startY by sessionState { 0.0 }
+    private val centerPos by sessionState { Vector2d() }
 
     init {
         // for this module, support should by default be able to use obsidian

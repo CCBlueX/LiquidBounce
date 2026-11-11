@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeStatic
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.item.isGlider
@@ -72,7 +73,7 @@ object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
         ElytraFlyModePitch40Infinite
     ))
 
-    private var needsToRestart = false
+    private var needsToRestart by sessionState { false }
 
     override fun onEnabled() {
         needsToRestart = false

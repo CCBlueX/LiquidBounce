@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -47,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.client.RequestHandler
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -81,7 +83,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     private val rotationTarget
         get() = rotationTargetHandler.getActiveRequestValue()
-    private val rotationTargetHandler = RequestHandler<RotationTarget>()
+    private val rotationTargetHandler by sessionState { RequestHandler<RotationTarget>() }
 
     @Suppress("unused")
     private val lifecycleListener = object : EventListener {
@@ -90,28 +92,31 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
     val activeRotationTarget: RotationTarget?
         get() = rotationTarget ?: previousRotationTarget
-    internal var previousRotationTarget: RotationTarget? = null
+    internal var previousRotationTarget: RotationTarget? by sessionState { null }
         private set
 
     /**
      * The rotation we want to aim at. This DOES NOT mean that the server already received this rotation.
      */
     @AddonApi
-    var currentRotation: Rotation? = null
+    var currentRotation: Rotation?
+        get() = currentRotationState.get()
         private set(value) {
             lastRotation = if (value == null) {
                 null
             } else {
-                field ?: mc.player?.rotation ?: Rotation.ZERO
+                currentRotationState.get() ?: currentSession.player?.rotation ?: Rotation.ZERO
             }
 
-            field = value
+            currentRotationState.set(value)
         }
 
+    private val currentRotationState = sessionState<Rotation?> { null }
+
     // Used for rotation interpolation
-    var playerRotation: Rotation? = null
+    var playerRotation: Rotation? by sessionState { null }
         private set
-    var lastRotation: Rotation? = null
+    var lastRotation: Rotation? by sessionState { null }
         private set
 
     private val fakeLagging
@@ -139,10 +144,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      * The value is not being written by the packets, but we gather the Rotation from the last yaw and pitch variables
      * from our player instance handled by the sendMovementPackets() function.
      */
-    var actualServerRotation = Rotation.ZERO
+    var actualServerRotation by sessionState { Rotation.ZERO }
         private set
 
-    private var theoreticalServerRotation = Rotation.ZERO
+    private var theoreticalServerRotation by sessionState { Rotation.ZERO }
 
     private fun reset() {
         rotationTargetHandler.clear()
@@ -316,7 +321,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     private fun allowedToUpdate() = !CombatManager.shouldPauseRotation
 
     fun rotationMatchesPreviousRotation(): Boolean {
-        val player = mc.player ?: return false
+        val player = currentSession.player ?: return false
 
         currentRotation?.let {
             return it == lastRotation

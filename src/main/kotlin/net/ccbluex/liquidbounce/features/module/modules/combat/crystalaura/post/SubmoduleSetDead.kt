@@ -22,6 +22,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
+import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -46,7 +48,7 @@ object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", tru
             val level: ClientLevel
         )
 
-        private val entities = Int2ObjectOpenHashMap<RemovedCrystal>().synchronized()
+        private val entities by sessionState { Int2ObjectOpenHashMap<RemovedCrystal>().synchronized() }
 
         override fun attacked(id: Int) {
             if (!running) {
@@ -70,7 +72,7 @@ object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", tru
         override fun timedOut(id: Int) {
             mc.execute {
                 val tracked = entities.remove(id) ?: return@execute
-                val currentWorld = mc.level ?: return@execute
+                val currentWorld = currentSession.level ?: return@execute
                 if (tracked.level !== currentWorld || currentWorld.getEntity(id) != null) {
                     return@execute
                 }
@@ -82,7 +84,7 @@ object SubmoduleSetDead : ToggleableValueGroup(ModuleCrystalAura, "SetDead", tru
 
         override fun cleared() {
             mc.execute {
-                val currentWorld = mc.level ?: run {
+                val currentWorld = currentSession.level ?: run {
                     entities.clear()
                     return@execute
                 }

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
@@ -169,8 +170,8 @@ object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     private val switchDelay by int("SwitchDelay", 0, 0..100, "ticks")
 
     // Tracks the current block breaking session so the switch is delayed only once per block
-    private var breakingPos: BlockPos? = null
-    private var breakingStartedTick = 0
+    private var breakingPos: BlockPos? by sessionState { null }
+    private var breakingStartedTick by sessionState { 0 }
 
     private val requireSneaking by boolean("RequireSneaking", false)
     private val notDuringCombat by boolean("NotDuringCombat", false)

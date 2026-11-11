@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.Custo
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotHorizon20211018
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotIntave20220728
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotMatrix20211018
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
@@ -84,7 +85,7 @@ object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
      * Check if player might be a bot
      */
     fun isBot(player: Entity): Boolean {
-        if (!running || player === mc.player) {
+        if (!running || player === currentSession.player) {
             return false
         }
 

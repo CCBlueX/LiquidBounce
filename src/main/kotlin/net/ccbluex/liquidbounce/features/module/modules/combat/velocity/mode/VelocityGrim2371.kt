@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.shouldSwingHand
@@ -45,17 +46,17 @@ import net.minecraft.world.phys.BlockHitResult
 
 internal object VelocityGrim2371 : VelocityMode("Grim-2.3.71", aliases = listOf("Grim2371")) {
 
-    private var cancelNextVelocity = false
-    private var delay = false
-    private var needClick = false
+    private var cancelNextVelocity by sessionState { false }
+    private var delay by sessionState { false }
+    private var needClick by sessionState { false }
 
-    private var waitForPing = false
-    private var waitForUpdate = false
+    private var waitForPing by sessionState { false }
+    private var waitForUpdate by sessionState { false }
 
-    private var hitResult: BlockHitResult? = null
-    private var shouldSkip = false
+    private var hitResult: BlockHitResult? by sessionState { null }
+    private var shouldSkip by sessionState { false }
 
-    private var freezeTicks = 0
+    private var freezeTicks by sessionState { 0 }
     private const val MAX_FREEZE_TICKS = 20 // To prevent freezing
 
     override fun enable() {

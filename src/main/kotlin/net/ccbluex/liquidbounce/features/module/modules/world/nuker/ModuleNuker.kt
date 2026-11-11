@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNu
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.SphereNukerArea
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.InstantNukerMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode.LegitNukerMode
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -69,11 +70,14 @@ object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit
     /**
      * The last target block that was hit. Does not mean it was destroyed.
      */
-    var wasTarget: BlockPos? = null
+    var wasTarget: BlockPos?
+        get() = wasTargetState.get()
         set(value) {
-            field = value
+            wasTargetState.set(value)
             targetRenderer.addBlock(value ?: return)
         }
+
+    private val wasTargetState = sessionState<BlockPos?> { null }
 
     fun isValid(blockState: BlockState): Boolean {
         return filter.invoke(blockState.block, blocks)

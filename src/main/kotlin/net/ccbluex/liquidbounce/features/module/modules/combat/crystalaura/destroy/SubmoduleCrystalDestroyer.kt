@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -49,8 +50,8 @@ object SubmoduleCrystalDestroyer : ToggleableValueGroup(ModuleCrystalAura, "Dest
     // prioritizes faces that are visible, might make the crystal aura slower
     private val prioritizeVisibleFaces by boolean("PrioritizeVisibleFaces", false)
 
-    var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
-    val chronometer = Chronometer()
+    var postAttackHandlers by sessionState { arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker) }
+    val chronometer by sessionState { Chronometer() }
 
     fun tick(providedCrystal: EndCrystal? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {

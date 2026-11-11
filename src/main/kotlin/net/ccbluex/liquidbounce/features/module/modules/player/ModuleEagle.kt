@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAll
@@ -47,9 +48,9 @@ object ModuleEagle : ClientModule(
             currentEdgeDistance = it.random()
         }
 
-    private var currentEdgeDistance: Float = edgeDistance.random()
-    private var wasSneaking = false
-    private var sneakCaptured = false
+    private var currentEdgeDistance: Float by sessionState { edgeDistance.random() }
+    private var wasSneaking by sessionState { false }
+    private var sneakCaptured by sessionState { false }
 
     private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
         if (player.abilities.flying || !conditionsMet) {

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThan1_21_2
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -137,7 +138,7 @@ import kotlin.math.floor
 fun Vec3i.toBlockPos() = BlockPos(this.x, this.y, this.z)
 
 @AddonApi
-val BlockPos.state: BlockState? get() = mc.level?.getBlockState(this)
+val BlockPos.state: BlockState? get() = currentSession.level?.getBlockState(this)
 
 @AddonApi
 val BlockPos.stateOrEmpty: BlockState get() = state ?: Blocks.VOID_AIR.defaultBlockState()
@@ -443,7 +444,7 @@ inline fun AABB.collideBlockIntersects(
             return true
         }
 
-        if (blockState.getCollisionShape(mc.level!!, blockPos).move(blockPos) intersects this) {
+        if (blockState.getCollisionShape(currentSession.level!!, blockPos).move(blockPos) intersects this) {
             return true
         }
     }

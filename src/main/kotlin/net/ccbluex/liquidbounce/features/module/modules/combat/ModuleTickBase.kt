@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
@@ -110,7 +111,7 @@ internal object ModuleTickBase : ClientModule(
     private val chargeWhileUsingItem by boolean("ChargeWhileUsingItem", false)
 
     @Suppress("unused")
-    private val balanceReset = balanceReset()
+    private val balanceReset by sessionState { balanceReset() }
 
     init {
         tree(Advantage)
@@ -126,7 +127,7 @@ internal object ModuleTickBase : ClientModule(
     /**
      * Whether [chance] lets us take the current chance to hit earlier, rolled once until the chance is gone.
      */
-    private var rolled: Boolean? = null
+    private var rolled: Boolean? by sessionState { null }
 
     private fun rollChance() = rolled ?: chance.asBoolean.also { rolled = it }
 
@@ -192,8 +193,8 @@ internal object ModuleTickBase : ClientModule(
 
         private val boostSpeed by float("BoostSpeed", 5f, 1f..10f)
 
-        private var boosting = false
-        private var cooldownTicks = 0
+        private var boosting by sessionState { false }
+        private var cooldownTicks by sessionState { 0 }
 
         override fun enable() {
             boosting = false
@@ -293,13 +294,13 @@ internal object ModuleTickBase : ClientModule(
         /**
          * Set while bursting and paying for it, when the game has to run at the normal speed.
          */
-        private var busy = false
+        private var busy by sessionState { false }
 
         /**
          * While holding first, the normal ticks that will run between the hold and the burst.
          */
-        private var walkAfterHold: Int? = null
-        private var plannedAtBalance = Float.NaN
+        private var walkAfterHold: Int? by sessionState { null }
+        private var plannedAtBalance by sessionState { Float.NaN }
 
         override fun timerSpeed() = 1f.takeIf { busy }
 

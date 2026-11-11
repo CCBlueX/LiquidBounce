@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -62,7 +63,7 @@ object FlyFireballCustomTechnique : Mode("Custom") {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 
-    var canMove = true
+    var canMove by sessionState { true }
 
     init {
         tree(Jump)

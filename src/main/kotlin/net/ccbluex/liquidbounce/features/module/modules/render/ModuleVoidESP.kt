@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.core.BlockPos
@@ -54,7 +55,7 @@ object ModuleVoidESP : ClientModule("VoidESP", ModuleCategories.RENDER) {
         )
     )
 
-    private var lastTickPositions: LongSet = LongSets.EMPTY_SET
+    private var lastTickPositions: LongSet by sessionState { LongSets.EMPTY_SET }
 
     override fun onDisabled() {
         lastTickPositions = LongSets.EMPTY_SET

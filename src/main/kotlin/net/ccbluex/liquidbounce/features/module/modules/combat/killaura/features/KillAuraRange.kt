@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.range.RangeValueGroup
 import kotlin.math.max
@@ -44,7 +45,7 @@ object KillAuraRange : RangeValueGroup("Range", 1f, 3f), MinecraftShortcuts {
     ).onChanged { range ->
         currentScanRangeAddition = range.random()
     }
-    private var currentScanRangeAddition: Float = scanRangeIncrease.random()
+    private var currentScanRangeAddition: Float by sessionState { scanRangeIncrease.random() }
 
     fun update() {
         currentScanRangeAddition = scanRangeIncrease.random()

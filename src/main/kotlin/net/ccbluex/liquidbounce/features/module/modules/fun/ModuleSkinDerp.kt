@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.world.entity.player.PlayerModelPart
 import kotlin.random.Random
 
@@ -37,7 +38,7 @@ object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val parts by multiEnumChoice("Parts", DerpParts.entries)
 
-    private var prevModelParts = emptySet<PlayerModelPart>()
+    private var prevModelParts by sessionState { emptySet<PlayerModelPart>() }
 
     override fun onEnabled() {
         prevModelParts = HashSet(mc.options.modelParts)

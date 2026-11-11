@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -82,12 +84,12 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
 
     private val useNotification by boolean("UseNotification", false)
 
-    private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
-    private val uuidGameModeCache = Object2ObjectOpenHashMap<UUID, GameType>()
-    private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
-    private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
-    private val observedPlayers = ObjectOpenHashSet<UUID>()
-    private val totemPopCounter = Object2IntOpenHashMap<UUID>()
+    private val uuidNameCache by sessionState { Object2ObjectOpenHashMap<UUID, String>() }
+    private val uuidGameModeCache by sessionState { Object2ObjectOpenHashMap<UUID, GameType>() }
+    private val itemConsumptionCache by sessionState { Object2ObjectOpenHashMap<UUID, ItemConsumptionState>() }
+    private val heldItemCache by sessionState { Object2ObjectOpenHashMap<UUID, HeldItemState>() }
+    private val observedPlayers by sessionState { ObjectOpenHashSet<UUID>() }
+    private val totemPopCounter by sessionState { Object2IntOpenHashMap<UUID>() }
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -142,7 +144,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
             is ClientboundEntityEventPacket -> if (packet.isDeathProtection) {
                 mc.execute {
                     val entity = packet.getEntity(world) as? Player ?: return@execute
-                    if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
+                    if (entity === currentSession.player || FriendManager.isFriend(entity.name.string)) return@execute
 
                     totemPopCounter.addTo(entity.uuid, 1)
 

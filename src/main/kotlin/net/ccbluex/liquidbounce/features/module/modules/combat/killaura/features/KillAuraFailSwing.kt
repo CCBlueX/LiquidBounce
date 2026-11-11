@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -57,7 +58,7 @@ internal object KillAuraFailSwing : ToggleableValueGroup(ModuleKillAura, "FailSw
      * Current additional range - randomized from [additionalRange].
      * This will change every time we attack an entity.
      */
-    private var currentAdditionalRange: Float = this.additionalRange.random()
+    private var currentAdditionalRange: Float by sessionState { this.additionalRange.random() }
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent>{

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.mode
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -57,10 +58,10 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
 
     // ===================== Runtime State =====================
 
-    private var currentAcceleration = 0f
-    private var currentDiveSpeed = 0f
-    private var cachedGroundCheck = false
-    private var groundCheckCooldown = 0
+    private var currentAcceleration by sessionState { 0f }
+    private var currentDiveSpeed by sessionState { 0f }
+    private var cachedGroundCheck by sessionState { false }
+    private var groundCheckCooldown by sessionState { 0 }
 
     // ===================== Physics Constants =====================
 

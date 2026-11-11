@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -73,12 +74,12 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     }
 
     private val rotations = tree(RotationsValueGroup(this))
-    private val pickupTracker = TimedPickupTracker(PICKUP_TRACKER_CAPACITY)
-    private val trackedWebs = ObjectLinkedOpenHashSet<BlockPos>()
+    private val pickupTracker by sessionState { TimedPickupTracker(PICKUP_TRACKER_CAPACITY) }
+    private val trackedWebs by sessionState { ObjectLinkedOpenHashSet<BlockPos>() }
 
-    private var currentAction: UseAction? = null
-    private var lastSuccessfulWeb: BlockPos? = null
-    private var lastSuccessfulAt = 0L
+    private var currentAction: UseAction? by sessionState { null }
+    private var lastSuccessfulWeb: BlockPos? by sessionState { null }
+    private var lastSuccessfulAt by sessionState { 0L }
 
     init {
         tree(Pickup)

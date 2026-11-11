@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.splash.SplashPhaseScreen
 import net.ccbluex.liquidbounce.render.splash.SplashTimeline
 import net.ccbluex.liquidbounce.render.splash.wrapText
 import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -283,7 +284,7 @@ class ErrorScreen private constructor(
          * behind the screen.
          */
         private fun leaveWorld(screen: ErrorScreen) {
-            val level = mc.level ?: return
+            val level = currentSession.level ?: return
             try {
                 level.disconnect(ClientLevel.DEFAULT_QUIT_MESSAGE)
                 // Keeps the server's resource packs, so no reload starts behind the screen

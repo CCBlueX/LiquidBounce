@@ -26,6 +26,7 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.renderpearl.api.pipeline.UniformType
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.LevelTargetBundle
@@ -59,9 +60,9 @@ object GlowPostEffect {
     val FieldRows = pipeline(ClientShaders.Fragment.EspGlowRows)
     val FieldColumns = pipeline(ClientShaders.Fragment.EspGlowColumns)
 
-    private var chain: PostChain? = null
+    private var chain: PostChain? by sessionState { null }
     private var chainStyle: ShaderGlow? = null
-    private var dirty = true
+    private var dirty by sessionState { true }
 
     fun invalidate() {
         dirty = true

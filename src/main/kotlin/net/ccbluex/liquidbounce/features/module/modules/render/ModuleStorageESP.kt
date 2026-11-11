@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.addShapeFaces
@@ -49,6 +50,7 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.PositionedVoxelShape
@@ -158,7 +160,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private val dirtyFlag = atomic(true)
+        private val dirtyFlag by sessionState { atomic(true) }
 
         private val blockFacesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockFaces")
         private val blockOutlinesRenderState = CachedMeshStorage("${ModuleStorageESP.name} $name BlockOutlines")
@@ -176,7 +178,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         private val outline by boolean("Outline", true)
 
-        private val entityBoxes = mutableListOf<EntityBox>()
+        private val entityBoxes by sessionState { mutableListOf<EntityBox>() }
 
         override fun disable() {
             blockFacesRenderState.clearStates()
@@ -233,7 +235,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
-            val level = mc.level ?: return@handler
+            val level = currentSession.level ?: return@handler
 
             entityBoxes.clear()
 
@@ -292,7 +294,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
     }
 
     object GlowMode : Mode("Glow") {
-        private val dirtyFlag = atomic(true)
+        private val dirtyFlag by sessionState { atomic(true) }
 
         private val renderState = CachedMeshStorage("${ModuleStorageESP.name} $name")
 
@@ -375,7 +377,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
                 }
             }
 
-            for (entity in mc.level?.entitiesForRendering() ?: return@handler) {
+            for (entity in currentSession.level?.entitiesForRendering() ?: return@handler) {
                 val category = entity.categorize() ?: continue
                 if (!category.shouldRender(entity) || !category.tracers) continue
 
@@ -478,7 +480,7 @@ object ModuleStorageESP : ClientModule("StorageESP", ModuleCategories.RENDER, al
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             if (!state.hasBlockEntity()) return null
 
-            return mc.level?.getBlockEntity(pos).categorize()
+            return currentSession.level?.getBlockEntity(pos).categorize()
         }
 
         override fun onUpdated() {

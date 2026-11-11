@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -35,7 +36,7 @@ import kotlin.math.atan2
 
 object ScaffoldMovementPrediction : ToggleableValueGroup(ModuleScaffold, "Prediction", true) {
 
-    private val lastPlacementOffsets = ArrayDeque<Vec3>(MAX_PLACEMENT_OFFSETS + 1)
+    private val lastPlacementOffsets by sessionState { ArrayDeque<Vec3>(MAX_PLACEMENT_OFFSETS + 1) }
 
     private const val MAX_PLACEMENT_OFFSETS = 4
 

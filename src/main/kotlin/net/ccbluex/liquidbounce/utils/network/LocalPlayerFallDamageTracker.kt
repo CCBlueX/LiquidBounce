@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.tags.DamageTypeTags
 
@@ -45,7 +46,7 @@ object LocalPlayerFallDamageTracker : EventListener {
 
     private const val HURT_TICKS = 10
 
-    private var fallDamageTicks = 0
+    private var fallDamageTicks by sessionState { 0 }
 
     val isCurrentFallDamage: Boolean
         get() = fallDamageTicks > 0

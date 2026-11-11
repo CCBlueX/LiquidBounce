@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.moving
 
@@ -36,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHylex20241117(parent: ModeValueGroup<*>) : SpeedBHopBase("HylexLowHop", parent) {
 
-    private var airTicks = 0
+    private var airTicks by sessionState { 0 }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -43,23 +45,20 @@ import net.minecraft.world.phys.Vec3
 object TeleportDispatcher : EventListener {
 
     /** The latest run, also after it ended. */
-    var run: TeleportRun? = null
+    var run: TeleportRun? by sessionState { null }
         private set
 
-    @Volatile
-    private var holder: EventListener? = null
+    private var holder: EventListener? by sessionState { null }
 
     /** The last step the server got, while it has the player somewhere else than the client. */
-    @Volatile
-    private var lastSent: TeleportStep? = null
+    private var lastSent: TeleportStep? by sessionState { null }
 
-    @Volatile
-    private var setback = false
+    private var setback by sessionState { false }
 
     /** Where the current excursion began, followed by the route points it passed. */
-    private val trail = ArrayList<Vec3>()
-    private var stepLength = TeleportStepSettings.DEFAULT_STEP_LENGTH
-    private var packetsPerTick = TeleportStepSettings.DEFAULT_PACKETS_PER_TICK
+    private val trail by sessionState { ArrayList<Vec3>() }
+    private var stepLength by sessionState { TeleportStepSettings.DEFAULT_STEP_LENGTH }
+    private var packetsPerTick by sessionState { TeleportStepSettings.DEFAULT_PACKETS_PER_TICK }
 
     val serverPosition: Vec3?
         get() = lastSent?.position
@@ -181,7 +180,7 @@ object TeleportDispatcher : EventListener {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val run = run ?: return@handler
-        if (mc.player == null) {
+        if (currentSession.player == null) {
             return@handler
         }
 

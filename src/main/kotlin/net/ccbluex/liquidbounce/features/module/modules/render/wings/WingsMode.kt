@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.minecraft.util.Mth.rotLerp
 import net.minecraft.world.entity.EquipmentSlot
@@ -56,7 +57,7 @@ abstract class WingsMode(name: String) : Mode(name) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val player = mc.player ?: return@handler
+        val player = currentSession.player ?: return@handler
 
         event.renderEnvironment {
             for (entity in world.players()) {

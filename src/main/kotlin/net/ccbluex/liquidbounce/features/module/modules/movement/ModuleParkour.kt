@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -66,13 +67,13 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     private class JumpTarget(val pos: BlockPos, val aim: Vec3, val jumpNow: Boolean)
 
-    private var target: JumpTarget? = null
-    private var aimYaw = Float.NaN
-    private var sprint = false
+    private var target: JumpTarget? by sessionState { null }
+    private var aimYaw by sessionState { Float.NaN }
+    private var sprint by sessionState { false }
 
     /** Whether an assisted jump is in the air. */
-    private var airborne = false
-    private var ticksSinceLanding = BRAKE_TICKS
+    private var airborne by sessionState { false }
+    private var ticksSinceLanding by sessionState { BRAKE_TICKS }
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {

@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.SelfMoveTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.TickTrigger
+import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinClientPacketListener
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPlayerGameMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -63,12 +65,12 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     /**
      * The currently executed placement task.
      */
-    private var currentPlaceTask: Future<*>? = null
+    private var currentPlaceTask: Future<*>? by sessionState { null }
 
     /**
      * The currently executed destroy task.
      */
-    private var currentDestroyTask: Future<*>? = null
+    private var currentDestroyTask: Future<*>? by sessionState { null }
 
     private val canCache: BooleanSupplier
 
@@ -109,7 +111,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentPlaceTask = service.submit(runnable)
+            currentPlaceTask = service.submit(SessionContext.pinned(runnable))
         } else {
             currentPlaceTask?.cancel(true)
             currentPlaceTask = null
@@ -125,7 +127,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentDestroyTask = service.submit(runnable)
+            currentDestroyTask = service.submit(SessionContext.pinned(runnable))
         } else {
             currentDestroyTask?.cancel(true)
             currentDestroyTask = null

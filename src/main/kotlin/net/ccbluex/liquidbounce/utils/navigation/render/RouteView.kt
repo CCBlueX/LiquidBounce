@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.render
 
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -49,39 +50,39 @@ interface RouteProgress {
 /** What a navigating module shows, drawn by [RouteRenderer]. */
 class RouteView {
 
-    var state = RouteState.NONE
+    var state by sessionState { RouteState.NONE }
         private set
 
-    var since = 0L
+    var since by sessionState { 0L }
         private set
 
-    var start: Vec3? = null
+    var start: Vec3? by sessionState { null }
         private set
 
-    var destination: Vec3? = null
+    var destination: Vec3? by sessionState { null }
         private set
 
     /** Corners of the route, feet positions. */
-    var path: List<Vec3>? = null
+    var path: List<Vec3>? by sessionState { null }
         private set
 
-    var progress: RouteProgress? = null
+    var progress: RouteProgress? by sessionState { null }
         private set
 
-    var breaks: Collection<BlockPos> = emptyList()
-    var places: Collection<BlockPos> = emptyList()
+    var breaks: Collection<BlockPos> by sessionState { emptyList() }
+    var places: Collection<BlockPos> by sessionState { emptyList() }
 
     /** Where the server has the player when that differs from the client. */
-    var ghost: ((partialTicks: Float) -> Vec3?)? = null
+    var ghost: ((partialTicks: Float) -> Vec3?)? by sessionState { null }
 
-    var target: Entity? = null
-    var attackPosition: Vec3? = null
+    var target: Entity? by sessionState { null }
+    var attackPosition: Vec3? by sessionState { null }
 
-    var engaged = false
+    var engaged by sessionState { false }
 
     /** A destination the player could pick right now, shown while nothing else is. */
-    var preview: Vec3? = null
-    var isPreviewValid = false
+    var preview: Vec3? by sessionState { null }
+    var isPreviewValid by sessionState { false }
 
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start

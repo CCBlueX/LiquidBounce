@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -50,8 +51,8 @@ internal object NoFallBlink : NoFallMode("Blink") {
     private var triggerFallDistance by float("TriggerFallDistance", 2.5f, 0.5f..3f)
     private var maximumFallDistance by float("MaximumFallDistance", 20f, 2f..50f)
 
-    private var blinkFall = false
-    var waitUntilGround = true
+    private var blinkFall by sessionState { false }
+    var waitUntilGround by sessionState { true }
 
     private val inputHandler = handler<MovementInputEvent> { event ->
         // If we are invincible, we don't need to care about fall damage

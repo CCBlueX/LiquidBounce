@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -156,13 +157,13 @@ class BlockPlacer(
      * Stores all block positions where blocks should be placed paired with a boolean that is `true`
      * if the position was added by [support].
      */
-    val blocks = Long2BooleanLinkedOpenHashMap()
+    val blocks by sessionState { Long2BooleanLinkedOpenHashMap() }
 
-    private val inaccessible = LongOpenHashSet()
-    var ticksToWait = 0
+    private val inaccessible by sessionState { LongOpenHashSet() }
+    var ticksToWait by sessionState { 0 }
         private set
-    var ranAction = false
-    private var sneakTimes = 0
+    var ranAction by sessionState { false }
+    private var sneakTimes by sessionState { 0 }
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent>(priority = -20) {

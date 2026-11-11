@@ -213,7 +213,7 @@ data class MessageMetadata(
 fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
     val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
 
-    if (mc.player == null) {
+    if (currentSession.player == null) {
         logger.info("(Chat) ${realText.string}")
         return
     }

@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.clientLogger
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFixes
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -278,7 +279,7 @@ object ScreenManager : ActiveSessionListener {
 
     @Suppress("unused")
     private val effectUpdateHandler = handler<GameTickEvent> {
-        val player = mc.player ?: return@handler
+        val player = currentSession.player ?: return@handler
         if (player.activeEffects.isNotEmpty()) {
             EventManager.callEvent(ClientPlayerEffectEvent(player.activeEffects.toList()))
         }
@@ -357,7 +358,7 @@ object ScreenManager : ActiveSessionListener {
         }
 
         // Are we currently playing the game?
-        if (mc.level != null && screen == null) {
+        if (currentSession.level != null && screen == null) {
             closeScreen()
             return false
         }

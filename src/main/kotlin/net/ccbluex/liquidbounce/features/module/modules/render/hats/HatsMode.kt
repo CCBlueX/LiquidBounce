@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
@@ -68,7 +69,7 @@ abstract class HatsMode(name: String) : Mode(name) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val player = mc.player ?: return@handler
+        val player = currentSession.player ?: return@handler
 
         event.renderEnvironment {
             for (entity in world.players()) {

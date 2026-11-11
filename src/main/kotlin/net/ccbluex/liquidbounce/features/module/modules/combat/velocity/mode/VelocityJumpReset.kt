@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 
 /**
@@ -45,9 +46,9 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
         tree(JumpByDelay)
     }
 
-    private var limitUntilJump = 0
-    private var hitsUntilJump = JumpByReceivedHits.hitsUntilJump.random()
-    private var ticksUntilJump = JumpByDelay.ticksUntilJump.random()
+    private var limitUntilJump by sessionState { 0 }
+    private var hitsUntilJump by sessionState { JumpByReceivedHits.hitsUntilJump.random() }
+    private var ticksUntilJump by sessionState { JumpByDelay.ticksUntilJump.random() }
 
     @Suppress("ComplexCondition", "unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->

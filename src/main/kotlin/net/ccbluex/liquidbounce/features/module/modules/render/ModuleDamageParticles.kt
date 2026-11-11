@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -73,9 +74,9 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     /**
      * Ordered by [Particle.startTime]
      */
-    private val particles = ArrayDeque<Particle>()
+    private val particles by sessionState { ArrayDeque<Particle>() }
 
-    private val entityHealthMap = Reference2FloatOpenHashMap<LivingEntity>()
+    private val entityHealthMap by sessionState { Reference2FloatOpenHashMap<LivingEntity>() }
 
     private const val EPSILON = 0.05F
     private val FORMATTER = DecimalFormat("0.#")

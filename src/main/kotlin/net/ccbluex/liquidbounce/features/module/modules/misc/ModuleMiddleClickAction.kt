@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -63,7 +64,7 @@ object ModuleMiddleClickAction : ClientModule(
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
         private val stopOnSubmit by floatRange("StopOnSubmit", 85F..90F, 60F..90F, "Pitch")
-        private var wasPressed = false
+        private var wasPressed by sessionState { false }
 
         val repeatable = handler<GameTickEvent> {
             if (mc.gui.screen() != null) {
@@ -115,7 +116,7 @@ object ModuleMiddleClickAction : ClientModule(
 
         private val pickUpRange by float("PickUpRange", 3.0f, 1f..100f)
 
-        private var clicked = false
+        private var clicked by sessionState { false }
 
         val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation

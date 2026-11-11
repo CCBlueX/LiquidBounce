@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
@@ -49,7 +50,7 @@ import kotlin.math.max
 
 object LegitNukerMode : Mode("Legit") {
 
-    private var currentTarget: BlockPos? = null
+    private var currentTarget: BlockPos? by sessionState { null }
 
     override val parent: ModeValueGroup<Mode>
         get() = mode

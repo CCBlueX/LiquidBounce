@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -76,8 +77,8 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
         val wireframePlayer = WireframePlayer()
-        var creationTime = 0L
-        var finished = true
+        var creationTime by sessionState { 0L }
+        var finished by sessionState { true }
 
         override fun onEnabled() {
             finished = true
@@ -117,9 +118,9 @@ object ModuleFlagCheck : ClientModule("FlagCheck", ModuleCategories.MISC, aliase
         tree(Render)
     }
 
-    private val flagCount = atomic(0)
-    private var lastYaw = 0F
-    private var lastPitch = 0F
+    private val flagCount by sessionState { atomic(0) }
+    private var lastYaw by sessionState { 0F }
+    private var lastPitch by sessionState { 0F }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

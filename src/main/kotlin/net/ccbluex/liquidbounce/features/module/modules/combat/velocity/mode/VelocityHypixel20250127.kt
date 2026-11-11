@@ -22,12 +22,13 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 internal object VelocityHypixel20250127 : VelocityMode("Hypixel") {
 
-    private var absorbedVelocity = false
+    private var absorbedVelocity by sessionState { false }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

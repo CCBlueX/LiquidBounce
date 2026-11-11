@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -86,8 +87,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
-    private var targetRotation: Rotation? = null
-    private var playerRotation: Rotation? = null
+    private var targetRotation: Rotation? by sessionState { null }
+    private var playerRotation: Rotation? by sessionState { null }
 
     @Suppress("unused", "ComplexCondition")
     private val tickHandler = handler<RotationUpdateEvent> { _ ->

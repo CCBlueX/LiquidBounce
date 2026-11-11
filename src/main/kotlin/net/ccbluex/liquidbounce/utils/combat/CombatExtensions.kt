@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -154,7 +155,7 @@ private fun Set<Targets>.isInteresting(suspect: Entity, info: EntityTargetingInf
     // Check if enemy is a player and should be considered as a target
     return when (suspect) {
         is Player -> when {
-            suspect === mc.player -> false
+            suspect === currentSession.player -> false
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
             // Allow targeting friends even when Players is disabled, as long as Friends is enabled

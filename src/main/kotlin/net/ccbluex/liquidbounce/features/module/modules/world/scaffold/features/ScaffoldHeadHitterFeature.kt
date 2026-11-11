@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.entity.moving
 
@@ -30,7 +31,7 @@ object ScaffoldHeadHitterFeature : ToggleableValueGroup(ScaffoldNormalTechnique,
         !player.blockPosition().above(2).collisionShape.isEmpty && player.onGround()
 
     private val jumpDelay by intRange("JumpDelay", 0..0, 0..20, "ticks")
-    private var jumpCooldown = 0
+    private var jumpCooldown by sessionState { 0 }
 
     override fun onEnabled() {
         jumpCooldown = 0

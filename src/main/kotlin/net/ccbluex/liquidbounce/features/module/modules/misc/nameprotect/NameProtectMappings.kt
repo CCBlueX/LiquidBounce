@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.io.FastByteArrayInputStream
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.randomUsername
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
@@ -55,17 +56,16 @@ fun interface ColorGetter {
  * Keeps track of the current name protect mappings and contains functions for replacement.
  */
 class NameProtectMappings {
-    private var usernameReplacement: Pair<String, String>? = null
+    private var usernameReplacement: Pair<String, String>? by sessionState { null }
 
-    private var friendMappings = emptyMap<String, String>()
-    private var otherPlayerMappings = emptySet<String>()
+    private var friendMappings by sessionState { emptyMap<String, String>() }
+    private var otherPlayerMappings by sessionState { emptySet<String>() }
 
     /**
      * Replaced as a whole on every rebuild, so readers either see the previous or the next
      * fully built matcher.
      */
-    @Volatile
-    private var replacementInstructions: ReplacementInstructions? = null
+    private var replacementInstructions: ReplacementInstructions? by sessionState { null }
 
     private fun shouldUpdate(
         usernameReplacement: Pair<String, String>,

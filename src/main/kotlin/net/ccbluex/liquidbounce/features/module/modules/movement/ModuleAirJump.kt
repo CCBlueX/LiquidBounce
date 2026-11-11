@@ -25,13 +25,14 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.world.phys.shapes.Shapes
 
 object ModuleAirJump : ClientModule("AirJump", ModuleCategories.MOVEMENT) {
 
     val mode by enumChoice("Mode", Mode.JUMP_FREELY)
 
-    private var doubleJump = true
+    private var doubleJump by sessionState { true }
 
     val allowJump: Boolean
         get() = running && (mode == Mode.JUMP_FREELY || mode == Mode.DOUBLE_JUMP && doubleJump)

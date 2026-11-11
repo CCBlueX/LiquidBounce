@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -49,8 +50,8 @@ internal object FlyVulcan286TeleportMC18 : Mode(
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    private var jumping = false
-    private var flagged = false
+    private var jumping by sessionState { false }
+    private var flagged by sessionState { false }
 
     override fun disable() {
         jumping = false

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.player.AbstractClientPlayer
@@ -31,13 +32,13 @@ import java.util.UUID
 
 sealed class UuidBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
 
-    protected val bowPlayers = ObjectOpenHashSet<UUID>()
-    protected val murdererPlayers = ObjectOpenHashSet<UUID>()
+    protected val bowPlayers by sessionState { ObjectOpenHashSet<UUID>() }
+    protected val murdererPlayers by sessionState { ObjectOpenHashSet<UUID>() }
 
     /**
      * What is our current player doing? Is he murderer?
      */
-    protected var currentPlayerType = PlayerType.NEUTRAL
+    protected var currentPlayerType by sessionState { PlayerType.NEUTRAL }
 
     val repeatable =
         handler<GameTickEvent> {

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -49,8 +50,8 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
     }
 
-    private var currentOffset: Vec3 = Vec3.ZERO
-    private var targetOffset: Vec3 = Vec3.ZERO
+    private var currentOffset: Vec3 by sessionState { Vec3.ZERO }
+    private var targetOffset: Vec3 by sessionState { Vec3.ZERO }
 
     private val yawFactor by floatRange("YawOffset", 0f..0f, 0.0f..1.0f)
     private val pitchFactor by floatRange("PitchOffset", 0f..0f, 0.0f..1.0f)

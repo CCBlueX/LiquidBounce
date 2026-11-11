@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.range
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -42,7 +43,7 @@ open class RangeValueGroup(
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
     val interactionRange: Float
-        get() = (mc.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
+        get() = (currentSession.player?.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE)?.toFloat()
             ?: 3.0F) + maxRangeIncrease
 
     val interactionThroughWallsRange

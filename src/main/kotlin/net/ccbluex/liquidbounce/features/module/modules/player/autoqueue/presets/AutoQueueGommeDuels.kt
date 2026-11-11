@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -45,7 +46,7 @@ import net.minecraft.world.item.Items
 
 object AutoQueueGommeDuels : Mode("GommeDuels") {
 
-    private var inMatch = false
+    private var inMatch by sessionState { false }
 
     private val winMessage by text("WinMessage", "GG, nice try")
     private val loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")

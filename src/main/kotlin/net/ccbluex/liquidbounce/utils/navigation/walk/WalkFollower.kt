@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -56,9 +57,9 @@ enum class FollowState {
 @Suppress("TooManyFunctions")
 class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
-    var path: WalkPath? = null
+    var path: WalkPath? by sessionState { null }
         private set
-    private var index = 0
+    private var index by sessionState { 0 }
 
     private val step: WalkStep?
         get() = path?.steps?.getOrNull(index)
@@ -67,10 +68,10 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         get() = path != null && step == null
 
     /** The block the step given up last leads into. */
-    var stuckAt: BlockPos? = null
+    var stuckAt: BlockPos? by sessionState { null }
         private set
 
-    private var movement = Movement.NONE
+    private var movement by sessionState { Movement.NONE }
 
     val target get() = movement.target
     val sprint get() = movement.sprint
@@ -81,16 +82,16 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     val building: Boolean
         get() = step?.builds == true || path?.steps?.getOrNull(index + 1)?.builds == true
 
-    var remainingBreaks = emptyList<BlockPos>()
+    var remainingBreaks by sessionState { emptyList<BlockPos>() }
         private set
-    var remainingPlaces = emptyList<BlockPos>()
+    var remainingPlaces by sessionState { emptyList<BlockPos>() }
         private set
 
-    private var progress = Progress()
-    private var breathing = false
+    private var progress by sessionState { Progress() }
+    private var breathing by sessionState { false }
 
     /** Where the sprint hop in the air was aimed; the steps it passes over lie behind the player. */
-    private var hopAim: Vec3? = null
+    private var hopAim: Vec3? by sessionState { null }
 
     private val Player.isStable: Boolean
         get() = onGround() || isInWater || onClimbable()

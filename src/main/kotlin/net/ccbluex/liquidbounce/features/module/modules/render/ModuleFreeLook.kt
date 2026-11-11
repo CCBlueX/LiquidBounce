@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.client.CameraType
@@ -39,8 +40,8 @@ object ModuleFreeLook : ClientModule(
     private val senseBoost by float("SenseBoost", 1f, 0.1f..2f)
     private val noPitchLimit by boolean("NoPitchLimit", true)
 
-    var cameraYaw = 0f
-    var cameraPitch = 0f
+    var cameraYaw by sessionState { 0f }
+    var cameraPitch by sessionState { 0f }
 
     @get:JvmName("isInvertedView")
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT

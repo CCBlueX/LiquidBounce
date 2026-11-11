@@ -70,6 +70,12 @@ import kotlin.math.abs
  */
 object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableOnQuit = true) {
 
+    /**
+     * There is one camera, the one of the active session.
+     */
+    override val perSession
+        get() = false
+
     private val speed by float("Speed", 1f, 0.1f..2f)
 
     /**

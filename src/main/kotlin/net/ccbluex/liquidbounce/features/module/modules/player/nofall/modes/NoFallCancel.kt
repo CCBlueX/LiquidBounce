@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
@@ -32,7 +33,7 @@ internal object NoFallCancel : NoFallMode("Cancel") {
     private val resetFallDistance by boolean("ResetFallDistance", true)
     private val cancelSetback by boolean("CancelSetbackPacket", false)
 
-    private var isFalling = false
+    private var isFalling by sessionState { false }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

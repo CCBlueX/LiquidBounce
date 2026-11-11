@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.drawGradientCircle
@@ -68,7 +69,7 @@ object KillAuraRangeIndicator : ToggleableValueGroup(ModuleKillAura, "RangeIndic
 
     private val canBeCovered by boolean("CanBeCovered", false)
 
-    private var colorFactor = 0f
+    private var colorFactor by sessionState { 0f }
 
     private enum class ColorMode(override val tag: String) : Tagged {
         STATIC("Static"),

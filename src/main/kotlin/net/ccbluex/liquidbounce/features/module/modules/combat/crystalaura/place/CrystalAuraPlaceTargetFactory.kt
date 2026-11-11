@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.OnlyAboveCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.PredictBlockageCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.ValidHeightCondition
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
@@ -37,8 +38,8 @@ import net.minecraft.core.BlockPos
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
-    var placementTarget: BlockPos? = null
-    var previousTarget: BlockPos? = null
+    var placementTarget: BlockPos? by sessionState { null }
+    var previousTarget: BlockPos? by sessionState { null }
 
     /**
      * Conditions to include a position into the positions to consider.
@@ -52,7 +53,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         PredictBlockageCondition
     )
 
-    private var sphere: Array<BlockPos> = BlockPos.ZERO.getSortedSphere(4.5f)
+    private var sphere: Array<BlockPos> by sessionState { BlockPos.ZERO.getSortedSphere(4.5f) }
 
     fun updateSphere() {
         sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())

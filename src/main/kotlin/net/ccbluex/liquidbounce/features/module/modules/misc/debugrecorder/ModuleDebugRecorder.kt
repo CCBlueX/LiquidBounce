@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.text.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -69,7 +70,7 @@ object ModuleDebugRecorder : ClientModule("DebugRecorder", ModuleCategories.MISC
             mkdirs()
         }
 
-        protected val packets = mutableListOf<T>()
+        protected val packets by sessionState { mutableListOf<T>() }
 
         protected fun recordPacket(packet: T) {
             if (!this.isSelected) {

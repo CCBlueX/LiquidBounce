@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -47,7 +48,7 @@ class SpeedNCP(parent: ModeValueGroup<*>) : SpeedBHopBase("NCP-2024-08-31", pare
         private val onTick by int("OnTick", 5, 1..9)
         private val onHurt by boolean("OnHurt", true)
 
-        private var ticksInAir = 0
+        private var ticksInAir by sessionState { 0 }
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {

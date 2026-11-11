@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.Av
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.state
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isOnMagmaBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
@@ -114,7 +115,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         sneak: Boolean,
         avoidModes: Collection<Avoid>
     ): Boolean {
-        val level = mc.level ?: return true
+        val level = currentSession.level ?: return true
 
         val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
             directionalInput = directionalInput,

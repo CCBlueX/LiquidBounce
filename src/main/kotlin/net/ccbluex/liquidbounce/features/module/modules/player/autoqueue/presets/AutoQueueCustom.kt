@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTabFooter
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTabHeader
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerTitle
+import net.ccbluex.liquidbounce.features.session.sessionState
 
 object AutoQueueCustom : Mode("Custom") {
 
@@ -67,9 +68,12 @@ object AutoQueueCustom : Mode("Custom") {
         val killAura by boolean("KillAura", true)
         val speed by boolean("Speed", false)
 
-        var wasInQueue = false
+        private val wasInQueueState = sessionState { false }
+
+        var wasInQueue: Boolean
+            get() = wasInQueueState.get()
             set(value) {
-                field = value
+                wasInQueueState.set(value)
 
                 if (!enabled) {
                     return
@@ -86,7 +90,7 @@ object AutoQueueCustom : Mode("Custom") {
     }
 
     private val waitUntilWorldChange by boolean("WaitUntilWorldChange", true)
-    private var worldChangeOccurred = false
+    private var worldChangeOccurred by sessionState { false }
 
     @Suppress("unused")
     private val tickHandler = tickHandler(Dispatchers.Main) {

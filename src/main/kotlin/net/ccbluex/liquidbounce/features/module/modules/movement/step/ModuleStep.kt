@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.network.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
@@ -116,7 +117,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
             enumSetOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
         )
 
-        private var ticksWait = 0
+        private var ticksWait by sessionState { 0 }
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
@@ -185,8 +186,8 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         override val parent: ModeValueGroup<Mode>
             get() = modes
 
-        private var stepCounter = 0
-        private var stepping = false
+        private var stepCounter by sessionState { 0 }
+        private var stepping by sessionState { false }
 
         @Suppress("unused")
         private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
@@ -234,7 +235,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private var baseTimer by float("BaseTimer", 3.0f, 0.1f..5.0f)
         private var recoveryTimer by float("RecoveryTimer", 0.6f, 0.1f..5.0f)
 
-        private var stepping = false
+        private var stepping by sessionState { false }
 
         @Suppress("unused")
         private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
@@ -284,7 +285,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
         private val alternateBypass by boolean("AlternateBypass", false)
         private val spoof by boolean("Spoof", false)
 
-        private var stepping = false
+        private var stepping by sessionState { false }
 
         private val stepHeight get() = when {
             player.canStep(1.0) -> 1.0

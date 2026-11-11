@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.raytracing
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -35,13 +36,13 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 
 fun rayTraceCollidingBlocks(start: Vec3, end: Vec3): BlockHitResult? {
-    val result = mc.level!!.clip(
+    val result = currentSession.level!!.clip(
         ClipContext(
             start,
             end,
             ClipContext.Block.COLLIDER,
             ClipContext.Fluid.ANY,
-            mc.player!!
+            currentSession.player!!
         )
     )
 
@@ -61,11 +62,11 @@ fun raytraceBlock(
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
 
-    return mc.level?.clipWithInteractionOverride(
+    return currentSession.level?.clipWithInteractionOverride(
         start,
         end,
         pos,
-        state.getShape(mc.level!!, pos, CollisionContext.of(mc.player!!)),
+        state.getShape(currentSession.level!!, pos, CollisionContext.of(currentSession.player!!)),
         state,
     )
 }
@@ -83,7 +84,7 @@ fun Entity.isFacingBlock(
     val dir = targetPoint.subtract(eyes).withLength(0.005)
 
     val searchedPos =
-        mc.level?.clip(
+        currentSession.level?.clip(
             from = eyes,
             to = targetPoint.add(dir), // Prevent point on face -> miss
             ClipContext.Block.OUTLINE,

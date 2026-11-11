@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.entity.player.Player
@@ -30,7 +31,7 @@ open class ItemCooldown : ValueGroup("ItemCooldown", aliases = listOf("Cooldown"
         1.0f..1.0f, 0.0f..2.0f
     )
 
-    var nextCooldown = minimumCooldown.random()
+    var nextCooldown by sessionState { minimumCooldown.random() }
         private set
 
     open fun isCooldownPassed(ticks: Int = 0) = cooldownProgress(ticks) >= nextCooldown

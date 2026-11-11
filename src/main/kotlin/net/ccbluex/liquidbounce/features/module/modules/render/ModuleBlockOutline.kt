@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
@@ -65,9 +66,9 @@ object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER
         tree(Slide)
     }
 
-    private var currentPosition: AABB? = null
-    private var previousPosition: AABB? = null
-    private var lastChange = 0L
+    private var currentPosition: AABB? by sessionState { null }
+    private var previousPosition: AABB? by sessionState { null }
+    private var lastChange by sessionState { 0L }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->

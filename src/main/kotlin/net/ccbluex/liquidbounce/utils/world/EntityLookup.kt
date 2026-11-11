@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.session.sessionState
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.entity.LevelEntityGetter
 import kotlin.reflect.KProperty
@@ -32,11 +34,12 @@ import kotlin.reflect.KProperty
 class EntityLookup<T : Entity> private constructor(
     owner: EventListener,
     private val updateCycle: Int,
-    private val entities: ReferenceCollection<T>,
     private val collector: Collector<T>,
 ) : MinecraftShortcuts {
 
-    private var ticks = 0
+    private val entities: ReferenceCollection<T> by sessionState { ReferenceOpenHashSet() }
+
+    private var ticks by sessionState { 0 }
 
     fun clear() {
         entities.clear()
@@ -54,7 +57,7 @@ class EntityLookup<T : Entity> private constructor(
 
         entities.clear()
         with(collector) {
-            mc.level?.entityGetter?.collect(entities)
+            currentSession.level?.entityGetter?.collect(entities)
         }
     }
 
@@ -66,7 +69,7 @@ class EntityLookup<T : Entity> private constructor(
         @JvmStatic
         @JvmName("create")
         fun <T : Entity> EventListener.EntityLookup(collector: Collector<T>): EntityLookup<T> {
-            return EntityLookup(owner = this, updateCycle = 1, ReferenceOpenHashSet(), collector)
+            return EntityLookup(owner = this, updateCycle = 1, collector)
         }
     }
 

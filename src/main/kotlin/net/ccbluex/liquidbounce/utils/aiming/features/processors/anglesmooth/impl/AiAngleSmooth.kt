@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
 import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
@@ -98,7 +99,7 @@ class AiAngleSmooth(
 
     companion object {
         private const val UNSUPPORTED_NOTIFICATION_TIME = 5000L
-        private val notificationChronometer = Chronometer()
+        private val notificationChronometer by sessionState { Chronometer() }
     }
 
     override fun process(

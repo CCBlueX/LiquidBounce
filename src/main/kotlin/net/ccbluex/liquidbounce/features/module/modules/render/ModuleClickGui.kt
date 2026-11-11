@@ -34,6 +34,8 @@ import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
@@ -42,7 +44,6 @@ import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraf
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.ccbluex.liquidbounce.features.session.SessionContext
 
 /**
  * ClickGUI module
@@ -104,7 +105,7 @@ object ModuleClickGui :
     }
 
     // Standalone screen instance for caching
-    private var standaloneScreen: CustomStandaloneMinecraftScreen? = null
+    private var standaloneScreen: CustomStandaloneMinecraftScreen? by sessionState { null }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.register
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -38,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.math.center
  */
 object CommandCenter : EventListener, CommandRegistrar {
 
-    var state = CenterHandlerState.INACTIVE
+    var state by sessionState { CenterHandlerState.INACTIVE }
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("center") {

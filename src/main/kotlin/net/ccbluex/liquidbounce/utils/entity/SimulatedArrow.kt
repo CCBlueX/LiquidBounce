@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -105,7 +106,7 @@ class SimulatedArrow(
             ) {
                 val canBeHit = !it.isSpectator && it.isAlive
 
-                if (canBeHit && (it.isPickable || arrowEntity != mc.player && it == arrowEntity)) {
+                if (canBeHit && (it.isPickable || arrowEntity != currentSession.player && it == arrowEntity)) {
                     if (arrowEntity.isPassengerOfSameVehicle(it)) return@getEntityHitResult false
                 } else {
                     return@getEntityHitResult false

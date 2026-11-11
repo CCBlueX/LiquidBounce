@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Cryst
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.getMaxRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.wallsRange
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.entity.isWithinWorldBorder
@@ -33,7 +34,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
-    var currentTarget: EndCrystal? = null
+    var currentTarget: EndCrystal? by sessionState { null }
 
     /**
      * For the main loop. Finds the best target in range.

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_11_1
@@ -72,24 +73,27 @@ object InventoryManager : EventListener {
     val isHandledScreenOpen
         get() = mc.gui.screen() is AbstractContainerScreen<*> || isInventoryOpenServerSide
 
-    var isInventoryOpenServerSide = false
+    var isInventoryOpenServerSide: Boolean
+        get() = inventoryOpenServerSide.get()
         set(value) {
-            if (!field && value) {
+            if (!inventoryOpenServerSide.get() && value) {
                 onInventoryOpened()
             }
-            field = value
+            inventoryOpenServerSide.set(value)
         }
 
-    var lastClickedSlot: Int = -1
+    private val inventoryOpenServerSide = sessionState { false }
+
+    var lastClickedSlot: Int by sessionState { -1 }
         internal set
 
-    private var recentInventoryOpen = false
+    private var recentInventoryOpen by sessionState { false }
 
     /**
      * As soon the inventory changes unexpectedly,
      * we have to update the scheduled inventory actions
      */
-    private var requiresUpdate = false
+    private var requiresUpdate by sessionState { false }
 
     /**
      * We keep running during the entire time

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.spoofer
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.ACCEPTED
@@ -38,7 +39,7 @@ object SpooferResourcePack : ToggleableValueGroup(name = "ResourceSpoofer", enab
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        val network = mc.connection ?: return@handler
+        val network = currentSession.connection ?: return@handler
 
         if (packet is ClientboundResourcePackPushPacket) {
             val id = packet.id

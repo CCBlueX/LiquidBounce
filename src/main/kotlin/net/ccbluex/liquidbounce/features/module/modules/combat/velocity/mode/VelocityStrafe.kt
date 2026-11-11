@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
@@ -51,8 +52,8 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
 
     private val untilGround by boolean("UntilGround", false)
 
-    private var applyStrafe = false
-    private var shouldStrafe = false
+    private var applyStrafe by sessionState { false }
+    private var shouldStrafe by sessionState { false }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

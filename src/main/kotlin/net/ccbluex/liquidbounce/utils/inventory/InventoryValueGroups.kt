@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -123,7 +124,7 @@ enum class InventoryRequirements(
         NO_MOVEMENT -> player.input.moveVector.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         NOT_USING_ITEM -> !player.isUsingItem
-        NOT_BREAKING -> mc.gameMode?.isDestroying == false
+        NOT_BREAKING -> currentSession.gameMode?.isDestroying == false
         NOT_DURING_COMBAT -> !CombatManager.isInCombat
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }

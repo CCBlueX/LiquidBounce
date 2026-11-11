@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -47,8 +48,8 @@ internal object LongJumpNCP3161Bow : Mode("NCP-3.16.1-Bow", aliases = listOf("Lo
     override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
-    private var arrowBoost = 0f
-    private var shotArrows = 0f
+    private var arrowBoost by sessionState { 0f }
+    private var shotArrows by sessionState { 0f }
 
     val rotations = tree(RotationsValueGroup(this))
     private val charged by int("Charged", 4, 3..20)
@@ -56,8 +57,8 @@ internal object LongJumpNCP3161Bow : Mode("NCP-3.16.1-Bow", aliases = listOf("Lo
     private val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
     val fallDistance by float("FallDistanceToJump", 0.42f, 0f..2f)
 
-    private var stopMovement = false
-    private var forceUseKey = false
+    private var stopMovement by sessionState { false }
+    private var forceUseKey by sessionState { false }
 
     val movementInputHandler = handler<MovementInputEvent> {
         if (stopMovement) {

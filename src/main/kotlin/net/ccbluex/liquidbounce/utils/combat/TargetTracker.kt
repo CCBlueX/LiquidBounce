@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.mapReadOnly
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
 import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
@@ -56,7 +57,7 @@ open class TargetTracker(
     constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
         this(defaultPriority, DummyRangedValueProvider(range))
 
-    var target: LivingEntity? = null
+    var target: LivingEntity? by sessionState { null }
 
     fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
         val enemies = targets()
@@ -98,7 +99,7 @@ open class TargetSelector(
     constructor(defaultPriority: TargetPriority = TargetPriority.HEALTH, range: RangedValue<*>) :
         this(defaultPriority, DummyRangedValueProvider(range))
 
-    var closestSquaredEnemyDistance: Double = 0.0
+    var closestSquaredEnemyDistance: Double by sessionState { 0.0 }
         private set
 
     private val range = rangeValue.register(this)

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -40,14 +41,14 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 
 object PlayerSimulationCache: EventListener {
-    private val otherPlayerCache = ConcurrentHashMap<Player, SimulatedPlayerCache>()
-    private var localPlayerCache: SimulatedPlayerCache? = null
+    private val otherPlayerCache by sessionState { ConcurrentHashMap<Player, SimulatedPlayerCache>() }
+    private var localPlayerCache: SimulatedPlayerCache? by sessionState { null }
 
     /**
      * The local player is between the start of its movement tick and the end of its tick.
      * A simulation made now has to finish this tick instead of running a whole one.
      */
-    var isLocalPlayerMoving = false
+    var isLocalPlayerMoving by sessionState { false }
         private set
 
     @Suppress("unused")

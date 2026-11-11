@@ -22,12 +22,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.customambience.w
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.modes.WorldParticlesSimple
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.minecraft.world.phys.Vec3
 
 object WorldParticles : ToggleableValueGroup(ModuleCustomAmbience, "WorldParticles", false) {
 
-    val coords = ExpiringList<Vec3>()
+    val coords by sessionState { ExpiringList<Vec3>() }
 
     val modes = choices("Mode", 0) {
         arrayOf(

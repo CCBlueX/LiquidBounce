@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericColorMode
@@ -98,8 +99,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
         final override val parent get() = modes
 
-        protected var useColor = false
-        protected val dirtyFlag = atomic(true)
+        protected var useColor by sessionState { false }
+        protected val dirtyFlag by sessionState { atomic(true) }
 
         fun markDirty() {
             if (this.running) {

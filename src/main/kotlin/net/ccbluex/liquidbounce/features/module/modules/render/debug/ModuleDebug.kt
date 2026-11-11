@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawQuad
@@ -58,13 +59,13 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
-    private val sections = ConcurrentHashMap<DebuggedOwner, DebugSection>()
-    private val nextOrder = AtomicInteger()
+    private val sections by sessionState { ConcurrentHashMap<DebuggedOwner, DebugSection>() }
+    private val nextOrder by sessionState { AtomicInteger() }
 
     /**
      * Bumped after parameters appear, disappear or change priority, so the overview lays out again.
      */
-    private val structureVersion = AtomicInteger()
+    private val structureVersion by sessionState { AtomicInteger() }
 
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         sections.values.forEach { it.parameters.clear() }
@@ -93,7 +94,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     private val outputDir = ConfigSystem.rootFolder.resolve("debug-log").apply { mkdirs() }
     // TSV: timestamp, owner path, name, value
-    private var outputFile: File? = null
+    private var outputFile: File? by sessionState { null }
 
     private val fontRenderer
         get() = FontManager.FONT_RENDERER

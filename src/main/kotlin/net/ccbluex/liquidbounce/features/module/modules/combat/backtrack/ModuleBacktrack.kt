@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.blink.esp.BlinkEspWireframe
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReduce
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -64,7 +65,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private val nextBacktrackDelay by intRange("NextBacktrackDelay", 0..10, 0..2000, "ms")
     private val trackingBuffer by int("TrackingBuffer", 500, 0..2000, "ms")
     private val chance = percentageChance("Chance", 50f)
-    private var chancePassed = chance.asBoolean
+    private var chancePassed by sessionState { chance.asBoolean }
 
     private object PauseOnHurtTime : ToggleableValueGroup(this, "PauseOnHurtTime", false) {
         val hurtTime by int("HurtTime", 3, 0..10)
@@ -91,16 +92,16 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         doNotIncludeAlways()
     }
 
-    private val chronometer = Chronometer()
-    private val trackingBufferChronometer = Chronometer()
-    private val attackChronometer = Chronometer()
+    private val chronometer by sessionState { Chronometer() }
+    private val trackingBufferChronometer by sessionState { Chronometer() }
+    private val attackChronometer by sessionState { Chronometer() }
 
-    private var shouldPause = false
+    private var shouldPause by sessionState { false }
 
-    private var target: Entity? = null
+    private var target: Entity? by sessionState { null }
     private val position = TrackedEntityPosition()
 
-    var currentDelay = delay.random()
+    var currentDelay by sessionState { delay.random() }
 
     @Suppress("unused")
     private val queuePacketHandler = handler<BlinkPacketEvent> { event ->

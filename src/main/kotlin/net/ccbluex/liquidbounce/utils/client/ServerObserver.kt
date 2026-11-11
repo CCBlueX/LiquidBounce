@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.minecraft.ChatFormatting
@@ -72,28 +73,28 @@ object ServerObserver : EventListener {
         "negativity"
     )
 
-    var serverInfo: ServerData? = null
+    var serverInfo: ServerData? by sessionState { null }
         private set
-    var serverAddress: ServerAddress? = null
+    var serverAddress: ServerAddress? by sessionState { null }
         private set
-    var serverId: String? = null
+    var serverId: String? by sessionState { null }
         private set
-    var serverType: ServerType? = null
+    var serverType: ServerType? by sessionState { null }
         private set
-    val payloadChannels: TreeSet<Identifier> = TreeSet<Identifier>()
+    val payloadChannels: TreeSet<Identifier> by sessionState { TreeSet<Identifier>() }
 
-    val transactions = mutableListOf<Int>()
-    var isCapturingTransactions = false
+    val transactions by sessionState { mutableListOf<Int>() }
+    var isCapturingTransactions by sessionState { false }
 
     // defines how many packets are recorded to get the average
     private const val AVERAGE_OF = 15
 
     // stores last intervals between WorldTimeUpdateS2CPackets
-    private val intervals = ArrayDeque<Double>(AVERAGE_OF + 1)
-    private val chronometer = Chronometer()
-    private var wasDisconnected = true
+    private val intervals by sessionState { ArrayDeque<Double>(AVERAGE_OF + 1) }
+    private val chronometer by sessionState { Chronometer() }
+    private var wasDisconnected by sessionState { true }
 
-    var tps = Double.NaN
+    var tps by sessionState { Double.NaN }
         private set
 
     /**
@@ -102,16 +103,16 @@ object ServerObserver : EventListener {
      */
     val tickSpeed: Double
         get() {
-            val level = mc.level
+            val level = currentSession.level
             return if (tps.isNaN() || level == null) 1.0 else tps / level.tickRateManager().tickrate()
         }
 
-    var serverVersion: String? = null
+    var serverVersion: String? by sessionState { null }
         private set
-    var hostingInformation: IpInfoApi.IpData? = null
+    var hostingInformation: IpInfoApi.IpData? by sessionState { null }
         private set
 
-    var plugins: Set<String>? = null
+    var plugins: Set<String>? by sessionState { null }
         private set
 
     val formattedPluginList: List<Component>?

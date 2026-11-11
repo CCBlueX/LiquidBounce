@@ -29,7 +29,9 @@ import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAcco
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.currentSession
 
 
 /**
@@ -71,7 +73,7 @@ object ModuleAutoAccount : ClientModule(
     override val running
         get() = !SelfDestruct.isDestructed && enabled
 
-    private var sending = false
+    private var sending by sessionState { false }
 
     override fun onDisabled() {
         sending = false
@@ -79,7 +81,7 @@ object ModuleAutoAccount : ClientModule(
 
     private suspend inline fun action(operation: () -> Unit) {
         sending = true
-        tickUntil { mc.connection != null }
+        tickUntil { currentSession.connection != null }
         waitTicks(delay.random())
         operation()
         sending = false

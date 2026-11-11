@@ -24,12 +24,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectImage
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectSimple
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.minecraft.world.phys.Vec3
 
 object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
-    val circles = ExpiringList<Vec3>()
+    val circles by sessionState { ExpiringList<Vec3>() }
 
     val modes = choices("Mode", 0) {
         arrayOf(

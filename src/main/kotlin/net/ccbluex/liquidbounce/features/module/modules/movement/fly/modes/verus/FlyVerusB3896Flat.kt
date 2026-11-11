@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -84,7 +85,7 @@ internal object FlyVerusB3896Flat : Mode("Verus-b3896-Flat", aliases = listOf("V
     }
 
     override fun disable() {
-        val player = mc.player ?: return
+        val player = currentSession.player ?: return
         player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
 
         network.send(

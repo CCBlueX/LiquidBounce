@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.Ant
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -56,8 +57,8 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
     // Flags indicating if an action has been already taken or needs to be taken.
-    var isLikelyFalling = false
-    var rescuePosition: Vec3? = null
+    var isLikelyFalling by sessionState { false }
+    var rescuePosition: Vec3? by sessionState { null }
         private set
 
     // How many future ticks to simulate to ensure safety.

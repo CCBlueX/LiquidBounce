@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireb
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques.FlyFireballLegitTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -45,7 +46,7 @@ internal object FlyFireball : Mode("Fireball") {
     // Silent fireball selection
     val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
-    var wasTriggered = false
+    var wasTriggered by sessionState { false }
 
     private fun findFireballSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findSlot(Items.FIRE_CHARGE)
 

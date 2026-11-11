@@ -21,10 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigge
 
 import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 
 object AutoQueueTriggerSubtitle : AutoQueueTrigger("Title") {
-    override var isTriggered: Boolean = false
-        get() = field.apply { field = false }
+    private val triggered = sessionState { false }
+
+    /**
+     * Reading it takes the trigger back.
+     */
+    override var isTriggered: Boolean
+        get() = triggered.get().also { triggered.set(false) }
+        set(value) = triggered.set(value)
 
     private val keywords by textList("Keywords", mutableListOf("恭喜"))
 

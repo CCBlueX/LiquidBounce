@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
@@ -60,14 +61,14 @@ internal object TickBaseVisuals : ToggleableValueGroup(ModuleTickBase, "Visuals"
     /**
      * The coming positions of the player from now up to where the hit on [hit] lands. Empty without a hit.
      */
-    private var path = emptyList<Vec3>()
-    private var hit: Vec3? = null
+    private var path by sessionState { emptyList<Vec3>() }
+    private var hit: Vec3? by sessionState { null }
 
     /**
      * Where the player was when the ticks started to run ahead of real time.
      */
-    private var afterimage: Afterimage? = null
-    private var ahead = false
+    private var afterimage: Afterimage? by sessionState { null }
+    private var ahead by sessionState { false }
 
     private val ghost = WireframePlayer()
 

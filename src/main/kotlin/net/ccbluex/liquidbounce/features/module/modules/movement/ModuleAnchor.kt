@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
@@ -56,7 +57,7 @@ object ModuleAnchor : ClientModule(
     private val horizontalSpeed by float("HorizontalSpeed", 0.3f, 0f..10f)
     private val verticalSpeed by float("VerticalSpeed", 0.1f, 0f..10f)
 
-    var goal: Vec3? = null
+    var goal: Vec3? by sessionState { null }
 
     override fun onEnabled() {
         HoleManager.subscribe(this)

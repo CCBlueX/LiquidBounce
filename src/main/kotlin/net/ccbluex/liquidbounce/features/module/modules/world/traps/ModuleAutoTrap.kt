@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -58,11 +59,11 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     val targetTracker = tree(TargetTracker(range = range))
     private val rotations = tree(RotationsValueGroup(this))
 
-    private var currentPlan: BlockChangeIntent<*>? = null
+    private var currentPlan: BlockChangeIntent<*>? by sessionState { null }
 
-    private var timeout = false
+    private var timeout by sessionState { false }
 
-    private var pendingCombatWaitTicks = 0
+    private var pendingCombatWaitTicks by sessionState { 0 }
 
     override fun onEnabled() {
         resetState()

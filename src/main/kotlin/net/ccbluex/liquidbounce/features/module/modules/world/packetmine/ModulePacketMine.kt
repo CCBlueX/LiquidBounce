@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.Al
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.NeverToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.OnStopToolMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.tool.PostStartToolMode
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -45,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
@@ -122,26 +124,30 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
     )
     private val progressRenderer = targetRenderer.tree(BreakingProgressRenderer(targetRenderer, this))
 
-    private val chronometer = Chronometer()
-    private var rotation: Rotation? = null
-    private var tickCounter = 0L
-    private var nextAllowedStartTick = 0L
+    private val chronometer by sessionState { Chronometer() }
+    private var rotation: Rotation? by sessionState { null }
+    private var tickCounter by sessionState { 0L }
+    private var nextAllowedStartTick by sessionState { 0L }
 
     /**
      * The current target of the module.
      *
      * Should never be accessed directly by other modules!
      */
-    internal var currentTarget: MineTarget? = null
+    internal var currentTarget: MineTarget?
+        get() = currentTargetState.get()
         set(value) {
-            if (value == field) {
+            val previous = currentTargetState.get()
+            if (value == previous) {
                 return
             }
 
-            field?.cleanUp()
+            previous?.cleanUp()
             value?.init()
-            field = value
+            currentTargetState.set(value)
         }
+
+    private val currentTargetState = sessionState<MineTarget?> { null }
 
     private fun shouldBlockTargetChange(mineTarget: MineTarget): Boolean {
         return mode.activeMode.shouldPreventTargetChange(mineTarget)
@@ -149,7 +155,7 @@ object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD), Br
 
     init {
         mode.onChanged {
-            if (mc.level != null && mc.player != null) {
+            if (currentSession.level != null && currentSession.player != null) {
                 onDisabled()
                 onEnabled()
             }

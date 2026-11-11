@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.spearkill.ModuleSpearKill
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -67,7 +68,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
         tree(Rehook)
     }
 
-    private var wasInVehicle = false
+    private var wasInVehicle by sessionState { false }
 
     override fun onEnabled() {
         chat(warning(message("quitHelp")))
@@ -146,8 +147,8 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
         private var unhookAfter by int("UnhookAfter", 4, 1..10)
         private var hookAfter by int("HookAfter", 2, 1..10)
 
-        internal var vehicleId = -1
-        private var forceAttempt = false
+        internal var vehicleId by sessionState { -1 }
+        private var forceAttempt by sessionState { false }
 
         @Suppress("unused")
         private val handleRehooking = tickHandler {

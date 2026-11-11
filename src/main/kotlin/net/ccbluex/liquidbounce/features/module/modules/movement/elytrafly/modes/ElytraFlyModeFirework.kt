@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
@@ -56,7 +57,7 @@ internal object ElytraFlyModeFirework : ElytraFlyMode("Firework") {
         }
     }
 
-    private var skipTicks = 0
+    private var skipTicks by sessionState { 0 }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

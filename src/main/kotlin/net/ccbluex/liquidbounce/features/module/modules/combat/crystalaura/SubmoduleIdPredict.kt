@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -61,7 +62,7 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
 
         val back by boolean("Back", false)
 
-        var oldRotation: Rotation? = null
+        var oldRotation: Rotation? by sessionState { null }
 
         fun sendRotation(rotation: Rotation) {
             if (!enabled) {
@@ -104,9 +105,12 @@ object SubmoduleIdPredict : ToggleableValueGroup(ModuleCrystalAura, "IDPredict",
         tree(Rotate)
     }
 
-    private var highestId = 0
+    private val highestIdState = sessionState { 0 }
+
+    private var highestId: Int
+        get() = highestIdState.get()
         set(value) {
-            field = value
+            highestIdState.set(value)
             ModuleCrystalAura.debugParameter("Highest ID") { highestId }
         }
 

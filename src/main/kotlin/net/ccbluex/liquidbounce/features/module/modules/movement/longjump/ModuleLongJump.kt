@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.LongJumpVulcan289
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.LongJumpNCP3161Boost
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.LongJumpNCP3161Bow
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
@@ -43,9 +44,9 @@ object ModuleLongJump : ClientModule("LongJump", ModuleCategories.MOVEMENT) {
     private val autoJump by boolean("AutoJump", false)
     val autoDisable by boolean("DisableAfterFinished", false)
 
-    var jumped = false
-    var canBoost = false
-    var boosted = false
+    var jumped by sessionState { false }
+    var canBoost by sessionState { false }
+    var boosted by sessionState { false }
 
     val tickHandler = handler<MovementInputEvent> {
         if (jumped) {

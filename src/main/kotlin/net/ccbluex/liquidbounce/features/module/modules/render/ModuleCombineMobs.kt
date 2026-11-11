@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
@@ -48,8 +49,8 @@ object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) 
     @JvmRecord
     private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    private val renderTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
-    private val nametagTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val renderTracker by sessionState { Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>() }
+    private val nametagTracker by sessionState { Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>() }
 
     private val mapPool = Pool(::Long2IntOpenHashMap, Long2IntOpenHashMap::clear)
 

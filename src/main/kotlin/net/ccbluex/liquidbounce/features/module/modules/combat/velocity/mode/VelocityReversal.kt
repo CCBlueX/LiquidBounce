@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
@@ -36,8 +37,8 @@ internal object VelocityReversal : VelocityMode("Reversal") {
     private val zModifier by float("ZModifier", 0.5f, 0f..1.0f)
     private val onlyMoving by boolean("OnlyMoving", false)
 
-    private var handlingVelocity = false
-    private var velocityTicks = 0
+    private var handlingVelocity by sessionState { false }
+    private var velocityTicks by sessionState { 0 }
 
     @Suppress("unused")
     private val packetEventHandler = handler<PacketEvent> { event ->

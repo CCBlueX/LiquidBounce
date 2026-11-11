@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -33,7 +34,7 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
 object TrapPlayerSimulation {
-    private val predictedPlayerStatesCache = HashMap<Player, ArrayDeque<PredictedPlayerPos>>()
+    private val predictedPlayerStatesCache by sessionState { HashMap<Player, ArrayDeque<PredictedPlayerPos>>() }
 
     private const val SIMULATION_DISTANCE: Double = 10.0
 

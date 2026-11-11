@@ -50,6 +50,7 @@ import net.ccbluex.liquidbounce.features.account.AccountService
 import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.render.readNativeImage
 import net.ccbluex.liquidbounce.utils.render.registerTexture
@@ -145,7 +146,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                 }
             }
 
-            override var skinTextures: Supplier<PlayerSkin>? = null
+            override var skinTextures: Supplier<PlayerSkin>? by sessionState { null }
 
             private suspend fun textureSupplier(username: String): Supplier<PlayerSkin> {
                 val profile = withContext(Dispatchers.IO) {

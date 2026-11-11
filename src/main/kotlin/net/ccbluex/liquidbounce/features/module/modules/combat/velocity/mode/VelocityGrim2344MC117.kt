@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.network.isLocalPlayerVelocity
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
@@ -42,7 +43,7 @@ internal object VelocityGrim2344MC117 : VelocityMode("Grim-2.3.44-MC1.17", alias
 
     private var alternativeBypass by boolean("AlternativeBypass", true)
 
-    private var canCancel = false
+    private var canCancel by sessionState { false }
 
     override fun enable() {
         canCancel = false

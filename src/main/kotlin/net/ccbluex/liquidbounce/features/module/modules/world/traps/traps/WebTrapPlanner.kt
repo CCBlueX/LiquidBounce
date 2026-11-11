@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeI
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
@@ -53,8 +54,8 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
     true
 ) {
 
-    override val trapItems: Set<Item> = referenceSetOf(Items.COBWEB)
-    override val trapWorthyBlocks: Set<Block> = referenceSetOf(Blocks.COBWEB)
+    override val trapItems: Set<Item> by sessionState { referenceSetOf(Items.COBWEB) }
+    override val trapWorthyBlocks: Set<Block> by sessionState { referenceSetOf(Blocks.COBWEB) }
 
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<WebIntentData>? {
         val slot = findSlotForTrap() ?: return null

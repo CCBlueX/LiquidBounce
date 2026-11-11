@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
@@ -75,7 +76,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         get() = mc.gui.hud.isHidden
 
     /** [isHudHidden] as of the last visibility evaluation, so the tick handler only reacts to changes. */
-    private var lastHudHidden = false
+    private var lastHudHidden by sessionState { false }
 
     var hudEditorSelected = false
         set(value) {
@@ -109,10 +110,10 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         }
     }
 
-    private var overlay = CustomOverlay(
+    private var overlay by sessionState { CustomOverlay(
         screenType = CustomScreenType.HUD,
         browserSettings = BrowserSettings(60, ::reopen)
-    )
+    ) }
 
     init {
         tree(Blur)

@@ -25,6 +25,7 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.immutable
@@ -42,9 +43,9 @@ import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
 object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>(), Predicate<BlockState> {
-    private var maxLayers: Int = 0
+    private var maxLayers: Int by sessionState { 0 }
 
-    private val subscribers = ReferenceOpenHashSet<Subscriber>()
+    private val subscribers by sessionState { ReferenceOpenHashSet<Subscriber>() }
 
     private val CACHE = ThreadLocal.withInitial(BlockPos::MutableBlockPos)
 

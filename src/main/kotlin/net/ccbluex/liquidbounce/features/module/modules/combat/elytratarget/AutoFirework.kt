@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.network.sendHeldItemChange
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -49,9 +50,9 @@ internal object AutoFirework : ToggleableValueGroup(ModuleElytraTarget, "AutoFir
     /**
      * Initial firework cooldown
      */
-    private var fireworkCooldown = 750
+    private var fireworkCooldown by sessionState { 750 }
 
-    private val fireworkChronometer = Chronometer()
+    private val fireworkChronometer by sessionState { Chronometer() }
 
     private val cooldownReached: Boolean
         get() = fireworkChronometer.hasElapsed((fireworkCooldown * MILLISECONDS_PER_TICK).toLong())

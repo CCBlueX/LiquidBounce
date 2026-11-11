@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -58,8 +59,8 @@ object ModuleSpearKill : ClientModule("SpearKill", ModuleCategories.COMBAT, alia
         tree(Preview)
     }
 
-    private val attackMovements = ArrayDeque<Vec3>()
-    private var previewTarget: LivingEntity? = null
+    private val attackMovements by sessionState { ArrayDeque<Vec3>() }
+    private var previewTarget: LivingEntity? by sessionState { null }
 
     private val currentMovement get() = attackMovements.firstOrNull() ?: Vec3.ZERO
 

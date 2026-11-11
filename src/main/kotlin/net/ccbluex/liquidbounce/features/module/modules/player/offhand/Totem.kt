@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.offhand
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getPotentialSecondBedBlock
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
@@ -141,7 +142,7 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
 
         //val mainHand by boolean("MainHand", false)
 
-        private var sphere: Array<BlockPos>? = null
+        private var sphere: Array<BlockPos>? by sessionState { null }
 
         fun healthBelowThreshold(): Boolean {
             if (!enabled) {
@@ -269,8 +270,8 @@ internal object Totem : ToggleableValueGroup(ModuleOffhand, "Totem", true) {
      */
     private val sendDirectly by boolean("SendDirectly", false)
 
-    val switchBack = Chronometer()
-    var switchBackStarted = false
+    val switchBack by sessionState { Chronometer() }
+    var switchBackStarted by sessionState { false }
 
     fun shouldEquip(): Boolean {
         if (!enabled) {

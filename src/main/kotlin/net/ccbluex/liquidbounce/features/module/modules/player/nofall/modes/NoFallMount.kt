@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.entity.interactEntity
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -52,10 +53,10 @@ internal object NoFallMount : NoFallMode("Mount") {
         val delay by intRange("Delay", 0..0, 0..20, "ticks")
     }
 
-    private var lastTargetId = -1
-    private var pendingMountedTargetId = -1
-    private var dismountTargetId = -1
-    private var dismountTicksLeft = -1
+    private var lastTargetId by sessionState { -1 }
+    private var pendingMountedTargetId by sessionState { -1 }
+    private var dismountTargetId by sessionState { -1 }
+    private var dismountTicksLeft by sessionState { -1 }
 
     init {
         tree(AutoDismount)

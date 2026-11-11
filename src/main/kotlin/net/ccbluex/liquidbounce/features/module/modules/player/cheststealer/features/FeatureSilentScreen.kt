@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
@@ -99,7 +100,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
         tree(DrawInventoryTag)
     }
 
-    var shouldHide = false
+    var shouldHide by sessionState { false }
         private set
 
     @Suppress("unused")
@@ -107,8 +108,7 @@ object FeatureSilentScreen : ToggleableValueGroup(ModuleChestStealer, "SilentScr
         shouldHide = event.screen?.canBeStolen() == true
     }
 
-    @Volatile
-    private var lastInteractedBlock: BlockPos? = null
+    private var lastInteractedBlock: BlockPos? by sessionState { null }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->

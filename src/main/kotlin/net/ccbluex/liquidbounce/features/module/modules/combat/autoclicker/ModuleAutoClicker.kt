@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -104,7 +106,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) 
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)
 
-        internal var needToWait = true
+        internal var needToWait by sessionState { true }
     }
 
     private val SPECIAL_ITEMS_FOR_IGNORE = ReferenceOpenHashSet.of(
@@ -130,8 +132,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) 
     val use: Boolean
         get() = mc.options.keyUse.isPressedOnAny || UseButton.requiresNoInput
 
-    @Volatile
-    private var lastFinishBreak = 0L
+    private var lastFinishBreak by sessionState { 0L }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -188,7 +189,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", ModuleCategories.COMBAT) 
 
             val crosshairTarget = mc.hitResult
             if (crosshairTarget is BlockHitResult) {
-                val blockState = mc.level?.getBlockState(crosshairTarget.blockPos)
+                val blockState = currentSession.level?.getBlockState(crosshairTarget.blockPos)
                 if (blockState?.block in blocksForIgnore) {
                     return@run
                 }

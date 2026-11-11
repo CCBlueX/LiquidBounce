@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -50,7 +51,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
      * Keeps us from reverse stepping when the user intentionally jumps.
      * We either check for the PlayerJumpEvent or the velocity of the player.
      */
-    private var initiatedJump = false
+    private var initiatedJump by sessionState { false }
 
     private val UNWANTED_BLOCKS = referenceHashSetOf(
         Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK,

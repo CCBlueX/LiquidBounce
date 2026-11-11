@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -110,7 +111,7 @@ sealed class EspMode(
         companion {
             private val pool = Pool(::BoxBasedEspRenderState, BoxBasedEspRenderState::reset)
 
-            private val prepared = ObjectArrayList<BoxBasedEspRenderState>()
+            private val prepared by sessionState { ObjectArrayList<BoxBasedEspRenderState>() }
         }
     }
 }

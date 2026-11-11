@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -58,8 +59,8 @@ internal object FlyCubeCraft20240420 : Mode("CubeCraft-2024-04-20", aliases = li
     override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    private var hasBeenHurt = false
-    private var hasBeenTeleported = false
+    private var hasBeenHurt by sessionState { false }
+    private var hasBeenTeleported by sessionState { false }
 
     override fun enable() {
         if (!ModulePingSpoof.enabled) {

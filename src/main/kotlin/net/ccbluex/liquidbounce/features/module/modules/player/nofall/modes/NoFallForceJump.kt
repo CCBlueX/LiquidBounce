@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.math.anyNotEmpty
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -36,7 +37,7 @@ internal object NoFallForceJump : NoFallMode("ForceJump") {
     private val fallDistance by float("FallDistance", 3.35f, 3.35f..10.0f)
     private val jumpHeight by float("JumpHeight", 0.42f, 0.1f..0.42f)
 
-    private var jumpTriggered = false
+    private var jumpTriggered by sessionState { false }
 
     /**
      * Handles the packet event to check if a force jump should be triggered.

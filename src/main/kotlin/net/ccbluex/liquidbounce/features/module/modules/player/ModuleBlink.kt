@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.world.nextLocalEntityId
@@ -65,8 +66,8 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
 
-    private var dummyPlayer: RemotePlayer? = null
-    private var tickCounter = 0
+    private var dummyPlayer: RemotePlayer? by sessionState { null }
+    private var tickCounter by sessionState { 0 }
 
     init {
         tree(AutoResetOption)

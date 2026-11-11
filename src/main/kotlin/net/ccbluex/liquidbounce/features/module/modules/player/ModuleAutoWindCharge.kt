@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWindCharge.Rotate.rotations
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -65,9 +66,9 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", ModuleCategories.PL
      */
     private const val MAX_AIM_TICKS = 10
 
-    private var holdJump = false
-    private var aimTicks = 0
-    private var horizontalPitch: Float? = null
+    private var holdJump by sessionState { false }
+    private var aimTicks by sessionState { 0 }
+    private var horizontalPitch: Float? by sessionState { null }
 
     override fun onDisabled() {
         holdJump = false

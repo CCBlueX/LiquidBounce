@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -79,7 +80,7 @@ object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
     private val scanExtraRange by floatRange("ScanExtraRange", 0.0f..0.0f, 0.0f..5.0f).onChanged { range ->
         currentScanExtraRange = range.random()
     }
-    private var currentScanExtraRange: Float = scanExtraRange.random()
+    private var currentScanExtraRange: Float by sessionState { scanExtraRange.random() }
 
     // Requirements
     private val maxEnemiesNearby by int("MaxEnemiesNearby", 1, 0..10) // 0 = no limit

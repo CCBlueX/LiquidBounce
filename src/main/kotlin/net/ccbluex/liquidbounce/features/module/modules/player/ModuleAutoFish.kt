@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.useItem
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -86,7 +87,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
         tree(AutoCastRod)
     }
 
-    private var caughtFish = false
+    private var caughtFish by sessionState { false }
 
     override fun onDisabled() {
         caughtFish = false

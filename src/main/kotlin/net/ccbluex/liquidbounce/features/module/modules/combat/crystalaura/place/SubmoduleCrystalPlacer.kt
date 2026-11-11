@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleIdPredict
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SwitchMode
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -84,13 +85,13 @@ object SubmoduleCrystalPlacer : ToggleableValueGroup(ModuleCrystalAura, "Place",
         )
     )
 
-    private val chronometer = Chronometer()
-    private var blockHitResult: BlockHitResult? = null
+    private val chronometer by sessionState { Chronometer() }
+    private var blockHitResult: BlockHitResult? by sessionState { null }
 
     // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
-    private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)
+    private var previousRotations by sessionState { ArrayDeque<Pair<Rotation, Rotation>>(2) }
 
     @Suppress("LongMethod", "CognitiveComplexMethod")
     fun tick(excludeIds: IntCollection? = null) {

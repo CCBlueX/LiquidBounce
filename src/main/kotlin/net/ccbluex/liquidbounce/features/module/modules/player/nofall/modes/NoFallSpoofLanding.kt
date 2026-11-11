@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -45,14 +46,11 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
     private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0), useLocateButton = false)
 
-    @Volatile
-    private var prevFallDistance = 0.0
+    private var prevFallDistance by sessionState { 0.0 }
 
-    @Volatile
-    private var prevOnGround = false
+    private var prevOnGround by sessionState { false }
 
-    @Volatile
-    private var flag = false
+    private var flag by sessionState { false }
 
     override fun disable() {
         prevFallDistance = 0.0

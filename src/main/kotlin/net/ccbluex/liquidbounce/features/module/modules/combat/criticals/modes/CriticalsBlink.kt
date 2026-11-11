@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
 import net.minecraft.network.protocol.game.ServerboundAttackPacket
@@ -44,10 +45,10 @@ object CriticalsBlink : Mode("Blink") {
 
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
     private val range by float("Range", 4.0f, 0.0f..10.0f)
-    private var nextDelay = delay.random()
+    private var nextDelay by sessionState { delay.random() }
 
-    var isInState = false
-    private var enemyInRange = false
+    var isInState by sessionState { false }
+    private var enemyInRange by sessionState { false }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

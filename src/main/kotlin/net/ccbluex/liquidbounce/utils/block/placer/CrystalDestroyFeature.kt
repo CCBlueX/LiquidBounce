@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -51,9 +52,9 @@ class CrystalDestroyFeature(private val eventListener: EventListener) :
         ]
     }
 
-    private val chronometer = Chronometer()
+    private val chronometer by sessionState { Chronometer() }
 
-    var currentTarget: EndCrystal? = null
+    var currentTarget: EndCrystal? by sessionState { null }
         private set
 
     /**

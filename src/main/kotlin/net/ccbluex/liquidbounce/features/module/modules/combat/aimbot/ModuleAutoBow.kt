@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAimbotFeature
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAutoShootFeature
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowFastChargeFeature
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.world.item.BowItem
 import java.util.Random
@@ -34,12 +35,12 @@ import java.util.Random
  *  + and make it possible to shoot faster
  */
 object ModuleAutoBow : ClientModule("AutoBow", ModuleCategories.COMBAT, aliases = listOf("BowAssist", "BowAimbot")) {
-    val random = Random()
+    val random by sessionState { Random() }
 
     /**
      * Keeps track of the last bow shot that has taken place
      */
-    val lastShotTimer = Chronometer()
+    val lastShotTimer by sessionState { Chronometer() }
 
     @JvmStatic
     fun onStopUsingItem() {

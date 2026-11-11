@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.isInteractable
@@ -38,8 +39,8 @@ import net.minecraft.world.phys.BlockHitResult
  */
 object ModuleNoBlockInteract : ClientModule("NoBlockInteract", ModuleCategories.PLAYER) {
 
-    private var sneaking = false
-    private var interacting = false
+    private var sneaking by sessionState { false }
+    private var interacting by sessionState { false }
 
     fun startSneaking() {
         sneaking = true

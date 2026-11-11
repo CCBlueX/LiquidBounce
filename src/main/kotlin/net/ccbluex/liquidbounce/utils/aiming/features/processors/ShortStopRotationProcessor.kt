@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.utils.percentageChance
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -35,8 +36,8 @@ class ShortStopRotationProcessor(owner: EventListener? = null)
     private var stopDuration by intRange("Duration", 1..2, 1..5,
         "ticks")
 
-    private var ticksElapsed = 0
-    private var currentTransitionInDuration = stopDuration.random()
+    private var ticksElapsed by sessionState { 0 }
+    private var currentTransitionInDuration by sessionState { stopDuration.random() }
 
     override fun process(
         rotationTarget: RotationTarget,

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.contains
@@ -113,7 +114,7 @@ object ChunkRenderer {
             localZ: Int,
             knownChunk: LevelChunk? = null,
         ): Int {
-            val chunk = knownChunk ?: mc.level?.getChunk(chunkPos) ?: return AIR_COLOR
+            val chunk = knownChunk ?: currentSession.level?.getChunk(chunkPos) ?: return AIR_COLOR
             val blockX = chunkPos.getBlockX(localX)
             val blockZ = chunkPos.getBlockZ(localZ)
 
@@ -200,7 +201,7 @@ object ChunkRenderer {
                 return heightmap.getHighestTaken(x and 15, z and 15)
             }
 
-            val level = mc.level ?: return Int.MIN_VALUE
+            val level = currentSession.level ?: return Int.MIN_VALUE
 
             return level.getChunk(x shr 4, z shr 4).getHeight(Heightmap.Types.WORLD_SURFACE, x and 15, z and 15)
         }
@@ -244,7 +245,7 @@ object ChunkRenderer {
             }
 
             for ((otherPos, from, to) in chunkBordersToUpdate) {
-                val otherChunk = mc.level?.getChunk(otherPos)
+                val otherChunk = currentSession.level?.getChunk(otherPos)
 
                 textureAtlasManager.editChunk(otherPos.pack()) { image, atlasPosition ->
                     for (offX in from.x..to.x) {

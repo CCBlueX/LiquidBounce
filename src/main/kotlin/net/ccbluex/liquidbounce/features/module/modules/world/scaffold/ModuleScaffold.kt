@@ -66,6 +66,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -208,7 +209,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         } else {
             false
         }
-    private var wasTowering: Boolean = false
+    private var wasTowering: Boolean by sessionState { false }
 
     private val activeTechnique get() = if (isTowering) {
         ScaffoldNormalTechnique
@@ -246,7 +247,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     }
 
-    private var currentTarget: BlockPlacementTarget? = null
+    private var currentTarget: BlockPlacementTarget? by sessionState { null }
 
     private val swingMode by enumChoice("Swing", SwingMode.DO_NOT_HIDE, SwingMode.INTERACT_CHOICES)
 
@@ -276,12 +277,12 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
 
     private val renderer = tree(PlacementRenderer("Render", true, this, keep = false))
 
-    private var placementY = 0
-    private var forceSneak = 0
-    private var startY = 0
-    private var jumps = 0
+    private var placementY by sessionState { 0 }
+    private var forceSneak by sessionState { 0 }
+    private var startY by sessionState { 0 }
+    private var jumps by sessionState { 0 }
 
-    private var nextBlock: Block? = null
+    private var nextBlock: Block? by sessionState { null }
 
     val blockCount: Int
         get() {
@@ -421,9 +422,9 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     }
 
-    var currentOptimalLine: Line? = null
+    var currentOptimalLine: Line? by sessionState { null }
         private set
-    var rawInput = DirectionalInput.NONE
+    var rawInput by sessionState { DirectionalInput.NONE }
         private set
 
     @Suppress("unused")

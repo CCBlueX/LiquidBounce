@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.client.currentSession
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
@@ -87,7 +88,7 @@ open class FakePlayer @JvmOverloads constructor(
             val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
-                mc.execute { packet.handle(mc.connection!!) }
+                mc.execute { packet.handle(currentSession.connection!!) }
             }
         }
     }

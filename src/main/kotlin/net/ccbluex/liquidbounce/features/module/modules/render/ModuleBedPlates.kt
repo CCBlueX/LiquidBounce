@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.BackgroundMode.backgroundChoices
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderer.createItemStackForRendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -179,7 +180,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
         }
     }
 
-    private val beds = ArrayList<BedStateRenderState>()
+    private val beds by sessionState { ArrayList<BedStateRenderState>() }
 
     private fun updateAndSortBeds() {
         val cameraPos = mc.gameRenderer.mainCamera().position()
