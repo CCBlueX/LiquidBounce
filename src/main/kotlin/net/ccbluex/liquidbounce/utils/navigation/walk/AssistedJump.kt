@@ -121,7 +121,8 @@ internal class AssistedJump {
 
             val pos = BlockPos(x, y, z)
             val jump = jumps.fromHere(state, yaw, pos, top) ?: return@forEach true
-            val score = angle / maxAngle - jump.margin
+            // Below a course is where a missed jump ends, so any block level with it or higher comes first.
+            val score = angle / maxAngle - jump.margin + maxOf(0.0, height - top) * DROP_PENALTY
             if (score < bestScore) {
                 best = Target(pos, top, jump)
                 bestScore = score
@@ -149,6 +150,7 @@ internal class AssistedJump {
 
     private companion object {
         const val MAX_DROP = 4
+        const val DROP_PENALTY = 0.5
 
         const val BRAKE_TICKS = 10
         const val BRAKE_LOOKAHEAD = 3
