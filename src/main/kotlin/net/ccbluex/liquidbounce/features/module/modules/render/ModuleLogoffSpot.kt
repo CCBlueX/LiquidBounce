@@ -27,9 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
@@ -57,7 +55,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
         val entity: Entity,
     )
 
-    private val lastSeenPlayers by clientState { Object2ObjectOpenHashMap<UUID, LoggedOffPlayer>() }
+    private val lastSeenPlayers = Object2ObjectOpenHashMap<UUID, LoggedOffPlayer>()
 
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
@@ -124,7 +122,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
         for ((_, playerEntity) in lastSeenPlayers.values) {
             // Use [mc.world] instead of [world] to prevent NPE when the module is disabled
             // outside the game
-            currentClient.level?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
+            mc.level?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
         }
 
         lastSeenPlayers.clear()

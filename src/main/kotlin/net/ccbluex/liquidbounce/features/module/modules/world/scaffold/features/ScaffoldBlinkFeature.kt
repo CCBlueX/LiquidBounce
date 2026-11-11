@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.BlinkPacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.kotlin.matchesAny
@@ -37,8 +36,8 @@ object ScaffoldBlinkFeature : ToggleableValueGroup(ModuleScaffold, "Blink", fals
     private val time by intRange("Time", 50..250, 0..3000, "ms")
     private val flushOn by multiEnumChoice<FlushOn>("FlushOn")
 
-    private var pulseTime by clientState { 0L }
-    private val pulseTimer by clientState { Chronometer() }
+    private var pulseTime = 0L
+    private val pulseTimer = Chronometer()
 
     fun onBlockPlacement() {
         pulseTime = time.random().toLong()

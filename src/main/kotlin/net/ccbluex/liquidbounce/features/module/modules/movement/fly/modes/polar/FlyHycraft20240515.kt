@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.network.handlePacket
@@ -48,9 +47,9 @@ internal object FlyHycraft20240515 : Mode("HycraftDamage") {
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    private var damageTaken by clientState { false }
-    private var release by clientState { false }
-    private var ticks by clientState { 0 }
+    private var damageTaken = false
+    private var release = false
+    private var ticks = 0
 
     override fun enable() {
         ticks = 0

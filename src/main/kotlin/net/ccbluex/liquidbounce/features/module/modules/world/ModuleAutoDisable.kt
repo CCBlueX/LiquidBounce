@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -47,6 +48,9 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  * Command: [CommandAutoDisable]
  */
 object ModuleAutoDisable : ClientModule("AutoDisable", ModuleCategories.WORLD) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     private val moduleNames by registryList("Modules", objectRBTreeSetOf<String>(), ValueType.CLIENT_MODULE)
     private val disableOn by multiEnumChoice<DisableOn>("On", DisableOn.entries, canBeNone = false)
 

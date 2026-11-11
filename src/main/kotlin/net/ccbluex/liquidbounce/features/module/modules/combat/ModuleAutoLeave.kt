@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 import net.minecraft.core.component.DataComponents
@@ -31,6 +32,8 @@ import net.minecraft.core.component.DataComponents
  * Automatically makes you leave the server whenever your health is low.
  */
 object ModuleAutoLeave : ClientModule("AutoLeave", ModuleCategories.COMBAT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val health by float("Health", 8f, 0f..20f, "HP")
     /**

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -33,7 +32,7 @@ object ScaffoldStrafeFeature : ToggleableValueGroup(ModuleScaffold, "Strafe", fa
     private val hypixel by boolean("Hypixel", false)
     private val onlyOnGround by boolean("OnlyOnGround", false)
 
-    private var moveTicks by clientState { 0 }
+    private var moveTicks = 0
 
     override fun onEnabled() {
         moveTicks = 0

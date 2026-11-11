@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.message
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.network.handlePacket
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -49,9 +48,9 @@ internal object FlyVulcan286MC113 : Mode("Vulcan-2.8.6-MC1.13", aliases = listOf
     override val parent: ModeValueGroup<*>
         get() = modes
 
-    var packet: ClientboundPlayerPositionPacket? by clientState { null }
-    var flags by clientState { 0 }
-    var wait by clientState { false }
+    var packet: ClientboundPlayerPositionPacket? = null
+    var flags = 0
+    var wait = false
 
     override fun enable() {
         packet = null

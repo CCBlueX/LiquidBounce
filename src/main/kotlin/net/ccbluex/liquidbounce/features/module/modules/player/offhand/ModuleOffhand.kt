@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -59,6 +60,8 @@ import java.util.function.Predicate
  * Manages your offhand.
  */
 object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases = listOf("AutoTotem")) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val switchMode by enumChoice(

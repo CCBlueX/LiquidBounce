@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -58,8 +57,8 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategorie
      * the render distance. */
     private val savePlayers by boolean("SavePlayers", false).onChanged { playerMap.clear() }
 
-    private val inventoryMap by clientState { Object2ObjectOpenHashMap<UUID, TrackedInventory>() }
-    val playerMap by clientState { Object2ObjectOpenHashMap<UUID, Player>() }
+    private val inventoryMap = Object2ObjectOpenHashMap<UUID, TrackedInventory>()
+    val playerMap = Object2ObjectOpenHashMap<UUID, Player>()
 
     @Suppress("unused")
     val playerEquipmentChangeHandler = handler<EntityEquipmentChangeEvent> { event ->

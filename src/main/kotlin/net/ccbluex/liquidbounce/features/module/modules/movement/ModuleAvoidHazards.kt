@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.AvoidHazardInputPlanner
 import net.ccbluex.liquidbounce.features.module.modules.movement.avoidhazards.isLadderClimbState
@@ -58,6 +59,9 @@ import net.minecraft.world.phys.shapes.Shapes
  * Prevents you walking into blocks that might be malicious for you.
  */
 object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     private val mode by enumChoice("Mode", AvoidMode.SHAPE)
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 

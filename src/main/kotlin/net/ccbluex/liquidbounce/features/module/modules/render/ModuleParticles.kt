@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.BuiltinParticle
@@ -75,8 +74,8 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
 
     private val color by color("Color", Color4b.LIQUID_BOUNCE)
     private val builtinParticles by multiEnumChoice("Particle", enumSetOf(BuiltinParticle.STAR), canBeNone = false)
-    private val particles by clientState { mutableListOf<Particle>() }
-    private val chronometer by clientState { Chronometer() }
+    private val particles = mutableListOf<Particle>()
+    private val chronometer = Chronometer()
 
     private val gravity: Double
         get() = physicalSettings.gravityFactor.toDouble() * 0.03125

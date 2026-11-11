@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.collidesWithAnythingElse
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.standingOnWater
@@ -47,7 +46,7 @@ internal object LiquidWalkNCP3161 : Mode("NCP-3.16.1", aliases = listOf("NoCheat
     override val parent: ModeValueGroup<Mode>
         get() = ModuleLiquidWalk.modes
 
-    private var shiftDown by clientState { false }
+    private var shiftDown = false
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->

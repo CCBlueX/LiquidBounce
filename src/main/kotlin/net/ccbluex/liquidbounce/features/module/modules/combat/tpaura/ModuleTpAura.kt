@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -95,13 +94,13 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         var attacked = false
     }
 
-    private var phase by clientState { Phase.IDLE }
-    private var engagement: Engagement? by clientState { null }
-    private var ticks by clientState { 0 }
-    private var restUntil by clientState { 0 }
+    private var phase = Phase.IDLE
+    private var engagement: Engagement? = null
+    private var ticks = 0
+    private var restUntil = 0
 
     /** Targets without a route, by entity id, until the tick they may be tried again. */
-    private val unreachable by clientState { Int2IntOpenHashMap() }
+    private val unreachable = Int2IntOpenHashMap()
 
     private val reach: Double
         get() = player.entityInteractionRange() - REACH_MARGIN

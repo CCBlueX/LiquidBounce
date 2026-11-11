@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.drawPlane
@@ -114,15 +113,15 @@ object ModuleStrongholdFinder : ClientModule(
     private val announcePrediction by boolean("AnnouncePrediction", true)
     private val resetOnWorldChange by boolean("ResetOnWorldChange", true)
 
-    private val pendingThrows by clientState { ArrayDeque<PendingThrow>() }
-    private val trackedEyes by clientState { Int2ObjectLinkedOpenHashMap<TrackedEye>() }
-    private val measurements by clientState { mutableListOf<EyeMeasurement>() }
-    private var posterior: PosteriorSnapshot? by clientState { null }
-    private var lastAnnouncedCandidate: ChunkPos? by clientState { null }
-    private val detectedPortalBlocks by clientState { hashMapOf<BlockPos, PortalBlockType>() }
+    private val pendingThrows = ArrayDeque<PendingThrow>()
+    private val trackedEyes = Int2ObjectLinkedOpenHashMap<TrackedEye>()
+    private val measurements = mutableListOf<EyeMeasurement>()
+    private var posterior: PosteriorSnapshot? = null
+    private var lastAnnouncedCandidate: ChunkPos? = null
+    private val detectedPortalBlocks = hashMapOf<BlockPos, PortalBlockType>()
 
-    private var hypothesisCache: List<StrongholdHypothesis> by clientState { emptyList() }
-    private var cachedHypothesisCount by clientState { -1 }
+    private var hypothesisCache: List<StrongholdHypothesis> = emptyList()
+    private var cachedHypothesisCount = -1
 
     override fun onDisabled() {
         resetState()

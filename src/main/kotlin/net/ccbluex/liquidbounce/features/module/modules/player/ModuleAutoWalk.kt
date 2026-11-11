@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.toBlockPos
@@ -46,6 +47,8 @@ import kotlin.math.abs
  * Walks straight ahead, the way you are facing, to a destination or after a player.
  */
 object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val modes = choices("Mode", Forward, arrayOf(Forward, Direction, Goto, Follow)).apply(::tagBy)
     private val navigator = WalkNavigator(this, this)

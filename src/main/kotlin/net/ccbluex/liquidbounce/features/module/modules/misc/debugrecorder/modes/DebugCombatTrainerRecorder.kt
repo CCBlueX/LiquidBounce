@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -50,9 +49,9 @@ import kotlin.random.Random
  */
 object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>("CombatTrainer") {
 
-    private var isFirstRun by clientState { true }
+    private var isFirstRun = true
 
-    private var target: LivingEntity? by clientState { null }
+    private var target: LivingEntity? = null
 
     override fun enable() {
         isFirstRun = true

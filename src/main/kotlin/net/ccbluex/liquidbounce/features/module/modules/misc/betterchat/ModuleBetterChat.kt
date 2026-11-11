@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -122,7 +121,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
         tree(Copy)
     }
 
-    var antiChatClearPaused by clientState { false }
+    var antiChatClearPaused = false
 
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> {

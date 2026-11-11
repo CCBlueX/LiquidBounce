@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy
 
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer.getMaxRange
@@ -34,7 +33,7 @@ import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
-    var currentTarget: EndCrystal? by clientState { null }
+    var currentTarget: EndCrystal? = null
 
     /**
      * For the main loop. Finds the best target in range.

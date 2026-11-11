@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Modul
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
 import java.util.concurrent.ConcurrentLinkedQueue
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.client.clientState
 
 /**
  * Counts how many crystals the crystal aura places.
@@ -32,7 +31,7 @@ import net.ccbluex.liquidbounce.features.client.clientState
  */
 object CrystalAuraSpeedDebugger : CrystalPostAttackTracker() {
 
-    private val cps by clientState { ConcurrentLinkedQueue<Long>() }
+    private val cps = ConcurrentLinkedQueue<Long>()
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {

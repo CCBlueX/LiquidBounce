@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.core.particles.ParticleTypes
@@ -57,7 +56,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
     private val selfSoundSet by multiEnumChoice("SelfSound", HitFXRegistry.BOYKISSER)
 
-    private var lastTargetId: Int? by clientState { null }
+    private var lastTargetId: Int? = null
 
     private val vanillaHitSounds = setOf(
         SoundEvents.ARROW_HIT_PLAYER,

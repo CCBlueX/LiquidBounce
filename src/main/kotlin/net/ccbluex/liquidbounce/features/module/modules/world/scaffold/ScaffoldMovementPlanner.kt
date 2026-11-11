@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLine
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.ModuleDebug
@@ -48,10 +47,10 @@ object ScaffoldMovementPlanner {
     private const val SUPPORT_SURFACE_EPSILON = 1.0E-3
     private const val SUPPORT_OVERLAP_HYSTERESIS = 0.02
 
-    private val lastPlacedBlocks by clientState { ArrayDeque<BlockPos>(MAX_LAST_PLACE_BLOCKS) }
-    private var lastPosition: BlockPos? by clientState { null }
-    private var lastSupportReference: SupportReference? by clientState { null }
-    private var lastDirectionAngle by clientState { Float.NaN }
+    private val lastPlacedBlocks = ArrayDeque<BlockPos>(MAX_LAST_PLACE_BLOCKS)
+    private var lastPosition: BlockPos? = null
+    private var lastSupportReference: SupportReference? = null
+    private var lastDirectionAngle = Float.NaN
 
     data class SupportReference(
         val blockPos: BlockPos,

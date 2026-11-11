@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -62,7 +61,7 @@ object ModuleProjectilePuncher : ClientModule(
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
-    private var target: Entity? by clientState { null }
+    private var target: Entity? = null
 
     // Rotation
     private val rotations = tree(RotationsValueGroup(this))

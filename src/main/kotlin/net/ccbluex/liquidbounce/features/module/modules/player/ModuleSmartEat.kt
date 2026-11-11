@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -55,6 +56,8 @@ import java.util.Comparator.comparingInt
  */
 
 object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.parse("hud/hotbar_offhand_left")
 

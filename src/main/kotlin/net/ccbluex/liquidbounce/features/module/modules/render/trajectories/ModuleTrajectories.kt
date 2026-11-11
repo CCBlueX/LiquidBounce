@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironment
@@ -76,9 +75,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         tree(TrajectoryDetailedInfoRenderer)
     }
 
-    internal val simulationResults by clientState {
+    internal val simulationResults =
         mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
-    }
 
     override fun onDisabled() {
         simulationResults.clear()

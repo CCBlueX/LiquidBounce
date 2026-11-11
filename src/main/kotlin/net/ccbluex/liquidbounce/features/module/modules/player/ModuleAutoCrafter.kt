@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.minecraft.client.gui.screens.recipebook.SearchRecipeBookCategory
@@ -69,7 +68,7 @@ object ModuleAutoCrafter : ClientModule("AutoCrafter", ModuleCategories.PLAYER) 
             return@tickHandler
         }
 
-        val context = SlotDisplayContext.fromLevel(currentClient.level ?: return@tickHandler)
+        val context = SlotDisplayContext.fromLevel(mc.level ?: return@tickHandler)
         val collections = player.recipeBook.getCollection(menuType.searchCategory)
 
         for ((index, targetItem) in itemsToCraft.withIndex()) {

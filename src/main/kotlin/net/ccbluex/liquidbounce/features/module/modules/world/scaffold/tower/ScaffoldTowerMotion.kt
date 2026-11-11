@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.minecraft.stats.Stats
@@ -36,7 +35,7 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
     /**
      * The position where the player jumped off
      */
-    private var jumpOffPosition by clientState { Double.NaN }
+    private var jumpOffPosition = Double.NaN
 
     @Suppress("unused")
     private val jumpHandler = handler<PlayerJumpEvent> {

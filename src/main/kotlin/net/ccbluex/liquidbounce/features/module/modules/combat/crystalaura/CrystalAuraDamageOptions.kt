@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Modul
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.collection.LruCache
@@ -56,7 +55,7 @@ object CrystalAuraDamageOptions : ValueGroup("Damage") {
      */
     val terrain by boolean("Terrain", true)
 
-    val cacheMap by clientState { LruCache<DamageConstellation, DamageProvider>(64) }
+    val cacheMap = LruCache<DamageConstellation, DamageProvider>(64)
 
     /**
      * Approximates how favorable an explosion of a crystal at [pos] in a given [world] would be.

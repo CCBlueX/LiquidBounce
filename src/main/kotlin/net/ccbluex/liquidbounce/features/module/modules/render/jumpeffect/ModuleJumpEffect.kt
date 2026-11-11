@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.jumpeffect.modes.JumpEffectImage
@@ -30,7 +29,7 @@ import net.minecraft.world.phys.Vec3
 
 object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
-    val circles by clientState { ExpiringList<Vec3>() }
+    val circles = ExpiringList<Vec3>()
 
     val modes = choices("Mode", 0) {
         arrayOf(

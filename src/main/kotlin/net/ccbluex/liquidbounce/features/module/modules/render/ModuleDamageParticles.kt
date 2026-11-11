@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -74,9 +73,9 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
     /**
      * Ordered by [Particle.startTime]
      */
-    private val particles by clientState { ArrayDeque<Particle>() }
+    private val particles = ArrayDeque<Particle>()
 
-    private val entityHealthMap by clientState { Reference2FloatOpenHashMap<LivingEntity>() }
+    private val entityHealthMap = Reference2FloatOpenHashMap<LivingEntity>()
 
     private const val EPSILON = 0.05F
     private val FORMATTER = DecimalFormat("0.#")

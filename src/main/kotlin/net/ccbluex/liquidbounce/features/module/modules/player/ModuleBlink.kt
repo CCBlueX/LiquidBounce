@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
@@ -66,8 +65,8 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
 
-    private var dummyPlayer: RemotePlayer? by clientState { null }
-    private var tickCounter by clientState { 0 }
+    private var dummyPlayer: RemotePlayer? = null
+    private var tickCounter = 0
 
     init {
         tree(AutoResetOption)

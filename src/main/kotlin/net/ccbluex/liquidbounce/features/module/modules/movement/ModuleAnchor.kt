@@ -22,7 +22,6 @@ import net.ccbluex.fastutil.weightedMinByOrNullAtMost
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
@@ -57,7 +56,7 @@ object ModuleAnchor : ClientModule(
     private val horizontalSpeed by float("HorizontalSpeed", 0.3f, 0f..10f)
     private val verticalSpeed by float("VerticalSpeed", 0.1f, 0f..10f)
 
-    var goal: Vec3? by clientState { null }
+    var goal: Vec3? = null
 
     override fun onEnabled() {
         HoleManager.subscribe(this)

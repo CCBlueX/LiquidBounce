@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -198,7 +197,7 @@ internal object FlyExplosion : Mode("Explosion") {
     val startStrafe by float("StartStrafe", 1f, 0.6f..4f)
     val strafeDecrease by float("StrafeDecrease", 0.005f, 0.001f..0.1f)
 
-    private var strafeSince by clientState { 0.0f }
+    private var strafeSince = 0.0f
 
     override fun enable() {
         chat("You need to be damaged by an explosion to fly.")

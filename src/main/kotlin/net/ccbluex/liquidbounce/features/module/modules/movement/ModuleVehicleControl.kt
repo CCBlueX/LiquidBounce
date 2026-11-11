@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.spearkill.ModuleSpearKill
@@ -68,7 +67,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
         tree(Rehook)
     }
 
-    private var wasInVehicle by clientState { false }
+    private var wasInVehicle = false
 
     override fun onEnabled() {
         chat(warning(message("quitHelp")))
@@ -147,8 +146,8 @@ object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MO
         private var unhookAfter by int("UnhookAfter", 4, 1..10)
         private var hookAfter by int("HookAfter", 2, 1..10)
 
-        internal var vehicleId by clientState { -1 }
-        private var forceAttempt by clientState { false }
+        internal var vehicleId = -1
+        private var forceAttempt = false
 
         @Suppress("unused")
         private val handleRehooking = tickHandler {

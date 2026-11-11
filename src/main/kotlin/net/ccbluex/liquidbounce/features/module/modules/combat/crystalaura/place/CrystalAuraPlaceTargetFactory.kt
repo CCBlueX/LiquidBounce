@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 
 import it.unimi.dsi.fastutil.ints.IntCollection
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleBasePlace
@@ -38,8 +37,8 @@ import net.minecraft.core.BlockPos
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
-    var placementTarget: BlockPos? by clientState { null }
-    var previousTarget: BlockPos? by clientState { null }
+    var placementTarget: BlockPos? = null
+    var previousTarget: BlockPos? = null
 
     /**
      * Conditions to include a position into the positions to consider.
@@ -53,7 +52,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         PredictBlockageCondition
     )
 
-    private var sphere: Array<BlockPos> by clientState { BlockPos.ZERO.getSortedSphere(4.5f) }
+    private var sphere: Array<BlockPos> = BlockPos.ZERO.getSortedSphere(4.5f)
 
     fun updateSphere() {
         sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())

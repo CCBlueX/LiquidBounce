@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 /**
- * State a module or manager keeps once per [Client] instead of once per client.
+ * State a module or manager keeps once per [Client] instead of once for the whole game. A module needs it for all of
+ * its state once it runs in [every][ClientScope.EVERY] client.
  *
  * ```
  * private var ticksSinceHit by clientState { 0 }

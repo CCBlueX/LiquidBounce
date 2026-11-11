@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.event.eventListenerScope
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.kotlin.toUndashedString
@@ -46,7 +45,7 @@ object ModuleMobOwners : ClientModule("MobOwners", ModuleCategories.RENDER) {
 
     private val projectiles by boolean("Projectiles", false)
 
-    private val uuidNameCache by clientState { hashMapOf<UUID, FormattedCharSequence>() }
+    private val uuidNameCache = hashMapOf<UUID, FormattedCharSequence>()
 
     fun getOwnerInfoText(entity: Entity?): FormattedCharSequence? {
         if (entity == null || !this.running) {

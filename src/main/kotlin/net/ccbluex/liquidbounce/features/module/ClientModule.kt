@@ -79,15 +79,15 @@ open class ClientModule @JvmOverloads constructor(
      */
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable) &&
-            (perClient || ClientContext.current.isActive)
+            clientScope.includes(ClientContext.current)
 
     /**
-     * Whether every client has its own settings and state of this module, so that it can be on for one
-     * account and off for another. Modules that only serve the window are shared and follow the active client.
+     * Which clients run this module. A module that runs in [ClientScope.EVERY] client has to keep all of its state
+     * in `clientState { }`, any other stays with the main client.
      */
     @AddonApi
-    open val perClient: Boolean
-        get() = true
+    open val clientScope: ClientScope
+        get() = ClientScope.MAIN
 
     @AddonApi
     val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYBOARD, bind, bindAction))

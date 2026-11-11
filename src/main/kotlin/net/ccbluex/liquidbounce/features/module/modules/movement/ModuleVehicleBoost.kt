@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.phys.Vec3
@@ -36,7 +35,7 @@ object ModuleVehicleBoost : ClientModule("VehicleBoost", ModuleCategories.MOVEME
 
     private var horizontalSpeed by float("HorizontalSpeed", 2f, 0.1f..10f)
     private var verticalSpeed by float("VerticalSpeed", 1f, 0.1f..5f)
-    private var wasInVehicle by clientState { false }
+    private var wasInVehicle = false
 
     val repeatable = handler<GameTickEvent> {
         val isInVehicle = player.isPassenger

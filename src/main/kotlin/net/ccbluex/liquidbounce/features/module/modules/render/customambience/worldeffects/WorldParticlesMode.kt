@@ -25,13 +25,11 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.worldeffects.WorldParticles.coords
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.math.Easing
 
 abstract class WorldParticlesMode(name: String) : Mode(name) {
@@ -58,14 +56,14 @@ abstract class WorldParticlesMode(name: String) : Mode(name) {
         tree(yMotion)
     }
 
-    protected var lastSpawnTime by clientState { 0L }
+    protected var lastSpawnTime = 0L
 
     protected abstract fun WorldRenderEnvironment.drawWorldParticle(progress: Float, age: Float)
     protected abstract fun createParticleCoord(currentTime: Long)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val player = currentClient.player ?: return@handler
+        val player = mc.player ?: return@handler
 
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastSpawnTime >= spawnTime) createParticleCoord(currentTime)

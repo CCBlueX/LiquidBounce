@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.blink.BlinkManager.Action
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -166,8 +165,8 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
         private val cancelC0B by boolean("CancelC0B",true)
-        private val yawOffset by clientState { FloatOffsetGenerator() }
-        private val pitchOffset by clientState { FloatOffsetGenerator() }
+        private val yawOffset = FloatOffsetGenerator()
+        private val pitchOffset = FloatOffsetGenerator()
 
         override val parent: ModeValueGroup<Mode>
             get() = modes
@@ -255,7 +254,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
     private object TickMovement : Mode("TickMovement") {
 
         private val interval by intRange("Interval", 20..20, 1..200, "ticks")
-        private var ticksUntilMovement by clientState { 0 }
+        private var ticksUntilMovement = 0
 
         override val parent: ModeValueGroup<Mode>
             get() = modes

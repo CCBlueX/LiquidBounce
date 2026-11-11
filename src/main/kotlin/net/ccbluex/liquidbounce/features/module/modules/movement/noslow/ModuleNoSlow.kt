@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bow.NoSlowBow
@@ -43,6 +44,8 @@ import net.minecraft.world.phys.Vec2
  * Cancels slowness effects caused by blocks and using items.
  */
 object ModuleNoSlow : ClientModule("NoSlow", ModuleCategories.MOVEMENT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     init {
         tree(NoSlowBlock)

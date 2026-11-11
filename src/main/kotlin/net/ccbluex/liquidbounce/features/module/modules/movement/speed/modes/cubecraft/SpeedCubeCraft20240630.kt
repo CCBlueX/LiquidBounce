@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -50,12 +49,12 @@ class SpeedCubeCraft20240630(override val parent: ModeValueGroup<*>) : Mode(
     private val speed by float("Speed", 0.5f, 0.1f..5f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
 
-    private var hasBeenHurt by clientState { false }
-    private var adjusted by clientState { false }
-    private var damageDelay by clientState { 0 }
-    private var enabledTime by clientState { 0L }
-    private var externalDamageAdjust by clientState { 0 }
-    private var lastDamage by clientState { 0L }
+    private var hasBeenHurt = false
+    private var adjusted = false
+    private var damageDelay = 0
+    private var enabledTime = 0L
+    private var externalDamageAdjust = 0
+    private var lastDamage = 0L
 
     override fun enable() {
         if (!ModulePingSpoof.enabled) {

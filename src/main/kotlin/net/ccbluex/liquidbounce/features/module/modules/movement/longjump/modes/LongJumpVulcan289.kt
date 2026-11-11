@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -41,8 +40,8 @@ internal object LongJumpVulcan289 : Mode("Vulcan-2.8.9", aliases = listOf("Vulca
     override val parent: ModeValueGroup<*>
         get() = ModuleLongJump.mode
 
-    private var receivedSetback by clientState { false }
-    private var started by clientState { false }
+    private var receivedSetback = false
+    private var started = false
 
     private val jumpingSequence = doubleArrayOf(
         0.41999998688698,

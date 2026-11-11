@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.core.Holder
@@ -50,7 +49,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) 
             instance = MobEffectInstance(registryEntry, 0, it - 1)
         }
 
-        var instance: MobEffectInstance by clientState { MobEffectInstance(registryEntry, 0, level.get() - 1) }
+        var instance: MobEffectInstance = MobEffectInstance(registryEntry, 0, level.get() - 1)
             private set
     }
 

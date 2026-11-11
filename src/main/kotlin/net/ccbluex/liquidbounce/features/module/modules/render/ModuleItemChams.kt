@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.common.LightmapOverride
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
@@ -66,12 +65,12 @@ object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
         private val layerSize by float("LayerSize", 1.91f, 1f..5f).markDirtyOnChanged()
         private val falloff by float("Falloff", 6.83f, 0f..20f).markDirtyOnChanged()
 
-        private var texture: GpuTexture? by clientState { null }
-        private var textureView: GpuTextureView? by clientState { null }
+        private var texture: GpuTexture? = null
+        private var textureView: GpuTextureView? = null
 
         private val UBO = ClientUniformDefine.HAND_ITEM_LIGHTMAP.createSingleBuffer()
 
-        private var uboDirty by clientState { true }
+        private var uboDirty = true
         private fun <T : Any> Value<T>.markDirtyOnChanged() = onChanged { uboDirty = true }
 
         private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)

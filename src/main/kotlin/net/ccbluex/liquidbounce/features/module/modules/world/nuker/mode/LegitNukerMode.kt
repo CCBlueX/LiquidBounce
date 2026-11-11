@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
@@ -50,7 +49,7 @@ import kotlin.math.max
 
 object LegitNukerMode : Mode("Legit") {
 
-    private var currentTarget: BlockPos? by clientState { null }
+    private var currentTarget: BlockPos? = null
 
     override val parent: ModeValueGroup<Mode>
         get() = mode

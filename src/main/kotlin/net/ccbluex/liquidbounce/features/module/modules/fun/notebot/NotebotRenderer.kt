@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStage
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -32,10 +31,10 @@ object NotebotRenderer : PlacementRenderer("Render", true, ModuleNotebot) {
     val tuneColor by color("TuneColor", Color4b.YELLOW.with(a = 90))
     val outlineTuneColor by color("TuneOutlineColor", Color4b.YELLOW)
 
-    private val stageChangeChronometer by clientState { Chronometer() }
+    private val stageChangeChronometer = Chronometer()
 
-    private var currentStage by clientState { NotebotStage.TEST }
-    private var lastStage by clientState { NotebotStage.TEST }
+    private var currentStage = NotebotStage.TEST
+    private var lastStage = NotebotStage.TEST
 
     override fun getColor(id: Int): Color4b {
         return lastStage.blockColor().interpolateTo(currentStage.blockColor(), getTransitionProgress())

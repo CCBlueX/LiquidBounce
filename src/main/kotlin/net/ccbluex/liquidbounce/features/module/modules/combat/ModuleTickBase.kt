@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
@@ -111,7 +110,7 @@ internal object ModuleTickBase : ClientModule(
     private val chargeWhileUsingItem by boolean("ChargeWhileUsingItem", false)
 
     @Suppress("unused")
-    private val balanceReset by clientState { balanceReset() }
+    private val balanceReset = balanceReset()
 
     init {
         tree(Advantage)
@@ -127,7 +126,7 @@ internal object ModuleTickBase : ClientModule(
     /**
      * Whether [chance] lets us take the current chance to hit earlier, rolled once until the chance is gone.
      */
-    private var rolled: Boolean? by clientState { null }
+    private var rolled: Boolean? = null
 
     private fun rollChance() = rolled ?: chance.asBoolean.also { rolled = it }
 
@@ -193,8 +192,8 @@ internal object ModuleTickBase : ClientModule(
 
         private val boostSpeed by float("BoostSpeed", 5f, 1f..10f)
 
-        private var boosting by clientState { false }
-        private var cooldownTicks by clientState { 0 }
+        private var boosting = false
+        private var cooldownTicks = 0
 
         override fun enable() {
             boosting = false
@@ -294,13 +293,13 @@ internal object ModuleTickBase : ClientModule(
         /**
          * Set while bursting and paying for it, when the game has to run at the normal speed.
          */
-        private var busy by clientState { false }
+        private var busy = false
 
         /**
          * While holding first, the normal ticks that will run between the hold and the burst.
          */
-        private var walkAfterHold: Int? by clientState { null }
-        private var plannedAtBalance by clientState { Float.NaN }
+        private var walkAfterHold: Int? = null
+        private var plannedAtBalance = Float.NaN
 
         override fun timerSpeed() = 1f.takeIf { busy }
 

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
@@ -99,8 +98,8 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     sealed class Mode(name: String) : net.ccbluex.liquidbounce.config.types.group.Mode(name) {
         final override val parent get() = modes
 
-        protected var useColor by clientState { false }
-        protected val dirtyFlag by clientState { atomic(true) }
+        protected var useColor = false
+        protected val dirtyFlag = atomic(true)
 
         fun markDirty() {
             if (this.running) {

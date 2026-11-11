@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.airTicks
@@ -48,8 +47,8 @@ class SpeedBlocksMC20241123(override val parent: ModeValueGroup<*>) : Mode("Bloc
 
     private var roundStrafeYaw by boolean("RoundStrafeYaw", false)
 
-    private var state by clientState { 0 }
-    private var flagDelay by clientState { 0 }
+    private var state = 0
+    private var flagDelay = 0
 
     override fun enable() {
         state = 0

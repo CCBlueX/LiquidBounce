@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
@@ -57,7 +57,7 @@ object ModuleClickGui :
 
     override val running get() = ClientContext.current.isActive
 
-    override val perClient get() = false
+    override val clientScope get() = ClientScope.WINDOW
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
@@ -105,7 +105,7 @@ object ModuleClickGui :
     }
 
     // Standalone screen instance for caching
-    private var standaloneScreen: CustomStandaloneMinecraftScreen? by clientState { null }
+    private var standaloneScreen: CustomStandaloneMinecraftScreen? = null
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {

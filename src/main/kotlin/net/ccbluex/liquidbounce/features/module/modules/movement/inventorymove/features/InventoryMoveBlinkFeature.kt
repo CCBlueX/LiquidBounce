@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.text.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -42,7 +41,7 @@ object InventoryMoveBlinkFeature : ToggleableValueGroup(ModuleInventoryMove, "Bl
      */
     private val maximumTime by int("MaximumTime", 10000, 0..30000, "ms")
 
-    private val chronometer by clientState { Chronometer() }
+    private val chronometer = Chronometer()
 
     @Suppress("unused")
     private val fakeLagHandler = handler<BlinkPacketEvent> { event ->

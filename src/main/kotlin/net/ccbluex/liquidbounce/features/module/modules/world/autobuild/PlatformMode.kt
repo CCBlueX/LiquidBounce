@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -38,7 +37,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     private val blocks by blocks("Blocks", blockSortedSetOf(Blocks.OBSIDIAN))
     private val platformSize by int("Size", 3, 1..6)
 
-    private var startY by clientState { 0.0 }
+    private var startY = 0.0
 
     override fun enabled() {
         startY = player.position().y

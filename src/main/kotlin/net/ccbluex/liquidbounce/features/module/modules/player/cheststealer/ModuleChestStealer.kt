@@ -20,12 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.fastutil.swap
-import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
@@ -42,8 +43,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
-import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.ccbluex.liquidbounce.utils.inventory.mergeableCapacityFor
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.client.gui.screens.Screen
@@ -60,6 +61,8 @@ import kotlin.math.ceil
  */
 
 object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.lang.translation
@@ -62,8 +61,8 @@ internal object FlyCubeCraft20251226 : Mode("CubeCraft-2025-12-26", aliases = li
     override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes
 
-    private var hasBeenHurt by clientState { false }
-    private var hasBeenTeleported by clientState { false }
+    private var hasBeenHurt = false
+    private var hasBeenTeleported = false
 
     override fun enable() {
         if (ModuleSpeed.enabled) {

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityAAC442
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityBlocksMC20241123
@@ -54,6 +55,8 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  */
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     val modes = choices(
         "Mode", VelocityModify, arrayOf(

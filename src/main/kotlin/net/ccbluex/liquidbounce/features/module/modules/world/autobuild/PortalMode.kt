@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -42,15 +41,15 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
      */
     private val igniteTimeout by int("IgniteTimeout", 2000, 200..10000, "ms")
 
-    private var phase by clientState { Phase.BUILD }
-    private var portal: NetherPortal? by clientState { null }
-    private var missingItemReported by clientState { false }
-    private val igniteChronometer by clientState { Chronometer() }
+    private var phase = Phase.BUILD
+    private var portal: NetherPortal? = null
+    private var missingItemReported = false
+    private val igniteChronometer = Chronometer()
 
     override fun enabled() {
         phase = Phase.BUILD
         missingItemReported = false
-        val portal = findPortal()
+        val portal = getPortal()
         this.portal = portal
         if (portal == null) {
             chat(markAsError(ModuleAutoBuild.message("noPosition")), ModuleAutoBuild)
@@ -122,7 +121,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
     }
 
     @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
-    private fun findPortal(): NetherPortal? {
+    private fun getPortal(): NetherPortal? {
         var result: NetherPortal? = null
         val pos = BlockPos.containing(player.position())
         for (direction in Direction.BY_2D_DATA) {

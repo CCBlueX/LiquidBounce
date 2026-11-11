@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trig
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.notWhileUsingItem
@@ -65,12 +63,12 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
     /**
      * The currently executed placement task.
      */
-    private var currentPlaceTask: Future<*>? by clientState { null }
+    private var currentPlaceTask: Future<*>? = null
 
     /**
      * The currently executed destroy task.
      */
-    private var currentDestroyTask: Future<*>? by clientState { null }
+    private var currentDestroyTask: Future<*>? = null
 
     private val canCache: BooleanSupplier
 
@@ -111,7 +109,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentPlaceTask = service.submit(ClientContext.pinned(runnable))
+            currentPlaceTask = service.submit(runnable)
         } else {
             currentPlaceTask?.cancel(true)
             currentPlaceTask = null
@@ -127,7 +125,7 @@ object CrystalAuraTriggerer : ValueGroup("Triggers"), EventListener, MinecraftSh
         }
 
         if (offThread) {
-            currentDestroyTask = service.submit(ClientContext.pinned(runnable))
+            currentDestroyTask = service.submit(runnable)
         } else {
             currentDestroyTask?.cancel(true)
             currentDestroyTask = null

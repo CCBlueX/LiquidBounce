@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -84,7 +83,7 @@ object ModuleMacros : ClientModule("Macros", ModuleCategories.MISC) {
 
     private sealed class Macro(name: String) : ValueGroup(name) {
 
-        var lastTriggerTime by clientState { 0L }
+        var lastTriggerTime = 0L
 
         val triggerDelayMs = intRange("TriggerDelay", 0..0, 0..15000, "ms").asRefreshable()
 

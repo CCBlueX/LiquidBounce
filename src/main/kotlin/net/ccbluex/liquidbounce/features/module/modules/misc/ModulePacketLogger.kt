@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.text.asPlainText
 import net.ccbluex.liquidbounce.utils.text.asText
@@ -81,15 +80,15 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
     private val outputDir = ConfigSystem.rootFolder.resolve("packet-logger").apply { mkdirs() }
 
-    private val classNames by clientState { ConcurrentHashMap<Class<out Packet<*>>, String>() }
-    private val fieldNames by clientState { ConcurrentHashMap<Field, String>() }
+    private val classNames = ConcurrentHashMap<Class<out Packet<*>>, String>()
+    private val fieldNames = ConcurrentHashMap<Field, String>()
 
     init {
         // Do not include this module in the auto config, as this is for debugging purposes only.
         doNotIncludeAlways()
     }
 
-    private val outputFile by clientState { atomic<File?>(null) }
+    private val outputFile = atomic<File?>(null)
 
     private fun createFileIfNeeded() {
         outputFile.compareAndSet(

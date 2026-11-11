@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -36,7 +35,7 @@ object SpeedYawOffset : ToggleableValueGroup(ModuleSpeed, "YawOffset", false) {
     private val yawOffsetMode by enumChoice("YawOffsetMode", YawOffsetMode.AIR)
     private val rotations = RotationsValueGroup(this)
 
-    private var yaw by clientState { 0f }
+    private var yaw = 0f
 
     @Suppress("unused")
     private val yawOffsetHandler = handler<RotationUpdateEvent> {

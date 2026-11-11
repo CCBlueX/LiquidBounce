@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.minecraft.world.effect.MobEffects
 
 /**
@@ -34,7 +33,7 @@ import net.minecraft.world.effect.MobEffects
 @Deprecated("Will be removed with the release of 0.43.0 and ported to LiquidBounce Legacy Add-on")
 class SpeedHylex20241117Ground(override val parent: ModeValueGroup<*>) : Mode("HylexGround") {
 
-    private var groundTicks by clientState { 0 }
+    private var groundTicks = 0
 
     override fun enable() {
         groundTicks = 0

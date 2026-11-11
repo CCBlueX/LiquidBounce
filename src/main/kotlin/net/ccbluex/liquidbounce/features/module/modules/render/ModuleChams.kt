@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.toTextureProperty
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinRenderTypeAccessor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientUniformDefine
@@ -87,12 +86,12 @@ object ModuleChams : ClientModule("Chams", ModuleCategories.RENDER) {
     )
 
     private val heldItemEntityContext = ScopedValue.newInstance<Entity>()
-    private var entityContext: Entity? by clientState { null }
-    private var captureDepth by clientState { 0 }
-    private var chamsStorage by clientState { SubmitNodeStorage() }
-    private var chamsRenderBuffers: RenderBuffers? by clientState { null }
-    private var chamsDispatcher: FeatureRenderDispatcher? by clientState { null }
-    private var chamsFrame: FeatureRenderDispatcher.PreparedFrame? by clientState { null }
+    private var entityContext: Entity? = null
+    private var captureDepth = 0
+    private var chamsStorage = SubmitNodeStorage()
+    private var chamsRenderBuffers: RenderBuffers? = null
+    private var chamsDispatcher: FeatureRenderDispatcher? = null
+    private var chamsFrame: FeatureRenderDispatcher.PreparedFrame? = null
 
     private fun supports(renderType: RenderType): Boolean =
         supportedRenderTypes.contains((renderType as MixinRenderTypeAccessor).name)

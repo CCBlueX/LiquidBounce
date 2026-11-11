@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -49,6 +50,9 @@ import net.minecraft.world.item.Items
  * @author ccetl
  */
 object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, aliases = listOf("Refill")) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")

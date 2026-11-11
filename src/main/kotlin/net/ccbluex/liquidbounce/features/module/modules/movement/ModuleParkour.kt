@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -55,6 +56,8 @@ import kotlin.math.abs
  * the tick that lands best, turns the jump towards it, steers in the air and stops you on small landings.
  */
 object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     private object Assist : ToggleableValueGroup(this, "Assist", true) {
         val maxAngle by float("MaxAngle", 35f, 5f..90f, "°")

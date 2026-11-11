@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -47,7 +46,7 @@ internal object Matrix7145FlagLongJump : Mode("Matrix-7.14.5-Flag") {
     private val motionY by float("MotionY", 0.42f, 0.0f..5.0f)
     private val delay by int("Delay", 0, 0..3)
 
-    private var flagTicks by clientState { 0 }
+    private var flagTicks = 0
     private const val ACCEPTED_AIR_TIME = 5
 
     @Suppress("unused")

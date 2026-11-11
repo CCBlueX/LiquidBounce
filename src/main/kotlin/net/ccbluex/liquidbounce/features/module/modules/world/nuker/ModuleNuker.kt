@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.nuker
 
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.area.FloorNukerArea
@@ -70,14 +69,11 @@ object ModuleNuker : ClientModule("Nuker", ModuleCategories.WORLD, disableOnQuit
     /**
      * The last target block that was hit. Does not mean it was destroyed.
      */
-    var wasTarget: BlockPos?
-        get() = wasTargetState.get()
+    var wasTarget: BlockPos? = null
         set(value) {
-            wasTargetState.set(value)
+            field = value
             targetRenderer.addBlock(value ?: return)
         }
-
-    private val wasTargetState = clientState<BlockPos?> { null }
 
     fun isValid(blockState: BlockState): Boolean {
         return filter.invoke(blockState.block, blocks)

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.ClientsUpdateEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
@@ -118,7 +119,10 @@ object ClientOverview : EventListener {
             position = player?.blockPosition(),
             heldItem = player?.mainHandItem?.takeUnless { it.isEmpty },
             modules = ModuleManager
-                .filter { it.perClient && it.category != ModuleCategories.RENDER && it.enabled && !it.hidden }
+                .filter {
+                    it.clientScope == ClientScope.EVERY && it.category != ModuleCategories.RENDER &&
+                        it.enabled && !it.hidden
+                }
                 .map { it.name },
             lastMessage = lastMessage,
         )

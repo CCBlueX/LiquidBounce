@@ -879,13 +879,13 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun getBind ()Lnet/ccbluex/liquidbounce/utils/input/InputBind;
 	public final fun getBindValue ()Lnet/ccbluex/liquidbounce/config/types/Value;
 	public final fun getCategory ()Lnet/ccbluex/liquidbounce/features/module/ModuleCategory;
+	public fun getClientScope ()Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 	public final fun getDisableActivation ()Z
 	public final fun getDisableOnQuit ()Z
 	public fun getExternalBind ()Z
 	public final fun getHidden ()Z
 	protected final fun getLogger ()Lorg/apache/logging/log4j/Logger;
 	public final fun getNotActivatable ()Z
-	public fun getPerClient ()Z
 	public fun getRunning ()Z
 	public fun getSettings ()Ljava/util/Map;
 	public fun getTag ()Ljava/lang/String;
@@ -897,6 +897,16 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun tagBy (Lnet/ccbluex/liquidbounce/config/types/Value;)V
 	public fun toString ()Ljava/lang/String;
 	public final fun verifyFallbackDescription ()V
+}
+
+public final class net/ccbluex/liquidbounce/features/module/ClientScope : java/lang/Enum {
+	public static final field EVERY Lnet/ccbluex/liquidbounce/features/module/ClientScope;
+	public static final field MAIN Lnet/ccbluex/liquidbounce/features/module/ClientScope;
+	public static final field WINDOW Lnet/ccbluex/liquidbounce/features/module/ClientScope;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun includes (Lnet/ccbluex/liquidbounce/features/client/Client;)Z
+	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/module/ClientScope;
+	public static fun values ()[Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 }
 
 public abstract interface class net/ccbluex/liquidbounce/features/module/MinecraftShortcuts {
@@ -991,7 +1001,7 @@ public final class net/ccbluex/liquidbounce/features/module/modules/player/autos
 
 public final class net/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui : net/ccbluex/liquidbounce/features/module/ClientModule {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui;
-	public fun getPerClient ()Z
+	public fun getClientScope ()Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 	public fun getRunning ()Z
 	public final fun invalidate ()V
 	public final fun isInSearchBar ()Z

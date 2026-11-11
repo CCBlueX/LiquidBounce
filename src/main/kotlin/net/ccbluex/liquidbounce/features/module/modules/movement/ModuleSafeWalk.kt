@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
@@ -51,6 +52,8 @@ import kotlin.math.min
  * Prevents you from falling down as if you were sneaking.
  */
 object ModuleSafeWalk : ClientModule("SafeWalk", ModuleCategories.MOVEMENT) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     @Suppress("UnusedPrivateProperty")
     private val modes = choices("Mode", 1, ::safeWalkChoices) // Default safe mode

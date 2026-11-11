@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.block.UnbreakableFirst
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
@@ -119,10 +118,10 @@ object ModuleBlockIn : ClientModule("BlockIn", ModuleCategories.WORLD, disableOn
     }
 
     private val startPos = BlockPos.MutableBlockPos()
-    private var rotateClockwise by clientState { false }
-    private var blockList by clientState { emptyList<BlockPos>() }
-    private var moved by clientState { false }
-    private val recentlyBrokenBlocks by clientState { Long2LongOpenHashMap() }
+    private var rotateClockwise = false
+    private var blockList = emptyList<BlockPos>()
+    private var moved = false
+    private val recentlyBrokenBlocks = Long2LongOpenHashMap()
 
     override fun onDisabled() {
         startPos.set(BlockPos.ZERO)

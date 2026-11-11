@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHudAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.gui.ItemStackListBackground
 import net.ccbluex.liquidbounce.render.gui.ItemStackListRenderState
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -123,7 +122,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
     fun GuiGraphicsExtractor.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
 
-        val player = currentClient.player ?: return
+        val player = mc.player ?: return
 
         val progress = player.cooldowns.getCooldownPercent(stack, mc.deltaTracker.getGameTimeDeltaPartialTick(true))
 

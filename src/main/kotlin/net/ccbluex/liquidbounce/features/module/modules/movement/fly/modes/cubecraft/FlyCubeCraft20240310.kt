@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -47,7 +46,7 @@ internal object FlyCubeCraft20240310 : Mode("CubeCraft-2024-03-10", aliases = li
     private val jumpSpeed by float("Speed", 0.35f, 0.1f..1f)
     private val ticks by int("Ticks", 11, 1..20)
 
-    private var spoofOnGround by clientState { false }
+    private var spoofOnGround = false
 
     override val parent: ModeValueGroup<*>
         get() = ModuleFly.modes

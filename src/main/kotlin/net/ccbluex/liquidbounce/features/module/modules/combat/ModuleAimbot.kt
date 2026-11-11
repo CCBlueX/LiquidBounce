@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
@@ -87,8 +86,8 @@ object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = 
 
     private val ignores by multiEnumChoice<IgnoreOpened>("Ignore")
 
-    private var targetRotation: Rotation? by clientState { null }
-    private var playerRotation: Rotation? by clientState { null }
+    private var targetRotation: Rotation? = null
+    private var playerRotation: Rotation? = null
 
     @Suppress("unused", "ComplexCondition")
     private val tickHandler = handler<RotationUpdateEvent> { _ ->

@@ -26,13 +26,11 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -84,12 +82,12 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
 
     private val useNotification by boolean("UseNotification", false)
 
-    private val uuidNameCache by clientState { Object2ObjectOpenHashMap<UUID, String>() }
-    private val uuidGameModeCache by clientState { Object2ObjectOpenHashMap<UUID, GameType>() }
-    private val itemConsumptionCache by clientState { Object2ObjectOpenHashMap<UUID, ItemConsumptionState>() }
-    private val heldItemCache by clientState { Object2ObjectOpenHashMap<UUID, HeldItemState>() }
-    private val observedPlayers by clientState { ObjectOpenHashSet<UUID>() }
-    private val totemPopCounter by clientState { Object2IntOpenHashMap<UUID>() }
+    private val uuidNameCache = Object2ObjectOpenHashMap<UUID, String>()
+    private val uuidGameModeCache = Object2ObjectOpenHashMap<UUID, GameType>()
+    private val itemConsumptionCache = Object2ObjectOpenHashMap<UUID, ItemConsumptionState>()
+    private val heldItemCache = Object2ObjectOpenHashMap<UUID, HeldItemState>()
+    private val observedPlayers = ObjectOpenHashSet<UUID>()
+    private val totemPopCounter = Object2IntOpenHashMap<UUID>()
 
     override fun onEnabled() {
         for (entry in network.onlinePlayers) {
@@ -144,7 +142,7 @@ object ModuleNotifier : ClientModule("Notifier", ModuleCategories.MISC) {
             is ClientboundEntityEventPacket -> if (packet.isDeathProtection) {
                 mc.execute {
                     val entity = packet.getEntity(world) as? Player ?: return@execute
-                    if (entity === currentClient.player || FriendManager.isFriend(entity.name.string)) return@execute
+                    if (entity === mc.player || FriendManager.isFriend(entity.name.string)) return@execute
 
                     totemPopCounter.addTo(entity.uuid, 1)
 

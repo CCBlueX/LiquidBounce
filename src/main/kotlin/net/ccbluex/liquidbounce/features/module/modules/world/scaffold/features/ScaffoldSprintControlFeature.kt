@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
@@ -66,7 +65,7 @@ object ScaffoldSprintControlFeature : ToggleableValueGroup(ModuleScaffold, "Spri
 
     }
 
-    private var wasPlaced by clientState { false }
+    private var wasPlaced = false
 
     /**
      * We want to sprint omnidirectional because we are walking

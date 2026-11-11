@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
@@ -38,13 +37,13 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER
     private val factorH by float("HorizontalFactor", 0.9f, 0f..1f)
     private val factorV by float("VerticalFactor", 0.93f, 0f..1f)
 
-    var smoothPos: Vec3 by clientState { Vec3.ZERO }
+    var smoothPos: Vec3 = Vec3.ZERO
         private set
 
     private val perspective
         get () = mc.options.cameraType
 
-    private var lastPerspective by clientState { perspective }
+    private var lastPerspective = perspective
 
     override fun onDisabled() {
         smoothPos = Vec3.ZERO

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.render.drawRoundedRect
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
@@ -41,7 +40,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper
 import kotlin.jvm.optionals.getOrNull
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache by clientState { LruCache<Holder<Enchantment>, String>(64) }
+    private val enchantmentAbbreviationCache = LruCache<Holder<Enchantment>, String>(64)
 
     private const val MAX_NAME_LENGTH = 3
 

@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
@@ -77,7 +76,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
     private val rotateToTarget by boolean("RotateToTarget", false)
     private val rotations = tree(RotationsValueGroup(this))
 
-    private var currentTargetBlock: BlockPos? by clientState { null }
+    private var currentTargetBlock: BlockPos? = null
 
     override val running: Boolean
         get() = super.running && pauseOn.none { it.asBoolean }

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -38,7 +37,7 @@ object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT
 
     private val rotations = tree(RotationsValueGroup(this))
 
-    var screen: DroneControlScreen? by clientState { null }
+    var screen: DroneControlScreen? = null
 
     override fun onEnabled() {
         screen = DroneControlScreen()
@@ -54,8 +53,8 @@ object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT
         screen = null
     }
 
-    var currentTarget: Pair<Entity, Vec3>? by clientState { null }
-    var mayShoot by clientState { false }
+    var currentTarget: Pair<Entity, Vec3>? = null
+    var mayShoot = false
 
     @Suppress("unused")
     private val repeatable = handler<GameTickEvent> {

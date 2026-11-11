@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
@@ -57,8 +56,8 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
     // Flags indicating if an action has been already taken or needs to be taken.
-    var isLikelyFalling by clientState { false }
-    var rescuePosition: Vec3? by clientState { null }
+    var isLikelyFalling = false
+    var rescuePosition: Vec3? = null
         private set
 
     // How many future ticks to simulate to ensure safety.

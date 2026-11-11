@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.config.utils.TextureMode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.PresetTexture
 import net.ccbluex.liquidbounce.features.module.modules.render.potionfx.ModulePotionFX.SecondaryPresetTexture
@@ -43,7 +42,6 @@ import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket
@@ -103,7 +101,7 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
 
     private val canBeCovered by boolean("CanBeCovered", true)
 
-    private val splashes by clientState { ExpiringList<SplashData>() }
+    private val splashes = ExpiringList<SplashData>()
 
     override fun onDisabled() {
         splashes.clear()
@@ -115,7 +113,7 @@ object PotionFXSplash : ToggleableValueGroup(ModulePotionFX, "SplashPotion", tru
         if (event.packet !is ClientboundLevelEventPacket
             || event.packet.type != PARTICLES_SPELL_POTION_SPLASH) { return@handler }
 
-        val world = currentClient.level ?: return@handler
+        val world = mc.level ?: return@handler
         world.getEntities(EntityTypes.SPLASH_POTION, AABB(event.packet.pos).inflate(3.0)) { true }
             .ifEmpty { return@handler }
 

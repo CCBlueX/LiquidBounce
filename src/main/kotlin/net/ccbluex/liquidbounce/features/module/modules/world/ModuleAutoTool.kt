@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
@@ -55,6 +56,9 @@ import java.util.function.BiPredicate
  * Automatically chooses the best tool in your inventory to mine a block.
  */
 object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
+
+    override val clientScope get() = ClientScope.EVERY
+
     val toolSelector =
         choices(
             "ToolSelector",

@@ -26,6 +26,7 @@ import net.ccbluex.fastutil.referenceIntArrayMapOf
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
@@ -47,6 +48,7 @@ object ModuleInventoryCleaner : ClientModule(
     "InventoryCleaner", ModuleCategories.PLAYER,
     aliases = listOf("InventoryManager")
 ) {
+    override val clientScope get() = ClientScope.EVERY
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 

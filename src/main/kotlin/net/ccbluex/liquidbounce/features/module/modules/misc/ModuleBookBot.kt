@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -97,9 +96,9 @@ object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disable
 
     private val delay by float("Delay", .5f, 0f..20f, suffix = "s")
 
-    private val chronometer by clientState { Chronometer() }
+    private val chronometer = Chronometer()
 
-    private var bookCount by clientState { 0 }
+    private var bookCount = 0
 
     override fun onEnabled() {
         bookCount = 0

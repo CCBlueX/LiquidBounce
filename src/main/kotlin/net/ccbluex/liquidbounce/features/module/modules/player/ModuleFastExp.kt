@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
@@ -132,10 +131,10 @@ object ModuleFastExp : ClientModule(
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
-    private var bottlesRequired by clientState { 0 }
-    private var bottlesUsed by clientState { 0 }
-    private var itemsToThrow by clientState { 0f }
-    private var repairing by clientState { false }
+    private var bottlesRequired = 0
+    private var bottlesUsed = 0
+    private var itemsToThrow = 0f
+    private var repairing = false
 
     override fun onDisabled() {
         bottlesUsed = 0

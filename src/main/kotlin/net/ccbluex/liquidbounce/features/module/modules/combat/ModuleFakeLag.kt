@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.blink.BlinkManager.positions
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
@@ -91,10 +90,10 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
         DYNAMIC("Dynamic")
     }
 
-    private var nextDelay by clientState { delay.random() }
-    private val chronometer by clientState { Chronometer() }
+    private var nextDelay = delay.random()
+    private val chronometer = Chronometer()
 
-    private var isEnemyNearby by clientState { false }
+    private var isEnemyNearby = false
 
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent> {

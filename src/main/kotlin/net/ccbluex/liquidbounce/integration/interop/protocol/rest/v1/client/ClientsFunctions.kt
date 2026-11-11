@@ -43,6 +43,8 @@ import net.ccbluex.liquidbounce.features.client.ClientElement
 import net.ccbluex.liquidbounce.features.client.ClientManager
 import net.ccbluex.liquidbounce.features.client.ClientOverview
 import net.ccbluex.liquidbounce.features.client.view.ClientViews
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
@@ -61,6 +63,18 @@ internal suspend fun <T> ApplicationCall.withinQueriedClient(block: suspend () -
     val client = ClientManager.byId(id) ?: notFound("/clients/$id", "Client not found")
 
     return withContext(ClientElement(client)) { block() }
+}
+
+/**
+ * Another client than the main one only has its own copy of the modules that run in every client.
+ */
+internal fun isChangeable(module: ClientModule) =
+    ClientContext.current.isMain || module.clientScope == ClientScope.EVERY
+
+internal suspend fun ApplicationCall.checkChangeable(module: ClientModule) {
+    if (!isChangeable(module)) {
+        badRequest("${module.name} only runs in the main client")
+    }
 }
 
 // GET /api/v1/client/clients

@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
@@ -40,8 +39,8 @@ object ModuleFreeLook : ClientModule(
     private val senseBoost by float("SenseBoost", 1f, 0.1f..2f)
     private val noPitchLimit by boolean("NoPitchLimit", true)
 
-    var cameraYaw by clientState { 0f }
-    var cameraPitch by clientState { 0f }
+    var cameraYaw = 0f
+    var cameraPitch = 0f
 
     @get:JvmName("isInvertedView")
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT

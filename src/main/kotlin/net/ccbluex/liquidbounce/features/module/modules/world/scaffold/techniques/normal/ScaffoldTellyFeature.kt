@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -51,13 +50,13 @@ object ScaffoldTellyFeature : ToggleableValueGroup(ScaffoldNormalTechnique, "Tel
     val isTellyBridging: Boolean
         get() = ticksUntilJump >= jumpTicks && player.moving && enabled
 
-    private var ticksUntilJump by clientState { 0 }
+    private var ticksUntilJump = 0
 
     val resetMode by enumChoice("ResetMode", Mode.RESET)
     private val straightTicks by int("Straight", 0, 0..5, "ticks")
     private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
     private val aimOnTower by boolean("AimOnTower", true)
-    private var jumpTicks by clientState { jumpTicksOpt.random() }
+    private var jumpTicks = jumpTicksOpt.random()
 
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent> {

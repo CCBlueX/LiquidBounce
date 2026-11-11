@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -89,7 +88,7 @@ object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
         private val whenNoLock by enumChoice("WhenNoLock", NoLockMode.ALLOW_ALL)
 
         // Combination of [entityId] and [time]
-        private val lockList by clientState { Int2LongLinkedOpenHashMap() }
+        private val lockList = Int2LongLinkedOpenHashMap()
 
         enum class NoLockMode(override val tag: String) : Tagged {
             ALLOW_ALL("AllowAll"),

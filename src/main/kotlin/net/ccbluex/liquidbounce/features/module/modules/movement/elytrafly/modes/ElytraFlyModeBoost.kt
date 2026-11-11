@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.mode
 
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -58,10 +57,10 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
 
     // ===================== Runtime State =====================
 
-    private var currentAcceleration by clientState { 0f }
-    private var currentDiveSpeed by clientState { 0f }
-    private var cachedGroundCheck by clientState { false }
-    private var groundCheckCooldown by clientState { 0 }
+    private var currentAcceleration = 0f
+    private var currentDiveSpeed = 0f
+    private var cachedGroundCheck = false
+    private var groundCheckCooldown = 0
 
     // ===================== Physics Constants =====================
 

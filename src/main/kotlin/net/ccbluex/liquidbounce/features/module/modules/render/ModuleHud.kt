@@ -28,23 +28,23 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.LevelLoadingScreen
 import net.minecraft.client.gui.screens.Screen
-import net.ccbluex.liquidbounce.features.client.ClientContext
 
 /**
  * Module HUD
@@ -60,8 +60,8 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     /**
      * There is one HUD, and it shows the active client.
      */
-    override val perClient
-        get() = false
+    override val clientScope
+        get() = ClientScope.WINDOW
     override val baseKey: String
         get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 
@@ -76,7 +76,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         get() = mc.gui.hud.isHidden
 
     /** [isHudHidden] as of the last visibility evaluation, so the tick handler only reacts to changes. */
-    private var lastHudHidden by clientState { false }
+    private var lastHudHidden = false
 
     var hudEditorSelected = false
         set(value) {
@@ -110,10 +110,10 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         }
     }
 
-    private var overlay by clientState { CustomOverlay(
+    private var overlay = CustomOverlay(
         screenType = CustomScreenType.HUD,
         browserSettings = BrowserSettings(60, ::reopen)
-    ) }
+    )
 
     init {
         tree(Blur)

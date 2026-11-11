@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfig
@@ -54,7 +55,7 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("description", description.get())
     addProperty("tag", this@toJsonObject.tag)
     addProperty("hidden", hidden)
-    addProperty("perClient", perClient)
+    addProperty("perClient", clientScope == ClientScope.EVERY)
     add("aliases", interopGson.toJsonTree(aliases))
 }
 
@@ -99,6 +100,7 @@ private fun Route.putSettings() = put {
     val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
     val request = call.receiveText()
     call.withinQueriedClient {
+        call.checkChangeable(module)
         withContext(Dispatchers.Main) {
             ConfigSystem.deserializeValueGroup(module, request)
             ConfigSystem.store(modulesConfig)
@@ -114,7 +116,7 @@ private fun Route.postPanic() = post("/panic") {
             AutoConfig.withLoading {
                 runCatching {
                     for (module in ModuleManager) {
-                        if (module.category == ModuleCategories.RENDER) {
+                        if (module.category == ModuleCategories.RENDER || !isChangeable(module)) {
                             continue
                         }
 
@@ -141,6 +143,7 @@ private data class ModuleRequest(val name: String) {
 
     private suspend fun toggle(call: ApplicationCall) {
         val module = ModuleManager[this.name] ?: call.forbidden("Module '${this.name}' not found")
+        call.checkChangeable(module)
         val supposedNew = call.request.httpMethod == HttpMethod.Put ||
             (call.request.httpMethod == HttpMethod.Post && !module.enabled)
         if (module.enabled == supposedNew) {

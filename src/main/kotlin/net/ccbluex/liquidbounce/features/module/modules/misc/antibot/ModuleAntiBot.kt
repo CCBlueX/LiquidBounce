@@ -23,16 +23,19 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotHorizon20211018
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotIntave20220728
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.AntiBotMatrix20211018
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
 import net.ccbluex.liquidbounce.utils.client.currentClient
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
 object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
+
+    override val clientScope get() = ClientScope.EVERY
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(
         CustomAntiBotMode,

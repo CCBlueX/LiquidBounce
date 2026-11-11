@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.list.Tagged
-import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
@@ -48,7 +47,7 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
 
     private val delay by intRange("Delay", 2..3, 0..20, suffix = "ticks")
 
-    private val chronometer by clientState { Chronometer() }
+    private val chronometer = Chronometer()
 
     fun resetChronometer() {
         chronometer.reset()
