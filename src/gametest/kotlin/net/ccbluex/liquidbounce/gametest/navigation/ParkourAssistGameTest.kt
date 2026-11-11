@@ -47,6 +47,13 @@ private val COURSE = listOf(
     BlockPos(15, 0, 0), BlockPos(18, 0, 1), BlockPos(21, 0, 0), BlockPos(22, 0, 0),
 )
 
+/** Along +X: a drop of six onto slime, whose bounce gets up to a block three higher, out of reach of a jump. */
+private val SLIME_COURSE = listOf(
+    BlockPos(-3, 6, 0), BlockPos(-2, 6, 0), BlockPos(-1, 6, 0), BlockPos(0, 6, 0), BlockPos(4, 0, 0),
+    BlockPos(8, 3, 0),
+)
+private val SLIME = BlockPos(4, 0, 0)
+
 /**
  * A run-up along a wall at +Z and a gap past its end, so the way there slides along the wall. Then jumps up and down,
  * two turns and a jump into a corner.
@@ -63,13 +70,15 @@ private const val WALL_OFFSET = 40
 
 /**
  * Holding forward and sprint along a Jump 'n' Run course over a lake makes it to the end with Parkour on and falls in
- * without it, also when sprinting along a wall with the Sprint module and looking a little off the next block.
+ * without it, also when sprinting along a wall with the Sprint module and looking a little off the next block. With
+ * Parkour, a drop onto slime bounces up to the next block too.
  */
 class ParkourAssistGameTest : LiquidBounceGameTest({
     try {
         val ground = origin.y
         val start = BlockPos(0, ground + HEIGHT, 0)
         val wallStart = start.offset(WALL_OFFSET, 0, 0)
+        val slimeStart = BlockPos(0, ground + HEIGHT, 8)
         run("effect give $playerName minecraft:saturation infinite 0 true")
         fill(BlockPos(-10, ground - 2, -20), BlockPos(WALL_OFFSET + 20, ground - 1, 20), "minecraft:water")
         for (block in COURSE) {
@@ -78,28 +87,34 @@ class ParkourAssistGameTest : LiquidBounceGameTest({
         for (block in WALL_COURSE + WALL) {
             setBlock(wallStart.offset(block), "minecraft:stone")
         }
-        val last = wallStart.offset(WALL.last())
+        for (block in SLIME_COURSE) {
+            setBlock(slimeStart.offset(block), if (block == SLIME) "minecraft:slime_block" else "minecraft:stone")
+        }
+        val last = slimeStart.offset(SLIME_COURSE.last())
         awaitServer("block ${last.x} ${last.y} ${last.z} minecraft:stone")
 
-        val unassisted = runCourse(start, assist = false)
+        val unassisted = runCourse(start, COURSE, assist = false)
         check(unassisted != null) { "Without Parkour the course was run to the end" }
 
-        val failure = runCourse(start, assist = true)
+        val failure = runCourse(start, COURSE, assist = true)
         check(failure == null) { "With Parkour the run failed: $failure" }
 
         val wallFailure = runAlongWall(wallStart)
         check(wallFailure == null) { "With Parkour the run along the wall failed: $wallFailure" }
+
+        val slimeFailure = runCourse(slimeStart, SLIME_COURSE, assist = true)
+        check(slimeFailure == null) { "With Parkour the run over slime failed: $slimeFailure" }
     } finally {
         context.onClient { ModuleParkour.enabled = false }
     }
 })
 
-/** Runs the course from [origin] holding forward and sprint; why it failed, or null. */
-private fun GameTestScope.runCourse(origin: BlockPos, assist: Boolean): String? {
-    val goal = origin.offset(COURSE.last()).above()
-    val lowest = origin.y + COURSE.minOf { it.y }
+/** Runs [course] from [origin] holding forward and sprint; why it failed, or null. */
+private fun GameTestScope.runCourse(origin: BlockPos, course: List<BlockPos>, assist: Boolean): String? {
+    val goal = origin.offset(course.last()).above()
+    val lowest = origin.y + course.minOf { it.y }
 
-    moveTo(Vec3.atBottomCenterOf(origin.offset(COURSE.first()).above()), yaw = -90f)
+    moveTo(Vec3.atBottomCenterOf(origin.offset(course.first()).above()), yaw = -90f)
     context.onClient { ModuleParkour.enabled = assist }
 
     input.holdKey { it.keyUp }

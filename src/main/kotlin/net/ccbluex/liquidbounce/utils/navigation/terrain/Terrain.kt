@@ -176,6 +176,9 @@ class Terrain(
 
     fun isClimbable(x: Int, y: Int, z: Int) = state(x, y, z).block in CLIMBABLE
 
+    /** Whether a fall onto the block at [x] [y] [z] bounces back up, as off slime. */
+    fun isBouncy(x: Int, y: Int, z: Int) = state(x, y, z).block.bounceRestitution > 0f
+
     /**
      * Height the feet rest at when standing in the block, always within it, or NaN when nothing carries the player
      * there or the body does not fit. Slabs, farmland, carpets, fences and the like are taken into account.

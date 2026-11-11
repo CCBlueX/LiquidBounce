@@ -105,6 +105,9 @@ class PlayerMotionGameTest : LocalGameTest() {
 
         fun floor(block: String) = { y: Int -> listOf("fill 4 ${y - 1} -1 30 ${y - 1} 1 $block") }
 
+        fun slimeBelowTower(y: Int) =
+            listOf("fill 0 $y -1 5 ${y + 5} 1 stone", "fill 6 ${y - 1} -4 40 ${y - 1} 4 slime_block")
+
         val courses = listOf(
             Course("walking"),
             Course("sprinting", sprint = true),
@@ -122,6 +125,11 @@ class PlayerMotionGameTest : LocalGameTest() {
             Course("sprint jumping on soul sand", jump = true, sprint = true, ticks = 60, build = floor("soul_sand")),
             Course("sprint jumping on ice", jump = true, sprint = true, ticks = 60, build = floor("packed_ice")),
             Course("sprint jumping on slime", jump = true, sprint = true, ticks = 60, build = floor("slime_block")),
+            Course("walking off a tower onto slime", ticks = 100, height = 6, build = ::slimeBelowTower),
+            Course(
+                "sprint jumping off a tower onto slime", jump = true, sprint = true, ticks = 80, height = 6,
+                build = ::slimeBelowTower,
+            ),
             Course("sprinting on honey", sprint = true, build = floor("honey_block")),
             Course("sprinting up slabs and into a wall", sprint = true, ticks = 80) { y ->
                 listOf(

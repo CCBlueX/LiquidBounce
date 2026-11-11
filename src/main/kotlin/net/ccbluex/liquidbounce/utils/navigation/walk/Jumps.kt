@@ -160,8 +160,18 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         return best
     }
 
-    /** The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. */
-    fun airKeys(state: PlayerMotion, yaw: Float, to: BlockPos, toHeight: Double): AirKeys? {
+    /**
+     * The keys for this tick, moving with [yaw], that let [state], a player in the air, land best on [to]. With
+     * [keepSpeed], the first keys in the order tried, forward first, that land well enough, as the landing is a
+     * take-off.
+     */
+    fun airKeys(
+        state: PlayerMotion,
+        yaw: Float,
+        to: BlockPos,
+        toHeight: Double,
+        keepSpeed: Boolean = false,
+    ): AirKeys? {
         setCourse(state.x, state.y, state.z, to, toHeight)
         var best: AirKeys? = null
         for (forward in 1 downTo -1) {
@@ -169,6 +179,9 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
                 motion.copyFrom(state)
                 motion.tick(yaw, forward, strafe, jump = false, sprint = abilities.canSprint)
                 val margin = land()
+                if (keepSpeed && margin >= minMargin) {
+                    return AirKeys(forward, strafe, margin)
+                }
                 if (!margin.isNaN() && (best == null || margin > best.margin + KEY_PREFERENCE)) {
                     best = AirKeys(forward, strafe, margin)
                 }
@@ -183,7 +196,14 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
      * the ground before the jump, or -1 when [state] is in the air already or the replay fails.
      */
     @Suppress("LongParameterList")
-    fun trace(state: PlayerMotion, yaw: Float?, to: BlockPos, toHeight: Double, jump: Jump, path: MutableList<Vec3>): Int {
+    fun trace(
+        state: PlayerMotion,
+        yaw: Float?,
+        to: BlockPos,
+        toHeight: Double,
+        jump: Jump,
+        path: MutableList<Vec3>,
+    ): Int {
         setCourse(state.x, state.y, state.z, to, toHeight)
         aimX = jump.aim.x
         aimZ = jump.aim.z
@@ -327,7 +347,8 @@ internal class Jumps(private val terrain: Terrain, private val abilities: Abilit
         }
 
         var best: Jump? = null
-        if (runToEdge(firstYaw) && targetHeight < motion.y) {
+        // Off a bouncing slime block, leaving the ground without a jump goes up as well.
+        if (runToEdge(firstYaw) && (targetHeight < motion.y || motion.motionY > 0.0)) {
             best = fly(runUp, hopTicks + ground.size, jumps = false, hops)
         }
 

@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInpu
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
@@ -72,11 +71,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
 
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
-        val target = assisted.target ?: return@handler
-        val delta = target.aim.subtract(player.position())
-        // Close to the aim, the way there turns around once the player passes it, so the yaw is held.
-        if (delta.horizontalDistanceSqr() >= MIN_AIM_DISTANCE * MIN_AIM_DISTANCE) {
-            aimYaw = delta.yaw
+        assisted.target ?: return@handler
+        val yaw = assisted.aimYaw(player.position(), player.deltaMovement, player.onGround())
+        if (!yaw.isNaN()) {
+            aimYaw = yaw
         }
         if (aimYaw.isNaN()) {
             return@handler
@@ -195,5 +193,4 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private const val SAFE_FALL = 3
     private const val WATER_FALL = 23
     private const val MIN_SPRINT_FOOD = 6
-    private const val MIN_AIM_DISTANCE = 0.75
 }

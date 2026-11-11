@@ -33,12 +33,11 @@ import kotlin.math.sqrt
 /** Spots worth a jump from a feet block: within reach across a gap or dip, where walking does not get as fast. */
 internal class JumpTargets(
     val terrain: Terrain,
-    traits: MotionTraits = MotionTraits.DEFAULT,
+    private val traits: MotionTraits = MotionTraits.DEFAULT,
 ) {
 
     private val extraHeight = traits.jumpHeight - MotionTraits.DEFAULT.jumpHeight
     private val maxRise = MAX_RISE + extraHeight
-    private val maxUp = ceil(maxRise).toInt()
     private val reachScale = maxOf(1.0, traits.walkSpeed.toDouble() / MotionTraits.DEFAULT.walkSpeed)
 
     fun interface Sink {
@@ -46,25 +45,46 @@ internal class JumpTargets(
         fun accept(x: Int, y: Int, z: Int, top: Double): Boolean
     }
 
-    /** Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first. */
-    fun forEach(x: Int, y: Int, z: Int, height: Double, maxDrop: Int, sink: Sink) {
-        if (!isEdge(x, y, z, height)) {
+    /**
+     * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
+     * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
+     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further.
+     */
+    @Suppress("LongParameterList", "CognitiveComplexMethod")
+    fun forEach(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        maxDrop: Int,
+        bounceDrop: Int = maxDrop,
+        upward: Double = 0.0,
+        sink: Sink,
+    ) {
+        val lift = lift(upward)
+        val bouncing = lift > 0.0
+        if (!bouncing && !isEdge(x, y, z, height)) {
             return
         }
 
+        val rises = maxRise + lift
+        val maxUp = ceil(rises).toInt()
+        val farthest = if (bouncing) MAX_BOUNCE_REACH else MAX_REACH
         for (offset in OFFSETS) {
+            if (offset.distance > farthest) {
+                return
+            }
             val tx = x + offset.x
             val tz = z + offset.z
-            for (ty in y + maxUp downTo y - maxDrop) {
+            for (ty in y + maxUp downTo y - maxOf(maxDrop, bounceDrop)) {
                 // Landings in water are not simulated; swimming gets there.
                 if (terrain.isWater(tx, ty, tz)) {
                     continue
                 }
                 val top = terrain.standHeight(tx, ty, tz).ifNaN { catchHeight(tx, ty, tz) }
                 val rise = top - height
-                if (top.isNaN() || rise > maxRise || offset.distance > maxReach(rise) ||
-                    walkReaches(x, y, z, offset, ty - y) || !leavesOverGap(x, y, z, height, offset, ty)
-                ) {
+                val inRange = !top.isNaN() && rise <= rises && (ty >= y - maxDrop || terrain.isBouncy(tx, ty - 1, tz))
+                if (!inRange || !bouncing && !isJumpedTo(x, y, z, height, offset, ty, rise)) {
                     continue
                 }
 
@@ -74,6 +94,15 @@ internal class JumpTargets(
             }
         }
     }
+
+    /** How much higher than a jump from the ground a take-off moving up at [upward] already gets. */
+    fun lift(upward: Double) = MotionTraits.rise(maxOf(upward, traits.jumpPower)) - traits.jumpHeight
+
+    /** Whether [offset] at [ty], [rise] up, takes a jump from [x] [y] [z], standing at [height], and one gets there. */
+    @Suppress("LongParameterList")
+    private fun isJumpedTo(x: Int, y: Int, z: Int, height: Double, offset: Offset, ty: Int, rise: Double) =
+        offset.distance <= maxReach(rise) && !walkReaches(x, y, z, offset, ty - y) &&
+            leavesOverGap(x, y, z, height, offset, ty)
 
     private fun catchHeight(x: Int, y: Int, z: Int) =
         if (terrain.isClimbable(x, y, z) && terrain.hasRoom(x, y, z)) y.toDouble() else Double.NaN
@@ -137,16 +166,19 @@ internal class JumpTargets(
         const val LINE_SAMPLES = 10
         const val MAX_REACH = 8
 
+        /** How far a bounce off slime, much longer in the air than a jump, is let reach. */
+        const val MAX_BOUNCE_REACH = 14
+
         const val DIP_DEPTH = 0.25
 
         val DX = intArrayOf(1, -1, 0, 0, 1, 1, -1, -1)
         val DZ = intArrayOf(0, 0, 1, -1, 1, -1, 1, -1)
 
         val OFFSETS: Array<Offset> = buildList {
-            for (x in -MAX_REACH..MAX_REACH) {
-                for (z in -MAX_REACH..MAX_REACH) {
+            for (x in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {
+                for (z in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {
                     val offset = Offset(x, z)
-                    if ((x != 0 || z != 0) && offset.distance <= MAX_REACH) {
+                    if ((x != 0 || z != 0) && offset.distance <= MAX_BOUNCE_REACH) {
                         add(offset)
                     }
                 }

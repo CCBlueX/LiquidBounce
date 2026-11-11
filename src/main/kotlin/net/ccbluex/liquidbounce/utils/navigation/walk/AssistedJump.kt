@@ -34,12 +34,22 @@ internal class AssistedJump {
 
     /**
      * The block jumped to, with the feet at [feet], and the jump onto it. A jump that does not work from where the
-     * player is has a [step], which [Leap] makes from its run-up.
+     * player is has a [step], which [Leap] makes from its run-up. A landing that [bounces] is the next take-off.
      */
-    class Target(val pos: BlockPos, val feet: Double, val jump: Jump, val step: Step? = null) {
+    class Target(
+        val pos: BlockPos,
+        val feet: Double,
+        val jump: Jump,
+        val step: Step? = null,
+        val bounces: Boolean = false,
+    ) {
         /** Where to turn to: the jump was simulated running there, which can be beside the middle of the block. */
         val aim: Vec3
             get() = jump.aim
+
+        fun isLanded(position: Vec3, onGround: Boolean) = onGround && abs(position.y - feet) < FEET_PROBE &&
+            abs(position.x - pos.x - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH &&
+            abs(position.z - pos.z - HALF_BLOCK) < HALF_BLOCK + PlayerMotion.HALF_WIDTH
     }
 
     var target: Target? = null
@@ -57,6 +67,19 @@ internal class AssistedJump {
     /** Whether an assisted jump is in the air. */
     private var airborne = false
     private var ticksSinceLanding = BRAKE_TICKS
+
+    /**
+     * The yaw a player at [position], moving by [motion], turns to for the jump, or NaN to hold the one it has: close
+     * to the aim, where the way there turns around once it is passed, past it in the air, and down on the target until
+     * the next tick picks the jump after it.
+     */
+    fun aimYaw(position: Vec3, motion: Vec3, onGround: Boolean): Float {
+        val target = target ?: return Float.NaN
+        val delta = target.aim.subtract(position)
+        val passed = !onGround && delta.x * motion.x + delta.z * motion.z < 0.0
+        val near = delta.horizontalDistanceSqr() < MIN_AIM_DISTANCE * MIN_AIM_DISTANCE
+        return if (near || passed || target.isLanded(position, onGround)) Float.NaN else delta.yaw
+    }
 
     /**
      * The keys for [state], a player moving with [yaw] who holds [keys] towards [heading], that make the jump it
@@ -113,7 +136,8 @@ internal class AssistedJump {
         val runUp = target.step?.let {
             state.copy().apply { reset(target.jump.runUp, PlayerMotion.RESTING, onGround = true) }
         }
-        takeoff = jumps.trace(runUp ?: state, if (runUp == null) yaw else null, target.pos, target.feet, target.jump, path)
+        val yawNow = if (runUp == null) yaw else null
+        takeoff = jumps.trace(runUp ?: state, yawNow, target.pos, target.feet, target.jump, path)
     }
 
     fun release() {
@@ -127,10 +151,10 @@ internal class AssistedJump {
         ticksSinceLanding = BRAKE_TICKS
     }
 
-    /** The keys that land the furthest inside the block jumped to. */
+    /** The keys that land the furthest inside the block jumped to, or with the most speed when it bounces on. */
     private fun steerInAir(state: PlayerMotion, yaw: Float, jumps: Jumps): LeapInput? {
         val target = target ?: return null
-        val air = jumps.airKeys(state, yaw, target.pos, target.feet) ?: return null
+        val air = jumps.airKeys(state, yaw, target.pos, target.feet, keepSpeed = target.bounces) ?: return null
         return LeapInput(air.forward, air.strafe, jump = false, sprint = air.forward > 0)
     }
 
@@ -146,7 +170,7 @@ internal class AssistedJump {
      * The block across a gap within [maxAngle] of [heading] that a jump from here lands on best. A block the player
      * clearly heads for more than that one is jumped to from a run-up when no jump from here works.
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "CognitiveComplexMethod")
     private fun pick(
         targets: JumpTargets,
         jumps: Jumps,
@@ -155,22 +179,26 @@ internal class AssistedJump {
         heading: Float,
         maxAngle: Float,
     ): Target? {
+        val terrain = targets.terrain
         val position = state.position
         val feet = BlockPos.containing(position.x, position.y + FEET_PROBE, position.z)
-        val standing = targets.terrain.standHeight(feet.x, feet.y, feet.z)
+        val standing = terrain.standHeight(feet.x, feet.y, feet.z)
         val height = if (standing.isNaN()) position.y else standing
         var best: Target? = null
         var bestScore = Double.MAX_VALUE
         var bestIntent = Double.MAX_VALUE
         val missed = ArrayList<Missed>()
-        targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP) { x, y, z, top ->
+        targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP, MAX_BOUNCE_DROP, state.motionY) { x, y, z, top ->
             val angle = angle(position, Vec3(x + 0.5, top, z + 0.5), heading)
             if (angle > maxAngle) {
                 return@forEach true
             }
 
-            // Below a course is where a missed jump ends, so any block level with it or higher comes first.
-            val intent = angle / maxAngle + maxOf(0.0, height - top) * DROP_PENALTY
+            // Below a course is where a missed jump ends, so any block level with it or higher comes first. Slime
+            // bounces back up.
+            val bounces = terrain.isBouncy(x, y - 1, z)
+            val drop = if (bounces) 0.0 else maxOf(0.0, height - top)
+            val intent = angle / maxAngle + drop * DROP_PENALTY
             val pos = BlockPos(x, y, z)
             val jump = jumps.fromHere(state, yaw, pos, top)
             if (jump == null) {
@@ -180,7 +208,7 @@ internal class AssistedJump {
 
             val score = intent - jump.margin
             if (score < bestScore) {
-                best = Target(pos, top, jump)
+                best = Target(pos, top, jump, bounces = bounces)
                 bestScore = score
                 bestIntent = intent
             }
@@ -189,6 +217,10 @@ internal class AssistedJump {
 
         if (standing.isNaN()) {
             return best
+        }
+        if (state.motionY > 0.0) {
+            // Bouncing off slime leaves no run-up; with nowhere to go, the player comes down on the same block.
+            return best ?: jumps.fromHere(state, yaw, feet, height)?.let { Target(feet, height, it, bounces = true) }
         }
         missed.sortBy(Missed::intent)
         for (candidate in missed.take(MAX_RUN_UPS)) {
@@ -226,12 +258,15 @@ internal class AssistedJump {
 
     private companion object {
         const val MAX_DROP = 4
+        const val MAX_BOUNCE_DROP = 12
         const val DROP_PENALTY = 0.5
 
         /** How much more a block out of reach from here has to be headed for to be run up to instead. */
         const val INTENT_SLACK = 0.5
         const val MAX_RUN_UPS = 3
         const val FEET_PROBE = 1.0E-3
+        const val HALF_BLOCK = 0.5
+        const val MIN_AIM_DISTANCE = 0.75
 
         const val BRAKE_TICKS = 10
         const val BRAKE_LOOKAHEAD = 3

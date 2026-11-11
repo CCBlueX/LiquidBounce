@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
 import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
 import net.ccbluex.liquidbounce.utils.navigation.walk.LeapInput
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,7 +46,6 @@ class AssistedJumpTest {
         }
 
         private const val MAX_ANGLE = 35f
-        private const val MIN_AIM_DISTANCE = 0.75
         private const val TICKS_PER_BLOCK = 60
         private const val MAX_JUMP_TICKS = 40
         private const val LANDING_TOLERANCE = 0.3
@@ -82,16 +82,15 @@ class AssistedJumpTest {
             val camera = look.subtract(state.position).yaw
             val yaw = if (aimYaw.isNaN()) camera else aimYaw
             val held = LeapInput(1, 0, jump = state.horizontalCollision, sprint = true)
-            val keys = assisted.tick(state, yaw, camera, held, MAX_ANGLE, jumps, targets) ?: jumpAtEdge(state, yaw, held)
+            val keys = assisted.tick(state, yaw, camera, held, MAX_ANGLE, jumps, targets)
+                ?: jumpAtEdge(state, yaw, held)
             state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
-
-            val target = assisted.target
-            if (target == null) {
+            if (assisted.target == null) {
                 aimYaw = Float.NaN
             } else {
-                val delta = target.aim.subtract(state.position)
-                if (delta.horizontalDistanceSqr() >= MIN_AIM_DISTANCE * MIN_AIM_DISTANCE) {
-                    aimYaw = delta.yaw
+                val turn = assisted.aimYaw(state.position, state.deltaMovement, state.onGround)
+                if (!turn.isNaN()) {
+                    aimYaw = turn
                 }
             }
         }
@@ -141,6 +140,15 @@ class AssistedJumpTest {
         val course = course(world, BlockPos(94, 19, 9), BlockPos(97, 20, 9), BlockPos(99, 20, 5), BlockPos(96, 21, 3))
 
         assertEquals(course, run(world, TestWorld.feet(92, 19, 9), course))
+    }
+
+    @Test
+    fun `a fall onto slime bounces up to a block higher than a jump reaches`() {
+        val world = TestWorld().fill(-3, 6, 0, -1, 6, 0)
+        val course = course(world, BlockPos(0, 6, 0), BlockPos(4, 0, 0), BlockPos(8, 3, 0))
+        world.set(4, 0, 0, Blocks.SLIME_BLOCK.defaultBlockState())
+
+        assertEquals(course, run(world, TestWorld.feet(-2, 7, 0), course))
     }
 
     @Test
