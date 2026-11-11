@@ -28,6 +28,7 @@ import net.minecraft.client.Camera
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.renderer.LevelRenderer
 import net.minecraft.client.renderer.extract.LevelExtractor
+import net.minecraft.world.entity.Entity
 import org.joml.Vector4f
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferInt
@@ -57,7 +58,8 @@ internal class ClientView(private val client: Client, private val frames: Client
         private set
 
     /**
-     * Runs within [client] on the render thread, outside of the window's frame.
+     * Runs within [client] on the render thread, outside of the window's frame. Whatever draws in between,
+     * vanilla or modules, finds this view's renderer, camera and target in place of the window's.
      */
     fun render() {
         val level = mc.level ?: return
@@ -69,55 +71,19 @@ internal class ClientView(private val client: Client, private val frames: Client
         val windowRenderer = mc.levelRenderer
         val windowExtractor = mc.levelExtractor
         val serverRenderDistance = mc.options.serverRenderDistance
-        val target = target!!
         val levelRenderer = levelRenderer!!
-        val extractor = extractor!!
 
-        gameRenderer.mainRenderTarget = target
+        gameRenderer.mainRenderTarget = target!!
         gameRenderer.mainCamera = camera
         mc.levelRenderer = levelRenderer
-        mc.levelExtractor = extractor
+        mc.levelExtractor = extractor!!
         mc.options.serverRenderDistance = if (serverRenderDistance in 1..RENDER_DISTANCE) {
             serverRenderDistance
         } else {
             RENDER_DISTANCE
         }
         try {
-            if (renderedLevel !== level) {
-                camera.setLevel(level)
-                extractor.setLevel(level)
-                renderedLevel = level
-            }
-            val cameraEntity = mc.cameraEntity ?: player
-            if (camera.entity() !== cameraEntity) {
-                camera.setEntity(cameraEntity)
-            }
-
-            val deltaTracker = mc.deltaTracker
-            val partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false)
-            val state = gameRenderer.gameRenderState()
-            camera.tick()
-            camera.update(deltaTracker)
-            gameRenderer.lightmapRenderStateExtractor.extract(state.lightmapRenderState, 1f)
-            gameRenderer.extractCamera(deltaTracker, partialTicks)
-            extractor.extract(deltaTracker, camera, partialTicks)
-
-            gameRenderer.globalSettingsUniform.update(
-                width,
-                height,
-                state.optionsRenderState.glintStrength,
-                state.levelRenderState.gameTime,
-                state.levelRenderState.worldPartialTicks,
-                0,
-                state.levelRenderState.cameraRenderState.pos,
-                false
-            )
-            gameRenderer.lightmap.render(state.lightmapRenderState)
-            RenderSystem.getDevice().createCommandEncoder()
-                .clearColorAndDepthTextures(target.colorTexture!!, CLEAR_COLOR, target.depthTexture!!, 0.0)
-            gameRenderer.renderLevel()
-            levelRenderer.blitEntityOutline()
-            readBack(target)
+            draw(level, mc.cameraEntity ?: player)
         } finally {
             // Both renderers keep their uniforms in ring buffers that move on once per frame.
             gameRenderer.fogRenderer.endFrame()
@@ -130,6 +96,46 @@ internal class ClientView(private val client: Client, private val frames: Client
             mc.options.serverRenderDistance = serverRenderDistance
             renderedAt = System.nanoTime()
         }
+    }
+
+    private fun draw(level: ClientLevel, cameraEntity: Entity) {
+        val gameRenderer = mc.gameRenderer
+        val target = target!!
+        val extractor = extractor!!
+        if (renderedLevel !== level) {
+            camera.setLevel(level)
+            extractor.setLevel(level)
+            renderedLevel = level
+        }
+        if (camera.entity() !== cameraEntity) {
+            camera.setEntity(cameraEntity)
+        }
+
+        val deltaTracker = mc.deltaTracker
+        val partialTicks = deltaTracker.getGameTimeDeltaPartialTick(false)
+        val state = gameRenderer.gameRenderState()
+        camera.tick()
+        camera.update(deltaTracker)
+        gameRenderer.lightmapRenderStateExtractor.extract(state.lightmapRenderState, 1f)
+        gameRenderer.extractCamera(deltaTracker, partialTicks)
+        extractor.extract(deltaTracker, camera, partialTicks)
+
+        gameRenderer.globalSettingsUniform.update(
+            width,
+            height,
+            state.optionsRenderState.glintStrength,
+            state.levelRenderState.gameTime,
+            state.levelRenderState.worldPartialTicks,
+            0,
+            state.levelRenderState.cameraRenderState.pos,
+            false
+        )
+        gameRenderer.lightmap.render(state.lightmapRenderState)
+        RenderSystem.getDevice().createCommandEncoder()
+            .clearColorAndDepthTextures(target.colorTexture!!, CLEAR_COLOR, target.depthTexture!!, 0.0)
+        gameRenderer.renderLevel()
+        levelRenderer!!.blitEntityOutline()
+        readBack(target)
     }
 
     /**
