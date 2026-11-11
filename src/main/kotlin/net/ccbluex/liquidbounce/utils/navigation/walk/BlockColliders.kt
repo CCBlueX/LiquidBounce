@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import it.unimi.dsi.fastutil.floats.FloatArraySet
 import it.unimi.dsi.fastutil.floats.FloatArrays
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -34,7 +34,7 @@ import kotlin.math.abs
  * Moves a box through the blocks of [terrain] as Entity.collide does, without allocating for every block. Boxes are
  * kept in flat arrays, six coordinates each: minimum x, y, z, then maximum x, y, z. Not thread-safe.
  */
-internal class BlockColliders(private val terrain: NavigationTerrain) {
+internal class BlockColliders(private val terrain: Terrain) {
 
     private val blocks = Long2ObjectOpenHashMap<DoubleArray>()
     private var colliders = DoubleArray(BOX * INITIAL_COLLIDERS)

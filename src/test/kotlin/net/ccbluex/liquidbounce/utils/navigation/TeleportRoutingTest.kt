@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStep
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportSteps
 import net.ccbluex.liquidbounce.utils.navigation.terrain.DestinationCheck
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.CropBlock
@@ -62,7 +62,7 @@ class TeleportRoutingTest {
     }
 
     private fun search(
-        terrain: NavigationTerrain,
+        terrain: Terrain,
         start: Vec3,
         goal: BlockPos,
         limits: RouteLimits = RouteLimits(maxLength = 80.0),

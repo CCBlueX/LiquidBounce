@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 import kotlin.math.max
@@ -45,7 +45,7 @@ object TeleportSteps {
     private const val EPSILON = 1.0E-6
 
     /** Breaks [route] into steps the server's collision sweep lets through; null when a part of it is blocked. */
-    fun plan(terrain: NavigationTerrain, route: TeleportRoute, stepLength: Double): List<TeleportStep>? {
+    fun plan(terrain: Terrain, route: TeleportRoute, stepLength: Double): List<TeleportStep>? {
         val steps = ArrayList<TeleportStep>()
         for (segment in 0 until route.points.lastIndex) {
             if (!appendSegment(terrain, route.points[segment], route.points[segment + 1], stepLength, segment, steps)) {
@@ -57,7 +57,7 @@ object TeleportSteps {
 
     /** Rises in the column of [from], crosses at the higher level, then drops onto [to]; false when blocked. */
     fun appendSegment(
-        terrain: NavigationTerrain,
+        terrain: Terrain,
         from: Vec3,
         to: Vec3,
         stepLength: Double,
@@ -76,7 +76,7 @@ object TeleportSteps {
     }
 
     private fun appendLine(
-        terrain: NavigationTerrain,
+        terrain: Terrain,
         from: Vec3,
         to: Vec3,
         stepLength: Double,
@@ -104,7 +104,7 @@ object TeleportSteps {
 
     /** Falls of at most [MAX_FALL] blocks with a [BOUNCE] between two of them. Only the landing claims ground. */
     private fun appendDrop(
-        terrain: NavigationTerrain,
+        terrain: Terrain,
         from: Vec3,
         to: Vec3,
         stepLength: Double,

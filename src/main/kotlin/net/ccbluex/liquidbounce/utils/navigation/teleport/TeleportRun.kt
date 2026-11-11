@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.teleport
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
@@ -120,8 +120,8 @@ class TeleportRun internal constructor(
     }
 
     private fun sweptBox(from: Vec3, to: Vec3): AABB {
-        val half = NavigationTerrain.PLAYER_WIDTH / 2.0
-        val height = NavigationTerrain.PLAYER_HEIGHT
+        val half = Terrain.PLAYER_WIDTH / 2.0
+        val height = Terrain.PLAYER_HEIGHT
         return AABB(
             minOf(from.x, to.x) - half, minOf(from.y, to.y), minOf(from.z, to.z) - half,
             maxOf(from.x, to.x) + half, maxOf(from.y, to.y) + height, maxOf(from.z, to.z) + half,

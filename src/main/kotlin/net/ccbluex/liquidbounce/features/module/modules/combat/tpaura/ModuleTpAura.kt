@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportSteps
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportTrip
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.reachPositions
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.core.BlockPos
@@ -346,7 +346,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
 
     /** Standable positions around [target] that see it within reach, closest to [from] first. */
     private fun attackPositions(target: LivingEntity, from: Vec3) =
-        NavigationTerrain.live().reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
+        Terrain.live().reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
 
     private const val REACH_MARGIN = 0.1
     private const val TARGET_MOVEMENT_MARGIN = 0.4

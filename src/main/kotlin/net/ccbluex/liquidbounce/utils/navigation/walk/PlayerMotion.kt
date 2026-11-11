@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5
@@ -52,7 +52,7 @@ private const val SUPPORT_EPSILON = 1.0E-6
  */
 @Suppress("TooManyFunctions")
 internal class PlayerMotion(
-    private val terrain: NavigationTerrain,
+    private val terrain: Terrain,
     private val traits: MotionTraits = MotionTraits.DEFAULT,
     private val colliders: BlockColliders = BlockColliders(terrain),
 ) {
@@ -465,7 +465,7 @@ internal class PlayerMotion(
     }
 
     companion object {
-        const val HALF_WIDTH = NavigationTerrain.PLAYER_WIDTH / 2.0
+        const val HALF_WIDTH = Terrain.PLAYER_WIDTH / 2.0
         const val AIR_SPEED = 0.02f
         const val SPRINT_AIR_SPEED = 0.025999999f
         const val PLAIN_FRICTION = 0.6f
@@ -476,7 +476,7 @@ internal class PlayerMotion(
         /** Motion of a player standing still on the ground, which gravity keeps pulling down every tick. */
         val RESTING: Vec3 = Vec3(0.0, -DEFAULT_BASE_GRAVITY * BASE_VERTICAL_AIR_DRAG, 0.0)
 
-        private const val HEIGHT = NavigationTerrain.PLAYER_HEIGHT
+        private const val HEIGHT = Terrain.PLAYER_HEIGHT
         private const val STEP_HEIGHT = 0.6f
         private const val JUMP_DELAY = 10
         private const val SPRINT_JUMP_BOOST = 0.2f

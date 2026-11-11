@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.groundY
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -76,7 +76,7 @@ class PlayerMotionGameTest : LocalGameTest() {
     ) {
         /** The first tick the two are apart at, if any. */
         fun difference(player: LocalPlayer): String? {
-            val motion = PlayerMotion(NavigationTerrain.live(), MotionTraits.capture(player))
+            val motion = PlayerMotion(Terrain.live(), MotionTraits.capture(player))
             motion.reset(player)
             val game = SimulatedPlayer.fromClientPlayer(
                 SimulatedPlayerInput(DirectionalInput(forward.toFloat(), strafe.toFloat()), jump, sprint, sneak)

@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.network.sendPacketSilently
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -94,7 +94,7 @@ object TeleportDispatcher : EventListener {
         val linked = when {
             drift > MAX_DRIFT_SQ -> return null
             drift <= TeleportRoute.SAME_POSITION_SQ -> plan
-            else -> plan.startingAt(current, NavigationTerrain.live(), settings.stepLength) ?: return null
+            else -> plan.startingAt(current, Terrain.live(), settings.stepLength) ?: return null
         }
 
         if (held == null) {
@@ -118,7 +118,7 @@ object TeleportDispatcher : EventListener {
 
         val position = serverPosition ?: return release()
         val back = wayBack(position, trail) ?: return release()
-        val steps = TeleportSteps.plan(NavigationTerrain.live(), back, stepLength) ?: return land(position)
+        val steps = TeleportSteps.plan(Terrain.live(), back, stepLength) ?: return land(position)
         start(owner, back, steps, RunFinish.RESYNC)
     }
 

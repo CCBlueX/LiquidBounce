@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.navigation.route.AStarRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -36,7 +36,7 @@ import kotlin.math.min
  * is clear, otherwise an A* over standable positions, compacted into few waypoints. Not thread-safe.
  */
 class TeleportRouteSearch(
-    private val terrain: NavigationTerrain,
+    private val terrain: Terrain,
     private val start: Vec3,
     private val goals: List<BlockPos>,
     limits: RouteLimits,
@@ -217,11 +217,11 @@ class TeleportRouteSearch(
 
 }
 
-private fun NavigationTerrain.isRiseClear(from: Vec3, height: Double) =
+private fun Terrain.isRiseClear(from: Vec3, height: Double) =
     height <= from.y || isClear(box(from).expandTowards(0.0, height - from.y, 0.0))
 
 /** The crossing at the higher level and the drop into the column of [to], checked as boxes. */
-private fun NavigationTerrain.isCrossingClear(from: Vec3, to: Vec3): Boolean {
+private fun Terrain.isCrossingClear(from: Vec3, to: Vec3): Boolean {
     val top = max(from.y, to.y)
     val crossing = box(from.x, top, from.z).minmax(box(to.x, top, to.z))
 

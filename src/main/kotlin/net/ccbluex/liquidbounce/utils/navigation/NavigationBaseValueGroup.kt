@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
 import net.minecraft.world.phys.Vec3
 
 /** Base for features that walk to a goal. */
@@ -43,7 +42,7 @@ abstract class NavigationBaseValueGroup<T>(
     showRoute: Boolean = true,
 ) : ToggleableValueGroup(parent, name, enabled) {
 
-    private val navigator = WalkNavigator(this, this, rotations, allowBreak, allowPlace, allowParkour, showRoute)
+    private val navigator = Navigator(this, this, rotations, allowBreak, allowPlace, allowParkour, showRoute)
 
     val isActing: Boolean
         get() = navigator.isActing

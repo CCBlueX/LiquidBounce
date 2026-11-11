@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.navigation.flight.FlightAbilities
-import net.ccbluex.liquidbounce.utils.navigation.flight.GlideAbilities
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity.BASE_SAFE_FALL_DISTANCE
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -54,9 +52,9 @@ class WalkSettings(
     private val riskyJumps by values.boolean("RiskyJumps", false)
     private val maxFall by values.int("MaxFall", 3, 0..20, "blocks")
     private val pathRange by values.int("PathRange", 64, 16..128, "blocks")
-    private val allowFly by values.boolean("AllowFly", true)
-    private val allowElytra by values.boolean("AllowElytra", true)
-    private val elytraRockets by values.boolean("ElytraRockets", true)
+    internal val allowFly by values.boolean("AllowFly", true)
+    internal val allowElytra by values.boolean("AllowElytra", true)
+    internal val elytraRockets by values.boolean("ElytraRockets", true)
 
     /** Longest route searched, in blocks along the path. */
     val maxLength: Double
@@ -70,9 +68,9 @@ class WalkSettings(
         }
 
     /** The abilities for one search, safe to read from any thread. Captures run on the render thread. */
-    fun capture(avoid: LongSet): WalkAbilities {
+    fun capture(avoid: LongSet): Abilities {
         val placeableBlocks = if (allowPlace) countPlaceableBlocks() else 0
-        return WalkAbilities(
+        return Abilities(
             canBreak = allowBreak,
             canPlace = placeableBlocks > 0,
             placeableBlocks = placeableBlocks,
@@ -87,10 +85,6 @@ class WalkSettings(
             motion = MotionTraits.capture(player),
         )
     }
-
-    fun captureFlight(): FlightAbilities? = if (allowFly) FlightAbilities.capture() else null
-
-    fun captureGlide(): GlideAbilities? = if (allowElytra) GlideAbilities.capture(elytraRockets) else null
 
     private fun countPlaceableBlocks() = Slots.OffhandWithHotbar.sumOf { slot ->
         slot.itemStack.takeIf(ScaffoldBlockItemSelection::isValidBlock)?.count ?: 0

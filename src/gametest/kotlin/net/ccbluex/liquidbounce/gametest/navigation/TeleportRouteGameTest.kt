@@ -44,8 +44,8 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRun
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.monster.zombie.Husk
@@ -207,7 +207,7 @@ private fun ClientGameTestContext.route(
     val start = checkNotNull(mc.player).position()
     val region = BlockGoal(goal).region(start, maxLength, maxLength.toInt())
     val search = TeleportRouteSearch(
-        NavigationTerrain(SectionCache.capture(level, region)),
+        Terrain(SectionCache.capture(level, region)),
         start,
         [goal],
         RouteLimits(maxLength),

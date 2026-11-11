@@ -25,14 +25,14 @@ import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.A
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
+import net.ccbluex.liquidbounce.utils.navigation.walk.Jump
+import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
+import net.ccbluex.liquidbounce.utils.navigation.walk.Leap
+import net.ccbluex.liquidbounce.utils.navigation.walk.Move
+import net.ccbluex.liquidbounce.utils.navigation.walk.Path
+import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJump
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkLeap
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkMove
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkStep
+import net.ccbluex.liquidbounce.utils.navigation.walk.Step
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Blocks
@@ -61,31 +61,31 @@ class WalkJumpTest {
     /** Whether a jump from a single block at the origin to a single block [dx] [dy] [dz] away works. */
     private fun canJump(dx: Int, dy: Int, dz: Int, riskyJumps: Boolean = true): Boolean {
         val world = TestNavigationWorld().fill(0, 0, 0, 0, 0, 0).fill(dx, dy, dz, dx, dy, dz)
-        return WalkJumps(world.terrain(), abilities(riskyJumps))
+        return Jumps(world.terrain(), abilities(riskyJumps))
             .plan(BlockPos(0, 1, 0), 1.0, BlockPos(dx, dy + 1, dz), dy + 1.0) != null
     }
 
-    private fun route(world: TestNavigationWorld, goal: BlockPos): WalkPath {
-        val search = WalkRouteSearch(world.terrain(), Vec3(0.5, 1.0, 0.5), BlockGoal(goal), abilities(), LIMITS)
+    private fun route(world: TestNavigationWorld, goal: BlockPos): Path {
+        val search = PathSearch(world.terrain(), Vec3(0.5, 1.0, 0.5), BlockGoal(goal), abilities(), LIMITS)
         return completePath(search.advanceToEnd(), message = null)
     }
 
     /**
-     * Whether the player, standing at [start], makes the jump from [from] to [to] with [WalkLeap] at the keys and
+     * Whether the player, standing at [start], makes the jump from [from] to [to] with [Leap] at the keys and
      * the camera on the target.
      */
     private fun leap(world: TestNavigationWorld, start: Vec3, from: BlockPos, to: BlockPos): Boolean {
         val terrain = world.terrain()
-        val jumps = WalkJumps(terrain, abilities())
+        val jumps = Jumps(terrain, abilities())
         val toHeight = terrain.standHeight(to.x, to.y, to.z)
         val jump = jumps.plan(from, terrain.standHeight(from.x, from.y, from.z), to, toHeight) ?: return false
         val feet = Vec3(to.x + 0.5, toHeight, to.z + 0.5)
-        val step = WalkStep(
-            from, to, WalkMove.PARKOUR, feet, emptyList(), emptyList(), emptyList(), cost = 0.0, jump = jump,
+        val step = Step(
+            from, to, Move.PARKOUR, feet, emptyList(), emptyList(), emptyList(), cost = 0.0, jump = jump,
         )
         val state = PlayerMotion(terrain)
         state.reset(start, PlayerMotion.RESTING, onGround = true)
-        val leap = WalkLeap()
+        val leap = Leap()
         var look = feet
         repeat(MAX_LEAP_TICKS) {
             val yaw = look.subtract(state.x, state.y, state.z).yaw
@@ -141,7 +141,7 @@ class WalkJumpTest {
     @Test
     fun `a gap of four is run at from behind the middle of the block`() {
         val world = TestNavigationWorld().fill(0, 0, 0, 0, 0, 0).fill(5, 0, 0, 5, 0, 0)
-        val jump = WalkJumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.0, BlockPos(5, 1, 0), 1.0)
+        val jump = Jumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.0, BlockPos(5, 1, 0), 1.0)
 
         assertNotNull(jump)
         assertTrue(jump.runUp.x < 0.5, "the run starts at ${jump.runUp}")
@@ -170,12 +170,12 @@ class WalkJumpTest {
 
     @Test
     fun `a ceiling over the gap cuts the jump short`() {
-        fun plan(gap: Int, ceiling: Boolean): WalkJump? {
+        fun plan(gap: Int, ceiling: Boolean): Jump? {
             val world = TestNavigationWorld().fill(0, 0, 0, 0, 0, 0).fill(gap + 1, 0, 0, gap + 1, 0, 0)
             if (ceiling) {
                 world.fill(1, 3, 0, gap, 3, 0)
             }
-            return WalkJumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.0, BlockPos(gap + 1, 1, 0), 1.0)
+            return Jumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.0, BlockPos(gap + 1, 1, 0), 1.0)
         }
 
         assertNotNull(plan(3, ceiling = false))
@@ -189,7 +189,7 @@ class WalkJumpTest {
 
         // The same gap with ground two blocks down: a miss is survived.
         val world = TestNavigationWorld().fill(-2, -2, -2, 5, -2, 2).fill(0, 0, 0, 0, 0, 0).fill(3, 0, 0, 3, 0, 0)
-        val jumps = WalkJumps(world.terrain(), abilities(riskyJumps = false))
+        val jumps = Jumps(world.terrain(), abilities(riskyJumps = false))
         assertNotNull(jumps.plan(BlockPos(0, 1, 0), 1.0, BlockPos(3, 1, 0), 1.0))
     }
 
@@ -199,7 +199,7 @@ class WalkJumpTest {
         val world = TestNavigationWorld().set(0, 0, 0, wall).fill(2, 0, 0, 2, 0, 0)
 
         // A plain sprint jump from the wall's top overshoots the block two away.
-        val jump = WalkJumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.5, BlockPos(2, 1, 0), 1.0)
+        val jump = Jumps(world.terrain(), abilities()).plan(BlockPos(0, 1, 0), 1.5, BlockPos(2, 1, 0), 1.0)
         assertNotNull(jump)
     }
 
@@ -207,7 +207,7 @@ class WalkJumpTest {
     fun `a jump crosses a dip onto ground walking down into it does not get back up from`() {
         val world = TestNavigationWorld().fill(-2, -1, -2, 4, -1, 2).fill(-2, 0, 0, 0, 0, 0).fill(2, 0, 0, 2, 1, 0)
         val path = route(world, BlockPos(2, 2, 0))
-        assertEquals(WalkMove.PARKOUR, path.steps.last().move)
+        assertEquals(Move.PARKOUR, path.steps.last().move)
     }
 
     @Test
@@ -241,9 +241,9 @@ class WalkJumpTest {
 
         val path = route(world, goal)
         val first = path.steps.first()
-        assertEquals(WalkMove.PARKOUR, first.move)
+        assertEquals(Move.PARKOUR, first.move)
         assertEquals(3, first.to.x)
-        assertTrue(path.steps.any { it.move == WalkMove.CLIMB_UP })
+        assertTrue(path.steps.any { it.move == Move.CLIMB_UP })
     }
 
     @Test
@@ -259,7 +259,7 @@ class WalkJumpTest {
         val path = route(world, goal)
         val landings = path.steps.map { it.to }
         assertTrue(landings.all { it.below() in course }, "the path leaves the course: $landings")
-        assertTrue(path.steps.all { it.move == WalkMove.PARKOUR && it.jump != null })
+        assertTrue(path.steps.all { it.move == Move.PARKOUR && it.jump != null })
     }
 
 }

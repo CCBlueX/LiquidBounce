@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.fma
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -257,8 +257,8 @@ class RouteRenderer(
 
         val PLATE = AABB(-0.5, 0.0, -0.5, 0.5, 0.02, 0.5)
         val BODY = AABB(
-            -NavigationTerrain.PLAYER_WIDTH / 2, 0.0, -NavigationTerrain.PLAYER_WIDTH / 2,
-            NavigationTerrain.PLAYER_WIDTH / 2, NavigationTerrain.PLAYER_HEIGHT, NavigationTerrain.PLAYER_WIDTH / 2,
+            -Terrain.PLAYER_WIDTH / 2, 0.0, -Terrain.PLAYER_WIDTH / 2,
+            Terrain.PLAYER_WIDTH / 2, Terrain.PLAYER_HEIGHT, Terrain.PLAYER_WIDTH / 2,
         )
     }
 

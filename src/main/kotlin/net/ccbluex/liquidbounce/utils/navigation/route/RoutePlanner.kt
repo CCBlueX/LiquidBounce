@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationRegion
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.CompletableFuture
@@ -42,7 +42,7 @@ import java.util.concurrent.CompletableFuture
  */
 class RoutePlanner<T>(
     private val owner: EventListener,
-    private val newTerrain: (NavigationWorld) -> NavigationTerrain = ::NavigationTerrain,
+    private val newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
 ) : EventListener {
 
     private var job: Job<T>? = null
@@ -116,7 +116,7 @@ class RoutePlanner<T>(
     }
 
     /** Whether a recorded change alters how a block the search looked at is moved through. */
-    private fun applyChanges(terrain: NavigationTerrain): Boolean {
+    private fun applyChanges(terrain: Terrain): Boolean {
         val level = mc.level ?: return false
 
         var affected = changesOverflowed
@@ -163,7 +163,7 @@ class RoutePlanner<T>(
         val key: Any,
         val region: NavigationRegion,
         val factory: RouteSearchFactory<T>,
-        val terrain: NavigationTerrain,
+        val terrain: Terrain,
         val search: RouteSearch<T>,
     ) {
         var slice: CompletableFuture<RouteResult<T>>? = null

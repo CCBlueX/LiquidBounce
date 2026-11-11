@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
@@ -61,7 +61,7 @@ class TeleportRoute(val points: List<Vec3>) {
 class TeleportPlan(val route: TeleportRoute, val steps: List<TeleportStep>) {
 
     /** This plan with the way from [position] to its start put in front, or null when that way is blocked. */
-    internal fun startingAt(position: Vec3, terrain: NavigationTerrain, stepLength: Double): TeleportPlan? {
+    internal fun startingAt(position: Vec3, terrain: Terrain, stepLength: Double): TeleportPlan? {
         val linked = ArrayList<TeleportStep>(steps.size + 2)
         if (!TeleportSteps.appendSegment(terrain, position, route.start, stepLength, 0, linked)) {
             return null

@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
+import net.ccbluex.liquidbounce.utils.navigation.walk.Path
+import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -58,10 +58,10 @@ class WalkStageTest {
 
     private val abilities = walkAbilities()
 
-    private fun stage(world: TestNavigationWorld, goal: BlockPos): RouteResult<WalkPath> {
+    private fun stage(world: TestNavigationWorld, goal: BlockPos): RouteResult<Path> {
         val terrain = world.terrain()
         val stageGoal = StageGoal(NearGoal(Vec3.atBottomCenterOf(goal), 1.0), START, RANGE, terrain)
-        return WalkRouteSearch(terrain, START, stageGoal, abilities, LIMITS).advanceToEnd(MAX_SLICES)
+        return PathSearch(terrain, START, stageGoal, abilities, LIMITS).advanceToEnd(MAX_SLICES)
     }
 
     private fun stageEnd(world: TestNavigationWorld, goal: BlockPos): BlockPos =

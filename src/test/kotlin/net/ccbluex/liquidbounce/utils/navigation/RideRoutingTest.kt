@@ -22,16 +22,15 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
-import net.ccbluex.liquidbounce.utils.navigation.ride.RideBody
-import net.ccbluex.liquidbounce.utils.navigation.ride.RideKind
-import net.ccbluex.liquidbounce.utils.navigation.ride.RidePath
-import net.ccbluex.liquidbounce.utils.navigation.ride.RideRouteSearch
+import net.ccbluex.liquidbounce.utils.navigation.ride.Body
+import net.ccbluex.liquidbounce.utils.navigation.ride.Path
+import net.ccbluex.liquidbounce.utils.navigation.ride.PathSearch
+import net.ccbluex.liquidbounce.utils.navigation.ride.VehicleKind
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
-import net.ccbluex.liquidbounce.utils.navigation.route.NavigationGoal
+import net.ccbluex.liquidbounce.utils.navigation.route.Goal
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
@@ -40,6 +39,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch as WalkPathSearch
 
 class RideRoutingTest {
 
@@ -54,19 +54,19 @@ class RideRoutingTest {
         private val WATER: BlockState get() = Blocks.WATER.defaultBlockState()
         private val ICE: BlockState get() = Blocks.PACKED_ICE.defaultBlockState()
 
-        private val BOAT = RideBody(
-            kind = RideKind.BOAT,
+        private val BOAT = Body(
+            kind = VehicleKind.BOAT,
             width = 1.375,
             height = 1.9,
             stepHeight = 0.0,
             jumpHeight = 0.0,
             safeFall = 1,
-            speed = RideBody.BOAT_WATER_SPEED,
-            iceSpeed = RideBody.BOAT_ICE_SPEED,
+            speed = Body.BOAT_WATER_SPEED,
+            iceSpeed = Body.BOAT_ICE_SPEED,
         )
 
-        private fun horse(jump: Double = 0.0) = RideBody(
-            kind = RideKind.MOUNT,
+        private fun horse(jump: Double = 0.0) = Body(
+            kind = VehicleKind.MOUNT,
             width = 1.3964844,
             height = 2.99,
             stepHeight = 1.0,
@@ -89,10 +89,10 @@ class RideRoutingTest {
         private fun afloat(x: Int, z: Int) = Vec3(x + 0.5, 0.52, z + 0.5)
     }
 
-    private fun search(world: TestNavigationWorld, start: Vec3, goal: NavigationGoal, body: RideBody) =
-        RideRouteSearch(world.terrain(), start, goal, body, LIMITS).advanceToEnd(MAX_SLICES)
+    private fun search(world: TestNavigationWorld, start: Vec3, goal: Goal, body: Body) =
+        PathSearch(world.terrain(), start, goal, body, LIMITS).advanceToEnd(MAX_SLICES)
 
-    private fun completePath(result: RouteResult<RidePath>): RidePath =
+    private fun completePath(result: RouteResult<Path>): Path =
         found(result).also { assertTrue(it.complete, "path should reach the goal") }
 
     @Test
@@ -165,7 +165,7 @@ class RideRoutingTest {
         val ridden = search(world, feet(0, 1, 0), goal, horse())
         assertFalse(ridden is RouteResult.Found && ridden.value.complete)
 
-        val walker = WalkRouteSearch(world.terrain(), feet(0, 1, 0), goal, walkAbilities(breakTicks = 20.0), LIMITS)
+        val walker = WalkPathSearch(world.terrain(), feet(0, 1, 0), goal, walkAbilities(breakTicks = 20.0), LIMITS)
         assertTrue(found(walker.advanceToEnd()).complete)
 
         // Three blocks high, the horse fits, off the middle of the blocks.

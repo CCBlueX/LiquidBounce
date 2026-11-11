@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.utils.navigation.route
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
@@ -34,7 +34,7 @@ import net.minecraft.world.phys.Vec3
 internal class GoalRouter<T>(
     owner: EventListener,
     private val verticalMargin: Int,
-    newTerrain: (NavigationWorld) -> NavigationTerrain = ::NavigationTerrain,
+    newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
 ) {
 
     private val planner = RoutePlanner<T>(owner, newTerrain)
@@ -112,7 +112,7 @@ internal class GoalRouter<T>(
         goal: NearGoal,
         maxLength: Double,
         variant: Any? = null,
-        search: (terrain: NavigationTerrain, goal: NavigationGoal) -> RouteSearch<T>,
+        search: (terrain: Terrain, goal: Goal) -> RouteSearch<T>,
     ) {
         // A stage with its detours stays within the route length.
         val stageRange = maxLength / 2.0

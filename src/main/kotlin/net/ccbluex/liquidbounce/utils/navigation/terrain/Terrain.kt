@@ -1,0 +1,477 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.utils.navigation.terrain
+
+import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import net.ccbluex.fastutil.referenceHashSetOf
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity.DEFAULT_BB_HEIGHT
+import net.minecraft.world.entity.Entity.DEFAULT_BB_WIDTH
+import net.minecraft.world.level.block.BaseFireBlock
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.BooleanOp
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.phys.shapes.VoxelShape
+import kotlin.math.abs
+import kotlin.math.ceil
+
+enum class DestinationCheck {
+    VALID,
+    OUTSIDE_WORLD,
+    OUTSIDE_BORDER,
+    NOT_LOADED,
+    NOT_STANDABLE,
+}
+
+/**
+ * Block lookups for route searches, cached per block until [invalidate]. Unknown blocks and hazards count as solid.
+ * With [opensDoors], closed doors, fence gates and trapdoors a player opens by hand count as open, except a trapdoor
+ * that is a floor; [closedIn] tells which a move has to open. Not thread-safe.
+ */
+@Suppress("TooManyFunctions")
+class Terrain(
+    val world: NavigationWorld,
+    val width: Double = PLAYER_WIDTH,
+    val height: Double = PLAYER_HEIGHT,
+    val opensDoors: Boolean = false,
+) {
+
+    private val halfWidth = width / 2.0
+    private val states = Long2ObjectOpenHashMap<BlockState>()
+    private val shapes = Long2ObjectOpenHashMap<VoxelShape>()
+    private val stands = Long2DoubleOpenHashMap()
+    private val crouchStands = Long2DoubleOpenHashMap()
+
+    /** Collision shapes of the closed blocks that count as open. */
+    private val closed = Long2ObjectOpenHashMap<VoxelShape>()
+
+    val minY: Int get() = world.minY
+
+    val maxY: Int get() = world.maxY
+
+    fun box(feet: Vec3): AABB = box(feet.x, feet.y, feet.z)
+
+    fun box(x: Double, y: Double, z: Double, height: Double = this.height) =
+        AABB(x - halfWidth, y, z - halfWidth, x + halfWidth, y + height, z + halfWidth)
+
+    /** Whether the block is loaded, copied and inside the world border. */
+    fun isKnown(x: Int, y: Int, z: Int) = world.isKnown(x, y, z) && world.isInsideBorder(x + 0.5, z + 0.5)
+
+    fun state(x: Int, y: Int, z: Int): BlockState {
+        val key = BlockPos.asLong(x, y, z)
+        states.get(key)?.let { return it }
+
+        val state = if (isKnown(x, y, z)) world.getBlockState(BlockPos(x, y, z)) else VOID_AIR
+        states.put(key, state)
+        return state
+    }
+
+    fun shape(x: Int, y: Int, z: Int): VoxelShape {
+        val key = BlockPos.asLong(x, y, z)
+        shapes.get(key)?.let { return it }
+
+        val state = state(x, y, z)
+        val pos = BlockPos(x, y, z)
+        val shape = when {
+            !isKnown(x, y, z) || isHazard(state) -> FULL
+            countsOpen(state, x, y, z) -> {
+                closed.put(key, state.getCollisionShape(world, pos))
+                state.setValue(BlockStateProperties.OPEN, true).getCollisionShape(world, pos)
+            }
+
+            else -> state.getCollisionShape(world, pos)
+        }
+
+        shapes.put(key, shape)
+        return shape
+    }
+
+    /**
+     * Adds to [opens] the closed blocks counting as open that a body moving from [from] into [box] has to open, a
+     * door by its lower half. What [from] collides with was opened before.
+     */
+    fun closedIn(box: AABB, from: AABB, opens: MutableList<BlockPos>) {
+        if (!opensDoors) {
+            return
+        }
+
+        forEachBlock(box) { x, y, z ->
+            val closedShape = closedShape(x, y, z)
+            if (closedShape != null && closedShape.intersects(x, y, z, box) && !closedShape.intersects(x, y, z, from)) {
+                val upper = state(x, y, z).getOptionalValue(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                    .map { it == DoubleBlockHalf.UPPER }.orElse(false)
+                val pos = BlockPos(x, if (upper) y - 1 else y, z)
+                if (pos !in opens) {
+                    opens += pos
+                }
+            }
+        }
+    }
+
+    private fun closedShape(x: Int, y: Int, z: Int): VoxelShape? {
+        shape(x, y, z)
+        return closed.get(BlockPos.asLong(x, y, z))
+    }
+
+    private fun countsOpen(state: BlockState, x: Int, y: Int, z: Int): Boolean {
+        if (!opensDoors || state.getOptionalValue(BlockStateProperties.OPEN).orElse(true)) {
+            return false
+        }
+
+        return when (val block = state.block) {
+            is DoorBlock -> block.type().canOpenByHand()
+            is FenceGateBlock -> true
+            is TrapDoorBlock -> block.type.canOpenByHand() && !isFloor(x, y, z)
+            else -> false
+        }
+    }
+
+    // A trapdoor to stand on, unless it covers a ladder or vine or has no room above.
+    private fun isFloor(x: Int, y: Int, z: Int) = state(x, y - 1, z).block !in CLIMBABLE &&
+        isEmpty(x, y + 1, z) && isEmpty(x, y + 2, z)
+
+    private fun isEmpty(x: Int, y: Int, z: Int) =
+        state(x, y, z).getCollisionShape(world, BlockPos(x, y, z)).isEmpty
+
+    fun isPassable(x: Int, y: Int, z: Int) = shape(x, y, z).isEmpty
+
+    fun isHazard(x: Int, y: Int, z: Int) = isKnown(x, y, z) && isHazard(state(x, y, z))
+
+    fun isWater(x: Int, y: Int, z: Int) = state(x, y, z).fluidState.type.isSame(Fluids.WATER)
+
+    fun isClimbable(x: Int, y: Int, z: Int) = state(x, y, z).block in CLIMBABLE
+
+    /**
+     * Height the feet rest at when standing in the block, always within it, or NaN when nothing carries the player
+     * there or the body does not fit. Slabs, farmland, carpets, fences and the like are taken into account.
+     */
+    fun standHeight(x: Int, y: Int, z: Int) =
+        stands.cached(BlockPos.asLong(x, y, z)) { computeStandHeight(x, y, z, height) }
+
+    fun isStandable(feet: BlockPos) = !standHeight(feet.x, feet.y, feet.z).isNaN()
+
+    fun crouchHeight(x: Int, y: Int, z: Int) =
+        crouchStands.cached(BlockPos.asLong(x, y, z)) { computeStandHeight(x, y, z, minOf(height, CROUCH_HEIGHT)) }
+
+    fun feet(node: BlockPos): Vec3? {
+        val height = standHeight(node.x, node.y, node.z)
+        return if (height.isNaN()) null else Vec3(node.x + 0.5, height, node.z + 0.5)
+    }
+
+    fun check(feet: BlockPos): DestinationCheck = when {
+        feet.y < minY || feet.y > maxY -> DestinationCheck.OUTSIDE_WORLD
+        !world.isInsideBorder(feet.x + 0.5, feet.z + 0.5) -> DestinationCheck.OUTSIDE_BORDER
+        !world.isKnown(feet.x, feet.y, feet.z) -> DestinationCheck.NOT_LOADED
+        !isStandable(feet) -> DestinationCheck.NOT_STANDABLE
+        else -> DestinationCheck.VALID
+    }
+
+    fun isClear(box: AABB): Boolean {
+        forEachBlock(box) { x, y, z ->
+            val shape = shape(x, y, z)
+            if (!shape.isEmpty && shape.intersects(x, y, z, box)) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
+     * Whether the server moves a player from [from] to [to] without hitting anything. It moves one axis after the
+     * other, so the corners it passes are checked too.
+     */
+    fun sweep(from: Vec3, to: Vec3): Boolean {
+        val movement = to.subtract(from)
+        val box = box(from)
+        val colliders = colliders(box.expandTowards(movement))
+        if (colliders.isEmpty()) {
+            return true
+        }
+
+        var moved = Vec3.ZERO
+        for (axis in Direction.axisStepOrder(movement)) {
+            val axisMovement = movement.get(axis)
+            if (axisMovement == 0.0) {
+                continue
+            }
+
+            val collision = Shapes.collide(axis, box.move(moved), colliders, axisMovement)
+            if (abs(collision - axisMovement) > EPSILON) {
+                return false
+            }
+            moved = moved.with(axis, collision)
+        }
+
+        return true
+    }
+
+    /** Whether something is right below the feet, which is what the server calls on ground. */
+    fun isSupported(feet: Vec3): Boolean {
+        val box = box(feet)
+        return !isClear(AABB(box.minX, feet.y - SUPPORT_PROBE, box.minZ, box.maxX, feet.y, box.maxZ))
+    }
+
+    /**
+     * Drops what is cached for [pos], which became [state], and for the blocks depending on it; true if anything
+     * was. A change that leaves the collision alike, as a growing crop does, is ignored.
+     */
+    fun invalidate(pos: BlockPos, state: BlockState): Boolean {
+        val key = pos.asLong()
+        val old = states.get(key)
+        if (old != null && isAlike(old, state, pos)) {
+            if (state.getOptionalValue(BlockStateProperties.OPEN).orElse(false)) {
+                // An opened door keeps the shape it counted with, but no longer needs opening.
+                closed.remove(key)
+            }
+            return false
+        }
+
+        var cached = states.remove(key) != null
+        cached = drop(pos.x, pos.y, pos.z) || cached
+        if (opensDoors) {
+            // Whether a trapdoor counts as open depends on the blocks below and above it, see [isFloor].
+            for (dy in TRAPDOOR_NEIGHBOURS) {
+                if (states.get(BlockPos.asLong(pos.x, pos.y + dy, pos.z))?.block is TrapDoorBlock) {
+                    cached = drop(pos.x, pos.y + dy, pos.z) || cached
+                }
+            }
+        }
+
+        return cached
+    }
+
+    private fun drop(x: Int, y: Int, z: Int): Boolean {
+        val key = BlockPos.asLong(x, y, z)
+        var cached = shapes.remove(key) != null
+        closed.remove(key)
+        // The floor, the body and the layer below a tall floor block of a standing spot are within two blocks.
+        for (dy in -STAND_REACH..STAND_REACH) {
+            val standKey = BlockPos.asLong(x, y + dy, z)
+            if (stands.containsKey(standKey)) {
+                stands.remove(standKey)
+                cached = true
+            }
+            if (crouchStands.containsKey(standKey)) {
+                crouchStands.remove(standKey)
+                cached = true
+            }
+        }
+
+        return cached
+    }
+
+    private fun isAlike(old: BlockState, new: BlockState, pos: BlockPos): Boolean {
+        if (old === new) {
+            return true
+        }
+        if (old.block !== new.block || !old.fluidState.type.isSame(new.fluidState.type) ||
+            isHazard(old) != isHazard(new)) {
+            return false
+        }
+
+        val oldShape = shapes.get(pos.asLong()) ?: old.getCollisionShape(world, pos)
+        val newShape = if (isHazard(new)) FULL else new.getCollisionShape(world, pos)
+        return oldShape === newShape || !Shapes.joinIsNotEmpty(oldShape, newShape, BooleanOp.NOT_SAME)
+    }
+
+    private fun computeStandHeight(x: Int, y: Int, z: Int, bodyHeight: Double): Double {
+        if (y > maxY || !isKnown(x, y, z) || !isKnown(x, y - 1, z)) {
+            return Double.NaN
+        }
+
+        val below = shape(x, y - 1, z)
+        val at = shape(x, y, z)
+        if (at === FULL || below.isEmpty && at.isEmpty || isHazard(x, y - 1, z) || isHazard(x, y, z)) {
+            return Double.NaN
+        }
+
+        val top = if (below === FULL && at.isEmpty) y.toDouble() else partialTop(below, at, y)
+        return if (top.isNaN() || !isClear(box(x + 0.5, top, z + 0.5, bodyHeight))) Double.NaN else top
+    }
+
+    private fun partialTop(below: VoxelShape, at: VoxelShape, y: Int): Double {
+        var top = Double.NaN
+        for (box in below.toAabbs()) {
+            val boxTop = y - 1 + box.maxY
+            if (box.overlapsFootprint() && boxTop >= y && boxTop < y + 1 && !(boxTop <= top)) {
+                top = boxTop
+            }
+        }
+
+        for (box in at.toAabbs()) {
+            if (!box.overlapsFootprint()) {
+                continue
+            }
+
+            val boxTop = y + box.maxY
+            if (boxTop >= y + 1) {
+                return Double.NaN
+            }
+            if (!(boxTop <= top)) {
+                top = boxTop
+            }
+        }
+
+        return top
+    }
+
+    private fun AABB.overlapsFootprint() =
+        minX < 0.5 + halfWidth && maxX > 0.5 - halfWidth && minZ < 0.5 + halfWidth && maxZ > 0.5 - halfWidth
+
+    private fun colliders(region: AABB): List<VoxelShape> {
+        val colliders = ArrayList<VoxelShape>()
+        forEachBlock(region) { x, y, z ->
+            val shape = shape(x, y, z)
+            if (!shape.isEmpty) {
+                colliders.add(shape.move(x.toDouble(), y.toDouble(), z.toDouble()))
+            }
+        }
+        return colliders
+    }
+
+    companion object {
+        const val PLAYER_WIDTH = DEFAULT_BB_WIDTH.toDouble()
+        const val PLAYER_HEIGHT = DEFAULT_BB_HEIGHT.toDouble()
+        const val CROUCH_HEIGHT = 1.5
+
+        /** Highest ledge the player walks onto without jumping. */
+        const val STEP = 0.6
+
+        private const val STAND_REACH = 2
+        private const val EPSILON = 1.0E-7
+        private const val SUPPORT_PROBE = 1.0E-3
+
+        /** Offsets from a block to the trapdoors whose counting as open depends on it. */
+        private val TRAPDOOR_NEIGHBOURS = intArrayOf(-2, -1, 1)
+
+        private val VOID_AIR: BlockState = Blocks.VOID_AIR.defaultBlockState()
+        private val FULL: VoxelShape = Shapes.block()
+
+        private val HAZARDS = referenceHashSetOf(
+            Blocks.COBWEB,
+            Blocks.SWEET_BERRY_BUSH,
+            Blocks.POWDER_SNOW,
+            Blocks.WITHER_ROSE,
+            Blocks.MAGMA_BLOCK,
+            Blocks.CAMPFIRE,
+            Blocks.SOUL_CAMPFIRE,
+            Blocks.CACTUS,
+        )
+
+        private val CLIMBABLE = referenceHashSetOf(
+            Blocks.LADDER,
+            Blocks.VINE,
+            Blocks.WEEPING_VINES,
+            Blocks.WEEPING_VINES_PLANT,
+            Blocks.TWISTING_VINES,
+            Blocks.TWISTING_VINES_PLANT,
+            Blocks.CAVE_VINES,
+            Blocks.CAVE_VINES_PLANT,
+        )
+
+        /** Only for the render thread. */
+        fun live() = Terrain(LiveWorld(world))
+
+        fun isHazard(state: BlockState) =
+            state.fluidState.type.isSame(Fluids.LAVA) || state.block is BaseFireBlock || state.block in HAZARDS
+
+        /** Every block [box] reaches into, and the layer below for blocks taller than a block, like fences. */
+        private inline fun forEachBlock(box: AABB, action: (x: Int, y: Int, z: Int) -> Unit) {
+            for (x in Mth.floor(box.minX + EPSILON)..Mth.floor(box.maxX - EPSILON)) {
+                for (z in Mth.floor(box.minZ + EPSILON)..Mth.floor(box.maxZ - EPSILON)) {
+                    for (y in Mth.floor(box.minY + EPSILON) - 1..Mth.floor(box.maxY - EPSILON)) {
+                        action(x, y, z)
+                    }
+                }
+            }
+        }
+
+        private inline fun Long2DoubleOpenHashMap.cached(key: Long, compute: () -> Double): Double {
+            if (containsKey(key)) {
+                return get(key)
+            }
+            return compute().also { put(key, it) }
+        }
+
+        private fun VoxelShape.intersects(x: Int, y: Int, z: Int, box: AABB): Boolean {
+            if (this === FULL) {
+                return box.intersects(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 1.0, z + 1.0)
+            }
+
+            return toAabbs().any {
+                box.intersects(it.minX + x, it.minY + y, it.minZ + z, it.maxX + x, it.maxY + y, it.maxZ + z)
+            }
+        }
+    }
+
+}
+
+/** Whether a body [height] tall fits in the middle of block [x] [y] [z] with the feet at its bottom. */
+internal fun Terrain.hasRoom(x: Int, y: Int, z: Int, height: Double = this.height) =
+    isClear(box(x + 0.5, y.toDouble(), z + 0.5, height))
+
+/** Whether nothing is in the way of feet and head in [x] [y] [z]. */
+internal fun Terrain.isOpen(x: Int, y: Int, z: Int) = isPassable(x, y, z) && isPassable(x, y + 1, z)
+
+private const val MAX_REACH_POSITIONS = 8
+
+/** Blocks below the box the feet may still stand at, as the eyes are above them. */
+private const val EYE_DEPTH = 2
+
+/** Standable feet positions whose eyes see [box] within [reach], closest to [from] first; [block] does not hide it. */
+fun Terrain.reachPositions(box: AABB, reach: Double, from: Vec3, block: BlockPos? = null): List<BlockPos> {
+    val center = BlockPos.containing(box.center)
+    val radius = ceil(reach).toInt()
+    val positions = ArrayList<BlockPos>()
+
+    for (dx in -radius..radius) {
+        for (dz in -radius..radius) {
+            for (dy in -radius - EYE_DEPTH..radius) {
+                val position = center.offset(dx, dy, dz)
+                val feet = this.feet(position) ?: continue
+                val eyes = player.getEyePositionAt(feet)
+                if (!this.box(feet).intersects(box) && box.distanceToSqr(eyes) <= reach * reach &&
+                    canSeeBox(eyes, box, reach, 0.0, block)
+                ) {
+                    positions += position
+                }
+            }
+        }
+    }
+
+    positions.sortBy { this.feet(it)?.distanceToSqr(from) ?: Double.MAX_VALUE }
+    return positions.take(MAX_REACH_POSITIONS)
+}

@@ -23,10 +23,10 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationWorld
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
+import net.ccbluex.liquidbounce.utils.navigation.walk.Path
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -55,7 +55,7 @@ class TestNavigationWorld(
 
     fun set(x: Int, y: Int, z: Int, state: BlockState) = fill(x, y, z, x, y, z, state)
 
-    fun terrain(opensDoors: Boolean = false) = NavigationTerrain(this, opensDoors = opensDoors)
+    fun terrain(opensDoors: Boolean = false) = Terrain(this, opensDoors = opensDoors)
 
     override fun isKnown(x: Int, y: Int, z: Int) = y >= minY && y <= maxY && known(x, z)
 
@@ -96,7 +96,7 @@ fun <T> RouteSearch<T>.advanceToEnd(maxSlices: Int = Int.MAX_VALUE): RouteResult
 
 inline fun <reified T> found(result: RouteResult<T>): T = assertIs<RouteResult.Found<T>>(result).value
 
-fun completePath(result: RouteResult<WalkPath>, message: String? = "path should reach the goal"): WalkPath =
+fun completePath(result: RouteResult<Path>, message: String? = "path should reach the goal"): Path =
     found(result).also { assertTrue(it.complete, message) }
 
 /** A sprinting walker that takes falls of [safeFall] blocks and mines every block in [breakTicks]. */
@@ -108,7 +108,7 @@ fun walkAbilities(
     safeFall: Int = 3,
     breakTicks: Double = Double.POSITIVE_INFINITY,
     avoid: LongSet = LongOpenHashSet(),
-) = WalkAbilities(
+) = Abilities(
     canBreak = canBreak,
     canPlace = canPlace,
     placeableBlocks = if (canPlace) 64 else 0,

@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
-import net.ccbluex.liquidbounce.utils.navigation.flight.ColumnHeights
-import net.ccbluex.liquidbounce.utils.navigation.flight.ElytraCruise
-import net.ccbluex.liquidbounce.utils.navigation.flight.RoofBounce
+import net.ccbluex.liquidbounce.utils.navigation.glide.ColumnHeights
+import net.ccbluex.liquidbounce.utils.navigation.glide.Cruise
+import net.ccbluex.liquidbounce.utils.navigation.glide.RoofBounce
 import net.minecraft.world.phys.Vec3
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,13 +44,13 @@ class ElytraTravelTest {
 
     @Test
     fun `a far cruise needs more rockets than a near one`() {
-        val near = ElytraCruise.rocketsNeeded(300.0, 10.0, ROCKET_TICKS)
-        val far = ElytraCruise.rocketsNeeded(1200.0, 10.0, ROCKET_TICKS)
-        val high = ElytraCruise.rocketsNeeded(300.0, 80.0, ROCKET_TICKS)
+        val near = Cruise.rocketsNeeded(300.0, 10.0, ROCKET_TICKS)
+        val far = Cruise.rocketsNeeded(1200.0, 10.0, ROCKET_TICKS)
+        val high = Cruise.rocketsNeeded(300.0, 80.0, ROCKET_TICKS)
 
         assertTrue(far > near * 3, "1200 blocks took $far rockets, 300 took $near")
         assertTrue(high > near, "climbing 80 blocks took no extra rockets")
-        assertEquals(Int.MAX_VALUE, ElytraCruise.rocketsNeeded(300.0, 0.0, 0))
+        assertEquals(Int.MAX_VALUE, Cruise.rocketsNeeded(300.0, 0.0, 0))
     }
 
     @Test
@@ -60,10 +60,10 @@ class ElytraTravelTest {
         val pillar = ColumnHeights { x, _ -> if (x in 150..152) 160 else 0 }
         val unloaded = ColumnHeights { x, _ -> if (x > 50) null else 0 }
 
-        assertEquals(160.0 + ElytraCruise.CLEARANCE, ElytraCruise.cruiseAltitude(start, goal, pillar))
+        assertEquals(160.0 + Cruise.CLEARANCE, Cruise.cruiseAltitude(start, goal, pillar))
         assertEquals(
-            110.0 + ElytraCruise.CLEARANCE + ElytraCruise.UNKNOWN_CLEARANCE,
-            ElytraCruise.cruiseAltitude(start, goal, unloaded),
+            110.0 + Cruise.CLEARANCE + Cruise.UNKNOWN_CLEARANCE,
+            Cruise.cruiseAltitude(start, goal, unloaded),
         )
     }
 
