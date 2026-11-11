@@ -148,7 +148,8 @@ object ClientInteropServer {
                             return@webSocket
                         }
 
-                        WebSocketSessionManager.add(this)
+                        // Themes that tell clients apart ask for the events of every client
+                        WebSocketSessionManager.add(this, call.request.queryParameters["clients"] == "all")
 
                         try {
                             this.closeReason.await()

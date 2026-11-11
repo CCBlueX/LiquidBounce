@@ -27,19 +27,23 @@ import java.util.WeakHashMap
 
 object WebSocketSessionManager {
 
-    private val sessions: MutableSet<WebSocketSession> =
-        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+    /**
+     * Each session with whether it also wants the events of clients in the background.
+     */
+    private val sessions: MutableMap<WebSocketSession, Boolean> = Collections.synchronizedMap(WeakHashMap())
 
-    fun add(session: WebSocketSession) {
-        sessions.add(session)
+    fun add(session: WebSocketSession, everyClient: Boolean) {
+        sessions[session] = everyClient
     }
 
     fun remove(session: WebSocketSession) {
         sessions.remove(session)
     }
 
-    fun broadcast(message: String, onError: (WebSocketSession, Throwable) -> Unit) {
-        val snapshot = sessions.toTypedArray().ifEmpty { return }
+    fun broadcast(message: String, background: Boolean, onError: (WebSocketSession, Throwable) -> Unit) {
+        val snapshot = synchronized(sessions) {
+            sessions.mapNotNull { (session, everyClient) -> session.takeIf { everyClient || !background } }
+        }.ifEmpty { return }
         val messageBytes = message.toByteArray(Charsets.UTF_8)
         for (session in snapshot) {
             session.launch {

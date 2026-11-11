@@ -20,17 +20,27 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.ActiveClientListener
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventName
+import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
+import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.event.newEventHook
+import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 
-internal object SocketEventListener : ActiveClientListener {
+/**
+ * Sends events to the theme, each tagged with the id of the client it happened in. Of the clients in the
+ * background only module and setting changes are sent, and only to sockets that asked for every client.
+ */
+internal object SocketEventListener : EventListener {
+
+    private val backgroundEvents = setOf(ModuleToggleEvent::class.java, ValueChangedEvent::class.java)
 
     // Not cached: add-ons can register events later.
     private val events
@@ -76,14 +86,23 @@ internal object SocketEventListener : ActiveClientListener {
     }
 
     private fun writeToSockets(event: Event) {
+        val client = ClientContext.current
+        val background = !client.isActive
+        if (background && event.javaClass !in backgroundEvents) {
+            return
+        }
+
         if ((event as WebSocketEvent).serializeAsync) {
-            Util.backgroundExecutor().execute { serializeAndBroadcast(event) }
+            // Values read while serializing have to be the ones of the client
+            Util.backgroundExecutor().execute {
+                ClientContext.within(client) { serializeAndBroadcast(event, client, background) }
+            }
         } else {
-            serializeAndBroadcast(event)
+            serializeAndBroadcast(event, client, background)
         }
     }
 
-    private fun serializeAndBroadcast(event: Event) {
+    private fun serializeAndBroadcast(event: Event, client: Client, background: Boolean) {
         val eventName = event.javaClass.eventName
         val json = try {
             val writer = writeBuffer.get()
@@ -92,6 +111,10 @@ internal object SocketEventListener : ActiveClientListener {
                 writer.name("name").value(eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
+                writer.name("client").value(client.id)
+                if (background) {
+                    writer.name("background").value(true)
+                }
                 writer.endObject()
             }
             writer.toString().also { writer.builder.clear() }
@@ -100,7 +123,7 @@ internal object SocketEventListener : ActiveClientListener {
             return
         }
 
-        WebSocketSessionManager.broadcast(json) { _, t ->
+        WebSocketSessionManager.broadcast(json, background) { _, t ->
             logger.error("WebSocket event broadcast failed, event: $eventName", t)
         }
     }
