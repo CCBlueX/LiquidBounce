@@ -104,13 +104,9 @@ loom {
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
 // `-PgameTestNavigation=false` skips the slow navigation tests.
 //
-// Tests that extend `LiquidBounceGameTest` play on the game test server (https://github.com/CCBlueX/gametest)
-// with an anticheat of choice watching. They need a LiquidBounce API token in GAMETEST_API_TOKEN, or a server
-// of one's own: `GAMETEST_SERVER_ADDRESS=localhost:25565 ./gradlew runClientGameTest` against its `docker compose up`.
-// GAMETEST_SERVER_ANTICHEAT picks the anticheat (https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md).
-// The other tests, `LocalGameTest`s, need no server and run only when GAMETEST_SERVER_ANTICHEAT is not set.
-// `-PgameTestServerOnly=Harness,Sprint` runs only those tests, and `build/run/clientGameTest/gametest` keeps what
-// the server told them.
+// `LiquidBounceGameTest`s play on the game test server (https://github.com/CCBlueX/gametest) with GAMETEST_API_TOKEN,
+// or on a server of one's own at GAMETEST_SERVER_ADDRESS. GAMETEST_SERVER_ANTICHEAT picks the anticheat;
+// `LocalGameTest`s run only without it. `-PgameTestServerOnly=Harness,Sprint` runs only those tests.
 fabricApi {
     configureTests {
         createSourceSet = true

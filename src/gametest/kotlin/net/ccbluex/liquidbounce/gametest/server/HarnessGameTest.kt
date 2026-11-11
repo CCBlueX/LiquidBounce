@@ -30,9 +30,8 @@ private val POSITION = Regex("""\[(-?[\d.]+)d, (-?[\d.]+)d, (-?[\d.]+)d]""")
 private val SCORE = Regex("""has (\d+) """)
 
 /**
- * The harness itself: the session has its world and answers commands, a command that reaches beyond the
- * session is refused, the session waits for a player who reconnects, and a client claiming to be somewhere it
- * cannot be is caught. Without that negative control no clean verdict would mean anything.
+ * The harness itself: the session has its world, refuses commands beyond it and waits for a player who reconnects,
+ * and a client claiming to be where it cannot be is caught, without which no clean verdict means anything.
  */
 class HarnessGameTest : LiquidBounceGameTest({
     awaitServer("block 0 -61 0 minecraft:grass_block")

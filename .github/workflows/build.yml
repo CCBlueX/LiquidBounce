@@ -253,8 +253,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # `local` runs the tests of the client alone. The others play on the game test server, whose bots this
-        # anticheat watches, see https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md
+        # `local` runs the client-only tests, the others the server tests against this anticheat:
+        # https://github.com/CCBlueX/gametest/blob/main/docs/anticheats.md
         run: [local, vanilla, grim]
     steps:
       - name: Checkout repository and submodules
@@ -317,8 +317,7 @@ jobs:
           SDL_VIDEO_FORCE_EGL: 1
           # Pull requests that leave navigation alone skip its game tests, which take minutes
           NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
-          # The game test server lets in bots of LiquidBounce accounts; empty on pull requests from forks, which
-          # then skip the tests on it
+          # Bots join with a LiquidBounce account token; forks get none and skip the server tests
           GAMETEST_API_TOKEN: ${{ matrix.run != 'local' && secrets.API_TOKEN || '' }}
           GAMETEST_SERVER_ANTICHEAT: ${{ matrix.run != 'local' && matrix.run || '' }}
         run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"

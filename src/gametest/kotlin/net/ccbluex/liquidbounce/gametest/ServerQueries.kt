@@ -36,13 +36,11 @@ private const val FILL_LIMIT = 32768
 /** The player's health as the server has it. */
 fun GameTestScope.health() = query("data get entity $playerName Health", HEALTH).groupValues[1].toFloat()
 
-/** Where the server has the player. */
 fun GameTestScope.serverPosition(): Vec3 {
     val (x, y, z) = query("data get entity $playerName Pos", POSITION).destructured
     return Vec3(x.toDouble(), y.toDouble(), z.toDouble())
 }
 
-/** Waits until the server has the player within [distance] of [position]. */
 fun GameTestScope.awaitServerAt(position: Vec3, distance: Double = 0.1, timeout: Int = DEFAULT_TIMEOUT) =
     awaitServer("entity @a[x=${position.x},y=${position.y},z=${position.z},distance=..$distance]", timeout)
 
