@@ -261,6 +261,14 @@ public final class net/ccbluex/liquidbounce/deeplearn/ModelManager : net/ccbluex
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
+public final class net/ccbluex/liquidbounce/event/ActiveSessionListener$DefaultImpls {
+	public static fun after (Lnet/ccbluex/liquidbounce/event/ActiveSessionListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public static fun every (Lnet/ccbluex/liquidbounce/event/ActiveSessionListener;ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public static fun on (Lnet/ccbluex/liquidbounce/event/ActiveSessionListener;Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public static fun on (Lnet/ccbluex/liquidbounce/event/ActiveSessionListener;Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public static fun onTick (Lnet/ccbluex/liquidbounce/event/ActiveSessionListener;Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
 public abstract class net/ccbluex/liquidbounce/event/CancellableEvent : net/ccbluex/liquidbounce/event/Event {
 	public fun <init> ()V
 	public final fun cancelEvent ()V
@@ -676,7 +684,7 @@ public final class net/ccbluex/liquidbounce/features/command/CommandExecutor : n
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/features/command/CommandManager : net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/features/command/CommandManager : net/ccbluex/liquidbounce/event/ActiveSessionListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public final fun execute (Ljava/lang/String;)V
@@ -738,7 +746,7 @@ public final class net/ccbluex/liquidbounce/features/command/commands/ingame/fak
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/features/cosmetic/CapeCosmeticsManager : net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/features/cosmetic/CapeCosmeticsManager : net/ccbluex/liquidbounce/event/ActiveSessionListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -746,7 +754,7 @@ public final class net/ccbluex/liquidbounce/features/cosmetic/CapeCosmeticsManag
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/features/cosmetic/CosmeticService : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/features/cosmetic/CosmeticService : net/ccbluex/liquidbounce/config/types/group/ValueGroup, net/ccbluex/liquidbounce/event/ActiveSessionListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -857,6 +865,7 @@ public class net/ccbluex/liquidbounce/features/module/ClientModule : net/ccbluex
 	public final fun getHidden ()Z
 	protected final fun getLogger ()Lorg/apache/logging/log4j/Logger;
 	public final fun getNotActivatable ()Z
+	public fun getPerSession ()Z
 	public fun getRunning ()Z
 	public fun getSettings ()Ljava/util/Map;
 	public fun getTag ()Ljava/lang/String;
@@ -962,12 +971,33 @@ public final class net/ccbluex/liquidbounce/features/module/modules/player/autos
 
 public final class net/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui : net/ccbluex/liquidbounce/features/module/ClientModule {
 	public static final field INSTANCE Lnet/ccbluex/liquidbounce/features/module/modules/render/ModuleClickGui;
+	public fun getPerSession ()Z
 	public fun getRunning ()Z
 	public final fun invalidate ()V
 	public final fun isInSearchBar ()Z
 	public fun onEnabled ()V
 	public final fun sync ()V
 	public final fun updateStandaloneScreen ()Z
+}
+
+public final class net/ccbluex/liquidbounce/features/session/SessionOverview : net/ccbluex/liquidbounce/event/EventListener {
+	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun on (Ljava/lang/Class;SLjava/util/function/Consumer;)Ljava/lang/AutoCloseable;
+	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
+}
+
+public final class net/ccbluex/liquidbounce/features/session/SessionState : kotlin/properties/ReadWriteProperty {
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public final fun get ()Ljava/lang/Object;
+	public fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun set (Ljava/lang/Object;)V
+	public fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class net/ccbluex/liquidbounce/features/session/SessionStateKt {
+	public static final fun sessionState (Lkotlin/jvm/functions/Function0;)Lnet/ccbluex/liquidbounce/features/session/SessionState;
 }
 
 public abstract interface class net/ccbluex/liquidbounce/integration/backend/BrowserBackend {
@@ -1147,7 +1177,7 @@ public final class net/ccbluex/liquidbounce/integration/interop/protocol/rest/v1
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/integration/screen/ScreenManager : net/ccbluex/liquidbounce/event/ActiveSessionListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -1921,7 +1951,7 @@ public final class net/ccbluex/liquidbounce/utils/entity/PlayerSimulationCache :
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/utils/entity/RenderedEntities : java/util/Collection, kotlin/jvm/internal/markers/KMappedMarker, net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/utils/entity/RenderedEntities : kotlin/collections/AbstractCollection, net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
