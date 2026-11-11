@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -57,6 +58,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     private var glide: Glide? = null
     private var ticks = 0
     private var retryAt = 0
+    private var fireRocket = false
 
     val isActive: Boolean
         get() = glide != null
@@ -84,12 +86,17 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     fun halt() {
         planner.cancel()
         glide = null
+        fireRocket = false
         sprint = false
     }
 
     private fun start(goal: Vec3, radius: Double, abilities: GlideAbilities?, direct: Boolean): Glide? {
         if (abilities == null) {
             planner.cancel()
+            return null
+        }
+        // Landed, but the server has not closed the elytra yet
+        if (player.isFallFlying) {
             return null
         }
 
@@ -165,10 +172,10 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     /** Jumps and opens the elytra in the air, then leaves the steering to [rotationHandler] until touch-down. */
     private fun fly(event: MovementInputEvent, glide: Glide, frameYaw: Float): Boolean {
         glide.ticks++
-        if (player.isFallFlying) {
+        if (player.isFallFlying && !player.onGround()) {
             glide.hasOpened = true
-        } else if (glide.hasOpened || glide.ticks > TAKE_OFF_TICKS) {
-            // Touched down, or the elytra did not open.
+        } else if (glide.hasOpened && player.onGround() || !glide.hasOpened && glide.ticks > TAKE_OFF_TICKS) {
+            // Touched down, even if the server has not told yet that the elytra closed, or it did not open.
             if (!glide.hasOpened) {
                 retryAt = ticks + RETRY_TICKS
             }
@@ -177,13 +184,15 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         }
 
         event.sneak = false
-        if (glide.hasOpened) {
-            event.directionalInput = DirectionalInput.NONE
-            event.jump = false
+        event.jump = when {
+            player.isFallFlying -> false
+            player.onGround() -> true
+            else -> pressToOpen(glide)
+        }
+        event.directionalInput = if (glide.hasOpened) {
+            DirectionalInput.NONE
         } else {
-            // Jump, let go and jump again in the air, which opens the elytra.
-            event.directionalInput = steer(glide.goal.subtract(player.position()), frameYaw)
-            event.jump = glide.ticks % 2 == 1
+            steer(glide.goal.subtract(player.position()), frameYaw)
         }
         sprint = !glide.hasOpened
 
@@ -193,15 +202,26 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         return true
     }
 
+    /**
+     * A fresh jump press in the air opens the elytra. The server may first answer with it closed, and a second press
+     * before that answer would close it, so the next press waits.
+     */
+    private fun pressToOpen(glide: Glide): Boolean {
+        if (player.input.keyPresses.jump() || glide.ticks - glide.pressedAt < REOPEN_TICKS) {
+            return false
+        }
+
+        glide.pressedAt = glide.ticks
+        return true
+    }
+
     @Suppress("unused")
     private val rotationHandler = handler<RotationUpdateEvent> {
         val glide = glide ?: return@handler
 
         val rotation = if (player.isFallFlying) {
             val input = glide.steering.steer(player.position(), player.deltaMovement)
-            if (input.fireRocket) {
-                Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
-            }
+            fireRocket = input.fireRocket
             Rotation(input.yaw, input.pitch)
         } else {
             Rotation(glide.goal.subtract(player.position()).yaw, 0f)
@@ -212,6 +232,15 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
             Priority.IMPORTANT_FOR_USAGE_2,
             owner,
         )
+    }
+
+    /** Fires once this tick's rotation is set, which the server expects the rocket to be used with. */
+    @Suppress("unused")
+    private val rocketHandler = handler<GameTickEvent> {
+        if (fireRocket) {
+            fireRocket = false
+            Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
+        }
     }
 
     private val liveHeights = ColumnHeights { x, z ->
@@ -251,6 +280,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     private class Glide(val goal: Vec3, val steering: GlideSteering, private val path: GlidePath? = null) {
         var ticks = 0
         var hasOpened = false
+        var pressedAt = -REOPEN_TICKS
 
         val points: List<Vec3>
             get() = path?.points ?: listOf(player.position(), steering.target)
@@ -267,7 +297,8 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         const val RETRY_TICKS = 40
         const val GROUND_SCAN = 96
         const val GROUND_STEP = 8
-        const val TAKE_OFF_TICKS = 8
+        const val TAKE_OFF_TICKS = 24
+        const val REOPEN_TICKS = 10
     }
 
 }

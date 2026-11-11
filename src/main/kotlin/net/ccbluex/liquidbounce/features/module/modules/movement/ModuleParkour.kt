@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -94,9 +95,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
     }
 
+    /** Holds the sprint key; the game still decides whether the player sprints, and tells the server. */
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (sprint && event.directionalInput.isMoving) {
+        if (sprint && event.source == SprintEvent.Source.INPUT && event.directionalInput.isMoving) {
             event.sprint = true
         }
     }
@@ -173,7 +175,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         heading: Float,
     ): JumpTarget? {
         val position = player.position()
-        val feet = BlockPos.containing(position)
+        // Over the edge, the player still stands on the block behind it.
+        val feet = BlockPos.containing(position).let { feet ->
+            player.mainSupportingBlockPos.map { BlockPos(it.x, feet.y, it.z) }.orElse(feet)
+        }
         val height = targets.terrain.standHeight(feet.x, feet.y, feet.z).ifNaN { position.y }
         val maxAngle = Assist.maxAngle
         var best: JumpTarget? = null
@@ -221,8 +226,11 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             return
         }
 
-        val simulation = PlayerSimulationCache.getSimulationForLocalPlayer()
-        if (!simulation.getSnapshotAt(1).onGround) {
+        // The shared simulation of the player is renewed at this priority too, so it may still be the last tick's.
+        val input = SimulatedPlayerInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
+        val simulation = SimulatedPlayer.fromClientPlayer(input)
+        simulation.tick()
+        if (!simulation.onGround()) {
             event.jump = true
         }
     }
