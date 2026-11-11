@@ -48,8 +48,8 @@ class AssistedJumpTest {
     }
 
     /**
-     * Runs the course of single blocks [course] from [start], looking at the first block of it not stood on yet; the
-     * blocks stood on, in order, until the last one or a fall below all of them.
+     * Runs the course of single blocks [course] from [start], looking at the first block of it not stood on yet and
+     * jumping up the step walked into; the blocks stood on, in order, until the last one or a fall below all of them.
      */
     private fun run(world: TestWorld, start: Vec3, course: List<BlockPos>): List<BlockPos> {
         val terrain = world.terrain()
@@ -77,8 +77,8 @@ class AssistedJumpTest {
             val look = Vec3.atBottomCenterOf(course[next].above())
             val camera = look.subtract(state.position).yaw
             val yaw = if (aimYaw.isNaN()) camera else aimYaw
-            val held = LeapInput(1, 0, jump = false, sprint = true)
-            val keys = assisted.tick(state, yaw, camera, held, MAX_ANGLE, jumps, targets) ?: jumpAtEdge(state, yaw)
+            val held = LeapInput(1, 0, jump = state.horizontalCollision, sprint = true)
+            val keys = assisted.tick(state, yaw, camera, held, MAX_ANGLE, jumps, targets) ?: jumpAtEdge(state, yaw, held)
             state.tick(yaw, keys.forward, keys.strafe, keys.jump, keys.sprint, keys.sneak)
 
             val target = assisted.target
@@ -94,11 +94,12 @@ class AssistedJumpTest {
         return stood
     }
 
-    /** ModuleParkour without a target: forward and sprint, with a jump on the last tick on the ground. */
-    private fun jumpAtEdge(state: PlayerMotion, yaw: Float): LeapInput {
+    /** ModuleParkour without a target: [held], with a jump on the last tick on the ground. */
+    private fun jumpAtEdge(state: PlayerMotion, yaw: Float, held: LeapInput): LeapInput {
         val probe = state.copy()
-        probe.tick(yaw, 1, 0, jump = false, sprint = true)
-        return LeapInput(1, 0, jump = state.onGround && !probe.onGround, sprint = true)
+        probe.tick(yaw, held.forward, held.strafe, jump = false, sprint = held.sprint)
+        val edge = state.onGround && !probe.onGround
+        return LeapInput(held.forward, held.strafe, jump = held.jump || edge, sprint = held.sprint)
     }
 
     private fun course(world: TestWorld, vararg blocks: BlockPos) = blocks.toList().onEach {
@@ -117,8 +118,8 @@ class AssistedJumpTest {
 
     @Test
     fun `a block out of reach from the landing spot is jumped to from a run-up`() {
-        // 196 Level Parkour, level 1: after the jump onto 7 21 10 the next block lies 3 blocks to the side, 1 up.
-        val world = room()
+        // 196 Level Parkour, level 1: the course turns at most blocks, so a landing leaves no run for the next jump.
+        val world = room(0)
         val course = course(
             world, BlockPos(3, 20, 7), BlockPos(3, 21, 10), BlockPos(7, 21, 10), BlockPos(7, 22, 7),
             BlockPos(7, 22, 5), BlockPos(9, 23, 2), BlockPos(10, 23, 6),
@@ -128,8 +129,18 @@ class AssistedJumpTest {
         assertEquals(course, run(world, TestWorld.feet(3, 20, 4), course))
     }
 
-    /** The room of a level of 196 Level Parkour: a floor at y 18 walled in from x and z 1 to 11. */
-    private fun room() = TestWorld().fill(1, 18, 1, 11, 18, 11)
-        .fill(1, 19, 1, 11, 23, 1).fill(1, 19, 11, 11, 23, 11)
-        .fill(1, 19, 1, 1, 23, 11).fill(11, 19, 1, 11, 23, 11)
+    @Test
+    fun `the player turns where the jump was simulated to aim`() {
+        // 196 Level Parkour, level 10: the block of the course at 99 22 8 hangs over the jump from 97 20 9 to
+        // 99 20 5, which only works aimed beside the middle of the block.
+        val world = room(90).set(99, 22, 8, TestWorld.STONE)
+        val course = course(world, BlockPos(94, 19, 9), BlockPos(97, 20, 9), BlockPos(99, 20, 5), BlockPos(96, 21, 3))
+
+        assertEquals(course, run(world, TestWorld.feet(92, 19, 9), course))
+    }
+
+    /** A room of 196 Level Parkour: a floor at y 18 walled in from x 1 to 11 east of [x] and z 1 to 11. */
+    private fun room(x: Int) = TestWorld().fill(x + 1, 18, 1, x + 11, 18, 11)
+        .fill(x + 1, 19, 1, x + 11, 23, 1).fill(x + 1, 19, 11, x + 11, 23, 11)
+        .fill(x + 1, 19, 1, x + 1, 23, 11).fill(x + 11, 19, 1, x + 11, 23, 11)
 }

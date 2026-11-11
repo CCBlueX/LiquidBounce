@@ -37,7 +37,9 @@ internal class AssistedJump {
      * player is has a [step], which [Leap] makes from its run-up.
      */
     class Target(val pos: BlockPos, val feet: Double, val jump: Jump, val step: Step? = null) {
-        val aim = Vec3(pos.x + 0.5, feet, pos.z + 0.5)
+        /** Where to turn to: the jump was simulated running there, which can be beside the middle of the block. */
+        val aim: Vec3
+            get() = jump.aim
     }
 
     var target: Target? = null
