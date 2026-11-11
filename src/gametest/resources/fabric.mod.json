@@ -26,6 +26,8 @@
       "net.ccbluex.liquidbounce.gametest.navigation.ParkourAssistGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSneakGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.WalkSwimGameTest",
+      "net.ccbluex.liquidbounce.gametest.navigation.WalkBlockedGameTest",
+      "net.ccbluex.liquidbounce.gametest.navigation.PlayerMotionGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.FlightNavigationGameTest",
       "net.ccbluex.liquidbounce.gametest.navigation.RideNavigationGameTest",
       "net.ccbluex.liquidbounce.gametest.EnchantCommandGameTest",
