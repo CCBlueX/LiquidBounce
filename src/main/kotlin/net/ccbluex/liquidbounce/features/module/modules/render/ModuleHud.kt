@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.client.gui.screens.DisconnectedScreen
 import net.minecraft.client.gui.screens.LevelLoadingScreen
 import net.minecraft.client.gui.screens.Screen
+import net.ccbluex.liquidbounce.features.session.SessionContext
 
 /**
  * Module HUD
@@ -53,7 +54,13 @@ import net.minecraft.client.gui.screens.Screen
 object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hide = true) {
 
     override val running
-        get() = this.enabled && !isDestructed
+        get() = this.enabled && !isDestructed && SessionContext.current.isActive
+
+    /**
+     * There is one HUD, and it shows the active session.
+     */
+    override val perSession
+        get() = false
     override val baseKey: String
         get() = "${ConfigSystem.KEY_PREFIX}.module.hud"
 

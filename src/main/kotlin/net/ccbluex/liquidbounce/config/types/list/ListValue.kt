@@ -70,7 +70,7 @@ open class ListValue<T : MutableCollection<E>, E>(
     }
 
     final override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val currValue = this.inner
+        val currValue = get()
         if (element is JsonArray) {
             val newItems = Array(element.size()) {
                 gson.fromJson(element[it], this.innerType)

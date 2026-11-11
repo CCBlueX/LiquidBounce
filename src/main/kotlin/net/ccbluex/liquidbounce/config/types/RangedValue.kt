@@ -37,12 +37,12 @@ class RangedValue<T : Any>(
 
     @Suppress("UNCHECKED_CAST")
     override fun setByString(string: String) {
-        if (this.inner is ClosedRange<*>) {
+        if (get() is ClosedRange<*>) {
             val split = string.split("..")
 
             require(split.size == 2)
 
-            val closedRange = this.inner as ClosedRange<*>
+            val closedRange = get() as ClosedRange<*>
 
             val newValue = when (closedRange.start) {
                 is Int -> split[0].toInt()..split[1].toInt()
@@ -54,7 +54,7 @@ class RangedValue<T : Any>(
 
             set(newValue as T)
         } else {
-            val translationFunction: (String) -> Any = when (this.inner) {
+            val translationFunction: (String) -> Any = when (get()) {
                 is Int -> String::toInt
                 is Long -> String::toLong
                 is Float -> String::toFloat

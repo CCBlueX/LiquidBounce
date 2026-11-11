@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module
 import com.mojang.renderpearl.api.device.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
@@ -34,19 +35,21 @@ import net.minecraft.client.player.LocalPlayer
  * However, we do not check for nulls here, because
  * we are sure that the client is in-game, if not
  * fiddling with the handler code.
+ *
+ * They are those of the session the running code belongs to, which is not always the one on screen.
  */
 @AddonApi
 interface MinecraftShortcuts {
     val mc: Minecraft
         get() = net.ccbluex.liquidbounce.utils.client.mc
     val player: LocalPlayer
-        get() = requireNotNull(mc.player) { "mc.player is null" }
+        get() = requireNotNull(SessionContext.current.player) { "The session has no player" }
     val world: ClientLevel
-        get() = requireNotNull(mc.level) { "mc.level is null" }
+        get() = requireNotNull(SessionContext.current.level) { "The session has no level" }
     val network: ClientPacketListener
-        get() = requireNotNull(mc.connection) { "mc.connection is null" }
+        get() = requireNotNull(SessionContext.current.connection) { "The session has no connection" }
     val interaction: MultiPlayerGameMode
-        get() = requireNotNull(mc.gameMode) { "mc.gameMode is null" }
+        get() = requireNotNull(SessionContext.current.gameMode) { "The session has no game mode" }
     val gpuDevice: GpuDevice
         get() = RenderSystem.getDevice()
 

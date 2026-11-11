@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.resolver.NoopAddressResolverGroup;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -30,6 +32,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
+import net.ccbluex.liquidbounce.features.session.ClientSession;
+import net.ccbluex.liquidbounce.features.session.SessionContext;
+import net.ccbluex.liquidbounce.interfaces.ConnectionAddition;
 import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Connection;
 import net.minecraft.network.PacketListener;
@@ -38,8 +43,10 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ServerboundPunchPacket;
 import net.minecraft.server.RunningOnDifferentThreadException;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -48,10 +55,60 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 @Mixin(Connection.class)
-public abstract class MixinConnection {
+public abstract class MixinConnection implements ConnectionAddition {
 
     @Shadow
     private static <T extends PacketListener> void genericsFtw(Packet<T> packet, PacketListener listener) {
+    }
+
+    @Unique
+    private @Nullable ClientSession liquid_bounce$session;
+
+    @Override
+    public @Nullable ClientSession liquid_bounce$getSession() {
+        return this.liquid_bounce$session;
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void joinSession(PacketFlow receiving, CallbackInfo ci) {
+        if (receiving == PacketFlow.CLIENTBOUND) {
+            this.liquid_bounce$session = SessionContext.getCurrent();
+        }
+    }
+
+    /**
+     * Packets are read on a network thread, which has to know whose packets they are.
+     */
+    @WrapMethod(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V")
+    private void readWithinSession(ChannelHandlerContext context, Packet<?> packet, Operation<Void> original) {
+        var session = this.liquid_bounce$session;
+        if (session == null) {
+            original.call(context, packet);
+            return;
+        }
+
+        var previous = SessionContext.enter(session);
+        try {
+            original.call(context, packet);
+        } finally {
+            SessionContext.exit(previous);
+        }
+    }
+
+    @WrapMethod(method = "send(Lnet/minecraft/network/protocol/Packet;)V")
+    private void sendWithinSession(Packet<?> packet, Operation<Void> original) {
+        var session = this.liquid_bounce$session;
+        if (session == null) {
+            original.call(packet);
+            return;
+        }
+
+        var previous = SessionContext.enter(session);
+        try {
+            original.call(packet);
+        } finally {
+            SessionContext.exit(previous);
+        }
     }
 
     /**

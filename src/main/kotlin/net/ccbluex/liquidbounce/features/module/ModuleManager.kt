@@ -267,6 +267,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
+import net.ccbluex.liquidbounce.features.session.ClientSession
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.clientStartDurationMs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -289,8 +291,8 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
     private class SmartBindMouseState(val pendingEnabled: Boolean, val pressTimestamp: Long)
 
-    private val smartKeyboardStates = Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>()
-    private val smartMouseStates = Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>()
+    private val smartKeyboardStates by sessionState { Reference2ObjectArrayMap<ClientModule, SmartBindKeyboardState>() }
+    private val smartMouseStates by sessionState { Reference2ObjectArrayMap<ClientModule, SmartBindMouseState>() }
 
     private fun modulesWithOwnBinds() = modules.filterNot(ClientModule::externalBind)
 
@@ -710,6 +712,23 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             addModule(module)
             module.walkKeyPath()
             module.verifyFallbackDescription()
+        }
+    }
+
+    /**
+     * Gives [session] its own copy of every module: the settings of the current session, with only the
+     * modules running that cannot do anything on a server.
+     */
+    internal fun copyTo(session: ClientSession) {
+        for (module in modules) {
+            if (!module.perSession) {
+                continue
+            }
+
+            module.giveTo(session)
+            if (module.category != ModuleCategories.RENDER) {
+                session.values[module.enabledValue] = false
+            }
         }
     }
 

@@ -19,22 +19,22 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.ReportedException
 import org.slf4j.LoggerFactory
 
 /**
- * Schedules tasks that must run inside [net.minecraft.client.Minecraft.tick].
+ * Schedules tasks that must run inside [net.minecraft.client.Minecraft.tick], the one of their session.
  */
 object TickLoopTaskExecutor {
 
     private val logger = LoggerFactory.getLogger("$CLIENT_NAME/TickLoopTaskExecutor")
 
-    @Volatile
-    var isInTickLoop = false
+    var isInTickLoop by sessionState { false }
         private set
 
-    private val pendingTasks = ArrayDeque<Runnable>()
+    private val pendingTasks by sessionState { ArrayDeque<Runnable>() }
 
     fun executeInTickLoop(runnable: Runnable) {
         if (isInTickLoop) {

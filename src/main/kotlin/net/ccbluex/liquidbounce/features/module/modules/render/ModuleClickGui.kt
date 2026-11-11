@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraf
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
+import net.ccbluex.liquidbounce.features.session.SessionContext
 
 /**
  * ClickGUI module
@@ -53,7 +54,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_
 object ModuleClickGui :
     ClientModule("ClickGUI", ModuleCategories.RENDER, bind = InputConstants.KEY_RSHIFT, disableActivation = true) {
 
-    override val running get() = true
+    override val running get() = SessionContext.current.isActive
+
+    override val perSession get() = false
 
     @Suppress("UnusedPrivateProperty")
     private val scale by float("Scale", 1f, 0.5f..2f).onChanged {

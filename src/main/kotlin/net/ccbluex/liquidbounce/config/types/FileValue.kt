@@ -73,7 +73,11 @@ class FileValue(
      *
      * If the file is not absolute, it is resolved relative to the [ConfigSystem.rootFolder].
      */
-    val absoluteFile: File get() = if (inner.isAbsolute) inner else ConfigSystem.rootFolder.resolve(inner)
+    val absoluteFile: File
+        get() {
+            val file = get()
+            return if (file.isAbsolute) file else ConfigSystem.rootFolder.resolve(file)
+        }
 
     companion {
         private fun normalizeToClientFolder(file: File): File {

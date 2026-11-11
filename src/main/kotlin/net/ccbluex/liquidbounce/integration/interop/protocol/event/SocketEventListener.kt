@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.event.ActiveSessionListener
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
-import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.eventName
 import net.ccbluex.liquidbounce.event.newEventHook
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 
-internal object SocketEventListener : EventListener {
+internal object SocketEventListener : ActiveSessionListener {
 
     // Not cached: add-ons can register events later.
     private val events

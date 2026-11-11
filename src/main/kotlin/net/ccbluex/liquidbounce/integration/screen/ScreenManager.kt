@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.screen
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.ActiveSessionListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
@@ -63,7 +63,7 @@ import com.mojang.blaze3d.platform.cursor.CursorType
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
-object ScreenManager : EventListener {
+object ScreenManager : ActiveSessionListener {
 
     private val logger = clientLogger("ScreenManager")
 

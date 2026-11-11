@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.Active
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screens.ConnectScreen
 import net.minecraft.client.gui.screens.TitleScreen
@@ -374,7 +375,8 @@ object ActiveServerList : EventListener {
         }
     }
 
-    override val running = true
+    override val running
+        get() = SessionContext.current.isActive
 
 }
 

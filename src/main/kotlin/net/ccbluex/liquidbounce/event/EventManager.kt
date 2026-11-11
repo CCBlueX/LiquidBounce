@@ -151,6 +151,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.annotations.Tag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
+import net.ccbluex.liquidbounce.features.session.ClientSession
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.ErrorScreen
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -402,6 +404,21 @@ object EventManager {
         }
     }
 
+    /**
+     * Drops the hooks that were waiting for an event of [session].
+     */
+    internal fun unregisterSession(session: ClientSession) {
+        for (hooks in tables.registry.values) {
+            for (hook in hooks.snapshot) {
+                @Suppress("UNCHECKED_CAST")
+                hook as EventHook<in Event>
+                if (hook.session === session) {
+                    hooks.remove(hook)
+                }
+            }
+        }
+    }
+
     fun unregisterAll() {
         tables.registry.values.forEach {
             it.clear()
@@ -426,6 +443,10 @@ object EventManager {
         for (eventHook in target.snapshot) {
             @Suppress("UNCHECKED_CAST")
             eventHook as EventHook<T>
+            val session = eventHook.session
+            if (session != null && session !== SessionContext.current) {
+                continue
+            }
             if (!eventHook.handlerClass.running) {
                 continue
             }

@@ -150,7 +150,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
             private suspend fun textureSupplier(username: String): Supplier<PlayerSkin> {
                 val profile = withContext(Dispatchers.IO) {
                     val uuid = lookupUuidByName(username) ?: UUIDUtil.createOfflinePlayerUUID(username)
-                    mc.services.sessionService.fetchProfile(uuid, false)?.profile
+                    mc.services().sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
 
@@ -161,11 +161,11 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
                 val uuid = lookupUuidByName(username.get()) ?: return
 
                 val profile = withContext(Dispatchers.IO) {
-                    mc.services.sessionService.fetchProfile(uuid, false)
+                    mc.services().sessionService.fetchProfile(uuid, false)
                 } ?: return
 
-                val texture = mc.services.sessionService.unpackTextures(
-                    mc.services.sessionService.getPackedTextures(profile.profile)
+                val texture = mc.services().sessionService.unpackTextures(
+                    mc.services().sessionService.getPackedTextures(profile.profile)
                 )
                 val skinTexture = texture.skin ?: return
                 val variant = if (skinTexture.getMetadata("model") == "slim") {

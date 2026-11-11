@@ -34,6 +34,8 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.session.ClientSession
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
@@ -220,15 +222,48 @@ open class Value<T : Any>(
     }
 
 
-    fun get() = inner
+    /**
+     * The value as the current session has it. Only settings of modules differ between sessions,
+     * see [giveTo]; everything else reads [inner] of the main session.
+     */
+    fun get(): T {
+        val session = SessionContext.current
+        if (session.isMain) {
+            return inner
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return session.values[this] as T? ?: inner
+    }
 
     fun set(t: T) {
         // Do nothing if value is the same
-        if (t == inner) {
+        if (t == get()) {
             return
         }
 
-        set(t) { inner = it }
+        set(t) { store(it) }
+    }
+
+    private fun store(value: T) {
+        val session = SessionContext.current
+        if (session.isMain || session.values.replace(this, value) == null) {
+            inner = value
+        }
+    }
+
+    /**
+     * Lets [session] keep its own copy of this value, starting from the one of the current session.
+     */
+    internal open fun giveTo(session: ClientSession) {
+        val value = get()
+
+        // Collections are changed in place by the settings holding them.
+        session.values[this] = if (value is MutableCollection<*> && value is Cloneable) {
+            value.javaClass.getMethod("clone").invoke(value)
+        } else {
+            value
+        }
     }
 
     fun set(t: T, apply: ValueChangedListener<T>) {
@@ -245,9 +280,11 @@ open class Value<T : Any>(
             apply.accept(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it.accept(currT) }
-            stateFlow.value = currT
+            if (SessionContext.current.isActive) {
+                stateFlow.value = currT
+            }
         }.onFailure { ex ->
-            logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
+            logger.error("Failed to set ${this.name} from ${get()} to $t", ex)
         }
     }
 
@@ -316,7 +353,7 @@ open class Value<T : Any>(
      */
     @Suppress("UNCHECKED_CAST")
     open fun deserializeFrom(gson: Gson, element: JsonElement) {
-        val currValue = this.inner
+        val currValue = get()
 
         var clazz: Class<*>? = currValue.javaClass
         var r: T? = null

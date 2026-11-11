@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CapeApi
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.ActiveSessionListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.clientLogger
@@ -37,7 +37,7 @@ import java.util.function.Consumer
 /**
  * A cape cosmetic manager
  */
-object CapeCosmeticsManager : EventListener {
+object CapeCosmeticsManager : ActiveSessionListener {
 
     private val logger = clientLogger("CapeCosmeticsManager")
 

@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.updateAndGet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -29,8 +27,14 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.features.session.sessionState
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * How a handler deals with an event that arrives while an earlier one is still being handled.
+ * Each session is handled on its own.
+ */
 sealed interface SuspendHandlerBehavior {
 
     fun <T : Event> EventListener.createEventHook(
@@ -73,9 +77,10 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val channelRef = atomic<Channel<T>?>(null)
+            val channelRefs = sessionState { AtomicReference<Channel<T>?>() }
 
             return handler(eventClass, priority) { event ->
+                val channelRef = channelRefs.get()
                 val channel = channelRef.updateAndGet { old ->
                     old ?: Channel<T>(
                         capacity = Channel.BUFFERED,
@@ -106,9 +111,9 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val jobRef = atomic<Job?>(null)
+            val jobRefs = sessionState { AtomicReference<Job?>() }
             return handler(eventClass, priority) { event ->
-                jobRef.getAndSet(eventListenerScope.launch(wrappedContext) {
+                jobRefs.get().getAndSet(eventListenerScope.launch(wrappedContext) {
                     handler(event)
                 })?.cancel()
             }
@@ -126,12 +131,13 @@ sealed interface SuspendHandlerBehavior {
             priority: Short,
             handler: SuspendableEventHandler<T>
         ): EventHook<T> {
-            val jobRef = atomic<Job?>(null)
+            val jobRefs = sessionState { AtomicReference<Job?>() }
             return handler(eventClass, priority) { event ->
+                val jobRef = jobRefs.get()
                 var newJob: Job? = null
 
                 while (true) {
-                    val currentJob = jobRef.value
+                    val currentJob = jobRef.get()
                     if (currentJob?.isActive == true) break
 
                     if (newJob == null) {

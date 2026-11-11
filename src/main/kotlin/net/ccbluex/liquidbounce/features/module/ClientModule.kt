@@ -36,6 +36,8 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.session.SessionContext
+import net.ccbluex.liquidbounce.features.session.sessionState
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.clientLogger
@@ -76,7 +78,16 @@ open class ClientModule @JvmOverloads constructor(
      * Note: This overwrites [ToggleableValueGroup] declaration of [running].
      */
     override val running: Boolean
-        get() = super<EventListener>.running && inGame && (enabled || notActivatable)
+        get() = super<EventListener>.running && inGame && (enabled || notActivatable) &&
+            (perSession || SessionContext.current.isActive)
+
+    /**
+     * Whether every session has its own settings and state of this module, so that it can be on for one
+     * account and off for another. Modules that only serve the window are shared and follow the active session.
+     */
+    @AddonApi
+    open val perSession: Boolean
+        get() = true
 
     @AddonApi
     val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYBOARD, bind, bindAction))
@@ -126,7 +137,7 @@ open class ClientModule @JvmOverloads constructor(
      * On client startup, the [onToggled] of enabled modules (in configuration) will be called when the player first
      * joins a world.
      */
-    internal var calledSinceStartup = false
+    internal var calledSinceStartup by sessionState { false }
 
     /**
      * Called when the module is registered in the module manager.

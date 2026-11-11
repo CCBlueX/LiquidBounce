@@ -24,6 +24,8 @@ import com.mojang.authlib.services.ServicesKeySet
 import com.mojang.blaze3d.platform.Window
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.device.GpuDevice
+import net.ccbluex.liquidbounce.features.session.ClientSession
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.ccbluex.liquidbounce.utils.kotlin.IntIntValuePair
 import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
@@ -42,14 +44,21 @@ val Window.scaledDimension
 
 val mc: Minecraft
     inline get() = Minecraft.getInstance()
+
+/**
+ * The session the running code belongs to. On the game thread its player and level are the ones in [mc];
+ * on any other thread only this is right while a background session is being ticked.
+ */
+val currentSession: ClientSession
+    inline get() = SessionContext.current
 val player: LocalPlayer
-    inline get() = mc.player!!
+    inline get() = currentSession.player!!
 val world: ClientLevel
-    inline get() = mc.level!!
+    inline get() = currentSession.level!!
 val network: ClientPacketListener
-    inline get() = mc.connection!!
+    inline get() = currentSession.connection!!
 val interaction: MultiPlayerGameMode
-    inline get() = mc.gameMode!!
+    inline get() = currentSession.gameMode!!
 val gpuDevice: GpuDevice
     inline get() = RenderSystem.getDevice()
 

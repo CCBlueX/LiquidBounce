@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.config.gson.adapter.LocalDateTimeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.MinecraftAccountAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.OffsetDateTimeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.OptionalAdapter
+import net.ccbluex.liquidbounce.config.gson.adapter.SessionValueAdapterFactory
 import net.ccbluex.liquidbounce.config.gson.adapter.RangeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.SimpleStringTypeAdapter
 import net.ccbluex.liquidbounce.config.gson.adapter.Vec2fAdapter
@@ -185,3 +186,4 @@ private fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeAdapter(MobEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
         .registerTypeAdapterFactory(OptionalAdapter)
+        .registerTypeAdapterFactory(SessionValueAdapterFactory)

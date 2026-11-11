@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.session.SessionContext;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -183,6 +184,23 @@ public abstract class MixinHud {
         EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
         if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_OVERLAY_MESSAGE)) {
+            ci.cancel();
+        }
+    }
+
+    /**
+     * Titles and the action bar of a background session never reach the window.
+     */
+    @Inject(method = {
+        "setOverlayMessage",
+        "setTitle",
+        "setSubtitle",
+        "setTimes",
+        "clearTitles",
+        "resetTitleTimes"
+    }, at = @At("HEAD"), cancellable = true)
+    private void skipBackgroundSession(CallbackInfo ci) {
+        if (SessionContext.isBackground()) {
             ci.cancel();
         }
     }

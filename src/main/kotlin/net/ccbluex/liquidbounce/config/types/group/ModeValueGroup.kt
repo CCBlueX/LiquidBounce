@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.features.session.ClientSession
+import net.ccbluex.liquidbounce.features.session.SessionContext
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import java.util.function.ToIntFunction
 
@@ -43,8 +45,35 @@ class ModeValueGroup<T : Mode>(
     var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set
     private var defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]
-    var activeMode: T = defaultMode
-        private set
+    private var mainMode: T = defaultMode
+
+    /**
+     * The mode the current session has selected.
+     */
+    var activeMode: T
+        get() {
+            val session = SessionContext.current
+            if (session.isMain) {
+                return mainMode
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            return session.activeModes[this] as T? ?: mainMode
+        }
+        private set(mode) {
+            val session = SessionContext.current
+            if (session.isMain || session.activeModes.replace(this, mode) == null) {
+                mainMode = mode
+            }
+        }
+
+    override fun giveTo(session: ClientSession) {
+        session.activeModes[this] = activeMode
+        super.giveTo(session)
+        for (mode in modes) {
+            mode.giveTo(session)
+        }
+    }
 
     init {
         for (choice in modes) {

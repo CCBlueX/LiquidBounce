@@ -19,12 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.account
 
-import com.mojang.authlib.minecraft.SessionService
 import net.minecraft.client.User
 import net.minecraft.client.multiplayer.ProfileKeyPairManager
+import net.minecraft.server.Services
 
+/**
+ * What the game needs to play as an account.
+ */
 data class SessionBundle(
     val session: User,
-    val sessionService: SessionService?,
+    val services: Services,
     val profileKeys: ProfileKeyPairManager
 )

@@ -292,7 +292,7 @@ private fun announce(key: String, severity: NotificationEvent.Severity) =
     notification("LiquidChat", translation("liquidbounce.liquidchat.$key"), severity)
 
 private suspend fun joinServer(serverId: String) = withContext(Dispatchers.IO) {
-    mc.services.sessionService.joinServer(mc.user.profileId, mc.user.accessToken, serverId)
+    mc.services().sessionService.joinServer(mc.user.profileId, mc.user.accessToken, serverId)
 }
 
 private fun chatGroupOf(channel: Channel) = when (channel) {
