@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.global
 import net.ccbluex.liquidbounce.config.types.Config
 import net.ccbluex.liquidbounce.features.blink.BlinkManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -40,9 +41,11 @@ object GlobalManager : Config("Settings") {
 
         // Feature settings
         tree(GlobalSettingsTarget)
+        tree(GlobalSettingsTeleport)
         tree(GlobalSettingsRichPresence)
         tree(GlobalSettingsClientChat)
         tree(GlobalSettingsAutoTranslate)
+        tree(GlobalSettingsViewModel)
 
         // Client settings
         tree(CommandManager.GlobalSettings)

@@ -77,9 +77,6 @@ internal fun formatDate(dateTime: String): String =
 
 internal suspend fun session(): OAuthSession = ClientAccountManager.accountOrException().takeSession()
 
-/**
- * The session when signed in. `null` means: use the public view.
- */
 internal suspend fun sessionOrNull(): OAuthSession? {
     if (ClientAccountManager.clientAccount == ClientAccount.EMPTY_ACCOUNT) {
         return null
@@ -103,13 +100,9 @@ internal suspend fun ownUserId(): String? {
     return account.userInformation?.userId
 }
 
-internal suspend fun CmdI18n.resolveConfig(input: String): MarketplaceItem =
+internal suspend fun CmdI18n.findConfig(input: String): MarketplaceItem =
     single(input, MarketplaceConfigs.find(input, sessionOrNull()))
 
-/**
- * The one item [input] names. A bare name that several authors use is refused with their
- * `author/name` forms, so a config never loads by accident.
- */
 internal fun CmdI18n.single(input: String, matches: List<MarketplaceItem>): MarketplaceItem = when (matches.size) {
     0 -> throw CommandException(t("error.notFound", variable(input)))
     1 -> matches.single()
@@ -134,7 +127,7 @@ internal suspend fun CmdI18n.requireOwnTracked() {
 }
 
 /**
- * Owner, anyone the API lets edit, or anyone signed in once the owner opened a public config to the community.
+ * The owner, anyone the API lets edit, or anyone signed in once the owner opened a public config to the community.
  */
 internal fun MarketplaceItem.isEditableBy(userId: String?): Boolean = when {
     userId == null || type != MarketplaceItemType.CONFIG -> false
@@ -156,13 +149,12 @@ internal suspend fun CmdI18n.requireEditableTracked(): OAuthSession {
     return session
 }
 
-internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility =
-    if (input == null) {
-        MarketplaceItemVisibility.PUBLIC
-    } else {
-        MarketplaceItemVisibility.entries.find { it.name.equals(input, ignoreCase = true) }
-            ?: throw CommandException(t("error.invalidVisibility", variable(input)))
-    }
+internal fun CmdI18n.parseVisibility(input: String?): MarketplaceItemVisibility {
+    input ?: return MarketplaceItemVisibility.PUBLIC
+
+    return MarketplaceItemVisibility.entries.find { it.name.equals(input, ignoreCase = true) }
+        ?: throw CommandException(t("error.invalidVisibility", variable(input)))
+}
 
 internal suspend fun CmdI18n.tagIds(names: Collection<String>): List<Int> {
     if (names.isEmpty()) {

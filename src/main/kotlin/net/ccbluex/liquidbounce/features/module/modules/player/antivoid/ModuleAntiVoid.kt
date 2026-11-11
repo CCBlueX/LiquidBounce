@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.Ant
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidFlagMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidUseItemMode
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -139,7 +139,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
         val collisions = world.getBlockCollisions(player, boundingBox)
         val hasCollision = collisions.allEmpty()
         debugGeometry("BoundingBox") {
-            ModuleDebug.DebuggedBox(
+            DebuggedBox(
                 boundingBox, if (hasCollision) {
                     Color4b.RED
                 } else {

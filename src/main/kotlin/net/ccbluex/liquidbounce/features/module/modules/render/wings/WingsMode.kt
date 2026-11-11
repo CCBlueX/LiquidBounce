@@ -50,6 +50,8 @@ abstract class WingsMode(name: String) : Mode(name) {
         val distance by int("Distance", 64, 8..512, "blocks")
     }
 
+    private val friends = tree(FriendsOptions())
+
     protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float)
 
     @Suppress("unused")
@@ -61,9 +63,9 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 val isMe = entity == player
                 val isFriend =
-                    FriendsOptions().friendView
+                    friends.friendView
                         && FriendManager.isFriend(entity)
-                        && player.distanceTo(entity) <= FriendsOptions().distance
+                        && player.closerThan(entity, friends.distance.toDouble())
 
                 val shouldRender = when {
                     isMe -> !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled

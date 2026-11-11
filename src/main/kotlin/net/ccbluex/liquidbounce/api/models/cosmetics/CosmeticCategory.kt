@@ -28,4 +28,6 @@ enum class CosmeticCategory {
     DEADMAU5_EARS,
     @SerializedName("Dinnerbone")
     DINNERBONE,
+    @SerializedName("Elytra")
+    ELYTRA,
 }

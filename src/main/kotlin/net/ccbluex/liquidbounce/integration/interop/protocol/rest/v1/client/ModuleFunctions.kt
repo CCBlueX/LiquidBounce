@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
@@ -100,7 +101,7 @@ private fun Route.putSettings() = put {
         ConfigSystem.deserializeValueGroup(module, request)
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/modules/panic
@@ -123,7 +124,7 @@ private fun Route.postPanic() = post("/panic") {
         }
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 @JvmRecord
@@ -143,7 +144,7 @@ private data class ModuleRequest(val name: String) {
                 logger.error("Failed to toggle module ${this@ModuleRequest.name}", e)
             }
         }
-        call.respond(io.ktor.http.HttpStatusCode.NoContent)
+        call.respond(HttpStatusCode.NoContent)
     }
 }
 

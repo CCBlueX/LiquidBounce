@@ -34,23 +34,23 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedPiercingAttack
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc.SpeedBlocksMC
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexGround
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylexLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.blocksmc.SpeedBlocksMC20241123
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrim2373
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylex20241117Ground
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hylex.SpeedHylex20241117
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14Fast
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrix7
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.cubecraft.SpeedCubeCraft20240630
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartanV4043FastFall
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcanGround286
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelBHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286Ground
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20231212
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixel20250125
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -76,28 +76,28 @@ object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
         SpeedVerusB3882(modeValueGroup),
 
-        SpeedHypixelBHop(modeValueGroup),
-        SpeedHypixelLowHop(modeValueGroup),
+        SpeedHypixel20231212(modeValueGroup),
+        SpeedHypixel20250125(modeValueGroup),
 
         SpeedSpartanV4043(modeValueGroup),
         SpeedSpartanV4043FastFall(modeValueGroup),
 
-        SpeedSentinelDamage(modeValueGroup),
+        SpeedCubeCraft20240630(modeValueGroup),
 
         SpeedVulcan286(modeValueGroup),
         SpeedVulcan288(modeValueGroup),
-        SpeedVulcanGround286(modeValueGroup),
-        SpeedGrimCollide(modeValueGroup),
+        SpeedVulcan286Ground(modeValueGroup),
+        SpeedGrim2373(modeValueGroup),
 
         SpeedNCP(modeValueGroup),
 
         SpeedIntave14(modeValueGroup),
         SpeedIntave14Fast(modeValueGroup),
 
-        SpeedHylexLowHop(modeValueGroup),
-        SpeedHylexGround(modeValueGroup),
+        SpeedHylex20241117(modeValueGroup),
+        SpeedHylex20241117Ground(modeValueGroup),
 
-        SpeedBlocksMC(modeValueGroup),
+        SpeedBlocksMC20241123(modeValueGroup),
 
         SpeedMatrix7(modeValueGroup)
     )

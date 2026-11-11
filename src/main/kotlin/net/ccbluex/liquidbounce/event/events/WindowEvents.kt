@@ -59,7 +59,7 @@ class MouseButtonEvent(
 }
 
 @Tag("mouseScroll")
-class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
+class MouseScrollEvent(val horizontal: Double, val vertical: Double) : CancellableEvent()
 
 @Tag("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()

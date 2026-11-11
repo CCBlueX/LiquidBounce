@@ -24,6 +24,8 @@ import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -41,9 +43,27 @@ object PlayerSimulationCache: EventListener {
     private val otherPlayerCache = ConcurrentHashMap<Player, SimulatedPlayerCache>()
     private var localPlayerCache: SimulatedPlayerCache? = null
 
+    /**
+     * The local player is between the start of its movement tick and the end of its tick.
+     * A simulation made now has to finish this tick instead of running a whole one.
+     */
+    var isLocalPlayerMoving = false
+        private set
+
     @Suppress("unused")
     private val gameTickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         this.otherPlayerCache.clear()
+        this.isLocalPlayerMoving = false
+    }
+
+    @Suppress("unused")
+    private val movementTickHandler = handler<PlayerMovementTickEvent>(priority = FIRST_PRIORITY) {
+        this.isLocalPlayerMoving = true
+    }
+
+    @Suppress("unused")
+    private val postTickHandler = handler<PlayerPostTickEvent>(priority = FIRST_PRIORITY) {
+        this.isLocalPlayerMoving = false
     }
 
     @Suppress("unused")
@@ -193,7 +213,7 @@ data class SimulatedPlayerSnapshot(
         s.pos,
         s.fallDistance,
         s.deltaMovement,
-        s.onGround,
+        s.onGround(),
         s.clipLedged
     )
 }

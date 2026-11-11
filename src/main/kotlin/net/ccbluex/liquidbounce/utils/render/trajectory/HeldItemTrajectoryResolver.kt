@@ -69,7 +69,7 @@ object HeldItemTrajectoryResolver {
                 val trajectoryInfo = TrajectoryInfo.bowWithUsageDuration(useTime) ?: return null
                 singleShot(
                     icon = stack,
-                    trajectoryDescriptor = TrajectoryDescriptor(trajectoryInfo, TrajectoryType.Arrow),
+                    trajectoryDescriptor = TrajectoryDescriptor(trajectoryInfo, TrajectoryType.ARROW),
                     colorSource = player.getProjectile(stack),
                 )
             }
