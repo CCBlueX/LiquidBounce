@@ -20,23 +20,25 @@ package net.ccbluex.liquidbounce.features.client.view
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.takeWhile
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.minecraft.client.renderer.extract.LevelExtractor
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Live views of the background clients, drawn while someone watches them.
+ * Live views of the background clients, drawn while someone keeps asking for them.
  */
 object ClientViews {
 
     private const val FRAME_INTERVAL_NANOS = 100_000_000L
 
     /**
-     * A view outlives its last stream a little, so that a page reload does not compile the chunks again.
+     * How long one request keeps a view drawn.
+     */
+    private const val WATCHED_NANOS = 1_000_000_000L
+
+    /**
+     * A view outlives its last request a little, so that a page reload does not compile the chunks again.
      */
     private const val IDLE_NANOS = 5_000_000_000L
 
@@ -47,42 +49,46 @@ object ClientViews {
     private val extractors = ReferenceOpenHashSet<LevelExtractor>()
 
     /**
-     * Runs [block] with the JPEG frames of what [client] sees. Frames are drawn as long as a block runs.
+     * The latest JPEG of what [client] sees, null until one is drawn. Asking keeps the view drawn for a second.
+     *
+     * Pages ask again and again instead of keeping a stream open: Chromium allows six connections per host,
+     * and a stream for every view would leave none for the rest of the theme.
      */
-    suspend fun <T> watch(client: Client, block: suspend (Flow<ByteArray>) -> T): T {
-        val frames = frames.compute(client) { _, frames ->
-            (frames ?: ClientViewFrames()).also { it.watchers++ }
-        }!!
-
-        try {
-            return block(frames.latest.filterNotNull().takeWhile { it !== ClientViewFrames.END })
-        } finally {
-            this.frames.computeIfPresent(client) { _, frames ->
-                frames.watchers--
-                frames.leftAt = System.nanoTime()
-                frames
-            }
-        }
+    fun latestFrame(client: Client): ByteArray? {
+        val frames = frames.computeIfAbsent(client) { ClientViewFrames() }
+        frames.askedAt = System.nanoTime()
+        return frames.latest
     }
 
     /**
-     * Draws the view of [client] if it is watched and due. Runs within [client].
+     * Draws the watched view that waited longest, if it is due. Only one per frame: the uniforms of the renderers
+     * live in rings of three buffers, which one frame must not go round, and the window takes one of them.
      */
-    internal fun render(client: Client) {
-        val frames = frames.computeIfPresent(client) { _, frames ->
-            frames.takeIf { it.watchers > 0 || System.nanoTime() - it.leftAt < IDLE_NANOS }
-        }
-        if (frames == null) {
-            close(client)
-            return
+    internal fun renderNext() {
+        val now = System.nanoTime()
+        var next: Client? = null
+        var nextAt = Long.MAX_VALUE
+        for ((client, frames) in frames) {
+            val asked = now - frames.askedAt
+            if (asked >= IDLE_NANOS) {
+                this.frames.remove(client, frames)
+                close(client)
+                continue
+            }
+            if (asked >= WATCHED_NANOS || client.isActive) {
+                continue
+            }
+
+            val renderedAt = views[client]?.renderedAt ?: 0L
+            if (now - renderedAt >= FRAME_INTERVAL_NANOS && renderedAt < nextAt) {
+                next = client
+                nextAt = renderedAt
+            }
         }
 
-        if (frames.watchers == 0) {
-            return
-        }
-
-        val view = views.getOrPut(client) { ClientView(client, frames) }
-        if (System.nanoTime() - view.renderedAt >= FRAME_INTERVAL_NANOS) {
+        val client = next ?: return
+        val view = views.getOrPut(client) { ClientView(client, frames[client] ?: return) }
+        ClientContext.within(client) {
             view.fit()
             view.extractor?.let(extractors::add)
             view.render()
@@ -99,11 +105,11 @@ object ClientViews {
     }
 
     /**
-     * Ends the streams of [client], which is gone.
+     * Drops the view and frames of [client], which is gone.
      */
     internal fun forget(client: Client) {
         close(client)
-        frames.remove(client)?.latest?.value = ClientViewFrames.END
+        frames.remove(client)
     }
 
     @JvmStatic

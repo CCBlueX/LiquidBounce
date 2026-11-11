@@ -134,9 +134,10 @@ object ClientManager {
                 repeat(client.dueTicks()) {
                     BackgroundGame.tick()
                 }
-                ClientViews.render(client)
             }
         }
+
+        ClientViews.renderNext()
 
         ClientOverview.announce()
     }

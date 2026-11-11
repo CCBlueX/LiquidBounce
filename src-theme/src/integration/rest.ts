@@ -274,8 +274,12 @@ export async function openClient(account: number, address?: string): Promise<str
  * A live view of what the client sees, for an image. Clients only draw it while someone looks,
  * so the image has to go once it is out of sight.
  */
-export function clientViewUrl(id: number): string {
-    return `${API_BASE}/client/clients/${id}/view`;
+/**
+ * The latest frame of what a background client sees, null while there is none.
+ */
+export async function getClientView(id: number): Promise<Blob | null> {
+    const response = await fetch(`${API_BASE}/client/clients/${id}/view`, {cache: "no-store"});
+    return response.status === 200 ? await response.blob() : null;
 }
 
 export async function activateClient(id: number) {

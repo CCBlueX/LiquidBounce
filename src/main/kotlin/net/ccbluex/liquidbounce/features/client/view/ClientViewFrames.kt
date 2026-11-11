@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.client.view
 
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executors
@@ -27,25 +26,21 @@ import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 
 /**
- * The JPEG frames of one client's view, and how many streams are showing them.
+ * The JPEG frames of one client's view, and when someone last asked for one.
  */
 internal class ClientViewFrames {
 
-    /**
-     * The latest frame, [END] once the client is gone.
-     */
-    val latest = MutableStateFlow<ByteArray?>(null)
+    @Volatile
+    var latest: ByteArray? = null
+        private set
 
     @Volatile
-    var watchers = 0
-
-    @Volatile
-    var leftAt = 0L
+    var askedAt = System.nanoTime()
 
     fun encode(image: BufferedImage, done: () -> Unit) {
         encoder.execute {
             try {
-                latest.value = jpeg(image)
+                latest = jpeg(image)
             } finally {
                 done()
             }
@@ -53,8 +48,6 @@ internal class ClientViewFrames {
     }
 
     companion object {
-
-        val END = ByteArray(0)
 
         private const val QUALITY = 0.75f
 

@@ -25,7 +25,6 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -34,6 +33,7 @@ import javax.imageio.ImageIO
 
 private const val JOIN_TIMEOUT_TICKS = 30 * 20
 private const val VIEW_TIMEOUT_TICKS = 60 * 20
+private const val FRAME_INTERVAL_MILLIS = 100L
 
 /**
  * A background client's view shows its own world: it stands in front of a red wall, the window's client does not.
@@ -90,11 +90,10 @@ private class Rgb(val red: Int, val green: Int, val blue: Int) {
 }
 
 /**
- * Reads the stream of [id]'s view on a thread of its own, the game only runs while the test thread waits for it.
+ * Asks for frames of [id]'s view on a thread of its own, like a theme page does. The game only runs while the
+ * test thread waits for it.
  */
 private class FrameStream(id: Int) : AutoCloseable {
-
-    private val input: InputStream
 
     @Volatile
     var latest: Rgb? = null
@@ -108,34 +107,31 @@ private class FrameStream(id: Int) : AutoCloseable {
     var lastJpeg: ByteArray? = null
         private set
 
+    @Volatile
+    private var running = true
+
     init {
-        val response = HttpClient.newHttpClient().send(viewRequest(id), HttpResponse.BodyHandlers.ofInputStream())
-        check(response.statusCode() == 200) { "The view answered ${response.statusCode()}" }
-        check(response.headers().firstValue("Content-Encoding").isEmpty) { "The view stream got compressed" }
-        input = response.body()
+        val http = HttpClient.newHttpClient()
         Thread({
-            runCatching {
-                while (true) {
-                    latest = next() ?: break
+            while (running) {
+                val response = http.send(viewRequest(id), HttpResponse.BodyHandlers.ofByteArray())
+                when (response.statusCode()) {
+                    200 -> {
+                        check(response.headers().firstValue("Content-Encoding").isEmpty) { "The view got compressed" }
+                        lastJpeg = response.body()
+                        latest = averageOf(response.body())
+                        count++
+                    }
+
+                    204 -> Unit
+                    else -> error("The view answered ${response.statusCode()}")
                 }
+                Thread.sleep(FRAME_INTERVAL_MILLIS)
             }
-        }, "View stream reader").apply { isDaemon = true }.start()
+        }, "View reader").apply { isDaemon = true }.start()
     }
 
-    private fun next(): Rgb? {
-        var length = -1
-        while (true) {
-            val line = readLine() ?: return null
-            if (line.startsWith("Content-Length:", ignoreCase = true)) {
-                length = line.substringAfter(':').trim().toInt()
-            } else if (line.isEmpty() && length >= 0) {
-                break
-            }
-        }
-
-        val jpeg = input.readNBytes(length)
-        lastJpeg = jpeg
-        count++
+    private fun averageOf(jpeg: ByteArray): Rgb {
         val image = ImageIO.read(ByteArrayInputStream(jpeg))
         var red = 0L
         var green = 0L
@@ -152,18 +148,9 @@ private class FrameStream(id: Int) : AutoCloseable {
         return Rgb((red / pixels).toInt(), (green / pixels).toInt(), (blue / pixels).toInt())
     }
 
-    private fun readLine(): String? {
-        val line = StringBuilder()
-        while (true) {
-            when (val byte = input.read()) {
-                -1 -> return null
-                '\n'.code -> return line.toString().trimEnd('\r')
-                else -> line.append(byte.toChar())
-            }
-        }
+    override fun close() {
+        running = false
     }
-
-    override fun close() = input.close()
 
 }
 

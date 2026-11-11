@@ -262,7 +262,7 @@ internal class ClientView(private val client: Client, private val frames: Client
     }
 
     private companion object {
-        const val HEIGHT = 180
+        const val HEIGHT = 270
         const val RENDER_DISTANCE = 4
         const val READBACKS = 2
         val CLEAR_COLOR = Vector4f(0f, 0f, 0f, 1f)

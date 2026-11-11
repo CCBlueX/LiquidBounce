@@ -20,20 +20,20 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode.Companion.NoContent
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondBytesWriter
+import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import io.ktor.utils.io.writeByteArray
-import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.features.account.AccountManager
@@ -50,8 +50,6 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress
 
 private const val CLIENT_PARAMETER = "client"
 
-private const val BOUNDARY = "frame"
-private val MJPEG = ContentType.parse("multipart/x-mixed-replace; boundary=$BOUNDARY")
 
 /**
  * Runs [block] for the client the request names with `?client=<id>`, or for the active one without it.
@@ -102,15 +100,12 @@ private fun Route.getClientView() = get("/{id}/view") {
     val client = call.client().takeUnless { it.isActive }
         ?: call.notFound(call.request.path(), "The active client has no view, it is the window")
 
-    call.respondBytesWriter(MJPEG) {
-        ClientViews.watch(client) { frames ->
-            frames.collect { jpeg ->
-                writeStringUtf8("--$BOUNDARY\r\nContent-Type: image/jpeg\r\nContent-Length: ${jpeg.size}\r\n\r\n")
-                writeByteArray(jpeg)
-                writeStringUtf8("\r\n")
-                flush()
-            }
-        }
+    val jpeg = ClientViews.latestFrame(client)
+    if (jpeg == null) {
+        call.respond(NoContent)
+    } else {
+        call.response.header(HttpHeaders.CacheControl, "no-store")
+        call.respondBytes(jpeg, ContentType.Image.JPEG)
     }
 }
 
