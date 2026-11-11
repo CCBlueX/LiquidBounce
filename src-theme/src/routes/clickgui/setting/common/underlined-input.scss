@@ -1,0 +1,21 @@
+@mixin underlined-input($height: 28px) {
+  height: $height;
+  padding: 0 8px;
+  border: none;
+  border-bottom: 2px solid var(--clickgui-control-border-color);
+  border-radius: 0;
+  background-color: var(--clickgui-input-background-color);
+  color: var(--clickgui-text-color);
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  transition: ease border-color .15s;
+
+  &::placeholder {
+    color: var(--clickgui-text-muted-color);
+  }
+
+  &:focus {
+    border-bottom-color: var(--accent-color);
+  }
+}

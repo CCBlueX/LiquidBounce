@@ -1,5 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher, tick} from "svelte";
+    import {cubicOut} from "svelte/easing";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {escapeLayer} from "../../../../integration/escape";
 
@@ -9,9 +10,15 @@
 
     const dispatch = createEventDispatcher();
 
+    const WINDOW_MARGIN = 8;
+    const MAX_OPTIONS_HEIGHT = 300;
+
     let expanded = false;
     let dropdownHead: HTMLElement;
+    let optionsElement: HTMLElement | undefined;
     let optionsStyle = "";
+
+    $: label = (text: string) => $spaceSeperatedNames ? convertToSpacedString(text) : text;
 
     function portal(node: HTMLElement) {
         document.body.appendChild(node);
@@ -21,8 +28,19 @@
         };
     }
 
+    function isInside(target: EventTarget | null) {
+        return dropdownHead.contains(target as Node) || (optionsElement?.contains(target as Node) ?? false);
+    }
+
     function windowClickHide(e: MouseEvent) {
-        if (!dropdownHead.contains(e.target as Node)) {
+        if (!isInside(e.target)) {
+            expanded = false;
+        }
+    }
+
+    // The options scroll by themselves when there are many
+    function windowScrollHide(e: Event) {
+        if (!optionsElement?.contains(e.target as Node)) {
             expanded = false;
         }
     }
@@ -50,10 +68,12 @@
 
         const bounds = dropdownHead.getBoundingClientRect();
         const scale = bounds.width / dropdownHead.offsetWidth;
+        const roomBelow = (window.innerHeight - bounds.bottom - WINDOW_MARGIN) / scale;
         optionsStyle = [
             `left: ${bounds.left}px`,
             `top: ${bounds.bottom}px`,
             `width: ${dropdownHead.offsetWidth}px`,
+            `max-height: ${Math.max(Math.min(roomBelow, MAX_OPTIONS_HEIGHT), 0)}px`,
             `--dropdown-scale: ${scale}`
         ].join(";");
     }
@@ -64,113 +84,170 @@
 
     const layer = escapeLayer(closeDropdown);
     $: layer.setOpen(expanded);
+
+    // The transform already carries the scale of the ClickGUI, so the way down goes through `translate`
+    function drop(_: HTMLElement) {
+        return {
+            duration: 120,
+            easing: cubicOut,
+            css: (t: number) => `opacity: ${t}; translate: 0 ${(t - 1) * 4}px;`,
+        };
+    }
 </script>
 
 <svelte:window
         on:click={windowClickHide}
         on:resize={updateOptionsPosition}
-        on:scroll|capture={closeDropdown}
+        on:scroll|capture={windowScrollHide}
 />
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="dropdown" class:expanded>
-    <div class="head" bind:this={dropdownHead} on:click={toggleExpanded}>
+    <button
+            type="button"
+            class="head"
+            aria-haspopup="listbox"
+            aria-expanded={expanded}
+            bind:this={dropdownHead}
+            on:click={toggleExpanded}
+    >
         {#if name !== null}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(name) : name}
-                &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
-        {:else}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="name">{label(name)}</span>
         {/if}
-    </div>
+        <span class="value">{label(value)}</span>
+        <span class="chevron"></span>
+    </button>
 
     {#if expanded}
-        <div class="options" style={optionsStyle} use:portal>
+        <div class="options" role="listbox" style={optionsStyle} bind:this={optionsElement} use:portal in:drop>
             {#each options as o (o)}
-                <div
+                <button
+                        type="button"
+                        role="option"
+                        aria-selected={o === value}
                         class="option"
                         class:active={o === value}
                         on:click={() => updateValue(o)}
                 >
-                    {$spaceSeperatedNames ? convertToSpacedString(o) : o}
-                </div>
+                    {label(o)}
+                </button>
             {/each}
         </div>
     {/if}
 </div>
 
 <style lang="scss">
-  @use "../../icon-settings-expand" as *;
-
   .dropdown {
     position: relative;
-
-    &.expanded {
-      .text::after {
-        transform: translateY(-50%) rotate(0);
-        opacity: 1;
-      }
-
-      .head {
-        border-radius: 3px 3px 0 0;
-      }
-    }
+    // Grows only where it has a line of its own
+    flex: 1 1 170px;
+    width: 170px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .head {
-    background-color: var(--clickgui-dropdown-trigger-background-color);
-    padding: 6px 10px;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    position: relative;
-    border-radius: 3px;
-    transition: ease border-radius .2s;
+    gap: 6px;
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border: none;
+    border-bottom: 2px solid var(--clickgui-control-border-color);
+    background-color: var(--clickgui-input-background-color);
+    color: var(--clickgui-text-color);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: ease border-color .15s;
 
-    .text {
-      font-weight: 500;
-      color: var(--clickgui-text-color);
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-right: 20px;
+    &:hover, &:focus-visible {
+      border-bottom-color: var(--clickgui-text-muted-color);
     }
+  }
 
-    .text::after {
-      @include icon-settings-expand();
-    }
+  .expanded .head {
+    border-bottom-color: var(--accent-color);
+  }
+
+  .name {
+    flex: none;
+    color: var(--clickgui-text-muted-color);
+  }
+
+  .value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chevron {
+    flex: none;
+    width: 9px;
+    height: 6px;
+    margin-left: auto;
+    background: url("/img/clickgui/icon-settings-expand.svg") center / contain no-repeat;
+    opacity: .8;
+    transition: ease transform .15s;
+  }
+
+  .expanded .chevron {
+    transform: rotate(180deg);
   }
 
   .options {
     --dropdown-scale: 1;
 
-    padding: 6px 10px;
+    position: fixed;
+    z-index: 999999;
+    box-sizing: border-box;
+    padding: 3px 0;
+    overflow-y: auto;
     background-color: var(--clickgui-dropdown-background-color);
-    border: solid 1px var(--clickgui-dropdown-border-color);
+    border: 1px solid var(--clickgui-divider-color);
     border-top: none;
     border-radius: 0 0 3px 3px;
-    z-index: 999999;
-    position: fixed;
-    box-sizing: border-box;
+    box-shadow: 0 6px 14px var(--clickgui-panel-shadow-color);
     transform: scale(var(--dropdown-scale));
     transform-origin: top left;
 
-    .option {
-      color: var(--clickgui-dropdown-option-color);
-      font-weight: 500;
-      font-size: 12px;
-      padding: 5px 0;
-      cursor: pointer;
-      text-align: center;
-      transition: ease color 0.2s;
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
 
-      &:hover {
-        color: var(--clickgui-dropdown-option-hover-color);
-      }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 3px;
+      background-color: var(--clickgui-control-border-color);
+    }
+  }
 
-      &.active {
-        color: var(--clickgui-dropdown-option-selected-color);
-      }
+  .option {
+    display: block;
+    width: 100%;
+    height: 28px;
+    padding: 0 8px;
+    border: none;
+    background: none;
+    color: var(--clickgui-dropdown-option-color);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: ease color .15s, ease background-color .15s;
+
+    &:hover, &:focus-visible {
+      color: var(--clickgui-dropdown-option-hover-color);
+      background-color: var(--clickgui-control-hover-background-color);
+    }
+
+    &.active {
+      color: var(--clickgui-dropdown-option-selected-color);
     }
   }
 </style>

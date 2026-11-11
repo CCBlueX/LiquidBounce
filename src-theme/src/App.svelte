@@ -17,7 +17,7 @@
     import Connecting from "./routes/menu/connecting/Connecting.svelte";
     import BasicMenu from "./routes/menu/basicmenu/BasicMenu.svelte";
     import Browser from "./routes/browser/Browser.svelte";
-    import TabbedClickGui from "./routes/clickgui/TabbedClickGui.svelte";
+    import ClickGui from "./routes/clickgui/ClickGui.svelte";
     import {intToRgba, rgbaToHex} from "./integration/util";
     import type {ThemeColorChangeEvent} from "./integration/events";
     import Menu from "./routes/menu/common/Menu.svelte";
@@ -33,7 +33,7 @@
     };
 
     const routes = {
-        "/clickgui": TabbedClickGui,
+        "/clickgui": ClickGui,
         "/hud": Hud,
         "/inventory": Inventory,
         "/none": None,

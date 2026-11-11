@@ -110,6 +110,13 @@
         -webkit-overflow-scrolling:touch;
         display: block;
     }
+    svelte-virtual-list-viewport::-webkit-scrollbar {
+        width: 6px;
+    }
+    svelte-virtual-list-viewport::-webkit-scrollbar-thumb {
+        border-radius: 3px;
+        background-color: var(--clickgui-control-border-color);
+    }
     svelte-virtual-list-contents, svelte-virtual-list-row {
         display: block;
     }

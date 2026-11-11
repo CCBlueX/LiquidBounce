@@ -1,15 +1,16 @@
 <script lang="ts">
     import type {ListSetting, ModuleSetting} from "../../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import {createEventDispatcher} from "svelte";
-    import SettingButton from "../common/SettingButton.svelte";
     import RemovableItem from "../common/RemovableItem.svelte";
+    import SettingRow from "../common/SettingRow.svelte";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as ListSetting;
 
     const dispatch = createEventDispatcher();
+
+    let newEntry = "";
 
     function handleChange() {
         setting = {...cSetting};
@@ -22,60 +23,87 @@
         handleChange();
     }
 
-    function addValueIndex() {
-        cSetting.value = ["", ...cSetting.value];
+    function addEntry() {
+        if (newEntry === "") {
+            return;
+        }
+
+        cSetting.value = [...cSetting.value, newEntry];
+        newEntry = "";
         handleChange();
     }
 </script>
 
-<div class="setting">
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <SettingButton value="Add value" on:click={addValueIndex} />
-    {#if cSetting.value.length > 0}
-        <div class="inputs">
-            {#each cSetting.value as _, index}
-                <RemovableItem on:remove={() => removeValueIndex(index)}>
-                    <input type="text" class="value" spellcheck="false" placeholder={setting.name} bind:value={cSetting.value[index]}
-                           on:input={handleChange}>
-                </RemovableItem>
-            {/each}
-        </div>
-    {/if}
-</div>
+<SettingRow {setting}>
+    <span class="count">{cSetting.value.length} {cSetting.value.length === 1 ? "entry" : "entries"}</span>
+
+    <svelte:fragment slot="below">
+        {#each cSetting.value as _, index}
+            <RemovableItem on:remove={() => removeValueIndex(index)}>
+                <input type="text" class="value" spellcheck="false" aria-label="Entry {index + 1}"
+                       bind:value={cSetting.value[index]}
+                       on:input={handleChange}>
+            </RemovableItem>
+        {/each}
+        <form class="add" on:submit|preventDefault={addEntry}>
+            <input type="text" class="new-entry" spellcheck="false" placeholder="Add entry" aria-label="Add entry"
+                   bind:value={newEntry}>
+            {#if newEntry !== ""}
+                <button type="submit" class="confirm">Add</button>
+            {/if}
+        </form>
+    </svelte:fragment>
+</SettingRow>
 
 <style lang="scss">
-  .setting {
-    padding: 7px 0;
-  }
+  @use "../common/underlined-input" as *;
 
-  .inputs {
-    display: flex;
-    flex-direction: column;
-    row-gap: 10px;
-    margin-top: 5px;
-  }
-
-  .name {
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    margin-bottom: 5px;
+  .count {
+    font-size: 11px;
+    color: var(--clickgui-text-muted-color);
+    white-space: nowrap;
   }
 
   .value {
-    width: 100%;
-    background-color: var(--clickgui-input-background-color);
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--clickgui-text-color);
+    flex: 1;
+    min-width: 0;
+    height: 28px;
     border: none;
-    border-bottom: solid 2px var(--clickgui-input-border-color);
-    padding: 6px;
-    border-radius: 3px;
-    transition: ease border-color .2s;
+    background: none;
+    color: var(--clickgui-text-color);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+  }
 
-    &::-webkit-scrollbar {
-      background-color: transparent;
+  .add {
+    position: relative;
+    padding: 1px 0 8px;
+  }
+
+  .new-entry {
+    @include underlined-input;
+    width: 100%;
+  }
+
+  .confirm {
+    position: absolute;
+    top: 5px;
+    right: 4px;
+    height: 20px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 3px;
+    background: none;
+    color: var(--accent-color);
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: ease background-color .15s;
+
+    &:hover, &:focus-visible {
+      background-color: var(--clickgui-control-hover-background-color);
     }
   }
 </style>

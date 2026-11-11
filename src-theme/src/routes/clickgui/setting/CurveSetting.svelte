@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {CurveSetting, ModuleSetting, Vec2} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
     import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import {
         Chart,
@@ -12,20 +12,12 @@
         ScatterController
     } from "chart.js";
     import dragDataPlugin from "chartjs-plugin-dragdata";
-    import ExpandArrow from "./common/ExpandArrow.svelte";
-    import {setItem} from "../../../integration/persistent_storage";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as CurveSetting;
 
     const dispatch = createEventDispatcher();
-
-    const thisPath = `${path}.${cSetting.name}`;
-    let expanded = localStorage.getItem(thisPath) === "true";
-
-    $: setItem(thisPath, expanded.toString());
 
     type TChart = ChartJS<'line', Vec2[], unknown>;
 
@@ -38,6 +30,7 @@
     const EPS = 1e-9;
     // Points at the exact edges of the x-axis are locked. This margin prevents additional points from being locked.
     const EDGE_MARGIN = 1e-6;
+    const TICK_FONT = {family: "Inter", size: 10};
     let themeObserver: MutationObserver | null = null;
 
     function getThemeColor(name: string) {
@@ -65,8 +58,6 @@
         yAxis.grid.color = gridColor;
         xAxis.ticks.color = axisColor;
         yAxis.ticks.color = axisColor;
-        xAxis.title.color = axisColor;
-        yAxis.title.color = axisColor;
 
         chart.update();
     }
@@ -185,12 +176,9 @@
                             color: getThemeColor("--clickgui-curve-grid-color")
                         },
                         ticks: {
-                            color: getThemeColor("--clickgui-curve-axis-color")
-                        },
-                        title: {
-                            display: true,
-                            text: cSetting.xAxis.label,
-                            color: getThemeColor("--clickgui-curve-axis-color")
+                            color: getThemeColor("--clickgui-curve-axis-color"),
+                            font: TICK_FONT,
+                            maxTicksLimit: 5
                         }
                     },
                     y: {
@@ -201,12 +189,9 @@
                             color: getThemeColor("--clickgui-curve-grid-color")
                         },
                         ticks: {
-                            color: getThemeColor("--clickgui-curve-axis-color")
-                        },
-                        title: {
-                            display: true,
-                            text: cSetting.yAxis.label,
-                            color: getThemeColor("--clickgui-curve-axis-color")
+                            color: getThemeColor("--clickgui-curve-axis-color"),
+                            font: TICK_FONT,
+                            maxTicksLimit: 5
                         }
                     }
                 },
@@ -312,53 +297,25 @@
     });
 </script>
 
-<div class="setting">
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="head" class:expanded on:contextmenu|preventDefault={() => expanded = !expanded}>
-        <div class="title">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <ExpandArrow bind:expanded/>
-    </div>
+<SettingRow {setting}>
+    <span class="axes">{cSetting.yAxis.label} over {cSetting.xAxis.label}</span>
 
-    <div class="canvas-wrapper" class:visible={expanded}>
+    <div slot="below" class="canvas-wrapper">
         <canvas on:click={addPoint} on:contextmenu={removePoint}
                 bind:this={canvasElement}></canvas>
     </div>
-</div>
+</SettingRow>
 
 <style lang="scss">
-
-  .setting {
-    padding: 7px 0;
-    position: relative;
+  .axes {
+    font-size: 11px;
+    color: var(--clickgui-text-muted-color);
+    text-align: right;
   }
 
   .canvas-wrapper {
-    height: 0;
-    opacity: 0;
-    overflow: hidden;
-    will-change: height, opacity;
-    transition: ease height 0.2s, ease opacity 0.2s;
-
-    &.visible {
-      height: 180px;
-      opacity: 1;
-    }
+    position: relative;
+    height: 140px;
+    margin-bottom: 8px;
   }
-
-  .title {
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .head {
-    display: flex;
-    justify-content: space-between;
-    transition: ease margin-bottom .2s;
-
-    &.expanded {
-      margin-bottom: 10px;
-    }
-  }
-
 </style>

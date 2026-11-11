@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {BlockHitResult, ModuleSetting, Setting, Vec, Vec3Setting, VecAxis} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
     import {getCrosshairData, getPlayerData} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
@@ -32,77 +32,80 @@
     }
 </script>
 
-<div class="setting">
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <div class="input-group"
-         style="grid-template-columns: repeat({vecAxes.length}, 1fr) {useLocateButton ? '20px' : ''}">
+<SettingRow {setting}>
+    <div class="vector">
         {#each vecAxes as axis (axis)}
-            <input
-                    type="number"
-                    {step}
-                    class="value"
-                    spellcheck="false"
-                    placeholder={axis.toUpperCase()}
-                    bind:value={cSetting.value[axis]}
-                    on:input={handleChange}
-            />
+            <label class="axis">
+                <span class="axis-name">{axis.toUpperCase()}</span>
+                <input
+                        type="number"
+                        {step}
+                        class="value"
+                        spellcheck="false"
+                        bind:value={cSetting.value[axis]}
+                        on:input={handleChange}
+                />
+            </label>
         {/each}
         {#if useLocateButton}
-            <button class="locate-btn" on:click={locate} title="Locate">&#x2299;</button>
+            <button type="button" class="locate" on:click={locate} title="Locate" aria-label="Locate">&#x2299;</button>
         {/if}
     </div>
-</div>
+</SettingRow>
 
 <style lang="scss">
+  @use "./common/underlined-input" as *;
 
-  .setting {
-    padding: 7px 0;
+  .vector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 3px 8px;
+    min-width: 0;
   }
 
-  .name {
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    margin-bottom: 5px;
+  .axis {
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 
-  .input-group {
-    display: grid;
-    column-gap: 5px;
+  .axis-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--clickgui-text-muted-color);
+  }
 
-    input.value {
-      width: 100%;
-      background-color: var(--clickgui-input-background-color);
-      font-family: monospace;
-      font-size: 12px;
-      color: var(--clickgui-text-color);
-      border: none;
-      border-bottom: solid 2px var(--clickgui-input-border-color);
-      padding: 5px;
-      border-radius: 3px;
-      transition: ease border-color .2s;
-      appearance: textfield;
+  .value {
+    @include underlined-input(26px);
+    width: 58px;
+    padding: 0 6px;
+    appearance: textfield;
 
-      &::-webkit-scrollbar {
-        background-color: transparent;
-      }
-
-      /* Hide the number input spinner buttons */
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
+  }
 
-    .locate-btn {
-      display: block;
-      background-color: transparent;
-      border: none;
-      cursor: pointer;
-      color: var(--clickgui-text-color);
-      font-size: 12px;
-      text-align: right;
+  .locate {
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 3px;
+    background: none;
+    color: var(--clickgui-text-color);
+    font-size: 13px;
+    line-height: 1;
+    opacity: .7;
+    cursor: pointer;
+    transition: ease opacity .15s, ease background-color .15s;
+
+    &:hover, &:focus-visible {
+      opacity: 1;
+      background-color: var(--clickgui-control-hover-background-color);
     }
   }
 </style>

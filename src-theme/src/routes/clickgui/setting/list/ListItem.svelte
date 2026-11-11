@@ -26,52 +26,63 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="item" class:has-icon={icon !== undefined} class:has-enabled-state={showEnabledState}
+<div class="item" class:enabled={showEnabledState && enabled} class:has-icon={icon !== undefined}
      class:pointer-cursor={pointerCursor} on:click={() => dispatch("toggle", {enabled: !enabled, value: value})}>
     {#if icon}
-        <img class="icon" class:fallback={showingFallbackImage} src="{icon}" alt={value} on:error={showFallbackIcon}/>
+        <img class="icon" class:fallback={showingFallbackImage} src="{icon}" alt="" on:error={showFallbackIcon}/>
     {/if}
-    <div class="name">{name}</div>
+    <div class="name" title={name}>{name}</div>
     {#if showEnabledState}
-        <div class="tick">
-            {#if enabled}
-                <img src="img/clickgui/icon-tick-checked.svg" alt="enabled">
-            {:else}
-                <img src="img/clickgui/icon-tick.svg" alt="disabled">
-            {/if}
-        </div>
+        <span class="tick" role="img" aria-label={enabled ? "enabled" : "disabled"}></span>
     {/if}
 </div>
 
 <style lang="scss">
-
   .item {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
     align-items: center;
-    column-gap: 5px;
-    margin: 2px 5px 2px 0;
+    gap: 8px;
+    min-width: 0;
+    height: 28px;
+    margin-bottom: 3px;
+    padding: 0 9px 0 10px;
+    border-radius: 3px;
+    background-color: var(--clickgui-list-item-background-color);
+    color: var(--clickgui-text-dimmed-color);
+    transition: ease background-color .15s, ease color .15s;
+
+    &.has-icon {
+      padding-left: 4px;
+    }
 
     &.pointer-cursor {
       cursor: pointer;
+
+      &:hover {
+        background-color: var(--clickgui-control-hover-background-color);
+        color: var(--clickgui-text-color);
+      }
     }
 
-    &.has-icon:not(.has-enabled-state) {
-      grid-template-columns: max-content 1fr;
-    }
-
-    &.has-icon.has-enabled-state {
-      grid-template-columns: max-content 1fr max-content;
-    }
-
-    &:not(.has-icon).has-enabled-state {
-      grid-template-columns: 1fr max-content;
+    &.enabled {
+      color: var(--clickgui-text-color);
     }
   }
 
+  // A removable item is the row already
+  :global(.removable-item) > .item {
+    flex: 1;
+    margin-bottom: 0;
+    padding: 0;
+    background: none;
+    color: var(--clickgui-text-color);
+  }
+
   .icon {
-    height: 25px;
-    width: 25px;
+    flex: none;
+    height: 20px;
+    width: 20px;
+    image-rendering: pixelated;
 
     &.fallback {
       filter: grayscale(1);
@@ -79,10 +90,26 @@
   }
 
   .name {
+    flex: 1;
+    min-width: 0;
     font-size: 12px;
-    color: var(--clickgui-text-color);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  .tick {
+    flex: none;
+    width: 10px;
+    height: 8px;
+    background-color: var(--clickgui-text-color);
+    mask: url("/img/clickgui/icon-tick.svg") center / contain no-repeat;
+    opacity: .18;
+    transition: ease opacity .15s, ease background-color .15s;
+  }
+
+  .enabled .tick {
+    background-color: var(--accent-color);
+    opacity: 1;
   }
 </style>

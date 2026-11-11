@@ -1,7 +1,8 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import ScaledClickGuiContent from "../../ScaledClickGuiContent.svelte";
-    import WindowPanel from "../WindowPanel.svelte";
+    import {fly} from "svelte/transition";
+    import {cubicOut} from "svelte/easing";
+    import SideNav, {type NavItem} from "../../common/SideNav.svelte";
     import ConfigBrowser from "./browse/ConfigBrowser.svelte";
     import ItemBrowser from "./browse/ItemBrowser.svelte";
     import ConfigDetail from "./detail/ConfigDetail.svelte";
@@ -36,6 +37,20 @@
     let view = $state<View>({kind: "browse"});
     let tags = $state<string[]>([]);
     let itemChanges = $state(0);
+
+    // Stand-ins from the menu icons, the theme has none of its own for these
+    const TYPE_ICONS: Record<ListedType, string> = {
+        Config: "img/menu/icon-clickgui.svg",
+        Theme: "img/menu/icon-change-background.svg",
+        Addon: "img/menu/icon-customize.svg",
+        Script: "img/menu/icon-scripts.svg",
+    };
+
+    const items: NavItem[] = Object.entries(TYPE_TITLES).map(([listed, title]) => ({
+        id: listed,
+        label: title,
+        icon: TYPE_ICONS[listed as ListedType],
+    }));
 
     const detailLayer = escapeLayer(showList);
 
@@ -87,45 +102,36 @@
     }
 </script>
 
-<ScaledClickGuiContent>
-    <WindowPanel title="Marketplace" icon="world" width={1040} fill
-                 onback={view.kind === "browse" ? undefined : showList}>
-        {#snippet actions()}
-            {#each Object.entries(TYPE_TITLES) as [listed, title] (listed)}
-                <button type="button" class="type" class:active={listed === type}
-                        onclick={() => selectType(listed as ListedType)}>
-                    {title}
-                </button>
-            {/each}
-        {/snippet}
+<!-- The page stays loaded while the player joins and leaves servers, with nothing telling it -->
+<div class="marketplace" role="presentation" onpointerenter={refreshCurrentServer}>
+    <SideNav {items} active={type} label="Marketplace" onselect={id => selectType(id as ListedType)}/>
 
-        <!-- The page stays loaded while the player joins and leaves servers, with nothing telling it -->
-        <div class="marketplace" role="presentation" onpointerenter={refreshCurrentServer}>
-            <!-- The list stays behind a detail page, to come back to where it was scrolled -->
-            <div class="view" class:hidden={view.kind !== "browse"}>
-                {#if type === "Config"}
-                    <ConfigBrowser bind:filters {tags} onopen={id => open({kind: "config", id})}/>
-                {:else}
-                    {#key type}
-                        <ItemBrowser {type} bind:sort={filters.sort} changes={itemChanges}
-                                     onopen={id => open({kind: "item", id})}/>
-                    {/key}
-                {/if}
-            </div>
-            {#if view.kind !== "browse"}
-                <div class="view">
-                    {#key view.id}
-                        {#if view.kind === "config"}
-                            <ConfigDetail id={view.id} ondelete={showList} onopen={open}/>
-                        {:else}
-                            <ItemDetail id={view.id} onchange={() => itemChanges++}/>
-                        {/if}
-                    {/key}
-                </div>
+    <section class="main">
+        <!-- The list stays behind a detail page, to come back to where it was scrolled -->
+        <div class="view" class:hidden={view.kind !== "browse"}>
+            {#if type === "Config"}
+                <ConfigBrowser bind:filters {tags} onopen={id => open({kind: "config", id})}/>
+            {:else}
+                {#key type}
+                    <ItemBrowser {type} bind:sort={filters.sort} changes={itemChanges}
+                                 onopen={id => open({kind: "item", id})}/>
+                {/key}
             {/if}
         </div>
-    </WindowPanel>
-</ScaledClickGuiContent>
+        {#if view.kind !== "browse"}
+            <div class="view detail" in:fly={{x: 20, duration: 180, easing: cubicOut}}>
+                <button type="button" class="back" onclick={showList}>{TYPE_TITLES[type]}</button>
+                {#key view.id}
+                    {#if view.kind === "config"}
+                        <ConfigDetail id={view.id} ondelete={showList} onopen={open}/>
+                    {:else}
+                        <ItemDetail id={view.id} onchange={() => itemChanges++}/>
+                    {/if}
+                {/key}
+            </div>
+        {/if}
+    </section>
+</div>
 
 {#if $dialog?.kind === "load"}
     <LoadDialog config={$dialog.config} onclose={closeDialog}/>
@@ -144,35 +150,17 @@
 {/if}
 
 <style lang="scss">
-  .type {
-    padding: 5px 12px;
-    border: solid 1px transparent;
-    border-radius: 999px;
-    background-color: transparent;
-    font-family: "Inter", sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--clickgui-text-dimmed-color);
-    cursor: pointer;
-    transition: ease background-color 0.2s, ease color 0.2s;
-
-    &:hover, &:focus-visible {
-      color: var(--clickgui-text-color);
-      background-color: var(--clickgui-tab-hover-background-color);
-    }
-
-    &.active {
-      color: var(--clickgui-text-color);
-      background-color: var(--clickgui-tab-active-background-color);
-      border-color: var(--clickgui-tab-active-border-color);
-    }
+  .marketplace {
+    flex: 1;
+    min-width: 0;
+    display: flex;
   }
 
-  .marketplace {
+  .main {
+    flex: 1;
+    min-width: 0;
     display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-height: 0;
+    background-color: var(--clickgui-pane-background-color);
   }
 
   .view {
@@ -184,6 +172,27 @@
 
     &.hidden {
       display: none;
+    }
+  }
+
+  .back {
+    flex: none;
+    align-self: flex-start;
+    margin: 12px 0 0 14px;
+    padding: 5px 10px 5px 26px;
+    border: none;
+    border-radius: 3px;
+    background: url("/img/menu/icon-back.svg") 7px center / 13px no-repeat;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--clickgui-text-dimmed-color);
+    cursor: pointer;
+    transition: ease background-color .15s, ease color .15s;
+
+    &:hover, &:focus-visible {
+      color: var(--clickgui-text-color);
+      background-color: var(--clickgui-control-hover-background-color);
     }
   }
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, TextSetting,} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
 
     export let setting: ModuleSetting;
 
@@ -15,42 +15,21 @@
     }
 </script>
 
-<div class="setting">
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" class="value" spellcheck="false"
-           placeholder={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
+<SettingRow {setting}>
+    <input type="text" class="value" spellcheck="false" aria-label={cSetting.name}
            bind:value={cSetting.value}
            on:input={handleChange}
     >
-</div>
+</SettingRow>
 
 <style lang="scss">
-
-  .setting {
-    padding: 7px 0px;
-  }
-
-  .name {
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    margin-bottom: 5px;
-  }
+  @use "./common/underlined-input" as *;
 
   .value {
-    width: 100%;
-    background-color: var(--clickgui-input-background-color);
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--clickgui-text-color);
-    border: none;
-    border-bottom: solid 2px var(--clickgui-input-border-color);
-    padding: 5px;
-    border-radius: 3px;
-    transition: ease border-color .2s;
-
-    &::-webkit-scrollbar {
-      background-color: transparent;
-    }
+    @include underlined-input;
+    flex: 1 1 170px;
+    width: 170px;
+    min-width: 0;
+    max-width: 100%;
   }
 </style>
