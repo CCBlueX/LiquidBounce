@@ -1,6 +1,6 @@
 {
   "name": "Clients",
-  "description": "Shows what your other clients are doing.",
+  "description": "Shows live views of your other clients.",
   "enabled": true,
   "singleton": true,
   "alignment": {

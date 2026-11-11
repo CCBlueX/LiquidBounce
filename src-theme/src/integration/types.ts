@@ -29,6 +29,8 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    /** False for modules that serve the window and are shared by every client */
+    perClient: boolean;
     aliases: string[];
     tag: string | null;
 }
@@ -303,28 +305,9 @@ export interface Client {
     active: boolean;
     status: "MENU" | "CONNECTING" | "IN_GAME" | "DISCONNECTED";
     server?: string;
-    activity?: ClientActivity;
     health?: number;
     maxHealth?: number;
-    food?: number;
-    position?: Vec3;
-    heldItem?: ItemStack;
-    modules: string[];
-    lastMessage?: TextComponent | string;
 }
-
-export type ClientActivity =
-    | "DEAD"
-    | "FIGHTING"
-    | "MINING"
-    | "USING_ITEM"
-    | "IN_CONTAINER"
-    | "SLEEPING"
-    | "RIDING"
-    | "GLIDING"
-    | "SWIMMING"
-    | "MOVING"
-    | "IDLE";
 
 export interface Server {
     id: number;

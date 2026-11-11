@@ -23,7 +23,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.route
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.accountRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.clientRoutes
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.clientViewRoutes
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.clientsRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.componentRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.globalRoutes
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.localStorageRoutes
@@ -57,7 +57,7 @@ internal fun Route.registerInteropFunctions() = route("/api/v1/client") {
     moduleRoutes()
     componentRoutes()
     sessionRoutes()
-    clientViewRoutes()
+    clientsRoutes()
     accountRoutes()
     proxyRoutes()
     browserRoutes()

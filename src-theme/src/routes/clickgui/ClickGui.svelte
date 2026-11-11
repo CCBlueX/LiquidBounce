@@ -3,22 +3,35 @@
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
+    import ClientPicker from "./ClientPicker.svelte";
     import {fade} from "svelte/transition";
-    import {onMount} from "svelte";
     import {getCategories, getModules} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
-    import {gridSize, showGrid} from "./clickgui_store";
+    import {gridSize, pickedClient, showGrid} from "./clickgui_store";
     import ScaledClickGuiContent from "./ScaledClickGuiContent.svelte";
 
     let categories = $state<GroupedModules>({});
     let modules = $state<Module[]>([]);
     let icons = $state<Record<string, string>>({});
 
-    onMount(async () => {
-        modules = await getModules();
+    async function loadModules(client: number | null) {
+        const loaded = await getModules(client);
+        if (client !== $pickedClient) {
+            return;
+        }
+
+        // Modules that serve the window are shared, so another client has none of its own
+        modules = loaded.filter(module => client === null || module.perClient);
         categories = groupByCategory(modules);
+    }
+
+    $effect(() => {
+        loadModules($pickedClient);
+    });
+
+    getCategories().then(categories => {
         icons = Object.fromEntries(
-            (await getCategories())
+            categories
                 .filter(category => category.icon)
                 .map(category => [category.name, category.icon!])
         );
@@ -33,13 +46,17 @@
             transition:fade|global={{duration: 200}}
     >
         <Description/>
-        <Search modules={structuredClone($state.snapshot(modules))}/>
+        {#key modules}
+            <Search modules={structuredClone($state.snapshot(modules))}/>
 
-        {#each Object.entries(categories) as [category, modules], panelIndex (category)}
-            <Panel {category} {modules} {panelIndex} icon={icons[category]}/>
-        {/each}
+            {#each Object.entries(categories) as [category, modules], panelIndex (category)}
+                <Panel {category} {modules} {panelIndex} icon={icons[category]}/>
+            {/each}
+        {/key}
     </div>
 </ScaledClickGuiContent>
+
+<ClientPicker/>
 
 <style lang="scss">
   .clickgui {

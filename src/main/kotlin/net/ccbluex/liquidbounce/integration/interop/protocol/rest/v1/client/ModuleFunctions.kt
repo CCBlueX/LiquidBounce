@@ -54,12 +54,13 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("description", description.get())
     addProperty("tag", this@toJsonObject.tag)
     addProperty("hidden", hidden)
+    addProperty("perClient", perClient)
     add("aliases", interopGson.toJsonTree(aliases))
 }
 
 // GET /api/v1/client/modules
 private fun Route.getModules() = get {
-    call.respond(ModuleManager.map { it.toJsonObject() })
+    call.respond(call.withinQueriedClient { ModuleManager.map { it.toJsonObject() } })
 }
 
 // GET /api/v1/client/module/{name}
@@ -67,7 +68,7 @@ private fun Route.getModule() = get("/module/{name}") {
     val name = call.parameters["name"] ?: call.forbidden("Module not found")
     val module = ModuleManager[name] ?: call.forbidden("Module not found")
 
-    call.respond(module.toJsonObject())
+    call.respond(call.withinQueriedClient { module.toJsonObject() })
 }
 
 // POST /api/v1/client/modules/toggle
@@ -89,7 +90,7 @@ private fun Route.toggleModuleDelete() = delete {
 private fun Route.getSettings() = get {
     val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
-    call.respond(ConfigSystem.serializeValueGroup(module, gson = interopGson))
+    call.respond(call.withinQueriedClient { ConfigSystem.serializeValueGroup(module, gson = interopGson) })
 }
 
 // PUT /api/v1/client/modules/settings
@@ -97,29 +98,33 @@ private fun Route.putSettings() = put {
     val name = call.queryParameters["name"] ?: call.badRequest("Missing parameter 'name'")
     val module = ModuleManager[name] ?: call.forbidden("Module '$name' not found")
     val request = call.receiveText()
-    withContext(Dispatchers.Main) {
-        ConfigSystem.deserializeValueGroup(module, request)
-        ConfigSystem.store(modulesConfig)
+    call.withinQueriedClient {
+        withContext(Dispatchers.Main) {
+            ConfigSystem.deserializeValueGroup(module, request)
+            ConfigSystem.store(modulesConfig)
+        }
     }
     call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/modules/panic
 private fun Route.postPanic() = post("/panic") {
-    withContext(Dispatchers.Main) {
-        AutoConfig.withLoading {
-            runCatching {
-                for (module in ModuleManager) {
-                    if (module.category == ModuleCategories.RENDER) {
-                        continue
+    call.withinQueriedClient {
+        withContext(Dispatchers.Main) {
+            AutoConfig.withLoading {
+                runCatching {
+                    for (module in ModuleManager) {
+                        if (module.category == ModuleCategories.RENDER) {
+                            continue
+                        }
+
+                        module.enabled = false
                     }
 
-                    module.enabled = false
+                    ConfigSystem.store(modulesConfig)
+                }.onFailure {
+                    logger.error("Failed to panic disable modules", it)
                 }
-
-                ConfigSystem.store(modulesConfig)
-            }.onFailure {
-                logger.error("Failed to panic disable modules", it)
             }
         }
     }
@@ -130,6 +135,11 @@ private fun Route.postPanic() = post("/panic") {
 @JvmRecord
 private data class ModuleRequest(val name: String) {
     suspend fun handle(call: ApplicationCall) {
+        call.withinQueriedClient { toggle(call) }
+        call.respond(HttpStatusCode.NoContent)
+    }
+
+    private suspend fun toggle(call: ApplicationCall) {
         val module = ModuleManager[this.name] ?: call.forbidden("Module '${this.name}' not found")
         val supposedNew = call.request.httpMethod == HttpMethod.Put ||
             (call.request.httpMethod == HttpMethod.Post && !module.enabled)
@@ -144,7 +154,6 @@ private data class ModuleRequest(val name: String) {
                 logger.error("Failed to toggle module ${this@ModuleRequest.name}", e)
             }
         }
-        call.respond(HttpStatusCode.NoContent)
     }
 }
 

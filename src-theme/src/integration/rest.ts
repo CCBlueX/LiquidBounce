@@ -45,8 +45,17 @@ export async function getMetadata(): Promise<Metadata> {
     return data;
 }
 
-export async function getModules(): Promise<Module[]> {
-    const response = await fetch(`${API_BASE}/client/modules`);
+/**
+ * The query that makes module requests act within the given client instead of the active one.
+ */
+function clientQuery(client: number | null | undefined): Record<string, string> {
+    return client === null || client === undefined ? {} : {client: client.toString()};
+}
+
+export async function getModules(client?: number | null): Promise<Module[]> {
+    const searchParams = new URLSearchParams(clientQuery(client));
+
+    const response = await fetch(`${API_BASE}/client/modules?${searchParams.toString()}`);
     const data: [Module] = await response.json();
 
     return data;
@@ -66,8 +75,8 @@ export async function getModule(name: string): Promise<Module> {
     return data;
 }
 
-export async function getModuleSettings(name: string): Promise<ConfigurableSetting> {
-    const searchParams = new URLSearchParams({name});
+export async function getModuleSettings(name: string, client?: number | null): Promise<ConfigurableSetting> {
+    const searchParams = new URLSearchParams({name, ...clientQuery(client)});
 
     const response = await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`);
     const data = await response.json();
@@ -75,8 +84,8 @@ export async function getModuleSettings(name: string): Promise<ConfigurableSetti
     return data;
 }
 
-export async function setModuleSettings(name: string, settings: ConfigurableSetting) {
-    const searchParams = new URLSearchParams({name});
+export async function setModuleSettings(name: string, settings: ConfigurableSetting, client?: number | null) {
+    const searchParams = new URLSearchParams({name, ...clientQuery(client)});
 
     await fetch(`${API_BASE}/client/modules/settings?${searchParams.toString()}`, {
         method: "PUT",
@@ -121,8 +130,10 @@ export async function setGlobalSettings(settings: ConfigurableSetting) {
     });
 }
 
-export async function setModuleEnabled(name: string, enabled: boolean) {
-    await fetch(`${API_BASE}/client/modules/toggle`, {
+export async function setModuleEnabled(name: string, enabled: boolean, client?: number | null) {
+    const searchParams = new URLSearchParams(clientQuery(client));
+
+    await fetch(`${API_BASE}/client/modules/toggle?${searchParams.toString()}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -239,16 +250,32 @@ export async function getClients(): Promise<Client[]> {
 }
 
 /**
- * Opens a client for an account of the alt manager. It joins the given server, or stays in the menus.
+ * Opens a client for an account of the alt manager. It joins the given server, or the one the active
+ * client is on.
+ *
+ * @return why it failed, or null
  */
-export async function openClient(account: number, address?: string) {
-    await fetch(`${API_BASE}/client/clients`, {
+export async function openClient(account: number, address?: string): Promise<string | null> {
+    const response = await fetch(`${API_BASE}/client/clients`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({account, address})
     });
+
+    if (response.ok) {
+        return null;
+    }
+    return (await response.json().catch(() => null))?.reason ?? `The client answered with ${response.status}`;
+}
+
+/**
+ * A live view of what the client sees, for an image. Clients only draw it while someone looks,
+ * so the image has to go once it is out of sight.
+ */
+export function clientViewUrl(id: number): string {
+    return `${API_BASE}/client/clients/${id}/view`;
 }
 
 export async function activateClient(id: number) {
