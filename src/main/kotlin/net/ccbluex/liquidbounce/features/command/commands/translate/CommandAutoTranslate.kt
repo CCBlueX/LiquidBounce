@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
 import com.mojang.brigadier.CommandDispatcher
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandRegistrar
 import net.ccbluex.liquidbounce.features.command.arguments.ClientStringArgumentType
@@ -27,12 +27,13 @@ import net.ccbluex.liquidbounce.features.command.brigadier.ClientCommandSource
 import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.command.brigadier.suggestions
+import net.ccbluex.liquidbounce.features.global.GlobalManager
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsAutoTranslate
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 
-object CommandAutoTranslate : ValueGroup("AutoTranslate"), CommandRegistrar {
-    var languageCode by text("LanguageCode", "en")
-        private set
+object CommandAutoTranslate : CommandRegistrar {
+    private var languageCode by GlobalSettingsAutoTranslate::languageCode
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("autotranslate") {
@@ -62,6 +63,7 @@ object CommandAutoTranslate : ValueGroup("AutoTranslate"), CommandRegistrar {
                                     )
                                 )
                             languageCode = code
+                            ConfigSystem.store(GlobalManager)
                             chat(
                                 t("language.set.set",
                                     code,
