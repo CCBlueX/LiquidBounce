@@ -32,20 +32,14 @@ import net.minecraft.world.phys.Vec3
 
 private const val HEIGHT = 24
 private const val TIMEOUT = 400
-/**
- * Along +X: a run-up, gaps of one, two and three blocks and one down, each landing long enough for a sprint jump from
- * the very edge.
- */
+/** Along +X: a run-up, gaps of one, two and three blocks and one down; each landing fits a sprint jump off its edge. */
 private val COURSE = listOf(
     BlockPos(0, 0, 0), BlockPos(1, 0, 0), BlockPos(3, 0, 0), BlockPos(4, 0, 0), BlockPos(5, 0, 0),
     BlockPos(8, 0, 0), BlockPos(9, 0, 0), BlockPos(13, 0, 0), BlockPos(14, 0, 0), BlockPos(17, -1, 0),
     BlockPos(18, -1, 0), BlockPos(19, -1, 0),
 )
 
-/**
- * With Assist off, Parkour still jumps at the very edge of a block: a player who only holds forward and sprint
- * along gaps straight ahead over a lake gets across.
- */
+/** With Assist off, Parkour still jumps at the very edge: holding forward and sprint gets across gaps over a lake. */
 class ParkourEdgeGameTest : LiquidBounceGameTest({
     val assist = context.fromClient {
         ModuleParkour.containedValues.first { it.name == "Assist" } as ToggleableValueGroup

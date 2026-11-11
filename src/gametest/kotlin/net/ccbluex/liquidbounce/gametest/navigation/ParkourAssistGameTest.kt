@@ -48,9 +48,8 @@ private val COURSE = listOf(
 )
 
 /**
- * A run-up along a wall at +Z and a gap to a block past its end on that side, so that the way to it slides along the
- * wall. Then a jump up, a turn left with a jump up and one down, a short jump into a corner and a turn right out of
- * it.
+ * A run-up along a wall at +Z and a gap past its end, so the way there slides along the wall. Then jumps up and down,
+ * two turns and a jump into a corner.
  */
 private val WALL_COURSE = listOf(
     BlockPos(0, 0, 0), BlockPos(1, 0, 0), BlockPos(2, 0, 0), BlockPos(3, 0, 0), BlockPos(5, 0, 1),
@@ -63,9 +62,8 @@ private val WALL = (0..3).flatMap { x -> (1..3).map { y -> BlockPos(x, y, 1) } }
 private const val WALL_OFFSET = 40
 
 /**
- * A player who only holds forward and sprint along a Jump 'n' Run course over a lake makes it to the end with
- * Parkour on, and falls into the lake without it. One who sprints with the Sprint module along a wall and turns the
- * camera towards the next block, a little off like players do, makes it too.
+ * Holding forward and sprint along a Jump 'n' Run course over a lake makes it to the end with Parkour on and falls in
+ * without it, also when sprinting along a wall with the Sprint module and looking a little off the next block.
  */
 class ParkourAssistGameTest : LiquidBounceGameTest({
     try {
@@ -116,10 +114,7 @@ private fun GameTestScope.runCourse(origin: BlockPos, assist: Boolean): String? 
     }
 }
 
-/**
- * Runs [WALL_COURSE] from [origin] with Parkour and Sprint on, holding forward and turning the camera towards the
- * block after the one the player is over; why it failed, or null.
- */
+/** Runs [WALL_COURSE] with Parkour and Sprint, facing the block after the one below; why it failed, or null. */
 private fun GameTestScope.runAlongWall(origin: BlockPos): String? {
     val path = WALL_COURSE.map(origin::offset)
     val lowest = path.minOf { it.y }

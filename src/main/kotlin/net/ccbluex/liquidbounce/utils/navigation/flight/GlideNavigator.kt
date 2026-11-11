@@ -203,8 +203,8 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     }
 
     /**
-     * A fresh jump press in the air opens the elytra. The server may answer with the elytra closed for a moment
-     * first, and another press before its answer would close it, so the next press waits.
+     * A fresh jump press in the air opens the elytra. The server may first answer with it closed, and a second press
+     * before that answer would close it, so the next press waits.
      */
     private fun pressToOpen(glide: Glide): Boolean {
         if (player.input.keyPresses.jump() || glide.ticks - glide.pressedAt < REOPEN_TICKS) {
