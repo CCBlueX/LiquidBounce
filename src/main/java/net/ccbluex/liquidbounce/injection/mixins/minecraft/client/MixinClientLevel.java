@@ -23,12 +23,12 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent;
+import net.ccbluex.liquidbounce.features.client.ClientContext;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ExplosionParticleInfo;
@@ -93,7 +93,7 @@ public abstract class MixinClientLevel {
 
     @Inject(method = "doAddParticle", at = @At("HEAD"), cancellable = true)
     private void keepSimulationFromShowingParticles(CallbackInfo ci) {
-        if (SimulatedPlayer.isTicking()) {
+        if (ClientContext.getCurrent().isSimulated()) {
             ci.cancel();
         }
     }

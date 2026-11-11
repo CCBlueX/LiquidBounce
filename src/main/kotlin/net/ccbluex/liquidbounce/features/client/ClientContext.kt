@@ -25,6 +25,7 @@ import java.util.function.Supplier
  *
  * Minecraft keeps one player, level and screen per client. On the game thread a client is entered by moving
  * its [GameState] into those fields, so vanilla code runs unchanged. Other threads only carry the reference.
+ * A simulated client moves no field at all: it reads the ones of the client it simulates for.
  */
 object ClientContext {
 
@@ -43,6 +44,11 @@ object ClientContext {
     @Volatile
     private var settled: Client? = loaded
 
+    /**
+     * The simulated client the game thread runs in. It does not move any field.
+     */
+    private var simulated: Client? = null
+
     private val bound = ThreadLocal<Client>()
 
     @JvmStatic
@@ -57,7 +63,7 @@ object ClientContext {
      */
     @JvmStatic
     val current: Client
-        get() = if (isGameThread) loaded else bound.get() ?: ClientManager.active
+        get() = if (isGameThread) simulated ?: loaded else bound.get() ?: ClientManager.active
 
     /**
      * True while the game thread runs a client the window does not show.
@@ -80,8 +86,11 @@ object ClientContext {
     @JvmStatic
     fun enter(client: Client): Client? {
         if (isGameThread) {
-            val previous = loaded
-            load(client)
+            val previous = simulated ?: loaded
+            if (!client.isSimulated) {
+                simulated?.host = loaded
+            }
+            switchTo(client)
             return previous
         }
 
@@ -93,10 +102,25 @@ object ClientContext {
     @JvmStatic
     fun exit(previous: Client?) {
         when {
-            isGameThread -> load(previous!!)
+            isGameThread -> switchTo(previous!!)
             previous == null -> bound.remove()
             else -> bound.set(previous)
         }
+    }
+
+    private fun switchTo(client: Client) {
+        if (!client.isSimulated) {
+            simulated = null
+            load(client)
+            return
+        }
+
+        // Back from a real client that was entered while simulating
+        client.host?.let { host ->
+            client.host = null
+            load(host)
+        }
+        simulated = client
     }
 
     /**
@@ -122,7 +146,7 @@ object ClientContext {
      */
     @JvmStatic
     fun pinned(task: Runnable): Runnable {
-        val client = if (isGameThread) loaded.takeUnless { it.isActive } else bound.get()
+        val client = if (isGameThread) simulated ?: loaded.takeUnless { it.isActive } else bound.get()
         client ?: return task
 
         return Runnable { within(client) { task.run() } }

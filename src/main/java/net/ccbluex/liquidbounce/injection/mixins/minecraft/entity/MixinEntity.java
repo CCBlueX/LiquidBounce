@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLim
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
@@ -78,6 +79,15 @@ public abstract class MixinEntity {
         return (Object) this == Minecraft.getInstance().player;
     }
 
+    /**
+     * The local player, or a simulation of it that modules take part in, for the hooks that move it.
+     */
+    @Unique
+    protected boolean liquid_bounce$movesAsClientPlayer() {
+        return liquid_bounce$isClientPlayer()
+                || (Object) this instanceof SimulatedPlayer simulatedPlayer && simulatedPlayer.getFiresEvents();
+    }
+
     @ModifyExpressionValue(method = "isSuppressingBounce", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;isShiftKeyDown()Z"))
     private boolean hookAntiBounce(boolean original) {
         return ModuleAntiBounce.INSTANCE.getRunning() || original;
@@ -120,7 +130,7 @@ public abstract class MixinEntity {
 
     @ModifyExpressionValue(method = "moveRelative", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"))
     public Vec3 hookVelocity(Vec3 original, @Local(argsOnly = true, name = "input") Vec3 input, @Local(argsOnly = true, name = "speed") float speed) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!liquid_bounce$movesAsClientPlayer()) {
             return original;
         }
 
@@ -131,7 +141,7 @@ public abstract class MixinEntity {
 
     @ModifyExpressionValue(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;maxUpStep()F"))
     private float hookStepHeight(float original) {
-        if (!liquid_bounce$isClientPlayer()) {
+        if (!liquid_bounce$movesAsClientPlayer()) {
             return original;
         }
 
@@ -143,7 +153,7 @@ public abstract class MixinEntity {
     @Inject(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
             at = @At(value = "RETURN", ordinal = 0), cancellable = true)
     private void hookStepHeight(Vec3 movement, CallbackInfoReturnable<Vec3> cir) {
-        if (liquid_bounce$isClientPlayer()) {
+        if (liquid_bounce$movesAsClientPlayer()) {
             PlayerStepSuccessEvent movementCollisionsEvent = new PlayerStepSuccessEvent(movement, cir.getReturnValue());
             EventManager.INSTANCE.callEvent(movementCollisionsEvent);
             cir.setReturnValue(movementCollisionsEvent.getAdjustedVec());

@@ -205,7 +205,8 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         val aim = movement.target?.takeUnless { movement.dive } ?: return true
         val sprint = movement.sprint
         val body = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayerInput(event.directionalInput, event.jump, sprint, event.sneak)
+            SimulatedPlayerInput(event.directionalInput, event.jump, sprint, event.sneak),
+            withModules = false,
         )
         body.yRot = frameYaw
 

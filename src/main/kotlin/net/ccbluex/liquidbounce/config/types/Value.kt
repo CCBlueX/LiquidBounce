@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.features.client.StateCopy
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
@@ -224,16 +225,17 @@ open class Value<T : Any>(
 
     /**
      * The value as the current client has it. Only settings of modules differ between clients,
-     * see [giveTo]; everything else reads [inner] of the main client.
+     * see [giveTo]; everything else reads [inner] of the main client. A simulated client reads the value
+     * of its parent until it sets its own.
      */
     fun get(): T {
-        val client = ClientContext.current
-        if (client.isMain) {
-            return inner
+        var client = ClientContext.current
+        while (!client.isMain) {
+            @Suppress("UNCHECKED_CAST")
+            client.values[this]?.let { return it as T }
+            client = client.parent ?: break
         }
-
-        @Suppress("UNCHECKED_CAST")
-        return client.values[this] as T? ?: inner
+        return inner
     }
 
     fun set(t: T) {
@@ -247,8 +249,9 @@ open class Value<T : Any>(
 
     private fun store(value: T) {
         val client = ClientContext.current
-        if (client.isMain || client.values.replace(this, value) == null) {
-            inner = value
+        when {
+            client.isSimulated -> client.values[this] = value as Any
+            client.isMain || client.values.replace(this, value) == null -> inner = value
         }
     }
 
@@ -256,14 +259,8 @@ open class Value<T : Any>(
      * Lets [client] keep its own copy of this value, starting from the one of the current client.
      */
     internal open fun giveTo(client: Client) {
-        val value = get()
-
         // Collections are changed in place by the settings holding them.
-        client.values[this] = if (value is MutableCollection<*> && value is Cloneable) {
-            value.javaClass.getMethod("clone").invoke(value)
-        } else {
-            value
-        }
+        client.values[this] = StateCopy.of(get()) as Any
     }
 
     fun set(t: T, apply: ValueChangedListener<T>) {
@@ -278,6 +275,10 @@ open class Value<T : Any>(
             }
         }.onSuccess {
             apply.accept(currT)
+            // What a simulated client changes is thrown away with it, nobody else needs to hear of it.
+            if (ClientContext.current.isSimulated) {
+                return
+            }
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it.accept(currT) }
             if (ClientContext.current.isActive) {

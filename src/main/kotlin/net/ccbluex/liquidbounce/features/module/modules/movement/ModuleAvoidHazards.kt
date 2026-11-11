@@ -124,7 +124,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
             sneaking = sneak
         )
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput, withModules = false)
         simulatedPlayer.setPos(player.position())
         var previousBoundingBox = simulatedPlayer.boundingBox
         // Do not reject every candidate while already on a ladder. We only block

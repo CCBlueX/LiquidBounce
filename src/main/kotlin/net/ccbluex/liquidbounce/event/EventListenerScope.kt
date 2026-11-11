@@ -28,9 +28,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.client.ClientElement
-import net.ccbluex.liquidbounce.features.client.clientState
+import net.ccbluex.liquidbounce.features.client.ownClientState
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.ReportedException
@@ -42,8 +43,10 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * The scopes of the current client. A listener has one in every client it launched something in.
+ * A simulated client launches in its own, which end with it.
  */
-private val scopes by clientState { ConcurrentHashMap<EventListener, CoroutineScope>() }
+private val scopeState = ownClientState { ConcurrentHashMap<EventListener, CoroutineScope>() }
+private val scopes by scopeState
 
 /**
  * Get the related [CoroutineScope] of receiver [EventListener] in the current client.
@@ -87,6 +90,15 @@ internal fun cancelEventListenerScopes() {
         scope.cancel(EventListenerNotListeningException(listener))
     }
     scopes.clear()
+}
+
+/**
+ * Cancels what listeners launched in the simulated [client], if anything.
+ */
+internal fun cancelEventListenerScopes(client: Client) {
+    if (scopeState.isSetIn(client)) {
+        ClientContext.within(client) { cancelEventListenerScopes() }
+    }
 }
 
 /**
