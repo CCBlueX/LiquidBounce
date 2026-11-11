@@ -124,7 +124,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEME
         )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
-        simulatedPlayer.pos = player.position()
+        simulatedPlayer.setPos(player.position())
         var previousBoundingBox = simulatedPlayer.boundingBox
         // Do not reject every candidate while already on a ladder. We only block
         // transitions that newly enter climb-state.

@@ -284,7 +284,7 @@ fun LocalPlayer.isCloseToEdge(
         simulatedInput
     )
 
-    simulatedPlayer.pos = pos
+    simulatedPlayer.setPos(pos)
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.deltaMovement

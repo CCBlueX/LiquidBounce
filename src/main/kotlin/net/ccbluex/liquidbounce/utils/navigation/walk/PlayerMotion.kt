@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer.Companion.SUPPORT_EPSILON
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
@@ -44,6 +43,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 private const val SPRINT_FACTOR = 1.3f
+private const val SUPPORT_EPSILON = 1.0E-6
 
 /**
  * A player walking, sprinting, sneaking and jumping on land, tick for tick as LivingEntity.aiStep moves it.
