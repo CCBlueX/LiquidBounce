@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.gametest
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.Config
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import java.nio.file.Files
 import java.nio.file.Path

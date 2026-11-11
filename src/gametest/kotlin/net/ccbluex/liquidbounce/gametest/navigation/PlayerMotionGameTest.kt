@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.gametest.LocalGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer

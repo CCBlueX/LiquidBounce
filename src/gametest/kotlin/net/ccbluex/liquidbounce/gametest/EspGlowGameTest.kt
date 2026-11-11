@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.ShaderGlow
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.gui.Hud

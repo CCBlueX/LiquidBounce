@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
