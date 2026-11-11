@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos

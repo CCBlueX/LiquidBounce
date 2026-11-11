@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.glide
 
+import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
@@ -72,8 +73,8 @@ class Cruise(
         }
 
         val boosted = rockets.tick()
-        val pitch = GlidePhysics.pitchTowards(below, AIM_AHEAD).coerceIn(MIN_PITCH, MAX_PITCH)
-        return Controls(GlidePhysics.yawTowards(dx, dz), pitch, fire, boosted)
+        val pitch = ElytraMotion.pitchTowards(below, AIM_AHEAD).coerceIn(MIN_PITCH, MAX_PITCH)
+        return Controls(ElytraMotion.yawTowards(dx, dz), pitch, fire, boosted)
     }
 
     private fun land(at: Vec3, position: Vec3, velocity: Vec3): Controls =

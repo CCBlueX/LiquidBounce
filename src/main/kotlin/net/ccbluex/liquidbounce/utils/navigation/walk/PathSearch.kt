@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
 import net.ccbluex.liquidbounce.utils.block.WeightedEdge
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.navigation.route.AStarRouteSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.Goal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure

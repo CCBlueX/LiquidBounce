@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.navigation.glide
+package net.ccbluex.liquidbounce.utils.entity
 
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
@@ -29,7 +29,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /** Elytra flight as the game moves it, one tick at a time. */
-internal object GlidePhysics {
+internal object ElytraMotion {
 
     private const val LIFT = 0.75
     private const val DIVE = 0.1

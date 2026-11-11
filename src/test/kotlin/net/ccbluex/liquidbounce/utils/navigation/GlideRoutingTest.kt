@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.glide.Abilities
-import net.ccbluex.liquidbounce.utils.navigation.glide.GlidePhysics
 import net.ccbluex.liquidbounce.utils.navigation.glide.Landing
 import net.ccbluex.liquidbounce.utils.navigation.glide.PathSearch
 import net.ccbluex.liquidbounce.utils.navigation.glide.Rockets
@@ -119,7 +119,7 @@ class GlideRoutingTest {
         repeat(200) {
             val input = control.steer(position, velocity)
             assertFalse(input.fireRocket, "fired a rocket at $position, ${position.y - goal.y} above the goal")
-            velocity = GlidePhysics.step(velocity, input.yaw, input.pitch, input.boosted)
+            velocity = ElytraMotion.step(velocity, input.yaw, input.pitch, input.boosted)
             position = position.add(velocity)
         }
         assertEquals(8, control.rockets.left)

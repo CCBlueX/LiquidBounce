@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
@@ -41,8 +43,6 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.Abilities
 import net.ccbluex.liquidbounce.utils.navigation.walk.JumpTargets
 import net.ccbluex.liquidbounce.utils.navigation.walk.Jumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
-import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation
 
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
 import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.STONE
@@ -31,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.navigation.walk.Leap
 import net.ccbluex.liquidbounce.utils.navigation.walk.Move
 import net.ccbluex.liquidbounce.utils.navigation.walk.Path
 import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
-import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
 import net.ccbluex.liquidbounce.utils.navigation.walk.Step
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.glide
 
+import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
@@ -91,7 +92,7 @@ class PathSearch(
                 jump()
             } else {
                 val input = control.steer(position, motion)
-                motion = GlidePhysics.step(motion, input.yaw, input.pitch, input.boosted)
+                motion = ElytraMotion.step(motion, input.yaw, input.pitch, input.boosted)
                 position.add(motion)
             }
 

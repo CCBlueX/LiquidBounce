@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
 import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.terrain.hasRoom

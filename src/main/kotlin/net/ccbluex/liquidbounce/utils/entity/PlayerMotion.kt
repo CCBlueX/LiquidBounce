@@ -17,11 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.navigation.walk
+package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.math.fastCos
 import net.ccbluex.liquidbounce.utils.math.fastSin
 import net.ccbluex.liquidbounce.utils.math.toRadians
+import net.ccbluex.liquidbounce.utils.navigation.terrain.BlockColliders
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_2
@@ -48,7 +49,8 @@ private const val SUPPORT_EPSILON = 1.0E-6
 
 /**
  * A player walking, sprinting, sneaking and jumping on land, tick for tick as LivingEntity.aiStep moves it.
- * Fluids, climbing and slow falling are left out. Collisions come from [terrain], so it runs off the game thread.
+ * Fluids, climbing and slow falling are left out. Collisions come from [terrain], so unlike [SimulatedPlayer] it
+ * runs off the game thread.
  */
 @Suppress("TooManyFunctions")
 internal class PlayerMotion(

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.glide
 
+import net.ccbluex.liquidbounce.utils.entity.ElytraMotion
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -40,7 +41,7 @@ class Landing(
         val dx = target.x - position.x
         val dz = target.z - position.z
         val distance = Mth.length(dx, dz)
-        val bearing = GlidePhysics.yawTowards(dx, dz)
+        val bearing = ElytraMotion.yawTowards(dx, dz)
         sweepPitches(position, velocity, bearing, distance, dx, dz)
 
         if (approach > 0.0 && distance > approach && rockets.boostTicks == 0 && sweep.farthestAlong >= 0.0) {
@@ -60,7 +61,7 @@ class Landing(
         return when {
             boosted -> {
                 val climb = target.y + CLIMB_ABOVE + distance * CLIMB_SLOPE - position.y
-                val pitch = GlidePhysics.pitchTowards(climb, distance).coerceIn(MIN_CLIMB_PITCH, MAX_CLIMB_PITCH)
+                val pitch = ElytraMotion.pitchTowards(climb, distance).coerceIn(MIN_CLIMB_PITCH, MAX_CLIMB_PITCH)
                 Controls(bearing, pitch, fire, boosted = true)
             }
 
@@ -101,7 +102,7 @@ class Landing(
         var z = position.z
         var motion = velocity
         for (tick in 0 until HORIZON_TICKS) {
-            motion = GlidePhysics.step(motion, yaw, pitch, tick < rockets.boostTicks)
+            motion = ElytraMotion.step(motion, yaw, pitch, tick < rockets.boostTicks)
             x += motion.x
             y += motion.y
             z += motion.z

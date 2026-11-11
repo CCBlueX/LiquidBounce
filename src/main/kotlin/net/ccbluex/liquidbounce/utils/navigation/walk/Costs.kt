@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.minecraft.world.entity.LivingEntity.BASE_HORIZONTAL_AIR_DRAG
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.SlimeBlock

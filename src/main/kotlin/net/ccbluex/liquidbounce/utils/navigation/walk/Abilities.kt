@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import it.unimi.dsi.fastutil.longs.LongSet
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
 import net.minecraft.world.level.block.state.BlockState
 import java.util.function.ToDoubleFunction
 
