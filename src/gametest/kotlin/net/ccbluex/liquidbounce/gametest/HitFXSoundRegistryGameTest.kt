@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**

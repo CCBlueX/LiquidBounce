@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.PortalMode
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
 import net.minecraft.core.BlockPos

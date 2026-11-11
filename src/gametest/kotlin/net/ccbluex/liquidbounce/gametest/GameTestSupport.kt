@@ -18,51 +18,16 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.gametest.harness.connection.GameTestEnvironment
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.screens.TitleScreen
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.function.FailableConsumer
 import org.apache.commons.lang3.function.FailableFunction
-
-// LiquidBounce holds a TaskProgressScreen until its startup tasks (e.g. the DJL natives) finish
-private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
-
-/** CI runs the server game tests once per anticheat, and the tests of the client alone in a job of their own. */
-private val localRun = System.getenv("GAMETEST_SERVER_ANTICHEAT").isNullOrBlank()
-
-/**
- * A game test of the client alone (commands, configs, registries, simulations), on the integrated server if it needs
- * a world. It runs only when no anticheat is picked; `-PgameTestServerOnly` selects these too.
- */
-abstract class LocalGameTest : FabricClientGameTest {
-
-    private val name = javaClass.simpleName.removeSuffix("GameTest")
-
-    final override fun runTest(context: ClientGameTestContext) {
-        if (!localRun || !GameTestEnvironment.isSelected(name)) {
-            return
-        }
-        context.waitForClient()
-        test(context)
-    }
-
-    protected abstract fun test(context: ClientGameTestContext)
-
-}
-
-fun ClientGameTestContext.waitForClient() {
-    waitFor({ client -> client.gui.screen() is TitleScreen }, STARTUP_TIMEOUT_TICKS)
-    check(fromClient { LiquidBounce.isInitialized }) { "LiquidBounce did not finish initializing" }
-}
 
 fun ClientGameTestContext.onClient(
     block: FailableConsumer<Minecraft, RuntimeException>
