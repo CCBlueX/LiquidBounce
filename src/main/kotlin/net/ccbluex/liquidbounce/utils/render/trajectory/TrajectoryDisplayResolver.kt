@@ -44,17 +44,17 @@ object TrajectoryDisplayResolver {
         entity: Entity? = null,
     ): Color4b {
         return when (trajectoryType) {
-            TrajectoryType.Arrow -> resolveArrowColor(colorSource, entity)
-            TrajectoryType.Potion -> resolvePotionColor(colorSource)
-            TrajectoryType.EnderPearl -> Color4b.PURPLE.alpha(200)
-            TrajectoryType.FishingBobber -> Color4b.CYAN.alpha(200)
-            TrajectoryType.Trident -> Color4b(180, 210, 255, 220)
-            TrajectoryType.Snowball -> Color4b.LIGHT_GRAY.alpha(220)
-            TrajectoryType.Egg -> Color4b(240, 234, 214, 220)
-            TrajectoryType.ExpBottle -> Color4b(120, 230, 120, 220)
-            TrajectoryType.FireworkRocket -> Color4b.ORANGE.alpha(220)
-            TrajectoryType.Fireball -> Color4b.ORANGE.alpha(220)
-            TrajectoryType.WindCharge -> Color4b(180, 235, 255, 220)
+            TrajectoryType.ARROW -> resolveArrowColor(colorSource, entity)
+            TrajectoryType.POTION -> resolvePotionColor(colorSource)
+            TrajectoryType.ENDER_PEARL -> Color4b.PURPLE.alpha(200)
+            TrajectoryType.FISHING_BOBBER -> Color4b.CYAN.alpha(200)
+            TrajectoryType.TRIDENT -> Color4b(180, 210, 255, 220)
+            TrajectoryType.SNOWBALL -> Color4b.LIGHT_GRAY.alpha(220)
+            TrajectoryType.EGG -> Color4b(240, 234, 214, 220)
+            TrajectoryType.EXP_BOTTLE -> Color4b(120, 230, 120, 220)
+            TrajectoryType.FIREWORK_ROCKET -> Color4b.ORANGE.alpha(220)
+            TrajectoryType.FIREBALL -> Color4b.ORANGE.alpha(220)
+            TrajectoryType.WIND_CHARGE -> Color4b(180, 235, 255, 220)
         }
     }
 

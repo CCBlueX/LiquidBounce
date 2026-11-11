@@ -71,4 +71,31 @@ class PathExtTest {
         assertFalse(Files.exists(source))
     }
 
+    @Test
+    fun `atomic write replaces the file without leaving the temporary one`() {
+        val target = folder.resolve("settings.json")
+        target.writeText("old settings")
+
+        target.atomicWrite { it.writeText("new settings") }
+
+        assertEquals("new settings", target.readText())
+        assertEquals(1L, Files.list(folder).use { it.count() })
+    }
+
+    @Test
+    fun `failed atomic write keeps the previous content`() {
+        val target = folder.resolve("settings.json")
+        target.writeText("old settings")
+
+        assertFailsWith<IllegalStateException> {
+            target.atomicWrite {
+                it.writeText("partial settings")
+                error("writing failed")
+            }
+        }
+
+        assertEquals("old settings", target.readText())
+        assertEquals(1L, Files.list(folder).use { it.count() })
+    }
+
 }

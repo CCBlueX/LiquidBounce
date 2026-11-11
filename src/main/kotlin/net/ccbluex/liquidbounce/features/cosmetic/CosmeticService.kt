@@ -209,7 +209,7 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
         }
     }
 
-    private fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
+    fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
         fetchCosmetic(uuid, category)
 
         // Check if the client account is available and the requested UUID is the same as the session UUID

@@ -20,12 +20,28 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.fastutil.objectDoubleHashMapOf
 import net.ccbluex.fastutil.objectDoubleMapOf
-import kotlin.test.assertNotNull
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import java.util.function.ToDoubleFunction
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class GraphSearchTest {
+
+    private fun shortestPath(
+        graph: Map<String, List<WeightedEdge<String>>>,
+        heuristic: ToDoubleFunction<String> = objectDoubleMapOf(),
+        maxIterations: Int = Int.MAX_VALUE,
+        maxCost: Double = Double.POSITIVE_INFINITY,
+    ) = aStarShortestPath(
+        start = "S",
+        isGoal = { it == "G" },
+        neighbors = { graph[it].orEmpty() },
+        heuristic = heuristic,
+        maxIterations = maxIterations,
+        maxCost = maxCost,
+    )
 
     @Test
     fun `finds optimal path in weighted graph`() {
@@ -36,12 +52,7 @@ class GraphSearchTest {
             "C" to listOf(WeightedEdge("G", 10.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-        )
+        val result = shortestPath(graph)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "A", "G"), path.nodes)
@@ -56,12 +67,7 @@ class GraphSearchTest {
             "B" to emptyList(),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-        )
+        val result = shortestPath(graph)
 
         assertNull(result)
     }
@@ -89,22 +95,10 @@ class GraphSearchTest {
             "C" to listOf(WeightedEdge("G", 1.0)),
         )
 
-        val limited = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxIterations = 3,
-        )
+        val limited = shortestPath(graph, maxIterations = 3)
         assertNull(limited)
 
-        val full = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxIterations = 10,
-        )
+        val full = shortestPath(graph, maxIterations = 10)
         assertEquals(listOf("S", "A", "B", "C", "G"), assertNotNull(full).nodes)
     }
 
@@ -115,22 +109,10 @@ class GraphSearchTest {
             "A" to listOf(WeightedEdge("G", 2.0)),
         )
 
-        val tooLow = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxCost = 3.0,
-        )
+        val tooLow = shortestPath(graph, maxCost = 3.0)
         assertNull(tooLow)
 
-        val exact = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxCost = 4.0,
-        )
+        val exact = shortestPath(graph, maxCost = 4.0)
         val path = assertNotNull(exact)
         assertEquals(listOf("S", "A", "G"), path.nodes)
         assertEquals(4.0, path.totalCost)
@@ -144,12 +126,7 @@ class GraphSearchTest {
             "A" to listOf(WeightedEdge("G", 1.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-        )
+        val result = shortestPath(graph)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "B", "A", "G"), path.nodes)
@@ -172,12 +149,7 @@ class GraphSearchTest {
             "G", 0.0,
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = heuristic,
-        )
+        val result = shortestPath(graph, heuristic)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "A", "C", "G"), path.nodes)
@@ -192,13 +164,7 @@ class GraphSearchTest {
             "B" to listOf(WeightedEdge("A", 1.0), WeightedEdge("G", 1.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxIterations = 50,
-        )
+        val result = shortestPath(graph, maxIterations = 50)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "A", "B", "G"), path.nodes)
@@ -212,12 +178,7 @@ class GraphSearchTest {
             "A" to listOf(WeightedEdge("G", 1.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-        )
+        val result = shortestPath(graph)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "A", "G"), path.nodes)
@@ -231,13 +192,7 @@ class GraphSearchTest {
             "A" to listOf(WeightedEdge("G", 0.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxCost = 0.0,
-        )
+        val result = shortestPath(graph, maxCost = 0.0)
 
         val path = assertNotNull(result)
         assertEquals(listOf("S", "A", "G"), path.nodes)
@@ -260,14 +215,7 @@ class GraphSearchTest {
             maxCost = 10.0,
         )
 
-        val viaAStar = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxIterations = 100,
-            maxCost = 10.0,
-        )
+        val viaAStar = shortestPath(graph, maxIterations = 100, maxCost = 10.0)
 
         val nonNullAStar = assertNotNull(viaAStar)
         val nonNullDijkstra = assertNotNull(viaDijkstra)
@@ -282,13 +230,7 @@ class GraphSearchTest {
             "S" to listOf(WeightedEdge("G", 0.0)),
         )
 
-        val result = aStarShortestPath(
-            start = "S",
-            isGoal = { it == "G" },
-            neighbors = { graph[it].orEmpty() },
-            heuristic = objectDoubleMapOf(),
-            maxCost = -0.1,
-        )
+        val result = shortestPath(graph, maxCost = -0.1)
 
         assertNull(result)
     }
@@ -304,5 +246,33 @@ class GraphSearchTest {
         )
 
         assertNull(result)
+    }
+
+    @Test
+    fun `advancing in slices finds the same path as one call`() {
+        val graph = mapOf(
+            "S" to listOf(WeightedEdge("A", 1.0), WeightedEdge("B", 4.0)),
+            "A" to listOf(WeightedEdge("B", 1.0), WeightedEdge("C", 5.0)),
+            "B" to listOf(WeightedEdge("C", 1.0)),
+            "C" to listOf(WeightedEdge("G", 1.0)),
+        )
+        fun search() = AStarSearch(
+            start = "S",
+            isGoal = { it == "G" },
+            neighbors = { graph[it].orEmpty() },
+            heuristic = objectDoubleMapOf(),
+        )
+
+        val whole = assertNotNull(search().advance(Int.MAX_VALUE))
+
+        val sliced = search()
+        var slices = 0
+        while (!sliced.isFinished) {
+            assertTrue(sliced.advance(1) == null || sliced.isFinished)
+            slices++
+        }
+
+        assertEquals(whole, sliced.result)
+        assertEquals(sliced.iterations, slices)
     }
 }

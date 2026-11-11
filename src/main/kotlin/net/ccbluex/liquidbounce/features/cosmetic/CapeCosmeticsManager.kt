@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
 import net.ccbluex.liquidbounce.api.services.cosmetics.CapeApi
 import net.ccbluex.liquidbounce.event.EventListener
@@ -58,18 +57,27 @@ object CapeCosmeticsManager : EventListener {
      * @param player The player to load the cape for
      * @param callback The callback to call with the cape texture identifier
      */
-    fun loadPlayerCape(player: GameProfile, callback: Consumer<Identifier>) {
+    fun loadPlayerCape(player: GameProfile, callback: Consumer<Identifier>) =
+        loadPlayerTexture(player, CosmeticCategory.CAPE, callback)
+
+    /**
+     * Loads a custom elytra, a texture in the cape layout
+     */
+    fun loadPlayerElytra(player: GameProfile, callback: Consumer<Identifier>) =
+        loadPlayerTexture(player, CosmeticCategory.ELYTRA, callback)
+
+    private fun loadPlayerTexture(player: GameProfile, category: CosmeticCategory, callback: Consumer<Identifier>) {
         ioScope.launch {
             val uuid = player.id
 
-            CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
+            CosmeticService.fetchCosmetic(uuid, category) { cosmetic ->
                 // Get url of cape from cape service
-                val name = getCapeName(cosmetic) ?: return@fetchCosmetic
+                val name = cosmetic.extra ?: return@fetchCosmetic
 
                 // Check if the cape is cached
                 val cachedCapeId = cachedCapes[name]
                 if (cachedCapeId != null) {
-                    logger.info("Successfully loaded cached cape for ${player.name}")
+                    logger.info("Successfully loaded cached $category texture for ${player.name}")
                     callback.accept(cachedCapeId)
                     return@fetchCosmetic
                 }
@@ -81,7 +89,7 @@ object CapeCosmeticsManager : EventListener {
                     }
                 }.getOrNull() ?: return@fetchCosmetic
 
-                logger.info("Successfully loaded cape for ${player.name}")
+                logger.info("Successfully loaded $category texture for ${player.name}")
 
                 val id = LiquidBounce.identifier("cape-$name")
 
@@ -97,12 +105,6 @@ object CapeCosmeticsManager : EventListener {
                 }
             }
         }
-    }
-
-    private fun getCapeName(cosmetic: Cosmetic): String? {
-        // Check if cosmetic is a cape
-        if (cosmetic.category != CosmeticCategory.CAPE) return null
-        return cosmetic.extra
     }
 
     @Suppress("unused")

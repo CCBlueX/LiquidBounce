@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.CachedMeshStorage
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
@@ -293,7 +294,7 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     private fun collectBlockShapes(
-        colorMode: net.ccbluex.liquidbounce.render.GenericColorMode<Pair<BlockPos, BlockState>>,
+        colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
         useColor: Boolean,
     ): List<PositionedVoxelShape<BlockMergeKey>> {
         val shapes = buildList {

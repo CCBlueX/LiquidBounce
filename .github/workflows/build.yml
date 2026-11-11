@@ -286,9 +286,28 @@ jobs:
         with:
           path: ~/.gradle/liquidbounce-gametest
           key: gametest-libraries-${{ runner.os }}-${{ steps.libraries.outputs.key }}
+      - name: Look for navigation changes
+        id: navigation
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          # The engine, what drives it, its game tests, and Minecraft or library updates
+          PATHS: >-
+            ^(src/main/kotlin/net/ccbluex/liquidbounce/(utils/navigation/|features/global/GlobalSettingsTeleport|features/command/commands/ingame/teleport/|features/module/modules/(combat/tpaura/|combat/killaura/features/KillAuraFightBot|exploit/(ModuleTeleportReach|ReachAction)|player/ModuleAutoWalk|render/ModuleFreeCam|movement/ModuleElytraRecast|world/autofarm/AutoFarmAutoWalk|world/fucker/FuckerAutoWalk))|src/gametest/kotlin/net/ccbluex/liquidbounce/gametest/navigation/|gradle/libs\.versions\.toml)
+        run: |
+          if ! files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename'); then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif grep -qE "$PATHS" <<< "$files"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Client game tests
         env:
           CI: true
           # Minecraft asks for an sRGB framebuffer, which Xvfb's GLX does not offer
           SDL_VIDEO_FORCE_EGL: 1
-        run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest
+          # Pull requests that leave navigation alone skip its game tests, which take minutes
+          NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
+        run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"

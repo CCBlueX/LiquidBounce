@@ -57,7 +57,7 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.io.atomicMoveTo
+import net.ccbluex.liquidbounce.utils.io.atomicWrite
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -210,15 +210,15 @@ object CommandLocalConfig : CommandRegistrar {
         }
 
         try {
-            val tempPath = Files.createTempFile(path.parent, "$name.", ".json.tmp")
-            Files.newBufferedWriter(tempPath).use { writer ->
-                serializeAutoConfig(
-                    writer,
-                    includeConfiguration,
-                    marketplaceItemId = ConfigTracker.trackedItemId
-                )
+            path.atomicWrite { tempPath ->
+                Files.newBufferedWriter(tempPath).use { writer ->
+                    serializeAutoConfig(
+                        writer,
+                        includeConfiguration,
+                        marketplaceItemId = ConfigTracker.trackedItemId
+                    )
+                }
             }
-            tempPath.atomicMoveTo(path)
             chat(regular(t("save.created", variable(name))))
         } catch (e: Exception) {
             chat(regular(t("save.failedToCreate", variable(name))))
@@ -240,7 +240,7 @@ object CommandLocalConfig : CommandRegistrar {
                 return 1
             }
 
-            val config = bufferedReader().use { r -> publicGson.newJsonReader(r).parseTree().asJsonObject }
+            val config = publicGson.newJsonReader(bufferedReader()).use { it.parseTree().asJsonObject }
             AutoConfig.withLoading {
                 AutoConfig.loadAutoConfig(config, modules)
             }

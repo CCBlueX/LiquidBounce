@@ -61,9 +61,6 @@ internal fun header(title: Component, detail: Component? = null) {
     )
 }
 
-/**
- * `author/name`, clickable to load the config.
- */
 internal fun CmdI18n.addressText(item: MarketplaceItem): MutableComponent = regular("")
     .apply { item.author?.let { append(regular("$it/")) } }
     .append(variable(item.name))
@@ -81,20 +78,20 @@ internal fun CmdI18n.trackedMarker(item: MarketplaceItem): MutableComponent? = i
 }
 
 /**
- * `[✔ 3] [✘ 1]`: the reports of the last 30 days, each a button to report the config.
+ * The reports of the last 30 days, each a button to report the config.
  */
 internal fun CmdI18n.votes(item: MarketplaceItem): MutableComponent =
     vote(item, works = true).append(regular(" ")).append(vote(item, works = false))
 
 private fun CmdI18n.vote(item: MarketplaceItem, works: Boolean): MutableComponent {
-    val (symbol, count, color) = if (works) {
-        Triple("✔", item.recentWorks, ChatFormatting.GREEN)
-    } else {
-        Triple("✘", item.recentFails, ChatFormatting.RED)
-    }
     val verdict = if (works) "works" else "broken"
+    val button = if (works) {
+        "[✔ ${item.recentWorks}]".asText().withStyle(ChatFormatting.GREEN)
+    } else {
+        "[✘ ${item.recentFails}]".asText().withStyle(ChatFormatting.RED)
+    }
 
-    return "[$symbol $count]".asText().withStyle(color)
+    return button
         .onHover(HoverEvent.ShowText(regular(t("vote.$verdict", variable(item.address)))))
         .onClickRun {
             runCatching {
@@ -103,9 +100,6 @@ private fun CmdI18n.vote(item: MarketplaceItem, works: Boolean): MutableComponen
         }
 }
 
-/**
- * The protocol the config was made on, green when it is the one in use and red when it is not.
- */
 internal fun protocolText(item: MarketplaceItem): Component? {
     val name = item.protocolName ?: return null
     val matches = item.protocolVersion == null || item.protocolVersion == protocolVersion.version
@@ -116,8 +110,7 @@ private const val DAYS_PER_WEEK = 7
 private const val DAYS_SHOWN_RELATIVE = 28
 
 /**
- * How long ago [dateTime] (UTC, as the API sends it) was, with the exact date on hover. Beyond
- * four weeks only the date.
+ * [dateTime] is in UTC, as the API sends it.
  */
 internal fun CmdI18n.ago(dateTime: String): MutableComponent {
     val exact = formatDate(dateTime)
@@ -136,9 +129,6 @@ internal fun CmdI18n.ago(dateTime: String): MutableComponent {
     return text.onHover(HoverEvent.ShowText(variable(exact)))
 }
 
-/**
- * Servers, protocol, tags and the last update on one gray line, or null when there is none of it.
- */
 internal fun CmdI18n.details(item: MarketplaceItem): MutableComponent? {
     val parts = listOfNotNull(
         item.targetServers?.takeIf { it.isNotEmpty() }?.joinToText(DEFAULT_SEPARATOR, ::variable),

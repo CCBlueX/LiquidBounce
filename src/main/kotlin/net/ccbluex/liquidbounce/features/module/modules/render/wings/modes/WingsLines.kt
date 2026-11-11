@@ -20,11 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.wings.modes
 
 import com.mojang.math.Axis
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.features.module.modules.render.wings.WingsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.wings.WingsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.wings.modes.WingsLines.WingsOptions.angles
-import net.ccbluex.liquidbounce.features.module.modules.render.wings.modes.WingsLines.WingsOptions.linesCount
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawCustomMesh
@@ -35,27 +31,15 @@ import org.joml.Matrix4f
 
 object WingsLines : WingsMode("Lines") {
 
-    private val colors = WingsColorSettings()
-
-    private object WingsOptions : ValueGroup("WingsOptions") {
-        val wingsLength by float("WingsLength", 1f, 0.1f..2f)
-        val wingsWidth by float("WingsWidth", 0.05f, 0.01f..1f)
-        val fadeStartRatio by float("FadeStartRatio", 0.5f, 0.1f..1f)
-        val linesCount by int("LinesCount", 4, 1..12)
-        val angles by intRange("Angles", 10..37, 1..90)
-    }
-
-    init {
-        tree(WingsOptions)
-        tree(colors)
-    }
+    val length by float("Length", 1f, 0.1f..2f)
+    val width by float("Width", 0.05f, 0.01f..1f)
+    val fadeStartRatio by float("FadeStartRatio", 0.5f, 0.1f..1f)
+    val linesCount by int("LinesCount", 4, 1..12)
+    val angles by intRange("Angles", 10..37, 1..90)
+    val color by color("Color", Color4b.LIQUID_BOUNCE)
 
     override fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float) {
-
-        val currentColor = when (isHurt) {
-            true -> Color4b.RED.alpha(colors.color.a)
-            else -> colors.color
-        }
+        val currentColor = if (isHurt) Color4b.RED.alpha(color.a) else color
 
         fun drawQuadSegment(
             m: Matrix4f,
@@ -86,11 +70,11 @@ object WingsLines : WingsMode("Lines") {
                 val m = pose.pose()
                 val transparent = currentColor.alpha(0)
 
-                val rSolid = firstX * WingsOptions.fadeStartRatio
+                val rSolid = firstX * fadeStartRatio
                 drawQuadSegment(m, 0f, rSolid, height, currentColor, currentColor)
                 drawQuadSegment(m, rSolid, firstX, height, currentColor, transparent)
 
-                val lSolid = -secondX * WingsOptions.fadeStartRatio
+                val lSolid = -secondX * fadeStartRatio
                 drawQuadSegment(m, 0f, lSolid, height, currentColor, currentColor)
                 drawQuadSegment(m, lSolid, -secondX, height, currentColor, transparent)
             }
@@ -113,9 +97,9 @@ object WingsLines : WingsMode("Lines") {
                     translate(0.1 + (0.0375 * i), 0.0, -0.1 - (0.0375 * i))
                     rotate(Axis.YP.rotationDegrees(angle))
                     drawWingPair(
-                        WingsOptions.wingsLength - 0.25f,
-                        WingsOptions.wingsWidth,
-                        secondX = WingsOptions.wingsLength
+                        length - 0.25f,
+                        width,
+                        secondX = length
                     )
                 }
 
@@ -123,9 +107,9 @@ object WingsLines : WingsMode("Lines") {
                     translate(-0.1 - (0.0375 * i), 0.0, -0.1 - (0.0375 * i))
                     rotate(Axis.YP.rotationDegrees(-angle))
                     drawWingPair(
-                        WingsOptions.wingsLength,
-                        WingsOptions.wingsWidth,
-                        secondX = WingsOptions.wingsLength - 0.25f
+                        length,
+                        width,
+                        secondX = length - 0.25f
                     )
                 }
             }

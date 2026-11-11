@@ -284,7 +284,7 @@ fun LocalPlayer.isCloseToEdge(
         simulatedInput
     )
 
-    simulatedPlayer.pos = pos
+    simulatedPlayer.setPos(pos)
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.deltaMovement
@@ -769,6 +769,15 @@ private fun LivingEntity.getHealthFromScoreboard(): Float? {
 fun Entity.getBoundingBoxAt(pos: Vec3): AABB {
     return boundingBox.move(pos - this.position())
 }
+
+/**
+ * Where the server last placed this entity. [Entity.position] only catches up while the entity ticks, so it falls
+ * behind while ticks are held back.
+ */
+val Entity.serverPosition: Vec3
+    get() = positionCodec.base
+
+fun Entity.serverBox(): AABB = getBoundingBoxAt(serverPosition)
 
 /**
  * Check if the entity collides with anything below his bounding box.

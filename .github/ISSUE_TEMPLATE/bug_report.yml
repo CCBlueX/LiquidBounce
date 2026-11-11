@@ -26,6 +26,7 @@ body:
           required: true
 
   - type: dropdown
+    id: branch
     attributes:
       label: LiquidBounce Branch
       description: Which edition of LiquidBounce does this bug affect?
@@ -37,6 +38,7 @@ body:
       required: true
 
   - type: input
+    id: version
     attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
@@ -45,6 +47,7 @@ body:
       required: true
 
   - type: dropdown
+    id: os
     attributes:
       label: Operating System
       description: On which OS is LiquidBounce running?
@@ -61,6 +64,7 @@ body:
       required: true
 
   - type: input
+    id: minecraft
     attributes:
       label: Minecraft Version
       description: Which Minecraft-Version and protocol version does this bug affect?
@@ -69,6 +73,7 @@ body:
       required: true
 
   - type: textarea
+    id: description
     attributes:
       label: Describe the bug
       description: Clear and thorough explanation of the bug.
@@ -89,6 +94,7 @@ body:
       required: true
 
   - type: textarea
+    id: log
     attributes:
       label: Client Log
       description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.

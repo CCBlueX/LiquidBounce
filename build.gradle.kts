@@ -18,6 +18,7 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
+import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import java.time.Duration
@@ -101,6 +102,7 @@ loom {
 // Client game tests: `src/gametest` is a separate source set/mod, never part of the main jar.
 // Run with `./gradlew runClientGameTest`. Headless, SDL needs EGL, since Xvfb has no sRGB GLX visual:
 // `SDL_VIDEO_FORCE_EGL=1 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest`
+// `-PgameTestNavigation=false` skips the slow navigation tests.
 fabricApi {
     configureTests {
         createSourceSet = true
@@ -119,6 +121,10 @@ loom.runs.named("clientGameTest") {
     systemProperties.put("net.ccbluex.liquidbounce.ui.basicMode", "true")
     systemProperties.put("net.ccbluex.liquidbounce.browser.libraries", gameTestLibraries.resolve("mcef").path)
     systemProperties.put("net.ccbluex.liquidbounce.deeplearning.engines", gameTestLibraries.resolve("djl").path)
+    systemProperties.put(
+        "net.ccbluex.liquidbounce.gametest.navigation",
+        providers.gradleProperty("gameTestNavigation").getOrElse("true"),
+    )
 }
 
 tasks.named("runClientGameTest") {
@@ -161,6 +167,9 @@ dependencies {
 
     // Minecraft account authentication (Microsoft/Xbox Live/XSTS token chain)
     jij(libs.minecraftauth)
+
+    // LiquidChat protocol client
+    jij(libs.axochat.client)
 
     // TheAltening alt service
     jij(libs.thealtening)
@@ -364,6 +373,17 @@ detekt {
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
     // Defaults only cover src/{main,test}/{java,kotlin}.
     source.from("src/gametest/kotlin")
+}
+
+val detektTypeResolutionTasks = listOf("detektMain", "detektTest", "detektGametest")
+
+tasks.withType<Detekt>().matching { it.name in detektTypeResolutionTasks }.configureEach {
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt-type-resolution.yml"))
+    buildUponDefaultConfig.set(false)
+}
+
+tasks.check {
+    dependsOn(detektTypeResolutionTasks)
 }
 
 tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
