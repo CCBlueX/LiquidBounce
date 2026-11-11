@@ -28,8 +28,8 @@ import net.minecraft.resources.Identifier
  * Every piece of evidence has a certainty of its own. Evidence for the same anticheat adds up, the most certain
  * anticheat wins and ties go to the one declared first. Entries without evidence only show in the plugin list.
  *
- * `@testedOn` lists the servers an entry was sampled on, `@testedWith` the clients that joined them, `@untested`
- * marks entries never sampled.
+ * `@anticheatVersion` and `@testedOn` say what an entry was sampled against, with a 26.3 client unless noted.
+ * Entries without `@testedOn` were never sampled.
  *
  * [plugins] are the plugin names that prefix their commands, lowercase as Paper registers them. They only mark
  * anticheats in the plugin list, as the command list is no reliable evidence.
@@ -41,17 +41,13 @@ enum class AntiCheat(
     private vararg val evidence: Evidence,
 ) : Tagged {
 
-    /**
-     * @untested
-     */
     WATCHDOG("Watchdog", emptySet(), host("hypixel.net")),
 
     /**
-     * @testedOn Paper 26.3, only GrimAC 2.3.75
-     * @testedOn 1.8.8 with ViaVersion 5.12.2, only GrimAC 2.3.75
-     * @testedOn Velocity and BungeeCord, lobby without anticheat, then Paper 26.3 with GrimAC 2.3.75
-     * @testedWith 26.3
-     * @testedWith 1.8 through ViaFabricPlus
+     * @anticheatVersion 2.3.75-e457d55
+     * @testedOn Paper 26.3
+     * @testedOn Paper 26.3 behind Velocity and BungeeCord, also as 1.8 through ViaFabricPlus
+     * @testedOn 1.8.8 with ViaVersion
      */
     GRIM(
         "Grim",
@@ -62,9 +58,9 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn Paper 26.3, only Intave 14.9.7
-     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Intave 14.9.7
-     * @testedWith 26.3
+     * @anticheatVersion 14.9.7-b1-4f18a06d
+     * @testedOn Paper 26.3
+     * @testedOn 1.8.8 with ViaVersion
      */
     INTAVE(
         "Intave",
@@ -83,9 +79,9 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn Paper 26.3, only Vulcan 2.9.7.29
-     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Vulcan 2.9.7.29
-     * @testedWith 26.3
+     * @anticheatVersion 2.9.7.29
+     * @testedOn Paper 26.3
+     * @testedOn 1.8.8 with ViaVersion
      */
     VULCAN(
         "Vulcan",
@@ -97,9 +93,9 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn Paper 26.3, only Matrix 7.27.0
-     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Matrix 7.27.0
-     * @testedWith 26.3
+     * @anticheatVersion 7.27.0
+     * @testedOn Paper 26.3
+     * @testedOn 1.8.8 with ViaVersion
      */
     MATRIX(
         "Matrix",
@@ -117,8 +113,7 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn anticheat-test.com, 1.8 with several anticheats
-     * @testedWith 26.3
+     * @testedOn anticheat-test.com
      */
     KARHU(
         "Karhu",
@@ -132,8 +127,7 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn anticheat-test.com, 1.8 with several anticheats
-     * @testedWith 26.3
+     * @testedOn anticheat-test.com
      */
     VERUS(
         "Verus",
@@ -145,9 +139,7 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn pika.host, 1.8 behind Velocity
-     * @testedOn gamster.org, 1.8 behind Velocity
-     * @testedWith 26.3
+     * @testedOn pika.host, gamster.org
      */
     POLAR(
         "Polar",
@@ -164,50 +156,35 @@ enum class AntiCheat(
     ),
 
     /**
-     * @testedOn Paper 26.3, only NoCheatPlus 3.17.1
-     * @testedWith 26.3
+     * @anticheatVersion 3.17.1-b198
+     * @testedOn Paper 26.3
      */
     NOCHEATPLUS("NoCheatPlus", setOf("nocheatplus")),
 
     /**
-     * @testedOn 1.8.8 with ViaVersion 5.12.2 and FoxViaRestore, only AAC 5.0.14
-     * @testedWith 26.3
-     * @testedWith 1.8 through ViaFabricPlus
+     * @anticheatVersion 5.0.14
+     * @testedOn 1.8.8 with ViaVersion and FoxViaRestore, also as 1.8 through ViaFabricPlus
      */
     AAC("AAC", setOf("aac", "aac5")),
 
     /**
-     * @testedOn 1.8.8 with ViaVersion 5.12.2, only Horizon BETA17
-     * @testedWith 26.3
-     * @testedWith 1.8 through ViaFabricPlus
+     * @anticheatVersion BETA17
+     * @testedOn 1.8.8 with ViaVersion, also as 1.8 through ViaFabricPlus
      */
     HORIZON("Horizon", setOf("horizon")),
 
     /**
-     * @testedOn Paper 26.3, only Spartan 4.0.9
-     * @testedOn minecraft.vagdedes.com, its official test server
-     * @testedWith 26.3
+     * @anticheatVersion 4.0.9.0
+     * @testedOn Paper 26.3, minecraft.vagdedes.com
      */
     SPARTAN("Spartan", setOf("spartan")),
 
-    /**
-     * @untested
-     */
     KAURI("Kauri", setOf("kauri")),
 
-    /**
-     * @untested
-     */
     ANTICHEAT_RELOADED("AntiCheatReloaded", setOf("anticheatreloaded")),
 
-    /**
-     * @untested runs only on 1.17 to 1.21
-     */
     THEMIS("Themis", setOf("themis")),
 
-    /**
-     * @untested
-     */
     NEGATIVITY("Negativity", setOf("negativity"));
 
     private fun certainty(observation: Observation): Int? {
