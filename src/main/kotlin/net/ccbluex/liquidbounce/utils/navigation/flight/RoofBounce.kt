@@ -47,7 +47,7 @@ import kotlin.math.min
 
 /**
  * Bounces along a flat floor, such as the Nether roof, with an elytra and [ModuleElytraRecast], which reopens the
- * elytra after each jump off the floor: much faster than running. The rest of the way is left to walking.
+ * elytra each time the feet touch the floor: much faster than running. The rest of the way is left to walking.
  */
 class RoofBounce(private val owner: EventListener, private val view: RouteView) : EventListener {
 
@@ -72,10 +72,11 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
             return false
         }
 
+        bounce.ticks++
         event.directionalInput = steer(goal.subtract(position), frameYaw)
         event.sneak = false
-        // Held, as ElytraRecast lets go of it for the fresh press that opens the elytra.
-        event.jump = true
+        // Opening the elytra takes a fresh jump press in the air; after that ElytraRecast reopens it on every bounce.
+        event.jump = player.isFallFlying || player.onGround() || bounce.ticks % 2 == 0
 
         view.breaks = emptyList()
         view.places = emptyList()
@@ -130,7 +131,9 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
     }
 
-    private class Bounce(val goal: Vec3, val floor: Double, var lineEnd: Vec3)
+    private class Bounce(val goal: Vec3, val floor: Double, var lineEnd: Vec3) {
+        var ticks = 0
+    }
 
     companion object {
         // The pitch that bounces fastest.

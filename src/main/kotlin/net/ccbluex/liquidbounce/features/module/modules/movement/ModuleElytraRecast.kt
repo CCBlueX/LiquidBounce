@@ -18,11 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.item.isGlider
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EquipmentSlot
 
@@ -35,24 +34,31 @@ import net.minecraft.world.entity.EquipmentSlot
  */
 object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEMENT) {
 
-    private val canOpenElytra: Boolean
+    private val shouldRecast: Boolean
         get() {
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
-            return !player.onGround() && !player.isFallFlying && !player.abilities.flying && !player.isPassenger &&
-                !player.onClimbable() && !player.isInLiquid && !player.hasEffect(MobEffects.LEVITATION) &&
-                itemStack.isGlider && !itemStack.nextDamageWillBreak()
+            return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
+                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) && !player.isFallFlying &&
+                itemStack.isGlider && !itemStack.nextDamageWillBreak() &&
+                (mc.options.keyJump.isDown || player.input.keyPresses.jump)
         }
 
     /**
-     * The game opens the elytra only on a fresh jump press in the air, so a held jump is let go for one tick.
-     * Letting go also allows the next jump right on landing.
+     * Recast elytra when [shouldRecast] says it should
+     *
+     * @return true if elytra was recast
      */
-    @Suppress("unused")
-    private val inputHandler = handler<MovementInputEvent> { event ->
-        if (event.jump && player.input.keyPresses.jump() && canOpenElytra) {
-            event.jump = false
+    fun recastElytra(): Boolean {
+        if (shouldRecast) {
+            player.startFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
+            return true
         }
+
+        return false
     }
 
 }

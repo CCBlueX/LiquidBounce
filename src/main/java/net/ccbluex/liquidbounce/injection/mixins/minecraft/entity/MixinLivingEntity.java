@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -46,6 +47,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffect;
@@ -92,6 +95,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     public abstract void setHealth(float health);
+
+    @Shadow
+    public abstract boolean isFallFlying();
 
     @Shadow
     protected abstract boolean canGlide();
@@ -251,6 +257,26 @@ public abstract class MixinLivingEntity extends MixinEntity {
             this.jumpFromGround();
             noJumpDelay = 10;
         }
+    }
+
+    @Unique
+    private boolean previousElytra = false;
+
+    @Inject(method = "aiStep", at = @At("TAIL"))
+    public void recastIfLanded(CallbackInfo callbackInfo) {
+        if (!liquid_bounce$isClientPlayer()) {
+            return;
+        }
+
+        var elytra = isFallFlying();
+        if (ModuleElytraRecast.INSTANCE.getRunning() && previousElytra && !elytra) {
+            Minecraft.getInstance().getSoundManager().stop(SoundEvents.ELYTRA_FLYING.location(),
+                    SoundSource.PLAYERS);
+            ModuleElytraRecast.INSTANCE.recastElytra();
+            noJumpDelay = 0;
+        }
+
+        previousElytra = elytra;
     }
 
     /**
