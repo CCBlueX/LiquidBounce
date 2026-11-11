@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.render
 
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
@@ -43,6 +45,22 @@ interface RouteProgress {
     fun head(partialTicks: Float): Vec3
 
     val ahead: List<Vec3>
+
+}
+
+/** The player heading straight for [target] while [isMoving]. */
+internal class TargetProgress(
+    private val moving: () -> Boolean,
+    private val target: () -> Vec3?,
+) : RouteProgress {
+
+    override val isMoving: Boolean
+        get() = moving()
+
+    override val ahead: List<Vec3>
+        get() = listOfNotNull(target())
+
+    override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
 
 }
 

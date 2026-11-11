@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -38,8 +37,8 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
+import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
 import net.ccbluex.liquidbounce.utils.navigation.route.BackgroundSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.minecraft.core.BlockPos
@@ -266,15 +265,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
         return best
     }
 
-    private val progress = object : RouteProgress {
-        override val isMoving: Boolean
-            get() = isActive
-
-        override val ahead: List<Vec3>
-            get() = listOfNotNull(glide?.landing)
-
-        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
-    }
+    private val progress = TargetProgress({ isActive }) { glide?.landing }
 
     /** A glide from take-off to touch-down: planned along [path], or a cruise without one. */
     private class Glide(val goal: Vec3, val steering: Steering, private val path: Path? = null) {

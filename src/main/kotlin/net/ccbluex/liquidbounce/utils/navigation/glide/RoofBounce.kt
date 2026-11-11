@@ -30,14 +30,13 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
+import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.util.Mth
@@ -121,15 +120,7 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         )
     }
 
-    private val progress = object : RouteProgress {
-        override val isMoving: Boolean
-            get() = isActive
-
-        override val ahead: List<Vec3>
-            get() = listOfNotNull(bounce?.lineEnd)
-
-        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
-    }
+    private val progress = TargetProgress({ isActive }) { bounce?.lineEnd }
 
     private class Bounce(val goal: Vec3, val floor: Double, var lineEnd: Vec3) {
         var ticks = 0

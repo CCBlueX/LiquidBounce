@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.navigation.ProgressWatch
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
@@ -60,8 +61,7 @@ class Riding(
 
     private var stuck = false
     private var stuckCount = 0
-    private var bestDistance = Double.MAX_VALUE
-    private var idleTicks = 0
+    private val watch = ProgressWatch(MIN_PROGRESS, STUCK_TICKS)
 
     /** Whether the vehicle is in the goal node, so only the last bit is left to ride straight. */
     private var atGoal = false
@@ -187,22 +187,17 @@ class Riding(
 
         if (reached >= 0) {
             index = reached + 1
-            resetProgress()
+            watch.reset()
         }
     }
 
     private fun trackProgress(position: Vec3, point: Vec3, path: Path) {
         val distance = position.horizontalDistanceTo(point)
-        if (distance < bestDistance - MIN_PROGRESS) {
-            bestDistance = distance
-            idleTicks = 0
-            return
-        }
-        if (++idleTicks < STUCK_TICKS) {
+        if (!watch.stalls(distance)) {
             return
         }
 
-        resetProgress()
+        watch.reset()
         // A boat pushed against the shore at the end of its route is there.
         if (index == path.points.lastIndex && distance < NEAR_END) {
             index = path.points.size
@@ -210,11 +205,6 @@ class Riding(
             stuck = true
             stuckCount++
         }
-    }
-
-    private fun resetProgress() {
-        bestDistance = Double.MAX_VALUE
-        idleTicks = 0
     }
 
     /** Rides straight at [goal] from within its node, and gets off when that does not get the player there. */
@@ -259,7 +249,7 @@ class Riding(
                 stuck = false
                 atGoal = false
                 approachTicks = 0
-                resetProgress()
+                watch.reset()
                 routes.routeEnds(result.value.points.last().node)
             }
         }

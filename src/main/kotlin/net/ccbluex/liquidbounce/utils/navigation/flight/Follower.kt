@@ -25,8 +25,9 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
+import net.ccbluex.liquidbounce.utils.navigation.FollowState
+import net.ccbluex.liquidbounce.utils.navigation.ProgressWatch
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
-import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -108,11 +109,8 @@ class Follower : RouteProgress {
 
     private fun progress(route: Route): FollowState {
         val distance = player.position().distanceTo(route.points[route.corner])
-        if (distance < route.bestDistance - MIN_PROGRESS) {
-            route.bestDistance = distance
-            route.idleTicks = 0
-        } else if (++route.idleTicks >= STUCK_TICKS) {
-            route.resetProgress()
+        if (route.watch.stalls(distance)) {
+            route.watch.reset()
             return FollowState.STUCK
         }
         return FollowState.WALKING
@@ -189,7 +187,7 @@ class Follower : RouteProgress {
         }
 
         if (route.corner != start) {
-            route.resetProgress()
+            route.watch.reset()
         }
     }
 
@@ -197,16 +195,10 @@ class Follower : RouteProgress {
     private class Route(val path: Path) {
         val points = path.points
         var corner = 1
-        var bestDistance = Double.MAX_VALUE
-        var idleTicks = 0
+        val watch = ProgressWatch(MIN_PROGRESS, STUCK_TICKS)
 
         val isFinished: Boolean
             get() = corner >= points.size
-
-        fun resetProgress() {
-            bestDistance = Double.MAX_VALUE
-            idleTicks = 0
-        }
     }
 
     private companion object {

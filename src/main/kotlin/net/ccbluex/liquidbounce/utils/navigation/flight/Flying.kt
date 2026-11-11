@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.navigation.FollowState
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 

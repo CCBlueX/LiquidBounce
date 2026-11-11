@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
@@ -47,9 +46,9 @@ import net.ccbluex.liquidbounce.utils.navigation.flight.captureFlight
 import net.ccbluex.liquidbounce.utils.navigation.glide.Gliding
 import net.ccbluex.liquidbounce.utils.navigation.glide.RoofBounce
 import net.ccbluex.liquidbounce.utils.navigation.glide.captureGlide
-import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
+import net.ccbluex.liquidbounce.utils.navigation.render.TargetProgress
 import net.ccbluex.liquidbounce.utils.navigation.ride.Riding
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
@@ -57,7 +56,6 @@ import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.BlockActions
-import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
 import net.ccbluex.liquidbounce.utils.navigation.walk.Follower
 import net.ccbluex.liquidbounce.utils.navigation.walk.Path
 import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
@@ -544,15 +542,7 @@ class Navigator(
         lastLookYaw = Float.NaN
     }
 
-    private val straightProgress = object : RouteProgress {
-        override val isMoving: Boolean
-            get() = straightGoal != null
-
-        override fun head(partialTicks: Float): Vec3 = player.interpolateCurrentPosition(partialTicks)
-
-        override val ahead: List<Vec3>
-            get() = listOfNotNull(straightGoal)
-    }
+    private val straightProgress = TargetProgress({ straightGoal != null }) { straightGoal }
 
     private companion object {
         /** How far ahead a point has to be for the look to follow it; a step passed by a bit lies right behind. */

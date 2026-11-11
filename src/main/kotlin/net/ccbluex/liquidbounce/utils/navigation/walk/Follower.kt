@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
+import net.ccbluex.liquidbounce.utils.navigation.FollowState
+import net.ccbluex.liquidbounce.utils.navigation.ProgressWatch
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
@@ -41,17 +43,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.min
-
-enum class FollowState {
-    WALKING,
-
-    /** Breaking, placing or opening a block of the current step. */
-    ACTING,
-    FINISHED,
-
-    /** The current step made no progress for too long. */
-    STUCK,
-}
 
 /** Walks a [Path] step by step through movement input, mining, placing and opening with [actions] on the way. */
 @Suppress("TooManyFunctions")
@@ -191,7 +182,7 @@ class Follower(private val actions: BlockActions) : RouteProgress {
         val stuck = if (step.jump != null) {
             ++progress.jumpTicks >= JUMP_TICKS || progress.leap.hopeless
         } else {
-            progress.stalls(player.position().distanceTo(step.feet)) ||
+            progress.watch.stalls(player.position().distanceTo(step.feet)) ||
                 progress.isDueToPredict && !getsAhead(event, frameYaw, step)
         }
         return if (stuck) giveUp(step) else FollowState.WALKING
@@ -256,7 +247,7 @@ class Follower(private val actions: BlockActions) : RouteProgress {
         // Air is filled up before a dive, and during one once it runs low.
         if (breathes() || step.underwater && isShortOfAir()) {
             standStill(event)
-            progress.idleTicks = 0
+            progress.watch.excuse()
             return Movement.NONE
         }
         if (step.underwater) {
@@ -534,22 +525,12 @@ class Follower(private val actions: BlockActions) : RouteProgress {
     private class Progress {
         val leap = Leap()
         var jumpTicks = 0
-        var idleTicks = 0
-        private var bestDistance = Double.MAX_VALUE
+        val watch = ProgressWatch(PROGRESS, STUCK_TICKS)
         var acting: BlockPos? = null
         private var actingTicks = 0
 
-        fun stalls(distance: Double): Boolean {
-            if (distance < bestDistance - PROGRESS) {
-                bestDistance = distance
-                idleTicks = 0
-                return false
-            }
-            return ++idleTicks >= STUCK_TICKS
-        }
-
         val isDueToPredict: Boolean
-            get() = idleTicks > 0 && idleTicks % PREDICT_INTERVAL == 0
+            get() = watch.idleTicks > 0 && watch.idleTicks % PREDICT_INTERVAL == 0
 
         fun actsTooLong(pos: BlockPos): Boolean {
             if (pos != acting) {
