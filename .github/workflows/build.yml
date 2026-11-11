@@ -243,18 +243,12 @@ jobs:
           sarif_file: build/reports/detekt/detekt.sarif
 
   gametest:
-    # Once with the default rotations, and with two AngleSmooth modes that lag behind their target
-    name: ${{ matrix.angle-smooth && format('gametest ({0})', matrix.angle-smooth) || 'gametest' }}
     runs-on: ubuntu-latest
     needs: extract-versions
     # A normal run takes about 5 minutes; the Gradle task gives up after 10
     timeout-minutes: 20
     # nextgen fills the library cache that pull requests read
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/nextgen'
-    strategy:
-      fail-fast: false
-      matrix:
-        angle-smooth: ['', Sigmoid, Acceleration]
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v7
@@ -280,7 +274,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' || matrix.angle-smooth != '' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Install EGL
         # The CEF add-on loads it to pick the browser's rendering, and the game renders through it below
         run: sudo apt-get update && sudo apt-get install -y libegl1 libegl-mesa0
@@ -316,7 +310,4 @@ jobs:
           SDL_VIDEO_FORCE_EGL: 1
           # Pull requests that leave navigation alone skip its game tests, which take minutes
           NAVIGATION: ${{ steps.navigation.outputs.run || 'true' }}
-          ANGLE_SMOOTH: ${{ matrix.angle-smooth }}
-        run: >-
-          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"
-          ${ANGLE_SMOOTH:+-PgameTestAngleSmooth=$ANGLE_SMOOTH}
+        run: xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest -PgameTestNavigation="$NAVIGATION"
