@@ -97,6 +97,11 @@ public abstract class MixinConnection implements ConnectionAddition {
 
     @WrapMethod(method = "send(Lnet/minecraft/network/protocol/Packet;)V")
     private void sendWithinClient(Packet<?> packet, Operation<Void> original) {
+        // Nothing a simulation does leaves the game
+        if (ClientContext.getCurrent().isSimulated()) {
+            return;
+        }
+
         var client = this.liquid_bounce$client;
         if (client == null) {
             original.call(packet);
@@ -108,6 +113,13 @@ public abstract class MixinConnection implements ConnectionAddition {
             original.call(packet);
         } finally {
             ClientContext.exit(previous);
+        }
+    }
+
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V", at = @At("HEAD"), cancellable = true)
+    private void keepSimulationFromSending(CallbackInfo ci) {
+        if (ClientContext.getCurrent().isSimulated()) {
+            ci.cancel();
         }
     }
 

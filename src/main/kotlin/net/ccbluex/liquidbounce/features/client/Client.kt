@@ -22,6 +22,10 @@ import com.google.common.collect.MapMaker
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.group.Mode
 import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.cancelEventListenerScopes
 import net.ccbluex.liquidbounce.features.account.SessionBundle
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.utils.client.NullableBypass
@@ -32,7 +36,7 @@ import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.multiplayer.ClientPacketListener
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
 import net.minecraft.client.player.LocalPlayer
-import java.util.concurrent.ConcurrentMap
+import net.minecraft.world.entity.player.Player
 import kotlin.math.min
 
 /**
@@ -40,11 +44,22 @@ import kotlin.math.min
  *
  * Exactly one client is [ClientManager.active]: it has the window, the input and the sound.
  * The others keep playing in the background.
+ *
+ * A simulated client is a throwaway [fork] of another one. A player simulation runs in it, so that what modules
+ * change while they take part in the simulation stays in the fork.
  */
-class Client internal constructor(val id: Int) {
+class Client internal constructor(
+    val id: Int,
+    /**
+     * The client a simulated client was forked from, null for a real one.
+     */
+    val parent: Client? = null,
+) {
 
-    val isMain: Boolean
-        get() = id == MAIN_ID
+    val isMain = id == MAIN_ID && parent == null
+
+    val isSimulated: Boolean
+        get() = parent != null
 
     val isActive: Boolean
         get() = this === ClientManager.active
@@ -56,19 +71,35 @@ class Client internal constructor(val id: Int) {
     var account: SessionBundle? = null
 
     val user: User
-        get() = account?.session ?: (mc as MinecraftAccessor).launchUser
+        get() = parent?.user ?: account?.session ?: (mc as MinecraftAccessor).launchUser
 
     val player: LocalPlayer?
-        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.player else game.player
+        get() = when {
+            parent != null -> parent.player
+            ClientContext.holds(this) -> NullableBypass.mc()?.player
+            else -> game.player
+        }
 
     val level: ClientLevel?
-        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.level else game.level
+        get() = when {
+            parent != null -> parent.level
+            ClientContext.holds(this) -> NullableBypass.mc()?.level
+            else -> game.level
+        }
 
     val gameMode: MultiPlayerGameMode?
-        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.gameMode else game.gameMode
+        get() = when {
+            parent != null -> parent.gameMode
+            ClientContext.holds(this) -> NullableBypass.mc()?.gameMode
+            else -> game.gameMode
+        }
 
     val screen: Screen?
-        get() = if (ClientContext.holds(this)) NullableBypass.mc()?.gui?.screen() else game.screen
+        get() = when {
+            parent != null -> parent.screen
+            ClientContext.holds(this) -> NullableBypass.mc()?.gui?.screen()
+            else -> game.screen
+        }
 
     val connection: ClientPacketListener?
         get() = player?.connection
@@ -76,21 +107,58 @@ class Client internal constructor(val id: Int) {
     val inGame: Boolean
         get() = player != null && level != null
 
-    internal val game = GameState()
+    /**
+     * A simulated client never holds the Minecraft fields, so it shares the state of its parent.
+     */
+    internal val game: GameState = parent?.game ?: GameState()
 
     /**
      * See [ClientState]. Keyed weakly, so that state of something short-lived goes with it.
+     * A simulated client lives on one thread and only for one simulation.
      */
-    internal val states: ConcurrentMap<ClientState<*>, Any> = MapMaker().weakKeys().makeMap()
+    internal val states: MutableMap<ClientState<*>, Any> = newMap()
 
     /**
-     * Module settings this client keeps for itself. Any other setting is the one of the main client.
+     * Module settings this client keeps for itself. Any other setting is the one of the main client,
+     * a simulated client reads those of its parent.
      */
-    internal val values: ConcurrentMap<Value<*>, Any> = MapMaker().weakKeys().makeMap()
-    internal val activeModes: ConcurrentMap<ModeValueGroup<*>, Mode> = MapMaker().weakKeys().makeMap()
+    internal val values: MutableMap<Value<*>, Any> = newMap()
+    internal val activeModes: MutableMap<ModeValueGroup<*>, Mode> = newMap()
+
+    /**
+     * The player a simulated client simulates, null if it is not the local one.
+     */
+    internal var simulatedPlayer: Player? = null
+
+    /**
+     * Event hooks that wait for an event of this simulated client, dropped with it.
+     */
+    internal var hooks: MutableList<Pair<Class<out Event>, EventHook<*>>>? = null
+
+    /**
+     * The client that was loaded when the game thread left this simulated client for a real one.
+     */
+    internal var host: Client? = null
 
     private var lastTickAt = System.nanoTime()
     private var partialTicks = 0f
+
+    /**
+     * A simulated client of this one. It reads the state of this client and keeps its writes for itself.
+     */
+    internal fun fork() = Client(id, this)
+
+    /**
+     * Drops what modules left waiting in this simulated client: event hooks and launched tasks. Nothing would run
+     * them, since a simulated client only lives while its simulation ticks.
+     */
+    internal fun release() {
+        EventManager.unregisterClient(this)
+        cancelEventListenerScopes(this)
+    }
+
+    private fun <K : Any, V : Any> newMap(): MutableMap<K, V> =
+        if (parent == null) MapMaker().weakKeys().makeMap() else HashMap()
 
     /**
      * Ticks that became due since the last call. Background clients keep their own time, so a timer
@@ -114,7 +182,8 @@ class Client internal constructor(val id: Int) {
         partialTicks = 0f
     }
 
-    override fun toString() = "Client(id=$id, user=${user.name})"
+    override fun toString() =
+        if (parent != null) "Client(simulated for $parent)" else "Client(id=$id, user=${user.name})"
 
     companion object {
         const val MAIN_ID = 0

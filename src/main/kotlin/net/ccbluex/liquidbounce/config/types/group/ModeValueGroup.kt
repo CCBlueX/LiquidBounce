@@ -48,22 +48,23 @@ class ModeValueGroup<T : Mode>(
     private var mainMode: T = defaultMode
 
     /**
-     * The mode the current client has selected.
+     * The mode the current client has selected. A simulated client follows its parent until it selects one.
      */
     var activeMode: T
         get() {
-            val client = ClientContext.current
-            if (client.isMain) {
-                return mainMode
+            var client = ClientContext.current
+            while (!client.isMain) {
+                @Suppress("UNCHECKED_CAST")
+                client.activeModes[this]?.let { return it as T }
+                client = client.parent ?: break
             }
-
-            @Suppress("UNCHECKED_CAST")
-            return client.activeModes[this] as T? ?: mainMode
+            return mainMode
         }
         private set(mode) {
             val client = ClientContext.current
-            if (client.isMain || client.activeModes.replace(this, mode) == null) {
-                mainMode = mode
+            when {
+                client.isSimulated -> client.activeModes[this] = mode
+                client.isMain || client.activeModes.replace(this, mode) == null -> mainMode = mode
             }
         }
 

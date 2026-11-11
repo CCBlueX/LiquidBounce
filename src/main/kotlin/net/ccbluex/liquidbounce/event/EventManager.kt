@@ -391,6 +391,12 @@ object EventManager {
 
         handlers.addIfAbsent(hook)
 
+        val client = hook.client
+        if (client != null && client.isSimulated) {
+            val hooks = client.hooks ?: ArrayList<Pair<Class<out Event>, EventHook<*>>>().also { client.hooks = it }
+            hooks += eventClass to hook
+        }
+
         return eventHook
     }
 
@@ -412,6 +418,12 @@ object EventManager {
      * Drops the hooks that were waiting for an event of [client].
      */
     internal fun unregisterClient(client: Client) {
+        if (client.isSimulated) {
+            client.hooks?.forEach { (eventClass, hook) -> unregisterEventHook(eventClass, hook) }
+            client.hooks = null
+            return
+        }
+
         for (hooks in tables.registry.values) {
             for (hook in hooks.snapshot) {
                 @Suppress("UNCHECKED_CAST")

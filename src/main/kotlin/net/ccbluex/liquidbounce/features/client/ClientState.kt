@@ -30,13 +30,25 @@ import kotlin.reflect.KProperty
  * private val queue by clientState { ArrayDeque<Packet<*>>() }
  * ```
  *
- * [initial] runs the first time a client reads the state.
+ * [initial] runs the first time a client reads the state. A simulated client starts from a copy of the
+ * value its parent has, see [StateCopy].
  */
 @AddonApi
 fun <T> clientState(initial: () -> T) = ClientState(initial)
 
+/**
+ * Like [clientState], but a simulated client starts from [initial] too. For state that describes the
+ * player of the client, which a simulated client replaces with the one it simulates.
+ */
+internal fun <T> ownClientState(initial: () -> T) = ClientState(initial, inherited = false)
+
 @AddonApi
-class ClientState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> {
+class ClientState<T> internal constructor(
+    private val initial: () -> T,
+    private val inherited: Boolean,
+) : ReadWriteProperty<Any?, T> {
+
+    constructor(initial: () -> T) : this(initial, inherited = true)
 
     /**
      * The main client gets a plain field, which keeps the cost of a client with one client at a field read.
@@ -44,9 +56,10 @@ class ClientState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> 
     @Volatile
     private var main: Any? = Unset
 
+    fun get(): T = getIn(ClientContext.current)
+
     @Suppress("UNCHECKED_CAST")
-    fun get(): T {
-        val client = ClientContext.current
+    private fun getIn(client: Client): T {
         if (client.isMain) {
             if (main === Unset) {
                 main = initial()
@@ -54,8 +67,17 @@ class ClientState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> 
             return main as T
         }
 
-        val value = client.states.computeIfAbsent(this) { initial() ?: Null }
+        val value = if (client.isSimulated) {
+            client.states.getOrPut(this) { startIn(client) ?: Null }
+        } else {
+            client.states.computeIfAbsent(this) { initial() ?: Null }
+        }
         return (if (value === Null) null else value) as T
+    }
+
+    private fun startIn(client: Client): Any? {
+        val parent = client.parent
+        return if (inherited && parent != null) StateCopy.of(getIn(parent)) else initial()
     }
 
     fun set(value: T) {
@@ -66,6 +88,11 @@ class ClientState<T>(private val initial: () -> T) : ReadWriteProperty<Any?, T> 
             client.states[this] = value ?: Null
         }
     }
+
+    /**
+     * Whether [client] has read or written this state yet.
+     */
+    internal fun isSetIn(client: Client) = if (client.isMain) main !== Unset else client.states.containsKey(this)
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T = get()
 
