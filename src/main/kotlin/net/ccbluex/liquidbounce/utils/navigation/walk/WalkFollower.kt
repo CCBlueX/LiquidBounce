@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
@@ -32,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
 import net.minecraft.tags.FluidTags
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.block.FarmlandBlock
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.Vec3
@@ -89,8 +92,11 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
     /** Where the sprint hop in the air was aimed; the steps it passes over lie behind the player. */
     private var hopAim: Vec3? = null
 
+    private val Player.isStable: Boolean
+        get() = onGround() || isInWater || onClimbable()
+
     private val isStable: Boolean
-        get() = player.onGround() || player.isInWater || player.onClimbable()
+        get() = player.isStable
 
     fun follow(path: WalkPath, startIndex: Int) {
         this.path = path
@@ -184,9 +190,36 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         val stuck = if (step.jump != null) {
             ++progress.jumpTicks >= JUMP_TICKS || progress.leap.hopeless
         } else {
-            progress.stalls(player.position().distanceTo(step.feet))
+            progress.stalls(player.position().distanceTo(step.feet)) ||
+                progress.isDueToPredict && !getsAhead(event, frameYaw, step)
         }
         return if (stuck) giveUp(step) else FollowState.WALKING
+    }
+
+    /**
+     * Whether walking on as in this tick gets closer to where it aims, moved as the game moves the player.
+     * A walk that the terrain holds up is given up right away instead of after [STUCK_TICKS].
+     */
+    private fun getsAhead(event: MovementInputEvent, frameYaw: Float, step: WalkStep): Boolean {
+        val aim = movement.target?.takeUnless { movement.dive } ?: return true
+        val sprint = movement.sprint
+        val body = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayerInput(event.directionalInput, event.jump, sprint, event.sneak)
+        )
+        body.yRot = frameYaw
+
+        val closer = player.position().distanceTo(aim) - PROGRESS
+        repeat(PREDICT_TICKS) {
+            body.tick()
+            val position = body.position()
+            if (position.distanceTo(aim) < closer) {
+                return true
+            }
+            body.input = SimulatedPlayerInput(
+                centerInput(position, aim, frameYaw), wantsJump(step, body), sprint, event.sneak,
+            )
+        }
+        return false
     }
 
     private fun place(event: MovementInputEvent, frameYaw: Float, step: WalkStep, pos: BlockPos) {
@@ -245,20 +278,21 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
         event.directionalInput = centerInput(position, aim, frameYaw)
         event.sneak = step.sneak
-        event.jump = wantsJump(step, position) || startsHop(position, aim, step.feet)
+        event.jump = wantsJump(step, player) || startsHop(position, aim, step.feet)
         return Movement(aim, sprint = !step.sneak, isPlainWalk = step.isLevelWalk)
     }
 
-    private fun wantsJump(step: WalkStep, position: Vec3): Boolean {
+    private fun wantsJump(step: WalkStep, body: Player): Boolean {
         val keepsLevel = step.to.y >= step.from.y
         return when (step.move) {
             WalkMove.SWIM -> keepsLevel
             WalkMove.CLIMB_UP -> true
             WalkMove.CLIMB_DOWN, WalkMove.FALL, WalkMove.DOWNWARD -> false
             else -> {
+                val position = body.position()
                 val rises = step.feet.y - position.y > NavigationTerrain.STEP + RISE_MARGIN
                 val inReach = position.horizontalDistanceTo(step.feet) < JUMP_REACH
-                (rises && inReach && isStable) || (player.isInWater && keepsLevel)
+                (rises && inReach && body.isStable) || (body.isInWater && keepsLevel)
             }
         }
     }
@@ -513,6 +547,9 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
             return ++idleTicks >= STUCK_TICKS
         }
 
+        val isDueToPredict: Boolean
+            get() = idleTicks > 0 && idleTicks % PREDICT_INTERVAL == 0
+
         fun actsTooLong(pos: BlockPos): Boolean {
             if (pos != acting) {
                 acting = pos
@@ -535,6 +572,10 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
         const val FALL_BELOW = 0.9
         const val PROGRESS = 0.1
         const val STUCK_TICKS = 40
+
+        /** Without progress, the way on is predicted every so many ticks, this far ahead. */
+        const val PREDICT_INTERVAL = 5
+        const val PREDICT_TICKS = 20
         const val ACTION_TICKS = 60
 
         /** Walking back to the run-up included. */
