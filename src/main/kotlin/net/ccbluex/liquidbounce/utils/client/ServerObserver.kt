@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.fastutil.objectRBTreeSetOf
+import com.mojang.brigadier.suggestion.Suggestions
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventListener
@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDete
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.screens.ConnectScreen
@@ -54,6 +55,7 @@ import java.net.InetAddress
 import java.util.TreeSet
 import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 object ServerObserver : EventListener {
 
@@ -141,39 +143,62 @@ object ServerObserver : EventListener {
     }
 
     /**
-     * Requests completions for all given commands.
-     * This is an exploit for servers that block the `/plugins` command.
-     *
-     * Plugins will add themselves to the command suggestions list with a prefix like `/pluginname:command`.
-     * This can be used to get a list of plugins on the server.
+     * Bukkit's `/version <plugin>` suggests the names of all plugins, also those without commands. `bukkit:version`
+     * gets past servers that only block `version`.
+     */
+    private val versionCommands = arrayOf("version", "bukkit:version")
+
+    /**
+     * Paper sends nothing back when there is no suggestion, so the `/version` requests give up early.
+     */
+    private val versionAnswerTimeout = 1.seconds
+
+    /**
+     * Collects the server's plugins for servers that block `/plugins`: the names `/version` suggests, and the
+     * prefixes of the server's commands, like `/pluginname:command`.
      *
      * @see [ServerboundCommandSuggestionPacket]
      * @see [ModulePlugins]
      */
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
-        val completionId = Random.nextInt(0, 32767)
-        network.send(ServerboundCommandSuggestionPacket(completionId, "/"))
-        /**
-         * Server sends a command suggestions packet with a list of commands.
-         * These commands are usually prefixed with the plugin name and a colon.
-         */
-        val packet = waitMatchesWithTimeout<PacketEvent>(timeout, priority = FIRST_PRIORITY) {
-            it.packet is ClientboundCommandSuggestionsPacket && it.packet.id == completionId
-        }?.packet ?: return false
 
-        packet as ClientboundCommandSuggestionsPacket
+        // Plugin names keep their spelling, so they go in before the lowercase command prefixes
+        val plugins = TreeSet(String.CASE_INSENSITIVE_ORDER)
+        versionCommands.firstNotNullOfOrNull { command ->
+            requestSuggestions("/$command ", versionAnswerTimeout)?.list?.takeIf { it.isNotEmpty() }
+        }?.mapTo(plugins) { it.text }
 
-        this.plugins = packet.toSuggestions().list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
-            val command = cmd.text.split(':')
-
-            if (command.size > 1) {
-                command[0].replace("/", "")
-            } else {
-                null
-            }
+        plugins += commandPrefixes(serverCommands()).ifEmpty {
+            // ViaVersion sends no commands of a pre-1.13 server, it only suggests them on request
+            commandPrefixes(requestSuggestions("/", timeout)?.list?.map { it.text }.orEmpty())
         }
-        return !this.plugins.isNullOrEmpty()
+
+        this.plugins = plugins
+        return plugins.isNotEmpty()
+    }
+
+    /**
+     * The commands the server sent, without the client-side commands Fabric adds to them.
+     */
+    private fun serverCommands(): List<String> {
+        val clientCommands = ClientCommands.getActiveDispatcher()?.root?.children.orEmpty().mapTo(HashSet()) { it.name }
+        return network.commands.root.children.map { it.name }.filter { it !in clientCommands }
+    }
+
+    private fun commandPrefixes(commands: List<String>) =
+        commands.mapNotNull { it.substringBefore(':', "").removePrefix("/").ifEmpty { null } }
+
+    /**
+     * One request at a time, as ViaVersion tags every answer of a pre-1.13 server with the id of the latest request.
+     */
+    private suspend fun requestSuggestions(input: String, timeout: Duration): Suggestions? {
+        val id = Random.nextInt(0, Short.MAX_VALUE.toInt())
+        network.send(ServerboundCommandSuggestionPacket(id, input))
+        val event = waitMatchesWithTimeout<PacketEvent>(timeout, priority = FIRST_PRIORITY) {
+            (it.packet as? ClientboundCommandSuggestionsPacket)?.id == id
+        }
+        return (event?.packet as? ClientboundCommandSuggestionsPacket)?.toSuggestions()
     }
 
     suspend fun requestHostingInformation() {
