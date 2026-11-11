@@ -114,10 +114,12 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     private val currentRotationState = clientState<Rotation?> { null }
 
     // Used for rotation interpolation
-    var playerRotation: Rotation? by clientState { null }
-        private set
     var lastRotation: Rotation? by clientState { null }
         private set
+
+    // currentRotation of the previous tick. Unlike lastRotation it outlives a reset by one tick, so the
+    // F5 model turns back to the vanilla rotation instead of snapping to it.
+    private var lastModelRotation: Rotation? by clientState { null }
 
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
@@ -153,8 +155,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         rotationTargetHandler.clear()
         previousRotationTarget = null
         currentRotation = null
-        playerRotation = null
         lastRotation = null
+        lastModelRotation = null
         actualServerRotation = Rotation.ZERO
         theoreticalServerRotation = Rotation.ZERO
     }
@@ -246,7 +248,8 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
-        val playerRotation = player.rotation.also { this.playerRotation = it }
+        lastModelRotation = currentRotation
+        val playerRotation = player.rotation
         val activeRotationTarget = this.activeRotationTarget ?: return
         val rotationTarget = this.rotationTarget
 
@@ -287,11 +290,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
 
         if (isRotatingAllowed(activeRotationTarget)
             && activeRotationTarget.movementCorrection == MovementCorrection.CHANGE_LOOK) {
-            val playerRotation = playerRotation ?: return
             val currentRotation = currentRotation ?: return
+            val lastRotation = lastRotation ?: currentRotation
 
-            val interpolated = playerRotation.interpolateTo(currentRotation, partialTicks)
-            player.setRotation(interpolated)
+            player.setRotation(lastRotation.interpolateTo(currentRotation, partialTicks))
         }
     }
 
@@ -306,13 +308,13 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         fun adjustRotation(rotation: Rotation): Rotation =
             RotationUtil.applyMouseTurnDelta(rotation, event.cursorDeltaX, event.cursorDeltaY)
 
-        playerRotation?.let { rotation ->
-            playerRotation = adjustRotation(rotation)
-        }
+        val currentRotation = currentRotation ?: return@handler
+        val lastRotation = lastRotation ?: currentRotation
 
-        currentRotation?.let { rotation ->
-            currentRotation = adjustRotation(rotation)
-        }
+        // The setter would move lastRotation onto the old currentRotation, so shift both ends instead
+        this.currentRotation = adjustRotation(currentRotation)
+        this.lastRotation = adjustRotation(lastRotation)
+        lastModelRotation = lastModelRotation?.let(::adjustRotation)
     }
 
     /**
@@ -409,7 +411,28 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         BODY("Body");
     }
 
-    fun isPartAllowed(part: BodyPart) = part in bodyPart
+    /**
+     * Yaw of [part] on the F5 model. Blends from or to [vanillaYaw] on the tick a rotation starts or ends.
+     */
+    fun modelYaw(part: BodyPart, partialTicks: Float, vanillaYaw: Float): Float {
+        if (part !in bodyPart) {
+            return vanillaYaw
+        }
+
+        val from = lastModelRotation?.yaw ?: vanillaYaw
+        val to = currentRotation?.yaw ?: vanillaYaw
+        return Mth.rotLerp(partialTicks, from, to)
+    }
+
+    fun modelPitch(partialTicks: Float, vanillaPitch: Float): Float {
+        if (BodyPart.HEAD !in bodyPart) {
+            return vanillaPitch
+        }
+
+        val from = lastModelRotation?.pitch ?: vanillaPitch
+        val to = currentRotation?.pitch ?: vanillaPitch
+        return Mth.lerp(partialTicks, from, to)
+    }
 
     /**
      * Draws a tracer line to the point we aim at.
