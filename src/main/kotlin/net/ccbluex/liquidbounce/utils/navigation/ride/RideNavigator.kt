@@ -22,71 +22,55 @@ package net.ccbluex.liquidbounce.utils.navigation.ride
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.distanceToSegment
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.ride.RideSteering.Companion.horizontalDistance
+import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
-import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
-import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
+import java.util.function.DoubleSupplier
 import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Drives the vehicle the player rides to a goal: a boat over water and ice with its own controls, a horse or other
- * mount by looking the way. Where the vehicle gets no closer, or the player rides something it cannot steer, the
- * player gets off to walk the rest.
- *
- * Routes are at most [maxLength] blocks long; goals beyond half of that are ridden to in stages.
+ * Drives the vehicle the player rides to a goal: a boat with its own controls, a horse or other mount by looking the
+ * way. Where the vehicle gets no closer, or the player cannot steer it, the player gets off to walk the rest.
  */
 @Suppress("TooManyFunctions")
 class RideNavigator(
     private val owner: EventListener,
     private val view: RouteView,
-    private val maxLength: () -> Double,
+    private val maxLength: DoubleSupplier,
 ) : EventListener {
 
-    private val planner = RoutePlanner<RidePath>(this)
+    private val routes = GoalRouter<RidePath>(this, VERTICAL_MARGIN)
     private val steering = RideSteering()
 
     private var vehicle: Entity? = null
     private var path: RidePath? = null
     private var index = 0
 
-    private var ticks = 0
-    private var lastRequest = Int.MIN_VALUE / 2
-    private var retryAt = 0
-    private var failed = false
     private var stuck = false
     private var stuckCount = 0
+    private var bestDistance = Double.MAX_VALUE
+    private var idleTicks = 0
 
-    /**
-     * Whether the vehicle is in the goal node, so only the last bit is left to ride straight.
-     */
+    /** Whether the vehicle is in the goal node, so only the last bit is left to ride straight. */
     private var atGoal = false
     private var approachTicks = 0
     private var dismountTicks = 0
 
-    private var bestDistance = Double.MAX_VALUE
-    private var progressAt = 0
-
-    private var pathGoal: Vec3? = null
-    private var requestedGoal: Vec3? = null
-    private var requestedStage: NearGoal? = null
-    private var followsStage = false
-
     /**
      * Moves the ridden vehicle one tick towards [goal], within [radius], or gets off it; false when the player rides
-     * nothing, so the walk goes on.
+     * nothing.
      */
     fun navigate(event: MovementInputEvent, goal: Vec3, radius: Double): Boolean {
         if (!player.isPassenger) {
@@ -96,7 +80,7 @@ class RideNavigator(
             return false
         }
 
-        ticks++
+        routes.tick()
         val vehicle = player.controlledVehicle
         val body = vehicle?.let { RideBody.of(player, it) }
         if (vehicle == null || body == null || dismountTicks > 0) {
@@ -106,16 +90,16 @@ class RideNavigator(
         this.vehicle = vehicle
 
         val position = vehicle.position()
-        collect()
+        collectRoute()
 
         val path = path
         when {
             path != null && index < path.points.size -> follow(event, vehicle, body, path)
             atGoal || path?.complete == true -> approach(event, vehicle, body, goal)
-            failed || path?.exhausted == true -> dismount(event, goal)
+            stuckCount > MAX_STUCK || routes.failed || path?.exhausted == true -> dismount(event, goal)
             else -> {
                 steering.stop(event)
-                view.pending(position, goal, planner.preview)
+                view.pending(position, goal, routes.preview)
             }
         }
 
@@ -125,25 +109,18 @@ class RideNavigator(
         return true
     }
 
-    /**
-     * Stops riding to the goal until the next [navigate].
-     */
+    /** Stops riding to the goal until the next [navigate]. */
     fun halt() {
-        planner.cancel()
+        routes.reset()
         steering.reset()
         vehicle = null
         path = null
         index = 0
-        failed = false
         stuck = false
         stuckCount = 0
         atGoal = false
         approachTicks = 0
         dismountTicks = 0
-        pathGoal = null
-        requestedGoal = null
-        requestedStage = null
-        followsStage = false
     }
 
     private fun follow(event: MovementInputEvent, vehicle: Entity, body: RideBody, path: RidePath) {
@@ -157,21 +134,10 @@ class RideNavigator(
         val point = path.points[index]
         trackProgress(position, point.position, path)
 
-        val moves = RideMoves(NavigationTerrain(LiveWorld(world)), body)
-        var target = point.position
-        if (!point.jump) {
-            for (i in index + 1 until min(path.points.size, index + LOOKAHEAD)) {
-                val next = path.points[i]
-                if (next.jump || !moves.isStraight(position, next.position)) {
-                    break
-                }
-                target = next.position
-            }
-        }
-
+        val target = if (point.jump) point.position else straightAhead(position, body, path)
         when (body.kind) {
             RideKind.BOAT -> {
-                val brake = target === path.end && horizontalDistance(position, target) <
+                val brake = target === path.end && position.horizontalDistanceTo(target) <
                     vehicle.deltaMovement.horizontalDistance() * BOAT_COAST_TICKS + 1.0
                 steering.boat(event, vehicle, target, brake)
             }
@@ -185,9 +151,21 @@ class RideNavigator(
         view.active(path.positions, progress)
     }
 
-    /**
-     * Moves on past the points of [path] the vehicle has got to.
-     */
+    /** The farthest of the next points the vehicle reaches in a straight line without a jump. */
+    private fun straightAhead(position: Vec3, body: RideBody, path: RidePath): Vec3 {
+        val moves = RideMoves(NavigationTerrain.live(), body)
+        var target = path.points[index].position
+        for (i in index + 1 until min(path.points.size, index + LOOKAHEAD)) {
+            val next = path.points[i]
+            if (next.jump || !moves.isStraight(position, next.position)) {
+                break
+            }
+            target = next.position
+        }
+        return target
+    }
+
+    /** Moves on past the points of [path] the vehicle has got to. */
     private fun advance(position: Vec3, body: RideBody, path: RidePath) {
         val arrive = if (body.kind == RideKind.BOAT) BOAT_ARRIVE else MOUNT_ARRIVE
         var reached = -1
@@ -199,9 +177,9 @@ class RideNavigator(
 
             // A point the vehicle went past on the way to the next one counts as reached too.
             val next = path.points.getOrNull(i + 1)
-            val distance = horizontalDistance(position, point.position)
+            val distance = position.horizontalDistanceTo(point.position)
             val passed = next != null && !point.jump && !next.jump && distance <= arrive * 2.0 &&
-                horizontalDistance(position, next.position) < horizontalDistance(point.position, next.position)
+                position.horizontalDistanceToSqr(next.position) < point.position.horizontalDistanceToSqr(next.position)
             if (passed || distance <= arrive) {
                 reached = i
             }
@@ -209,28 +187,23 @@ class RideNavigator(
 
         if (reached >= 0) {
             index = reached + 1
-            bestDistance = Double.MAX_VALUE
-            progressAt = ticks
+            resetProgress()
         }
     }
 
-    /**
-     * Notes when the vehicle stops getting closer to [point]; a boat pushed against the shore at the end of its
-     * route is there.
-     */
     private fun trackProgress(position: Vec3, point: Vec3, path: RidePath) {
-        val distance = horizontalDistance(position, point)
+        val distance = position.horizontalDistanceTo(point)
         if (distance < bestDistance - MIN_PROGRESS) {
             bestDistance = distance
-            progressAt = ticks
+            idleTicks = 0
             return
         }
-        if (ticks - progressAt < STUCK_TICKS) {
+        if (++idleTicks < STUCK_TICKS) {
             return
         }
 
-        progressAt = ticks
-        bestDistance = Double.MAX_VALUE
+        resetProgress()
+        // A boat pushed against the shore at the end of its route is there.
         if (index == path.points.lastIndex && distance < NEAR_END) {
             index = path.points.size
         } else {
@@ -239,9 +212,12 @@ class RideNavigator(
         }
     }
 
-    /**
-     * Rides straight at [goal] from within its node, and gets off when that does not get the player there.
-     */
+    private fun resetProgress() {
+        bestDistance = Double.MAX_VALUE
+        idleTicks = 0
+    }
+
+    /** Rides straight at [goal] from within its node, and gets off when that does not get the player there. */
     private fun approach(event: MovementInputEvent, vehicle: Entity, body: RideBody, goal: Vec3) {
         if (++approachTicks > APPROACH_TICKS) {
             dismount(event, goal)
@@ -250,17 +226,15 @@ class RideNavigator(
 
         when (body.kind) {
             RideKind.BOAT -> steering.boat(event, vehicle, goal, brake = true)
-            RideKind.MOUNT -> steering.mount(event, vehicle, goal, null, 0.0)
+            RideKind.MOUNT -> steering.mount(event, vehicle, goal, jumpTo = null, reach = 0.0)
         }
         view.done()
     }
 
-    /**
-     * Gets off, facing [goal] so the player lands on its side.
-     */
+    /** Gets off, facing [goal] so the player lands on its side. */
     private fun dismount(event: MovementInputEvent, goal: Vec3) {
         if (dismountTicks == 0) {
-            planner.cancel()
+            routes.reset()
             path = null
         }
 
@@ -270,108 +244,54 @@ class RideNavigator(
         view.done()
     }
 
-    private fun collect() {
-        when (val result = planner.poll()) {
-            RouteResult.Searching -> Unit
+    private fun collectRoute() {
+        when (val result = routes.poll()) {
+            RouteResult.Searching, is RouteResult.Failed -> Unit
 
             RouteResult.AlreadyThere -> {
-                planner.cancel()
                 path = null
                 atGoal = true
-                failed = false
-                pathGoal = requestedGoal
             }
 
             is RouteResult.Found -> {
-                planner.cancel()
-                accept(result.value)
-            }
-
-            is RouteResult.Failed -> {
-                planner.cancel()
-                failed = true
-                retryAt = ticks + RETRY_TICKS
+                path = result.value
+                index = 0
+                stuck = false
+                atGoal = false
+                approachTicks = 0
+                resetProgress()
+                routes.routeEnds(result.value.points.last().node)
             }
         }
     }
 
-    private fun accept(path: RidePath) {
-        this.path = path
-        index = 0
-        failed = false
-        stuck = false
-        atGoal = false
-        approachTicks = 0
-        bestDistance = Double.MAX_VALUE
-        progressAt = ticks
-        followsStage = requestedStage.let { it != null && !it.isGoal(path.points.last().node) }
-        pathGoal = requestedGoal
-    }
-
     private fun planIfNeeded(goal: Vec3, radius: Double, position: Vec3, body: RideBody) {
         if (stuckCount > MAX_STUCK) {
-            failed = true
             path = null
             return
         }
 
         val path = path
-        val offPath = path != null && index < path.points.size && distanceToLeg(position, path) > OFF_PATH
-        val goalMoved = pathGoal.let { it == null || it.distanceTo(goal) > GOAL_MOVED }
-        val finishedShort = path != null && index >= path.points.size && !path.complete && !path.exhausted
-        val nearStage = path != null && followsStage && horizontalDistance(position, path.end) < STAGE_LEAD
+        val riding = path != null && index < path.points.size
+        val offPath = path != null && riding && position.horizontal().distanceToSegment(
+            path.positions[index].horizontal(), path.positions[index + 1].horizontal(),
+        ) > OFF_PATH
+        val finishedShort = path != null && !riding && !path.complete && !path.exhausted
+        val nearStage = path != null && routes.endsAtStage &&
+            position.horizontalDistanceToSqr(path.end) < GoalRouter.STAGE_LEAD * GoalRouter.STAGE_LEAD
         val urgent = stuck || offPath
 
-        val needed = goalMoved || offPath || finishedShort || stuck || nearStage
-        if (!needed || ticks < retryAt) {
-            return
-        }
-        if (!urgent && (!planner.isIdle || ticks - lastRequest < REPLAN_INTERVAL)) {
+        val needed = routes.hasGoalMoved(goal) || offPath || finishedShort || stuck || nearStage
+        if (!needed || !routes.isDue(urgent)) {
             return
         }
 
-        request(goal, radius, position, body)
-        stuck = false
-    }
-
-    private fun request(goal: Vec3, radius: Double, start: Vec3, body: RideBody) {
-        val nearGoal = NearGoal(goal, radius)
-        val maxLength = maxLength()
-        val stageRange = maxLength / 2.0
-        val staged = StageGoal.isNeeded(LiveWorld(world), start, goal, stageRange)
-        val region = if (staged) {
-            StageGoal.region(start, stageRange, VERTICAL_MARGIN)
-        } else {
-            nearGoal.region(start, maxLength, VERTICAL_MARGIN)
-        }
+        val maxLength = maxLength.asDouble
         val limits = RouteLimits(maxLength)
-
-        val key = SearchKey(BlockPos.containing(start), nearGoal, staged, body.kind)
-        planner.request(key, region) { terrain ->
-            val searchGoal = if (staged) StageGoal(nearGoal, start, stageRange, terrain) else nearGoal
-            RideRouteSearch(terrain, start, searchGoal, body, limits)
+        routes.request(position, NearGoal(goal, radius), maxLength, body.kind) { terrain, searchGoal ->
+            RideRouteSearch(terrain, position, searchGoal, body, limits)
         }
-
-        requestedGoal = goal
-        requestedStage = nearGoal.takeIf { staged }
-        lastRequest = ticks
-    }
-
-    /**
-     * Horizontal distance from [position] to the leg of [path] being ridden.
-     */
-    private fun distanceToLeg(position: Vec3, path: RidePath): Double {
-        val from = path.positions[index]
-        val to = path.positions[index + 1]
-        val dx = to.x - from.x
-        val dz = to.z - from.z
-        val lengthSqr = dx * dx + dz * dz
-        val t = if (lengthSqr < 1.0E-6) {
-            0.0
-        } else {
-            (((position.x - from.x) * dx + (position.z - from.z) * dz) / lengthSqr).coerceIn(0.0, 1.0)
-        }
-        return horizontalDistance(position, Vec3(from.x + dx * t, position.y, from.z + dz * t))
+        stuck = false
     }
 
     private val progress = object : RouteProgress {
@@ -382,20 +302,13 @@ class RideNavigator(
             (vehicle ?: player).interpolateCurrentPosition(partialTicks)
 
         override val ahead: List<Vec3>
-            get() = path?.let { it.positions.subList(min(index + 1, it.positions.size), it.positions.size) }
-                ?: emptyList()
+            get() = path?.let { it.positions.subList(min(index + 1, it.positions.size), it.positions.size) }.orEmpty()
     }
 
     override fun parent() = owner
 
-    private data class SearchKey(val start: BlockPos, val goal: NearGoal, val staged: Boolean, val kind: RideKind)
-
     private companion object {
         const val VERTICAL_MARGIN = 16
-        const val GOAL_MOVED = 1.5
-        const val REPLAN_INTERVAL = 5
-        const val RETRY_TICKS = 20
-        const val STAGE_LEAD = 12.0
         const val OFF_PATH = 3.0
         const val LOOKAHEAD = 6
         const val JOIN_POINTS = 4
@@ -410,9 +323,7 @@ class RideNavigator(
         const val APPROACH_TICKS = 60
         const val DISMOUNT_DELAY = 2
 
-        /**
-         * Ticks a boat in water takes to coast to a stop.
-         */
+        /** Ticks a boat in water takes to coast to a stop. */
         const val BOAT_COAST_TICKS = 10.0
     }
 

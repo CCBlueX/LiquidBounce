@@ -24,11 +24,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.SelfDestruct.isDestructed
-import net.ccbluex.liquidbounce.utils.text.plus
-import net.ccbluex.liquidbounce.utils.text.withFormat
-import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.Style
-import net.minecraft.util.FormattedCharSequence
 import java.util.function.Consumer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -121,34 +116,6 @@ interface EventListener : DebuggedOwner {
             child.unregister()
         }
     }
-
-    override val debugDisplayName: FormattedCharSequence
-        get() {
-            val parentPart = this.parent()?.debugDisplayName
-            val selfPart =
-                this.javaClass.simpleName.withFormat(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.ITALIC)
-
-            return if (parentPart != null) {
-                FormattedCharSequence.composite(
-                    parentPart,
-                    FormattedCharSequence.codepoint('$'.code, Style.EMPTY + ChatFormatting.GRAY),
-                    selfPart,
-                )
-            } else {
-                selfPart
-            }
-        }
-
-    override val debugOwnerId: String
-        get() {
-            val parentPart = this.parent()?.debugOwnerId
-            val selfPart = this.javaClass.simpleName
-            return if (parentPart != null) {
-                "$parentPart$$selfPart"
-            } else {
-                selfPart
-            }
-        }
 
 }
 

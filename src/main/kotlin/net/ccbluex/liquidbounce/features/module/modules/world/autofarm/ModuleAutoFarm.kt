@@ -29,8 +29,9 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
@@ -209,10 +210,10 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             val blockState = world.getBlockState(blockPos)
 
             debugGeometry("RayTraceResult") {
-                ModuleDebug.DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
+                DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
             }
             debugGeometry("PlantablePos") {
-                ModuleDebug.DebuggedBox(AABB(blockPos), Color4b.GREEN.alpha(100))
+                DebuggedBox(AABB(blockPos), Color4b.GREEN.alpha(100))
             }
 
             val sides = AutoFarmTrackedState.Plantable.entries.findPlantableSides(blockPos, blockState)

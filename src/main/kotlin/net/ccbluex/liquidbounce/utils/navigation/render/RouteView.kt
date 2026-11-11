@@ -26,46 +26,27 @@ import net.minecraft.world.phys.Vec3
 enum class RouteState {
     NONE,
 
-    /**
-     * Searching for a route.
-     */
     PENDING,
 
-    /**
-     * Route found or being travelled.
-     */
     ACTIVE,
     DONE,
 
-    /**
-     * No route, or the server or the world stopped it.
-     */
+    /** No route, or the server or the world stopped it. */
     INVALID,
 }
 
-/**
- * How far along its route a mover is.
- */
+/** Where a mover is on its route and the corners still ahead. */
 interface RouteProgress {
 
     val isMoving: Boolean
 
-    /**
-     * Where the mover is, between the last tick and this one.
-     */
     fun head(partialTicks: Float): Vec3
 
-    /**
-     * The corners still ahead of [head].
-     */
     val ahead: List<Vec3>
 
 }
 
-/**
- * What a navigating module shows: its route, the blocks the route changes, the destination and, for combat,
- * the target it goes for.
- */
+/** What a navigating module shows, drawn by [RouteRenderer]. */
 class RouteView {
 
     var state = RouteState.NONE
@@ -80,9 +61,7 @@ class RouteView {
     var destination: Vec3? = null
         private set
 
-    /**
-     * Corners of the route, feet positions.
-     */
+    /** Corners of the route, feet positions. */
     var path: List<Vec3>? = null
         private set
 
@@ -92,29 +71,18 @@ class RouteView {
     var breaks: Collection<BlockPos> = emptyList()
     var places: Collection<BlockPos> = emptyList()
 
-    /**
-     * Where the server has the player when that differs from the client.
-     */
+    /** Where the server has the player when that differs from the client. */
     var ghost: ((partialTicks: Float) -> Vec3?)? = null
 
     var target: Entity? = null
     var attackPosition: Vec3? = null
 
-    /**
-     * Whether the module is attacking [target] right now.
-     */
     var engaged = false
 
-    /**
-     * A destination the player could pick right now, shown while nothing else is.
-     */
+    /** A destination the player could pick right now, shown while nothing else is. */
     var preview: Vec3? = null
     var isPreviewValid = false
 
-    /**
-     * Searching from [start] to [destination]; [searched] is the best route so far, see
-     * [net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner.preview].
-     */
     fun pending(start: Vec3, destination: Vec3, searched: List<Vec3>? = null) {
         this.start = start
         this.destination = destination

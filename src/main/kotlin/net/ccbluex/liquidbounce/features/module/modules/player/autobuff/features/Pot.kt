@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.yaw
@@ -63,7 +62,7 @@ internal object Pot : StatusEffectBasedBuff("Pot") {
 
     override val passesRequirements: Boolean
         get() {
-            if (InventoryManager.isInventoryOpen) {
+            if (ModuleAutoBuff.isInventoryBlocking) {
                 return false
             }
 

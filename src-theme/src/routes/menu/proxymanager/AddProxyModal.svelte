@@ -3,7 +3,7 @@
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import {addProxy as addProxyRest, browse} from "../../../integration/rest";
+    import {addProxy as addProxyRest, openLink} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
     import SingleSelect from "../common/setting/select/SingleSelect.svelte";
 
@@ -77,5 +77,5 @@
     <SwitchSetting title="Proxy Resource Packs" bind:value={proxyResourcePacks}/>
     <SwitchSetting title="Proxy DNS" bind:value={proxyDns}/>
     <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy} listenForEnter={true} {loading}/>
-    <ButtonSetting title="Get Proxy" on:click={() => browse("PROXY_WEBSITE")} secondary={true}/>
+    <ButtonSetting title="Get Proxy" on:click={() => openLink("PROXY_WEBSITE")} secondary={true}/>
 </Modal>

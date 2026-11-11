@@ -86,6 +86,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.GitInfo
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.KillDeathTracker
+import net.ccbluex.liquidbounce.utils.client.PlayerStatisticsTracker
 import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.clientIdentifier
@@ -110,6 +112,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
+import net.minecraft.util.Unit as MinecraftUnit
 
 /**
  * LiquidBounce
@@ -301,6 +304,8 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(ConfigTracker)
         PostRotationExecutor
         ServerObserver
+        KillDeathTracker
+        PlayerStatisticsTracker
         ItemImageAtlas
         ItemStackListRenderer
         IndicatorRenderer
@@ -343,9 +348,7 @@ object LiquidBounce : EventListener {
             }
             launch {
                 // Load cosmetics
-                CosmeticService.refreshCarriers(force = true) {
-                    logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
-                }
+                CosmeticService.refreshCarriers(force = true)
             }
             launch {
                 MarketplaceConfigs.refresh()
@@ -354,7 +357,7 @@ object LiquidBounce : EventListener {
                 MarketplaceItems.refresh()
             }
             launch {
-                MarketplaceManager.fillAuthors()
+                MarketplaceManager.updateMissingAuthors()
             }
             launch {
                 IpInfoApi.original
@@ -559,7 +562,7 @@ object LiquidBounce : EventListener {
             synchronizer: PreparableReloadListener.PreparationBarrier,
             applyExecutor: Executor
         ): CompletableFuture<Void> {
-            return synchronizer.wait(net.minecraft.util.Unit.INSTANCE)
+            return synchronizer.wait(MinecraftUnit.INSTANCE)
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()

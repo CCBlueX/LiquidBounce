@@ -20,55 +20,77 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity.DEFAULT_BASE_GRAVITY
+import net.minecraft.world.entity.LivingEntity.ELYTRA_HORIZONTAL_AIR_DRAG
+import net.minecraft.world.entity.LivingEntity.ELYTRA_VERTICAL_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
-/**
- * Where to look while gliding, whether to fire a rocket now and whether a rocket pushes this tick.
- */
+/** Where to look while gliding, whether to fire a rocket now and whether a rocket pushes this tick. */
 class GlideInput(val yaw: Float, val pitch: Float, val fireRocket: Boolean, val boosted: Boolean)
 
-/**
- * Steers a glide one tick at a time.
- */
-fun interface GlideSteering {
+interface GlideSteering {
+
+    /** Where the glide comes down. */
+    val target: Vec3
+
     fun steer(position: Vec3, velocity: Vec3): GlideInput
+
 }
 
-/**
- * Elytra flight as the game moves it, one tick at a time.
- */
+/** The rockets [left] to fire on a glide, each pushing [burnTicks] ticks, the last one fired for [boostTicks] more. */
+class GlideRockets(left: Int, private val burnTicks: Int) {
+
+    var left = left
+        private set
+
+    var boostTicks = 0
+        private set
+
+    val canFire: Boolean
+        get() = boostTicks == 0 && left > 0
+
+    fun fire() {
+        left--
+        boostTicks = burnTicks
+    }
+
+    /** Whether a rocket pushes this tick. */
+    fun tick(): Boolean {
+        if (boostTicks <= 0) {
+            return false
+        }
+
+        boostTicks--
+        return true
+    }
+
+}
+
+/** Elytra flight as the game moves it, one tick at a time. */
 internal object GlidePhysics {
 
-    private const val GRAVITY = 0.08
     private const val LIFT = 0.75
     private const val DIVE = 0.1
     private const val CLIMB = 0.04
     private const val CLIMB_LIFT = 3.2
     private const val TURN = 0.1
-    private const val HORIZONTAL_DRAG = 0.99
-    private const val VERTICAL_DRAG = 0.98
     private const val ROCKET_PUSH = 0.1
     private const val ROCKET_SPEED = 1.5
     private const val ROCKET_PULL = 0.5
 
-    /**
-     * The movement of the tick after one with [velocity], looking at [yaw] and [pitch], pushed by a rocket when
-     * [boosted].
-     */
     fun step(velocity: Vec3, yaw: Float, pitch: Float, boosted: Boolean): Vec3 {
         val look = Vec3.directionFromRotation(pitch, yaw)
         val lean = Math.toRadians(pitch.toDouble())
-        val lookHorizontal = sqrt(look.x * look.x + look.z * look.z)
+        val lookHorizontal = look.horizontalDistance()
         val moveHorizontal = velocity.horizontalDistance()
         val lift = cos(lean) * cos(lean)
 
         var x = velocity.x
-        var y = velocity.y + GRAVITY * (-1.0 + lift * LIFT)
+        var y = velocity.y + DEFAULT_BASE_GRAVITY * (-1.0 + lift * LIFT)
         var z = velocity.z
         if (lookHorizontal > 0.0) {
             if (y < 0.0) {
@@ -87,9 +109,9 @@ internal object GlidePhysics {
             z += (look.z / lookHorizontal * moveHorizontal - z) * TURN
         }
 
-        x *= HORIZONTAL_DRAG
-        y *= VERTICAL_DRAG
-        z *= HORIZONTAL_DRAG
+        x *= ELYTRA_HORIZONTAL_AIR_DRAG
+        y *= ELYTRA_VERTICAL_AIR_DRAG
+        z *= ELYTRA_HORIZONTAL_AIR_DRAG
         if (boosted) {
             x += look.x * ROCKET_PUSH + (look.x * ROCKET_SPEED - x) * ROCKET_PULL
             y += look.y * ROCKET_PUSH + (look.y * ROCKET_SPEED - y) * ROCKET_PULL
@@ -98,93 +120,70 @@ internal object GlidePhysics {
         return Vec3(x, y, z)
     }
 
+    fun yawTowards(dx: Double, dz: Double) = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
+
+    fun pitchTowards(up: Double, ahead: Double) = (-Math.toDegrees(atan2(up, ahead))).toFloat()
+
 }
 
 /**
- * Glides to [goal], feet on the ground there, with [rockets] rockets that each push for [rocketTicks] ticks, the last
- * one fired still pushing for [boostTicks].
- *
- * Every tick it tries a range of pitches held until touch-down and takes the one that lands just short of the goal
- * with a vertical speed that does no harm. Too high, it circles the goal while sinking slowly, diving while far
- * above it; too low or too far, it fires a rocket and climbs towards a point above the goal while it pushes. With an
- * [approach], it keeps as high as it can until that close to the goal, over ridges the direct glide would clip.
+ * Glides to [target]: every tick it takes the pitch that, held until touch-down, lands just short of it unhurt. Too
+ * high, it circles down; too low or too far, it fires a rocket and climbs. With an [approach], it keeps as high as
+ * it can until that close to the target, over ridges on the way.
  */
 class GlideControl(
-    private val goal: Vec3,
-    rockets: Int,
-    private val rocketTicks: Int,
-    boostTicks: Int = 0,
+    override val target: Vec3,
+    val rockets: GlideRockets,
     private val approach: Double = 0.0,
 ) : GlideSteering {
 
-    /**
-     * Rockets left to fire.
-     */
-    var rockets = rockets
-        private set
+    private val sweep = PitchSweep()
 
-    /**
-     * Ticks the last rocket still pushes.
-     */
-    var boostTicks = boostTicks
-        private set
-
-    /**
-     * Decides the next tick at [position] moving with [velocity].
-     */
     override fun steer(position: Vec3, velocity: Vec3): GlideInput {
-        val dx = goal.x - position.x
-        val dz = goal.z - position.z
-        val distance = sqrt(dx * dx + dz * dz)
-        val bearing = Mth.wrapDegrees(Math.toDegrees(atan2(-dx, dz))).toFloat()
+        val dx = target.x - position.x
+        val dz = target.z - position.z
+        val distance = Mth.length(dx, dz)
+        val bearing = GlidePhysics.yawTowards(dx, dz)
         sweepPitches(position, velocity, bearing, distance, dx, dz)
 
-        if (approach > 0.0 && distance > approach && boostTicks == 0 && sweep.farthestAlong >= 0.0) {
+        if (approach > 0.0 && distance > approach && rockets.boostTicks == 0 && sweep.farthestAlong >= 0.0) {
             return GlideInput(bearing, sweep.farthestPitch, fireRocket = false, boosted = false)
         }
 
-        var yaw = bearing
-        var pitch = sweep.bestPitch
         // No pitch comes down within the horizon: far too high, which no rocket helps with.
-        val overhead = sweep.bestError == Double.POSITIVE_INFINITY && position.y > goal.y
-        val missed = sweep.bestError > TOLERANCE
-        val fire = missed && !overhead && sweep.bestAlong < 0.0 && boostTicks == 0 && rockets > 0
+        val overhead = sweep.bestError == Double.POSITIVE_INFINITY && position.y > target.y
+        val missed = sweep.bestError > LANDING_TOLERANCE
+        val fire = missed && !overhead && sweep.bestAlong < 0.0 && rockets.canFire
         if (fire) {
-            rockets--
-            boostTicks = rocketTicks
+            rockets.fire()
         }
 
-        val boosted = boostTicks > 0
-        if (boosted) {
-            boostTicks--
-            val aim = goal.y + CLIMB_ABOVE + distance * CLIMB_SLOPE - position.y
-            pitch = (-Math.toDegrees(atan2(aim, distance))).toFloat().coerceIn(MIN_CLIMB_PITCH, MAX_CLIMB_PITCH)
-        } else if (overhead) {
-            yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
-            pitch = SPIRAL
-        } else if (missed && sweep.bestAlong > 0.0) {
-            yaw = Mth.wrapDegrees(bearing + ORBIT_TURN)
-            pitch = PARACHUTE
+        val boosted = rockets.tick()
+        val orbit = Mth.wrapDegrees(bearing + ORBIT_TURN)
+        return when {
+            boosted -> {
+                val climb = target.y + CLIMB_ABOVE + distance * CLIMB_SLOPE - position.y
+                val pitch = GlidePhysics.pitchTowards(climb, distance).coerceIn(MIN_CLIMB_PITCH, MAX_CLIMB_PITCH)
+                GlideInput(bearing, pitch, fire, boosted = true)
+            }
+
+            overhead -> GlideInput(orbit, SPIRAL_PITCH, fire, boosted = false)
+            missed && sweep.bestAlong > 0.0 -> GlideInput(orbit, PARACHUTE_PITCH, fire, boosted = false)
+            else -> GlideInput(bearing, sweep.bestPitch, fire, boosted = false)
         }
-        return GlideInput(yaw, pitch, fire, boosted)
     }
 
-    private val sweep = PitchSweep()
-
-    /**
-     * Finds the pitch, held towards [bearing], that touches down just short of the goal unhurt, and the one that
-     * touches down farthest along the way to it.
-     */
+    /** Finds the pitch that lands just short of the target unhurt, and the one that lands farthest along the way. */
     private fun sweepPitches(position: Vec3, velocity: Vec3, bearing: Float, distance: Double, dx: Double, dz: Double) {
         val unitX = if (distance > MIN_DISTANCE) dx / distance else 0.0
         val unitZ = if (distance > MIN_DISTANCE) dz / distance else 1.0
         sweep.reset()
         for (pitch in PITCHES) {
             val touchdown = predict(position, velocity, bearing, pitch) ?: continue
-            val along = (touchdown.x - goal.x) * unitX + (touchdown.z - goal.z) * unitZ
-            var error = abs(along + SHORT_OF_GOAL)
+            val along = (touchdown.x - target.x) * unitX + (touchdown.z - target.z) * unitZ
+            var error = abs(along + SHORT_OF_TARGET)
             if (touchdown.y < SAFE_SINK) {
-                error += UNSAFE
+                error += UNSAFE_PENALTY
             }
             if (error < sweep.bestError) {
                 sweep.bestError = error
@@ -196,6 +195,24 @@ class GlideControl(
                 sweep.farthestPitch = pitch
             }
         }
+    }
+
+    /** Where holding [yaw] and [pitch] comes down to the height of the target: x and z, with the sink speed as y. */
+    private fun predict(position: Vec3, velocity: Vec3, yaw: Float, pitch: Float): Vec3? {
+        var x = position.x
+        var y = position.y
+        var z = position.z
+        var motion = velocity
+        for (tick in 0 until HORIZON_TICKS) {
+            motion = GlidePhysics.step(motion, yaw, pitch, tick < rockets.boostTicks)
+            x += motion.x
+            y += motion.y
+            z += motion.z
+            if (y <= target.y && motion.y < 0.0) {
+                return Vec3(x, motion.y, z)
+            }
+        }
+        return null
     }
 
     private class PitchSweep {
@@ -214,46 +231,19 @@ class GlideControl(
         }
     }
 
-    /**
-     * Where the feet come down to the height of the goal, holding [yaw] and [pitch]: x and z of the spot and, as y,
-     * the vertical speed then; null when they do not within [HORIZON] ticks.
-     */
-    private fun predict(position: Vec3, velocity: Vec3, yaw: Float, pitch: Float): Vec3? {
-        var x = position.x
-        var y = position.y
-        var z = position.z
-        var motion = velocity
-        for (tick in 0 until HORIZON) {
-            motion = GlidePhysics.step(motion, yaw, pitch, tick < boostTicks)
-            x += motion.x
-            y += motion.y
-            z += motion.z
-            if (y <= goal.y && motion.y < 0.0) {
-                return Vec3(x, motion.y, z)
-            }
-        }
-        return null
-    }
-
     companion object {
-        /**
-         * Below this vertical speed a touch-down hurts.
-         */
+        /** Below this vertical speed a touch-down hurts. */
         const val SAFE_SINK = -0.45
 
         private val PITCHES = floatArrayOf(-45f, -35f, -25f, -15f, -10f, -5f, 0f, 5f, 10f, 20f)
-        private const val HORIZON = 400
+        private const val HORIZON_TICKS = 400
         private const val MIN_DISTANCE = 1.0E-6
-        private const val SHORT_OF_GOAL = 1.0
-        private const val UNSAFE = 100.0
-        private const val TOLERANCE = 3.0
+        private const val SHORT_OF_TARGET = 1.0
+        private const val UNSAFE_PENALTY = 100.0
+        private const val LANDING_TOLERANCE = 3.0
         private const val ORBIT_TURN = 90f
-        private const val PARACHUTE = -45f
-
-        /**
-         * Looking down while circling far above the goal, to come down fast.
-         */
-        private const val SPIRAL = 30f
+        private const val PARACHUTE_PITCH = -45f
+        private const val SPIRAL_PITCH = 30f
         private const val CLIMB_ABOVE = 4.0
         private const val CLIMB_SLOPE = 0.15
         private const val MIN_CLIMB_PITCH = -40f

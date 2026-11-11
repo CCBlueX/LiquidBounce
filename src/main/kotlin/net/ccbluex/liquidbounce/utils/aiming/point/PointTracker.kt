@@ -20,8 +20,9 @@ package net.ccbluex.liquidbounce.utils.aiming.point
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebugCollection
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBestHitVector
 import net.ccbluex.liquidbounce.utils.aiming.point.exempts.ExemptBoxPart
@@ -92,14 +93,14 @@ class PointTracker(val parent: EventListener) : ValueGroup("AimPoint"), EventLis
         }
 
         parent.debugGeometry("Points") {
-            ModuleDebug.DebugCollection(points.map { point ->
+            DebugCollection(points.map { point ->
                 val percentage = calculateDistancePercentage(point, eyes, bestHitVector, worstHitVector)
                 val color = if (point !in pointsWithExempts) {
                     Color4b.MAGENTA
                 } else {
                     Color4b.GREEN.interpolateTo(Color4b.RED, percentage)
                 }.fade(1.0f - percentage)
-                ModuleDebug.DebuggedPoint(point, color, 0.05)
+                DebuggedPoint(point, color, 0.05)
             })
         }
 

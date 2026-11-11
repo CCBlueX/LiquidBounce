@@ -16,16 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
-/**
- * Feet positions from where the player is to the destination. Between two points the player first rises,
- * then moves horizontally at the higher level, then drops.
- */
+/** Feet positions to a destination. Between two the player rises, crosses at the higher level, then drops. */
 class TeleportRoute(val points: List<Vec3>) {
 
     init {
@@ -36,9 +34,7 @@ class TeleportRoute(val points: List<Vec3>) {
 
     val destination: Vec3 get() = points.last()
 
-    /**
-     * Corners of the path the player actually takes.
-     */
+    /** Corners of the path the player actually takes. */
     val path: List<Vec3> by lazy {
         buildList {
             add(start)
@@ -47,8 +43,8 @@ class TeleportRoute(val points: List<Vec3>) {
                 val to = points[index + 1]
                 val top = max(from.y, to.y)
 
-                if (top > from.y) add(Vec3(from.x, top, from.z))
-                add(Vec3(to.x, top, to.z))
+                if (top > from.y) add(from.copy(y = top))
+                add(to.copy(y = top))
                 if (top > to.y) add(to)
             }
         }
@@ -62,7 +58,17 @@ class TeleportRoute(val points: List<Vec3>) {
 
 }
 
-/**
- * A route and the position packets that travel it.
- */
-class TeleportPlan(val route: TeleportRoute, val steps: List<TeleportStep>)
+class TeleportPlan(val route: TeleportRoute, val steps: List<TeleportStep>) {
+
+    /** This plan with the way from [position] to its start put in front, or null when that way is blocked. */
+    internal fun startingAt(position: Vec3, terrain: NavigationTerrain, stepLength: Double): TeleportPlan? {
+        val linked = ArrayList<TeleportStep>(steps.size + 2)
+        if (!TeleportSteps.appendSegment(terrain, position, route.start, stepLength, 0, linked)) {
+            return null
+        }
+
+        steps.mapTo(linked) { TeleportStep(it.position, it.onGround, it.segment + 1) }
+        return TeleportPlan(TeleportRoute(listOf(position) + route.points), linked)
+    }
+
+}

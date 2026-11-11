@@ -16,49 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.world.phys.Vec3
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 
-/**
- * One position packet of a route.
- */
 class TeleportStep(val position: Vec3, val onGround: Boolean, val segment: Int)
 
 object TeleportSteps {
 
-    /**
-     * Longest fall the server sees. It adds every descending move to the fall distance, also one on ground, deals
-     * a point of damage for every full block beyond three on a move on ground and clears the distance on any
-     * move upwards. The margin covers a fall the player was already in when the route began.
-     */
+    // The server adds every descending move to the fall distance, damages a landing after more than three blocks
+    // and clears the distance on any rise. The margin covers a fall the player was already in.
     const val MAX_FALL = 2.5
 
-    /**
-     * Rise between two falls of a drop, so the server clears the fall distance.
-     */
+    /** Rise between two falls of a drop, which clears the fall distance. */
     const val BOUNCE = 0.1
 
-    /**
-     * A vanilla server sets the player back when the k-th position packet since its last tick ends more than
-     * 10 * sqrt(k) blocks from where that tick started; from the sixth packet on k counts as 1 again.
-     */
+    // A vanilla server sets the player back when the k-th position packet since its last tick ends more than
+    // 10 * sqrt(k) blocks from where that tick started; from the sixth packet on k counts as 1 again.
     const val MAX_PACKETS_PER_TICK = 5
     private const val SAFE_DISTANCE = 9.5
 
     private const val EPSILON = 1.0E-6
 
-    /**
-     * Breaks [route] into position packets, every one checked against the server's collision sweep.
-     * Returns null when a part of the route is blocked.
-     */
+    /** Breaks [route] into steps the server's collision sweep lets through; null when a part of it is blocked. */
     fun plan(terrain: NavigationTerrain, route: TeleportRoute, stepLength: Double): List<TeleportStep>? {
         val steps = ArrayList<TeleportStep>()
         for (segment in 0 until route.points.lastIndex) {
@@ -69,9 +55,7 @@ object TeleportSteps {
         return steps
     }
 
-    /**
-     * Rises in the column of [from], crosses at the higher level, then drops onto [to].
-     */
+    /** Rises in the column of [from], crosses at the higher level, then drops onto [to]; false when blocked. */
     fun appendSegment(
         terrain: NavigationTerrain,
         from: Vec3,
@@ -84,18 +68,11 @@ object TeleportSteps {
         var position = from
 
         if (top - from.y > EPSILON) {
-            position = appendLine(terrain, position, Vec3(from.x, top, from.z), stepLength, segment, out)
-                ?: return false
+            position = appendLine(terrain, position, from.copy(y = top), stepLength, segment, out) ?: return false
         }
 
-        position = appendLine(terrain, position, Vec3(to.x, top, to.z), stepLength, segment, out)
-            ?: return false
-
-        if (top - to.y > EPSILON) {
-            return appendDrop(terrain, position, to, stepLength, segment, out)
-        }
-
-        return true
+        position = appendLine(terrain, position, to.copy(y = top), stepLength, segment, out) ?: return false
+        return top - to.y <= EPSILON || appendDrop(terrain, position, to, stepLength, segment, out)
     }
 
     private fun appendLine(
@@ -125,10 +102,7 @@ object TeleportSteps {
         return to
     }
 
-    /**
-     * Drops straight down from [from] onto [to] in falls of at most [MAX_FALL] blocks, with a [BOUNCE] between
-     * two of them. Only the landing claims ground.
-     */
+    /** Falls of at most [MAX_FALL] blocks with a [BOUNCE] between two of them. Only the landing claims ground. */
     private fun appendDrop(
         terrain: NavigationTerrain,
         from: Vec3,
@@ -160,10 +134,7 @@ object TeleportSteps {
         return true
     }
 
-    /**
-     * Groups [steps] into ticks, returning how many steps each tick sends. A tick takes steps while
-     * their distance from the tick's first position stays inside the server's allowance.
-     */
+    /** How many of [steps] each tick sends, staying inside the server's allowance from where the tick starts. */
     fun batches(start: Vec3, steps: List<TeleportStep>, packetsPerTick: Int): IntArray {
         val perTick = packetsPerTick.coerceIn(1, MAX_PACKETS_PER_TICK)
         val sizes = IntArrayList()
@@ -173,7 +144,8 @@ object TeleportSteps {
         for ((index, step) in steps.withIndex()) {
             val packet = inTick + 1
             if (inTick > 0 &&
-                (packet > perTick || step.position.distanceTo(tickStart) > SAFE_DISTANCE * sqrt(packet.toDouble()))
+                (packet > perTick || step.position.distanceToSqr(tickStart) >
+                    SAFE_DISTANCE * SAFE_DISTANCE * packet.toDouble())
             ) {
                 sizes.add(inTick)
                 tickStart = steps[index - 1].position

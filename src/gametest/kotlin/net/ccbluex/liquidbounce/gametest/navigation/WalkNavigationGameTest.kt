@@ -19,54 +19,28 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.gametest.countBlocks
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.groundY
 import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.player
 import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseValueGroup
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.core.BlockPos
-import net.minecraft.server.MinecraftServer
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
-import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
- * A survival player walks through a course with the walking navigation: around a wall, through a closed room,
- * across a gap in the air, up a cliff, over soul sand and ice and through a door and a fence gate, without taking
- * damage.
+ * A survival player walks through a course with the walking navigation, unhurt: around a wall, into a closed room,
+ * across a gap, up a cliff, over soul sand and ice and through a door and a fence gate.
  */
-@Suppress("TooManyFunctions")
 class WalkNavigationGameTest : FabricClientGameTest {
 
-    private object Owner : EventListener {
-        @Volatile
-        var active = false
-
-        override val running: Boolean
-            get() = active
-    }
-
-    private class Walker(name: String, build: Boolean) : NavigationBaseValueGroup<Unit>(
-        Owner, name, enabled = true, allowBreak = build, allowPlace = build, showRoute = false,
-    ) {
-        @Volatile
-        var goal: Vec3? = null
-
-        override fun createNavigationContext() = Unit
-
-        override fun calculateGoalPosition(context: Unit) = goal
-
-        override fun goalRadius(context: Unit) = GOAL_RADIUS
-    }
-
-    private lateinit var walker: Walker
-    private lateinit var builder: Walker
+    private lateinit var walker: TestWalker
+    private lateinit var builder: TestWalker
 
     override fun runTest(context: ClientGameTestContext) {
         if (!navigationGameTests) {
@@ -74,22 +48,23 @@ class WalkNavigationGameTest : FabricClientGameTest {
         }
         context.waitForClient()
         context.onClient {
-            walker = Walker("TestWalker", build = false)
-            builder = Walker("TestBuilder", build = true)
+            walker = TestWalker("TestWalker", GOAL_RADIUS)
+            builder = TestWalker("TestBuilder", GOAL_RADIUS, build = true)
         }
 
         try {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 buildCourse(server, y)
                 server.runCommand("gamemode survival @a")
                 server.runCommand("clear @a")
                 server.runCommand("give @a diamond_pickaxe")
                 server.runCommand("give @a cobblestone 64")
-                context.onClient { Owner.active = true }
+                context.onClient {
+                    walker.active = true
+                    builder.active = true
+                }
 
                 checkDetour(context, server, y)
                 checkTunnel(context, server, y)
@@ -99,11 +74,8 @@ class WalkNavigationGameTest : FabricClientGameTest {
                 checkDoors(context, server, y)
             }
         } finally {
-            context.onClient {
-                Owner.active = false
-                walker.goal = null
-                builder.goal = null
-            }
+            walker.stop(context)
+            builder.stop(context)
         }
     }
 
@@ -146,9 +118,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
         check(context.cobblestone() < before) { "Climbed the cliff without pillaring" }
     }
 
-    /**
-     * A roofed corridor in a stone block at x 0..16, z 24..36: east over soul sand, then north over ice.
-     */
+    /** A roofed corridor in stone: east over soul sand, then north over ice. */
     private fun checkSurfaces(context: ClientGameTestContext, server: TestServerContext, y: Int) {
         server.runCommand("fill 0 ${y - 1} 24 16 ${y + 3} 36 stone")
         server.runCommand("fill 1 $y 25 15 ${y + 2} 27 air")
@@ -160,10 +130,7 @@ class WalkNavigationGameTest : FabricClientGameTest {
         walk(context, server, walker, Vec3(14.5, y.toDouble(), 34.5), 600, "over soul sand and ice")
     }
 
-    /**
-     * A roofed corridor in a stone block at x 20..40, z 28..32, closed by walls with a closed oak door at x 26 and a
-     * closed oak fence gate at x 32.
-     */
+    /** A roofed corridor in stone, closed by walls with an oak door at x 26 and an oak fence gate at x 32. */
     private fun checkDoors(context: ClientGameTestContext, server: TestServerContext, y: Int) {
         server.runCommand("fill 20 ${y - 1} 28 40 ${y + 3} 32 stone")
         server.runCommand("fill 21 $y 29 39 ${y + 2} 31 air")
@@ -187,45 +154,16 @@ class WalkNavigationGameTest : FabricClientGameTest {
     private fun walk(
         context: ClientGameTestContext,
         server: TestServerContext,
-        walker: Walker,
+        walker: TestWalker,
         goal: Vec3,
         ticks: Int,
         what: String,
     ) {
-        val health = server.computeOnServer<Float, RuntimeException> { it.player().health }
-        context.onClient { walker.goal = goal }
-        try {
-            awaitArrival(context, goal, ticks, what)
-        } finally {
-            context.onClient { walker.goal = null }
-        }
+        val health = server.player { it.health }
+        walker.walk(context, goal, ticks, "Walking $what", "Did not walk $what", acting = { walker.isActing })
 
-        val (after, source) = server.computeOnServer<Pair<Float, String?>, RuntimeException> {
-            val player = it.player()
-            player.health to player.lastDamageSource?.type()?.msgId()
-        }
+        val (after, source) = server.player { it.health to it.lastDamageSource?.type()?.msgId() }
         check(after >= health) { "Walking $what hurt the player from $health to $after ($source)" }
-    }
-
-    private fun awaitArrival(context: ClientGameTestContext, goal: Vec3, ticks: Int, what: String) {
-        repeat(ticks) {
-            val position = context.fromClient { checkNotNull(it.player).position() }
-            if (position.horizontalDistance(goal) <= GOAL_RADIUS + 0.1 && abs(position.y - goal.y) < 1.0) {
-                return
-            }
-            context.waitTick()
-        }
-
-        val position = context.fromClient { checkNotNull(it.player).position() }
-        error("Did not walk $what to $goal within $ticks ticks, stopped at $position")
-    }
-
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z}")
-        context.waitFor({ client ->
-            client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
-        }, WAIT)
-        context.waitTicks(5)
     }
 
     private fun ClientGameTestContext.cobblestone(): Int = fromClient { mc ->
@@ -235,23 +173,8 @@ class WalkNavigationGameTest : FabricClientGameTest {
         }
     }
 
-    private fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int =
-        computeOnServer<Int, RuntimeException> { server ->
-            BlockPos.betweenClosed(from, to).count { !server.overworld().getBlockState(it).isAir }
-        }
-
-    private fun MinecraftServer.player() = playerList.players.first()
-
-    private fun Vec3.horizontalDistance(other: Vec3): Double {
-        val dx = x - other.x
-        val dz = z - other.z
-        return sqrt(dx * dx + dz * dz)
-    }
-
     private companion object {
         const val GOAL_RADIUS = 0.8
-        const val WAIT = 200
-        const val EPSILON = 1.0E-4
     }
 
 }

@@ -19,17 +19,16 @@
 
 package net.ccbluex.liquidbounce.gametest.navigation
 
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.gametest.command
 import net.ccbluex.liquidbounce.gametest.fromClient
-import net.ccbluex.liquidbounce.gametest.onClient
+import net.ccbluex.liquidbounce.gametest.groundY
+import net.ccbluex.liquidbounce.gametest.player
+import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
-import net.minecraft.client.Minecraft
-import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -43,31 +42,20 @@ class AutoWalkStagesGameTest : FabricClientGameTest {
             return
         }
         context.waitForClient()
-        val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoWalk) }
-
-        try {
+        context.restoring(ModuleAutoWalk) {
             context.worldBuilder().create().use { world ->
                 val server = world.server
-                val y = server.computeOnServer<Int, RuntimeException> {
-                    it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-                }
+                val y = server.groundY()
                 buildField(server, y)
                 server.runCommand("gamemode survival @a")
                 server.runCommand("clear @a")
 
                 checkFarGoto(context, server, y)
             }
-        } finally {
-            context.onClient {
-                ModuleAutoWalk.enabled = false
-                ConfigSystem.deserializeValueGroup(ModuleAutoWalk, saved)
-            }
         }
     }
 
-    /**
-     * A stone field from x -90 to 90 with walls at x -45, 0 and 45 that leave a gap on alternating sides.
-     */
+    /** A stone field from x -90 to 90 with walls at x -45, 0 and 45 that leave a gap on alternating sides. */
     private fun buildField(server: TestServerContext, y: Int) {
         server.runCommand("forceload add -96 -16 96 16")
         server.runCommand("fill -90 $y -14 90 ${y + 5} 14 air")
@@ -78,48 +66,40 @@ class AutoWalkStagesGameTest : FabricClientGameTest {
     }
 
     private fun checkFarGoto(context: ClientGameTestContext, server: TestServerContext, y: Int) {
-        moveTo(context, server, Vec3(-75.5, y.toDouble(), 0.5))
+        moveTo(context, server, Vec3(-75.5, y.toDouble(), 0.5), yaw = -90f)
         val destination = Vec3(75.5, y.toDouble(), 0.5)
-        val health = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
+        val health = server.player { it.health }
 
         context.command("goto ${destination.x} ${destination.y} ${destination.z}")
         check(context.fromClient { ModuleAutoWalk.enabled }) { ".goto did not turn AutoWalk on" }
 
         var stops = 0
-        var last = context.fromClient { checkNotNull(it.player).position() }
+        var last = context.playerPosition()
         var ticks = 0
-        while (context.fromClient { ModuleAutoWalk.enabled }) {
-            check(ticks++ < MAX_TICKS) { "Did not arrive within $MAX_TICKS ticks, stopped at $last" }
-            context.waitTick()
-            val (position, onGround) = context.fromClient { mc ->
-                val player = checkNotNull(mc.player)
-                player.position() to player.onGround()
+        TurnWatch.watch(context, "Walking to the far destination") {
+            while (context.fromClient { ModuleAutoWalk.enabled }) {
+                check(ticks++ < MAX_TICKS) { "Did not arrive within $MAX_TICKS ticks, stopped at $last" }
+                context.waitTick()
+                val (position, onGround) = context.fromClient { mc ->
+                    val player = checkNotNull(mc.player)
+                    player.position() to player.onGround()
+                }
+                if (onGround && position.subtract(last).horizontalDistance() < STILL) {
+                    stops++
+                }
+                last = position
             }
-            if (onGround && position.subtract(last).horizontalDistance() < STILL) {
-                stops++
-            }
-            last = position
         }
 
-        val position = context.fromClient { checkNotNull(it.player).position() }
+        val position = context.playerPosition()
         check(position.distanceTo(destination) <= ARRIVAL) { "AutoWalk turned off at $position, not at $destination" }
 
-        val after = server.computeOnServer<Float, RuntimeException> { it.playerList.players.first().health }
+        val after = server.player { it.health }
         check(after >= health) { "Walking to the far destination hurt the player from $health to $after" }
         check(stops <= MAX_STOPS) { "Stood still on the ground for $stops ticks on the way" }
     }
 
-    private fun moveTo(context: ClientGameTestContext, server: TestServerContext, position: Vec3) {
-        server.runCommand("tp @a ${position.x} ${position.y} ${position.z} -90 0")
-        context.waitFor({ client: Minecraft ->
-            client.player?.position()?.distanceToSqr(position)?.let { it < EPSILON } == true
-        }, WAIT)
-        context.waitTicks(5)
-    }
-
     private companion object {
-        const val WAIT = 200
-        const val EPSILON = 1.0E-4
         const val MAX_TICKS = 1200
         const val STILL = 0.02
         const val MAX_STOPS = 5

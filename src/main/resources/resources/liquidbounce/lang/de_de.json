@@ -503,7 +503,7 @@
   "liquidbounce.module.packetLogger.messages.send": "Sendet",
   "liquidbounce.module.packetMine.description": "Erlaubt es dir, Blöcke abzubauen, in dem du sie nur einmal anklickst.",
   "liquidbounce.module.packetMine.messages.noVfp": "Wähle eine andere Wechselmethode aus oder installier ViaFabricPlus!",
-  "liquidbounce.module.parkour.description": "Springt automatisch an den äußersten Rand eines Blocks.",
+  "liquidbounce.module.parkour.description": "Springt an Blockkanten und hilft dir, Sprünge zu landen.",
   "liquidbounce.module.particles.description": "Zeigt Partikel beim Angriff eines z.B. Spielers an.",
   "liquidbounce.module.phase.description": "Ermöglicht dir, durch Blöcke zu gehen.",
   "liquidbounce.module.pingSpoof.description": "Spooft deinen Ping auf einen angegebenen Wert.",

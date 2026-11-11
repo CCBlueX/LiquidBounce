@@ -24,6 +24,7 @@ import org.apache.commons.io.function.IOConsumer
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -66,7 +67,7 @@ fun Path.atomicMoveTo(target: Path): Path {
         )
     } catch (first: AtomicMoveNotSupportedException) {
         replaceExisting(target, first)
-    } catch (first: java.nio.file.FileAlreadyExistsException) {
+    } catch (first: FileAlreadyExistsException) {
         replaceExisting(target, first)
     }
 }

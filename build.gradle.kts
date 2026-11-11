@@ -18,6 +18,7 @@
  */
 
 import com.github.gradle.node.npm.task.NpmTask
+import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
 import java.time.Duration
@@ -374,6 +375,17 @@ detekt {
     source.from("src/gametest/kotlin")
 }
 
+val detektTypeResolutionTasks = listOf("detektMain", "detektTest", "detektGametest")
+
+tasks.withType<Detekt>().matching { it.name in detektTypeResolutionTasks }.configureEach {
+    config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt-type-resolution.yml"))
+    buildUponDefaultConfig.set(false)
+}
+
+tasks.check {
+    dependsOn(detektTypeResolutionTasks)
+}
+
 tasks.register<DetektCreateBaselineTask>("detektProjectBaseline") {
     description = "Overrides current baseline."
     ignoreFailures.set(true)
@@ -415,6 +427,11 @@ kotlin {
         jvmToolchain(libs.versions.jdk.get().toInt())
         freeCompilerArgs.add("-Xcollection-literals")
         freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
+    }
+
+    // Game tests check internals, as unit tests do
+    target.compilations.named("gametest") {
+        associateWith(target.compilations.getByName("main"))
     }
 
     // Add-ons are compiled against these; `./gradlew updateKotlinAbi` records a deliberate change.

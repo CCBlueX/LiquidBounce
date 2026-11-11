@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import com.mojang.brigadier.CommandDispatcher
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.thirdparty.LogsApi
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig.serializeAutoConfig
@@ -45,6 +46,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Style
+import okio.Buffer
 import java.net.URI
 import java.util.EnumSet
 
@@ -62,12 +64,12 @@ object CommandDebug : CommandRegistrar {
         .setPrettyPrinting()
         .create()
 
-    override fun register(dispatcher: com.mojang.brigadier.CommandDispatcher<ClientCommandSource>) {
+    override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
         dispatcher.register("debug") {
             execSuspend {
                 chat("Collecting debug information...".asPlainText(ChatFormatting.GRAY))
 
-                val buffer = okio.Buffer()
+                val buffer = Buffer()
 
                 buffer.outputStream().writer().use {
                     serializeAutoConfig(it)

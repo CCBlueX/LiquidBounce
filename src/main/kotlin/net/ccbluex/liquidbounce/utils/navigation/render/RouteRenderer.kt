@@ -32,22 +32,19 @@ import net.ccbluex.liquidbounce.render.renderEnvironment
 import net.ccbluex.liquidbounce.render.utils.MutableVertexList
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
+import net.minecraft.world.entity.Avatar.DEFAULT_EYE_HEIGHT
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import kotlin.math.PI
-import kotlin.math.sin
 
-/**
- * Draws the route of [view] with its direction and progress, the blocks it breaks and places, the destination,
- * where the server has the player, and the target with its attack position.
- */
+/** Draws [view]. */
 class RouteRenderer(
     owner: EventListener,
     private val view: RouteView,
@@ -122,9 +119,7 @@ class RouteRenderer(
         return 1f - (System.currentTimeMillis() - view.since).toFloat() / fadeOut
     }
 
-    /**
-     * The best route the search has so far, a line on to the destination, and a pulsing marker where the search got.
-     */
+    /** The route searched so far, a line on to the destination and a pulsing marker where the search got. */
     private fun WorldRenderEnvironment.drawPending(noDepthTest: Boolean) {
         val start = view.start ?: return
         val destination = view.destination ?: return
@@ -145,7 +140,7 @@ class RouteRenderer(
         }
 
         val phase = (System.currentTimeMillis() % PULSE_MILLIS).toDouble() / PULSE_MILLIS
-        val pulse = (sin(phase * 2.0 * PI) + 1.0) / 2.0
+        val pulse = (Mth.sin(phase * Mth.TWO_PI) + 1.0F) / 2.0F
         withPositionRelativeToCamera(reached) {
             drawBox(TIP, searchColor.alpha((TIP_ALPHA * pulse).toInt()), searchColor, noDepthTest = noDepthTest)
         }
@@ -203,7 +198,7 @@ class RouteRenderer(
 
         if (view.engaged && server != null) {
             val lines = MutableVertexList(2)
-            lines.addRelative(server.add(0.0, EYE_HEIGHT, 0.0), camera.position())
+            lines.addRelative(server.add(0.0, DEFAULT_EYE_HEIGHT.toDouble(), 0.0), camera.position())
             lines.addRelative(box.center, camera.position())
             drawLines(targetColor.argb, lines, noDepthTest)
         }
@@ -216,9 +211,7 @@ class RouteRenderer(
         }
     }
 
-    /**
-     * Arrow heads along [points], pointing the way the route goes.
-     */
+    /** Arrow heads along [points]. */
     private fun addChevrons(lines: MutableVertexList, points: List<Vec3>, origin: Vec3) {
         var offset = CHEVRON_SPACING / 2
         for (index in 0 until points.lastIndex) {
@@ -231,17 +224,17 @@ class RouteRenderer(
 
             val direction = segment.scale(1.0 / length)
             val side = if (direction.horizontalDistanceSqr() < 1.0E-4) {
-                Vec3(1.0, 0.0, 0.0)
+                Vec3.X_AXIS
             } else {
                 Vec3(-direction.z, 0.0, direction.x).normalize()
             }
 
             while (offset < length) {
-                val tip = from.add(direction.scale(offset + CHEVRON_SIZE))
-                val back = from.add(direction.scale(offset - CHEVRON_SIZE))
-                lines.addRelative(back.add(side.scale(CHEVRON_SIZE)), origin)
+                val tip = from.fma(offset + CHEVRON_SIZE, direction)
+                val back = from.fma(offset - CHEVRON_SIZE, direction)
+                lines.addRelative(back.fma(CHEVRON_SIZE, side), origin)
                 lines.addRelative(tip, origin)
-                lines.addRelative(back.subtract(side.scale(CHEVRON_SIZE)), origin)
+                lines.addRelative(back.fma(-CHEVRON_SIZE, side), origin)
                 lines.addRelative(tip, origin)
                 offset += CHEVRON_SPACING
             }
@@ -251,7 +244,6 @@ class RouteRenderer(
 
     private companion object {
         const val LIFT = 0.05
-        const val EYE_HEIGHT = 1.62
         const val CHEVRON_SPACING = 1.5
         const val CHEVRON_SIZE = 0.2
         const val GHOST_ALPHA = 50

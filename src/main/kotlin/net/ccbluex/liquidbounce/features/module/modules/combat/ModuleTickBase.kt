@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.balanceReset
@@ -60,7 +60,6 @@ import net.ccbluex.liquidbounce.utils.item.armorKnockbackResistance
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.getNearestPoint
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.world.entity.Entity
@@ -646,7 +645,7 @@ internal object ModuleTickBase : ClientModule(
     }
 
     private fun AABB.hitPoint(eyes: Vec3, range: Double, wallsRange: Double) = getNearestPoint(eyes).takeIf {
-        it.distanceToSqr(eyes) <= range.sq() && canSeeBox(eyes, this, range, wallsRange)
+        it.closerThan(eyes, range) && canSeeBox(eyes, this, range, wallsRange)
     }
 
     /**

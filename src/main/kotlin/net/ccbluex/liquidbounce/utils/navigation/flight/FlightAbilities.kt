@@ -21,64 +21,28 @@ package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 
-/**
- * How the player's speed follows the movement keys while flying.
- */
-enum class FlightControl {
-    /**
-     * Keys accelerate and the speed fades once they are released, as in creative flight.
-     */
-    MOMENTUM,
+/** Whether the keys build up speed that fades, as in creative flight, or set it right away, as Fly's Vanilla mode. */
+enum class FlightControl { MOMENTUM, DIRECT }
 
-    /**
-     * Keys set the speed right away and releasing them stops, as with the Vanilla mode of Fly.
-     */
-    DIRECT,
-}
-
-/**
- * How the player flies, captured on the render thread for one search.
- */
+/** How the player flies, captured on the render thread for one search. Speeds are in blocks per tick. */
 class FlightAbilities(
     val control: FlightControl,
-
-    /**
-     * Top speed in blocks per tick.
-     */
     val horizontalSpeed: Double,
     val verticalSpeed: Double,
-
-    /**
-     * Whether the player flies already, so no take-off is needed.
-     */
     val isFlying: Boolean,
 ) {
 
-    /**
-     * Ticks per block.
-     */
-    val horizontalCost: Double
-        get() = 1.0 / horizontalSpeed
-
-    val verticalCost: Double
-        get() = 1.0 / verticalSpeed
+    val horizontalCost = 1.0 / horizontalSpeed
+    val verticalCost = 1.0 / verticalSpeed
 
     companion object {
-
-        /**
-         * Momentum flight keeps this much of its speed every tick, horizontally and vertically.
-         */
-        const val HORIZONTAL_DRAG = 0.91
         const val VERTICAL_DRAG = 0.6
 
         private const val INPUT_SCALE = 0.98
         private const val VERTICAL_THRUST = 3.0
 
-        /**
-         * How the player can fly right now: with the Vanilla mode of Fly, with flying allowed by the game mode or
-         * the server, or not at all.
-         */
         fun capture(): FlightAbilities? {
             if (FlyVanilla.running) {
                 return FlightAbilities(
@@ -98,7 +62,7 @@ class FlightAbilities(
             val speed = abilities.flyingSpeed.toDouble()
             return FlightAbilities(
                 FlightControl.MOMENTUM,
-                horizontalSpeed = 2.0 * speed * INPUT_SCALE / (1.0 - HORIZONTAL_DRAG),
+                horizontalSpeed = 2.0 * speed * INPUT_SCALE / (1.0 - FLYING_AIR_DRAG),
                 verticalSpeed = speed * VERTICAL_THRUST / (1.0 - VERTICAL_DRAG),
                 isFlying = abilities.flying,
             )

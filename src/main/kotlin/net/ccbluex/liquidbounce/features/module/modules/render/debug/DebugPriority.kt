@@ -16,22 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.render.debug
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
-
-import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityFluidInteraction;
-import net.minecraft.world.level.material.Fluid;
-import org.jspecify.annotations.NullMarked;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-@NullMarked
-@Mixin(EntityFluidInteraction.class)
-public interface MixinEntityFluidInteractionAccessor {
-
-    @Accessor("currentAccumulators")
-    Reference2ObjectMap<TagKey<Fluid>, ?> currentAccumulators();
-
-}
+/**
+ * Order of parameters in the Debug overview, [HIGH] first. When a card does not fit on screen,
+ * [LOW] parameters are hidden first.
+ */
+enum class DebugPriority { HIGH, NORMAL, LOW }

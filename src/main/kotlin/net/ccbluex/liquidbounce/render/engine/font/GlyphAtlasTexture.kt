@@ -35,6 +35,7 @@ import java.awt.image.ComponentSampleModel
 import java.awt.image.DataBufferByte
 import java.awt.image.DataBufferInt
 import java.awt.image.SinglePixelPackedSampleModel
+import java.nio.ByteBuffer
 import java.util.function.Supplier
 
 class GlyphAtlasTexture(
@@ -216,7 +217,7 @@ private fun copyCoverageRows(
     source: ByteArray,
     sourceOffset: Int,
     sourceStride: Int,
-    target: java.nio.ByteBuffer,
+    target: ByteBuffer,
     targetOffset: Int,
     targetStride: Int,
     width: Int,
@@ -235,7 +236,7 @@ private fun copyAlphaRows(
     source: IntArray,
     sourceOffset: Int,
     sourceStride: Int,
-    target: java.nio.ByteBuffer,
+    target: ByteBuffer,
     targetOffset: Int,
     targetStride: Int,
     width: Int,

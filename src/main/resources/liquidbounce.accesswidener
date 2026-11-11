@@ -112,6 +112,8 @@ accessible method net/minecraft/world/item/BlockItem getPlacementState (Lnet/min
 
 accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
 accessible field net/minecraft/world/entity/Entity fluidInteraction Lnet/minecraft/world/entity/EntityFluidInteraction;
+accessible field net/minecraft/world/entity/Entity stuckSpeedMultiplier Lnet/minecraft/world/phys/Vec3;
+accessible method net/minecraft/client/player/LocalPlayer modifyInputSpeedForSquareMovement (Lnet/minecraft/world/phys/Vec2;)Lnet/minecraft/world/phys/Vec2;
 
 accessible field net/minecraft/network/protocol/game/VecDeltaCodec base Lnet/minecraft/world/phys/Vec3;
 

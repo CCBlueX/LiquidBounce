@@ -50,6 +50,8 @@ abstract class WingsMode(name: String) : Mode(name) {
         val distance by int("Distance", 64, 8..512, "blocks")
     }
 
+    private val friends = tree(FriendsOptions())
+
     protected abstract fun WorldRenderEnvironment.drawWings(isHurt: Boolean, bodyRot: Float, shifting: Float)
 
     @Suppress("unused")
@@ -61,9 +63,9 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 val isMe = entity == player
                 val isFriend =
-                    FriendsOptions().friendView
+                    friends.friendView
                         && FriendManager.isFriend(entity)
-                        && player.distanceTo(entity) <= FriendsOptions().distance
+                        && player.closerThan(entity, friends.distance.toDouble())
 
                 val shouldRender = when {
                     isMe -> !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
@@ -73,12 +75,12 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val partAllowed = RotationManager.isPartAllowed(RotationManager.BodyPart.BODY)
-                val bodyRot = if (isMe && RotationManager.running && partAllowed) {
-                    val modelRot = RotationManager.currentRotation?.yaw
-                    val prevModelRot = RotationManager.lastRotation?.yaw
-                    rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
-                } else { rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot) }
+                val vanillaBodyRot = rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
+                val bodyRot = if (isMe) {
+                    RotationManager.modelYaw(RotationManager.BodyPart.BODY, event.partialTicks, vanillaBodyRot)
+                } else {
+                    vanillaBodyRot
+                }
 
                 val look = Vec3.directionFromRotation(0f, bodyRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {

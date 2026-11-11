@@ -41,13 +41,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
 
-/**
- * Endpoints of the marketplace API.
- */
 @Suppress("TooManyFunctions")
 internal interface MarketplaceService {
 
-    // Items
     @GET("marketplace")
     suspend fun items(
         @QueryMap query: Map<String, String>,
@@ -88,7 +84,6 @@ internal interface MarketplaceService {
         @Header("Authorization") authorization: String? = null,
     ): MarketplaceItem
 
-    // Revisions
     @GET("marketplace/{id}/revisions")
     suspend fun revisions(
         @Path("id") id: Int,
@@ -118,7 +113,6 @@ internal interface MarketplaceService {
         @Header("Authorization") authorization: String,
     )
 
-    // Dependencies
     @GET("marketplace/{id}/dependencies")
     suspend fun dependencies(@Path("id") id: Int): List<MarketplaceLinkedItem>
 
@@ -158,7 +152,6 @@ internal interface MarketplaceService {
         @Header("Authorization") authorization: String,
     )
 
-    // Reviews
     @GET("marketplace/{id}/reviews")
     suspend fun reviews(
         @Path("id") id: Int,
@@ -180,7 +173,6 @@ internal interface MarketplaceService {
         @Header("Authorization") authorization: String,
     )
 
-    // Config reports
     @PUT("marketplace/{id}/revisions/{revisionId}/report")
     suspend fun putConfigReport(
         @Path("id") id: Int,
@@ -206,7 +198,6 @@ internal interface MarketplaceService {
     @GET("marketplace/{id}/reports")
     suspend fun configReports(@Path("id") id: Int): List<MarketplaceConfigReportSummary>
 
-    // Thumbnails
     @POST("marketplace/{id}/thumbnail")
     suspend fun uploadThumbnail(
         @Path("id") id: Int,

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
@@ -354,7 +355,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var maxHealth = this.getMaxHealth();
         var newHealth = Math.clamp(health, 0.0F, maxHealth);
 
-        if (oldHealth != newHealth) {
+        if (oldHealth != newHealth && !((Object) this instanceof SimulatedPlayer)) {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
         }
     }

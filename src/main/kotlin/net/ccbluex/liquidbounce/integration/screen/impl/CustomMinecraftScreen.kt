@@ -16,22 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
-import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceCreateItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceDeleteItemCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.item.MarketplaceEditItemCommand
+package net.ccbluex.liquidbounce.integration.screen.impl
+
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.utils.text.asPlainText
+import net.minecraft.client.gui.screens.Screen
 
 /**
- * Manage marketplace items
+ * A screen that a theme page draws.
  */
-object MarketplaceItemCommand {
+abstract class CustomMinecraftScreen(
+    val screenType: CustomScreenType
+) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
-    fun CmdLiteralScope.item() {
-        with(MarketplaceCreateItemCommand) { create() }
-        with(MarketplaceEditItemCommand) { edit() }
-        with(MarketplaceDeleteItemCommand) { delete() }
+    /**
+     * Set by the page while it has a dialog, menu or search open that Esc closes instead of the screen.
+     */
+    var pageKeepsEscape = false
+
+    override fun shouldCloseOnEsc() = !pageKeepsEscape
+
+    override fun removed() {
+        pageKeepsEscape = false
     }
 
 }

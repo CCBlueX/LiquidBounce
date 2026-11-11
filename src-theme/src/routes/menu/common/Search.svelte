@@ -1,11 +1,18 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
+    import {escapeLayer} from "../../../integration/escape";
 
     let value = "";
 
     const dispatch = createEventDispatcher<{
         search: { query: string }
     }>();
+
+    const layer = escapeLayer(() => {
+        value = "";
+        dispatch("search", {query: value});
+    });
+    $: layer.setOpen(value !== "");
 </script>
 
 <input class="search" type="text" placeholder="Search..." bind:value={value}

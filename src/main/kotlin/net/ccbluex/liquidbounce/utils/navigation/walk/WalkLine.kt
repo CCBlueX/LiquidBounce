@@ -28,18 +28,13 @@ import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.min
-import kotlin.math.sqrt
 
 private const val SAMPLE_SPACING = 0.5
 private const val DEAD_ANGLE = 20f
 private val SIDE_X = intArrayOf(1, -1, 0, 0)
 private val SIDE_Z = intArrayOf(0, 0, 1, -1)
 
-/**
- * Whether walking from [from] straight towards [to] gets within [stopDistance] of it on one level: every sample
- * on the way has ground within a step of the level, room for the body and no hazard. A straight walk does not sneak,
- * so no block on the way may have a side that drops deeper than [safeFall] blocks.
- */
+/** Whether walking straight from [from] gets within [stopDistance] of [to], past no drop deeper than [safeFall]. */
 internal fun isStraightWalkable(
     terrain: NavigationTerrain,
     from: Vec3,
@@ -49,11 +44,11 @@ internal fun isStraightWalkable(
 ): Boolean {
     val dx = to.x - from.x
     val dz = to.z - from.z
-    val length = sqrt(dx * dx + dz * dz)
+    val length = Mth.length(dx, dz)
     val samples = ceil(length / SAMPLE_SPACING).toInt()
 
     var level = from.y
-    if (isNearDrop(terrain, Mth.floor(from.x), level, Mth.floor(from.z), safeFall)) {
+    if (terrain.isNearDrop(Mth.floor(from.x), level, Mth.floor(from.z), safeFall)) {
         return false
     }
 
@@ -61,8 +56,8 @@ internal fun isStraightWalkable(
         val t = min(sample * SAMPLE_SPACING, length) / length
         val x = from.x + dx * t
         val z = from.z + dz * t
-        level = groundLevel(terrain, x, z, level) ?: return false
-        if (isNearDrop(terrain, Mth.floor(x), level, Mth.floor(z), safeFall)) {
+        level = terrain.groundLevel(x, z, level)
+        if (level.isNaN() || terrain.isNearDrop(Mth.floor(x), level, Mth.floor(z), safeFall)) {
             return false
         }
         if (to.distanceToSqr(x, level, z) <= stopDistance * stopDistance) {
@@ -73,61 +68,49 @@ internal fun isStraightWalkable(
     return false
 }
 
-/**
- * Whether a player standing in column [x] [z] with the feet at [level] can walk off a side into a drop deeper than
- * [safeFall] blocks, a hazard or the void.
- */
-private fun isNearDrop(terrain: NavigationTerrain, x: Int, level: Double, z: Int, safeFall: Int): Boolean {
+/** Whether a side of column [x] [z] drops deeper than [safeFall] blocks below feet at [level], or into a hazard. */
+private fun NavigationTerrain.isNearDrop(x: Int, level: Double, z: Int, safeFall: Int): Boolean {
     val y = Mth.floor(level)
     for (i in SIDE_X.indices) {
         val sideX = x + SIDE_X[i]
         val sideZ = z + SIDE_Z[i]
-        val open = terrain.isPassable(sideX, y, sideZ) && terrain.isPassable(sideX, y + 1, sideZ) &&
-            !terrain.isWater(sideX, y, sideZ)
-        if (open && !isSafeDrop(terrain, sideX, y, sideZ, level, safeFall)) {
+        val open = isOpen(sideX, y, sideZ) && !isWater(sideX, y, sideZ)
+        if (open && !isSafeDrop(sideX, y, sideZ, level, safeFall)) {
             return true
         }
     }
     return false
 }
 
-/**
- * Whether falling down column [x] [z] from block [y] with the feet at [level] ends in water or on ground at most
- * [safeFall] blocks lower.
- */
-private fun isSafeDrop(terrain: NavigationTerrain, x: Int, y: Int, z: Int, level: Double, safeFall: Int): Boolean {
+private fun NavigationTerrain.isSafeDrop(x: Int, y: Int, z: Int, level: Double, safeFall: Int): Boolean {
     for (dropY in y downTo y - safeFall - 1) {
-        val stand = terrain.standHeight(x, dropY, z)
+        val stand = standHeight(x, dropY, z)
         when {
-            terrain.isWater(x, dropY, z) -> return true
+            isWater(x, dropY, z) -> return true
             !stand.isNaN() -> return level - stand <= safeFall
-            !terrain.isPassable(x, dropY, z) -> return false
+            !isPassable(x, dropY, z) -> return false
         }
     }
     return false
 }
 
-/**
- * Feet height when standing at [x] [z] within a step of [level], or null.
- */
-private fun groundLevel(terrain: NavigationTerrain, x: Double, z: Double, level: Double): Double? {
+/** Feet height when standing at [x] [z] within a step of [level], or NaN. */
+private fun NavigationTerrain.groundLevel(x: Double, z: Double, level: Double): Double {
     val blockX = Mth.floor(x)
     val blockZ = Mth.floor(z)
     val step = NavigationTerrain.STEP
 
     for (y in Mth.floor(level + step) downTo Mth.floor(level - step)) {
-        val height = terrain.standHeight(blockX, y, blockZ)
+        val height = standHeight(blockX, y, blockZ)
         if (!height.isNaN() && abs(height - level) <= step) {
-            return height.takeIf { terrain.isClear(terrain.box(x, height, z)) }
+            return if (isClear(box(x, height, z))) height else Double.NaN
         }
     }
 
-    return null
+    return Double.NaN
 }
 
-/**
- * Keys that move towards [delta] when the input is applied relative to [frameYaw].
- */
+/** Keys that move towards [delta] when the input is applied relative to [frameYaw]. */
 internal fun steer(delta: Vec3, frameYaw: Float): DirectionalInput {
     if (delta.horizontalDistanceSqr() < 1.0E-6) {
         return DirectionalInput.NONE
