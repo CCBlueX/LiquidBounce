@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
+import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
@@ -45,9 +46,8 @@ import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportSteps
 import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportTrip
-import net.ccbluex.liquidbounce.utils.navigation.teleport.eyesAt
-import net.ccbluex.liquidbounce.utils.navigation.teleport.reachPositions
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.reachPositions
 import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -152,7 +152,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
             else -> null
         } ?: return@handler
 
-        val eyes = eyesAt(feet)
+        val eyes = player.getEyePositionAt(feet)
         val box = engagement.target.boundingBox
         val rotation = raytraceBox(eyes, box, range = reach, wallsRange = 0.0)?.rotation
             ?: Rotation.lookingAt(box.center, eyes)
@@ -268,7 +268,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         }
 
         view.engaged = true
-        if (clicker.isClickTick && isFacing(eyesAt(feet), target) &&
+        if (clicker.isClickTick && isFacing(player.getEyePositionAt(feet), target) &&
             !player.cannotAttackWithItem(player.mainHandItem, 0)
         ) {
             clicker.click {
@@ -330,7 +330,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     private fun isInReach(feet: Vec3, target: LivingEntity) =
-        target.boundingBox.distanceToSqr(eyesAt(feet)) <= Mth.square(reach)
+        target.boundingBox.distanceToSqr(player.getEyePositionAt(feet)) <= Mth.square(reach)
 
     /** Whether the rotation the server has hits [target] from [eyes]. */
     private fun isFacing(eyes: Vec3, target: LivingEntity): Boolean {
@@ -345,9 +345,8 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
     }
 
     /** Standable positions around [target] that see it within reach, closest to [from] first. */
-    private fun attackPositions(target: LivingEntity, from: Vec3) = reachPositions(
-        NavigationTerrain.live(), target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from
-    )
+    private fun attackPositions(target: LivingEntity, from: Vec3) =
+        NavigationTerrain.live().reachPositions(target.boundingBox, reach - TARGET_MOVEMENT_MARGIN, from)
 
     private const val REACH_MARGIN = 0.1
     private const val TARGET_MOVEMENT_MARGIN = 0.4

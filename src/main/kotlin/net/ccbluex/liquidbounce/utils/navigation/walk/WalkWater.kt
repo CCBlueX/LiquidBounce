@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.hasRoom
 import net.minecraft.world.entity.Avatar.SWIMMING_BB_HEIGHT
 import net.minecraft.world.entity.Entity.TOTAL_AIR_SUPPLY
 

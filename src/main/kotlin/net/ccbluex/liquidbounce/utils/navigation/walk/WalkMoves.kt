@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.hasRoom
+import net.ccbluex.liquidbounce.utils.navigation.terrain.isOpen
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.Entity.DELTA_AFFECTED_BY_BLOCKS_BELOW_0_5
@@ -593,12 +596,3 @@ internal class WalkMoves(private val terrain: NavigationTerrain, private val abi
     }
 
 }
-
-/** Whether a body [height] tall fits in the middle of block [x] [y] [z] with the feet at its bottom. */
-internal fun NavigationTerrain.hasRoom(x: Int, y: Int, z: Int, height: Double = this.height) =
-    isClear(box(x + 0.5, y.toDouble(), z + 0.5, height))
-
-/** Whether nothing is in the way of feet and head in [x] [y] [z]. */
-internal fun NavigationTerrain.isOpen(x: Int, y: Int, z: Int) = isPassable(x, y, z) && isPassable(x, y + 1, z)
-
-internal inline fun Double.ifNaN(other: () -> Double) = if (isNaN()) other() else this

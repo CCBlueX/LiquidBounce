@@ -21,15 +21,13 @@ package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import kotlin.math.roundToInt
 
 /** Makes one parkour step by simulating the player every tick: jumps where it works, else walks back to the run-up. */
 internal class WalkLeap {
@@ -58,7 +56,7 @@ internal class WalkLeap {
         val state = PlayerMotion(terrain, abilities.motion)
         state.reset(player)
         val input = decide(state, RotationManager.movementYaw, step, jump, WalkJumps(terrain, abilities))
-        event.directionalInput = keys(input.forward, input.strafe, frameYaw)
+        event.directionalInput = getDirectionalInputForMovementYaw(input.forward, input.strafe, frameYaw)
         event.jump = input.jump
         event.sneak = input.sneak
         sprint = input.sprint
@@ -197,26 +195,3 @@ internal class LeapInput(
     val sprint: Boolean,
     val sneak: Boolean = false,
 )
-
-/** Keys that move [forward] and [strafe] relative to [RotationManager.movementYaw]. */
-internal fun keys(forward: Int, strafe: Int, frameYaw: Float): DirectionalInput {
-    val rotation = RotationManager.currentRotation
-    if (rotation == null || RotationManager.activeRotationTarget?.movementCorrection != MovementCorrection.SILENT) {
-        return DirectionalInput(forward.toFloat(), strafe.toFloat())
-    }
-
-    // Silent correction reads the keys relative to the camera at frameYaw and turns them onto the rotation.
-    val delta = (frameYaw - rotation.yaw) * Mth.DEG_TO_RAD
-    val cos = Mth.cos(delta.toDouble())
-    val sin = Mth.sin(delta.toDouble())
-    for (z in -1..1) {
-        for (x in -1..1) {
-            val turnedX = (x * cos - z * sin).roundToInt()
-            val turnedZ = (z * cos + x * sin).roundToInt()
-            if (turnedX == strafe && turnedZ == forward) {
-                return DirectionalInput(z.toFloat(), x.toFloat())
-            }
-        }
-    }
-    return DirectionalInput(forward.toFloat(), strafe.toFloat())
-}

@@ -35,11 +35,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.terrain.LiveWorld
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.steer
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -73,7 +73,7 @@ class RoofBounce(private val owner: EventListener, private val view: RouteView) 
         }
 
         bounce.ticks++
-        event.directionalInput = steer(goal.subtract(position), frameYaw)
+        event.directionalInput = getDirectionalInputTowards(goal.subtract(position), frameYaw)
         event.sneak = false
         // Opening the elytra takes a fresh jump press in the air; after that ElytraRecast reopens it on every bounce.
         event.jump = player.isFallFlying || player.onGround() || bounce.ticks % 2 == 0

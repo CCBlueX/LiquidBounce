@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
@@ -53,7 +54,7 @@ class TeleportTrip(private val owner: EventListener, private val steps: Teleport
         get() = TeleportDispatcher.serverPosition?.takeIf { isAway } ?: player.position()
 
     val eyes: Vec3
-        get() = eyesAt(feet)
+        get() = player.getEyePositionAt(feet)
 
     fun request(
         origin: Vec3,

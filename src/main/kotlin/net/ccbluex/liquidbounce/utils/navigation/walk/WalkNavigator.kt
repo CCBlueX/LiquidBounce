@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.flight.FlightNavigator
 import net.ccbluex.liquidbounce.utils.navigation.flight.GlideNavigator
 import net.ccbluex.liquidbounce.utils.navigation.flight.RoofBounce
@@ -494,7 +495,7 @@ class WalkNavigator(
     private fun walkTowards(event: MovementInputEvent, target: Vec3, sprint: Boolean) {
         steeringTarget = target
         sprintWanted = sprint
-        event.directionalInput = steer(target.subtract(player.position()), frameYaw())
+        event.directionalInput = getDirectionalInputTowards(target.subtract(player.position()), frameYaw())
         event.jump = player.isInWater
         event.sneak = false
     }

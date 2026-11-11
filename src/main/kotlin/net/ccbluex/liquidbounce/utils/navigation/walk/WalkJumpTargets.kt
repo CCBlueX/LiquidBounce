@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.hasRoom
+import net.ccbluex.liquidbounce.utils.navigation.terrain.isOpen
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.ceil

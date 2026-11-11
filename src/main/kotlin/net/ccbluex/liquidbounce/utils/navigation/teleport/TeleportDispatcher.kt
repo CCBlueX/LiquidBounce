@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -161,7 +162,7 @@ object TeleportDispatcher : EventListener {
     }
 
     private fun land(position: Vec3) {
-        teleportPlayer(position.x, position.y, position.z, resetMotion = true)
+        GlobalSettingsTeleport.teleportPlayer(position.x, position.y, position.z, resetMotion = true)
         player.resetFallDistance()
         release()
     }

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.minecraft.core.BlockPos
@@ -234,7 +235,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
             // Bridging: lean over the edge, so the side of the block below is in sight.
             pos.y < step.from.y -> {
-                event.directionalInput = steer(step.feet.subtract(position), frameYaw)
+                event.directionalInput = getDirectionalInputTowards(step.feet.subtract(position), frameYaw)
                 event.sneak = true
                 movement = Movement(step.feet)
             }
@@ -369,7 +370,7 @@ class WalkFollower(private val actions: WalkActions) : RouteProgress {
 
     private fun centerInput(position: Vec3, feet: Vec3, frameYaw: Float): DirectionalInput =
         if (position.horizontalDistanceTo(feet) > CENTER_TOLERANCE) {
-            steer(feet.subtract(position), frameYaw)
+            getDirectionalInputTowards(feet.subtract(position), frameYaw)
         } else {
             DirectionalInput.NONE
         }

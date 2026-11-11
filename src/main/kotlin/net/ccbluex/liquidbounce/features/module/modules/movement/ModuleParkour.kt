@@ -34,15 +34,15 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInpu
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForMovementYaw
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
 import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
 import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumpTargets
 import net.ccbluex.liquidbounce.utils.navigation.walk.WalkJumps
-import net.ccbluex.liquidbounce.utils.navigation.walk.ifNaN
-import net.ccbluex.liquidbounce.utils.navigation.walk.keys
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -150,7 +150,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         }
 
         this.target = target
-        event.directionalInput = keys(1, 0, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(1, 0, player.yRot)
         event.jump = target.jumpNow
         airborne = target.jumpNow
         sprint = true
@@ -161,7 +161,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
     private fun steerInAir(event: MovementInputEvent, jumps: WalkJumps, state: PlayerMotion, yaw: Float) {
         val target = target ?: return
         val air = jumps.airKeys(state, yaw, target.pos, target.aim.y) ?: return
-        event.directionalInput = keys(air.forward, air.strafe, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(air.forward, air.strafe, player.yRot)
         event.jump = false
         sprint = air.forward > 0
     }
@@ -216,7 +216,7 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             return false
         }
 
-        event.directionalInput = keys(-1, 0, player.yRot)
+        event.directionalInput = getDirectionalInputForMovementYaw(-1, 0, player.yRot)
         return true
     }
 

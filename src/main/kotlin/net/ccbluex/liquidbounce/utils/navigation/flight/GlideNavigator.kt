@@ -37,11 +37,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.walk.steer
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.item.Items
@@ -192,7 +192,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
         event.directionalInput = if (glide.hasOpened) {
             DirectionalInput.NONE
         } else {
-            steer(glide.goal.subtract(player.position()), frameYaw)
+            getDirectionalInputTowards(glide.goal.subtract(player.position()), frameYaw)
         }
         sprint = !glide.hasOpened
 

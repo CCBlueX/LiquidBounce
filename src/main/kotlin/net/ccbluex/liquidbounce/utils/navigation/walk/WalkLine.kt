@@ -19,10 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
-import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.isOpen
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -30,7 +28,6 @@ import kotlin.math.ceil
 import kotlin.math.min
 
 private const val SAMPLE_SPACING = 0.5
-private const val DEAD_ANGLE = 20f
 private val SIDE_X = intArrayOf(1, -1, 0, 0)
 private val SIDE_Z = intArrayOf(0, 0, 1, -1)
 
@@ -108,17 +105,4 @@ private fun NavigationTerrain.groundLevel(x: Double, z: Double, level: Double): 
     }
 
     return Double.NaN
-}
-
-/** Keys that move towards [delta] when the input is applied relative to [frameYaw]. */
-internal fun steer(delta: Vec3, frameYaw: Float): DirectionalInput {
-    if (delta.horizontalDistanceSqr() < 1.0E-6) {
-        return DirectionalInput.NONE
-    }
-
-    return getDirectionalInputForDegrees(
-        DirectionalInput.NONE,
-        getDegreesRelativeToView(delta, frameYaw),
-        deadAngle = DEAD_ANGLE,
-    )
 }

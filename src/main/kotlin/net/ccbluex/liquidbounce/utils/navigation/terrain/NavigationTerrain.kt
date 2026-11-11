@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.utils.navigation.terrain
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import net.ccbluex.fastutil.referenceHashSetOf
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.getEyePositionAt
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -43,6 +46,7 @@ import net.minecraft.world.phys.shapes.BooleanOp
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import kotlin.math.abs
+import kotlin.math.ceil
 
 enum class DestinationCheck {
     VALID,
@@ -433,4 +437,41 @@ class NavigationTerrain(
         }
     }
 
+}
+
+/** Whether a body [height] tall fits in the middle of block [x] [y] [z] with the feet at its bottom. */
+internal fun NavigationTerrain.hasRoom(x: Int, y: Int, z: Int, height: Double = this.height) =
+    isClear(box(x + 0.5, y.toDouble(), z + 0.5, height))
+
+/** Whether nothing is in the way of feet and head in [x] [y] [z]. */
+internal fun NavigationTerrain.isOpen(x: Int, y: Int, z: Int) = isPassable(x, y, z) && isPassable(x, y + 1, z)
+
+private const val MAX_REACH_POSITIONS = 8
+
+/** Blocks below the box the feet may still stand at, as the eyes are above them. */
+private const val EYE_DEPTH = 2
+
+/** Standable feet positions whose eyes see [box] within [reach], closest to [from] first; [block] does not hide it. */
+fun NavigationTerrain.reachPositions(box: AABB, reach: Double, from: Vec3, block: BlockPos? = null): List<BlockPos> {
+    val center = BlockPos.containing(box.center)
+    val radius = ceil(reach).toInt()
+    val positions = ArrayList<BlockPos>()
+
+    for (dx in -radius..radius) {
+        for (dz in -radius..radius) {
+            for (dy in -radius - EYE_DEPTH..radius) {
+                val position = center.offset(dx, dy, dz)
+                val feet = this.feet(position) ?: continue
+                val eyes = player.getEyePositionAt(feet)
+                if (!this.box(feet).intersects(box) && box.distanceToSqr(eyes) <= reach * reach &&
+                    canSeeBox(eyes, box, reach, 0.0, block)
+                ) {
+                    positions += position
+                }
+            }
+        }
+    }
+
+    positions.sortBy { this.feet(it)?.distanceToSqr(from) ?: Double.MAX_VALUE }
+    return positions.take(MAX_REACH_POSITIONS)
 }

@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.distanceToSegment
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
-import net.ccbluex.liquidbounce.utils.navigation.walk.steer
 import net.minecraft.world.entity.LivingEntity.FLYING_AIR_DRAG
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -141,7 +141,7 @@ class FlightFollower : RouteProgress {
         val sinkTolerance = if (momentum && !isFinal) SINK_TOLERANCE else riseTolerance
 
         val moves = error.horizontalDistanceSqr() > horizontalTolerance * horizontalTolerance
-        event.directionalInput = if (moves) steer(error, frameYaw) else DirectionalInput.NONE
+        event.directionalInput = if (moves) getDirectionalInputTowards(error, frameYaw) else DirectionalInput.NONE
         event.jump = error.y > riseTolerance
         event.sneak = error.y < -sinkTolerance && !event.jump
         sprint = moves && error.horizontalDistance() > SPRINT_DISTANCE
