@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputTowards
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.route.RoutePlanner
+import net.ccbluex.liquidbounce.utils.navigation.route.BackgroundSearch
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -54,7 +54,7 @@ import net.minecraft.world.phys.Vec3
  */
 class Gliding(private val owner: EventListener, private val view: RouteView) : EventListener {
 
-    private val planner = RoutePlanner<Path>(this)
+    private val search = BackgroundSearch<Path>(this)
     private var glide: Glide? = null
     private var ticks = 0
     private var retryAt = 0
@@ -84,7 +84,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
 
     /** Stops planning and steering; a glide in the air goes on as the game moves it. */
     fun halt() {
-        planner.cancel()
+        search.cancel()
         glide = null
         fireRocket = false
         sprint = false
@@ -92,7 +92,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
 
     private fun start(goal: Vec3, radius: Double, abilities: Abilities?, direct: Boolean): Glide? {
         if (abilities == null) {
-            planner.cancel()
+            search.cancel()
             return null
         }
         // Landed, but the server has not closed the elytra yet
@@ -125,16 +125,16 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
             return null
         }
 
-        planner.cancel()
+        search.cancel()
         val rockets = Rockets(abilities.rockets, abilities.rocketTicks)
         return Glide(goal, Cruise(goal, liveHeights, rockets, world.maxY, ::groundNear))
     }
 
-    private fun planned(goal: Vec3, abilities: Abilities): Glide? = when (val result = planner.poll()) {
+    private fun planned(goal: Vec3, abilities: Abilities): Glide? = when (val result = search.poll()) {
         RouteResult.Searching -> null
 
         is RouteResult.Found -> {
-            planner.cancel()
+            search.cancel()
             val path = result.value
             // A glide found for where the player stood a moment ago is searched again.
             if (player.onGround() && player.position().closerThan(path.start, START_TOLERANCE)) {
@@ -146,14 +146,14 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
         }
 
         RouteResult.AlreadyThere, is RouteResult.Failed -> {
-            planner.cancel()
+            search.cancel()
             retryAt = ticks + RETRY_TICKS
             null
         }
     }
 
     private fun planIfUseful(goal: Vec3, radius: Double, abilities: Abilities, direct: Boolean) {
-        if (!planner.isIdle || ticks < retryAt || direct || !player.onGround()) {
+        if (!search.isIdle || ticks < retryAt || direct || !player.onGround()) {
             return
         }
 
@@ -164,7 +164,7 @@ class Gliding(private val owner: EventListener, private val view: RouteView) : E
             return
         }
 
-        planner.request(BlockPos.containing(start) to goal, PathSearch.region(start, goal)) { terrain ->
+        search.request(BlockPos.containing(start) to goal, PathSearch.region(start, goal)) { terrain ->
             PathSearch(terrain, start, goal, radius, abilities)
         }
     }

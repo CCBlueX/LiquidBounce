@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.gametest.onClient
 import net.ccbluex.liquidbounce.gametest.playerPosition
 import net.ccbluex.liquidbounce.gametest.restoring
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.KeyMapping
@@ -103,7 +103,7 @@ private fun GameTestScope.checkTeleport(y: Int) {
     input.holdKeyFor({ it.keyPickItem }, 3)
     awaitClient("the teleport", WAIT_TICKS) { client ->
         val position = client.player?.position() ?: return@awaitClient false
-        position.x > start.x + 4 && !TeleportDispatcher.isMoving
+        position.x > start.x + 4 && !TeleportManager.isMoving
     }
 
     val landed = context.playerPosition()
@@ -178,7 +178,7 @@ private fun GameTestScope.click(y: Int, target: BlockPos, key: (Options) -> KeyM
 
 private fun GameTestScope.awaitReturn(y: Int) {
     awaitClient("the player back", WAIT_TICKS) {
-        !TeleportDispatcher.holds(ModuleTeleportReach) && !TeleportDispatcher.isMoving
+        !TeleportManager.holds(ModuleTeleportReach) && !TeleportManager.isMoving
     }
     awaitServerAt(origin(y), timeout = WAIT_TICKS)
 }

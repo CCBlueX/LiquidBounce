@@ -2214,7 +2214,7 @@ public final class net/ccbluex/liquidbounce/utils/navigation/ride/Riding : net/c
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/utils/navigation/route/RoutePlanner : net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/utils/navigation/route/BackgroundSearch : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;
@@ -2222,7 +2222,7 @@ public final class net/ccbluex/liquidbounce/utils/navigation/route/RoutePlanner 
 	public fun onTick (Ljava/lang/Runnable;)Ljava/lang/AutoCloseable;
 }
 
-public final class net/ccbluex/liquidbounce/utils/navigation/teleport/TeleportDispatcher : net/ccbluex/liquidbounce/event/EventListener {
+public final class net/ccbluex/liquidbounce/utils/navigation/teleport/TeleportManager : net/ccbluex/liquidbounce/event/EventListener {
 	public fun after (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun every (ILjava/lang/Runnable;)Ljava/lang/AutoCloseable;
 	public fun on (Ljava/lang/Class;Ljava/util/function/Consumer;)Ljava/lang/AutoCloseable;

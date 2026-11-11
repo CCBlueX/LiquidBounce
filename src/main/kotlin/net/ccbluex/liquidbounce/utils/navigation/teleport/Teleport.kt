@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.event.EventListener
@@ -27,44 +28,44 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
-enum class RunState {
-    ACTIVE,
-    DONE,
-
-    /** The server set the player back. */
-    REJECTED,
-
-    /** A solid block appeared ahead. */
-    INVALID,
-    CANCELLED,
-}
-
-enum class RunFinish {
-    /** The client moves to the destination as well. */
-    LAND,
-
-    /** The server stays at the destination until [TeleportDispatcher.undo] brings it back to the client. */
-    HOLD,
-
-    /** The route ends where the client is. */
-    RESYNC,
-}
-
 /** The steps of a route on their way to the server, one batch per tick. */
-class TeleportRun internal constructor(
+class Teleport internal constructor(
     val owner: EventListener,
-    val route: TeleportRoute,
-    val steps: List<TeleportStep>,
+    val route: Route,
     private val batches: IntArray,
-    val finish: RunFinish,
+    val finish: Finish,
 ) : RouteProgress {
 
-    var state = RunState.ACTIVE
+    enum class State {
+        ACTIVE,
+        DONE,
+
+        /** The server set the player back. */
+        REJECTED,
+
+        /** A solid block appeared ahead. */
+        INVALID,
+        CANCELLED,
+    }
+
+    enum class Finish {
+        /** The client moves to the destination as well. */
+        LAND,
+
+        /** The server stays at the destination until [TeleportManager.undo] brings it back to the client. */
+        HOLD,
+
+        /** The route ends where the client is. */
+        RESYNC,
+    }
+
+    var state = State.ACTIVE
         private set
 
     internal var isBlocked = false
         private set
 
+    private val steps = route.steps
     private var sent = 0
     private var batch = 0
     private var previousPosition = route.start
@@ -76,17 +77,17 @@ class TeleportRun internal constructor(
         get() = batches.size
 
     override val isMoving: Boolean
-        get() = state == RunState.ACTIVE
+        get() = state == State.ACTIVE
 
     override val ahead: List<Vec3>
-        get() = steps.subList(sent, steps.size).map(TeleportStep::position)
+        get() = steps.subList(sent, steps.size).map(Route.Step::position)
 
     internal val isSent: Boolean
         get() = batch >= batches.size
 
     override fun head(partialTicks: Float): Vec3 = previousPosition.lerp(position, partialTicks.toDouble())
 
-    internal fun nextBatch(): List<TeleportStep> {
+    internal fun nextBatch(): List<Route.Step> {
         previousPosition = position
         val from = sent
         sent += batches[batch++]
@@ -97,7 +98,7 @@ class TeleportRun internal constructor(
         previousPosition = position
     }
 
-    internal fun end(state: RunState) {
+    internal fun end(state: State) {
         this.state = state
     }
 

@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
+import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
@@ -51,7 +51,7 @@ class Riding(
     private val maxLength: DoubleSupplier,
 ) : EventListener {
 
-    private val routes = GoalRouter<Path>(this, VERTICAL_MARGIN)
+    private val routes = Replanner<Path>(this, VERTICAL_MARGIN)
     private val steering = Steering()
 
     private var vehicle: Entity? = null
@@ -278,7 +278,7 @@ class Riding(
         ) > OFF_PATH
         val finishedShort = path != null && !riding && !path.complete && !path.exhausted
         val nearStage = path != null && routes.endsAtStage &&
-            position.horizontalDistanceToSqr(path.end) < GoalRouter.STAGE_LEAD * GoalRouter.STAGE_LEAD
+            position.horizontalDistanceToSqr(path.end) < Replanner.STAGE_LEAD * Replanner.STAGE_LEAD
         val urgent = stuck || offPath
 
         val needed = routes.hasGoalMoved(goal) || offPath || finishedShort || stuck || nearStage

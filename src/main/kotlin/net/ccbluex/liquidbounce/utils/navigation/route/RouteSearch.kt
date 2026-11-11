@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.navigation.route
 
-import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.TimeUnit
 
@@ -61,7 +60,3 @@ class RouteLimits(
     val expansionsPerSlice: Int = 400,
     val maxComputeNanos: Long = TimeUnit.MILLISECONDS.toNanos(150),
 )
-
-fun interface RouteSearchFactory<out T> {
-    fun create(terrain: Terrain): RouteSearch<T>
-}

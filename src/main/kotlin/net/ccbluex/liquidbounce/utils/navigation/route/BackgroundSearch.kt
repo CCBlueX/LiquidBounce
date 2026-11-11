@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture
  * Runs one route search at a time off the game thread, a slice per [poll]. The search reads a copy of its region
  * through the terrain [newTerrain] makes, and starts over when a block it looked at changes.
  */
-class RoutePlanner<T>(
+class BackgroundSearch<T>(
     private val owner: EventListener,
     private val newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
 ) : EventListener {
@@ -56,14 +56,14 @@ class RoutePlanner<T>(
     var preview: List<Vec3>? = null
         private set
 
-    /** Searches with [factory] over [region], unless a search for an equal [key] is running or done. */
-    fun request(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>) {
+    /** Searches with [newSearch] over [region], unless a search for an equal [key] is running or done. */
+    fun request(key: Any, region: NavigationRegion, newSearch: (Terrain) -> RouteSearch<T>) {
         if (job?.key == key) {
             return
         }
 
         cancel()
-        job = start(key, region, factory)
+        job = start(key, region, newSearch)
     }
 
     /** Collects the last slice and starts the next one. Call once per tick from the game thread. */
@@ -84,7 +84,7 @@ class RoutePlanner<T>(
 
         // Blocks changing all the time, like a command block running every tick, would restart the search forever.
         if (job.polls >= MIN_SEARCH_POLLS && applyChanges(job.terrain)) {
-            job = start(job.key, job.region, job.factory) ?: run {
+            job = start(job.key, job.region, job.newSearch) ?: run {
                 cancel()
                 return RouteResult.Searching
             }
@@ -109,10 +109,10 @@ class RoutePlanner<T>(
         changesOverflowed = false
     }
 
-    private fun start(key: Any, region: NavigationRegion, factory: RouteSearchFactory<T>): Job<T>? {
+    private fun start(key: Any, region: NavigationRegion, newSearch: (Terrain) -> RouteSearch<T>): Job<T>? {
         val level = mc.level ?: return null
         val terrain = newTerrain(SectionCache.capture(level, region))
-        return Job(key, region, factory, terrain, factory.create(terrain))
+        return Job(key, region, newSearch, terrain, newSearch(terrain))
     }
 
     /** Whether a recorded change alters how a block the search looked at is moved through. */
@@ -162,7 +162,7 @@ class RoutePlanner<T>(
     private class Job<T>(
         val key: Any,
         val region: NavigationRegion,
-        val factory: RouteSearchFactory<T>,
+        val newSearch: (Terrain) -> RouteSearch<T>,
         val terrain: Terrain,
         val search: RouteSearch<T>,
     ) {

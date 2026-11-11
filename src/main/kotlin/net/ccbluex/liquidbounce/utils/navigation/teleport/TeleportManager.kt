@@ -41,10 +41,10 @@ import net.minecraft.world.phys.Vec3
  * Sends teleport routes to the server, one batch of position packets per tick, and keeps the vanilla movement packets
  * in line while the server has the player somewhere else. One owner at a time; one that stops running is undone.
  */
-object TeleportDispatcher : EventListener {
+object TeleportManager : EventListener {
 
     /** The latest run, also after it ended. */
-    var run: TeleportRun? = null
+    var run: Teleport? = null
         private set
 
     @Volatile
@@ -52,15 +52,15 @@ object TeleportDispatcher : EventListener {
 
     /** The last step the server got, while it has the player somewhere else than the client. */
     @Volatile
-    private var lastSent: TeleportStep? = null
+    private var lastSent: Route.Step? = null
 
     @Volatile
     private var setback = false
 
     /** Where the current excursion began, followed by the route points it passed. */
     private val trail = ArrayList<Vec3>()
-    private var stepLength = TeleportStepSettings.DEFAULT_STEP_LENGTH
-    private var packetsPerTick = TeleportStepSettings.DEFAULT_PACKETS_PER_TICK
+    private var stepLength = StepsValueGroup.DEFAULT_STEP_LENGTH
+    private var packetsPerTick = StepsValueGroup.DEFAULT_PACKETS_PER_TICK
 
     val serverPosition: Vec3?
         get() = lastSent?.position
@@ -77,24 +77,24 @@ object TeleportDispatcher : EventListener {
     /** Whether nothing moves and the server has the player with the client or where [owner] left it. */
     fun isAvailable(owner: EventListener) = !isMoving && (holder == null || holder === owner)
 
-    /** Starts sending [plan] from where the server has the player; null when busy or the plan begins too far off. */
+    /** Starts sending [route] from where the server has the player; null when busy or it begins too far off. */
     fun dispatch(
         owner: EventListener,
-        plan: TeleportPlan,
-        finish: RunFinish,
-        settings: TeleportStepSettings,
-    ): TeleportRun? {
+        route: Route,
+        finish: Teleport.Finish,
+        settings: StepsValueGroup,
+    ): Teleport? {
         if (!isAvailable(owner) || player.isPassenger) {
             return null
         }
 
         val held = serverPosition
         val current = held ?: player.position()
-        val drift = plan.route.start.distanceToSqr(current)
+        val drift = route.start.distanceToSqr(current)
         val linked = when {
             drift > MAX_DRIFT_SQ -> return null
-            drift <= TeleportRoute.SAME_POSITION_SQ -> plan
-            else -> plan.startingAt(current, Terrain.live(), settings.stepLength) ?: return null
+            drift <= Route.SAME_POSITION_SQ -> route
+            else -> route.startingAt(current, Terrain.live(), settings.stepLength) ?: return null
         }
 
         if (held == null) {
@@ -104,32 +104,32 @@ object TeleportDispatcher : EventListener {
 
         stepLength = settings.stepLength
         packetsPerTick = settings.packetsPerTick
-        return start(owner, linked.route, linked.steps, finish)
+        return start(owner, linked, finish)
     }
 
     /** Brings the server back to where the excursion of [owner] began, or lands the client if the way is blocked. */
     fun undo(owner: EventListener) {
         val current = run
-        if (holder !== owner || current?.isMoving == true && current.finish == RunFinish.RESYNC) {
+        if (holder !== owner || current?.isMoving == true && current.finish == Teleport.Finish.RESYNC) {
             return
         }
 
-        current?.takeIf { it.isMoving }?.end(RunState.CANCELLED)
+        current?.takeIf { it.isMoving }?.end(Teleport.State.CANCELLED)
 
         val position = serverPosition ?: return release()
         val back = wayBack(position, trail) ?: return release()
-        val steps = TeleportSteps.plan(Terrain.live(), back, stepLength) ?: return land(position)
-        start(owner, back, steps, RunFinish.RESYNC)
+        val route = Route.plan(Terrain.live(), back, stepLength) ?: return land(position)
+        start(owner, route, Teleport.Finish.RESYNC)
     }
 
-    private fun start(owner: EventListener, route: TeleportRoute, steps: List<TeleportStep>, finish: RunFinish) =
-        TeleportRun(owner, route, steps, TeleportSteps.batches(route.start, steps, packetsPerTick), finish).also {
+    private fun start(owner: EventListener, route: Route, finish: Teleport.Finish) =
+        Teleport(owner, route, route.batches(packetsPerTick), finish).also {
             run = it
             holder = owner
             setback = false
         }
 
-    private fun send(run: TeleportRun) {
+    private fun send(run: Teleport) {
         if (!run.isSent) {
             for (step in run.nextBatch()) {
                 if (setback) {
@@ -140,8 +140,8 @@ object TeleportDispatcher : EventListener {
                 lastSent = step
 
                 val reached = run.route.points[step.segment + 1]
-                if (run.finish != RunFinish.RESYNC &&
-                    step.position.distanceToSqr(reached) < TeleportRoute.SAME_POSITION_SQ) {
+                if (run.finish != Teleport.Finish.RESYNC &&
+                    step.position.distanceToSqr(reached) < Route.SAME_POSITION_SQ) {
                     trail += reached
                 }
             }
@@ -152,12 +152,12 @@ object TeleportDispatcher : EventListener {
         }
     }
 
-    private fun complete(run: TeleportRun) {
-        run.end(RunState.DONE)
+    private fun complete(run: Teleport) {
+        run.end(Teleport.State.DONE)
         when (run.finish) {
-            RunFinish.LAND -> land(run.route.destination)
-            RunFinish.HOLD -> {}
-            RunFinish.RESYNC -> release()
+            Teleport.Finish.LAND -> land(run.route.destination)
+            Teleport.Finish.HOLD -> {}
+            Teleport.Finish.RESYNC -> release()
         }
     }
 
@@ -173,7 +173,7 @@ object TeleportDispatcher : EventListener {
         trail.clear()
     }
 
-    private fun reset(state: RunState) {
+    private fun reset(state: Teleport.State) {
         run?.takeIf { it.isMoving || holder != null }?.end(state)
         release()
         setback = false
@@ -188,11 +188,11 @@ object TeleportDispatcher : EventListener {
 
         val holder = holder
         when {
-            setback -> reset(RunState.REJECTED)
-            holder != null && !holder.running && run.finish != RunFinish.RESYNC -> undo(holder)
+            setback -> reset(Teleport.State.REJECTED)
+            holder != null && !holder.running && run.finish != Teleport.Finish.RESYNC -> undo(holder)
             !run.isMoving -> run.settle()
             run.isBlocked -> {
-                run.end(RunState.INVALID)
+                run.end(Teleport.State.INVALID)
                 undo(run.owner)
             }
             else -> send(run)
@@ -232,12 +232,12 @@ object TeleportDispatcher : EventListener {
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
-        reset(RunState.CANCELLED)
+        reset(Teleport.State.CANCELLED)
     }
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        reset(RunState.CANCELLED)
+        reset(Teleport.State.CANCELLED)
     }
 
     private const val MAX_DRIFT_SQ = 2.0 * 2.0
@@ -245,12 +245,12 @@ object TeleportDispatcher : EventListener {
 }
 
 /** The way from [position] back along [trail], without the points the server is already at. */
-private fun wayBack(position: Vec3, trail: List<Vec3>): TeleportRoute? {
+private fun wayBack(position: Vec3, trail: List<Vec3>): List<Vec3>? {
     val points = arrayListOf(position)
     for (point in trail.asReversed()) {
-        if (point.distanceToSqr(points.last()) > TeleportRoute.SAME_POSITION_SQ) {
+        if (point.distanceToSqr(points.last()) > Route.SAME_POSITION_SQ) {
             points += point
         }
     }
-    return points.takeIf { it.size >= 2 }?.let(::TeleportRoute)
+    return points.takeIf { it.size >= 2 }
 }

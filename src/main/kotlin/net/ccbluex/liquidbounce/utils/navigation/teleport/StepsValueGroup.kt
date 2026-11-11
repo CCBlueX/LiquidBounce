@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.utils.navigation.teleport
 
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 
-class TeleportStepSettings : ValueGroup("Steps") {
+class StepsValueGroup : ValueGroup("Steps") {
 
     private val length by float("Length", DEFAULT_STEP_LENGTH.toFloat(), 1f..9.5f, "blocks")
-    val packetsPerTick by int("PerTick", DEFAULT_PACKETS_PER_TICK, 1..TeleportSteps.MAX_PACKETS_PER_TICK, "packets")
+    val packetsPerTick by int("PerTick", DEFAULT_PACKETS_PER_TICK, 1..Route.MAX_PACKETS_PER_TICK, "packets")
 
     val stepLength: Double
         get() = length.toDouble()

@@ -51,8 +51,8 @@ import net.ccbluex.liquidbounce.utils.navigation.render.RouteProgress
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteRenderer
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
 import net.ccbluex.liquidbounce.utils.navigation.ride.Riding
-import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
+import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
@@ -94,7 +94,7 @@ class Navigator(
         values.tree(RouteRenderer(owner, view, showRoute))
     }
 
-    private val routes = GoalRouter<Path>(this, VERTICAL_MARGIN) { Terrain(it, opensDoors = true) }
+    private val routes = Replanner<Path>(this, VERTICAL_MARGIN) { Terrain(it, opensDoors = true) }
     private val actions = BlockActions(this, this.rotations)
     private val follower = Follower(actions)
     private val flight = Flying(this, view)
@@ -461,7 +461,7 @@ class Navigator(
 
         val finishedShort = path != null && follower.isFinished
         val nearStage = path != null && routes.endsAtStage &&
-            position.horizontalDistanceTo(path.end) < GoalRouter.STAGE_LEAD
+            position.horizontalDistanceTo(path.end) < Replanner.STAGE_LEAD
         val settled = settledAt.let { it != null && routes.ticks - it < SETTLE_TICKS }
 
         val needed = (path == null && !settled) || routes.hasGoalMoved(goal) || offPath || finishedShort || stuck ||

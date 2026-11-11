@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.render.RouteView
-import net.ccbluex.liquidbounce.utils.navigation.route.GoalRouter
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
+import net.ccbluex.liquidbounce.utils.navigation.route.Replanner
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.walk.FollowState
@@ -35,7 +35,7 @@ import net.minecraft.world.phys.Vec3
 /** Flies to goals for a walking navigator while the player can fly, see [Abilities.capture]. */
 class Flying(private val owner: EventListener, private val view: RouteView) : EventListener {
 
-    private val routes = GoalRouter<Path>(this, VERTICAL_MARGIN)
+    private val routes = Replanner<Path>(this, VERTICAL_MARGIN)
     private val follower = Follower()
     private var stuck = false
 
@@ -124,7 +124,7 @@ class Flying(private val owner: EventListener, private val view: RouteView) : Ev
     ) {
         val path = follower.path
         val finished = path != null && follower.isFinished
-        val nearStage = path != null && routes.endsAtStage && position.closerThan(path.end, GoalRouter.STAGE_LEAD)
+        val nearStage = path != null && routes.endsAtStage && position.closerThan(path.end, Replanner.STAGE_LEAD)
         val urgent = stuck || follower.isOffPath()
 
         val needed = path == null || routes.hasGoalMoved(goal) || finished || nearStage || urgent

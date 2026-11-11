@@ -31,13 +31,13 @@ import net.minecraft.world.phys.Vec3
  * Searches routes for a navigator whose goal is given anew every tick. Goals beyond half the route length or in
  * chunks not loaded are searched in stages.
  */
-internal class GoalRouter<T>(
+internal class Replanner<T>(
     owner: EventListener,
     private val verticalMargin: Int,
     newTerrain: (NavigationWorld) -> Terrain = ::Terrain,
 ) {
 
-    private val planner = RoutePlanner<T>(owner, newTerrain)
+    private val background = BackgroundSearch<T>(owner, newTerrain)
 
     var ticks = 0
         private set
@@ -56,10 +56,10 @@ internal class GoalRouter<T>(
         private set
 
     val isSearching: Boolean
-        get() = !planner.isIdle
+        get() = !background.isIdle
 
     val preview: List<Vec3>?
-        get() = planner.preview
+        get() = background.preview
 
     fun tick() {
         ticks++
@@ -67,7 +67,7 @@ internal class GoalRouter<T>(
 
     /** The result of the search, once. After a route was found, tell where it ends with [routeEnds] or [forget] it. */
     fun poll(): RouteResult<T> {
-        val result = planner.poll()
+        val result = background.poll()
         when (result) {
             RouteResult.Searching -> return result
 
@@ -83,7 +83,7 @@ internal class GoalRouter<T>(
             }
         }
 
-        planner.cancel()
+        background.cancel()
         return result
     }
 
@@ -123,7 +123,7 @@ internal class GoalRouter<T>(
             goal.region(start, maxLength, verticalMargin)
         }
 
-        planner.request(SearchKey(BlockPos.containing(start), goal, staged, variant), region) { terrain ->
+        background.request(SearchKey(BlockPos.containing(start), goal, staged, variant), region) { terrain ->
             search(terrain, if (staged) StageGoal(goal, start, stageRange, terrain) else goal)
         }
 
@@ -135,7 +135,7 @@ internal class GoalRouter<T>(
     }
 
     fun reset() {
-        planner.cancel()
+        background.cancel()
         requested = null
         routed = null
         failed = false

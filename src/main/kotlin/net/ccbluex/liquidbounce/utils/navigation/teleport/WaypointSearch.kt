@@ -35,13 +35,13 @@ import kotlin.math.min
  * Finds a teleport route from [start] to the closest of [goals], the blocks the feet end in: a straight one when it
  * is clear, otherwise an A* over standable positions, compacted into few waypoints. Not thread-safe.
  */
-class TeleportRouteSearch(
+class WaypointSearch(
     private val terrain: Terrain,
     private val start: Vec3,
     private val goals: List<BlockPos>,
     limits: RouteLimits,
     private val stepLength: Double,
-) : AStarRouteSearch<BlockPos, TeleportPlan>(limits) {
+) : AStarRouteSearch<BlockPos, Route>(limits) {
 
     private val startNode = BlockPos.containing(start)
     private val goalSet = goals.toHashSet()
@@ -51,7 +51,7 @@ class TeleportRouteSearch(
 
     override fun preview(): List<Vec3>? = search?.closestPath()?.nodes?.mapNotNull(::feetOf)
 
-    override fun begin(): RouteResult<TeleportPlan> {
+    override fun begin(): RouteResult<Route> {
         val standable = goals.mapNotNull(::feetOf)
         targets = standable.filter { it.closerThan(start, limits.maxLength) }
         return when {
@@ -62,12 +62,12 @@ class TeleportRouteSearch(
         }
     }
 
-    private fun straightRoute(goals: List<Vec3>): RouteResult.Found<TeleportPlan>? {
+    private fun straightRoute(goals: List<Vec3>): RouteResult.Found<Route>? {
         for (goal in goals.sortedBy { it.distanceToSqr(start) }) {
-            val route = TeleportRoute(listOf(start, goal))
-            if (route.length <= limits.maxLength) {
-                TeleportSteps.plan(terrain, route, stepLength)?.let {
-                    return RouteResult.Found(TeleportPlan(route, it))
+            val points = listOf(start, goal)
+            if (Route.lengthOf(points) <= limits.maxLength) {
+                Route.plan(terrain, points, stepLength)?.let {
+                    return RouteResult.Found(it)
                 }
             }
         }
@@ -153,12 +153,12 @@ class TeleportRouteSearch(
     }
 
     /** Keeps a node only where the straight route from the previous waypoint stops being clear. */
-    private fun compact(nodes: List<BlockPos>): RouteResult<TeleportPlan> {
+    private fun compact(nodes: List<BlockPos>): RouteResult<Route> {
         val positions = nodes.map { feetOf(it) ?: return RouteResult.Failed(RouteFailure.NO_PATH) }
         val waypoints = arrayListOf(positions.first())
-        val steps = ArrayList<TeleportStep>()
-        val scratch = ArrayList<TeleportStep>()
-        val accepted = ArrayList<TeleportStep>()
+        val steps = ArrayList<Route.Step>()
+        val scratch = ArrayList<Route.Step>()
+        val accepted = ArrayList<Route.Step>()
 
         var anchor = 0
         while (anchor < positions.lastIndex) {
@@ -166,7 +166,7 @@ class TeleportRouteSearch(
             val farthest = min(positions.lastIndex, anchor + MAX_LOOKAHEAD)
             for (candidate in anchor + 1..farthest) {
                 scratch.clear()
-                val clear = TeleportSteps.appendSegment(
+                val clear = Route.appendSegment(
                     terrain, positions[anchor], positions[candidate], stepLength, waypoints.size - 1, scratch
                 )
                 if (!clear) {
@@ -191,11 +191,11 @@ class TeleportRouteSearch(
             }
         }
 
-        val route = TeleportRoute(waypoints)
+        val route = Route(waypoints, steps)
         if (route.length > limits.maxLength) {
             return RouteResult.Failed(RouteFailure.TOO_FAR)
         }
-        return RouteResult.Found(TeleportPlan(route, steps))
+        return RouteResult.Found(route)
     }
 
     private fun feetOf(node: BlockPos): Vec3? = if (node == startNode) start else terrain.feet(node)

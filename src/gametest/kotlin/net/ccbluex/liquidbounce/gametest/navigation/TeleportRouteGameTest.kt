@@ -37,13 +37,11 @@ import net.ccbluex.liquidbounce.utils.navigation.route.BlockGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteFailure
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunFinish
-import net.ccbluex.liquidbounce.utils.navigation.teleport.RunState
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportPlan
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRouteSearch
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportRun
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportStepSettings
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Route
+import net.ccbluex.liquidbounce.utils.navigation.teleport.StepsValueGroup
+import net.ccbluex.liquidbounce.utils.navigation.teleport.Teleport
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
+import net.ccbluex.liquidbounce.utils.navigation.teleport.WaypointSearch
 import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
 import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
@@ -97,53 +95,53 @@ private fun GameTestScope.buildArena(y: Int) {
 
 private fun GameTestScope.checkDirectAndDetour(y: Int) {
     val direct = found(context.route(BlockPos(12, y, 0)))
-    check(direct.route.points.size == 2) { "Open ground took a detour: ${direct.route.points}" }
-    arrive(dispatch(direct, RunFinish.LAND), Vec3(12.5, y.toDouble(), 0.5))
+    check(direct.points.size == 2) { "Open ground took a detour: ${direct.points}" }
+    arrive(dispatch(direct, Teleport.Finish.LAND), Vec3(12.5, y.toDouble(), 0.5))
 
     val detour = found(context.route(BlockPos(28, y, 0)))
-    val points = detour.route.points
+    val points = detour.points
     check(points.size > 2) { "The route went through the wall: $points" }
     val inWall = points.map(BlockPos::containing).filter { it.x == 20 && it.z in -8..8 }
     check(inWall.isEmpty()) { "A waypoint is in the wall: $points" }
-    arrive(dispatch(detour, RunFinish.LAND), Vec3(28.5, y.toDouble(), 0.5))
+    arrive(dispatch(detour, Teleport.Finish.LAND), Vec3(28.5, y.toDouble(), 0.5))
 }
 
 private fun GameTestScope.checkClimbHoldAndUndo(y: Int) {
     val top = Vec3(34.5, y + 5.0, 0.5)
-    arrive(dispatch(found(context.route(BlockPos(34, y + 5, 0))), RunFinish.LAND), top)
+    arrive(dispatch(found(context.route(BlockPos(34, y + 5, 0))), Teleport.Finish.LAND), top)
 
     val below = Vec3(26.5, y.toDouble(), 0.5)
-    val hold = dispatch(found(context.route(BlockPos(26, y, 0))), RunFinish.HOLD)
-    check(hold.state == RunState.DONE) { "The held run ended as ${hold.state}" }
+    val hold = dispatch(found(context.route(BlockPos(26, y, 0))), Teleport.Finish.HOLD)
+    check(hold.state == Teleport.State.DONE) { "The held run ended as ${hold.state}" }
     awaitServerAt(below, timeout = WAIT_TICKS)
     check(context.playerPosition().near(top)) { "The client moved with a held run" }
-    check(context.fromClient { TeleportDispatcher.serverPosition?.near(below) == true })
+    check(context.fromClient { TeleportManager.serverPosition?.near(below) == true })
 
-    context.onClient { TeleportDispatcher.undo(Owner) }
-    awaitClient("the undo", WAIT_TICKS) { !TeleportDispatcher.holds(Owner) }
+    context.onClient { TeleportManager.undo(Owner) }
+    awaitClient("the undo", WAIT_TICKS) { !TeleportManager.holds(Owner) }
     awaitServerAt(top, timeout = WAIT_TICKS)
     ticks(SETTLE_TICKS)
     check(serverPosition().near(top)) { "The server did not stay where the undo ended" }
 }
 
 private fun GameTestScope.checkSetback(y: Int) {
-    val slow = TeleportStepSettings().apply {
+    val slow = StepsValueGroup().apply {
         containedValues.first { it.name == "Length" }.setByString(SLOW_STEP.toString())
         containedValues.first { it.name == "PerTick" }.setByString("1")
     }
     val far = found(context.route(BlockPos(2, y, 0), stepLength = SLOW_STEP))
     val run = context.fromClient {
-        checkNotNull(TeleportDispatcher.dispatch(Owner, far, RunFinish.LAND, slow))
+        checkNotNull(TeleportManager.dispatch(Owner, far, Teleport.Finish.LAND, slow))
     }
     check(run.ticks > SETTLE_TICKS * 2) { "The slow run is too short to interrupt" }
 
     ticks(SETTLE_TICKS)
     val setback = Vec3(30.5, y.toDouble(), -10.5)
     teleport(BlockPos.containing(setback))
-    awaitClient("the run to end", WAIT_TICKS) { run.state != RunState.ACTIVE }
+    awaitClient("the run to end", WAIT_TICKS) { run.state != Teleport.State.ACTIVE }
 
-    check(run.state == RunState.REJECTED) { "A setback ended the run as ${run.state}" }
-    check(context.fromClient { !TeleportDispatcher.holds(Owner) && TeleportDispatcher.serverPosition == null })
+    check(run.state == Teleport.State.REJECTED) { "A setback ended the run as ${run.state}" }
+    check(context.fromClient { !TeleportManager.holds(Owner) && TeleportManager.serverPosition == null })
     awaitClient("the client at the setback") { it.player?.position()?.near(setback) == true }
     ticks(SETTLE_TICKS)
     check(serverPosition().near(setback)) { "The rejected run kept moving the player" }
@@ -186,7 +184,7 @@ private fun GameTestScope.checkTpAuraAttack(origin: Vec3, target: BlockPos) {
 
     context.onClient { ModuleTpAura.enabled = false }
     awaitClient("TpAura to let go", WAIT_TICKS) {
-        !TeleportDispatcher.holds(ModuleTpAura) && !TeleportDispatcher.isMoving
+        !TeleportManager.holds(ModuleTpAura) && !TeleportManager.isMoving
     }
     check(context.playerPosition().near(origin)) { "TpAura moved the client from $origin" }
     awaitServerAt(origin, timeout = WAIT_TICKS)
@@ -201,12 +199,12 @@ private fun GameTestScope.checkTpAuraAttack(origin: Vec3, target: BlockPos) {
 private fun ClientGameTestContext.route(
     goal: BlockPos,
     maxLength: Double = 80.0,
-    stepLength: Double = TeleportStepSettings.DEFAULT_STEP_LENGTH,
-): RouteResult<TeleportPlan> = fromClient { mc ->
+    stepLength: Double = StepsValueGroup.DEFAULT_STEP_LENGTH,
+): RouteResult<Route> = fromClient { mc ->
     val level = checkNotNull(mc.level)
     val start = checkNotNull(mc.player).position()
     val region = BlockGoal(goal).region(start, maxLength, maxLength.toInt())
-    val search = TeleportRouteSearch(
+    val search = WaypointSearch(
         Terrain(SectionCache.capture(level, region)),
         start,
         [goal],
@@ -221,19 +219,19 @@ private fun ClientGameTestContext.route(
     result
 }
 
-private fun found(result: RouteResult<TeleportPlan>) =
-    (result as? RouteResult.Found<TeleportPlan>)?.value ?: error("Expected a route, got $result")
+private fun found(result: RouteResult<Route>) =
+    (result as? RouteResult.Found<Route>)?.value ?: error("Expected a route, got $result")
 
-private fun GameTestScope.dispatch(plan: TeleportPlan, finish: RunFinish): TeleportRun {
+private fun GameTestScope.dispatch(route: Route, finish: Teleport.Finish): Teleport {
     val run = context.fromClient {
-        checkNotNull(TeleportDispatcher.dispatch(Owner, plan, finish, TeleportStepSettings()))
+        checkNotNull(TeleportManager.dispatch(Owner, route, finish, StepsValueGroup()))
     }
-    awaitClient("the run to end", WAIT_TICKS) { run.state != RunState.ACTIVE }
+    awaitClient("the run to end", WAIT_TICKS) { run.state != Teleport.State.ACTIVE }
     return run
 }
 
-private fun GameTestScope.arrive(run: TeleportRun, destination: Vec3) {
-    check(run.state == RunState.DONE) { "The run to $destination ended as ${run.state}" }
+private fun GameTestScope.arrive(run: Teleport, destination: Vec3) {
+    check(run.state == Teleport.State.DONE) { "The run to $destination ended as ${run.state}" }
     awaitServerAt(destination, timeout = WAIT_TICKS)
     ticks(SETTLE_TICKS)
     check(context.playerPosition().near(destination)) { "Set back from $destination" }
