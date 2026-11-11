@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.cancelEventListenerScopes
 import net.ccbluex.liquidbounce.event.events.ClientSwitchEvent
 import net.ccbluex.liquidbounce.features.account.SessionBundle
-import net.ccbluex.liquidbounce.features.client.view.ClientViews
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.render.engine.LevelView
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.KeyMapping
@@ -137,7 +137,7 @@ object ClientManager {
             }
         }
 
-        ClientViews.renderNext()
+        LevelView.renderNext()
 
         ClientOverview.announce()
     }
@@ -168,7 +168,7 @@ object ClientManager {
             cancelEventListenerScopes()
         }
         EventManager.unregisterClient(client)
-        ClientViews.forget(client)
+        LevelView.forget(client)
         logger.info("Closed client ${client.id}")
     }
 
@@ -181,7 +181,7 @@ object ClientManager {
         // Keys the user still holds would otherwise stay held in the client that leaves the window.
         KeyMapping.releaseAll()
         previous.restartClock()
-        ClientViews.close(client)
+        LevelView.drop(client)
 
         ClientContext.rest(client)
         active = client

@@ -39,19 +39,17 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.ClientElement
 import net.ccbluex.liquidbounce.features.client.ClientManager
 import net.ccbluex.liquidbounce.features.client.ClientOverview
-import net.ccbluex.liquidbounce.features.client.view.ClientViews
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.integration.interop.badRequest
 import net.ccbluex.liquidbounce.integration.interop.forbidden
 import net.ccbluex.liquidbounce.integration.interop.notFound
+import net.ccbluex.liquidbounce.render.engine.LevelView
 import net.minecraft.client.multiplayer.resolver.ServerAddress
 
 private const val CLIENT_PARAMETER = "client"
-
 
 /**
  * Runs [block] for the client the request names with `?client=<id>`, or for the active one without it.
@@ -62,17 +60,14 @@ internal suspend fun <T> ApplicationCall.withinQueriedClient(block: suspend () -
     val id = parameter.toIntOrNull() ?: badRequest("Invalid client id '$parameter'")
     val client = ClientManager.byId(id) ?: notFound("/clients/$id", "Client not found")
 
-    return withContext(ClientElement(client)) { block() }
+    return withContext(ClientContext.Element(client)) { block() }
 }
 
 /**
- * Another client than the main one only has its own copy of the modules that run in every client.
+ * Refuses to change [module] in a client that has no copy of it, see [ClientScope.keepsStateIn].
  */
-internal fun isChangeable(module: ClientModule) =
-    ClientContext.current.isMain || module.clientScope == ClientScope.EVERY
-
 internal suspend fun ApplicationCall.checkChangeable(module: ClientModule) {
-    if (!isChangeable(module)) {
+    if (!module.clientScope.keepsStateIn(ClientContext.current)) {
         badRequest("${module.name} only runs in the main client")
     }
 }
@@ -114,7 +109,7 @@ private fun Route.getClientView() = get("/{id}/view") {
     val client = call.client().takeUnless { it.isActive }
         ?: call.notFound(call.request.path(), "The active client has no view, it is the window")
 
-    val jpeg = ClientViews.latestFrame(client)
+    val jpeg = LevelView.latestFrame(client)
     if (jpeg == null) {
         call.respond(NoContent)
     } else {

@@ -16,56 +16,63 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.client.view
+package net.ccbluex.liquidbounce.render.engine
 
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.renderpearl.api.GpuFormat
 import com.mojang.renderpearl.api.buffers.GpuBuffer
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.client.Client
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.copyTo
+import net.ccbluex.liquidbounce.utils.render.readBufferedImage
 import net.minecraft.client.Camera
+import net.minecraft.client.Minecraft
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.client.renderer.LevelRenderer
 import net.minecraft.client.renderer.extract.LevelExtractor
 import net.minecraft.world.entity.Entity
 import org.joml.Vector4f
 import java.awt.image.BufferedImage
-import java.awt.image.DataBufferInt
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import javax.imageio.IIOImage
+import javax.imageio.ImageIO
+import javax.imageio.ImageWriteParam
 import kotlin.math.roundToInt
 
 /**
- * What a background client sees, drawn off screen. It has a renderer and extractor of its own, so the chunks
- * of its level stay compiled between frames.
+ * What a client in the background sees, drawn off screen while someone keeps asking for it. A view has a renderer
+ * and an extractor of its own, so the chunks of its level stay compiled between frames.
  */
-internal class ClientView(private val client: Client, private val frames: ClientViewFrames) : AutoCloseable {
+class LevelView private constructor(private val frames: Frames) : AutoCloseable {
 
     private var width = 0
     private var height = 0
 
     private val camera = Camera()
     private var target: TextureTarget? = null
-    var levelRenderer: LevelRenderer? = null
-        private set
-
-    var extractor: LevelExtractor? = null
-        private set
+    private var levelRenderer: LevelRenderer? = null
+    private var extractor: LevelExtractor? = null
 
     private var renderedLevel: ClientLevel? = null
 
-    fun draws(level: ClientLevel?) = level != null && level === renderedLevel
+    private fun draws(level: ClientLevel?) = level != null && level === renderedLevel
 
     private val readbacks = Array(READBACKS) { Readback() }
     private var nextReadback = 0
 
-    var renderedAt = 0L
-        private set
+    private var renderedAt = 0L
 
     /**
-     * Runs within [client] on the render thread, outside of the window's frame. Whatever draws in between,
-     * vanilla or modules, finds this view's renderer, camera and target in place of the window's.
+     * Runs within the client it shows, on the render thread and outside of the window's frame. Whatever draws in
+     * between, vanilla or modules, finds this view's renderer, camera and target in place of the window's.
      */
-    fun render() {
+    private fun render() {
         val level = mc.level ?: return
         val player = mc.player ?: return
 
@@ -145,7 +152,7 @@ internal class ClientView(private val client: Client, private val frames: Client
     /**
      * Matches the aspect ratio of the window, building the renderer the first time.
      */
-    fun fit() {
+    private fun fit() {
         val window = mc.window
         val height = HEIGHT
         val width = (height * window.width.toFloat() / window.height.coerceAtLeast(1)).roundToInt() and 1.inv()
@@ -229,29 +236,18 @@ internal class ClientView(private val client: Client, private val frames: Client
                 ?: BufferedImage(width, height, BufferedImage.TYPE_INT_RGB).also { image = it }
 
             copying = true
-            RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(texture, buffer, 0L, {
+            texture.copyTo(buffer) {
                 copying = false
                 if (closing) {
                     closing = false
                     buffer.close()
-                    return@copyTextureToBuffer
+                    return@copyTo
                 }
 
-                buffer.map(true, false).use { view ->
-                    val data = view.data()
-                    val pixels = (image.raster.dataBuffer as DataBufferInt).data
-                    // Rows come bottom up, each pixel as ABGR
-                    for (y in 0 until height) {
-                        val row = (height - 1 - y) * width
-                        for (x in 0 until width) {
-                            val abgr = data.getInt((x + y * width) * Int.SIZE_BYTES)
-                            pixels[row + x] = (abgr and 0xFF shl 16) or (abgr and 0xFF00) or (abgr shr 16 and 0xFF)
-                        }
-                    }
-                }
+                buffer.readBufferedImage(width, height, image)
                 encoding = true
                 frames.encode(image) { encoding = false }
-            }, 0)
+            }
         }
 
         override fun close() {
@@ -265,11 +261,178 @@ internal class ClientView(private val client: Client, private val frames: Client
 
     }
 
-    private companion object {
-        const val HEIGHT = 270
-        const val RENDER_DISTANCE = 4
-        const val READBACKS = 2
-        val CLEAR_COLOR = Vector4f(0f, 0f, 0f, 1f)
+    /**
+     * The JPEG frames of one client's view, and when someone last asked for one.
+     */
+    private class Frames {
+
+        @Volatile
+        var latest: ByteArray? = null
+            private set
+
+        @Volatile
+        var askedAt = System.nanoTime()
+
+        fun encode(image: BufferedImage, done: () -> Unit) {
+            encoder.execute {
+                try {
+                    latest = jpeg(image)
+                } finally {
+                    done()
+                }
+            }
+        }
+
+        companion object {
+
+            private const val QUALITY = 0.75f
+
+            private val encoder = Executors.newSingleThreadExecutor {
+                Thread(it, "Client view encoder").apply { isDaemon = true }
+            }
+
+            // Only used on the encoder thread
+            private val writer = ImageIO.getImageWritersByFormatName("jpeg").next()
+            private val parameters = writer.defaultWriteParam.apply {
+                compressionMode = ImageWriteParam.MODE_EXPLICIT
+                compressionQuality = QUALITY
+            }
+            private val output = ByteArrayOutputStream()
+
+            private fun jpeg(image: BufferedImage): ByteArray {
+                output.reset()
+                ImageIO.createImageOutputStream(output).use { stream ->
+                    writer.output = stream
+                    writer.write(null, IIOImage(image, null, null), parameters)
+                }
+                return output.toByteArray()
+            }
+
+        }
+
+    }
+
+    companion object {
+
+        private const val HEIGHT = 270
+        private const val RENDER_DISTANCE = 4
+        private const val READBACKS = 2
+        private val CLEAR_COLOR = Vector4f(0f, 0f, 0f, 1f)
+
+        private const val FRAME_INTERVAL_NANOS = 100_000_000L
+
+        /**
+         * How long one request keeps a view drawn.
+         */
+        private const val WATCHED_NANOS = 1_000_000_000L
+
+        /**
+         * A view outlives its last request a little, so that a page reload does not compile the chunks again.
+         */
+        private const val IDLE_NANOS = 5_000_000_000L
+
+        private val watched = ConcurrentHashMap<Client, Frames>()
+
+        // Render thread only
+        private val views = Reference2ObjectOpenHashMap<Client, LevelView>()
+        private val extractors = ReferenceOpenHashSet<LevelExtractor>()
+
+        /**
+         * The latest JPEG of what [client] sees, null until one is drawn. Asking keeps the view drawn for a second.
+         *
+         * Pages ask again and again instead of keeping a stream open: Chromium allows six connections per host,
+         * and a stream for every view would leave none for the rest of the theme.
+         */
+        fun latestFrame(client: Client): ByteArray? {
+            val frames = watched.computeIfAbsent(client) { Frames() }
+            frames.askedAt = System.nanoTime()
+            return frames.latest
+        }
+
+        /**
+         * Draws the watched view that waited longest, if it is due. Only one per frame: the uniforms of the renderers
+         * live in rings of three buffers, which one frame must not go round, and the window takes one of them.
+         */
+        internal fun renderNext() {
+            val now = System.nanoTime()
+            var next: Client? = null
+            var nextAt = Long.MAX_VALUE
+            for ((client, frames) in watched) {
+                val asked = now - frames.askedAt
+                if (asked >= IDLE_NANOS) {
+                    watched.remove(client, frames)
+                    drop(client)
+                    continue
+                }
+                if (asked >= WATCHED_NANOS || client.isActive) {
+                    continue
+                }
+
+                val renderedAt = views[client]?.renderedAt ?: 0L
+                if (now - renderedAt >= FRAME_INTERVAL_NANOS && renderedAt < nextAt) {
+                    next = client
+                    nextAt = renderedAt
+                }
+            }
+
+            val client = next ?: return
+            val view = views.getOrPut(client) { LevelView(watched[client] ?: return) }
+            ClientContext.within(client) {
+                view.fit()
+                view.extractor?.let(extractors::add)
+                view.render()
+            }
+        }
+
+        /**
+         * Drops the view of [client], for when it takes over the window.
+         */
+        internal fun drop(client: Client) {
+            val view = views.remove(client) ?: return
+            view.extractor?.let(extractors::remove)
+            view.close()
+        }
+
+        /**
+         * Drops the view and frames of [client], which is gone.
+         */
+        internal fun forget(client: Client) {
+            drop(client)
+            watched.remove(client)
+        }
+
+        @JvmStatic
+        fun closeAll() {
+            views.keys.toList().forEach(::drop)
+        }
+
+        @JvmStatic
+        fun isView(extractor: LevelExtractor) = extractor in extractors
+
+        /**
+         * The extractor that should hear about a change reported to [extractor]. Levels of background clients report
+         * to the window's, which draws the active client only, so their changes go to their view if it already draws
+         * that level. A view that does not draw it yet reads the whole level once it starts to.
+         */
+        @JvmStatic
+        fun receiverOf(extractor: LevelExtractor): LevelExtractor? =
+            if (!ClientContext.isBackground || extractor in extractors) {
+                extractor
+            } else {
+                views[ClientContext.loaded]?.takeIf { it.draws(mc.level) }?.extractor
+            }
+
+        /**
+         * Puts the renderer of the loaded client's view in place of the window's while the view hears of a change, and
+         * returns the window's. Sodium finds the renderer of an extractor through [Minecraft.levelRenderer].
+         */
+        @JvmStatic
+        fun lendRenderer(): LevelRenderer {
+            val window = mc.levelRenderer
+            views[ClientContext.loaded]?.levelRenderer?.let { mc.levelRenderer = it }
+            return window
+        }
+
     }
 
 }

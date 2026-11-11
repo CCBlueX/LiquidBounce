@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.client
+package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
@@ -29,12 +29,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
-class StateCopyTest {
+class MutableCopyTest {
 
     private fun <T : Any> assertCopied(value: T, change: T.() -> Unit, read: T.() -> Any?) {
         val before = value.read()
         @Suppress("UNCHECKED_CAST")
-        val copy = StateCopy.of(value) as T
+        val copy = copyIfMutable(value) as T
 
         assertNotSame(value, copy)
         assertSame(value.javaClass, copy.javaClass)
@@ -57,7 +57,7 @@ class StateCopyTest {
     fun `a copied cache keeps its limit`() {
         val cache = LruCache<Int, Int>(2).apply { put(1, 1); put(2, 2) }
         @Suppress("UNCHECKED_CAST")
-        val copy = StateCopy.of(cache) as LruCache<Int, Int>
+        val copy = copyIfMutable(cache) as LruCache<Int, Int>
 
         copy[3] = 3
         assertEquals(setOf(2, 3), copy.keys)
@@ -77,9 +77,9 @@ class StateCopyTest {
         val list = listOf(1, 2)
         val text = "text"
 
-        assertSame(list, StateCopy.of(list))
-        assertSame(text, StateCopy.of(text))
-        assertSame(emptyList<Int>(), StateCopy.of(emptyList<Int>()))
+        assertSame(list, copyIfMutable(list))
+        assertSame(text, copyIfMutable(text))
+        assertSame(emptyList<Int>(), copyIfMutable(emptyList<Int>()))
     }
 
 }

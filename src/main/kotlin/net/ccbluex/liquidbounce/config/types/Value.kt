@@ -36,9 +36,9 @@ import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.StateCopy
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.copyIfMutable
 import net.ccbluex.liquidbounce.utils.text.toLowerCamelCase
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
@@ -260,7 +260,7 @@ open class Value<T : Any>(
      */
     internal open fun giveTo(client: Client) {
         // Collections are changed in place by the settings holding them.
-        client.values[this] = StateCopy.of(get()) as Any
+        client.values[this] = copyIfMutable(get()) as Any
     }
 
     fun set(t: T, apply: ValueChangedListener<T>) {

@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.features.client.view.ClientViews;
+import net.ccbluex.liquidbounce.render.engine.LevelView;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
@@ -46,11 +46,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "blockChanged")
     private void forwardBlockChanged(BlockPos pos, int updateFlags, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(pos, updateFlags);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.blockChanged(pos, updateFlags);
             } finally {
@@ -61,11 +61,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "setBlocksDirty")
     private void forwardBlocksDirty(int x0, int y0, int z0, int x1, int y1, int z1, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(x0, y0, z0, x1, y1, z1);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.setBlocksDirty(x0, y0, z0, x1, y1, z1);
             } finally {
@@ -76,11 +76,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "setBlockDirty(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;)V")
     private void forwardBlockDirty(BlockPos pos, BlockState oldState, BlockState newState, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(pos, oldState, newState);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.setBlockDirty(pos, oldState, newState);
             } finally {
@@ -91,11 +91,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "setSectionDirtyWithNeighbors")
     private void forwardSectionDirtyWithNeighbors(int x, int y, int z, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(x, y, z);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.setSectionDirtyWithNeighbors(x, y, z);
             } finally {
@@ -106,11 +106,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "setSectionRangeDirty")
     private void forwardSectionRangeDirty(int x0, int y0, int z0, int x1, int y1, int z1, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(x0, y0, z0, x1, y1, z1);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.setSectionRangeDirty(x0, y0, z0, x1, y1, z1);
             } finally {
@@ -121,11 +121,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "setSectionDirty(III)V")
     private void forwardSectionDirty(int x, int y, int z, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(x, y, z);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.setSectionDirty(x, y, z);
             } finally {
@@ -136,11 +136,11 @@ public abstract class MixinLevelExtractor {
 
     @WrapMethod(method = "queueTransientBlock")
     private void forwardTransientBlock(TransientBlock transientBlock, Operation<Void> original) {
-        var receiver = ClientViews.receiverOf((LevelExtractor) (Object) this);
+        var receiver = LevelView.receiverOf((LevelExtractor) (Object) this);
         if (receiver == (Object) this) {
             original.call(transientBlock);
         } else if (receiver != null) {
-            var window = ClientViews.lendRenderer();
+            var window = LevelView.lendRenderer();
             try {
                 receiver.queueTransientBlock(transientBlock);
             } finally {
@@ -155,7 +155,7 @@ public abstract class MixinLevelExtractor {
     @WrapOperation(method = "extract", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/particle/ParticleEngine;extract(Lnet/minecraft/client/renderer/state/level/ParticlesRenderState;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/Camera;F)V"))
     private void skipParticlesInViews(ParticleEngine engine, ParticlesRenderState state, Frustum frustum, Camera camera,
                                       float partialTicks, Operation<Void> original) {
-        if (ClientViews.isView((LevelExtractor) (Object) this)) {
+        if (LevelView.isView((LevelExtractor) (Object) this)) {
             state.reset();
         } else {
             original.call(engine, state, frustum, camera, partialTicks);
@@ -167,8 +167,8 @@ public abstract class MixinLevelExtractor {
      */
     @Inject(method = "onResourceManagerReload", at = @At("HEAD"))
     private void closeViews(ResourceManager resourceManager, CallbackInfo ci) {
-        if (!ClientViews.isView((LevelExtractor) (Object) this)) {
-            ClientViews.closeAll();
+        if (!LevelView.isView((LevelExtractor) (Object) this)) {
+            LevelView.closeAll();
         }
     }
 

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.client
 
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.features.module.ClientScope
+import net.ccbluex.liquidbounce.utils.kotlin.copyIfMutable
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -33,7 +34,7 @@ import kotlin.reflect.KProperty
  * ```
  *
  * [initial] runs the first time a client reads the state. A simulated client starts from a copy of the
- * value its parent has, see [StateCopy].
+ * value its parent has, see [copyIfMutable].
  */
 @AddonApi
 fun <T> clientState(initial: () -> T) = ClientState(initial)
@@ -79,7 +80,7 @@ class ClientState<T> internal constructor(
 
     private fun startIn(client: Client): Any? {
         val parent = client.parent
-        return if (inherited && parent != null) StateCopy.of(getIn(parent)) else initial()
+        return if (inherited && parent != null) copyIfMutable(getIn(parent)) else initial()
     }
 
     fun set(value: T) {

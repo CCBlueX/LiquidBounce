@@ -30,7 +30,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.ClientElement
 import net.ccbluex.liquidbounce.features.client.ownClientState
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -67,7 +66,7 @@ val EventListener.eventListenerScope: CoroutineScope
                 }
             }
                 + CoroutineName(it.toString()) // Name
-                + ClientElement(ClientContext.current)
+                + ClientContext.Element(ClientContext.current)
                 // Render thread + Auto cancel on not listening
                 + it.wrapContinuationInterceptor(Dispatchers.Main)
         )
@@ -145,7 +144,7 @@ private class EventListenerRunningContinuationInterceptor(
 
             override fun resumeWith(result: Result<T>) {
                 // Whoever resumes may be on a thread of another client, like the one that sent a packet
-                val client = context[ClientElement]?.client
+                val client = context[ClientContext.Element]?.client
                 if (client == null) {
                     resumeIfRunning(result)
                 } else {

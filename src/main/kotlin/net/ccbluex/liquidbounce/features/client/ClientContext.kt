@@ -18,7 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.client
 
+import kotlinx.coroutines.ThreadContextElement
 import java.util.function.Supplier
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Tells which [Client] the running code belongs to.
@@ -173,6 +176,19 @@ object ClientContext {
         client.game.install()
         loaded = client
         settled = client
+    }
+
+    /**
+     * Keeps a coroutine in the client it was started in, on whichever thread it continues.
+     */
+    class Element(val client: Client) : AbstractCoroutineContextElement(Key), ThreadContextElement<Client?> {
+
+        companion object Key : CoroutineContext.Key<Element>
+
+        override fun updateThreadContext(context: CoroutineContext): Client? = ClientContext.enter(client)
+
+        override fun restoreThreadContext(context: CoroutineContext, oldState: Client?) = ClientContext.exit(oldState)
+
     }
 
 }

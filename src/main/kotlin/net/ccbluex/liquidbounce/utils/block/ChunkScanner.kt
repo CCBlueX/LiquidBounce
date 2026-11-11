@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.client.ClientContext
-import net.ccbluex.liquidbounce.features.client.ClientElement
 import net.ccbluex.liquidbounce.features.client.clientState
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.clientLogger
@@ -158,7 +157,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
      */
     private val scope by clientState {
         CoroutineScope(
-            dispatcher + worldJob + ClientElement(ClientContext.current) + CommonCoroutineExceptionHandler { logger }
+            dispatcher + worldJob + ClientContext.Element(ClientContext.current) +
+                CommonCoroutineExceptionHandler { logger }
         )
     }
 

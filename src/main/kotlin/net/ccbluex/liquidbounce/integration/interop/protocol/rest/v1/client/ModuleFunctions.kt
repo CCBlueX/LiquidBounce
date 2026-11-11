@@ -37,6 +37,7 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.autoconfig.AutoConfig
 import net.ccbluex.liquidbounce.config.gson.interopGson
+import net.ccbluex.liquidbounce.features.client.ClientContext
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ClientScope
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
@@ -116,7 +117,8 @@ private fun Route.postPanic() = post("/panic") {
             AutoConfig.withLoading {
                 runCatching {
                     for (module in ModuleManager) {
-                        if (module.category == ModuleCategories.RENDER || !isChangeable(module)) {
+                        val ownsCopy = module.clientScope.keepsStateIn(ClientContext.current)
+                        if (module.category == ModuleCategories.RENDER || !ownsCopy) {
                             continue
                         }
 

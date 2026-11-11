@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.client.ClientContext
  * Values are written field by field, and their field holds the value of the main client.
  * In any other client the value of that client takes its place.
  */
-object ClientValueAdapterFactory : TypeAdapterFactory {
+object ValueAdapter : TypeAdapterFactory {
 
     override fun <T> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
         val rawType = type.rawType

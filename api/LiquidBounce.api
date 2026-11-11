@@ -905,6 +905,7 @@ public final class net/ccbluex/liquidbounce/features/module/ClientScope : java/l
 	public static final field WINDOW Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun includes (Lnet/ccbluex/liquidbounce/features/client/Client;)Z
+	public final fun keepsStateIn (Lnet/ccbluex/liquidbounce/features/client/Client;)Z
 	public static fun valueOf (Ljava/lang/String;)Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 	public static fun values ()[Lnet/ccbluex/liquidbounce/features/module/ClientScope;
 }

@@ -49,4 +49,10 @@ enum class ClientScope {
         WINDOW -> client.isActive
     }
 
+    /**
+     * Whether [client] keeps settings and state of the module for itself. Outside of the main client only modules
+     * that run in every client do, any other one is the main client's.
+     */
+    fun keepsStateIn(client: Client) = this == EVERY || client.isMain
+
 }
