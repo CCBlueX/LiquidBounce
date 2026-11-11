@@ -31,9 +31,8 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.gui.screens.TitleScreen
 
 /**
- * A game test of LiquidBounce or an add-on on the game test server. It waits until the client has started, and runs
- * with no module but the HUD; AutoConfig, on by default, would otherwise load a config on join and switch modules
- * on in the middle of the test. The modules that ran before are back on afterwards.
+ * A game test of LiquidBounce or an add-on on the game test server. It runs with no module but the HUD, as AutoConfig
+ * would load a config on join, and turns the modules that ran before back on afterwards.
  */
 abstract class LiquidBounceGameTest(world: TestWorld, body: GameTestScope.() -> Unit) : ServerGameTest(world, body) {
 

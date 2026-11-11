@@ -40,9 +40,8 @@ private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
 private val localRun = System.getenv("GAMETEST_SERVER_ANTICHEAT").isNullOrBlank()
 
 /**
- * A game test of the client alone, on the integrated server if it needs a world: commands, configs, registries and
- * simulations, where an anticheat would have nothing to say. It runs only when no anticheat is picked, and
- * `-PgameTestServerOnly` selects these as well.
+ * A game test of the client alone (commands, configs, registries, simulations), on the integrated server if it needs
+ * a world. It runs only when no anticheat is picked; `-PgameTestServerOnly` selects these too.
  */
 abstract class LocalGameTest : FabricClientGameTest {
 

@@ -35,9 +35,8 @@ private const val LANDED = 60
 private const val WALKED = 150
 
 /**
- * Sprint in its default mode, Legit, only starts the sprint a player would start with the key. The server's
- * statistics see the player sprint whenever it moves forward, on the ground, between jumps and while
- * strafing, and walk when it moves backwards, and the anticheat has nothing to report.
+ * Sprint's default Legit mode starts only the sprint the key would: the server counts sprinting forward, on the
+ * ground, between jumps and while strafing, walking backwards, and the anticheat reports nothing.
  */
 class SprintGameTest : LiquidBounceGameTest({
     val sprinted = statistic("sprint_one_cm")

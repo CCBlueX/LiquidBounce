@@ -163,7 +163,6 @@ internal inline fun GameTestScope.unhurt(what: String, block: () -> Unit) {
     check(after >= before) { "$what: hurt the player from $before to $after" }
 }
 
-/** Waits until the server has a husk hurt. */
 internal fun GameTestScope.awaitHuskHurt(timeout: Int) =
     awaitServer("entity @e[type=minecraft:husk,nbt=!{Health:20.0f}]", timeout)
 
