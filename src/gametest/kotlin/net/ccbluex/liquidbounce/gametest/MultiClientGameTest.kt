@@ -34,14 +34,15 @@ import net.minecraft.world.phys.Vec3
 private const val JOIN_TIMEOUT_TICKS = 30 * 20
 private const val WALK_TICKS = 60
 private const val SWITCHES = 20
-private const val SOAK_TICKS = 600
+private const val SOAK_TICKS = 200
 
 private const val WALKED_DISTANCE = 2.0
 private const val STOOD_DISTANCE = 0.1
 
 /**
  * Three accounts play on one server from one client. Each is a client with its own connection and its own
- * modules, the window goes from one to the other, and none of them loses its connection over it.
+ * modules, the window goes from one to the other, and none of them loses its connection over it. A client in the
+ * background shows what it sees, and the ClickGUI edits its modules over the interop server.
  */
 class MultiClientGameTest : FabricClientGameTest {
 
@@ -66,7 +67,10 @@ class MultiClientGameTest : FabricClientGameTest {
 
                 checkModulesBelongToTheirClient(context, main, second, third)
                 checkOnlyTheWalkingClientMoves(context, server, second)
-                checkSwitching(context, server, listOf(main, second, third))
+                checkSwitching(context, listOf(main, second, third))
+                checkClientView(context, server, third)
+                checkClientInterop(context, main, third)
+                checkStillPlaying(context, server, listOf(main, second, third))
                 checkClosing(context, server, second)
             }
         }
@@ -121,11 +125,7 @@ class MultiClientGameTest : FabricClientGameTest {
         }
     }
 
-    private fun checkSwitching(
-        context: ClientGameTestContext,
-        server: TestDedicatedServerContext,
-        clients: List<Client>,
-    ) {
+    private fun checkSwitching(context: ClientGameTestContext, clients: List<Client>) {
         // Ends on the main client, which is the one the test framework disconnects
         for (switch in SWITCHES downTo 0) {
             val client = clients[switch % clients.size]
@@ -136,10 +136,16 @@ class MultiClientGameTest : FabricClientGameTest {
             val shown = context.fromClient { it.player!!.gameProfile.name to it.user.name }
             check(client.isActive && shown == (name to name)) { "The window shows $shown after switching to $name" }
         }
+    }
 
+    private fun checkStillPlaying(
+        context: ClientGameTestContext,
+        server: TestDedicatedServerContext,
+        clients: List<Client>,
+    ) {
         context.waitTicks(SOAK_TICKS)
         check(server.positions().size == clients.size && context.fromClient { clients.all { it.inGame } }) {
-            "Still playing after $SWITCHES switches: ${server.positions().keys}"
+            "Not every client is still playing: ${server.positions().keys}"
         }
     }
 

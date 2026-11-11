@@ -37,8 +37,6 @@
       "net.ccbluex.liquidbounce.gametest.navigation.ElytraTravelGameTest",
       "net.ccbluex.liquidbounce.gametest.PlayerSimulationGameTest",
       "net.ccbluex.liquidbounce.gametest.MultiClientGameTest",
-      "net.ccbluex.liquidbounce.gametest.ClientViewGameTest",
-      "net.ccbluex.liquidbounce.gametest.ClientInteropGameTest",
       "net.ccbluex.liquidbounce.gametest.SimulatedClientGameTest"
     ]
   },
