@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.cancelEventListenerScopes
 import net.ccbluex.liquidbounce.event.events.ClientSwitchEvent
 import net.ccbluex.liquidbounce.features.account.SessionBundle
+import net.ccbluex.liquidbounce.features.client.view.ClientViews
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -133,6 +134,7 @@ object ClientManager {
                 repeat(client.dueTicks()) {
                     BackgroundGame.tick()
                 }
+                ClientViews.render(client)
             }
         }
 
@@ -165,6 +167,7 @@ object ClientManager {
             cancelEventListenerScopes()
         }
         EventManager.unregisterClient(client)
+        ClientViews.forget(client)
         logger.info("Closed client ${client.id}")
     }
 
@@ -177,6 +180,7 @@ object ClientManager {
         // Keys the user still holds would otherwise stay held in the client that leaves the window.
         KeyMapping.releaseAll()
         previous.restartClock()
+        ClientViews.close(client)
 
         ClientContext.rest(client)
         active = client

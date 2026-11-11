@@ -18,6 +18,17 @@ accessible field net/minecraft/client/gui/Hud bossOverlay Lnet/minecraft/client/
 mutable field net/minecraft/client/gui/Hud bossOverlay Lnet/minecraft/client/gui/components/BossHealthOverlay;
 accessible field net/minecraft/client/Options serverRenderDistance I
 accessible field net/minecraft/client/Camera entity Lnet/minecraft/world/entity/Entity;
+mutable field net/minecraft/client/Minecraft levelRenderer Lnet/minecraft/client/renderer/LevelRenderer;
+mutable field net/minecraft/client/Minecraft levelExtractor Lnet/minecraft/client/renderer/extract/LevelExtractor;
+accessible field net/minecraft/client/renderer/GameRenderer mainRenderTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+mutable field net/minecraft/client/renderer/GameRenderer mainRenderTarget Lcom/mojang/blaze3d/pipeline/RenderTarget;
+accessible field net/minecraft/client/renderer/GameRenderer mainCamera Lnet/minecraft/client/Camera;
+mutable field net/minecraft/client/renderer/GameRenderer mainCamera Lnet/minecraft/client/Camera;
+accessible field net/minecraft/client/renderer/GameRenderer lightmap Lnet/minecraft/client/renderer/Lightmap;
+accessible field net/minecraft/client/renderer/GameRenderer lightmapRenderStateExtractor Lnet/minecraft/client/renderer/LightmapRenderStateExtractor;
+accessible field net/minecraft/client/renderer/GameRenderer fogRenderer Lnet/minecraft/client/renderer/fog/FogRenderer;
+accessible field net/minecraft/client/renderer/GameRenderer globalSettingsUniform Lnet/minecraft/client/renderer/GlobalSettingsUniform;
+accessible method net/minecraft/client/renderer/GameRenderer extractCamera (Lnet/minecraft/client/DeltaTracker;F)V
 
 accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
 accessible field net/minecraft/world/entity/HumanoidArm id I

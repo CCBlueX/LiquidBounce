@@ -83,6 +83,8 @@ internal object BackgroundGame {
             return
         }
 
+        // Minecraft runs light updates once per frame, for the level of the window only
+        level.update()
         level.tickEntities()
         level.tickBlockEntities()
         mc.player?.takeUnless { it.isRemoved }?.sendChanges()
