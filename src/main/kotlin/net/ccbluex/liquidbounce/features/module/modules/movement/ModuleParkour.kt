@@ -95,9 +95,10 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
         )
     }
 
+    /** Holds the sprint key; the game still decides whether the player sprints, and tells the server. */
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (sprint && event.directionalInput.isMoving) {
+        if (sprint && event.source == SprintEvent.Source.INPUT && event.directionalInput.isMoving) {
             event.sprint = true
         }
     }
