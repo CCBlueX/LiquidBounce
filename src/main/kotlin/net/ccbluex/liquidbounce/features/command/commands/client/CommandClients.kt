@@ -56,11 +56,11 @@ object CommandClients : CommandRegistrar {
                     1
                 }
             }
-            literal("open") {
+            literal("add") {
                 argument("username", ClientStringArgumentType.word(), accountNames()) { username ->
                     optional("address", ClientStringArgumentType.word(), default = null) { address ->
                         execSuspend { ctx ->
-                            open(ctx.get(username), ctx.get(address))
+                            add(ctx.get(username), ctx.get(address))
                         }
                     }
                 }
@@ -87,16 +87,16 @@ object CommandClients : CommandRegistrar {
                     }
                 }
             }
-            literal("close") {
+            literal("remove") {
                 argument("client", ClientArgumentType) { client ->
                     exec { ctx ->
                         val target = ctx.get(client)
                         if (target.isMain) {
-                            throw CommandException(t("close.main"))
+                            throw CommandException(t("remove.main"))
                         }
 
                         ClientManager.close(target)
-                        chat(regular(t("close.success", variable(target.user.name))))
+                        chat(regular(t("remove.success", variable(target.user.name))))
                         1
                     }
                 }
@@ -119,7 +119,7 @@ object CommandClients : CommandRegistrar {
     /**
      * [username] is an account of the alt manager, or the name of an offline account if there is none.
      */
-    private suspend fun CmdI18n.open(username: String, address: String?) {
+    private suspend fun CmdI18n.add(username: String, address: String?) {
         address?.let { validAddress(it) }
 
         val account = AccountManager.accounts.firstOrNull { it.username.equals(username, true) }
@@ -128,7 +128,7 @@ object CommandClients : CommandRegistrar {
 
         val client = ClientManager.open(login)
         (address ?: ClientContext.current.connection?.serverData?.ip)?.let { ClientManager.connect(client, it) }
-        chat(regular(t("open.success", variable(client.user.name))))
+        chat(regular(t("add.success", variable(client.user.name))))
     }
 
     private fun CmdI18n.validAddress(address: String): String {
