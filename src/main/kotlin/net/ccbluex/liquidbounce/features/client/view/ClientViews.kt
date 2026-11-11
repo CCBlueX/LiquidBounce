@@ -22,6 +22,9 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.features.client.Client
 import net.ccbluex.liquidbounce.features.client.ClientContext
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.LevelRenderer
 import net.minecraft.client.renderer.extract.LevelExtractor
 import java.util.concurrent.ConcurrentHashMap
 
@@ -122,14 +125,26 @@ object ClientViews {
 
     /**
      * The extractor that should hear about a change reported to [extractor]. Levels of background clients report
-     * to the window's, which draws the active client only, so their changes go to their view if there is one.
+     * to the window's, which draws the active client only, so their changes go to their view if it already draws
+     * that level. A view that does not draw it yet reads the whole level once it starts to.
      */
     @JvmStatic
     fun receiverOf(extractor: LevelExtractor): LevelExtractor? =
         if (!ClientContext.isBackground || extractor in extractors) {
             extractor
         } else {
-            views[ClientContext.loaded]?.extractor
+            views[ClientContext.loaded]?.takeIf { it.draws(mc.level) }?.extractor
         }
+
+    /**
+     * Puts the renderer of the loaded client's view in place of the window's while the view hears of a change, and
+     * returns the window's. Sodium finds the renderer of an extractor through [Minecraft.levelRenderer].
+     */
+    @JvmStatic
+    fun lendRenderer(): LevelRenderer {
+        val window = mc.levelRenderer
+        views[ClientContext.loaded]?.levelRenderer?.let { mc.levelRenderer = it }
+        return window
+    }
 
 }

@@ -35,13 +35,18 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.customambience.ModuleCustomAmbience;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.glow.GlowPostEffect;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.color.block.BlockColors;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
+import net.minecraft.core.SectionPos;
 import org.joml.Vector4f;
 import org.joml.Vector4fc;
 import org.objectweb.asm.Opcodes;
@@ -226,6 +231,38 @@ public abstract class MixinLevelRenderer {
     @WrapWithCondition(method = "submitBlockDestroyAnimation", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitBreakingBlockModel(Lcom/mojang/blaze3d/vertex/PoseStack;Ljava/util/List;IZ)V"))
     private boolean cancelRenderBreakingTexture(SubmitNodeCollector instance, PoseStack poseStack, List<?> list, int i, boolean b) {
         return ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_OVERLAY);
+    }
+
+    /**
+     * The occlusion graph only hears of loaded chunks and empty sections from what the chunk cache collected since
+     * the last frame, and forgets them with every new level. A client's level is drawn by the window while it is
+     * active and by its view otherwise, neither sees what the other took, so it starts from what is loaded now.
+     */
+    @Inject(method = "invalidateCompiledGeometry", at = @At("TAIL"))
+    private void learnLoadedChunks(ClientLevel level, Options options, Camera camera, BlockColors blockColors,
+                                   CallbackInfo ci) {
+        var graph = ((LevelRenderer) (Object) this).sectionOcclusionGraph();
+        var loadedChunks = graph.loadedChunks;
+        var emptySections = graph.emptySections;
+        loadedChunks.clear();
+        emptySections.clear();
+
+        var chunks = level.getChunkSource().storage.chunks;
+        for (int i = 0; i < chunks.length(); i++) {
+            var chunk = chunks.get(i);
+            if (chunk == null) {
+                continue;
+            }
+
+            var pos = chunk.getPos();
+            loadedChunks.add(pos.pack());
+            var sections = chunk.getSections();
+            for (int index = 0; index < sections.length; index++) {
+                if (sections[index].hasOnlyAir()) {
+                    emptySections.add(SectionPos.asLong(pos.x(), chunk.getSectionYFromSectionIndex(index), pos.z()));
+                }
+            }
+        }
     }
 
 }

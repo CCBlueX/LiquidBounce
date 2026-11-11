@@ -45,12 +45,16 @@ internal class ClientView(private val client: Client, private val frames: Client
 
     private val camera = Camera()
     private var target: TextureTarget? = null
-    private var levelRenderer: LevelRenderer? = null
+    var levelRenderer: LevelRenderer? = null
+        private set
 
     var extractor: LevelExtractor? = null
         private set
 
     private var renderedLevel: ClientLevel? = null
+
+    fun draws(level: ClientLevel?) = level != null && level === renderedLevel
+
     private val readbacks = Array(READBACKS) { Readback() }
     private var nextReadback = 0
 

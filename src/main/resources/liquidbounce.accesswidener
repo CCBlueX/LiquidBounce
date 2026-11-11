@@ -29,6 +29,9 @@ accessible field net/minecraft/client/renderer/GameRenderer lightmapRenderStateE
 accessible field net/minecraft/client/renderer/GameRenderer fogRenderer Lnet/minecraft/client/renderer/fog/FogRenderer;
 accessible field net/minecraft/client/renderer/GameRenderer globalSettingsUniform Lnet/minecraft/client/renderer/GlobalSettingsUniform;
 accessible method net/minecraft/client/renderer/GameRenderer extractCamera (Lnet/minecraft/client/DeltaTracker;F)V
+accessible field net/minecraft/client/renderer/SectionOcclusionGraph loadedChunks Lit/unimi/dsi/fastutil/longs/LongOpenHashSet;
+accessible field net/minecraft/client/renderer/SectionOcclusionGraph emptySections Lit/unimi/dsi/fastutil/longs/LongOpenHashSet;
+accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
 
 accessible method net/minecraft/world/entity/LivingEntity updatingUsingItem ()V
 accessible field net/minecraft/world/entity/HumanoidArm id I

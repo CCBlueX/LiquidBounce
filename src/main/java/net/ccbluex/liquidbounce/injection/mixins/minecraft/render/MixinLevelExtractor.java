@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.client.view.ClientViews;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.extract.LevelExtractor;
@@ -49,7 +50,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(pos, updateFlags);
         } else if (receiver != null) {
-            receiver.blockChanged(pos, updateFlags);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.blockChanged(pos, updateFlags);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -59,7 +65,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(x0, y0, z0, x1, y1, z1);
         } else if (receiver != null) {
-            receiver.setBlocksDirty(x0, y0, z0, x1, y1, z1);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.setBlocksDirty(x0, y0, z0, x1, y1, z1);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -69,7 +80,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(pos, oldState, newState);
         } else if (receiver != null) {
-            receiver.setBlockDirty(pos, oldState, newState);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.setBlockDirty(pos, oldState, newState);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -79,7 +95,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(x, y, z);
         } else if (receiver != null) {
-            receiver.setSectionDirtyWithNeighbors(x, y, z);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.setSectionDirtyWithNeighbors(x, y, z);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -89,7 +110,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(x0, y0, z0, x1, y1, z1);
         } else if (receiver != null) {
-            receiver.setSectionRangeDirty(x0, y0, z0, x1, y1, z1);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.setSectionRangeDirty(x0, y0, z0, x1, y1, z1);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -99,7 +125,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(x, y, z);
         } else if (receiver != null) {
-            receiver.setSectionDirty(x, y, z);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.setSectionDirty(x, y, z);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
@@ -109,7 +140,12 @@ public abstract class MixinLevelExtractor {
         if (receiver == (Object) this) {
             original.call(transientBlock);
         } else if (receiver != null) {
-            receiver.queueTransientBlock(transientBlock);
+            var window = ClientViews.lendRenderer();
+            try {
+                receiver.queueTransientBlock(transientBlock);
+            } finally {
+                Minecraft.getInstance().levelRenderer = window;
+            }
         }
     }
 
