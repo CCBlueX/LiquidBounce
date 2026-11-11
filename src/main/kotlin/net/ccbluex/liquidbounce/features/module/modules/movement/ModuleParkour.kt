@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -221,8 +222,11 @@ object ModuleParkour : ClientModule("Parkour", ModuleCategories.MOVEMENT) {
             return
         }
 
-        val simulation = PlayerSimulationCache.getSimulationForLocalPlayer()
-        if (!simulation.getSnapshotAt(1).onGround) {
+        // The shared simulation of the player is renewed at this priority too, so it may still be the last tick's.
+        val input = SimulatedPlayerInput.fromClientPlayer(event.directionalInput, jump = false, sneaking = event.sneak)
+        val simulation = SimulatedPlayer.fromClientPlayer(input)
+        simulation.tick()
+        if (!simulation.onGround()) {
             event.jump = true
         }
     }
