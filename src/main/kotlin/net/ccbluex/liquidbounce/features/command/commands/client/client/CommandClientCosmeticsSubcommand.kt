@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
+import net.ccbluex.liquidbounce.api.core.httpException
 import net.ccbluex.liquidbounce.features.command.brigadier.CmdLiteralScope
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
@@ -52,14 +53,17 @@ object CommandClientCosmeticsSubcommand {
         CosmeticService.carriersCosmetics.clear()
         ClientAccountManager.clientAccount.cosmetics = null
 
-        if (CosmeticService.refreshCarriers(force = true)) {
+        CosmeticService.refreshCarriers(force = true).onSuccess {
             chat(
                 regular(
-                    "Cosmetic System has been refreshed."
+                    "Cosmetics have been refreshed."
                 )
             )
-        } else {
-            chat(markAsError("Cosmetic System could not be refreshed."))
+        }.onFailure { error ->
+            val reason = error.httpException?.let { "the API answered with code ${it.code}" }
+                ?: error.message
+                ?: error.javaClass.simpleName
+            chat(markAsError("Failed to refresh cosmetics: $reason"))
         }
     }
 }

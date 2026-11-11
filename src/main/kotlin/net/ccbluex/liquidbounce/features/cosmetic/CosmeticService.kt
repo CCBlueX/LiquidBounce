@@ -69,11 +69,11 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
      * It will only refresh when the REFRESH_DELAY has passed or when [force] is true,
      * and waits for a refresh that is already running.
      *
-     * @return false if the API did not provide the carriers
+     * @return the failure if the API did not provide the carriers
      */
-    suspend fun refreshCarriers(force: Boolean = false): Boolean = refreshing.withLock {
+    suspend fun refreshCarriers(force: Boolean = false): Result<Unit> = refreshing.withLock {
         if (!force && !lastUpdate.hasElapsed(REFRESH_DELAY)) {
-            return@withLock true
+            return@withLock Result.success(Unit)
         }
 
         // Reset first, a failed refresh is not repeated before the REFRESH_DELAY has passed either
@@ -88,7 +88,7 @@ object CosmeticService : EventListener, ValueGroup("Cosmetics") {
             }
         }.onFailure {
             logger.error("Failed to refresh cape carriers due to error.", it)
-        }.isSuccess
+        }
     }
 
     fun fetchCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit = { }) {
