@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.navigation.flight
 
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -57,6 +58,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     private var glide: Glide? = null
     private var ticks = 0
     private var retryAt = 0
+    private var fireRocket = false
 
     val isActive: Boolean
         get() = glide != null
@@ -84,6 +86,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
     fun halt() {
         planner.cancel()
         glide = null
+        fireRocket = false
         sprint = false
     }
 
@@ -199,9 +202,7 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
 
         val rotation = if (player.isFallFlying) {
             val input = glide.steering.steer(player.position(), player.deltaMovement)
-            if (input.fireRocket) {
-                Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
-            }
+            fireRocket = input.fireRocket
             Rotation(input.yaw, input.pitch)
         } else {
             Rotation(glide.goal.subtract(player.position()).yaw, 0f)
@@ -212,6 +213,15 @@ class GlideNavigator(private val owner: EventListener, private val view: RouteVi
             Priority.IMPORTANT_FOR_USAGE_2,
             owner,
         )
+    }
+
+    /** Fires once this tick's rotation is set, which the server expects the rocket to be used with. */
+    @Suppress("unused")
+    private val rocketHandler = handler<GameTickEvent> {
+        if (fireRocket) {
+            fireRocket = false
+            Slots.OffhandWithHotbar.findSlot(Items.FIREWORK_ROCKET)?.let { useHotbarSlotOrOffhand(it) }
+        }
     }
 
     private val liveHeights = ColumnHeights { x, z ->
