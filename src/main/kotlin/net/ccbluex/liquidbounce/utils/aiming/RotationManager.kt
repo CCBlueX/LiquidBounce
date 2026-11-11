@@ -112,6 +112,10 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
     var lastRotation: Rotation? = null
         private set
 
+    // currentRotation of the previous tick. Unlike lastRotation it outlives a reset by one tick, so the
+    // F5 model turns back to the vanilla rotation instead of snapping to it.
+    private var lastModelRotation: Rotation? = null
+
     private val fakeLagging
         get() = BlinkManager.isLagging || ModuleBacktrack.isLagging()
 
@@ -147,6 +151,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         previousRotationTarget = null
         currentRotation = null
         lastRotation = null
+        lastModelRotation = null
         actualServerRotation = Rotation.ZERO
         theoreticalServerRotation = Rotation.ZERO
     }
@@ -238,6 +243,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
+        lastModelRotation = currentRotation
         val playerRotation = player.rotation
         val activeRotationTarget = this.activeRotationTarget ?: return
         val rotationTarget = this.rotationTarget
@@ -303,6 +309,7 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         // The setter would move lastRotation onto the old currentRotation, so shift both ends instead
         this.currentRotation = adjustRotation(currentRotation)
         this.lastRotation = adjustRotation(lastRotation)
+        lastModelRotation = lastModelRotation?.let(::adjustRotation)
     }
 
     /**
@@ -399,7 +406,28 @@ object RotationManager : ValueGroup("RotationManager"), EventListener {
         BODY("Body");
     }
 
-    fun isPartAllowed(part: BodyPart) = part in bodyPart
+    /**
+     * Yaw of [part] on the F5 model. Blends from or to [vanillaYaw] on the tick a rotation starts or ends.
+     */
+    fun modelYaw(part: BodyPart, partialTicks: Float, vanillaYaw: Float): Float {
+        if (part !in bodyPart) {
+            return vanillaYaw
+        }
+
+        val from = lastModelRotation?.yaw ?: vanillaYaw
+        val to = currentRotation?.yaw ?: vanillaYaw
+        return Mth.rotLerp(partialTicks, from, to)
+    }
+
+    fun modelPitch(partialTicks: Float, vanillaPitch: Float): Float {
+        if (BodyPart.HEAD !in bodyPart) {
+            return vanillaPitch
+        }
+
+        val from = lastModelRotation?.pitch ?: vanillaPitch
+        val to = currentRotation?.pitch ?: vanillaPitch
+        return Mth.lerp(partialTicks, from, to)
+    }
 
     /**
      * Draws a tracer line to the point we aim at.

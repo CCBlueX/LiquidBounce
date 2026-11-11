@@ -75,12 +75,12 @@ abstract class WingsMode(name: String) : Mode(name) {
 
                 if (!shouldRender) continue
 
-                val partAllowed = RotationManager.isPartAllowed(RotationManager.BodyPart.BODY)
-                val bodyRot = if (isMe && RotationManager.running && partAllowed) {
-                    val modelRot = RotationManager.currentRotation?.yaw
-                    val prevModelRot = RotationManager.lastRotation?.yaw
-                    rotLerp(event.partialTicks, prevModelRot ?: entity.yBodyRotO, modelRot ?: entity.yBodyRot)
-                } else { rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot) }
+                val vanillaBodyRot = rotLerp(event.partialTicks, entity.yBodyRotO, entity.yBodyRot)
+                val bodyRot = if (isMe) {
+                    RotationManager.modelYaw(RotationManager.BodyPart.BODY, event.partialTicks, vanillaBodyRot)
+                } else {
+                    vanillaBodyRot
+                }
 
                 val look = Vec3.directionFromRotation(0f, bodyRot)
                 val equipmentOffset = when (!entity.getItemBySlot(EquipmentSlot.CHEST).isEmpty) {
