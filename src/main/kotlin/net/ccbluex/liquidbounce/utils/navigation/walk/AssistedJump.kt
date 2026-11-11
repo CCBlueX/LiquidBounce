@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.navigation.walk
 
 import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
-import net.ccbluex.liquidbounce.utils.math.ifNaN
 import net.ccbluex.liquidbounce.utils.math.yaw
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -33,13 +32,18 @@ import kotlin.math.abs
  */
 internal class AssistedJump {
 
-    /** The block jumped to, with the feet at [feet], and the jump onto it. */
-    class Target(val pos: BlockPos, val feet: Double, val jump: Jump) {
+    /**
+     * The block jumped to, with the feet at [feet], and the jump onto it. A jump that does not work from where the
+     * player is has a [step], which [Leap] makes from its run-up.
+     */
+    class Target(val pos: BlockPos, val feet: Double, val jump: Jump, val step: Step? = null) {
         val aim = Vec3(pos.x + 0.5, feet, pos.z + 0.5)
     }
 
     var target: Target? = null
         private set
+
+    private var leap = Leap()
 
     /** Whether an assisted jump is in the air. */
     private var airborne = false
@@ -70,12 +74,19 @@ internal class AssistedJump {
             ticksSinceLanding++
         }
 
-        val target = pick(targets, jumps, state, yaw, heading, maxAngle)
+        val target = runUpKept(state, heading, maxAngle) ?: pick(targets, jumps, state, yaw, heading, maxAngle)
+        if (target?.step != null && target !== this.target) {
+            leap = Leap()
+        }
         this.target = target
         if (target == null) {
             return if (ticksSinceLanding < BRAKE_TICKS) brake(state, yaw, keys) else null
         }
 
+        val step = target.step
+        if (step != null) {
+            return leap.decide(state, yaw, step, target.jump, jumps).also { airborne = it.jump }
+        }
         val jumpNow = target.jump.jumps && target.jump.takeoff == 0
         airborne = jumpNow
         return LeapInput(1, 0, jump = jumpNow, sprint = true)
@@ -98,7 +109,18 @@ internal class AssistedJump {
         return LeapInput(air.forward, air.strafe, jump = false, sprint = air.forward > 0)
     }
 
-    /** The block across a gap within [maxAngle] of [heading] that a jump from here lands on best. */
+    /** The target being run up to, while the player is still on the block it jumps from and heads for it. */
+    private fun runUpKept(state: PlayerMotion, heading: Float, maxAngle: Float): Target? {
+        val target = target ?: return null
+        val step = target.step ?: return null
+        val stays = BlockPos.containing(state.x, state.y + FEET_PROBE, state.z) == step.from
+        return target.takeIf { stays && !leap.hopeless && angle(state.position, target.aim, heading) <= maxAngle }
+    }
+
+    /**
+     * The block across a gap within [maxAngle] of [heading] that a jump from here lands on best. A block the player
+     * clearly heads for more than that one is jumped to from a run-up when no jump from here works.
+     */
     @Suppress("LongParameterList")
     private fun pick(
         targets: JumpTargets,
@@ -109,25 +131,52 @@ internal class AssistedJump {
         maxAngle: Float,
     ): Target? {
         val position = state.position
-        val feet = BlockPos.containing(position)
-        val height = targets.terrain.standHeight(feet.x, feet.y, feet.z).ifNaN { position.y }
+        val feet = BlockPos.containing(position.x, position.y + FEET_PROBE, position.z)
+        val standing = targets.terrain.standHeight(feet.x, feet.y, feet.z)
+        val height = if (standing.isNaN()) position.y else standing
         var best: Target? = null
         var bestScore = Double.MAX_VALUE
+        var bestIntent = Double.MAX_VALUE
+        val missed = ArrayList<Missed>()
         targets.forEach(feet.x, feet.y, feet.z, height, MAX_DROP) { x, y, z, top ->
             val angle = angle(position, Vec3(x + 0.5, top, z + 0.5), heading)
             if (angle > maxAngle) {
                 return@forEach true
             }
 
-            val pos = BlockPos(x, y, z)
-            val jump = jumps.fromHere(state, yaw, pos, top) ?: return@forEach true
             // Below a course is where a missed jump ends, so any block level with it or higher comes first.
-            val score = angle / maxAngle - jump.margin + maxOf(0.0, height - top) * DROP_PENALTY
+            val intent = angle / maxAngle + maxOf(0.0, height - top) * DROP_PENALTY
+            val pos = BlockPos(x, y, z)
+            val jump = jumps.fromHere(state, yaw, pos, top)
+            if (jump == null) {
+                missed += Missed(pos, top, intent)
+                return@forEach true
+            }
+
+            val score = intent - jump.margin
             if (score < bestScore) {
                 best = Target(pos, top, jump)
                 bestScore = score
+                bestIntent = intent
             }
             true
+        }
+
+        if (standing.isNaN()) {
+            return best
+        }
+        missed.sortBy(Missed::intent)
+        for (candidate in missed.take(MAX_RUN_UPS)) {
+            if (candidate.intent > bestIntent - INTENT_SLACK) {
+                break
+            }
+            val plan = jumps.plan(feet, height, candidate.pos, candidate.top) ?: continue
+            val landing = Vec3(candidate.pos.x + 0.5, candidate.top, candidate.pos.z + 0.5)
+            val step = Step(
+                feet, candidate.pos, Move.PARKOUR, landing, emptyList(), emptyList(), emptyList(), cost = 0.0,
+                jump = plan,
+            )
+            return Target(candidate.pos, candidate.top, plan, step)
         }
         return best
     }
@@ -148,9 +197,16 @@ internal class AssistedJump {
 
     private fun angle(from: Vec3, to: Vec3, heading: Float) = abs(Mth.wrapDegrees(to.subtract(from).yaw - heading))
 
+    private class Missed(val pos: BlockPos, val top: Double, val intent: Double)
+
     private companion object {
         const val MAX_DROP = 4
         const val DROP_PENALTY = 0.5
+
+        /** How much more a block out of reach from here has to be headed for to be run up to instead. */
+        const val INTENT_SLACK = 0.5
+        const val MAX_RUN_UPS = 3
+        const val FEET_PROBE = 1.0E-3
 
         const val BRAKE_TICKS = 10
         const val BRAKE_LOOKAHEAD = 3

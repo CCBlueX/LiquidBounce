@@ -114,4 +114,22 @@ class AssistedJumpTest {
 
         assertEquals(course, run(world, TestWorld.feet(-3, 1, 0), course))
     }
+
+    @Test
+    fun `a block out of reach from the landing spot is jumped to from a run-up`() {
+        // 196 Level Parkour, level 1: after the jump onto 7 21 10 the next block lies 3 blocks to the side, 1 up.
+        val world = room()
+        val course = course(
+            world, BlockPos(3, 20, 7), BlockPos(3, 21, 10), BlockPos(7, 21, 10), BlockPos(7, 22, 7),
+            BlockPos(7, 22, 5), BlockPos(9, 23, 2), BlockPos(10, 23, 6),
+        )
+        world.set(3, 19, 4, TestWorld.STONE)
+
+        assertEquals(course, run(world, TestWorld.feet(3, 20, 4), course))
+    }
+
+    /** The room of a level of 196 Level Parkour: a floor at y 18 walled in from x and z 1 to 11. */
+    private fun room() = TestWorld().fill(1, 18, 1, 11, 18, 11)
+        .fill(1, 19, 1, 11, 23, 1).fill(1, 19, 11, 11, 23, 11)
+        .fill(1, 19, 1, 1, 23, 11).fill(11, 19, 1, 11, 23, 11)
 }
