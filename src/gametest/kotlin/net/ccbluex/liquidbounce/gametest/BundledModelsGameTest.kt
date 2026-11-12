@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
+import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingModels
+import net.ccbluex.liquidbounce.deeplearn.clicking.ClickingStyle
 import net.ccbluex.liquidbounce.deeplearn.combat.CombatModels
 import net.ccbluex.liquidbounce.deeplearn.model.ModelRegistry
 import net.ccbluex.liquidbounce.deeplearn.model.ModelStatus
@@ -34,7 +36,7 @@ class BundledModelsGameTest : LocalGameTest() {
 
     override fun test(context: ClientGameTestContext) {
         check(context.fromClient { DeepLearningEngine.isInitialized }) { "The deep learning engine did not load" }
-        val slots = listOf(CombatModels.SLOT)
+        val slots = ClickingStyle.entries.map(ClickingModels::slot) + CombatModels.SLOT
         context.onClient {
             for (slot in slots) {
                 for (name in slot.bundled) {
