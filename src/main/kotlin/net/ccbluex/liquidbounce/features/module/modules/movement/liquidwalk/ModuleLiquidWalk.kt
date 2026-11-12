@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk
 
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkNoCheatPlus
+import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkNCP3161
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVerusB3901
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVulcan291
@@ -42,7 +42,7 @@ object ModuleLiquidWalk : ClientModule(
 
     internal val modes = choices("Mode", LiquidWalkVanilla, arrayOf(
         LiquidWalkVanilla,
-        LiquidWalkNoCheatPlus,
+        LiquidWalkNCP3161,
         LiquidWalkVerusB3901,
         LiquidWalkVulcan291,
     )).apply { tagBy(this) }

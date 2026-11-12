@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.features.global.viewmodel.GlobalSettingsViewModel;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar;
-import net.ccbluex.liquidbounce.features.module.modules.render.animations.ModuleAnimations;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.player.FirstPersonHandsAndItems;
 import net.minecraft.client.player.LocalPlayer;
@@ -58,16 +58,16 @@ public abstract class MixinFirstPersonHandsAndItemsRenderer {
 
     @Inject(method = "itemUsed", at = @At("HEAD"), cancellable = true)
     private void injectIgnorePlace(InteractionHand hand, CallbackInfo ci) {
-        if (ModuleAnimations.INSTANCE.getRunning() && ModuleAnimations.EquipOffset.INSTANCE.getIgnorePlace()) {
+        if (GlobalSettingsViewModel.INSTANCE.getRunning() && GlobalSettingsViewModel.EquipOffset.INSTANCE.getIgnorePlace()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "shouldInstantlyReplaceVisibleItem", at = @At("RETURN"), cancellable = true)
     private void injectIgnoreAmount(ItemStack currentlyVisibleItem, ItemStack expectedItem, LocalPlayer player, CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleAnimations.INSTANCE.getRunning() && !cir.getReturnValueZ()) {
-            cir.setReturnValue(!ModuleAnimations.EquipOffset.INSTANCE.getRunning()
-                || (currentlyVisibleItem.getCount() == expectedItem.getCount() || ModuleAnimations.EquipOffset.INSTANCE.getIgnoreAmount())
+        if (GlobalSettingsViewModel.INSTANCE.getRunning() && !cir.getReturnValueZ()) {
+            cir.setReturnValue(!GlobalSettingsViewModel.EquipOffset.INSTANCE.getRunning()
+                || (currentlyVisibleItem.getCount() == expectedItem.getCount() || GlobalSettingsViewModel.EquipOffset.INSTANCE.getIgnoreAmount())
                 && ItemStack.isSameItemSameComponents(currentlyVisibleItem, expectedItem)
             );
         }

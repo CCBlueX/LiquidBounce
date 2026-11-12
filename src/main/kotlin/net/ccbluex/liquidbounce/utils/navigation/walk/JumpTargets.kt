@@ -1,0 +1,287 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.utils.navigation.walk
+
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
+import net.ccbluex.liquidbounce.utils.math.ifNaN
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
+import net.ccbluex.liquidbounce.utils.navigation.terrain.hasRoom
+import net.ccbluex.liquidbounce.utils.navigation.terrain.isOpen
+import net.minecraft.util.Mth
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.sqrt
+
+/** Spots worth a jump from a feet block: within reach across a gap or dip, where walking does not get as fast. */
+@Suppress("TooManyFunctions")
+internal class JumpTargets(
+    val terrain: Terrain,
+    private val traits: MotionTraits = MotionTraits.DEFAULT,
+) {
+
+    private val extraHeight = traits.jumpHeight - MotionTraits.DEFAULT.jumpHeight
+    private val maxRise = MAX_RISE + extraHeight
+    private val reachScale = maxOf(1.0, traits.walkSpeed.toDouble() / MotionTraits.DEFAULT.walkSpeed)
+
+    fun interface Sink {
+        /** Takes the feet block [x] [y] [z] standing at [top]; false to stop. */
+        fun accept(x: Int, y: Int, z: Int, top: Double): Boolean
+    }
+
+    /**
+     * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
+     * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
+     * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further. With
+     * [around], also the ones behind a post or the end of a wall right where the straight line leaves the block, for a
+     * jump around it.
+     */
+    @Suppress("LongParameterList", "CognitiveComplexMethod")
+    fun forEach(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        maxDrop: Int,
+        bounceDrop: Int = maxDrop,
+        upward: Double = 0.0,
+        around: Boolean = false,
+        sink: Sink,
+    ) {
+        val lift = lift(upward)
+        val bouncing = lift > 0.0
+        if (!bouncing && !isEdge(x, y, z, height)) {
+            return
+        }
+
+        val rises = maxRise + lift
+        val maxUp = ceil(rises).toInt()
+        val farthest = if (bouncing) MAX_BOUNCE_REACH else MAX_REACH
+        for (offset in OFFSETS) {
+            if (offset.distance > farthest) {
+                return
+            }
+            val tx = x + offset.x
+            val tz = z + offset.z
+            for (ty in y + maxUp downTo y - maxOf(maxDrop, bounceDrop)) {
+                // Landings in water are not simulated; swimming gets there.
+                if (terrain.isWater(tx, ty, tz)) {
+                    continue
+                }
+                val top = terrain.standHeight(tx, ty, tz).ifNaN { catchHeight(tx, ty, tz) }
+                val rise = top - height
+                val inRange = !top.isNaN() && rise <= rises &&
+                    (ty >= y - maxDrop || terrain.restitution(tx, top, tz) > 0.0)
+                if (!inRange || !isJumpedTo(x, y, z, height, offset, ty, rise, bouncing, around)) {
+                    continue
+                }
+
+                if (!sink.accept(tx, ty, tz, top)) {
+                    return
+                }
+            }
+        }
+    }
+
+    /** How much higher than a jump from the ground a take-off moving up at [upward] already gets. */
+    fun lift(upward: Double) = MotionTraits.rise(maxOf(upward, traits.jumpPower)) - traits.jumpHeight
+
+    /**
+     * Whether [offset] at [ty], [rise] up, is a jump from [x] [y] [z], standing at [height], across a gap and not a
+     * walk, and within reach. [bouncing] reaches further and leaves the ground anywhere, so a gap anywhere on the way
+     * will do, or none for a block higher up; the rest of the floor it bounces off is no jump.
+     */
+    @Suppress("LongParameterList")
+    private fun isJumpedTo(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        offset: Offset,
+        ty: Int,
+        rise: Double,
+        bouncing: Boolean,
+        around: Boolean,
+    ) = when {
+        walkReaches(x, y, z, offset, ty - y) -> false
+        bouncing -> ty > y || crossesGap(x, y, z, height, offset)
+        else -> offset.distance <= maxReach(rise) && leavesOverGap(x, y, z, height, offset, ty, around)
+    }
+
+    private fun catchHeight(x: Int, y: Int, z: Int) =
+        if (terrain.isClimbable(x, y, z) && terrain.hasRoom(x, y, z)) y.toDouble() else Double.NaN
+
+    private fun isEdge(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in DX.indices) {
+            if (isDip(x + DX[i], y, z + DZ[i], height)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /** Whether the body fits into [x] [y] [z] but its ground is missing or lower than [height] by [DIP_DEPTH]. */
+    private fun isDip(x: Int, y: Int, z: Int, height: Double): Boolean {
+        val stand = terrain.standHeight(x, y, z)
+        return terrain.isOpen(x, y, z) && (stand.isNaN() || stand < height - DIP_DEPTH)
+    }
+
+    private fun isGap(x: Int, y: Int, z: Int, height: Double) =
+        isDip(x, y, z, height) && terrain.standHeight(x, y - 1, z).isNaN()
+
+    /**
+     * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. With
+     * [around], something right where it leaves that a jump gets around will do, when the line or the way beside it
+     * crosses a gap.
+     */
+    @Suppress("LongParameterList")
+    private fun leavesOverGap(
+        x: Int,
+        y: Int,
+        z: Int,
+        height: Double,
+        offset: Offset,
+        ty: Int,
+        around: Boolean,
+    ): Boolean {
+        val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
+        for (step in 1..steps) {
+            // Half a step off, so that a diagonal never samples the very corner between two columns.
+            val along = (step - 0.5) / steps
+            val cx = Mth.floor(x + 0.5 + offset.x * along)
+            val cz = Mth.floor(z + 0.5 + offset.z * along)
+            if (cx != x || cz != z) {
+                return cx == x + offset.x && cz == z + offset.z ||
+                    isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
+                    around && isJumpedAround(cx, y, cz, x, z) && !isStep(cx, y, cz, height) &&
+                    (crossesGap(x, y, z, height, offset) || hasGapBeside(cx, y, cz, height))
+            }
+        }
+        return false
+    }
+
+    /**
+     * Whether [x] [y] [z] is in the way of the body as something a jump from the block [fromX] [fromZ] gets around: a
+     * post or a pot with nothing else beside it, or the end of a wall that runs across the way from the block next
+     * to it. Not a wall seen end on, which the way runs along.
+     */
+    private fun isJumpedAround(x: Int, y: Int, z: Int, fromX: Int, fromZ: Int): Boolean {
+        if (terrain.isOpen(x, y, z)) {
+            return false
+        }
+        var wall = -1
+        for (i in 0 until SIDES) {
+            val sideX = x + DX[i]
+            val sideZ = z + DZ[i]
+            if ((sideX != fromX || sideZ != fromZ) && !terrain.isOpen(sideX, y, sideZ)) {
+                if (wall >= 0) {
+                    return false
+                }
+                wall = i
+            }
+        }
+        return wall < 0 || abs(x - fromX) + abs(z - fromZ) == 1 &&
+            (x - fromX) * DX[wall] + (z - fromZ) * DZ[wall] == 0
+    }
+
+    /** Whether a jump from [height] gets onto [x] [y] [z] or the block above it. */
+    private fun isStep(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (feet in y..y + 1) {
+            val top = terrain.standHeight(x, feet, z)
+            if (!top.isNaN() && top - height <= maxRise) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasGapBeside(x: Int, y: Int, z: Int, height: Double): Boolean {
+        for (i in 0 until SIDES) {
+            if (isGap(x + DX[i], y, z + DZ[i], height)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /** Whether the line to [offset] passes over a gap anywhere between the block and the target. */
+    private fun crossesGap(x: Int, y: Int, z: Int, height: Double, offset: Offset): Boolean {
+        val steps = max(abs(offset.x), abs(offset.z)) * LINE_SAMPLES
+        for (step in 1..steps) {
+            val along = (step - 0.5) / steps
+            val cx = Mth.floor(x + 0.5 + offset.x * along)
+            val cz = Mth.floor(z + 0.5 + offset.z * along)
+            val between = (cx != x || cz != z) && (cx != x + offset.x || cz != z + offset.z)
+            if (between && isGap(cx, y, cz, height)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun walkReaches(x: Int, y: Int, z: Int, offset: Offset, dy: Int) = when {
+        abs(offset.x) > 1 || abs(offset.z) > 1 -> false
+        offset.x == 0 || offset.z == 0 -> dy <= 1
+        else -> dy == 0 && terrain.isOpen(x + offset.x, y, z) && terrain.isOpen(x, y, z + offset.z)
+    }
+
+    private fun maxReach(rise: Double): Double {
+        val climb = rise - extraHeight
+        val reach = when {
+            climb > 0.0 -> 5.1
+            climb > -1.0 -> 5.8
+            else -> 5.8 - climb * 0.5
+        }
+        return minOf(reach * reachScale, MAX_REACH.toDouble())
+    }
+
+    private class Offset(val x: Int, val z: Int) {
+        val distance = sqrt((x * x + z * z).toDouble())
+    }
+
+    private companion object {
+        const val MAX_RISE = 1.25
+        const val LINE_SAMPLES = 10
+        const val MAX_REACH = 8
+
+        /** How far a bounce off slime, much longer in the air than a jump, is let reach. */
+        const val MAX_BOUNCE_REACH = 14
+
+        const val DIP_DEPTH = 0.25
+
+        /** Offsets to the neighbouring columns, the [SIDES] straight ones first. */
+        val DX = intArrayOf(1, -1, 0, 0, 1, 1, -1, -1)
+        val DZ = intArrayOf(0, 0, 1, -1, 1, -1, 1, -1)
+        const val SIDES = 4
+
+        val OFFSETS: Array<Offset> = buildList {
+            for (x in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {
+                for (z in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {
+                    val offset = Offset(x, z)
+                    if ((x != 0 || z != 0) && offset.distance <= MAX_BOUNCE_REACH) {
+                        add(offset)
+                    }
+                }
+            }
+            sortBy(Offset::distance)
+        }.toTypedArray()
+    }
+
+}
