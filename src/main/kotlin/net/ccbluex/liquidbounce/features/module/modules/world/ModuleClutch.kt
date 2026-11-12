@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRangeSorted
+import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.anyHorizontal
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -102,7 +102,7 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
 
         val range = player.blockInteractionRange().toFloat()
         val inReach = player.eyePosition.searchBlocksInRangeSorted(range) { _, state -> !state.canBeReplaced() }
-        return inReach.isNotEmpty() || withoutGhostBlocks {
+        return inReach.isNotEmpty() || withoutShapeChanges {
             FallingPlayer.fromPlayer(player).findCollision(MAX_FALL_TICKS) != null
         }
     }
@@ -114,19 +114,8 @@ object ModuleClutch : ClientModule("Clutch", ModuleCategories.WORLD) {
             return null
         }
 
-        return withoutGhostBlocks { FallingPlayer.fromPlayer(player).fallPath(minFallDistance, MAX_FALL_TICKS) }
-    }
-
-    /**
-     * Runs [block] on the world as the server has it, without the blocks of AntiVoid's GhostBlock mode.
-     */
-    private inline fun <T> withoutGhostBlocks(block: () -> T): T {
-        ShapeFlag.noShapeChange = true
-        try {
-            return block()
-        } finally {
-            ShapeFlag.noShapeChange = false
-        }
+        // Blocks other modules only make up, such as AntiVoid's ghost blocks, would make the fall look like a landing
+        return withoutShapeChanges { FallingPlayer.fromPlayer(player).fallPath(minFallDistance, MAX_FALL_TICKS) }
     }
 
     /**

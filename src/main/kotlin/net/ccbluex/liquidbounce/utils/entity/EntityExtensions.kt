@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
@@ -29,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
+import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
 import net.ccbluex.liquidbounce.utils.client.isBlocksAttacksExisting
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -614,9 +614,7 @@ fun LivingEntity.getDamageFromExplosion(
         return 0f
     }
 
-    try {
-        ShapeFlag.noShapeChange = true
-
+    return withoutShapeChanges {
         val useTweakedMethod = exclude != null ||
             maxBlastResistance != null ||
             include != null ||
@@ -635,9 +633,7 @@ fun LivingEntity.getDamageFromExplosion(
 
         val actualDamageSource = damageSource
             ?: DamageSource(this.level().damageSources().explosion(null).typeHolder(), pos)
-        return getEffectiveDamage(actualDamageSource, preprocessedDamage.toFloat())
-    } finally {
-        ShapeFlag.noShapeChange = false
+        getEffectiveDamage(actualDamageSource, preprocessedDamage.toFloat())
     }
 }
 
