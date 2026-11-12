@@ -401,9 +401,11 @@ internal class AssistedJump {
 
         val brakes = ticksSinceLanding < BRAKE_TICKS && leaves in 0 until BRAKE_LOOKAHEAD &&
             state.horizontalSpeed > BRAKE_SPEED
+        // Off a bed or slime, the probe bounces and comes down where it was, which is no step.
+        val drop = state.y - probe.y
         return when {
             brakes -> LeapInput(-1, 0, jump = keys.jump, sprint = false)
-            leaves == 0 && lands && state.motionY <= 0.0 && state.y - probe.y <= MAX_STEP_DOWN ->
+            leaves == 0 && lands && state.motionY <= 0.0 && drop > 0.0 && drop <= MAX_STEP_DOWN ->
                 LeapInput(keys.forward, keys.strafe, jump = false, sprint = keys.sprint)
             else -> null
         }
