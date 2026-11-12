@@ -23,7 +23,7 @@ closely as possible, and we expect outside developers to do the same when workin
 
 ### Repository standard
 
-* Run Gradle task `check` (or `detekt detektMain detektTest detektGametest`) to check for Kotlin code style violations.
+* Run Gradle task `check` (or `detekt detektMain detektTest detektGametest detektGametestHarness`) to check for Kotlin code style violations.
 * All new Java code must use [JSpecify](https://jspecify.dev/) annotations to mark nullability, which can be detected by Kotlin compiler and your IDE.
 
 **Additional, non-standard conventions will be listed below and must also be followed.**

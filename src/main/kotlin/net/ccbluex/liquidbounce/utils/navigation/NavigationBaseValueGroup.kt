@@ -28,12 +28,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
 import net.minecraft.world.phys.Vec3
 
-/**
- * Base class for features that walk to a goal, with a [WalkNavigator] that aims with the feature's [rotations].
- */
+/** Base for features that walk to a goal. */
 abstract class NavigationBaseValueGroup<T>(
     parent: EventListener? = null,
     name: String,
@@ -45,55 +42,28 @@ abstract class NavigationBaseValueGroup<T>(
     showRoute: Boolean = true,
 ) : ToggleableValueGroup(parent, name, enabled) {
 
-    private val navigator = WalkNavigator(this, this, rotations, allowBreak, allowPlace, allowParkour, showRoute)
+    private val navigator = Navigator(this, this, rotations, allowBreak, allowPlace, allowParkour, showRoute)
 
-    /**
-     * Whether a block is being mined or placed for the path.
-     */
     val isActing: Boolean
         get() = navigator.isActing
 
-    /**
-     * Creates context for navigation
-     */
     protected abstract fun createNavigationContext(): T
 
-    /**
-     * Calculates the desired position to move towards
-     *
-     * @return Target position as Vec3d
-     */
+    /** Where to walk, or null to stand still. */
     protected abstract fun calculateGoalPosition(context: T): Vec3?
 
-    /**
-     * How close to the goal is close enough, in blocks.
-     */
+    /** How close to the goal is close enough, in blocks. */
     protected open fun goalRadius(context: T): Double = DEFAULT_GOAL_RADIUS
 
-    /**
-     * Adds to the movement while walking straight on, such as jumping towards a target.
-     *
-     * @param event Movement input event to modify
-     */
+    /** Adds to the movement while walking straight on, such as jumping towards a target. */
     protected open fun handleMovementAssist(event: MovementInputEvent, context: T) = Unit
 
-    /**
-     * Gets rotation based on movement and target
-     *
-     * @return Movement rotation
-     */
     open fun getMovementRotation(): Rotation = navigator.movementRotation()
 
     @Suppress("unused")
-    private val inputHandler = handler<MovementInputEvent>(
-        priority = CRITICAL_MODIFICATION
-    ) { event ->
+    private val inputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
         val context = createNavigationContext()
-        val goal = calculateGoalPosition(context)
-        if (goal == null) {
-            navigator.halt()
-            return@handler
-        }
+        val goal = calculateGoalPosition(context) ?: return@handler navigator.halt()
 
         debugGeometry("Goal") { DebuggedPoint(goal, Color4b.BLUE, size = 0.4) }
 

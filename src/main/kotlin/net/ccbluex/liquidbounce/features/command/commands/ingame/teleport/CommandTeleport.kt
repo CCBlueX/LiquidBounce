@@ -27,17 +27,7 @@ import net.ccbluex.liquidbounce.features.command.brigadier.get
 import net.ccbluex.liquidbounce.features.command.brigadier.register
 import net.ccbluex.liquidbounce.features.global.GlobalSettingsTeleport
 
-/**
- * Teleport Command
- *
- * Allows you to teleport.
- *
- * Accepts vanilla coordinate semantics: absolute (`100 64 -200`), relative to the
- * player (`~ ~ ~`, `~5 ~-2 ~`) and local to the look direction (`^ ^ ^5`). An optional
- * trailing boolean (`true`/`yes`/`on`) replaces Y with the HighTP amount from [GlobalSettingsTeleport].
- *
- * Settings: [GlobalSettingsTeleport]
- */
+/** Teleports to coordinates in vanilla syntax (`~5 ~-2 ~`, `^ ^ ^5`); a trailing `true` uses the HighTP amount as Y. */
 object CommandTeleport : CommandRegistrar {
 
     override fun register(dispatcher: CommandDispatcher<ClientCommandSource>) {
@@ -47,11 +37,7 @@ object CommandTeleport : CommandRegistrar {
                 optional("highTp", BooleanArgumentType("highTp"), default = false) { highTp ->
                     exec { ctx ->
                         val position = Vec3ArgumentType.getPosition(ctx, pos.name)
-                        val y = if (ctx.get(highTp)) {
-                            GlobalSettingsTeleport.highTpAmount.toDouble()
-                        } else {
-                            position.y
-                        }
+                        val y = if (ctx.get(highTp)) GlobalSettingsTeleport.highTpAmount.toDouble() else position.y
 
                         GlobalSettingsTeleport.teleport(position.x, y, position.z)
                         1

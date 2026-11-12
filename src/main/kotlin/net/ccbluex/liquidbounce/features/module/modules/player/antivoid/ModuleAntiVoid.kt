@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
-import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.withoutShapeChanges
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.allEmpty
@@ -74,12 +74,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
     @Suppress("unused")
     private val voidHandler = handler<GameTickEvent> {
         // Analyzes if the player might be falling into the void soon.
-        try {
-            ShapeFlag.noShapeChange = true
-            isLikelyFalling = isPredictingFall()
-        } finally {
-            ShapeFlag.noShapeChange = false
-        }
+        isLikelyFalling = withoutShapeChanges { isPredictingFall() }
 
         val rescuePosition = mode.activeMode.discoverRescuePosition()
         if (rescuePosition != null) {

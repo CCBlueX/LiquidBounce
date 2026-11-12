@@ -28,11 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.NullableBypass.mc
 import net.minecraft.client.player.AbstractClientPlayer
 import java.util.concurrent.CompletableFuture
 
-/**
- * Another player in the loaded world, by name, whether or not the tab list shows them.
- *
- * Suggestions are the names of the other players in the world.
- */
+/** Another player in the loaded world, by name, whether or not the tab list shows them. */
 object WorldPlayerArgumentType : ArgumentType<AbstractClientPlayer> {
 
     @Throws(CommandSyntaxException::class)

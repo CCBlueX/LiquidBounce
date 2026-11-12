@@ -63,7 +63,6 @@ import net.ccbluex.liquidbounce.event.events.ConfigTrackerChangeEvent
 import net.ccbluex.liquidbounce.event.events.ConnectionDetailsEvent
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent
@@ -100,10 +99,12 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerContainerInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerDeathEvent
 import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerKillEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
@@ -202,6 +203,8 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     EntityHealthUpdateEvent::class.java,
     HealthUpdateEvent::class.java,
     DeathEvent::class.java,
+    PlayerKillEvent::class.java,
+    PlayerDeathEvent::class.java,
     PlayerTickEvent::class.java,
     PlayerPostTickEvent::class.java,
     PlayerMovementTickEvent::class.java,
@@ -259,7 +262,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ResourceReloadEvent::class.java,
     ProxyCheckResultEvent::class.java,
     ScaleFactorChangeEvent::class.java,
-    DrawOutlinesEvent::class.java,
     OverlayMessageEvent::class.java,
     ScheduleInventoryActionEvent::class.java,
     SelectHotbarSlotSilentlyEvent::class.java,

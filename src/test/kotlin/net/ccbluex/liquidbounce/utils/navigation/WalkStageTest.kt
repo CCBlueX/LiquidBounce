@@ -19,30 +19,26 @@
 
 package net.ccbluex.liquidbounce.utils.navigation
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.liquidbounce.test.MinecraftBootstrap
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.AIR
-import net.ccbluex.liquidbounce.utils.navigation.TestNavigationWorld.Companion.feet
+import net.ccbluex.liquidbounce.utils.math.horizontalDistanceTo
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.AIR
+import net.ccbluex.liquidbounce.utils.navigation.TestWorld.Companion.feet
 import net.ccbluex.liquidbounce.utils.navigation.route.NearGoal
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteLimits
 import net.ccbluex.liquidbounce.utils.navigation.route.RouteResult
 import net.ccbluex.liquidbounce.utils.navigation.route.StageGoal
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkAbilities
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkPath
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkRouteSearch
+import net.ccbluex.liquidbounce.utils.navigation.walk.Path
+import net.ccbluex.liquidbounce.utils.navigation.walk.PathSearch
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
-import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-/**
- * Goals beyond the path range or in unknown blocks are walked to in stages.
- */
+/** Goals beyond the path range or in unknown blocks are walked to in stages. */
 class WalkStageTest {
 
     companion object {
@@ -51,50 +47,27 @@ class WalkStageTest {
         }
 
         private const val RANGE = 32.0
+        private const val MAX_SLICES = 1000
         private val LIMITS = RouteLimits(maxLength = RANGE, maxExpansions = 20_000, maxComputeNanos = Long.MAX_VALUE)
         private val START = feet(0, 1, 0)
 
-        /**
-         * A stone floor at y = 0 from x -10 to 200 and z -40 to 40.
-         */
+        /** A stone floor at y = 0 from x -10 to 200 and z -40 to 40. */
         private fun field(known: (x: Int, z: Int) -> Boolean = { _, _ -> true }) =
-            TestNavigationWorld(known).fill(-10, 0, -40, 200, 0, 40)
+            TestWorld(known).fill(-10, 0, -40, 200, 0, 40)
     }
 
-    private val abilities = WalkAbilities(
-        canBreak = false,
-        canPlace = false,
-        placeableBlocks = 0,
-        canParkour = false,
-        canSprint = true,
-        safeFall = 3,
-        waterFall = 20,
-        breakTicks = { Double.POSITIVE_INFINITY },
-        avoid = LongOpenHashSet(),
-    )
+    private val abilities = walkAbilities()
 
-    private fun stage(world: TestNavigationWorld, goal: BlockPos): RouteResult<WalkPath> {
+    private fun stage(world: TestWorld, goal: BlockPos): RouteResult<Path> {
         val terrain = world.terrain()
         val stageGoal = StageGoal(NearGoal(Vec3.atBottomCenterOf(goal), 1.0), START, RANGE, terrain)
-        val search = WalkRouteSearch(terrain, START, stageGoal, abilities, LIMITS)
-        var result = search.advance()
-        repeat(1000) {
-            if (result != RouteResult.Searching) {
-                return result
-            }
-            result = search.advance()
-        }
-        return result
+        return PathSearch(terrain, START, stageGoal, abilities, LIMITS).advanceToEnd(MAX_SLICES)
     }
 
-    private fun stageEnd(world: TestNavigationWorld, goal: BlockPos): BlockPos =
-        assertIs<RouteResult.Found<WalkPath>>(stage(world, goal)).value.steps.last().to
+    private fun stageEnd(world: TestWorld, goal: BlockPos): BlockPos =
+        found(stage(world, goal)).steps.last().to
 
-    private fun horizontalDistance(pos: BlockPos, to: Vec3): Double {
-        val dx = pos.x + 0.5 - to.x
-        val dz = pos.z + 0.5 - to.z
-        return sqrt(dx * dx + dz * dz)
-    }
+    private fun horizontalDistance(pos: BlockPos, to: Vec3) = Vec3.atCenterOf(pos).horizontalDistanceTo(to)
 
     @Test
     fun `goals beyond the range or not known are walked in stages`() {
@@ -147,7 +120,7 @@ class WalkStageTest {
             .fill(-3, 1, -2, 60, 3, 2)
             .fill(-2, 1, -1, 59, 3, 1, AIR)
 
-        val path = assertIs<RouteResult.Found<WalkPath>>(stage(world, BlockPos(-150, 1, 0))).value
+        val path = found(stage(world, BlockPos(-150, 1, 0)))
         assertFalse(path.complete)
         assertTrue(path.steps.last().to.x < 0, "walked away from the goal to ${path.steps.last().to}")
     }

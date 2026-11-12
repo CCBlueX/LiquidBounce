@@ -92,6 +92,7 @@ accessible method net/minecraft/client/Camera setPosition (Lnet/minecraft/world/
 accessible method net/minecraft/client/multiplayer/MultiPlayerGameMode startPrediction (Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/multiplayer/prediction/PredictiveAction;)V
 
 accessible field net/minecraft/client/renderer/PostChain passes Ljava/util/List;
+accessible field net/minecraft/client/renderer/PostPass customUniforms Ljava/util/Map;
 accessible method net/minecraft/client/renderer/PostChain <init> (Lnet/minecraft/resources/Identifier;Ljava/util/List;Ljava/util/Map;Ljava/util/Set;Lnet/minecraft/client/renderer/Projection;Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;)V
 accessible field net/minecraft/client/renderer/ShaderManager postChainProjection Lnet/minecraft/client/renderer/Projection;
 accessible field net/minecraft/client/renderer/ShaderManager postChainProjectionMatrixBuffer Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;
@@ -112,6 +113,8 @@ accessible method net/minecraft/world/item/BlockItem getPlacementState (Lnet/min
 
 accessible field net/minecraft/world/entity/Entity dimensions Lnet/minecraft/world/entity/EntityDimensions;
 accessible field net/minecraft/world/entity/Entity fluidInteraction Lnet/minecraft/world/entity/EntityFluidInteraction;
+accessible field net/minecraft/world/entity/Entity stuckSpeedMultiplier Lnet/minecraft/world/phys/Vec3;
+accessible method net/minecraft/client/player/LocalPlayer modifyInputSpeedForSquareMovement (Lnet/minecraft/world/phys/Vec2;)Lnet/minecraft/world/phys/Vec2;
 
 accessible field net/minecraft/network/protocol/game/VecDeltaCodec base Lnet/minecraft/world/phys/Vec3;
 
@@ -165,6 +168,7 @@ accessible method net/minecraft/client/multiplayer/PlayerInfo createSkinLookup (
 accessible method net/minecraft/client/player/AbstractClientPlayer getPlayerInfo ()Lnet/minecraft/client/multiplayer/PlayerInfo;
 
 accessible field net/minecraft/client/renderer/GameRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
+accessible field net/minecraft/client/renderer/GameRenderer resourcePool Lcom/mojang/blaze3d/resource/CrossFrameResourcePool;
 accessible field net/minecraft/client/renderer/LevelRenderer submitNodeStorage Lnet/minecraft/client/renderer/SubmitNodeStorage;
 
 accessible field net/minecraft/client/renderer/RenderPipelines ENTITY_SNIPPET Lcom/mojang/renderpearl/api/pipeline/RenderPipeline$Snippet;

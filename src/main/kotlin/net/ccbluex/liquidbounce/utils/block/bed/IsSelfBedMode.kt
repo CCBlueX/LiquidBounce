@@ -111,9 +111,7 @@ sealed class IsSelfBedMode(name: String, final override val parent: ModeValueGro
 
             if (packet is ClientboundPlayerPositionPacket) {
                 val pos = packet.change.position
-                val distSq = player.position().distanceToSqr(pos.x, pos.y, pos.z)
-
-                if (distSq > 16.0 * 16.0) {
+                if (player.position().closerThan(pos, 16.0)) {
                     trackedSpawnLocation.set(pos.x, pos.y, pos.z)
                 }
             }
