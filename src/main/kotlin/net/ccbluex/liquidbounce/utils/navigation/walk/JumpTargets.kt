@@ -31,6 +31,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /** Spots worth a jump from a feet block: within reach across a gap or dip, where walking does not get as fast. */
+@Suppress("TooManyFunctions")
 internal class JumpTargets(
     val terrain: Terrain,
     private val traits: MotionTraits = MotionTraits.DEFAULT,
@@ -49,8 +50,7 @@ internal class JumpTargets(
      * Passes the spots a jump from [x] [y] [z], standing at [height], may land on or catch, nearest first: down to
      * [maxDrop] below, or [bounceDrop] onto blocks a fall bounces off. [upward] is the upward motion the player has
      * already, bouncing off slime; a bounce higher than a jump leaves the ground anywhere and reaches further. With
-     * [around], also the ones behind a post or wall right where the straight line leaves the block, for a jump around
-     * it.
+     * [around], also the ones behind a post right where the straight line leaves the block, for a jump around it.
      */
     @Suppress("LongParameterList", "CognitiveComplexMethod")
     fun forEach(
@@ -147,7 +147,7 @@ internal class JumpTargets(
 
     /**
      * Whether the line to [offset] leaves the block into the target, over a gap or, to a target no lower, a dip. With
-     * [around], a post or wall right where it leaves will do when the line crosses a gap further on.
+     * [around], a post right where it leaves will do when the line crosses a gap further on.
      */
     @Suppress("LongParameterList")
     private fun leavesOverGap(
@@ -168,10 +168,28 @@ internal class JumpTargets(
             if (cx != x || cz != z) {
                 return cx == x + offset.x && cz == z + offset.z ||
                     isGap(cx, y, cz, height) || ty >= y && isDip(cx, y, cz, height) ||
-                    around && !terrain.isOpen(cx, y, cz) && crossesGap(x, y, z, height, offset)
+                    around && isPost(cx, y, cz, x, z) && crossesGap(x, y, z, height, offset)
             }
         }
         return false
+    }
+
+    /**
+     * Whether [x] [y] [z] is in the way of the body with nothing beside it but the block [fromX] [fromZ], as a post
+     * or a pot that a jump gets around, and not a wall.
+     */
+    private fun isPost(x: Int, y: Int, z: Int, fromX: Int, fromZ: Int): Boolean {
+        if (terrain.isOpen(x, y, z)) {
+            return false
+        }
+        for (i in 0 until SIDES) {
+            val sideX = x + DX[i]
+            val sideZ = z + DZ[i]
+            if ((sideX != fromX || sideZ != fromZ) && !terrain.isOpen(sideX, y, sideZ)) {
+                return false
+            }
+        }
+        return true
     }
 
     /** Whether the line to [offset] passes over a gap anywhere between the block and the target. */
@@ -219,8 +237,10 @@ internal class JumpTargets(
 
         const val DIP_DEPTH = 0.25
 
+        /** Offsets to the neighbouring columns, the [SIDES] straight ones first. */
         val DX = intArrayOf(1, -1, 0, 0, 1, 1, -1, -1)
         val DZ = intArrayOf(0, 0, 1, -1, 1, -1, 1, -1)
+        const val SIDES = 4
 
         val OFFSETS: Array<Offset> = buildList {
             for (x in -MAX_BOUNCE_REACH..MAX_BOUNCE_REACH) {

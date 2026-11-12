@@ -273,6 +273,19 @@ class AssistedJumpTest {
     }
 
     @Test
+    fun `a block behind a wall seen end on is no jump around a post`() {
+        // 196 Level Parkour, level 122: from a doorway in a wall a block thick, the way on is down to the floor of the
+        // next room. Its first block, one lower and further along the wall, was taken for a jump around the wall, and
+        // the player was walked back and forth to a run-up for it.
+        val air = Blocks.AIR.defaultBlockState()
+        val world = TestWorld().fill(44, 18, 111, 56, 26, 121).fill(44, 19, 112, 56, 26, 120, air)
+            .fill(51, 19, 112, 51, 26, 120).fill(51, 25, 118, 51, 26, 118, air).set(50, 23, 115, TestWorld.STONE)
+        val course = listOf(BlockPos(51, 24, 118), BlockPos(50, 18, 117))
+
+        assertEquals(course, run(world, TestWorld.feet(51, 25, 118), course))
+    }
+
+    @Test
     fun `the traced way of a jump is the way the player takes`() {
         val world = room(0).set(3, 19, 4, TestWorld.STONE).set(3, 20, 7, TestWorld.STONE)
         val terrain = world.terrain()
