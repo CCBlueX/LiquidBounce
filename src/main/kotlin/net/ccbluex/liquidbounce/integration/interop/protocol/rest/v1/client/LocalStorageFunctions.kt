@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -62,14 +63,14 @@ private fun Route.putLocalStorage() = put {
     val value = payload["value"]?.asString ?: call.forbidden("No value")
 
     PersistentLocalStorage.map[key] = value
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // DELETE /api/v1/client/localStorage
 private fun Route.deleteLocalStorage() = delete {
     val key = call.queryParameters["key"] ?: call.forbidden("No key")
     PersistentLocalStorage.map.remove(key)
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/localStorage/all
@@ -86,7 +87,7 @@ private fun Route.putAllLocalStorage() = put {
         PersistentLocalStorage.map[item.key] = item.value
     }
 
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.localStorageRoutes() = route("/localStorage") {

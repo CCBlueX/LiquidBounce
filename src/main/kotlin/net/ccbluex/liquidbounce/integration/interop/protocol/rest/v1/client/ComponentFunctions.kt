@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
@@ -74,7 +75,7 @@ private fun Route.postComponent() = post("/{id}") {
             ?: call.badRequest("HUD component cannot be added again")
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // POST /api/v1/client/components/{id}/z-index
@@ -111,7 +112,7 @@ private fun Route.postComponentAlignment() = post("/{id}/alignment") {
         component.alignment.setFrom(alignment)
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 // GET /api/v1/client/components/{id}/settings
@@ -164,7 +165,7 @@ private fun Route.putComponentSettings() = put("/{id}/settings") {
         }
         ConfigSystem.store(modulesConfig)
     }
-    call.respond(io.ktor.http.HttpStatusCode.NoContent)
+    call.respond(HttpStatusCode.NoContent)
 }
 
 internal fun Route.componentRoutes() = route("/components") {

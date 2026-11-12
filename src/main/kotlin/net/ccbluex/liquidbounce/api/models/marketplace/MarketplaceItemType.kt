@@ -49,6 +49,6 @@ enum class MarketplaceItemType(
     suspend fun reload() = when (this) {
         THEME -> ThemeManager.load()
         ADDON -> AddonInstaller.stageSubscribedAddons()
-        else -> MarketplaceManager.reloadHandled(this)
+        else -> MarketplaceManager.reloadHandler(this)
     }
 }

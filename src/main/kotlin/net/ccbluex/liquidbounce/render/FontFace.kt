@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.render.engine.font.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.FontStyle
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.fontRasterizationLock
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.fontRendererContext
 import net.ccbluex.liquidbounce.render.engine.font.TextMetrics
 import okio.ByteString
 import java.awt.Font
@@ -107,6 +108,9 @@ class FontFace(
                         underlineThickness = lineMetrics.underlineThickness,
                         strikethroughOffset = lineMetrics.strikethroughOffset,
                         strikethroughThickness = lineMetrics.strikethroughThickness,
+                        xHeight = font.heightAboveBaseline('x'),
+                        roundXHeight = font.heightAboveBaseline('o'),
+                        capHeight = font.heightAboveBaseline('H'),
                     )
                 } finally {
                     graphics.dispose()
@@ -116,6 +120,16 @@ class FontFace(
             styles[style] = fontId
             metrics[style] = textMetrics
         }
+    }
+
+    // The unhinted context keeps FreeType away from its autohinter, see GlyphPage.renderGlyphs
+    private fun Font.heightAboveBaseline(char: Char): Float {
+        if (!canDisplay(char)) {
+            return 0f
+        }
+
+        val outline = createGlyphVector(fontRendererContext, char.toString()).getGlyphOutline(0)
+        return -outline.bounds2D.minY.toFloat()
     }
 
     override fun toString(): String {

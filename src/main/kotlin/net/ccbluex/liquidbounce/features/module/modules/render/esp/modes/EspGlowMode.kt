@@ -16,6 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-object EspGlowMode : EspMode("Glow", requiresTrueSight = true)
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
+
+object EspGlowMode : EspMode("Glow", requiresTrueSight = true) {
+
+    val styles = OutlineGlow.styles(this)
+
+}

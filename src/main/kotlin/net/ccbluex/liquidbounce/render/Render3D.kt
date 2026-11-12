@@ -27,6 +27,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.features.addon.AddonApi
 import net.ccbluex.liquidbounce.render.engine.RenderDrawKey
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.mesh.BatchCollector
 import net.ccbluex.liquidbounce.render.mesh.MeshBuildScope
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -87,7 +88,14 @@ class WorldRenderEnvironment internal constructor(
     val poseStack: PoseStack,
     val camera: Camera,
     private val batchCollector: BatchCollector,
+    private val shaded: Boolean = false,
 ) {
+    /**
+     * [color] as a shape is drawn in here: unchanged, or opaque in a shader layer, where alpha is the strength of the
+     * effect and fades are all that should lower it.
+     */
+    fun shapeColor(color: Color4b): Color4b = if (shaded) color.alpha(255) else color
+
     /**
      * Low-level draw entrypoint.
      *

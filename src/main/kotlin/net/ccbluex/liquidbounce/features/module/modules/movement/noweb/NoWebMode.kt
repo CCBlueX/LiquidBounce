@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb.modes
 import net.minecraft.core.BlockPos
 
-abstract class NoWebMode(name: String) : Mode(name) {
+abstract class NoWebMode(name: String, aliases: List<String> = emptyList()) : Mode(name, aliases) {
 
     override val parent: ModeValueGroup<NoWebMode>
         get() = modes

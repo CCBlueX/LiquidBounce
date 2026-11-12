@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.network.send1_21_5StartSneaking
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 
-internal class NoSlowSneakingAAC5(override val parent: ModeValueGroup<*>) : Mode("AAC5") {
+internal class NoSlowSneakingAAC5(override val parent: ModeValueGroup<*>) : Mode("AAC-5", aliases = listOf("AAC5")) {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
 
     override fun enable() {

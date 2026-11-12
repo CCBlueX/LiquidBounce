@@ -27,22 +27,21 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoRod
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 
 /** Checks the real guard shared by rod targeting and use, with no nearby enemies. */
-class AutoRodRequirementsGameTest : FabricClientGameTest {
+class AutoRodRequirementsGameTest : LocalGameTest() {
 
     private val requirements = ModuleAutoRod::class.java.getDeclaredMethod("getRequirementsMet")
         .apply { isAccessible = true }
     private val blockers = listOf(ModuleBlink, ModuleScaffold, ModuleFreeze)
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
+    override fun test(context: ClientGameTestContext) {
         val saved = context.fromClient { ConfigSystem.serializeValueGroup(ModuleAutoRod) }
         val blockerStates = context.fromClient { blockers.map { it.enabled } }
 

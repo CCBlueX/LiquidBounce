@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.sounds;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.HitFXRegistry;
+import net.ccbluex.liquidbounce.integration.theme.ThemeSounds;
 import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.resources.Identifier;
@@ -37,6 +38,7 @@ public abstract class MixinSoundManagerPreparations {
     private void hookClientSounds(Map<Identifier, WeighedSoundEvents> registry, Map<Identifier, Resource> soundCache,
                                   SoundEngine engine, CallbackInfo ci) {
         HitFXRegistry.registerSounds(registry, soundCache);
+        ThemeSounds.register(registry, soundCache);
     }
 
 }
