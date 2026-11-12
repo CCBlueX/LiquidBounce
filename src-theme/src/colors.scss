@@ -29,28 +29,9 @@
   --clickgui-base-85-color: color-mix(in srgb, var(--clickgui-base-color) 85%, transparent);
   --clickgui-base-90-color: color-mix(in srgb, var(--clickgui-base-color) 90%, transparent);
 
-  --clickgui-description-background-color: var(--clickgui-base-90-color);
-  --clickgui-description-shadow-color: var(--clickgui-base-50-color);
-  --clickgui-description-arrow-color: var(--clickgui-description-background-color);
-
   --clickgui-overlay-background-color: color-mix(in srgb, black 60%, transparent);
   --clickgui-panel-shadow-color: var(--clickgui-base-50-color);
-  --clickgui-panel-header-background-color: var(--clickgui-base-90-color);
-  --clickgui-panel-header-border-color: var(--accent-color);
-  --clickgui-panel-body-background-color: var(--clickgui-base-80-color);
-  --clickgui-panel-toggle-icon-color: var(--clickgui-text-color);
-
-  --clickgui-module-hover-background-color: var(--clickgui-base-85-color);
-  --clickgui-module-highlight-color: var(--accent-color);
   --clickgui-module-enabled-color: var(--accent-color);
-  --clickgui-module-settings-background-color: var(--clickgui-base-50-color);
-  --clickgui-module-settings-border-color: var(--accent-color);
-
-  --clickgui-search-background-color: var(--clickgui-base-90-color);
-  --clickgui-search-shadow-color: var(--clickgui-base-50-color);
-  --clickgui-search-border-color: var(--accent-color);
-  --clickgui-search-enabled-color: var(--accent-color);
-  --clickgui-search-alias-color: color-mix(in srgb, var(--clickgui-text-dimmed-color) 60%, transparent);
   --clickgui-search-hint-color: color-mix(in srgb, var(--clickgui-text-color) 40%, transparent);
 
   --clickgui-tabs-background-color: var(--clickgui-base-85-color);
@@ -75,9 +56,7 @@
   --clickgui-button-danger-background-color: color-mix(in srgb, var(--error-color) 10%, transparent);
   --clickgui-button-danger-hover-background-color: color-mix(in srgb, var(--error-color) 18%, transparent);
   --clickgui-setting-group-border-color: var(--accent-color);
-  --clickgui-dropdown-trigger-background-color: var(--clickgui-button-background-color);
   --clickgui-dropdown-background-color: var(--clickgui-base-color);
-  --clickgui-dropdown-border-color: var(--accent-color);
   --clickgui-dropdown-option-color: var(--clickgui-text-dimmed-color);
   --clickgui-dropdown-option-hover-color: var(--clickgui-text-color);
   --clickgui-dropdown-option-selected-color: var(--accent-color);
@@ -98,10 +77,27 @@
   --clickgui-slider-track-color: color-mix(in srgb, var(--clickgui-text-color) 20%, black);
   --clickgui-slider-handle-color: var(--clickgui-button-background-color);
   --clickgui-slider-fill-color: var(--clickgui-button-background-color);
-  --clickgui-color-picker-border-color: var(--accent-color);
   --clickgui-curve-accent-color: var(--accent-color);
   --clickgui-curve-grid-color: var(--clickgui-grid-color);
   --clickgui-curve-axis-color: var(--clickgui-text-dimmed-color);
+
+  --clickgui-text-muted-color: color-mix(in srgb, var(--clickgui-text-color) 55%, transparent);
+  --clickgui-divider-color: color-mix(in srgb, var(--clickgui-text-color) 8%, transparent);
+  --clickgui-changed-color: var(--warning-color);
+  --clickgui-control-border-color: color-mix(in srgb, var(--clickgui-text-color) 28%, transparent);
+  --clickgui-control-hover-background-color: color-mix(in srgb, var(--clickgui-text-color) 8%, transparent);
+  --clickgui-segmented-background-color: color-mix(in srgb, var(--clickgui-text-color) 6%, transparent);
+  --clickgui-segmented-active-background-color: color-mix(in srgb, var(--accent-color) 14%, transparent);
+  --clickgui-segmented-active-border-color: var(--accent-color);
+  --clickgui-chip-border-color: color-mix(in srgb, var(--clickgui-text-color) 14%, transparent);
+  --clickgui-chip-active-border-color: var(--accent-color);
+  --clickgui-keycap-background-color: color-mix(in srgb, var(--clickgui-text-color) 8%, transparent);
+  --clickgui-keycap-border-color: color-mix(in srgb, var(--clickgui-text-color) 22%, transparent);
+  --clickgui-list-item-background-color: color-mix(in srgb, var(--clickgui-text-color) 5%, transparent);
+  --clickgui-setting-group-background-color: color-mix(in srgb, var(--clickgui-text-color) 2.5%, transparent);
+  --clickgui-row-hover-background-color: color-mix(in srgb, var(--clickgui-text-color) 7%, transparent);
+  --clickgui-selected-background-color: var(--accent-color);
+  --clickgui-pane-background-color: var(--clickgui-base-30-color);
 
   --clickgui-modal-backdrop-color: var(--clickgui-base-50-color);
   --clickgui-modal-background-color: var(--clickgui-base-color);

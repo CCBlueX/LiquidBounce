@@ -1,7 +1,8 @@
 <script lang="ts">
     import type {KeySetting, ModuleSetting} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {getPrintableKeyName} from "../../../integration/rest";
+    import SettingRow from "./common/SettingRow.svelte";
+    import Keycap from "./bind/Keycap.svelte";
+    import {keyName} from "./bind/key_names.svelte";
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
@@ -16,16 +17,6 @@
 
     let isHovered = false;
     let binding = false;
-    let printableKeyName = "";
-
-    $: {
-        if (cSetting.value !== UNKNOWN_KEY) {
-            getPrintableKeyName(cSetting.value)
-                .then(printableKey => {
-                    printableKeyName = printableKey.localized;
-                });
-        }
-    }
 
     async function toggleBinding() {
         if (binding) {
@@ -83,54 +74,20 @@
     })
 </script>
 
-<div class="setting">
-    <button
-            class="change-bind"
+<SettingRow {setting}>
+    <Keycap
+            {binding}
+            muted={!binding && cSetting.value === UNKNOWN_KEY}
             on:click={toggleBinding}
             on:mouseenter={() => isHovered = true}
             on:mouseleave={() => isHovered = false}
     >
-        {#if !binding}
-            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
-
-            {#if cSetting.value === UNKNOWN_KEY}
-                <span class="none">None</span>
-            {:else}
-                <span>{printableKeyName}</span>
-            {/if}
+        {#if binding}
+            Press a key
+        {:else if cSetting.value === UNKNOWN_KEY}
+            None
         {:else}
-            <span>Press any key</span>
+            {keyName(cSetting.value)}
         {/if}
-    </button>
-</div>
-
-<style lang="scss">
-
-  .setting {
-    padding: 7px 0;
-  }
-
-  .change-bind {
-    background-color: transparent;
-    border: solid 2px var(--accent-color);
-    border-radius: 3px;
-    cursor: pointer;
-    padding: 4px;
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    font-family: "Inter", sans-serif;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    column-gap: 5px;
-
-    .name {
-      font-weight: 500;
-    }
-
-    .none {
-      color: var(--clickgui-text-dimmed-color);
-    }
-  }
-</style>
+    </Keycap>
+</SettingRow>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {FileSetting, ModuleSetting} from "../../../integration/types";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
+    import TextButton from "./common/TextButton.svelte";
     import {browsePath, openFileDialog} from "../../../integration/rest";
     import {createEventDispatcher} from "svelte";
 
@@ -36,75 +37,93 @@
         }
     }
 
+    $: fileName = cSetting.value.split(/[\\/]/).pop();
+    $: hint = cSetting.dialogMode === "OPEN_FOLDER"
+        ? "Choose folder"
+        : `Choose ${cSetting.supportedExtensions?.join(", ") ?? "file"}`;
+
     function resetFile() {
         cSetting.value = '';
         handleChange();
     }
 </script>
 
-<div class="setting">
-    <div class="name">{spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-
-    <div class="body">
-        <button class="button-select" on:click={selectFile}>{cSetting.value === "" ? "<empty>" : cSetting.value}</button>
-
+<SettingRow {setting}>
+    <div class="file">
         {#if cSetting.value !== ""}
-            <button class="button-action" on:click={resetFile}>
-                <img class="icon" src="img/clickgui/icon-reset.svg" alt="reset-file" title="Reset" />
-            </button>
-
-            <button class="button-action" on:click={() => browsePath(cSetting.value)}>
-                <img class="icon" src="img/clickgui/icon-open-file.svg" alt="open-file" title="Open" />
-            </button>
+            <TextButton on:click={() => browsePath(cSetting.value)}>Open</TextButton>
+            <button type="button" class="clear" title="Clear" aria-label="Clear" on:click={resetFile}></button>
         {/if}
+        <button type="button" class="select" class:empty={cSetting.value === ""} title={cSetting.value} on:click={selectFile}>
+            <img src="img/clickgui/icon-open-file.svg" alt="">
+            <span class="file-name">{cSetting.value === "" ? hint : fileName}</span>
+        </button>
     </div>
-</div>
+</SettingRow>
 
 <style lang="scss">
-
-  .setting {
-    padding: 7px 0;
-  }
-
-  .name {
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    margin-bottom: 5px;
-  }
-
-  .body {
+  .file {
     display: flex;
-    column-gap: 5px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
   }
 
-  .button-action {
-    cursor: pointer;
-    background-color: transparent;
-    border: none;
+  .select {
+    display: flex;
     align-items: center;
+    gap: 7px;
+    min-width: 0;
+    max-width: 220px;
+    height: 26px;
+    padding: 0 9px;
+    border: none;
+    border-radius: 3px;
+    background-color: var(--clickgui-keycap-background-color);
+    color: var(--clickgui-text-color);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: ease background-color .15s;
 
-    .icon {
-      height: 18px;
+    &:hover, &:focus-visible {
+      background-color: var(--clickgui-button-secondary-hover-background-color);
+    }
+
+    &.empty {
+      color: var(--clickgui-text-dimmed-color);
+    }
+
+    img {
+      flex: none;
+      width: 13px;
+      height: 13px;
     }
   }
 
-  .button-select {
-    cursor: pointer;
-    width: 100%;
-    background-color: var(--clickgui-input-background-color);
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--clickgui-text-dimmed-color);
-    border: none;
-    border-bottom: solid 2px var(--clickgui-input-border-color);
-    padding: 6px;
-    border-radius: 3px;
-    transition: ease border-color .2s;
-
-    white-space: nowrap;
+  .file-name {
     overflow: hidden;
     text-overflow: ellipsis;
-    direction: rtl;
+    white-space: nowrap;
+  }
+
+  .clear {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 3px;
+    background: url("/img/clickgui/icon-cross.svg") center / 9px no-repeat;
+    opacity: .6;
+    cursor: pointer;
+    transition: ease opacity .15s, ease background-color .15s;
+
+    &:hover, &:focus-visible {
+      opacity: 1;
+      background-color: var(--clickgui-control-hover-background-color);
+    }
   }
 </style>

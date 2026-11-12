@@ -1,11 +1,12 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy} from "svelte";
-    import type {BindModifier, BindSetting, ModuleSetting} from "../../../../integration/types";
+    import type {BindAction, BindModifier, BindSetting, ModuleSetting} from "../../../../integration/types";
     import {waitMatches} from "../../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import BindDisplay from "./BindDisplay.svelte";
-    import SwitchBindAction from "./SwitchBindAction.svelte";
+    import Keycap from "./Keycap.svelte";
+    import Segmented from "../common/Segmented.svelte";
+    import SettingRow from "../common/SettingRow.svelte";
     import {isClickGuiScreen, UNKNOWN_KEY} from "../../../../util/utils";
     import {escapeLayer} from "../../../../integration/escape";
 
@@ -29,6 +30,8 @@
         "key.keyboard.left.alt": "Alt", "key.keyboard.right.alt": "Alt",
         "key.keyboard.left.win": "Super", "key.keyboard.right.win": "Super",
     } as const;
+
+    const ACTIONS: BindAction[] = ["Toggle", "Hold", "Smart"];
 
     export let setting: ModuleSetting;
 
@@ -147,31 +150,28 @@
     $: layer.setOpen(binding);
 </script>
 
-<div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
-    <button
-            class="change-bind"
-            on:click={toggleBinding}
-            on:mouseenter={() => isHovered = true}
-            on:mouseleave={() => isHovered = false}
-    >
-        <span class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</span>
-
-        {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-            <div class="action">
-                <SwitchBindAction
-                        choices={["Toggle", "Hold", "Smart"]}
-                        bind:chosen={cSetting.value.action}
-                        onchange={handleChange}
-                />
-            </div>
+<SettingRow {setting}>
+    <div class="bind">
+        {#if !binding && cSetting.value.boundKey !== UNKNOWN_KEY}
+            <Segmented options={ACTIONS} bind:value={cSetting.value.action} on:change={handleChange}/>
         {/if}
 
-        <span class="bind">
+        <Keycap
+                {binding}
+                muted={!binding && cSetting.value.boundKey === UNKNOWN_KEY}
+                on:click={toggleBinding}
+                on:mouseenter={() => isHovered = true}
+                on:mouseleave={() => isHovered = false}
+        >
             {#if !binding}
-                <BindDisplay
-                        bind:modifiers={cSetting.value.modifiers}
-                        bind:boundKey={cSetting.value.boundKey}
-                />
+                {#if cSetting.value.boundKey === UNKNOWN_KEY}
+                    None
+                {:else}
+                    <BindDisplay
+                            bind:modifiers={cSetting.value.modifiers}
+                            bind:boundKey={cSetting.value.boundKey}
+                    />
+                {/if}
             {:else if addedModifiers.size}
                 <BindDisplay
                         bind:modifiers={addedModifiers}
@@ -179,45 +179,19 @@
                         literal={true}
                 />
             {:else}
-                <span>Press any key...</span>
+                Press a key
             {/if}
-        </span>
-    </button>
-</div>
+        </Keycap>
+    </div>
+</SettingRow>
 
 <style lang="scss">
-
-  .name {
-    text-align: center;
-    pointer-events: none;
-  }
-
-  .action {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-  }
-
   .bind {
     display: flex;
-    justify-content: center;
-  }
-
-  .setting {
-    padding: 7px 0;
-  }
-
-  .change-bind {
-    background-color: transparent;
-    border: solid 2px var(--accent-color);
-    border-radius: 3px;
-    cursor: pointer;
-    padding: 4px;
-    font-weight: 500;
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    font-family: "Inter", sans-serif;
-    width: 100%;
-    position: relative;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px 6px;
+    min-width: 0;
   }
 </style>

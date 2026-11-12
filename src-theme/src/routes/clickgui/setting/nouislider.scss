@@ -1,27 +1,65 @@
+// Shared by every slider setting: the value beside the name and the track under that line
 
-.noUi-handle {
-    background-color: var(--clickgui-slider-handle-color);
+.slider-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    // Keeps the track off the value where the value wraps under the name
+    min-height: 24px;
+    color: var(--clickgui-text-color);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.slider-track {
+    // Pulled up to sit tight under the name
+    margin: -4px 6px 10px;
+}
+
+.noUi-target {
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+    background-color: var(--clickgui-slider-track-color);
     box-shadow: unset;
+}
+
+// A track this thin is hard to hit, so it also takes clicks a little above and below
+.noUi-base::before {
+    content: "";
+    position: absolute;
+    inset: -7px 0;
+}
+
+.noUi-connects {
+    border-radius: 2px;
+}
+
+.noUi-connect {
+    background-color: var(--clickgui-slider-fill-color);
+}
+
+.noUi-horizontal .noUi-handle {
+    top: -4px;
+    right: -6px;
+    width: 12px;
+    height: 12px;
     border: none;
     border-radius: 50%;
-    height: 12px !important;
-    width: 12px !important;
-    transform: translate(-5px, 1px);
+    background-color: var(--clickgui-slider-handle-color);
+    box-shadow: unset;
+    cursor: grab;
+    transition: ease box-shadow .15s;
+}
+
+.noUi-horizontal .noUi-handle:hover,
+.noUi-horizontal .noUi-handle.noUi-active,
+.noUi-horizontal .noUi-handle:focus-visible {
+    box-shadow: 0 0 0 4px var(--accent-subtle-background-color);
 }
 
 .noUi-handle::after,
 .noUi-handle::before {
     display: none;
-}
-
-.noUi-target {
-    margin: 10px 0;
-    height: 2px;
-    border: none;
-    background-color: var(--clickgui-slider-track-color);
-    box-shadow: unset;
-}
-
-.noUi-connect {
-    background-color: var(--clickgui-slider-fill-color);
 }

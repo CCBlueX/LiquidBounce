@@ -1,21 +1,29 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, MultiChooseSetting,} from "../../../integration/types";
-    import {slide} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import ExpandArrow from "./common/ExpandArrow.svelte";
-    import {setItem} from "../../../integration/persistent_storage";
+    import {SortableList} from "@jhubbardsf/svelte-sortablejs";
+    import SettingRow from "./common/SettingRow.svelte";
+    import DraggableItem from "./common/DraggableItem.svelte";
+    import RemovableItem from "./common/RemovableItem.svelte";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as MultiChooseSetting;
-    const thisPath = `${path}.${cSetting.name}`;
 
     let errorValue: string | null = null;
     let timeoutId: ReturnType<typeof setTimeout>;
+    let sortableRenderKey = 0;
 
     const dispatch = createEventDispatcher();
+
+    $: label = (choice: string) => $spaceSeperatedNames ? convertToSpacedString(choice) : choice;
+    $: unchosen = cSetting.choices.filter(choice => !cSetting.value.includes(choice));
+
+    function commit() {
+        setting = {...cSetting};
+        dispatch("change");
+    }
 
     function handleChange(v: string) {
         if (cSetting.value.includes(v)) {
@@ -36,109 +44,162 @@
             cSetting.value = [...cSetting.value, v]
         }
 
-        setting = {...cSetting};
-        dispatch("change");
+        commit();
     }
 
-    let expanded = localStorage.getItem(thisPath) === "true";
+    type SortEvent = {
+        oldIndex?: number | null;
+        newIndex?: number | null;
+        oldDraggableIndex?: number | null;
+        newDraggableIndex?: number | null;
+    };
 
-    $: setItem(thisPath, expanded.toString());
+    function handleSort(e: SortEvent) {
+        const oldIndex = e.oldDraggableIndex ?? e.oldIndex;
+        const newIndex = e.newDraggableIndex ?? e.newIndex;
+        if (oldIndex == null || newIndex == null || oldIndex === newIndex) {
+            return;
+        }
 
-    function toggleExpanded() {
-        expanded = !expanded;
+        const values = [...cSetting.value];
+        const [moved] = values.splice(oldIndex, 1);
+        if (moved === undefined) {
+            return;
+        }
+        values.splice(newIndex, 0, moved);
+
+        cSetting.value = values;
+        commit();
+        // Sortable moved the elements itself, so the list is built again from the value
+        sortableRenderKey++;
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="setting">
-    <div class="head" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
-        <div class="title">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-        <div class="amount">{cSetting.value.length}/{cSetting.choices.length}</div>
-        <ExpandArrow bind:expanded/>
-    </div>
+<SettingRow {setting}>
+    <span class="count">{cSetting.value.length} of {cSetting.choices.length}</span>
 
-    {#if expanded}
-        <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
-            {#each cSetting.choices as choice (choice)}
-                <div
-                        class="choice"
-                        class:active={cSetting.value.includes(choice)}
-                        class:error={errorValue === choice}
-                        on:click={() => {
-                            handleChange(choice)
-                        }}
-                >
-                    {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
+    <svelte:fragment slot="below">
+        {#if cSetting.isOrderSensitive}
+            {#if cSetting.value.length > 0}
+                <div class="ordered">
+                    {#key sortableRenderKey}
+                        <SortableList class="" forceFallback={true} fallbackOnBody={true} animation={150}
+                                      onEnd={handleSort}>
+                            {#each cSetting.value as choice, index}
+                                <DraggableItem>
+                                    <RemovableItem on:remove={() => handleChange(choice)}>
+                                        <span class="position">{index + 1}</span>
+                                        <span class="chosen" class:error={errorValue === choice}>{label(choice)}</span>
+                                    </RemovableItem>
+                                </DraggableItem>
+                            {/each}
+                        </SortableList>
+                    {/key}
                 </div>
-            {/each}
-        </div>
-    {/if}
-</div>
+            {/if}
+            {#if unchosen.length > 0}
+                <div class="chips">
+                    {#each unchosen as choice (choice)}
+                        <button type="button" class="chip add" on:click={() => handleChange(choice)}>
+                            + {label(choice)}
+                        </button>
+                    {/each}
+                </div>
+            {/if}
+        {:else}
+            <div class="chips">
+                {#each cSetting.choices as choice (choice)}
+                    <button
+                            type="button"
+                            class="chip"
+                            class:active={cSetting.value.includes(choice)}
+                            class:error={errorValue === choice}
+                            aria-pressed={cSetting.value.includes(choice)}
+                            on:click={() => handleChange(choice)}
+                    >
+                        {label(choice)}
+                    </button>
+                {/each}
+            </div>
+        {/if}
+    </svelte:fragment>
+</SettingRow>
 
 <style lang="scss">
-
-  .setting {
-    padding: 7px 0;
-    color: var(--clickgui-text-color);
+  .count {
+    font-size: 11px;
+    color: var(--clickgui-text-muted-color);
+    white-space: nowrap;
   }
 
-  .title {
-    color: var(--clickgui-text-color);
-    font-size: 12px;
-    font-weight: 600;
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 8px;
   }
 
-  .choice {
-    color: var(--clickgui-text-dimmed-color);
+  .chip {
+    max-width: 100%;
+    padding: 3px 9px;
+    border: 1px solid var(--clickgui-chip-border-color);
+    border-radius: 999px;
     background-color: var(--clickgui-selection-chip-background-color);
-    border-radius: 3px;
-    padding: 3px 6px;
-    cursor: pointer;
+    color: var(--clickgui-selection-chip-color);
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
     font-weight: 500;
-    transition: ease color 0.2s;
     overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: ease color .15s, ease background-color .15s, ease border-color .15s;
 
-    &:hover {
+    &:hover, &:focus-visible {
       color: var(--clickgui-text-color);
-    }
-
-    &.error {
-      background-color: var(--clickgui-selection-chip-remove-background-color) !important;
-      color: var(--clickgui-selection-chip-remove-color) !important;
+      border-color: var(--clickgui-control-border-color);
     }
 
     &.active {
       background-color: var(--clickgui-selection-chip-selected-background-color);
       color: var(--clickgui-selection-chip-selected-color);
+      border-color: var(--clickgui-chip-active-border-color);
+    }
+
+    &.add {
+      padding-left: 7px;
+      border-style: dashed;
+      border-color: var(--clickgui-control-border-color);
+      background: none;
+    }
+
+    &.error {
+      background-color: var(--clickgui-selection-chip-remove-background-color);
+      color: var(--clickgui-selection-chip-remove-color);
+      border-color: var(--clickgui-selection-chip-remove-color);
     }
   }
 
-  .amount {
-    letter-spacing: 1px;
-    font-weight: 500;
-    font-size: 12px;
-    font-family: monospace;
+  .ordered {
+    padding-bottom: 3px;
   }
 
-  .head {
-    display: grid;
-    grid-template-columns: 1fr max-content max-content;
-    transition: ease margin-bottom .2s;
-    align-items: center;
+  .position {
+    flex: none;
+    width: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-align: center;
+  }
 
-    &.expanded {
-      margin-bottom: 10px;
+  .chosen {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: ease color .15s;
+
+    &.error {
+      color: var(--clickgui-selection-chip-remove-color);
     }
-  }
-
-  .choices {
-    border-left: solid 2px var(--clickgui-setting-group-border-color);
-    color: var(--clickgui-text-color);
-    padding: 7px 7px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    font-size: 12px;
   }
 </style>

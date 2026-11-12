@@ -41,15 +41,23 @@
 <span contenteditable="true" class="value" bind:innerText={inputValue} on:input={handleInput} on:keydown={handleKeyDown} bind:this={inputElement}></span>
 
 <style lang="scss">
-
   .value {
-    font-family: monospace;
+    display: inline-block;
+    min-width: 5px;
+    border-bottom: 1px solid transparent;
     color: var(--clickgui-text-color);
     font-weight: 500;
     font-size: 12px;
-    background-color: transparent;
-    border: none;
-    min-width: 5px;
-    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    cursor: text;
+    transition: ease border-color .15s;
+
+    &:hover {
+      border-bottom-color: var(--clickgui-control-border-color);
+    }
+
+    &:focus {
+      border-bottom-color: var(--accent-color);
+    }
   }
 </style>

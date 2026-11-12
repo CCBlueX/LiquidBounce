@@ -79,6 +79,10 @@ export interface Setting<V> {
     valueType: string;
     name: string;
     value: V;
+    /**
+     * Groups and choices have none.
+     */
+    defaultValue?: V;
     description: string | undefined;
     key: string | undefined;
 }
@@ -107,7 +111,6 @@ export interface KeySetting extends Setting<string> {
 }
 
 export interface BindSetting extends Setting<InputBind> {
-    defaultValue: InputBind;
 }
 
 export interface TextSetting extends Setting<string> {
@@ -148,6 +151,7 @@ export interface IntRangeSetting extends Setting<Range> {
 
 export interface ChoiceSetting extends Setting<ModuleSetting[]> {
     active: string;
+    defaultActive?: string;
     choices: { [name: string]: ModuleSetting }
 }
 

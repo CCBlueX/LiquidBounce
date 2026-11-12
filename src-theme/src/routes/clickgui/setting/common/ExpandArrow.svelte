@@ -11,28 +11,35 @@
     }
 </script>
 
-<!-- svelte-ignore a11y_consider_explicit_label -->
-<button class="arrow" class:expanded on:click={handleClick}
+<button
+        type="button"
+        class="arrow"
+        class:expanded
+        aria-expanded={expanded}
+        aria-label={expanded ? "Collapse" : "Expand"}
+        on:click={handleClick}
 ></button>
 
 <style lang="scss">
-  @use "../../icon-settings-expand" as *;
-
   .arrow {
-    width: 9px;
-    margin-left: 11px;
-    position: relative;
-    cursor: pointer;
-    background-color: transparent;
+    flex: none;
+    width: 20px;
+    height: 20px;
     border: none;
+    border-radius: 3px;
+    background: url("/img/clickgui/icon-settings-expand.svg") center / 9px 6px no-repeat;
+    opacity: .8;
+    transform: rotate(-90deg);
+    cursor: pointer;
+    transition: ease transform .15s, ease opacity .15s, ease background-color .15s;
 
-    &::after {
-      @include icon-settings-expand($right: 0);
+    &:hover, &:focus-visible {
+      opacity: 1;
+      background-color: var(--clickgui-control-hover-background-color);
     }
 
-    &.expanded::after {
-      transform: translateY(-50%) rotate(0);
-      opacity: 1;
+    &.expanded {
+      transform: none;
     }
   }
 </style>

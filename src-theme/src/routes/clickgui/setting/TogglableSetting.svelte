@@ -1,101 +1,65 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {BooleanSetting as TBooleanSetting, ModuleSetting, TogglableSetting,} from "../../../integration/types";
+    import type {BooleanSetting, ModuleSetting} from "../../../integration/types";
     import ExpandArrow from "./common/ExpandArrow.svelte";
-    import GenericSetting from "./common/GenericSetting.svelte";
+    import SettingGroup from "./common/SettingGroup.svelte";
+    import SettingRow from "./common/SettingRow.svelte";
     import Switch from "./common/Switch.svelte";
-    import {setItem} from "../../../integration/persistent_storage";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
+    /**
+     * A group with a switch. The `control` slot replaces its name and switch, for a host with its own way of
+     * turning the group off.
+     */
     export let setting: ModuleSetting;
     export let path: string;
 
-    const cSetting = setting as TogglableSetting;
-    const thisPath = `${path}.${cSetting.name}`;
-
     const dispatch = createEventDispatcher();
 
-    const enabledSetting = cSetting.value[0] as TBooleanSetting;
-
-    let nestedSettings = cSetting.value.slice(1);
-
-    let expanded = localStorage.getItem(thisPath) === "true";
-
-    $: setItem(thisPath, expanded.toString());
+    $: enabled = (setting.value as ModuleSetting[])[0] as BooleanSetting;
+    $: empty = (setting.value as ModuleSetting[]).length === 1;
 
     function handleChange() {
-        setting = {...cSetting};
+        setting = setting;
         dispatch("change");
     }
 
     function disable() {
-        enabledSetting.value = false;
+        enabled.value = false;
         handleChange();
-    }
-
-    function toggleExpanded() {
-        if (nestedSettings.length === 0) return;
-        expanded = !expanded;
     }
 </script>
 
-<div class="setting">
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div
-            class="head"
-            class:expand={nestedSettings.length > 0}
-            class:expanded={expanded && nestedSettings.length > 0}
-            on:contextmenu|preventDefault={toggleExpanded}
-    >
-        <slot
-                name="control"
-                {disable}
-                label={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
-        >
-            <Switch
-                    name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
-                    bind:value={enabledSetting.value}
-                    on:change={handleChange}
-            />
-        </slot>
-
-        {#if nestedSettings.length > 0}
-            <ExpandArrow bind:expanded/>
-        {/if}
-    </div>
-
-    {#if expanded}
-        <div class="nested-settings">
-            {#each nestedSettings as setting (setting.name)}
-                <GenericSetting path={thisPath} bind:setting on:change={handleChange}/>
-            {/each}
-        </div>
-    {/if}
-</div>
+{#if empty && !$$slots.control}
+    <!-- Nothing to open: a switch like any other -->
+    <SettingRow {setting}>
+        <Switch bind:value={enabled.value} on:change={handleChange}/>
+    </SettingRow>
+{:else}
+    <SettingGroup {path} bind:setting skip={1} off={!enabled.value} customTitle={$$slots.control} on:change>
+        <svelte:fragment slot="title" let:label let:toggle let:expanded>
+            {#if $$slots.control}
+                <div class="custom">
+                    <slot name="control" {disable} {label}/>
+                    {#if !empty}
+                        <ExpandArrow {expanded} on:click={toggle}/>
+                    {/if}
+                </div>
+            {/if}
+        </svelte:fragment>
+        <svelte:fragment slot="end">
+            {#if !$$slots.control}
+                <Switch bind:value={enabled.value} on:change={handleChange}/>
+            {/if}
+        </svelte:fragment>
+    </SettingGroup>
+{/if}
 
 <style lang="scss">
-
-  .setting {
-    padding: 7px 0px;
-  }
-
-    .head {
-      min-height: 14px;
-      transition: ease margin-bottom .2s;
-
-      &.expand {
-        display: grid;
-        grid-template-columns: 1fr max-content;
-        align-items: center;
-      }
-
-    &.expanded {
-      margin-bottom: 10px;
-    }
-  }
-
-  .nested-settings {
-    border-left: solid 2px var(--clickgui-setting-group-border-color);
-    padding-left: 7px;
+  .custom {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    align-items: center;
   }
 </style>

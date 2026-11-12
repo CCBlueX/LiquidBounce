@@ -42,7 +42,7 @@ class ModeValueGroup<T : Mode>(
 
     var modes: MutableList<T> = ObjectArrayList.wrap(modesCallback(this))
         internal set
-    private var defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]
+    internal val defaultMode: T = modes[activeModeIndexCallback.applyAsInt(modes)]
     var activeMode: T = defaultMode
         private set
 

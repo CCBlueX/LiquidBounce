@@ -1,10 +1,10 @@
 <script lang="ts">
     import "@simonwep/pickr/dist/themes/classic.min.css";
     import "./pickr.scss";
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher, onMount, tick} from "svelte";
     import type {ColorSetting, ModuleSetting,} from "../../../integration/types.js";
     import Pickr from "@simonwep/pickr";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
     import {intToRgba, rgbaToHex, rgbaToInt} from "../../../integration/util";
     import {escapeLayer} from "../../../integration/escape";
 
@@ -61,92 +61,86 @@
         });
     });
 
+    async function togglePicker() {
+        hidden = !hidden;
+        if (hidden) {
+            return;
+        }
+
+        // Pickr places its handles by measuring, which gives nothing while the picker is not displayed
+        await tick();
+        pickr.setColor(hex, true);
+    }
+
     function handleValueInput() {
         pickr.setColor(hex);
     }
 </script>
 
-<div class="setting">
-    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <div class="value-spot">
-        <input
-            class="value"
+<SettingRow {setting}>
+    <input
+            class="hex"
+            spellcheck="false"
+            aria-label="Hex colour"
             bind:value={hex}
             on:input={handleValueInput}
-        />
-        <!-- svelte-ignore a11y_consider_explicit_label -->
-        <button
-            class="color-pickr-button"
-            on:click={() => (hidden = !hidden)}
+    />
+    <button
+            type="button"
+            class="swatch"
+            class:open={!hidden}
+            aria-label="Edit colour"
+            aria-expanded={!hidden}
+            on:click={togglePicker}
             style="background-color: {hex};"
-        ></button>
+    ></button>
+    <div slot="below" class="color-picker" class:hidden>
+        <!-- svelte-ignore a11y_consider_explicit_label -->
+        <button bind:this={colorPicker}></button>
     </div>
-    <!-- svelte-ignore a11y_consider_explicit_label -->
-    <div class="color-picker" class:hidden>
-        <!-- svelte-ignore element_invalid_self_closing_tag -->
-        <button bind:this={colorPicker} />
-    </div>
-</div>
+</SettingRow>
 
 <style lang="scss">
+  .hidden {
+    display: none;
+  }
 
-    .setting {
-        display: grid;
-        grid-template-areas:
-            "a b"
-            "c c";
-        padding: 7px 0px;
+  .hex {
+    width: 9ch;
+    min-width: 0;
+    padding: 2px 0;
+    border: none;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--clickgui-text-color);
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    text-transform: uppercase;
+    transition: ease border-color .15s;
+
+    &:hover {
+      border-bottom-color: var(--clickgui-control-border-color);
     }
 
-    .name {
-        grid-area: a;
-        font-weight: 500;
-        color: var(--clickgui-text-color);
-        font-size: 12px;
+    &:focus {
+      border-bottom-color: var(--accent-color);
     }
+  }
 
-    .hidden {
-        height: 0px;
-        display: none;
-    }
+  .swatch {
+    flex: none;
+    width: 26px;
+    height: 16px;
+    border: 1px solid var(--clickgui-control-border-color);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: ease border-color .15s;
 
-    .value {
-        font-weight: 500;
-        color: var(--clickgui-text-color);
-        text-align: right;
-        font-size: 12px;
-        cursor: text;
-        text-transform: uppercase;
-        background-color: transparent;
-        border: none;
-        padding: 0;
-        margin: 0;
-        margin-right: 15px;
-        margin-left: auto;
-        width: 70px;
-        font-family: monospace;
+    &:hover, &:focus-visible, &.open {
+      border-color: var(--clickgui-text-color);
     }
-
-    .value-spot {
-        grid-area: b;
-        display: flex;
-
-        align-items: stretch;
-    }
-
-    .color-picker {
-        grid-area: c;
-    }
-
-    .color-pickr-button {
-        margin-top: -2px;
-        margin-bottom: -2px;
-        width: 30px;
-        border-radius: 3px;
-        background-color: blue;
-        border-style: none;
-    }
-    .color-pickr-button:focus {
-        outline: 3px solid #ffffff;
-    }
+  }
 </style>

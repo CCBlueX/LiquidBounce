@@ -5,7 +5,7 @@
         BooleanSetting,
     } from "../../../integration/types";
     import Switch from "./common/Switch.svelte";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import SettingRow from "./common/SettingRow.svelte";
 
     export let setting: ModuleSetting;
 
@@ -20,16 +20,6 @@
     }
 </script>
 
-<div class="setting">
-    <Switch
-        name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
-        bind:value={cSetting.value}
-        on:change={handleChange}
-    />
-</div>
-
-<style lang="scss">
-    .setting {
-        padding: 7px 0px;
-    }
-</style>
+<SettingRow {setting}>
+    <Switch bind:value={cSetting.value} on:change={handleChange}/>
+</SettingRow>
