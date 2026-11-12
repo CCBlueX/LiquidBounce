@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.integration.backend.isBrowserSkipped
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.gui.screens.TitleScreen
@@ -44,7 +45,10 @@ abstract class LiquidBounceGameTest(world: TestWorld, body: GameTestScope.() -> 
         // LiquidBounce holds a progress screen until its startup tasks are done, and aborting the browser's
         // first page load by joining a server is fatal to it
         context.waitFor({ it.gui.screen() is TitleScreen }, STARTUP_TIMEOUT)
-        context.waitFor({ LiquidBounce.isInitialized && ScreenManager.mainBrowser != null }, STARTUP_TIMEOUT)
+        context.waitFor(
+            { LiquidBounce.isInitialized && (ScreenManager.mainBrowser != null || isBrowserSkipped) },
+            STARTUP_TIMEOUT,
+        )
     }
 
     override fun beforeJoin(context: ClientGameTestContext) = context.runOnClient<RuntimeException> {

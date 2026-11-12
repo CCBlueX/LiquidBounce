@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -82,6 +83,11 @@ class ApiConfig(
         }
 
         const val SESSION_TOKEN_HEADER = "X-Session-Token"
+
+        /**
+         * Leaves out the requests the client sends on its own when it starts.
+         */
+        val isSkipping = env("LB_API_SKIP", "net.ccbluex.liquidbounce.api.skip")?.toBoolean() ?: false
 
         private val configLazy = AsyncLazy {
             lookup()
