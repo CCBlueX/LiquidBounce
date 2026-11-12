@@ -18,27 +18,13 @@
  */
 package net.ccbluex.liquidbounce.gametest.combat
 
-import com.google.gson.JsonArray
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.util.GSON_DEFAULT
-import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
-import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
-import net.minecraft.network.protocol.game.ServerboundPunchPacket
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.monster.zombie.Husk
 import net.minecraft.world.level.levelgen.Heightmap
 import kotlin.math.abs
 
@@ -50,7 +36,6 @@ internal fun ClientGameTestContext.combatTest(
     vararg modules: ClientModule,
     checks: (server: TestServerContext, y: Int) -> Unit,
 ) {
-    waitForClient()
     val saved = fromClient { modules.map(ConfigSystem::serializeValueGroup) }
 
     try {
@@ -74,49 +59,6 @@ internal fun ClientGameTestContext.combatTest(
             modules.forEach { it.enabled = false }
             modules.zip(saved).forEach { (module, json) -> ConfigSystem.deserializeValueGroup(module, json) }
         }
-    }
-}
-
-/**
- * What the combat checks observe: attacks with the state of the player, and swings.
- */
-internal object CombatEvents : EventListener {
-    @Volatile
-    var attacks = mutableListOf<Entity>()
-
-    @Volatile
-    var punches = 0
-
-    @Volatile
-    var fallingAttacks = 0
-
-    @Volatile
-    var airborneAttacks = 0
-
-    @Suppress("unused")
-    private val attackHandler = handler<AttackEntityEvent> { event ->
-        val player = checkNotNull(mc.player)
-        attacks += event.entity
-        if (!player.onGround()) {
-            airborneAttacks++
-            if (player.deltaMovement.y < 0.0) {
-                fallingAttacks++
-            }
-        }
-    }
-
-    @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is ServerboundPunchPacket) {
-            punches++
-        }
-    }
-
-    fun reset() {
-        attacks = mutableListOf()
-        punches = 0
-        fallingAttacks = 0
-        airborneAttacks = 0
     }
 }
 
@@ -151,14 +93,6 @@ internal fun summon(context: ClientGameTestContext, server: TestServerContext, w
 
 private var summonCount = 0
 
-internal fun TestServerContext.discard(id: Int) = runOnServer<RuntimeException> { s ->
-    s.overworld().getEntity(id)?.discard()
-}
-
-internal fun TestServerContext.huskHealth(id: Int) = computeOnServer<Int, RuntimeException> { s ->
-    (s.overworld().getEntity(id) as Husk).health.toInt()
-}
-
 internal fun face(
     context: ClientGameTestContext,
     server: TestServerContext,
@@ -174,42 +108,8 @@ internal fun face(
     context.waitTicks(SETTLE_TICKS)
 }
 
-internal fun ValueGroup.value(path: String): Value<*> {
-    var group = this
-    val names = path.split('/')
-    for (name in names.dropLast(1)) {
-        group = group.containedValues.first { it.name == name } as ValueGroup
-    }
-    return group.containedValues.first { it.name == names.last() }
-}
-
-internal fun ValueGroup.set(path: String, value: String) {
-    val target = value(path)
-    if (target is MultiChoiceListValue<*>) {
-        target.deserializeFrom(GSON_DEFAULT, JsonArray().apply { value.split(',').forEach(::add) })
-    } else {
-        target.setByString(value)
-    }
-}
-
-/**
- * Sets the reaction delay group at [path] to always take [REACTION_MS], or turns it off.
- */
-internal fun ValueGroup.setReactionDelay(path: String, enabled: Boolean) {
-    set("$path/Mean", REACTION_MS.toString())
-    set("$path/Deviation", "0")
-    set("$path/Limits", "0..$REACTION_MS")
-    set("$path/Enabled", enabled.toString())
-}
-
-@Suppress("UNCHECKED_CAST")
-internal fun <T> Any.privateField(name: String): T =
-    javaClass.getDeclaredField(name).apply { isAccessible = true }.get(this) as T
-
 internal const val WAIT_TICKS = 100
 internal const val SETTLE_TICKS = 5
 internal const val MEASURE_TICKS = 30
 internal const val HUSK_HEALTH = 1000
 internal const val MAX_HEALTH = 20
-internal const val REACTION_MS = 1000
-internal const val REACTION_TICKS = REACTION_MS / 50

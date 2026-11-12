@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.gametest.combat
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.gametest.set
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import kotlin.math.abs
@@ -37,9 +38,9 @@ private const val ANGLE_TOLERANCE = 0.5f
  * With a husk straight ahead and a crystal to the left of it, the aimbot turns to the crystal first, to the husk
  * while crystals wait for the use key, and to nothing when crystals are all it may aim at.
  */
-class AimbotCrystalsGameTest : FabricClientGameTest {
+class AimbotCrystalsGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) = context.combatTest(ModuleAimbot) { server, y ->
+    override fun test(context: ClientGameTestContext) = context.combatTest(ModuleAimbot) { server, y ->
         summonCrystal(context, server, y, 2.5, 3.5)
         summonHusk(context, server, y, 0.5, 3.0)
 

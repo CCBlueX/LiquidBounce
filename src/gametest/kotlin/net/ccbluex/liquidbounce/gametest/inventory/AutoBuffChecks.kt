@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.gametest.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.gametest.fromClient
+import net.ccbluex.liquidbounce.gametest.set
 import net.minecraft.core.Holder
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.effect.MobEffects
@@ -47,7 +48,7 @@ fun InventoryBench.checkAutoBuff() {
 private fun InventoryBench.checkHeldTrigger() {
     // Slowness is no wanted effect, only the held trigger throws it
     command("item replace entity @a hotbar.0 with ${splash("slowness")}")
-    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot", "Trigger", value = "Held") }) {
+    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot/Trigger", "Held") }) {
         waitUntil(THROW_TICKS, { "the held slowness potion was not thrown" }) {
             onServer { it.hasEffect(MobEffects.SLOWNESS) }
         }
@@ -56,7 +57,7 @@ private fun InventoryBench.checkHeldTrigger() {
 
 private fun InventoryBench.checkPitch() {
     command("item replace entity @a hotbar.0 with ${splash("swiftness")}")
-    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot", "Pitch", value = "0.0..0.0") }) {
+    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot/Pitch", "0.0..0.0") }) {
         var horizontalSpeed = 0.0
         waitUntil(THROW_TICKS, { "no potion was thrown" }) {
             horizontalSpeed = server.computeOnServer<Double, RuntimeException> { server ->
@@ -72,9 +73,9 @@ private fun InventoryBench.checkPitch() {
 
 private fun InventoryBench.checkMidAir() {
     withModule(ModuleAutoBuff, {
-        ModuleAutoBuff.set("Pot", "MidAir", "Enabled", value = "true")
-        ModuleAutoBuff.set("Pot", "MidAir", "Delay", value = "1..1")
-        ModuleAutoBuff.set("Rotations", "RotationTiming", value = "OnUse")
+        ModuleAutoBuff.set("Pot/MidAir/Enabled", "true")
+        ModuleAutoBuff.set("Pot/MidAir/Delay", "1..1")
+        ModuleAutoBuff.set("Rotations/RotationTiming", "OnUse")
     }) {
         // Far above TillGroundDistance, so the potions would otherwise wait for the landing
         command("execute as @a at @s run tp @s ~ ~$FALL_HEIGHT ~")
@@ -93,7 +94,7 @@ private fun InventoryBench.checkDisableWhenBuffed() {
         command("effect give @a $effect 120 0 true")
     }
     command("item replace entity @a hotbar.0 with ${splash("swiftness")}")
-    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot", "DisableWhenBuffed", value = "true") }) {
+    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Pot/DisableWhenBuffed", "true") }) {
         waitUntil(THROW_TICKS, { "AutoBuff stayed enabled with every effect active" }) {
             onServer { it.hasEffect(MobEffects.SPEED) } && !context.fromClient { ModuleAutoBuff.enabled }
         }
@@ -103,7 +104,7 @@ private fun InventoryBench.checkDisableWhenBuffed() {
 private fun InventoryBench.checkHealingOnlyRefill() {
     command("item replace entity @a container.9 with ${splash("healing")}")
     command("item replace entity @a container.10 with ${splash("swiftness")}")
-    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Refill", "HealingPotionsOnly", value = "true") }) {
+    withModule(ModuleAutoBuff, { ModuleAutoBuff.set("Refill/HealingPotionsOnly", "true") }) {
         waitUntil(THROW_TICKS, { "the healing potion was not moved into the hotbar" }) {
             (0..8).any { slot -> stackAt(slot).isPotion(Potions.HEALING) }
         }

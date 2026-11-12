@@ -20,25 +20,14 @@ package net.ccbluex.liquidbounce.gametest.combat
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
-import net.ccbluex.liquidbounce.gametest.waitForClient
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
-import net.minecraft.client.Minecraft
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.EntitySpawnReason
-import net.minecraft.world.entity.EntityTypes
-import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
-import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -79,83 +68,14 @@ class CombatScene(val context: ClientGameTestContext, val world: TestSingleplaye
 
     fun serverPlayer(server: MinecraftServer): ServerPlayer = server.playerList.players.first()
 
-    /**
-     * Spawns a husk without AI (husks do not burn in daylight) facing [yaw] and waits until the client has it.
-     */
-    fun spawnHusk(pos: Vec3, yaw: Float = 180f): Int {
-        val id = onServer { server ->
-            val level = server.overworld()
-            val husk = checkNotNull(EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND))
-            husk.setNoAi(true)
-            husk.setPersistenceRequired()
-            husk.snapTo(pos.x, pos.y, pos.z, yaw, 0f)
-            husk.yHeadRot = yaw
-            husk.yBodyRot = yaw
-            level.addFreshEntity(husk)
-            husk.id
-        }
-        context.waitFor({ client -> client.level?.getEntity(id) != null }, ENTITY_TIMEOUT_TICKS)
-        return id
-    }
-
-    fun clientEntity(client: Minecraft, id: Int): Entity = checkNotNull(checkNotNull(client.level).getEntity(id))
-
     fun serverEntity(server: MinecraftServer, id: Int): Entity = checkNotNull(server.overworld().getEntity(id))
-
-    fun serverHealth(id: Int): Float = onServer { server -> (serverEntity(server, id) as LivingEntity).health }
-
-    /**
-     * Gives the husk a shield and lets it block until the client sees it blocking.
-     */
-    fun raiseShield(id: Int) {
-        onServer { server ->
-            val husk = serverEntity(server, id) as LivingEntity
-            husk.setItemInHand(InteractionHand.OFF_HAND, ItemStack(Items.SHIELD))
-            husk.startUsingItem(InteractionHand.OFF_HAND)
-        }
-        context.waitFor({ client -> (clientEntity(client, id) as LivingEntity).isBlocking }, ENTITY_TIMEOUT_TICKS)
-    }
-
-    fun attack(id: Int) = context.onClient { client ->
-        checkNotNull(client.gameMode).attack(checkNotNull(client.player), clientEntity(client, id))
-    }
-
-    /**
-     * Distance between where the client is and where the server last saw it.
-     */
-    fun heldDistance(): Double {
-        val client = context.fromClient { checkNotNull(it.player).position() }
-        val server = onServer { serverPlayer(it).position() }
-        return client.distanceTo(server)
-    }
 
     companion object {
         const val SETTLE_TIMEOUT_TICKS = 200
-        const val ENTITY_TIMEOUT_TICKS = 60
         const val RESET_TICKS = 4
     }
 
 }
-
-/**
- * The value at [path], value names separated by '/'.
- */
-fun ValueGroup.value(path: String): Value<*> = path.split('/').fold<String, Value<*>>(this) { current, name ->
-    checkNotNull((current as ValueGroup).containedValues.firstOrNull { it.name == name }) { "No value $name in $path" }
-}
-
-fun ValueGroup.set(path: String, value: String) = value(path).setByString(value)
-
-const val PICK_TICKS = 2
-const val ATTACK_TICKS = 4
-const val HUSK_HEALTH = 20f
-
-/**
- * The entity under the crosshair.
- */
-fun crosshairEntity(client: Minecraft): Int? = (client.hitResult as? EntityHitResult)?.entity?.id
-
-fun CombatScene.pickRadius(id: Int) = context.fromClient { client -> clientEntity(client, id).pickRadius }
 
 /**
  * Runs [checks] in one shared world, each from a reset scene so one failure does not hide the others,
@@ -164,7 +84,6 @@ fun CombatScene.pickRadius(id: Int) = context.fromClient { client -> clientEntit
 fun ClientGameTestContext.runCombatChecks(modules: List<ClientModule>, vararg checks: CombatScene.() -> Unit) {
     fun disableAll() = modules.forEach { it.enabled = false }
 
-    waitForClient()
     val saved = fromClient { modules.map(ConfigSystem::serializeValueGroup) }
 
     try {

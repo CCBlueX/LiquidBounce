@@ -20,9 +20,6 @@ package net.ccbluex.liquidbounce.gametest.inventory
 
 import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.onClient
@@ -128,31 +125,3 @@ class InventoryBench(val context: ClientGameTestContext, val server: TestServerC
     }
 
 }
-
-/**
- * The value at [path] below this group, stepping into modes by their name.
- */
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> ValueGroup.setting(vararg path: String): Value<T> {
-    var group: ValueGroup = this
-    var index = 0
-    while (true) {
-        val name = path[index]
-        val value = group.containedValues.firstOrNull { it.name == name }
-            ?: error("No value $name in ${group.name}")
-
-        if (index == path.lastIndex) {
-            return value as Value<T>
-        }
-
-        index++
-        group = if (value is ModeValueGroup<*>) {
-            val modeName = path[index++]
-            value.modes.first { it.name == modeName }
-        } else {
-            value as ValueGroup
-        }
-    }
-}
-
-fun ValueGroup.set(vararg path: String, value: String) = setting<Any>(*path).setByString(value)

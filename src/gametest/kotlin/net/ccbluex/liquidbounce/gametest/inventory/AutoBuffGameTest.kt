@@ -18,18 +18,15 @@
  */
 package net.ccbluex.liquidbounce.gametest.inventory
 
-import net.ccbluex.liquidbounce.gametest.waitForClient
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
 /**
  * AutoBuff options, checked in one survival world.
  */
-class AutoBuffGameTest : FabricClientGameTest {
+class AutoBuffGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             val bench = InventoryBench(context, world.server)
             bench.setUp()

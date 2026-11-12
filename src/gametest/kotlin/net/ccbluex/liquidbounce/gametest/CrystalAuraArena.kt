@@ -40,7 +40,6 @@ import kotlin.math.sign
  * restored afterwards.
  */
 fun ClientGameTestContext.inCrystalAuraArena(block: CrystalAuraArena.() -> Unit) {
-    waitForClient()
     val saved = fromClient { ConfigSystem.serializeValueGroup(ModuleCrystalAura) }
 
     try {
