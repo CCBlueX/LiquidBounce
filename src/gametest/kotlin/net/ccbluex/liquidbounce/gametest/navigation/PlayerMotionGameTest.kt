@@ -21,14 +21,13 @@ package net.ccbluex.liquidbounce.gametest.navigation
 
 import net.ccbluex.liquidbounce.gametest.fromClient
 import net.ccbluex.liquidbounce.gametest.groundY
-import net.ccbluex.liquidbounce.gametest.waitForClient
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.ccbluex.liquidbounce.utils.entity.MotionTraits
+import net.ccbluex.liquidbounce.utils.entity.PlayerMotion
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer.SimulatedPlayerInput
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.MotionTraits
-import net.ccbluex.liquidbounce.utils.navigation.walk.PlayerMotion
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.phys.Vec3
@@ -37,14 +36,9 @@ import net.minecraft.world.phys.Vec3
  * [PlayerMotion], which route searches plan jumps with, has to move like the game moves the player on land. It is
  * held against [SimulatedPlayer], which is the game's own movement, with the same keys from the same spot.
  */
-class PlayerMotionGameTest : FabricClientGameTest {
+class PlayerMotionGameTest : LocalGameTest() {
 
-    override fun runTest(context: ClientGameTestContext) {
-        if (!navigationGameTests) {
-            return
-        }
-        context.waitForClient()
-
+    override fun test(context: ClientGameTestContext) {
         context.worldBuilder().create().use { world ->
             val server = world.server
             val y = server.groundY()
@@ -54,7 +48,10 @@ class PlayerMotionGameTest : FabricClientGameTest {
                 server.runCommand("fill 0 $y -4 40 ${y + 9} 4 air")
                 server.runCommand("fill 0 ${y - 1} -4 40 ${y - 1} 4 stone")
                 course.build(y).forEach(server::runCommand)
-                moveTo(context, server, Vec3(2.5, (y + course.height).toDouble(), 0.5), yaw = -90f, settleTicks = 10)
+                val start = Vec3(2.5, (y + course.height).toDouble(), 0.5)
+                server.runCommand("tp @a ${start.x} ${start.y} ${start.z} -90 0")
+                context.waitFor({ it.player?.position()?.near(start) == true }, ARRIVAL_TICKS)
+                context.waitTicks(SETTLE_TICKS)
 
                 context.fromClient { client -> course.difference(checkNotNull(client.player)) }
             }
@@ -79,7 +76,7 @@ class PlayerMotionGameTest : FabricClientGameTest {
     ) {
         /** The first tick the two are apart at, if any. */
         fun difference(player: LocalPlayer): String? {
-            val motion = PlayerMotion(NavigationTerrain.live(), MotionTraits.capture(player))
+            val motion = PlayerMotion(Terrain.live(), MotionTraits.capture(player))
             motion.reset(player)
             val game = SimulatedPlayer.fromClientPlayer(
                 SimulatedPlayerInput(DirectionalInput(forward.toFloat(), strafe.toFloat()), jump, sprint, sneak)
@@ -101,9 +98,26 @@ class PlayerMotionGameTest : FabricClientGameTest {
         /** The motion works out its turns with a sine table. */
         const val TOLERANCE = 1.0E-4
 
+        const val ARRIVAL_TICKS = 200
+        const val SETTLE_TICKS = 10
+
         fun platform(y: Int) = listOf("fill 0 $y -1 5 ${y + 2} 1 stone")
 
         fun floor(block: String) = { y: Int -> listOf("fill 4 ${y - 1} -1 30 ${y - 1} 1 $block") }
+
+        fun slimeBelowTower(y: Int) =
+            listOf("fill 0 $y -1 5 ${y + 5} 1 stone", "fill 6 ${y - 1} -4 40 ${y - 1} 4 slime_block")
+
+        fun carpetOnSlimeBelowTower(y: Int) = slimeBelowTower(y) + "fill 6 $y -4 40 $y 4 red_carpet"
+
+        /** A tower like [slimeBelowTower] with rows of beds east of it, head to the east. */
+        fun bedsBelowTower(y: Int) = listOf("fill 0 $y -1 5 ${y + 5} 1 stone") +
+            (6..38 step 2).flatMap { x ->
+                listOf(
+                    "fill $x $y -4 $x $y 4 red_bed[part=foot,facing=east]",
+                    "fill ${x + 1} $y -4 ${x + 1} $y 4 red_bed[part=head,facing=east]",
+                )
+            }
 
         val courses = listOf(
             Course("walking"),
@@ -122,6 +136,23 @@ class PlayerMotionGameTest : FabricClientGameTest {
             Course("sprint jumping on soul sand", jump = true, sprint = true, ticks = 60, build = floor("soul_sand")),
             Course("sprint jumping on ice", jump = true, sprint = true, ticks = 60, build = floor("packed_ice")),
             Course("sprint jumping on slime", jump = true, sprint = true, ticks = 60, build = floor("slime_block")),
+            Course("walking off a tower onto slime", ticks = 100, height = 6, build = ::slimeBelowTower),
+            Course(
+                "sprint jumping off a tower onto slime", jump = true, sprint = true, ticks = 80, height = 6,
+                build = ::slimeBelowTower,
+            ),
+            Course(
+                "walking off a tower onto carpet on slime", ticks = 100, height = 6, build = ::carpetOnSlimeBelowTower,
+            ),
+            Course("walking off a tower onto beds", ticks = 100, height = 6, build = ::bedsBelowTower),
+            Course(
+                "sprint jumping off a tower onto beds", jump = true, sprint = true, ticks = 80, height = 6,
+                build = ::bedsBelowTower,
+            ),
+            Course(
+                "sneak jumping off a tower onto beds", jump = true, sneak = true, ticks = 60, height = 6,
+                build = ::bedsBelowTower,
+            ),
             Course("sprinting on honey", sprint = true, build = floor("honey_block")),
             Course("sprinting up slabs and into a wall", sprint = true, ticks = 80) { y ->
                 listOf(

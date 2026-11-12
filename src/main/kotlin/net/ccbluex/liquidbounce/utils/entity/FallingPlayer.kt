@@ -110,6 +110,35 @@ class FallingPlayer(
     }
 
     /**
+     * Where the coming ticks take the player, one position per tick, up to the tick it has fallen further than
+     * [distance].
+     *
+     * @return null if the player is safe on the ground first, or has not fallen that far after [ticks]
+     */
+    fun fallPath(distance: Float, ticks: Int): List<Vec3>? {
+        val simulation = simulation(descending = false)
+        val steered = player.input.keyPresses.anyHorizontal
+        val positions = ArrayList<Vec3>()
+
+        repeat(ticks) {
+            simulation.tick()
+            positions += simulation.pos
+
+            if (simulation.fallDistance > distance) {
+                return positions
+            }
+
+            // Landing is not the end: what is left of the momentum still carries a player that does not walk
+            // itself over an edge
+            if (simulation.onGround() && (steered || simulation.deltaMovement.horizontalDistanceSqr() == 0.0)) {
+                return null
+            }
+        }
+
+        return null
+    }
+
+    /**
      * [positionBeforeMovement] is where the player uses an item from before the movement step of [tick].
      */
     class CollisionResult(

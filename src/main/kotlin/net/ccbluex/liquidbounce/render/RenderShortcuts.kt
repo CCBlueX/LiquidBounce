@@ -26,9 +26,11 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.addon.AddonApi
+import net.ccbluex.liquidbounce.render.effect.Rendering
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformValueGroup
@@ -81,6 +83,16 @@ private val ROUNDED_RECT_AS_OUTLINE_CIRCLE_UBO by lazy(LazyThreadSafetyMode.NONE
 @AddonApi
 inline fun WorldRenderEvent.renderEnvironment(draw: WorldRenderEnvironment.() -> Unit) {
     environment.draw()
+}
+
+/**
+ * Draws the way the chosen [Rendering] says.
+ */
+inline fun WorldRenderEvent.renderEnvironment(
+    rendering: ModeValueGroup<Rendering>,
+    draw: WorldRenderEnvironment.() -> Unit,
+) {
+    rendering.activeMode.environment(this).draw()
 }
 
 @AddonApi

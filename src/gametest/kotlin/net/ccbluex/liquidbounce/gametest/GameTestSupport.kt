@@ -18,27 +18,16 @@
  */
 package net.ccbluex.liquidbounce.gametest
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.screens.TitleScreen
-import net.minecraft.core.BlockPos
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.function.FailableConsumer
 import org.apache.commons.lang3.function.FailableFunction
-
-// LiquidBounce holds a TaskProgressScreen until its startup tasks (e.g. the DJL natives) finish
-private const val STARTUP_TIMEOUT_TICKS = 5 * 60 * 20
-
-fun ClientGameTestContext.waitForClient() {
-    waitFor({ client -> client.gui.screen() is TitleScreen }, STARTUP_TIMEOUT_TICKS)
-    check(fromClient { LiquidBounce.isInitialized }) { "LiquidBounce did not finish initializing" }
-}
 
 fun ClientGameTestContext.onClient(
     block: FailableConsumer<Minecraft, RuntimeException>
@@ -55,18 +44,23 @@ fun ClientGameTestContext.suggest(input: String): List<String> = fromClient {
     CommandManager.autoComplete(input, input.length).get().list.map { it.text }
 }
 
+/** Runs [block], then turns [modules] off and puts their settings back. */
+inline fun ClientGameTestContext.restoring(vararg modules: ClientModule, block: () -> Unit) {
+    val saved = fromClient { modules.map { ConfigSystem.serializeValueGroup(it) } }
+    try {
+        block()
+    } finally {
+        onClient {
+            for ((module, config) in modules.zip(saved)) {
+                module.enabled = false
+                ConfigSystem.deserializeValueGroup(module, config)
+            }
+        }
+    }
+}
+
 fun ClientGameTestContext.playerPosition(): Vec3 = fromClient { checkNotNull(it.player).position() }
-
-fun MinecraftServer.player(): ServerPlayer = playerList.players.first()
-
-fun <T> TestServerContext.player(block: (ServerPlayer) -> T): T =
-    computeOnServer<T, RuntimeException> { block(it.player()) }
 
 fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
     it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
-}
-
-fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int = computeOnServer<Int, RuntimeException> {
-    val level = it.overworld()
-    BlockPos.betweenClosed(from, to).count { pos -> !level.getBlockState(pos).isAir }
 }

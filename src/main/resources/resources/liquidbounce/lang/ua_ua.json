@@ -302,6 +302,7 @@
   "liquidbounce.module.clickRecorder.description": "Записує ваші кліки, які потім можуть бути використані модулями, що використовують cps.",
   "liquidbounce.module.clientSpoofer.description": "Підміняє назву вашого ігрового клієнта на іншу.",
   "liquidbounce.module.clip.description": "Дозволяє проходити крізь блоки.",
+  "liquidbounce.module.clutch.description": "Автоматично ставить блок під вами при падінні в безодню.",
   "liquidbounce.module.combineMobs.description": "Об'єднує сутності, які скупчилися.",
   "liquidbounce.module.consoleSpammer.description": "Опис спамера консолі",
   "liquidbounce.module.criticals.description": "Автоматично наносить критичний урон при кожному ударі по сутності.",

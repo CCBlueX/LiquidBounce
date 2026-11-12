@@ -433,25 +433,6 @@ object ClientRenderPipelines {
 
     // Special
 
-    /**
-     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
-     * @see RenderPipelines.OUTLINE_SNIPPET
-     */
-    @JvmField
-    val Outline = newPipeline("outline") {
-        screenQuadSnippet()
-        withFragmentShader(ClientShaders.Fragment.EntityOutline)
-        withBindGroupLayout(BindGroupLayouts.IN_SAMPLER)
-        withColorTargetState(
-            ColorTargetState(
-                optional(BlendFunction.ENTITY_OUTLINE_BLIT),
-                GpuFormat.RGBA8_UNORM,
-                ColorTargetState.WRITE_COLOR,
-            )
-        )
-        withDepthStencilState(optional())
-    }
-
     @JvmField
     val ChamsImage = newPipeline("chams/image_blit") {
         screenQuadSnippet()

@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.fma
 import net.ccbluex.liquidbounce.utils.math.horizontalDistanceToSqr
-import net.ccbluex.liquidbounce.utils.navigation.terrain.NavigationTerrain
-import net.ccbluex.liquidbounce.utils.navigation.walk.WalkNavigator
+import net.ccbluex.liquidbounce.utils.navigation.Navigator
+import net.ccbluex.liquidbounce.utils.navigation.terrain.Terrain
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.util.Mth
@@ -47,7 +47,7 @@ import kotlin.math.abs
 object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
     private val modes = choices("Mode", Forward, arrayOf(Forward, Direction, Goto, Follow)).apply(::tagBy)
-    private val navigator = WalkNavigator(this, this)
+    private val navigator = Navigator(this, this)
 
     fun goTo(position: Vec3) {
         val block = BlockPos.containing(position)
@@ -160,7 +160,7 @@ object ModuleAutoWalk : ClientModule("AutoWalk", ModuleCategories.PLAYER) {
 
         // The locate button picks the ground to stand on.
         private fun feetAt(pos: BlockPos): BlockPos {
-            val terrain = NavigationTerrain.live()
+            val terrain = Terrain.live()
             val above = pos.above()
             return if (!terrain.isStandable(pos) && terrain.isStandable(above)) above else pos
         }

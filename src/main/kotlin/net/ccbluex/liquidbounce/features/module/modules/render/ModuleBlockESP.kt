@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import kotlinx.atomicfu.atomic
-import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,6 +34,7 @@ import net.ccbluex.liquidbounce.render.addShapeFaces
 import net.ccbluex.liquidbounce.render.addShapeOutlines
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
+import net.ccbluex.liquidbounce.render.effect.OutlineGlow
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.translate
@@ -215,6 +215,11 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
     }
 
     object GlowMode : Mode("Glow") {
+
+        init {
+            OutlineGlow.styles(this)
+        }
+
         private val renderState = CachedMeshStorage("${ModuleBlockESP.name} $name")
 
         override fun disable() {
@@ -224,19 +229,14 @@ object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
         }
 
         @Suppress("unused")
-        private val renderHandler = handler<DrawOutlinesEvent> { event ->
-            val dirty = event.renderTarget.drawGenericBlockESP(
-                renderState,
-                ClientRenderPipelines.outlineQuads(useColor),
-                distanceFade,
-            ) {
-                getDynamicTransformsUniform(
-                    colorModulatorAlpha = 255,
-                )
-            }
-
-            if (dirty) {
-                event.markDirty()
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            OutlineGlow.drawMeshes(GlowMode, event.renderTarget) { target ->
+                target.drawGenericBlockESP(renderState, ClientRenderPipelines.outlineQuads(useColor), distanceFade) {
+                    getDynamicTransformsUniform(
+                        modelView = event.poseStack.last().pose(),
+                        colorModulatorAlpha = 255,
+                    )
+                }
             }
         }
 

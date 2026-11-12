@@ -361,6 +361,7 @@
   "liquidbounce.module.clientSpoofer.description": "Подменяет ваш игровой клиент другим.",
   "liquidbounce.module.clip.description": "Позволяет проходить сквозь блоки.",
   "liquidbounce.module.clip.messages.whoosh": "Вжуух!",
+  "liquidbounce.module.clutch.description": "Автоматически ставит блок под вами при падении в бездну.",
   "liquidbounce.module.combineMobs.description": "Если сущности находяться слишком близко, то визуально объединяет их в одного.",
   "liquidbounce.module.consoleSpammer.description": "Спамит консоль сервера ошибками.",
   "liquidbounce.module.criticals.description": "Автоматически наносит критический урон при ударе по сущности.",

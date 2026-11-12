@@ -100,10 +100,10 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.io.readText
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportDispatcher
-import net.ccbluex.liquidbounce.utils.navigation.terrain.SectionCache
+import net.ccbluex.liquidbounce.utils.navigation.teleport.TeleportManager
 import net.ccbluex.liquidbounce.utils.network.LocalPlayerFallDamageTracker
 import net.ccbluex.liquidbounce.utils.network.PositionPacketSeparator
+import net.ccbluex.liquidbounce.utils.world.SectionCache
 import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
@@ -289,7 +289,7 @@ object LiquidBounce : EventListener {
         Timer
         LocalPlayerFallDamageTracker
         PositionPacketSeparator
-        TeleportDispatcher
+        TeleportManager
         SectionCache
         InteractionTracker
         CombatManager

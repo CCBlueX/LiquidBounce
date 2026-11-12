@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedLin
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.ON_TICK_SNAP
@@ -55,6 +57,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ledge
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldClutchTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldExpandTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
@@ -194,15 +197,29 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         }
     private var wasTowering: Boolean = false
 
-    private val activeTechnique get() = if (isTowering) {
-        ScaffoldNormalTechnique
-    } else {
-        technique.activeMode
+    private val activeTechnique get() = when {
+        ModuleClutch.fall != null -> ScaffoldClutchTechnique
+        isTowering -> ScaffoldNormalTechnique
+        else -> technique.activeMode
+    }
+
+    /**
+     * [ModuleClutch] has scaffold build under a fall without enabling it.
+     */
+    override val running: Boolean
+        get() = super.running || ModuleClutch.fall != null
+
+    private object SafeWalk : EventListener {
+        override fun parent() = ModuleScaffold
+
+        // Not during a catch by [ModuleClutch]: stopping at an edge without sneaking gets flagged by Grim
+        override val running: Boolean
+            get() = super.running && ModuleClutch.fall == null
     }
 
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
-    private val safeWalkMode = choices("SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
+    private val safeWalkMode = modes(SafeWalk, "SafeWalk", 1, ModuleSafeWalk::safeWalkChoices)
 
     internal object ScaffoldRotationValueGroup : RotationsValueGroup(this) {
 
@@ -318,7 +335,7 @@ object ModuleScaffold : ClientModule("Scaffold", ModuleCategories.WORLD) {
         reset()
     }
 
-    private fun reset() {
+    internal fun reset() {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
