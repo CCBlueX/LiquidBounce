@@ -16,21 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming.features.processors
+package net.ccbluex.liquidbounce.gametest.combat
 
-import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
+import net.ccbluex.liquidbounce.gametest.harness.LocalGameTest
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 
-/**
- * Processes the rotation from the current to the target rotation.
- * This can be used to apply additional features to the rotation calculation.
- */
-interface RotationProcessor {
+class AutoPearlSimulatedPitchGameTest : LocalGameTest() {
 
-    fun process(
-        rotationTarget: RotationTarget,
-        currentRotation: Rotation,
-        targetRotation: Rotation
-    ): Rotation
+    override fun test(context: ClientGameTestContext) =
+        context.runCombatChecks(listOf(ModuleAutoPearl), CombatScene::checkAutoPearlSimulatedPitch)
 
 }

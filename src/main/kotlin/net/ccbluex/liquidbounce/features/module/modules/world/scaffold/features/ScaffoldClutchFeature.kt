@@ -16,14 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.RotationTimingMode.NORMAL
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationValueGroup.rotationTiming
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.outlineShape
 import net.ccbluex.liquidbounce.utils.block.stateOrEmpty
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
@@ -34,22 +36,22 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.verifyClick
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 
 /**
- * Builds under the fall [ModuleClutch] predicts. Not selectable: scaffold switches to it for as long as the fall
+ * Builds under the fall [ModuleClutch] predicts. Not a setting: scaffold builds this way for as long as the fall
  * lasts.
  */
-internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
+internal object ScaffoldClutchFeature {
 
     /**
      * An anticheat only takes a click for certain if the server had its rotation the tick before. The on tick
@@ -58,12 +60,7 @@ internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
     private val aimsAhead
         get() = rotationTiming == NORMAL
 
-    override fun findPlacementTarget(
-        predictedPos: Vec3,
-        predictedPose: Pose,
-        optimalLine: Line?,
-        bestStack: ItemStack
-    ): BlockPlacementTarget? {
+    fun findPlacementTarget(bestStack: ItemStack): BlockPlacementTarget? {
         val fall = ModuleClutch.fall ?: return null
         val now = target(player.position(), fall, bestStack)
         if (!aimsAhead) {
@@ -72,8 +69,14 @@ internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
 
         // What the rotation the server has points at already is clicked this tick. Anything else can only be aimed
         // at, for the next tick to click from where the player is by then
-        return now?.takeIf { it.click(RotationManager.serverRotation) != null }
-            ?: target(fall.first(), fall.subList(1, fall.size), bestStack)
+        now?.takeIf { it.allowedClick(RotationManager.serverRotation) != null }?.let { return it }
+
+        // An aim that takes a while to turn starts before the click is possible, as long as it gets there in time
+        for (tick in fall.indices) {
+            val ahead = target(fall[tick], fall.subList(tick + 1, fall.size), bestStack) ?: continue
+            return ahead.takeIf { tick == 0 || tick <= ScaffoldRotationValueGroup.calculateTicks(it.rotation) }
+        }
+        return null
     }
 
     /**
@@ -123,14 +126,23 @@ internal object ScaffoldClutchTechnique : ScaffoldTechnique("Clutch") {
         return null
     }
 
-    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
-        if (aimsAhead) target?.click(RotationManager.serverRotation) else target?.verifyClick(rotation)
+    fun click(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? =
+        if (aimsAhead) target?.allowedClick(RotationManager.serverRotation) else target?.verifyClick(rotation)
+
+    /**
+     * What a look has to point at to place [target]: the whole block it clicks, see [allowedClick]. As a target of
+     * that size, a hand flicks onto it no slower than onto any other.
+     */
+    fun box(target: BlockPlacementTarget): AABB? {
+        val shape = target.interactedBlockPos.outlineShape
+        return if (aimsAhead && !shape.isEmpty) shape.bounds().move(target.interactedBlockPos) else null
+    }
 
     /**
      * The click [rotation] allows. It only has to meet the clicked block, not the face to click: no anticheat can
      * tell which face a rotation met a tick ago, and the one that placed the last block of a row still meets it.
      */
-    private fun BlockPlacementTarget.click(rotation: Rotation): BlockHitResult? {
+    private fun BlockPlacementTarget.allowedClick(rotation: Rotation): BlockHitResult? {
         verifyClick(rotation)?.let { return it }
 
         val facesPlayer = (player.eyePosition - interactionPoint).dot(direction.unitVec3) > 0.0

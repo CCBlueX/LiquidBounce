@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -38,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.block.liquid.planPlacementAtPos
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -77,6 +77,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     private val trackedWebs = ObjectLinkedOpenHashSet<BlockPos>()
 
     private var currentAction: UseAction? = null
+    private var ready: Pair<BlockHitResult, Rotation>? = null
     private var lastSuccessfulWeb: BlockPos? = null
     private var lastSuccessfulAt = 0L
 
@@ -114,6 +115,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         currentAction = null
+        ready = null
 
         if (world.waterEvaporates) {
             return@handler
@@ -136,8 +138,13 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
         val action = currentAction ?: return@handler
         RotationManager.setRotationTarget(
-            action.rotation,
-            valueGroup = rotations,
+            rotations.toRotationTarget(
+                action.rotation,
+                considerInventory = true,
+                whenReady = Readiness({ rotation ->
+                    action.resolveHitResult(traceFromPlayer(rotation))?.let { hit -> hit to rotation }
+                }) { ready = it },
+            ),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleNoWeb,
         )
@@ -145,9 +152,9 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
+        val (resolvedHitResult, rotation) = ready ?: return@handler
+        ready = null
         val action = currentAction ?: return@handler
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val resolvedHitResult = action.resolveHitResult(traceFromPlayer(rotation)) ?: return@handler
 
         SilentHotbar.selectSlotSilently(this, action.slot, 1)
         val onSuccess = {
@@ -338,6 +345,7 @@ object NoWebPlaceWater : NoWebMode("PlaceWater") {
 
     private fun resetState() {
         currentAction = null
+        ready = null
         trackedWebs.clear()
         pickupTracker.clear()
     }

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toRadians
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.player.Player
@@ -150,7 +151,10 @@ open class TargetSelector(
             && entity.hurtTime <= hurtTime
             && validateRange(entity)
             && entity.shouldBeAttacked()
-            && (fov >= 180f || Mth.cos(fov.toDouble().toRadians()) <= RotationUtil.crosshairCosToEntity(entity))
+            && isInFov(entity)
+
+    fun isInFov(entity: Entity) =
+        fov >= 180f || Mth.cos(fov.toDouble().toRadians()) <= RotationUtil.crosshairCosToEntity(entity)
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true

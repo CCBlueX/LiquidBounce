@@ -16,36 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
+import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.rawInput
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.block.state
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPosOffsets
-import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
-import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.core.Direction
-import net.minecraft.world.entity.Pose
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
-import kotlin.math.round
 
-object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
+/**
+ * Breezily bridging: while the player runs forwards over a bridge, it taps left and right to stay over the blocks.
+ */
+object ScaffoldBreezilyFeature : ToggleableValueGroup(ModuleScaffold, "Breezily", false) {
 
     private var lastSideways = 0f
     private var lastAirTime = 0L
@@ -54,25 +41,6 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     private val edgeDistance by floatRange(
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
     )
-
-    override fun findPlacementTarget(
-        predictedPos: Vec3,
-        predictedPose: Pose,
-        optimalLine: Line?,
-        bestStack: ItemStack
-    ): BlockPlacementTarget? {
-        val searchOptions = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                BlockPosOffsets.NORMAL.offsets,
-                BlockPlacementTargetFindingOptions.leastBlockDistanceToPos(predictedPos),
-            ),
-            FaceHandlingOptions(CenterTargetPositionFactory),
-            stackToPlaceWith = bestStack,
-            PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
-        )
-
-        return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
-    }
 
     @Suppress("unused")
     private val handleMovementInput = handler<MovementInputEvent>(
@@ -129,40 +97,6 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
             lastSideways == -1f,
             lastSideways == 1f
         )
-    }
-
-    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
-        if (rawInput == DirectionalInput.NONE) {
-            target ?: return null
-
-            return getRotationForNoInput(target)
-        }
-
-        val direction = player.getMovementDirectionOfInput(rawInput) + 180
-
-        // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
-        val movingYaw = round(direction / 45) * 45
-        val isMovingStraight = movingYaw % 90 == 0f
-
-        return if (isMovingStraight) {
-            getRotationForStraightInput(movingYaw)
-        } else {
-            getRotationForDiagonalInput(movingYaw)
-        }
-
-    }
-
-    private fun getRotationForStraightInput(movingYaw: Float) = Rotation(movingYaw, 80f)
-
-    private fun getRotationForDiagonalInput(movingYaw: Float) = Rotation(movingYaw, 75.6f)
-
-    private fun getRotationForNoInput(target: BlockPlacementTarget): Rotation {
-        val axisMovement = floor(target.rotation.yaw / 90) * 90
-
-        val yaw = axisMovement + 45
-        val pitch = 75f
-
-        return Rotation(yaw, pitch)
     }
 
 }

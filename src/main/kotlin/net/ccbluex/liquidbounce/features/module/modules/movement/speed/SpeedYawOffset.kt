@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
@@ -45,10 +44,8 @@ object SpeedYawOffset : ToggleableValueGroup(ModuleSpeed, "YawOffset", false) {
             YawOffsetMode.CONSTANT -> constantYawOffset()
         }
 
-        val rotation = Rotation(player.yRot - yaw, player.xRot)
-
         RotationManager.setRotationTarget(
-            rotations.toRotationTarget(rotation),
+            rotations.toRotationTarget(yaw = player.yRot - yaw),
             Priority.NOT_IMPORTANT,
             ModuleSpeed
         )

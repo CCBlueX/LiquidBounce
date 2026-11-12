@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
@@ -38,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.ShulkerBullet
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
@@ -60,17 +60,19 @@ object ModuleProjectilePuncher : ClientModule(
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    // Target
-    private var target: Entity? = null
+    /** The projectile the rotation going out this tick hits. */
+    private var punchable: Entity? = null
 
     // Rotation
     private val rotations = tree(RotationsValueGroup(this))
 
     override fun onDisabled() {
-        target = null
+        punchable = null
     }
 
     val tickHandler = handler<RotationUpdateEvent> {
+        punchable = null
+
         if (player.isSpectator) {
             return@handler
         }
@@ -79,20 +81,10 @@ object ModuleProjectilePuncher : ClientModule(
     }
 
     /**
-     * Tries to punch the current projectile target when it is in range and the server-side rotation already faces it.
+     * Punches the projectile once the rotation faces it.
      */
     val repeatable = handler<GameTickEvent> {
-        val target = target ?: return@handler
-
-        if (target.squaredBoxedDistanceTo(player) > range * range ||
-            isLookingAtEntity(
-                toEntity = target,
-                rotation = RotationManager.serverRotation,
-                range = range.toDouble(),
-                throughWallsRange = 0.0
-            ) == null) {
-            return@handler
-        }
+        val target = punchable ?: return@handler
 
         clicker.click {
             attackEntity(target, swingMode)
@@ -102,8 +94,6 @@ object ModuleProjectilePuncher : ClientModule(
 
     private fun updateTarget() {
         val rangeSquared = range * range
-
-        target = null
 
         for (entity in world.entitiesForRendering().sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
@@ -124,15 +114,14 @@ object ModuleProjectilePuncher : ClientModule(
                 player.eyePosition, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
-            target = entity
-
             // aim at target
             RotationManager.setRotationTarget(
                 spot.rotation,
                 considerInventory = !ignoreOpenInventory,
                 valueGroup = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
-                this@ModuleProjectilePuncher
+                this@ModuleProjectilePuncher,
+                whenReady = Readiness.entity(entity, range.toDouble()) { punchable = entity },
             )
             break
         }

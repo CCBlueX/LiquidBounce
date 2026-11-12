@@ -146,8 +146,11 @@ class Navigator(
         }
         lastLookYaw = yaw
         RotationManager.setRotationTarget(
-            Rotation(yaw, if (target != null && follower.dive) divePitch(target) else player.xRot),
-            valueGroup = this.rotations,
+            this.rotations.toRotationTarget(
+                yaw = yaw,
+                pitch = if (target != null && follower.dive) divePitch(target) else null,
+                considerInventory = true,
+            ),
             priority = Priority.NOT_IMPORTANT,
             provider = owner,
         )

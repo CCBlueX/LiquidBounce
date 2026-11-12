@@ -20,53 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import kotlin.math.max
 
-@JvmRecord
-data class LedgeAction(
-    val jump: Boolean = false,
-    val sneakTime: Int = 0,
-    val stopInput: Boolean = false,
-    val stepBack: Boolean = false,
-) {
-    companion object {
-        @JvmField
-        val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false, stepBack = false)
+/**
+ * Whether the player waits at the edge, sneaking, because it has no blocks or is still [turning] towards the block it
+ * owes.
+ */
+fun sneaksAtLedge(turning: Boolean): Boolean {
+    if (!player.isCloseToEdge()) {
+        return false
     }
 
-}
-
-fun ledge(
-    target: BlockPlacementTarget?,
-    rotation: Rotation,
-    extension: ScaffoldLedgeExtension? = null
-): LedgeAction {
-    if (player.isCloseToEdge()) {
-        val ticks = ModuleScaffold.ScaffoldRotationValueGroup.calculateTicks(rotation)
-
-        ModuleScaffold.debugParameter("TicksUntilDestination") { ticks }
-
-        val isLowOnBlocks = ModuleScaffold.blockCount <= 0
-        val isNotReady = ticks >= 1
-
-        if (isLowOnBlocks || isNotReady) {
-            return LedgeAction(jump = false, sneakTime = max(1, ticks))
-        }
-    }
-
-    return extension?.ledge(
-        target = target,
-        rotation = rotation
-    ) ?: LedgeAction.NO_LEDGE
-}
-
-fun interface ScaffoldLedgeExtension {
-    fun ledge(
-        target: BlockPlacementTarget?,
-        rotation: Rotation
-    ): LedgeAction
+    ModuleScaffold.debugParameter("Turning") { turning }
+    return ModuleScaffold.blockCount <= 0 || turning
 }

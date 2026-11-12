@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedPoint
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
@@ -55,14 +56,13 @@ import net.ccbluex.liquidbounce.utils.math.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.math.ifEmpty
 import net.ccbluex.liquidbounce.utils.math.isSideVisible
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.raytracing.traceFromPoint
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
-import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 
@@ -129,10 +129,14 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
     var currentTarget: BlockPos? = null
         private set
 
+    private var ready: BlockHitResult? = null
+
     // Find the target on RotationUpdateEvent, which runs right before RotationManager.update, so the
     // requested rotation is applied within the same tick.
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        ready = null
+
         // Return if the user is inside a screen like the inventory
         if (mc.gui.screen() is AbstractContainerScreen<*>) {
             return@handler
@@ -160,27 +164,11 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             return@tickHandler
         }
 
-        // Return if we don't have a target
-        val target = currentTarget ?: return@tickHandler
-
-        val rotation = RotationManager.serverRotation
-        val rayTraceResult = traceFromPoint(
-            range = range.toDouble(),
-            start = player.eyePosition,
-            // Use the rotation already sent to the server, so we only interact when the server sees the aim
-            direction = rotation.directionVector,
-            entity = player,
-        )
-        if (rayTraceResult.type != HitResult.Type.BLOCK) {
-            return@tickHandler
-        }
-
+        // The block the rotation going out this tick hits, once that is the target
+        val rayTraceResult = ready ?: return@tickHandler
+        ready = null
+        val rotation = RotationManager.currentRotation ?: return@tickHandler
         val blockPos = rayTraceResult.blockPos
-
-        // Only act when we are actually aiming at the target block
-        if (blockPos != target) {
-            return@tickHandler
-        }
 
         val state = blockPos.state ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
@@ -241,13 +229,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             wallRange - 0.1f,
             possible,
             rotations,
-            this
+            this,
+            whenReady = ::readiness,
         ) ?: return false
 
         // set currentTarget to the new target
         currentTarget = target
         return true
     }
+
+    private fun readiness(pos: BlockPos) = Readiness.block(pos, range.toDouble()) { ready = it }
 
     /** Searches for any blocks within the radius that need to be destroyed, such as crops. */
     private fun updateTargetToHarvest(radius: Float, eyesPos: Vec3): Boolean {
@@ -303,10 +294,9 @@ object ModuleAutoFarm : ClientModule("AutoFarm", ModuleCategories.WORLD) {
             currentTarget = pos
             // aim at target
             RotationManager.setRotationTarget(
-                rotation,
-                valueGroup = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider = this@ModuleAutoFarm
+                rotations.toRotationTarget(rotation, considerInventory = true, whenReady = readiness(pos)),
+                Priority.IMPORTANT_FOR_USAGE_1,
+                this@ModuleAutoFarm
             )
 
             return true // We got a free angle at the block? No need to see more of them.

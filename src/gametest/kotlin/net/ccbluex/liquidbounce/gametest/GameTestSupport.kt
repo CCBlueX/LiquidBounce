@@ -16,14 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.gametest
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
+import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 import net.minecraft.client.Minecraft
+import net.minecraft.core.BlockPos
+import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.levelgen.Heightmap
 import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.function.FailableConsumer
@@ -64,3 +71,29 @@ fun ClientGameTestContext.playerPosition(): Vec3 = fromClient { checkNotNull(it.
 fun TestServerContext.groundY(): Int = computeOnServer<Int, RuntimeException> {
     it.overworld().getHeight(Heightmap.Types.MOTION_BLOCKING, 8, 8)
 }
+
+fun TestServerContext.countBlocks(from: BlockPos, to: BlockPos): Int = computeOnServer<Int, RuntimeException> {
+    val level = it.overworld()
+    BlockPos.betweenClosed(from, to).count { pos -> !level.getBlockState(pos).isAir }
+}
+
+/**
+ * The option at [path] below this group: names separated by `/`, a mode of a mode group is entered by its name.
+ */
+fun ValueGroup.option(path: String): Value<*> = path.split('/').fold<String, Value<*>>(this) { current, name ->
+    val group = current as? ValueGroup ?: error("${current.name} has no option $name")
+    group.containedValues.firstOrNull { it.name == name }
+        ?: (group as? ModeValueGroup<*>)?.modes?.firstOrNull { it.name == name }
+        ?: error("${group.name} has no option $name")
+}
+
+/**
+ * Sets the option at [path], see [option], from its text form.
+ */
+fun ValueGroup.set(path: String, value: String) = option(path).setByString(value)
+
+/**
+ * Runs [block] on the server thread and returns its result.
+ */
+fun <T> TestServerContext.query(block: (MinecraftServer) -> T): T =
+    computeOnServer<T, RuntimeException> { block(it) }

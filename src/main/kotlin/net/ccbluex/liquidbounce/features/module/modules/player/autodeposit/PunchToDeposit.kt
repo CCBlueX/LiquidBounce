@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.utils.selectBlockTarget
 import net.ccbluex.liquidbounce.utils.block.SwingMode
@@ -86,6 +86,8 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
         super.onDisabled()
     }
 
+    private var ready: BlockHitResult? = null
+
     /**
      * Sends a full left-click (START_DESTROY_BLOCK + ABORT_DESTROY_BLOCK) on a storage block.
      */
@@ -106,6 +108,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        ready = null
         if (!rotateToTarget || ModuleAutoDeposit.matchingSlots(inventory = false).isEmpty()) {
             return@handler
         }
@@ -118,7 +121,14 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
                 state.block in validStorageBlocks
             },
             rotations,
-            ModuleAutoDeposit
+            ModuleAutoDeposit,
+            whenReady = { pos ->
+                Readiness({ rotation ->
+                    val state = pos.state ?: return@Readiness null
+                    raytraceBlock(interactionRange.toDouble(), rotation, pos, state)
+                        ?.takeIf { it.type == HitResult.Type.BLOCK && it.blockPos == pos }
+                }) { ready = it }
+            },
         )
     }
 
@@ -133,19 +143,7 @@ internal object PunchToDeposit : ToggleableValueGroup(ModuleAutoDeposit, "PunchT
 
         val rayTraceResult = if (rotateToTarget) {
             val targetBlockPos = currentTargetBlock ?: return@tickHandler
-            val currentPlayerRotation = RotationManager.serverRotation
-
-            val hit = raytraceBlock(
-                interactionRange.toDouble(),
-                currentPlayerRotation,
-                targetBlockPos,
-                targetBlockPos.state ?: return@tickHandler
-            )
-
-            if (hit?.type != HitResult.Type.BLOCK || hit.blockPos != targetBlockPos) {
-                return@tickHandler
-            }
-            hit
+            ready?.takeIf { it.blockPos == targetBlockPos }?.also { ready = null } ?: return@tickHandler
         } else {
             val hit = mc.hitResult as? BlockHitResult ?: return@tickHandler
             val state = hit.blockPos.state ?: return@tickHandler

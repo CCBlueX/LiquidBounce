@@ -16,23 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth
+package net.ccbluex.liquidbounce.gametest.combat
 
-import net.ccbluex.liquidbounce.config.types.group.Mode
-import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoPearl
+import net.ccbluex.liquidbounce.gametest.onClient
+
+const val PEARL_TICKS = 30
 
 /**
- * An [AngleSmooth]'er, but as choice
+ * Gives the player ender pearls and enables AutoPearl after [configure].
  */
-abstract class AngleSmooth(
-    name: String,
-    override val parent: ModeValueGroup<*>,
-    aliases: List<String> = emptyList()
-) : Mode(name, aliases), RotationProcessor {
-    abstract fun calculateTicks(
-        currentRotation: Rotation,
-        targetRotation: Rotation
-    ): Int
+fun CombatScene.startAutoPearl(configure: () -> Unit) {
+    reset()
+    world.server.runCommand("item replace entity @a hotbar.0 with minecraft:ender_pearl 16")
+    context.onClient {
+        configure()
+        ModuleAutoPearl.enabled = true
+    }
 }

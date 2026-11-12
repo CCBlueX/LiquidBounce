@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.debug.DebuggedBox
 import net.ccbluex.liquidbounce.features.module.modules.render.debug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -106,8 +107,10 @@ fun raytraceBlockRotation(
 /**
  * Aims at the first block from [candidates] whose face is reachable within the given ranges and
  * returns its position, or null if none is reachable. Skips setting the rotation target when
- * [rotate] is false, e.g. when another module owns the rotation.
+ * [rotate] is false, e.g. when another module owns the rotation. [whenReady] makes what to do once
+ * the rotation at the chosen block goes out.
  */
+@Suppress("LongParameterList")
 fun selectBlockTarget(
     eyePosition: Vec3,
     range: Float,
@@ -117,6 +120,7 @@ fun selectBlockTarget(
     provider: ClientModule,
     considerInventory: Boolean = true,
     rotate: Boolean = true,
+    whenReady: (BlockPos) -> Readiness<*>? = { null },
 ): BlockPos? {
     for ((blockPos, state) in candidates) {
         val (rotation, _) = raytraceBlockRotation(
@@ -129,10 +133,12 @@ fun selectBlockTarget(
 
         if (rotate) {
             RotationManager.setRotationTarget(
-                rotation,
-                considerInventory = considerInventory,
-                valueGroup = valueGroup,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                valueGroup.toRotationTarget(
+                    rotation,
+                    considerInventory = considerInventory,
+                    whenReady = whenReady(blockPos),
+                ),
+                Priority.IMPORTANT_FOR_USAGE_1,
                 provider
             )
         }

@@ -23,10 +23,9 @@ import net.ccbluex.liquidbounce.config.types.group.ModeValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import java.util.function.BooleanSupplier
 
 sealed class RotationMode(
     name: String,
@@ -50,7 +49,10 @@ sealed class RotationMode(
      */
     val instant by boolean("Instant", false)
 
-    abstract fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable)
+    /**
+     * Turns to [rotation] and runs [onFinished] once [isFinished] holds for the rotation the action goes out with.
+     */
+    abstract fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable)
 
     override val parent: ModeValueGroup<*>
         get() = modeValueGroup
@@ -70,8 +72,9 @@ class NormalRotationMode(
     val rotations = tree(RotationsValueGroup(this))
     val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    override fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable) {
-        if (instant && isFinished.asBoolean) {
+    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+        // Sent at once, so the server judges it with the rotation it already has
+        if (instant && isFinished(RotationManager.serverRotation)) {
             onFinished.run()
             if (aimAfterInstantAction) {
                 mc.execute {
@@ -95,7 +98,7 @@ class NormalRotationMode(
                 valueGroup = rotations,
                 provider = eventListener,
                 priority = priority,
-                whenReached = RestrictedSingleUseAction(canExecute = isFinished, action = {
+                whenReady = Readiness({ next -> next.takeIf(isFinished) }, {
                     PostRotationExecutor.addTask(eventListener, postMove, task = onFinished, priority = true)
                 })
             )
@@ -109,7 +112,7 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
 
     val send by boolean("SendRotationPacket", false)
 
-    override fun rotate(rotation: Rotation, isFinished: BooleanSupplier, onFinished: Runnable) {
+    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
         fun task() {
             if (send) {
                 val fixedRotation = rotation.normalize()
@@ -122,6 +125,30 @@ class NoRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener
             }
 
             onFinished.run()
+        }
+
+        if (instant) {
+            task()
+            return
+        }
+
+        PostRotationExecutor.addTask(eventListener, postMove) { task() }
+    }
+
+}
+
+/**
+ * Never rotates. The action only runs when [isFinished] holds for the rotation the player already has, so the
+ * player's own crosshair decides what gets hit.
+ */
+class CrosshairRotationMode(modeValueGroup: ModeValueGroup<RotationMode>, eventListener: EventListener)
+    : RotationMode("Crosshair", modeValueGroup, eventListener) {
+
+    override fun rotate(rotation: Rotation, isFinished: (Rotation) -> Boolean, onFinished: Runnable) {
+        fun task() {
+            if (isFinished(player.rotation)) {
+                onFinished.run()
+            }
         }
 
         if (instant) {

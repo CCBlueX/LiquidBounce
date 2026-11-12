@@ -25,11 +25,15 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAu
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.ItemStack
 
 object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
+    private val healingOnly by boolean("HealingPotionsOnly", false)
 
     fun execute(event: ScheduleInventoryActionEvent) {
         // Check if we have space in the hotbar
@@ -42,7 +46,7 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
         // Find valid items in the inventory
         val validItems = Slots.Inventory.filter {
             val itemStack = it.itemStack
-            validFeatures.any { f -> f.isValidItem(itemStack, false) }
+            validFeatures.any { f -> f.isValidItem(itemStack, false) } && (!healingOnly || itemStack.isHealing)
         }
 
         // Check if we have any valid items
@@ -62,4 +66,6 @@ object Refill : ToggleableValueGroup(ModuleAutoBuff, "Refill", true) {
         return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
     }
 
+    private val ItemStack.isHealing
+        get() = getPotionEffects().any { it.effect == MobEffects.INSTANT_HEALTH }
 }

@@ -29,17 +29,19 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
+import net.ccbluex.liquidbounce.utils.aiming.Readiness
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.state
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.phys.BlockHitResult
 
 /**
  * Ignite & AutoWeb module
@@ -59,6 +61,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val rotations = tree(RotationsValueGroup(this))
 
     private var currentPlan: BlockChangeIntent<*>? = null
+    private var ready: Pair<BlockHitResult, Rotation>? = null
 
     private var timeout = false
 
@@ -75,6 +78,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     private fun resetState() {
         timeout = false
+        ready = null
         currentPlan = null
         pendingCombatWaitTicks = 0
         targetTracker.reset()
@@ -82,6 +86,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
+        ready = null
         if (timeout) {
             return@handler
         }
@@ -110,9 +115,13 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             }
 
             RotationManager.setRotationTarget(
-                blockChangeInfo.blockPlacementTarget.rotation,
-                considerInventory = !ignoreOpenInventory,
-                valueGroup = rotations,
+                rotations.toRotationTarget(
+                    blockChangeInfo.blockPlacementTarget.rotation,
+                    considerInventory = !ignoreOpenInventory,
+                    whenReady = Readiness({ rotation ->
+                        traceFromPlayer(rotation).takeIf { intent.validate(it) }?.let { hit -> hit to rotation }
+                    }) { ready = it },
+                ),
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this
             )
@@ -125,6 +134,9 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
             return@tickHandler
         }
 
+        val (raycast, rotation) = ready ?: return@tickHandler
+        ready = null
+
         val plan = currentPlan ?: return@tickHandler
         if (plan.blockChangeInfo !is BlockChangeInfo.PlaceBlock) {
             currentPlan = null
@@ -132,12 +144,6 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
         }
 
         if (shouldWaitForTiming(plan)) {
-            return@tickHandler
-        }
-
-        val rotation = RotationManager.currentRotation ?: player.rotation
-        val raycast = traceFromPlayer(rotation)
-        if (!plan.validate(raycast)) {
             return@tickHandler
         }
 

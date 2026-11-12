@@ -22,87 +22,75 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.types.group.ValueGroup
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.addon.AddonApi
-import net.ccbluex.liquidbounce.features.addon.UnstableAddonApi
+import net.ccbluex.liquidbounce.utils.aiming.aim.Aim
+import net.ccbluex.liquidbounce.utils.aiming.aim.ConstantAim
+import net.ccbluex.liquidbounce.utils.aiming.aim.HumanAim
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.FailRotationProcessor
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.ShortStopRotationProcessor
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AccelerationAngleSmooth
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.InterpolationAngleSmooth
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.LinearAngleSmooth
-import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
-import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.AABB
 
 /**
- * Configurable to configure the dynamic rotation engine
+ * The rotation settings of a module.
  */
 @AddonApi
 open class RotationsValueGroup(
     owner: EventListener,
     movementCorrection: MovementCorrection = MovementCorrection.SILENT,
-    combatSpecific: Boolean = false
 ) : ValueGroup("Rotations") {
 
-    private val angleSmooth = modes(owner, "AngleSmooth", 0) {
-        val linearAngleSmooth = LinearAngleSmooth(it)
-        val interpolationAngleSmooth = if (combatSpecific) InterpolationAngleSmooth(it) else null
-
-        listOfNotNull(
-            linearAngleSmooth,
-            SigmoidAngleSmooth(it),
-            interpolationAngleSmooth,
-            AccelerationAngleSmooth(it),
-            if (combatSpecific) AiAngleSmooth(it, interpolationAngleSmooth ?: linearAngleSmooth) else null
-        ).toTypedArray()
+    private val aim = modes<Aim>(owner, "Aim", listOf("AngleSmooth"), { 0 }) {
+        arrayOf(ConstantAim(it), HumanAim(it))
     }
 
-    private val shortStop = if (combatSpecific) tree(ShortStopRotationProcessor(owner)) else null
-    private val fail = if (combatSpecific) tree(FailRotationProcessor(owner)) else null
-
     private val movementCorrection by enumChoice("MovementCorrection", movementCorrection)
-    private val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
 
-    @UnstableAddonApi
-    val aiAngleSmooth: AiAngleSmooth?
-        get() = angleSmooth.modes.firstNotNullOfOrNull { it as? AiAngleSmooth }
-
-    internal val usesAiRotations: Boolean
-        get() = angleSmooth.activeMode is AiAngleSmooth
-
+    /**
+     * A target on both axes, with these settings.
+     */
     @AddonApi
+    @JvmOverloads
+    @Suppress("LongParameterList")
     fun toRotationTarget(
         rotation: Rotation,
         entity: Entity? = null,
         considerInventory: Boolean = false,
-        whenReached: RestrictedSingleUseAction? = null
+        box: AABB? = null,
+        tolerance: Float = 0f,
+        whenReady: Readiness<*>? = null,
+    ) = toRotationTarget(rotation.yaw, rotation.pitch, entity, considerInventory, box, tolerance, whenReady)
+
+    /**
+     * A target with these settings; leave out the axis the module does not care about.
+     */
+    @AddonApi
+    @JvmOverloads
+    @Suppress("LongParameterList")
+    fun toRotationTarget(
+        yaw: Float? = null,
+        pitch: Float? = null,
+        entity: Entity? = null,
+        considerInventory: Boolean = false,
+        box: AABB? = null,
+        tolerance: Float = 0f,
+        whenReady: Readiness<*>? = null,
     ) = RotationTarget(
-        rotation,
+        yaw,
+        pitch,
         entity,
-        listOfNotNull(
-            angleSmooth.activeMode,
-            fail?.takeIf { it.running && !usesAiRotations },
-            shortStop?.takeIf { it.running && !usesAiRotations }
-        ),
+        aim.activeMode,
         ticksUntilReset,
-        resetThreshold,
         considerInventory,
         movementCorrection,
-        whenReached
+        box,
+        tolerance,
+        whenReady,
     )
 
     /**
-     * How long it takes to rotate to a rotation in ticks
-     *
-     * Calculates the difference from the server rotation to the target rotation and divides it by the
-     * minimum turn speed (to make sure we are always there in time)
-     *
-     * @param rotation The rotation to rotate to
-     * @return The amount of ticks it takes to rotate to the rotation
+     * Ticks it takes at least to turn from the rotation the server has to [rotation].
      */
-    fun calculateTicks(rotation: Rotation) = angleSmooth.activeMode
-        .calculateTicks(RotationManager.actualServerRotation, rotation)
+    fun calculateTicks(rotation: Rotation) = aim.activeMode.ticksToReach(RotationManager.actualServerRotation, rotation)
 
 }

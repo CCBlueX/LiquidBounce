@@ -24,16 +24,14 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent;
 import net.ccbluex.liquidbounce.event.events.SprintEvent;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
+import net.ccbluex.liquidbounce.utils.aiming.features.SilentMovementKeys;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.KeyboardInput;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Input;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-
-import static net.minecraft.util.Mth.DEG_TO_RAD;
 
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends MixinClientInput {
@@ -78,25 +76,12 @@ public abstract class MixinKeyboardInput extends MixinClientInput {
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
         var configurable = RotationManager.INSTANCE.getActiveRotationTarget();
 
-        float z = KeyboardInput.calculateImpulse(input.getForwards(), input.getBackwards());
-        float x = KeyboardInput.calculateImpulse(input.getLeft(), input.getRight());
-
         if (configurable == null || configurable.getMovementCorrection() != MovementCorrection.SILENT
                 || rotation == null || player == null) {
             return input;
         }
 
-        float deltaYaw = player.getYRot() - rotation.yRot();
-
-        float newX = x * Mth.cos(deltaYaw * DEG_TO_RAD) - z *
-                Mth.sin(deltaYaw * DEG_TO_RAD);
-        float newZ = z * Mth.cos(deltaYaw * DEG_TO_RAD) + x *
-                Mth.sin(deltaYaw * DEG_TO_RAD);
-
-        var movementSideways = Math.round(newX);
-        var movementForward = Math.round(newZ);
-
-        return new DirectionalInput(movementForward, movementSideways);
+        return SilentMovementKeys.INSTANCE.turn(input, player.getYRot() - rotation.yRot());
     }
 
 }

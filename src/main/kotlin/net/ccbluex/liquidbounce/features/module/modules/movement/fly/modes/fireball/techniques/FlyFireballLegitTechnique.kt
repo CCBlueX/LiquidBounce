@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsValueGroup
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Mth
@@ -66,8 +65,11 @@ object FlyFireballLegitTechnique : Mode("Legit") {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         RotationManager.setRotationTarget(
-            Rotation(if (Rotations.backwards) this.invertYaw(player.yRot) else player.yRot, Rotations.pitch),
-            valueGroup = Rotations,
+            Rotations.toRotationTarget(
+                yaw = if (Rotations.backwards) this.invertYaw(player.yRot) else null,
+                pitch = Rotations.pitch,
+                considerInventory = true,
+            ),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )
