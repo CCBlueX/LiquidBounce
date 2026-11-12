@@ -23,6 +23,8 @@ import net.ccbluex.gametest.harness.TestWorld
 import net.ccbluex.gametest.harness.action.awaitServer
 import net.ccbluex.gametest.harness.action.fill
 import net.ccbluex.gametest.harness.action.give
+import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
+import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleClutch
 import net.ccbluex.liquidbounce.gametest.awaitServerAt
 import net.ccbluex.liquidbounce.gametest.carried
@@ -63,7 +65,8 @@ private const val FAR = 4.0
  * [ModuleClutch] has to keep a player on a platform over the void from falling, with blocks the server accepts and
  * without a move the anticheat objects to. The player leaves the platform in five ways: a hit throws it over the
  * edge, an arrow throws it blocks further than that, a hit follows every time it comes down, it slides over the edge
- * on the ground, and it steps off where only a wall below is left to build against.
+ * on the ground, and it steps off where only a wall below is left to build against. [ModuleAntiVoid] runs along with
+ * its ghost blocks, which would make the fall look like a landing and leave the player standing on nothing.
  */
 class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
     give(BLOCK, BLOCKS)
@@ -71,6 +74,8 @@ class ClutchGameTest : LiquidBounceGameTest(TestWorld.VOID, {
     // The blocks are not in the hand, so the catch has to take them out of the hotbar itself
     client { checkNotNull(it.player).inventory.selectedSlot = EMPTY_SLOT }
     enable(ModuleClutch)
+    client { ModuleAntiVoid.mode.setByString(AntiVoidGhostBlockMode.tag) }
+    enable(ModuleAntiVoid)
 
     var blocks = BLOCKS
     fun placed() = carried(BLOCK).let { left -> (left < blocks).also { blocks = left } }
